@@ -26,6 +26,7 @@ Create the first trusted identity boundary for NXTTRACK: users, tenants, tenant 
 - `authenticated` receives only read access needed for scoped identity queries plus limited profile self-update.
 - `service_role` receives explicit table grants for future trusted server-side admin flows.
 - RLS policies use `TO authenticated` with user, tenant or platform predicates.
+- CI runs `pnpm run db:audit` to statically check public table RLS, explicit grants, policy clauses and forbidden authorization patterns.
 
 ## Helper Functions
 
