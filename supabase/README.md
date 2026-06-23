@@ -17,4 +17,4 @@ Current migration:
 
 - `20260623222604_identity_boundary.sql` creates the identity boundary: profiles, tenants, tenant domains, tenant settings, tenant memberships, platform memberships, helper functions, explicit grants and RLS policies.
 
-The `pnpm run db:migrate` command remains a safe guardrail. It skips when `DATABASE_URL` is absent and fails intentionally when `DATABASE_URL` is present until the staging migration runner is approved.
+The `pnpm run db:migrate` command remains a safe guardrail. It skips unless `RUN_DB_MIGRATIONS=true` is set. When enabled, it requires `DATABASE_URL` and runs `supabase db push --db-url ... --yes`.
