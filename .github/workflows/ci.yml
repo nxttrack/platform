@@ -35,6 +35,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Audit route access
+        run: pnpm run auth:audit
+
       - name: Build
         run: pnpm build
 
