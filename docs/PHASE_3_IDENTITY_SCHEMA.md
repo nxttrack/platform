@@ -41,7 +41,7 @@ These helpers are `security definer` because RLS policies need stable membership
 ## Explicit Non-Goals
 
 - No live Supabase connection.
-- No migration runner activation.
+- No migration runner activation by default.
 - No seed data.
 - No login/signup UI.
 - No route redirects.
@@ -51,7 +51,7 @@ These helpers are `security definer` because RLS policies need stable membership
 ## Open Before Applying To Staging
 
 - Confirm Supabase staging project reference and database URL.
-- Confirm whether the deployment runner uses `supabase migration up`, `supabase db push`, or direct `psql`.
+- Confirm when staging should set `RUN_DB_MIGRATIONS=true`.
 - Run Supabase advisors against the staging project before merge-to-deploy.
 - Decide initial platform owner bootstrap process.
 - Decide whether parent-mediated child access is MVP default.
