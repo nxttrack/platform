@@ -25,6 +25,9 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 - Proxy adds internal tenant-routing request headers based on configured platform hostnames, tenant base domains and reserved subdomains.
 - Private route guard contracts added as pure decision logic. They can classify public routes, tenant shell access, platform shell access and default shell destinations without redirects or database calls.
 - CI now audits private shell route contracts so shell prefixes, route folders and `noindex` metadata stay aligned.
+- Trusted auth context contracts added for verified Supabase users, platform memberships, tenant memberships and active tenant selection.
+- Identity-boundary mapping added so the first real auth wiring can build context from `profiles`, `tenant_memberships`, `platform_memberships` and tenant settings without trusting client-provided roles.
+- CI now audits the web auth boundary for unsafe authorization patterns such as server-side `getSession()`, editable user metadata and public secret env vars.
 
 ## Explicit Non-Goals
 
@@ -40,7 +43,7 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 
 NXTTRACK will use Supabase Auth with SSR cookies. The frontend must use the publishable Supabase key. Secret keys and database URLs are server-only.
 
-The proxy currently refreshes sessions when Supabase is configured, but it does not block or redirect users yet. Route protection starts after tenant resolution and role mapping are approved.
+The proxy currently refreshes sessions when Supabase is configured, but it does not block or redirect users yet. It calls `getClaims()` for token validation/refresh alignment and leaves authorization to later server-side guards. Route protection starts after tenant resolution and role mapping are approved.
 
 Private route shells are centrally mapped to their intended role sets. The guard contract can evaluate access decisions from trusted platform and tenant membership context, but it is not wired into redirects or runtime enforcement yet. The current contract is a foundation for later server-side guards and RLS tests.
 
@@ -52,6 +55,17 @@ Guard denial reasons are explicit:
 - `role_not_allowed`
 
 This keeps UI routing decisions separate from security. Real authorization must still be enforced by server-side checks and Supabase RLS based on trusted database membership records.
+
+Trusted auth context is now defined as a server-side contract:
+
+- user identity comes from a verified Supabase Auth user;
+- display profile comes from `profiles`;
+- platform roles come from active `platform_memberships`;
+- tenant roles come from active `tenant_memberships` joined to active tenants;
+- active tenant is selected by explicit tenant id/slug or only when the user has exactly one tenant;
+- authorization must fail closed when membership rows cannot be loaded.
+
+The first runtime use of this context should be read-only guard wiring, not new product behavior.
 
 ## Role Strategy
 

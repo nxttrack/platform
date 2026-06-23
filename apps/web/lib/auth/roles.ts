@@ -17,10 +17,10 @@ export const roleLabels: Record<AppRole, string> = {
   athlete: "Athlete"
 };
 
-export function isPlatformRole(role: AppRole): role is PlatformRole {
+export function isPlatformRole(role: string): role is PlatformRole {
   return platformRoles.includes(role as PlatformRole);
 }
 
-export function isTenantRole(role: AppRole): role is TenantRole {
+export function isTenantRole(role: string): role is TenantRole {
   return tenantRoles.includes(role as TenantRole);
 }
