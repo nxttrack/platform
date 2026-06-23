@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
+
 import { AppShell } from "@/components/shell/app-shell";
 import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { privateRouteMetadata } from "@/lib/auth/access";
 import { platformNav } from "@/lib/navigation";
+
+export const metadata: Metadata = privateRouteMetadata;
 
 export default function PlatformPage() {
   return (
