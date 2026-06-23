@@ -20,10 +20,23 @@ Phase 0 and Phase 1 are active:
 
 No product features, database schema changes, Supabase integration work, auth implementation, payment implementation, or UI rewrites should happen in this phase.
 
-## Documents
+## Canon and planning docs
+
+- [NXTTRACK Canon](docs/NXTTRACK_CANON.md)
+- [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
+- [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+
+## Phase docs
 
 - [Phase 0 - Repo and Infra](docs/PHASE_0_REPO_INFRA.md)
 - [Phase 1 - Lovable UI Audit](docs/PHASE_1_LOVABLE_UI_AUDIT.md)
+
+## Operational prep docs
+
+- [Staging Setup Checklist](docs/STAGING_SETUP_CHECKLIST.md)
+- [VPS Deployment Runbook](docs/VPS_DEPLOY_RUNBOOK.md)
+- [Migration Strategy Decision](docs/MIGRATION_STRATEGY_DECISION.md)
+- [Lovable Screenshot Baseline](docs/LOVABLE_SCREENSHOT_BASELINE.md)
 
 ## Deployment baseline
 
