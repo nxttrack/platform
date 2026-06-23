@@ -1,6 +1,6 @@
 # Phase 3 - Auth, Tenants, Roles and Terminology
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 Status: foundation only, no production auth flow yet.
 
@@ -23,6 +23,8 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 - Tenant host resolution is prepared as a pure parsing contract. Database tenant lookup still waits for the first approved Supabase migration.
 - Identity-boundary migration prepared for profiles, tenants, tenant domains, tenant settings, tenant memberships, platform memberships, explicit grants and RLS policies.
 - Proxy adds internal tenant-routing request headers based on configured platform hostnames, tenant base domains and reserved subdomains.
+- Private route guard contracts added as pure decision logic. They can classify public routes, tenant shell access, platform shell access and default shell destinations without redirects or database calls.
+- CI now audits private shell route contracts so shell prefixes, route folders and `noindex` metadata stay aligned.
 
 ## Explicit Non-Goals
 
@@ -40,7 +42,16 @@ NXTTRACK will use Supabase Auth with SSR cookies. The frontend must use the publ
 
 The proxy currently refreshes sessions when Supabase is configured, but it does not block or redirect users yet. Route protection starts after tenant resolution and role mapping are approved.
 
-Private route shells are centrally mapped to their intended role sets. The map is not a security boundary yet; it is a contract for the later guard implementation and RLS tests.
+Private route shells are centrally mapped to their intended role sets. The guard contract can evaluate access decisions from trusted platform and tenant membership context, but it is not wired into redirects or runtime enforcement yet. The current contract is a foundation for later server-side guards and RLS tests.
+
+Guard denial reasons are explicit:
+
+- `tenant_context_required`
+- `tenant_membership_required`
+- `platform_membership_required`
+- `role_not_allowed`
+
+This keeps UI routing decisions separate from security. Real authorization must still be enforced by server-side checks and Supabase RLS based on trusted database membership records.
 
 ## Role Strategy
 
