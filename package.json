@@ -9,6 +9,7 @@
     "start": "pnpm --filter @nxttrack/web start",
     "lint": "pnpm --filter @nxttrack/web lint",
     "typecheck": "pnpm --filter @nxttrack/web typecheck",
+    "auth:audit": "node scripts/auth/audit-route-access.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
     "db:migrate": "node scripts/db/migrate.mjs"
   },
