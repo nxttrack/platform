@@ -22,6 +22,7 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 - Private shells have `noindex` metadata while real route guards are not active yet.
 - Tenant host resolution is prepared as a pure parsing contract. Database tenant lookup still waits for the first approved Supabase migration.
 - Identity-boundary migration prepared for profiles, tenants, tenant domains, tenant settings, tenant memberships, platform memberships, explicit grants and RLS policies.
+- Proxy adds internal tenant-routing request headers based on configured platform hostnames, tenant base domains and reserved subdomains.
 
 ## Explicit Non-Goals
 
@@ -71,6 +72,14 @@ The internal model stays generic:
 For swim schools, visible labels can say leerling, ouder, instructeur, badje, lesgroep, les and diploma. Internally the system still uses participant, guardian, instructor, stage, group, session and certificate.
 
 Hostname parsing supports platform hosts, tenant subdomains, and custom domains as separate outcomes. Custom-domain ownership and tenant lookup must be backed by trusted database records in a later migration.
+
+Tenant routing config is environment-driven:
+
+- `PLATFORM_HOSTNAMES`
+- `TENANT_BASE_DOMAINS`
+- `RESERVED_TENANT_SUBDOMAINS`
+
+The proxy may attach internal `x-nxttrack-*` request headers for later server-side tenant lookup. These headers are not an authorization boundary.
 
 ## Supabase Schema Direction
 
