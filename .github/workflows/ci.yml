@@ -38,5 +38,8 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Audit migrations
+        run: pnpm run db:audit
+
       - name: Check migration command
         run: pnpm run db:migrate

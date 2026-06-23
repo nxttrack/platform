@@ -21,14 +21,14 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 - CI pins Node 20.19.0 and pnpm 10.24.0 before frozen install, typecheck, build, and migration-command verification.
 - Private shells have `noindex` metadata while real route guards are not active yet.
 - Tenant host resolution is prepared as a pure parsing contract. Database tenant lookup still waits for the first approved Supabase migration.
+- Identity-boundary migration prepared for profiles, tenants, tenant domains, tenant settings, tenant memberships, platform memberships, explicit grants and RLS policies.
 
 ## Explicit Non-Goals
 
 - No login or signup UI.
 - No protected route redirects.
 - No Supabase project connection.
-- No database migration.
-- No RLS policy applied to a live database.
+- No migration applied to a live database.
 - No tenant resolution from hostname.
 - No SendGrid or SMTP sending.
 - No Mollie or payment integration.
@@ -74,15 +74,16 @@ Hostname parsing supports platform hosts, tenant subdomains, and custom domains 
 
 ## Supabase Schema Direction
 
-The first migration should cover only the identity boundary:
+The first migration covers only the identity boundary:
 
 - `tenants`
 - `profiles`
 - `tenant_memberships`
-- optional `tenant_domains`
-- optional `tenant_settings`
+- `tenant_domains`
+- `tenant_settings`
+- `platform_memberships`
 
-The first migration must include explicit Data API grants and RLS. New Supabase defaults in 2026 require grants to be deliberate; RLS does not replace grants.
+The identity migration includes explicit Data API grants and RLS. New Supabase defaults in 2026 require grants to be deliberate; RLS does not replace grants.
 
 ## Open Decisions Before Real Auth
 

@@ -1,8 +1,8 @@
-# Migrations
+# Supabase Migrations
 
-No migrations yet.
+Migrations in this folder are source-of-truth SQL for the NXTTRACK staging and production databases.
 
-When the staging Supabase project exists, create migrations with the Supabase CLI instead of hand-writing timestamp filenames:
+Create migrations with the Supabase CLI instead of hand-writing timestamp filenames:
 
 ```txt
 supabase migration new <descriptive-name>
@@ -15,4 +15,8 @@ Every migration that exposes `public` tables to Supabase Data API must include:
 - Policies using `TO authenticated` plus tenant/user ownership predicates.
 - `USING` and `WITH CHECK` for updates.
 
-Run database advisors before merging schema changes.
+Current migration:
+
+- `20260623222604_identity_boundary.sql`
+
+Run database advisors before applying schema changes to a live Supabase project.

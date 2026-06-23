@@ -1,10 +1,30 @@
 #!/usr/bin/env node
 
-console.log("[db:migrate] Phase 2 scaffold: no database migrations are configured yet.");
-console.log("[db:migrate] This command is intentionally a safe no-op until Supabase staging and the migration runner are approved.");
+import { spawnSync } from "node:child_process";
 
-if (process.env.DATABASE_URL) {
-  console.log("[db:migrate] DATABASE_URL is present, but no schema has been created in this phase.");
-} else {
-  console.log("[db:migrate] DATABASE_URL is not set. Skipping migration placeholder.");
+console.log("[db:migrate] Supabase migrations are present in the repository.");
+
+if (process.env.RUN_DB_MIGRATIONS !== "true") {
+  console.log("[db:migrate] RUN_DB_MIGRATIONS is not true. Skipping migration execution.");
+  process.exit(0);
 }
+
+if (!process.env.DATABASE_URL) {
+  console.error("[db:migrate] RUN_DB_MIGRATIONS is true, but DATABASE_URL is not set.");
+  process.exit(1);
+}
+
+const args = ["db", "push", "--db-url", process.env.DATABASE_URL, "--yes"];
+
+if (process.env.DB_MIGRATE_DRY_RUN === "true") {
+  args.push("--dry-run");
+}
+
+console.log("[db:migrate] Running Supabase migrations with explicit opt-in.");
+
+const result = spawnSync("supabase", args, {
+  stdio: "inherit",
+  shell: process.platform === "win32"
+});
+
+process.exit(result.status ?? 1);
