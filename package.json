@@ -1,0 +1,17 @@
+{
+  "name": "@nxttrack/platform",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.24.0",
+  "scripts": {
+    "build": "pnpm --filter @nxttrack/web build",
+    "dev": "pnpm --filter @nxttrack/web dev",
+    "start": "pnpm --filter @nxttrack/web start",
+    "lint": "pnpm --filter @nxttrack/web lint",
+    "typecheck": "pnpm --filter @nxttrack/web typecheck",
+    "db:migrate": "node scripts/db/migrate.mjs"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  }
+}
