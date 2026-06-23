@@ -1,8 +1,8 @@
 # Supabase Foundation
 
-Status: Phase 3 foundation only.
+Status: Phase 3 identity-boundary migration prepared, not connected to staging yet.
 
-This folder is reserved for Supabase project configuration and migrations once the staging project is confirmed.
+This folder contains Supabase migration files and project notes. Migrations are committed as source-of-truth SQL, but deployment execution waits for the approved staging Supabase project and runner command.
 
 Current decisions:
 
@@ -11,6 +11,10 @@ Current decisions:
 - Keep `SUPABASE_SECRET_KEY`, service-role style credentials, and `DATABASE_URL` server-only.
 - Add explicit `GRANT` statements in migrations for tables that must be reachable through the Data API.
 - Enable RLS on every exposed `public` table before adding access policies.
-- Do not use `raw_user_meta_data` / `user_metadata` for authorization. Role and tenant membership data belongs in trusted database records and, where needed later, app metadata maintained by server-side code.
+- Do not use `raw_user_meta_data` / `user_metadata` for authorization. Role and tenant membership data belongs in database tables or app metadata controlled by trusted server code.
 
-No migration has been committed in this phase because the Supabase staging project, connection string, and migration runner are not approved yet.
+Current migration:
+
+- `20260623222604_identity_boundary.sql` creates the identity boundary: profiles, tenants, tenant domains, tenant settings, tenant memberships, platform memberships, helper functions, explicit grants and RLS policies.
+
+The `pnpm run db:migrate` command remains a safe guardrail. It skips when `DATABASE_URL` is absent and fails intentionally when `DATABASE_URL` is present until the staging migration runner is approved.
