@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
-console.log("[db:migrate] Phase 2 scaffold: no database migrations are configured yet.");
-console.log("[db:migrate] This command is intentionally a safe no-op until Supabase staging and the migration runner are approved.");
+console.log("[db:migrate] Supabase migrations are present in the repository.");
+console.log("[db:migrate] Automatic migration execution is intentionally disabled until Supabase staging and the deployment runner are approved.");
 
 if (process.env.DATABASE_URL) {
-  console.log("[db:migrate] DATABASE_URL is present, but no schema has been created in this phase.");
+  console.error("[db:migrate] DATABASE_URL is present, but migration execution is not wired yet.");
+  console.error("[db:migrate] Approve the Supabase staging project and runner command before enabling this step.");
+  process.exit(1);
 } else {
-  console.log("[db:migrate] DATABASE_URL is not set. Skipping migration placeholder.");
+  console.log("[db:migrate] DATABASE_URL is not set. Skipping migration execution.");
 }
