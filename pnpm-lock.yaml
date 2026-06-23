@@ -975,8 +975,8 @@ snapshots:
       '@next/swc-linux-arm64-musl': 16.2.9
       '@next/swc-linux-x64-gnu': 16.2.9
       '@next/swc-linux-x64-musl': 16.2.9
-      '@next/swc-win32-arm64': 16.2.9
-      '@next/swc-win32-x64': 16.2.9
+      '@next/swc-win32-arm64-msvc': 16.2.9
+      '@next/swc-win32-x64-msvc': 16.2.9
       sharp: 0.34.5
     transitivePeerDependencies:
       - '@babel/core'
