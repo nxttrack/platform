@@ -17,6 +17,7 @@ Prepare the platform for Supabase Auth, tenant isolation, role-aware shells, and
 - Role vocabulary added for platform and tenant roles.
 - Sector terminology mapping added so swim labels can be visible without hardcoding swim-only internal model names.
 - Supabase folder created with migration guardrails.
+- Lockfile generated with pnpm 10.24.0 and verified with a frozen install.
 
 ## Explicit Non-Goals
 
