@@ -1,0 +1,46 @@
+import { createClient } from "@/lib/supabase/server";
+import {
+  identityBoundarySelects,
+  mapIdentityRowsToTrustedAuthContext,
+  type PlatformMembershipIdentityRow,
+  type ProfileIdentityRow,
+  type TenantMembershipIdentityRow
+} from "./identity-boundary";
+import { createAnonymousAuthContext, type TrustedAuthContext } from "./trusted-context";
+
+export type TrustedAuthContextOptions = {
+  activeTenantId?: string | null;
+  activeTenantSlug?: string | null;
+};
+
+export async function getTrustedAuthContext(options: TrustedAuthContextOptions = {}): Promise<TrustedAuthContext> {
+  const checkedAt = new Date().toISOString();
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error: userError
+  } = await supabase.auth.getUser();
+
+  if (userError || !user) {
+    return createAnonymousAuthContext(checkedAt);
+  }
+
+  const [profileResult, tenantMembershipsResult, platformMembershipsResult] = await Promise.all([
+    supabase.from("profiles").select(identityBoundarySelects.profile).eq("id", user.id).maybeSingle(),
+    supabase.from("tenant_memberships").select(identityBoundarySelects.tenantMemberships).eq("user_id", user.id),
+    supabase.from("platform_memberships").select(identityBoundarySelects.platformMemberships).eq("user_id", user.id)
+  ]);
+
+  return mapIdentityRowsToTrustedAuthContext({
+    user: {
+      id: user.id,
+      email: user.email ?? null
+    },
+    profile: profileResult.error ? null : (profileResult.data as ProfileIdentityRow | null),
+    tenantMemberships: tenantMembershipsResult.error ? [] : (tenantMembershipsResult.data as unknown as TenantMembershipIdentityRow[] | null),
+    platformMemberships: platformMembershipsResult.error ? [] : (platformMembershipsResult.data as PlatformMembershipIdentityRow[] | null),
+    activeTenantId: options.activeTenantId ?? null,
+    activeTenantSlug: options.activeTenantSlug ?? null,
+    checkedAt
+  });
+}
