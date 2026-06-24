@@ -44,27 +44,35 @@ export const instructorNav: NavItem[] = [
 ];
 
 export const adminNav: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/agenda", label: "Planning", icon: Calendar },
-  { href: "/admin/programs", label: "Programma's", icon: Waves },
-  { href: "/admin/stages", label: "Niveaus", icon: TrendingUp },
-  { href: "/admin/badges", label: "Badges", icon: Award },
-  { href: "/admin/groups", label: "Groepen", icon: Users },
-  { href: "/admin/sessions", label: "Lessen", icon: Calendar },
-  { href: "/admin/resources", label: "Locaties", icon: MapPin },
-  { href: "/admin/enrollments", label: "Inschrijvingen", icon: Users },
-  { href: "/admin/instructors", label: "Instructeurs", icon: User },
-  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: Award },
-  { href: "/admin/payments", label: "Betalingen", icon: CircleDollarSign },
-  { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3 },
-  { href: "/admin/berichten", label: "Berichten", icon: MessageSquare },
-  { href: "/admin/taken", label: "Taken", icon: ListChecks },
-  { href: "/admin/documenten", label: "Documenten", icon: FileText },
-  { href: "/admin/intake", label: "Intake", icon: Inbox },
-  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks },
-  { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingen", icon: CheckCircle2 },
-  { href: "/admin/slot-offers", label: "Lesplek-aanbod", icon: Send },
-  { href: "/admin/instellingen", label: "Instellingen", icon: Settings }
+  { href: "/admin", label: "Dashboard", icon: Home, section: "Overzicht" },
+  { href: "/admin/agenda", label: "Planning", icon: Calendar, section: "Overzicht" },
+
+  { href: "/admin/intake", label: "Intake", icon: Inbox, section: "Instroom" },
+  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks, section: "Instroom" },
+  { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingen", icon: CheckCircle2, section: "Instroom" },
+  { href: "/admin/slot-offers", label: "Lesplek-aanbod", icon: Send, section: "Instroom" },
+
+  { href: "/admin/programs", label: "Programma's", icon: Waves, section: "Aanbod" },
+  { href: "/admin/stages", label: "Niveaus", icon: TrendingUp, section: "Aanbod" },
+  { href: "/admin/badges", label: "Badges", icon: Award, section: "Aanbod" },
+
+  { href: "/admin/groups", label: "Groepen", icon: Users, section: "Planning" },
+  { href: "/admin/sessions", label: "Zwemlessen", icon: Calendar, section: "Planning" },
+  { href: "/admin/resources", label: "Locaties", icon: MapPin, section: "Planning" },
+  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: GraduationCap, section: "Planning" },
+
+  { href: "/admin/leerlingen", label: "Leerlingen & ouders", icon: Users, section: "Mensen" },
+  { href: "/admin/enrollments", label: "Inschrijvingen", icon: ListChecks, section: "Mensen" },
+  { href: "/admin/instructors", label: "Instructeurs", icon: User, section: "Mensen" },
+
+  { href: "/admin/berichten", label: "Berichten", icon: MessageSquare, section: "Communicatie" },
+  { href: "/admin/taken", label: "Taken", icon: ListChecks, section: "Communicatie" },
+  { href: "/admin/documenten", label: "Documenten", icon: FileText, section: "Communicatie" },
+
+  { href: "/admin/payments", label: "Betalingen", icon: CircleDollarSign, section: "Financieel & inzicht" },
+  { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3, section: "Financieel & inzicht" },
+
+  { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
 ];
 
 export const platformNav: NavItem[] = [

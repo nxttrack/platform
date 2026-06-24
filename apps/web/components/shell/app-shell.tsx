@@ -7,6 +7,7 @@ export type NavItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
   badge?: number;
+  section?: string;
 };
 
 type Props = {
@@ -31,6 +32,7 @@ export function AppShell({ brand, nav, user, children, accent = "parent", tenant
     .map((part) => part[0])
     .slice(0, 2)
     .join("");
+  const navGroups = groupNavItems(nav);
 
   return (
     <div className="flex min-h-screen">
@@ -47,20 +49,29 @@ export function AppShell({ brand, nav, user, children, accent = "parent", tenant
               <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{brand.subtitle}</p>
             </div>
           </div>
-          <nav className="flex-1 space-y-1 px-3">
-            {nav.map((item, index) => (
-              <Link
-                key={item.href}
-                className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                  index === 0 ? "bg-gradient-to-r from-primary/10 to-transparent text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-                href={item.href}
-              >
-                {index === 0 ? <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-primary" /> : null}
-                <item.icon className="h-[18px] w-[18px]" />
-                <span className="flex-1">{item.label}</span>
-                {item.badge ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{item.badge}</span> : null}
-              </Link>
+          <nav className="flex-1 space-y-4 overflow-y-auto px-3 pb-3">
+            {navGroups.map((group, groupIndex) => (
+              <div key={group.section ?? "main"} className="space-y-1">
+                {group.section ? <p className="px-3 text-[11px] font-bold uppercase text-muted-foreground">{group.section}</p> : null}
+                {group.items.map((item, itemIndex) => {
+                  const isFirstItem = groupIndex === 0 && itemIndex === 0;
+
+                  return (
+                    <Link
+                      key={item.href}
+                      className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+                        isFirstItem ? "bg-gradient-to-r from-primary/10 to-transparent text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      }`}
+                      href={item.href}
+                    >
+                      {isFirstItem ? <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-primary" /> : null}
+                      <item.icon className="h-[18px] w-[18px]" />
+                      <span className="flex-1">{item.label}</span>
+                      {item.badge ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{item.badge}</span> : null}
+                    </Link>
+                  );
+                })}
+              </div>
             ))}
           </nav>
           <div className="m-3 rounded-2xl border border-border bg-gradient-to-br from-muted to-card p-3">
@@ -106,4 +117,19 @@ export function AppShell({ brand, nav, user, children, accent = "parent", tenant
       </div>
     </div>
   );
+}
+
+function groupNavItems(nav: NavItem[]) {
+  return nav.reduce<Array<{ section: string | null; items: NavItem[] }>>((groups, item) => {
+    const section = item.section ?? null;
+    const current = groups[groups.length - 1];
+
+    if (!current || current.section !== section) {
+      groups.push({ section, items: [item] });
+      return groups;
+    }
+
+    current.items.push(item);
+    return groups;
+  }, []);
 }
