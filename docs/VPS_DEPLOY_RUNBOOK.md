@@ -81,7 +81,8 @@ Target flow from the existing workflow:
 13. Workflow updates `current` symlink atomically.
 14. Workflow restarts `SERVICE_NAME`.
 15. Workflow reloads Caddy.
-16. Workflow removes old releases beyond retention.
+16. Workflow verifies platform and default tenant health endpoints.
+17. Workflow removes old releases beyond retention.
 
 ## Pre-Deploy Checks
 
@@ -90,6 +91,7 @@ Before first staging deploy:
 - [ ] App scaffold exists.
 - [ ] `pnpm-lock.yaml` exists and is committed.
 - [ ] `pnpm build` exists and succeeds locally/CI.
+- [ ] `pnpm run release:gate` succeeds before release.
 - [ ] `pnpm run db:migrate` exists.
 - [ ] Health endpoint exists.
 - [ ] GitHub Environment `staging` variables/secrets are complete.
@@ -259,6 +261,16 @@ Check:
 - The service was restarted after the release was activated.
 
 If these files are missing, rerun the deploy after confirming `.github/workflows/deploy.yml` executes `node scripts/deploy/prepare-standalone-assets.mjs` after `pnpm build`.
+
+### Health verification fails after activation
+
+Check:
+
+- `APP_URL` is correct for the target environment.
+- `DEFAULT_TENANT_SLUG` and `TENANT_DOMAIN_SUFFIX` form a valid tenant health URL.
+- The service restarted after the `current` symlink moved.
+- Caddy points to the expected localhost port.
+- `COMMIT_SHA` is present in the shared `.env`.
 
 ### Wrong tenant/domain routing
 

@@ -59,6 +59,9 @@ BASE_PATH
 SERVICE_NAME
 RUN_DB_MIGRATIONS
 DB_MIGRATE_DRY_RUN
+SMTP_PORT
+SMTP_FROM_EMAIL
+SMTP_FROM_NAME
 ```
 
 Secrets:
@@ -76,11 +79,9 @@ Email secrets to add only when email code exists:
 
 ```txt
 SMTP_HOST
-SMTP_PORT
 SMTP_USER
 SMTP_PASS
-SMTP_FROM_EMAIL
-SMTP_FROM_NAME
+SENDGRID_API_KEY
 ```
 
 Payment secrets to add only when Mollie/iDEAL integration is approved:
@@ -172,6 +173,8 @@ Run only after app scaffold exists:
 - [ ] `systemctl restart nxttrack-staging` succeeds.
 - [ ] `caddy reload` succeeds.
 - [ ] Health endpoint returns success.
+- [ ] `pnpm run smoke:staging` passes after deploy.
+- [ ] Health endpoint commit matches the pushed commit.
 - [ ] Old releases remain available for rollback.
 
 ## Acceptance Criteria

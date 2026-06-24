@@ -49,6 +49,13 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
       DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ vars.SMTP_PORT }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      SMTP_FROM_EMAIL: ${{ vars.SMTP_FROM_EMAIL }}
+      SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
 
     steps:
       - name: Checkout
@@ -113,6 +120,13 @@ jobs:
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$SUPABASE_SERVICE_ROLE_KEY"
             printf 'RUN_DB_MIGRATIONS=%s\n' "$RUN_DB_MIGRATIONS"
             printf 'DB_MIGRATE_DRY_RUN=%s\n' "$DB_MIGRATE_DRY_RUN"
+            printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
+            printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
+            printf 'SMTP_USER=%s\n' "$SMTP_USER"
+            printf 'SMTP_PASS=%s\n' "$SMTP_PASS"
+            printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
+            printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
+            printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
           } > "$BASE_DIR/shared/.env"
 
           chmod 640 "$BASE_DIR/shared/.env"
@@ -157,6 +171,16 @@ jobs:
 
           sudo systemctl restart "$SERVICE_NAME"
           sudo systemctl reload caddy
+
+      - name: Verify health
+        run: |
+          set -euo pipefail
+
+          curl -fsS "$APP_URL/api/health"
+
+          if [ -n "${DEFAULT_TENANT_SLUG:-}" ] && [ -n "${TENANT_DOMAIN_SUFFIX:-}" ]; then
+            curl -fsS "https://${DEFAULT_TENANT_SLUG}.${TENANT_DOMAIN_SUFFIX}/api/health"
+          fi
 
       - name: Cleanup old releases
         run: |

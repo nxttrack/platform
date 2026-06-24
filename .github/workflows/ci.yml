@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - main
+      - staging
+      - production
 
 permissions:
   contents: read
@@ -43,6 +45,9 @@ jobs:
 
       - name: Audit migrations
         run: pnpm run db:audit
+
+      - name: Audit release readiness
+        run: pnpm run security:audit
 
       - name: Check migration command
         run: pnpm run db:migrate
