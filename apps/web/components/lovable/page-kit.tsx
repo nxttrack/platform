@@ -141,7 +141,7 @@ export function FinalCTA() {
         <div className="grid gap-6 md:grid-cols-[1.4fr_auto] md:items-center">
           <div>
             <h2 className="text-2xl font-bold md:text-3xl">Phase 2 blijft bewust klein.</h2>
-            <p className="mt-2 text-sm text-white/70">Na deze scaffold volgen auth, tenants en echte domeinmodellen pas in Phase 3 en verder.</p>
+            <p className="mt-2 text-sm text-white/70">Auth, tenants en shell-boundaries worden in Phase 2 vastgezet; echte domeinmodellen volgen daarna.</p>
           </div>
           <Link className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-bold text-slate-900" href="/platform">
             Platform shell <ArrowRight className="h-4 w-4" />

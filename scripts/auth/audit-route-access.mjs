@@ -8,31 +8,43 @@ const shellContracts = [
     shell: "parent",
     prefix: "/parent",
     routePath: "apps/web/app/(parent)/parent",
-    metadataFiles: ["layout.tsx"]
+    metadataFiles: ["layout.tsx"],
+    boundaryFile: "layout.tsx"
   },
   {
     shell: "instructor",
     prefix: "/instructor",
     routePath: "apps/web/app/(instructor)/instructor",
-    metadataFiles: ["layout.tsx"]
+    metadataFiles: ["layout.tsx"],
+    boundaryFile: "layout.tsx"
   },
   {
     shell: "tenant_admin",
     prefix: "/admin",
     routePath: "apps/web/app/(tenant-admin)/admin",
-    metadataFiles: ["layout.tsx"]
+    metadataFiles: ["layout.tsx"],
+    boundaryFile: "layout.tsx"
   },
   {
     shell: "platform_admin",
     prefix: "/platform",
     routePath: "apps/web/app/(platform-admin)/platform",
-    metadataFiles: ["layout.tsx", "page.tsx"]
+    metadataFiles: ["layout.tsx"],
+    boundaryFile: "layout.tsx"
   }
 ];
 
 const errors = [];
 const accessSource = readProjectFile("apps/web/lib/auth/access.ts");
 const guardSource = readProjectFile("apps/web/lib/auth/guard.ts");
+const requiredAuthBoundaryRoutes = [
+  "apps/web/app/(tenant-public)/login/page.tsx",
+  "apps/web/app/(tenant-public)/login/actions.ts",
+  "apps/web/app/(auth-boundary)/auth/no-access/page.tsx",
+  "apps/web/app/(auth-boundary)/auth/redirect/page.tsx",
+  "apps/web/app/(auth-boundary)/auth/tenant-switch/page.tsx",
+  "apps/web/app/(auth-boundary)/auth/tenant-switch/actions.ts"
+];
 
 for (const contract of shellContracts) {
   assertContains(accessSource, `shell: "${contract.shell}"`, `Missing shell "${contract.shell}" in privateShellAccess.`);
@@ -60,6 +72,17 @@ for (const contract of shellContracts) {
 
   if (!metadataFile) {
     errors.push(`Private shell "${contract.shell}" must export privateRouteMetadata from one of: ${contract.metadataFiles.join(", ")}`);
+  }
+
+  const boundarySource = readProjectFile(`${contract.routePath}/${contract.boundaryFile}`);
+
+  assertContains(boundarySource, "PrivateShellBoundary", `Private shell "${contract.shell}" must use PrivateShellBoundary in ${contract.boundaryFile}.`);
+  assertContains(boundarySource, `shell="${contract.shell}"`, `Private shell "${contract.shell}" must pass its shell key to PrivateShellBoundary.`);
+}
+
+for (const routePath of requiredAuthBoundaryRoutes) {
+  if (!existsSync(join(root, routePath))) {
+    errors.push(`Missing auth boundary route: ${routePath}`);
   }
 }
 

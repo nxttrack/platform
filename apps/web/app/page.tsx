@@ -15,8 +15,8 @@ const items = [
   },
   {
     icon: ShieldCheck,
-    title: "Nog geen productdata",
-    description: "Auth, Supabase, betalingen en echte tenantdata starten pas in latere fases."
+    title: "Auth-boundary eerst",
+    description: "Toegang, tenants en shells worden vastgezet voordat productdata en betalingen live gaan."
   }
 ];
 
