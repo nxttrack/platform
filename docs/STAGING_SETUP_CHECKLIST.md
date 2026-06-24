@@ -64,6 +64,15 @@ SMTP_FROM_EMAIL
 SMTP_FROM_NAME
 ```
 
+Required values for staging database bootstrapping:
+
+```txt
+RUN_DB_MIGRATIONS=true
+DB_MIGRATE_DRY_RUN=false
+```
+
+If `RUN_DB_MIGRATIONS` is false or missing, the app can deploy while Supabase still has no NXTTRACK tables. Staging deploys now force migrations on the `staging` branch, but the environment still needs a valid `DATABASE_URL` secret.
+
 Secrets:
 
 ```txt

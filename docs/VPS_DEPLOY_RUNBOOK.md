@@ -241,6 +241,16 @@ Check:
 - RLS/function/view changes follow security guidelines.
 - Do not retry blindly after repeated failures; inspect state first.
 
+### Supabase has no NXTTRACK tables after deploy
+
+Check:
+
+- Staging `RUN_DB_MIGRATIONS` must be `true`.
+- Staging `DATABASE_URL` must point to the intended Supabase staging Postgres database.
+- The deploy log must say `Running Supabase migrations for target=staging`, not `Skipping migration execution`.
+- The runner must have the pinned Supabase CLI available through the repository install.
+- Re-run the staging workflow after fixing variables/secrets; the migrations are idempotent through Supabase migration history.
+
 ### Caddy returns 502
 
 Check:
