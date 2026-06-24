@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorStudentsPage as InstructorStudentsPortalPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
-export default function InstructorStudentsPage() {
-  return <RoutePlaceholder kicker="Instructor shell" title="Leerlingen foundation" description="Leerlingdossiers en voortgangsbeoordeling worden in Phase 7 data-backed." items={["Dossiers", "Voortgang", "Notities", "Aanwezigheid"]} />;
+export default async function InstructorStudentsPage() {
+  const snapshot = await getInstructorPortalSnapshot();
+
+  return <InstructorStudentsPortalPage snapshot={snapshot} />;
 }

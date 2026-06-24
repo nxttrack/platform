@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorGroupsPage as InstructorGroupsPortalPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
-export default function InstructorGroupsPage() {
-  return <RoutePlaceholder kicker="Instructor shell" title="Mijn groepen foundation" description="Groepslijsten worden in Phase 7 gekoppeld aan echte sessies en deelnemers." items={["Groepen", "Roosters", "Deelnemers", "Aandachtspunten"]} />;
+export default async function InstructorGroupsPage() {
+  const snapshot = await getInstructorPortalSnapshot();
+
+  return <InstructorGroupsPortalPage snapshot={snapshot} />;
 }

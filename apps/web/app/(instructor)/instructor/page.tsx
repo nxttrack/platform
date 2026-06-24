@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorDashboardPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
-export default function InstructorHomePage() {
-  return <RoutePlaceholder kicker="Instructor shell" title="Vandaag skeleton" description="Tablet-first instructeur shell met agenda-routebasis, nog zonder toegewezen sessies." />;
+export default async function InstructorHomePage() {
+  const snapshot = await getInstructorPortalSnapshot();
+
+  return <InstructorDashboardPage snapshot={snapshot} />;
 }

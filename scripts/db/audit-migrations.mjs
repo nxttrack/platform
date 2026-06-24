@@ -35,6 +35,7 @@ checkCoreDomainContracts(normalizedMigrationSql.join(" "));
 checkPublicTenantIntakeContracts(normalizedMigrationSql.join(" "));
 checkPlacementWorkflowContracts(normalizedMigrationSql.join(" "));
 checkParentPortalContracts(normalizedMigrationSql.join(" "));
+checkInstructorPortalContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -363,6 +364,70 @@ function checkParentPortalContracts(sql) {
 
   if (!/create\s+policy\s+["']?parents\s+can\s+insert\s+catch-up\s+requests[\s\S]*?on\s+public\.lesson_catch_up_requests[\s\S]*?for\s+insert[\s\S]*?to\s+authenticated[\s\S]*?with\s+check[\s\S]*?current_user_can_request_catch_up[\s\S]*?;/.test(sql)) {
     failures.push("Phase 6 parent portal contract: lesson_catch_up_requests must use current_user_can_request_catch_up in its INSERT policy.");
+  }
+}
+
+function checkInstructorPortalContracts(sql) {
+  const requiredPhase7Tables = ["session_attendance", "instructor_student_notes"];
+
+  for (const table of requiredPhase7Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 7 instructor portal contract is missing public.${table}.`);
+    }
+
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const insertGrantPattern = new RegExp(`grant\\s+(?:select,\\s*)?insert[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?update[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const insertPolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+insert[\\s\\S]*?to\\s+authenticated[\\s\\S]*?with\\s+check[\\s\\S]*?current_user_can_manage_instruction[\\s\\S]*?;`);
+    const updatePolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+update[\\s\\S]*?to\\s+authenticated[\\s\\S]*?using[\\s\\S]*?current_user_can_manage_instruction[\\s\\S]*?with\\s+check[\\s\\S]*?current_user_can_manage_instruction[\\s\\S]*?;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 7 instructor portal contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 7 instructor portal contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 7 instructor portal contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+
+    if (!insertPolicyPattern.test(sql)) {
+      failures.push(`Phase 7 instructor portal contract: public.${table} is missing an instructor INSERT policy.`);
+    }
+
+    if (!updatePolicyPattern.test(sql)) {
+      failures.push(`Phase 7 instructor portal contract: public.${table} is missing an instructor UPDATE policy.`);
+    }
+  }
+
+  for (const functionName of ["current_user_can_manage_instruction"]) {
+    if (!new RegExp(`create\\s+or\\s+replace\\s+function\\s+app_private\\.${functionName}\\b`).test(sql)) {
+      failures.push(`Phase 7 instructor portal contract is missing app_private.${functionName}.`);
+    }
+  }
+
+  const progressInsertGrantPattern = /grant\s+insert\s*\([^)]*tenant_id[^)]*enrollment_id[^)]*stage_id[^)]*status[^)]*score[^)]*note[^)]*assessed_at[^)]*\)\s+on\s+(?:table\s+)?public\.progress\s+to\s+authenticated\s*;/;
+  const progressUpdateGrantPattern = /grant\s+update\s*\([^)]*stage_id[^)]*status[^)]*score[^)]*note[^)]*assessed_at[^)]*\)\s+on\s+(?:table\s+)?public\.progress\s+to\s+authenticated\s*;/;
+  const progressInsertPolicyPattern = /create\s+policy\s+["']?instructors\s+can\s+insert\s+progress[\s\S]*?on\s+public\.progress[\s\S]*?for\s+insert[\s\S]*?to\s+authenticated[\s\S]*?with\s+check[\s\S]*?current_user_can_manage_instruction[\s\S]*?;/;
+  const progressUpdatePolicyPattern = /create\s+policy\s+["']?instructors\s+can\s+update\s+progress[\s\S]*?on\s+public\.progress[\s\S]*?for\s+update[\s\S]*?to\s+authenticated[\s\S]*?using[\s\S]*?current_user_can_manage_instruction[\s\S]*?with\s+check[\s\S]*?current_user_can_manage_instruction[\s\S]*?;/;
+
+  if (!progressInsertGrantPattern.test(sql)) {
+    failures.push("Phase 7 instructor portal contract: public.progress is missing a column-limited authenticated INSERT grant.");
+  }
+
+  if (!progressUpdateGrantPattern.test(sql)) {
+    failures.push("Phase 7 instructor portal contract: public.progress is missing a column-limited authenticated UPDATE grant.");
+  }
+
+  if (!progressInsertPolicyPattern.test(sql)) {
+    failures.push("Phase 7 instructor portal contract: public.progress is missing an instructor INSERT policy.");
+  }
+
+  if (!progressUpdatePolicyPattern.test(sql)) {
+    failures.push("Phase 7 instructor portal contract: public.progress is missing an instructor UPDATE policy.");
   }
 }
 
