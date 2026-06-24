@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import {
   identityBoundarySelects,
   mapIdentityRowsToTrustedAuthContext,
@@ -15,6 +16,11 @@ export type TrustedAuthContextOptions = {
 
 export async function getTrustedAuthContext(options: TrustedAuthContextOptions = {}): Promise<TrustedAuthContext> {
   const checkedAt = new Date().toISOString();
+
+  if (!getSupabasePublicConfig()) {
+    return createAnonymousAuthContext(checkedAt);
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
