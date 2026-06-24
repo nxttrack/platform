@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentProgressPage as ParentProgressPortalPage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentProgressPage() {
-  return <RoutePlaceholder kicker="Voortgang" title="Progress skeleton" description="Progress modules, scores en badges worden pas na instructor workflow actief." items={["Progress modules", "Scoring labels", "Badges", "Diplomas"]} />;
+export default async function ParentProgressPage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentProgressPortalPage snapshot={snapshot} />;
 }

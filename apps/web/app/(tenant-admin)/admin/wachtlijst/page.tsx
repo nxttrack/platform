@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminWaitlistWorkflowPage } from "@/components/placement/admin-placement-pages";
+import { getPlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
 
-export default function AdminWaitlistPage() {
-  return <RoutePlaceholder kicker="Wachtlijst" title="Waitlist skeleton" description="Smart waitlist, placement assistant en slot offers starten later." items={["Intake submissions", "Stage recommendation", "Placement score", "Slot offers"]} />;
+export default async function AdminWaitlistPage() {
+  const snapshot = await getPlacementWorkflowSnapshot();
+
+  return <AdminWaitlistWorkflowPage snapshot={snapshot} />;
 }

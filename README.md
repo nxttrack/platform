@@ -2,7 +2,7 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: documentation and foundation only. Do not build product features until the product owner approves the canon, infrastructure plan, Lovable UI audit, and implementation roadmap.
+Current working mode: staging-first rebuild. Product modules through Phase 12 exist on staging; Phase 13 focuses on hardening, release checks and production-promotion readiness.
 
 ## Source of truth
 
@@ -13,12 +13,15 @@ Current working mode: documentation and foundation only. Do not build product fe
 
 ## Current phase
 
-Phase 0 and Phase 1 are active:
+Phase 13 is active:
 
-- Phase 0: lock repo structure, environment/secrets strategy, migration approach, and staging deploy flow.
-- Phase 1: audit Lovable UI before any UI transfer or consolidation.
+- Security review and release-readiness audit.
+- RLS/migration contract checks.
+- Staging smoke tests.
+- VPS/Caddy/systemd/GitHub runner deployment checks.
+- Staging release and production promotion checklist.
 
-No product features, database schema changes, Supabase integration work, auth implementation, payment implementation, or UI rewrites should happen in this phase.
+Production remains gated by explicit approval.
 
 ## Canon and planning docs
 
@@ -30,6 +33,7 @@ No product features, database schema changes, Supabase integration work, auth im
 
 - [Phase 0 - Repo and Infra](docs/PHASE_0_REPO_INFRA.md)
 - [Phase 1 - Lovable UI Audit](docs/PHASE_1_LOVABLE_UI_AUDIT.md)
+- [Phase 13 - Hardening and Production Launch](docs/PHASE_13_HARDENING_PRODUCTION_LAUNCH.md)
 
 ## Operational prep docs
 
@@ -43,3 +47,10 @@ No product features, database schema changes, Supabase integration work, auth im
 The repository already contains `.github/workflows/deploy.yml`. It targets `staging` and `production` branches using a self-hosted GitHub runner, Caddy, systemd, shared `.env` files, release directories, and symlink activation.
 
 The staging environment is the only first target. Production remains a future target and should not be treated as launch-ready until explicitly approved.
+
+## Release checks
+
+```bash
+pnpm run release:gate
+pnpm run smoke:staging
+```

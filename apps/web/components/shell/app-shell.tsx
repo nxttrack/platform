@@ -1,4 +1,4 @@
-import { Bell, Search, Waves } from "lucide-react";
+import { Bell, Repeat2, Search, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
 
@@ -15,6 +15,7 @@ type Props = {
   user: { name: string; role: string };
   children: ReactNode;
   accent?: "parent" | "instructor" | "admin" | "platform";
+  tenantSwitcherHref?: string | null;
 };
 
 const accentStyles = {
@@ -24,7 +25,7 @@ const accentStyles = {
   platform: "from-slate-900 to-blue-800"
 };
 
-export function AppShell({ brand, nav, user, children, accent = "parent" }: Props) {
+export function AppShell({ brand, nav, user, children, accent = "parent", tenantSwitcherHref }: Props) {
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
@@ -88,6 +89,12 @@ export function AppShell({ brand, nav, user, children, accent = "parent" }: Prop
               <Search className="h-4 w-4" />
               <span>Zoeken</span>
             </div>
+            {tenantSwitcherHref ? (
+              <Link className="hidden h-9 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground lg:flex" href={tenantSwitcherHref}>
+                <Repeat2 className="h-4 w-4" />
+                <span>Tenant wisselen</span>
+              </Link>
+            ) : null}
             <button className="relative rounded-xl border border-border bg-background p-2 hover:bg-muted" type="button">
               <Bell className="h-4 w-4" />
               <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">0</span>

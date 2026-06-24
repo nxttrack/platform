@@ -76,11 +76,13 @@ Target flow from the existing workflow:
 8. Workflow symlinks `.env` and `.env.production` into release.
 9. Workflow runs `pnpm install --frozen-lockfile`.
 10. Workflow runs `pnpm build`.
-11. Workflow runs `pnpm run db:migrate`.
-12. Workflow updates `current` symlink atomically.
-13. Workflow restarts `SERVICE_NAME`.
-14. Workflow reloads Caddy.
-15. Workflow removes old releases beyond retention.
+11. Workflow copies `apps/web/.next/static` and `apps/web/public` into the standalone app directory.
+12. Workflow runs `pnpm run db:migrate`.
+13. Workflow updates `current` symlink atomically.
+14. Workflow restarts `SERVICE_NAME`.
+15. Workflow reloads Caddy.
+16. Workflow verifies platform and default tenant health endpoints.
+17. Workflow removes old releases beyond retention.
 
 ## Pre-Deploy Checks
 
@@ -89,6 +91,7 @@ Before first staging deploy:
 - [ ] App scaffold exists.
 - [ ] `pnpm-lock.yaml` exists and is committed.
 - [ ] `pnpm build` exists and succeeds locally/CI.
+- [ ] `pnpm run release:gate` succeeds before release.
 - [ ] `pnpm run db:migrate` exists.
 - [ ] Health endpoint exists.
 - [ ] GitHub Environment `staging` variables/secrets are complete.
@@ -238,6 +241,16 @@ Check:
 - RLS/function/view changes follow security guidelines.
 - Do not retry blindly after repeated failures; inspect state first.
 
+### Supabase has no NXTTRACK tables after deploy
+
+Check:
+
+- Staging `RUN_DB_MIGRATIONS` must be `true`.
+- Staging `DATABASE_URL` must point to the intended Supabase staging Postgres database.
+- The deploy log must say `Running Supabase migrations for target=staging`, not `Skipping migration execution`.
+- The runner must have the pinned Supabase CLI available through the repository install.
+- Re-run the staging workflow after fixing variables/secrets; the migrations are idempotent through Supabase migration history.
+
 ### Caddy returns 502
 
 Check:
@@ -247,6 +260,27 @@ Check:
 - Caddy points to correct port.
 - Firewall is not relevant for localhost reverse proxy.
 - App crashed during startup due to missing env.
+
+### HTML loads without styling
+
+Check:
+
+- The release contains `apps/web/.next/standalone/apps/web/.next/static`.
+- The release contains `apps/web/.next/standalone/apps/web/public`.
+- The deploy log includes `Prepared standalone static assets`.
+- The service was restarted after the release was activated.
+
+If these files are missing, rerun the deploy after confirming `.github/workflows/deploy.yml` executes `node scripts/deploy/prepare-standalone-assets.mjs` after `pnpm build`.
+
+### Health verification fails after activation
+
+Check:
+
+- `APP_URL` is correct for the target environment.
+- `DEFAULT_TENANT_SLUG` and `TENANT_DOMAIN_SUFFIX` form a valid tenant health URL.
+- The service restarted after the `current` symlink moved.
+- Caddy points to the expected localhost port.
+- `COMMIT_SHA` is present in the shared `.env`.
 
 ### Wrong tenant/domain routing
 

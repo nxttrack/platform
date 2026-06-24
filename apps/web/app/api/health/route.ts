@@ -6,6 +6,7 @@ export function GET() {
   return NextResponse.json({
     ok: true,
     app: "nxttrack-platform",
-    env: process.env.APP_ENV ?? "development"
+    env: process.env.APP_ENV ?? "development",
+    commit: process.env.COMMIT_SHA ?? null
   });
 }

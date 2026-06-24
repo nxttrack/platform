@@ -1,7 +1,9 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorStudentDetailPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
 export default async function InstructorStudentPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const snapshot = await getInstructorPortalSnapshot();
 
-  return <RoutePlaceholder kicker="Student skeleton" title={`Student ${id}`} description="Student assessment route voor progress, notes en badges." items={["Progress scoring", "Internal notes", "Parent-visible notes", "Badge action"]} />;
+  return <InstructorStudentDetailPage participantId={id} snapshot={snapshot} />;
 }

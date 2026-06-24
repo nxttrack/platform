@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 
-import { AppShell } from "@/components/shell/app-shell";
+import { PrivateShellBoundary } from "@/components/shell/private-shell-boundary";
 import { privateRouteMetadata } from "@/lib/auth/access";
 import { parentNav } from "@/lib/navigation";
 
 export const metadata: Metadata = privateRouteMetadata;
+export const dynamic = "force-dynamic";
 
 export default function ParentLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppShell brand={{ title: "Zwemschool Demo", subtitle: "Ouder portaal" }} nav={parentNav} user={{ name: "Lisa de Jong", role: "Ouder" }} accent="parent">
+    <PrivateShellBoundary shell="parent" nav={parentNav} accent="parent">
       {children}
-    </AppShell>
+    </PrivateShellBoundary>
   );
 }

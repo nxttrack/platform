@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentDashboardPage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentHomePage() {
-  return <RoutePlaceholder kicker="Parent shell" title="Parent dashboard skeleton" description="Ouderportaal routebasis met Lovable AppShell-ritme, nog zonder family/enrollment data." />;
+export default async function ParentHomePage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentDashboardPage snapshot={snapshot} />;
 }

@@ -4,16 +4,22 @@
   "private": true,
   "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "build": "pnpm --filter @nxttrack/web build",
-    "dev": "pnpm --filter @nxttrack/web dev",
-    "start": "pnpm --filter @nxttrack/web start",
-    "lint": "pnpm --filter @nxttrack/web lint",
-    "typecheck": "pnpm --filter @nxttrack/web typecheck",
+    "build": "corepack pnpm --filter @nxttrack/web build",
+    "dev": "corepack pnpm --filter @nxttrack/web dev",
+    "start": "corepack pnpm --filter @nxttrack/web start",
+    "lint": "corepack pnpm --filter @nxttrack/web lint",
+    "typecheck": "corepack pnpm --filter @nxttrack/web typecheck",
     "auth:audit": "node scripts/auth/audit-route-access.mjs && node scripts/auth/audit-auth-boundary.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
-    "db:migrate": "node scripts/db/migrate.mjs"
+    "db:migrate": "node scripts/db/migrate.mjs",
+    "security:audit": "node scripts/security/audit-release-readiness.mjs",
+    "smoke:staging": "node scripts/smoke/staging-smoke.mjs",
+    "release:gate": "node scripts/release/phase13-gate.mjs"
   },
   "engines": {
     "node": ">=20.19.0"
+  },
+  "devDependencies": {
+    "supabase": "2.107.0"
   }
 }

@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentLessonsPage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentLessonsPage() {
-  return <RoutePlaceholder kicker="Mijn lessen" title="Lessons skeleton" description="Sessions, cancellations en catch-up credits komen later." items={["Sessions", "Attendance", "Catch-up credits", "Cancellation policy"]} />;
+export default async function ParentLessonsRoutePage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentLessonsPage snapshot={snapshot} />;
 }

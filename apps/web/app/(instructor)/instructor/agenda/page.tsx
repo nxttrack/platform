@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorAgendaPage as InstructorAgendaPortalPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
-export default function InstructorAgendaPage() {
-  return <RoutePlaceholder kicker="Instructor agenda" title="Agenda skeleton" description="Assigned sessions en group links komen in Phase 8." items={["Assigned sessions", "Group roster", "Attendance", "Assessment"]} />;
+export default async function InstructorAgendaPage() {
+  const snapshot = await getInstructorPortalSnapshot();
+
+  return <InstructorAgendaPortalPage snapshot={snapshot} />;
 }

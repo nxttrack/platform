@@ -1,0 +1,341 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
+import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { createClient } from "@/lib/supabase/server";
+
+const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
+
+export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const intakeId = requiredString(formData, "intake_submission_id");
+  const intake = await singleRow<{
+    id: string;
+    program_id: string;
+    preferred_days: string[];
+    preferred_time_windows: string[];
+    notes: string | null;
+  }>(
+    supabase
+      .from("intake_submissions")
+      .select("id, program_id, preferred_days, preferred_time_windows, notes")
+      .eq("id", intakeId)
+      .eq("tenant_id", tenantId)
+      .single()
+  );
+
+  await throwOnError(
+    supabase.from("waitlist_entries").upsert(
+      {
+        tenant_id: tenantId,
+        intake_submission_id: intake.id,
+        program_id: intake.program_id,
+        recommended_stage_id: optionalString(formData, "recommended_stage_id"),
+        status: "queued",
+        priority_date: optionalString(formData, "priority_date") ?? todayInput(),
+        preferred_days: intake.preferred_days ?? [],
+        preferred_time_windows: intake.preferred_time_windows ?? [],
+        source: "intake",
+        notes: optionalString(formData, "notes") ?? intake.notes
+      },
+      { onConflict: "intake_submission_id" }
+    )
+  );
+
+  await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", intake.id).eq("tenant_id", tenantId));
+  revalidatePlacementWorkflow();
+}
+
+export async function createPlacementSuggestionAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const waitlistEntryId = requiredString(formData, "waitlist_entry_id");
+  const groupId = requiredString(formData, "group_id");
+
+  const waitlistEntry = await singleRow<{
+    id: string;
+    intake_submission_id: string | null;
+    program_id: string;
+    recommended_stage_id: string | null;
+    preferred_days: string[];
+    preferred_time_windows: string[];
+  }>(
+    supabase
+      .from("waitlist_entries")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, preferred_days, preferred_time_windows")
+      .eq("id", waitlistEntryId)
+      .eq("tenant_id", tenantId)
+      .single()
+  );
+  const group = await singleRow<{ id: string; program_id: string; stage_id: string; resource_id: string | null; weekday: number; capacity: number; status: string }>(
+    supabase.from("groups").select("id, program_id, stage_id, resource_id, weekday, capacity, status").eq("id", groupId).eq("tenant_id", tenantId).single()
+  );
+
+  if (group.status !== "active") {
+    throw new Error("Deze groep is niet actief.");
+  }
+
+  if (group.program_id !== waitlistEntry.program_id) {
+    throw new Error("Deze groep hoort niet bij het gekozen programma.");
+  }
+
+  const resource = group.resource_id
+    ? await maybeRow<{ id: string; capacity: number }>(supabase.from("resources").select("id, capacity").eq("id", group.resource_id).eq("tenant_id", tenantId).maybeSingle())
+    : null;
+  const memberships = await rows<{ id: string; status: string; ends_on: string | null }>(
+    supabase.from("group_memberships").select("id, status, ends_on").eq("group_id", group.id).eq("tenant_id", tenantId)
+  );
+  const today = todayInput();
+  const activeMemberships = memberships.filter((membership) => ["planned", "active"].includes(membership.status) && (!membership.ends_on || membership.ends_on >= today)).length;
+  const capacityLimit = Math.min(group.capacity, resource?.capacity ?? group.capacity);
+  const availableSpots = Math.max(0, capacityLimit - activeMemberships);
+
+  if (availableSpots <= 0) {
+    throw new Error("Deze groep heeft geen beschikbare capaciteit.");
+  }
+
+  const preferredWeekday = weekdayToPreference(group.weekday);
+  const dayMatch = waitlistEntry.preferred_days.includes(preferredWeekday);
+  const stageMatch = !waitlistEntry.recommended_stage_id || waitlistEntry.recommended_stage_id === group.stage_id;
+  const score = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, availableSpots * 2));
+
+  await throwOnError(
+    supabase.from("placement_suggestions").insert({
+      tenant_id: tenantId,
+      waitlist_entry_id: waitlistEntry.id,
+      intake_submission_id: waitlistEntry.intake_submission_id,
+      program_id: waitlistEntry.program_id,
+      stage_id: group.stage_id,
+      group_id: group.id,
+      resource_id: group.resource_id,
+      score,
+      capacity_snapshot: {
+        group_capacity: group.capacity,
+        resource_capacity: resource?.capacity ?? null,
+        capacity_limit: capacityLimit,
+        active_memberships: activeMemberships,
+        available_spots: availableSpots
+      },
+      rationale: optionalString(formData, "rationale") ?? `Capaciteit beschikbaar (${availableSpots} plek${availableSpots === 1 ? "" : "ken"}).${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`,
+      status: "suggested"
+    })
+  );
+
+  await throwOnError(supabase.from("waitlist_entries").update({ status: "matched" }).eq("id", waitlistEntry.id).eq("tenant_id", tenantId));
+
+  if (waitlistEntry.intake_submission_id) {
+    await throwOnError(supabase.from("intake_submissions").update({ status: "matched" }).eq("id", waitlistEntry.intake_submission_id).eq("tenant_id", tenantId));
+  }
+
+  revalidatePlacementWorkflow();
+}
+
+export async function rejectPlacementSuggestionAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const suggestionId = requiredString(formData, "placement_suggestion_id");
+  const suggestion = await singleRow<{ id: string; waitlist_entry_id: string; intake_submission_id: string | null }>(
+    supabase.from("placement_suggestions").select("id, waitlist_entry_id, intake_submission_id").eq("id", suggestionId).eq("tenant_id", tenantId).single()
+  );
+
+  await throwOnError(supabase.from("placement_suggestions").update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
+  await throwOnError(supabase.from("waitlist_entries").update({ status: "queued" }).eq("id", suggestion.waitlist_entry_id).eq("tenant_id", tenantId));
+
+  if (suggestion.intake_submission_id) {
+    await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", suggestion.intake_submission_id).eq("tenant_id", tenantId));
+  }
+
+  revalidatePlacementWorkflow();
+}
+
+export async function approvePlacementSuggestionAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const suggestionId = requiredString(formData, "placement_suggestion_id");
+  const suggestion = await singleRow<{
+    id: string;
+    waitlist_entry_id: string;
+    intake_submission_id: string | null;
+    program_id: string;
+    stage_id: string | null;
+    group_id: string;
+  }>(
+    supabase
+      .from("placement_suggestions")
+      .select("id, waitlist_entry_id, intake_submission_id, program_id, stage_id, group_id")
+      .eq("id", suggestionId)
+      .eq("tenant_id", tenantId)
+      .single()
+  );
+  const token = crypto.randomUUID().replaceAll("-", "");
+  const existingOffer = await maybeRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestion.id).eq("tenant_id", tenantId).maybeSingle());
+
+  if (existingOffer) {
+    await throwOnError(
+      supabase
+        .from("slot_offers")
+        .update({
+          offer_token: token,
+          status: "sent",
+          sent_at: new Date().toISOString(),
+          expires_at: expiresAt(14),
+          parent_responded_at: null,
+          parent_response_note: null
+        })
+        .eq("id", existingOffer.id)
+        .eq("tenant_id", tenantId)
+    );
+  } else {
+    await throwOnError(
+      supabase.from("slot_offers").insert({
+        tenant_id: tenantId,
+        placement_suggestion_id: suggestion.id,
+        waitlist_entry_id: suggestion.waitlist_entry_id,
+        intake_submission_id: suggestion.intake_submission_id,
+        program_id: suggestion.program_id,
+        stage_id: suggestion.stage_id,
+        group_id: suggestion.group_id,
+        offer_token: token,
+        status: "sent",
+        expires_at: expiresAt(14)
+      })
+    );
+  }
+
+  await throwOnError(supabase.from("placement_suggestions").update({ status: "offered", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
+  await throwOnError(supabase.from("waitlist_entries").update({ status: "offered" }).eq("id", suggestion.waitlist_entry_id).eq("tenant_id", tenantId));
+
+  if (suggestion.intake_submission_id) {
+    await throwOnError(supabase.from("intake_submissions").update({ status: "slot_offered" }).eq("id", suggestion.intake_submission_id).eq("tenant_id", tenantId));
+  }
+
+  await maybeInsertEvent(supabase, tenantId, suggestion.id, "sent", "Slot offer sent from admin approval.");
+  revalidatePlacementWorkflow();
+}
+
+export async function cancelSlotOfferAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const offerId = requiredString(formData, "slot_offer_id");
+
+  await throwOnError(supabase.from("slot_offers").update({ status: "cancelled" }).eq("id", offerId).eq("tenant_id", tenantId));
+  revalidatePlacementWorkflow();
+}
+
+async function requireTenantWriter() {
+  const selection = await getActiveTenantSelection();
+  const context = await getTrustedAuthContext(selection);
+
+  if (context.status !== "authenticated" || !context.activeTenant) {
+    throw new Error("Geen actieve tenant gevonden.");
+  }
+
+  const canWrite = context.activeTenant.roles.some((role) => tenantWriteRoles.includes(role as (typeof tenantWriteRoles)[number]));
+
+  if (!canWrite) {
+    throw new Error("Je hebt geen rechten om deze tenantdata te wijzigen.");
+  }
+
+  if (!getSupabasePublicConfig()) {
+    throw new Error("Supabase is niet geconfigureerd.");
+  }
+
+  return {
+    supabase: await createClient(),
+    tenantId: context.activeTenant.tenantId
+  };
+}
+
+async function maybeInsertEvent(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, suggestionId: string, eventType: string, note: string) {
+  const offer = await maybeRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestionId).eq("tenant_id", tenantId).maybeSingle());
+
+  if (offer) {
+    await throwOnError(supabase.from("slot_offer_events").insert({ tenant_id: tenantId, slot_offer_id: offer.id, event_type: eventType, note }));
+  }
+}
+
+function revalidatePlacementWorkflow() {
+  for (const path of ["/admin/intake", "/admin/wachtlijst", "/admin/plaatsingsvoorstellen", "/admin/slot-offers", "/admin/enrollments", "/admin/leerlingen"]) {
+    revalidatePath(path);
+  }
+}
+
+async function throwOnError(builder: PromiseLike<{ error: { message: string } | null }>) {
+  const { error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+async function singleRow<Row>(builder: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<Row> {
+  const { data, error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Record niet gevonden.");
+  }
+
+  return data as Row;
+}
+
+async function maybeRow<Row>(builder: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<Row | null> {
+  const { data, error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? (data as Row) : null;
+}
+
+async function rows<Row>(builder: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<Row[]> {
+  const { data, error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Array.isArray(data) ? (data as Row[]) : [];
+}
+
+function requiredString(formData: FormData, key: string) {
+  const value = optionalString(formData, key);
+
+  if (!value) {
+    throw new Error(`${key} is verplicht.`);
+  }
+
+  return value;
+}
+
+function optionalString(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  return trimmed === "" ? null : trimmed;
+}
+
+function todayInput() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function expiresAt(days: number) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+
+  return date.toISOString();
+}
+
+function weekdayToPreference(weekday: number) {
+  const values = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+  return values[weekday - 1] ?? "monday";
+}

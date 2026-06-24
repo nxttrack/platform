@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminPlanningBoardPage } from "@/components/operations/admin-operations-pages";
+import { getAdminDomainSnapshot } from "@/lib/domain/admin-domain-read-model";
 
-export default function AdminAgendaPage() {
-  return <RoutePlaceholder kicker="Planboard" title="Planning skeleton" description="Resources, sessions, groups en conflicts komen na het domeinmodel." items={["Resources", "Groups", "Sessions", "Instructor conflicts"]} />;
+export default async function AdminAgendaPage() {
+  const snapshot = await getAdminDomainSnapshot();
+
+  return <AdminPlanningBoardPage snapshot={snapshot} />;
 }

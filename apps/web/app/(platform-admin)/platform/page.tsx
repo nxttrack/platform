@@ -1,16 +1,17 @@
-import type { Metadata } from "next";
+import { PlatformAdminDashboard } from "@/components/platform-admin/platform-admin-dashboard";
+import { getPlatformAdminSnapshot } from "@/lib/platform-admin/platform-admin-read-model";
 
-import { AppShell } from "@/components/shell/app-shell";
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
-import { privateRouteMetadata } from "@/lib/auth/access";
-import { platformNav } from "@/lib/navigation";
+type PlatformPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export const metadata: Metadata = privateRouteMetadata;
+export default async function PlatformPage({ searchParams }: PlatformPageProps) {
+  const params = (await searchParams) ?? {};
+  const snapshot = await getPlatformAdminSnapshot();
 
-export default function PlatformPage() {
-  return (
-    <AppShell brand={{ title: "NXTTRACK", subtitle: "Platform Admin" }} nav={platformNav} user={{ name: "Platform Admin", role: "Global" }} accent="platform">
-      <RoutePlaceholder kicker="Platform admin" title="Platform shell skeleton" description="Global tenant/domain/template management starts later and remains separate from tenant admin." items={["Tenants", "Domains", "Sector templates", "Audit"]} />
-    </AppShell>
-  );
+  return <PlatformAdminDashboard snapshot={snapshot} notice={getParam(params.notice)} error={getParam(params.error)} />;
+}
+
+function getParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }

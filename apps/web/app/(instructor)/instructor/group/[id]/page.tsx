@@ -1,7 +1,9 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { InstructorGroupDetailPage } from "@/components/instructor-portal/instructor-portal-pages";
+import { getInstructorPortalSnapshot } from "@/lib/instructor-portal/instructor-portal-read-model";
 
 export default async function InstructorGroupPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const snapshot = await getInstructorPortalSnapshot();
 
-  return <RoutePlaceholder kicker="Group skeleton" title={`Group ${id}`} description="Groep/session roster route voor attendance workflow." items={["Roster", "Attendance", "Capacity", "Session notes"]} />;
+  return <InstructorGroupDetailPage groupId={id} snapshot={snapshot} />;
 }
