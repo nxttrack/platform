@@ -69,34 +69,34 @@ export function AdminDomainHome({ snapshot }: DomainPageProps) {
   return (
     <DomainFrame
       snapshot={snapshot}
-      kicker="Tenant admin - Phase 3"
-      title="Domein foundation"
+      kicker="Backoffice - beheer"
+      title="Basisbeheer"
       subtitle="Beperkte CRUD op de generieke NXTTRACK kern: aanbod, niveaus, groepen, lessen, resources, inschrijvingen en begeleiding."
     >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<Waves className="h-5 w-5" />} label="Programma's" value={data.programs.length.toString()} detail={`${data.stages.length} stages`} />
-        <MetricCard icon={<Users className="h-5 w-5" />} label="Groepen" value={data.groups.length.toString()} detail={`${activeEnrollments} actieve enrollments`} />
-        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Sessies" value={scheduledSessions.toString()} detail="ingepland in snapshot" />
-        <MetricCard icon={<MapPin className="h-5 w-5" />} label="Resources" value={data.resources.length.toString()} detail={`${data.instructors.length} instructeurs`} />
+        <MetricCard icon={<Waves className="h-5 w-5" />} label="Programma's" value={data.programs.length.toString()} detail={`${data.stages.length} niveaus`} />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Groepen" value={data.groups.length.toString()} detail={`${activeEnrollments} actieve inschrijvingen`} />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Lessen" value={scheduledSessions.toString()} detail="ingepland" />
+        <MetricCard icon={<MapPin className="h-5 w-5" />} label="Locaties" value={data.resources.length.toString()} detail={`${data.instructors.length} instructeurs`} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
         <Card>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold">Core model</h2>
-              <p className="text-sm text-muted-foreground">Deze pagina bevestigt de Phase 3 scheiding tussen leerprogressie en billing.</p>
+              <h2 className="text-lg font-bold">Kernmodel</h2>
+              <p className="text-sm text-muted-foreground">Leerprogressie en betalingen blijven bewust van elkaar gescheiden.</p>
             </div>
-            <StatusPill tone="info">Limited CRUD</StatusPill>
+            <StatusPill tone="info">Beperkt beheer</StatusPill>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {[
-              ["Program", "Het aangeboden product of leertraject."],
-              ["Stage", "Het actuele niveau binnen een program, zoals Badje 1."],
-              ["Group", "De terugkerende lesgroep met tijd/resource/instructor."],
-              ["Session", "Een concrete lesdatum op basis van een group."],
-              ["Enrollment", "De deelname van een participant aan een program."],
-              ["SubscriptionPlan", "Billing/frequentie; staat los van stage/badje."]
+              ["Programma", "Het aangeboden product of leertraject."],
+              ["Niveau", "Het actuele niveau binnen een programma, zoals Badje 1."],
+              ["Groep", "De terugkerende lesgroep met tijd, locatie en instructeur."],
+              ["Les", "Een concreet lesmoment op basis van een groep."],
+              ["Inschrijving", "De deelname van een leerling aan een programma."],
+              ["Abonnement", "Facturatie en frequentie; staat los van niveau of badje."]
             ].map(([term, description]) => (
               <div key={term} className="rounded-2xl border border-border bg-muted/40 p-4">
                 <p className="text-sm font-bold">{term}</p>
@@ -113,7 +113,7 @@ export function AdminDomainHome({ snapshot }: DomainPageProps) {
             </div>
             <div>
               <h2 className="text-lg font-bold">Abonnement blijft los</h2>
-              <p className="text-sm text-muted-foreground">Een leerling kan van badje wisselen zonder billingwijziging.</p>
+              <p className="text-sm text-muted-foreground">Een leerling kan van badje wisselen zonder facturatiewijziging.</p>
             </div>
           </div>
           <DomainTable
@@ -136,36 +136,36 @@ export function AdminProgramsPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - aanbod" title="Programs" subtitle="Het aangeboden product of leertraject. Stages en subscription plans blijven los gekoppeld aan de enrollment.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - aanbod" title="Programma's" subtitle="Het aangeboden product of leertraject. Niveaus en abonnementen blijven los gekoppeld aan de inschrijving.">
       <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <Card>
-          <SectionHeader title="Programs" count={snapshot.data.programs.length} />
+          <SectionHeader title="Programma's" count={snapshot.data.programs.length} />
           <CreateProgramForm />
           <DomainTable
             columns={[
               { header: "Naam", render: (program) => <StrongText>{program.name}</StrongText> },
               { header: "Code", render: (program) => <CodeText>{program.code}</CodeText> },
-              { header: "Stages", render: (program) => countBy(snapshot.data.stages, "program_id", program.id) },
+              { header: "Niveaus", render: (program) => countBy(snapshot.data.stages, "program_id", program.id) },
               { header: "Status", render: (program) => <StatusPill tone={statusTone(program.status)}>{program.status}</StatusPill> },
               { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (program) => <ProgramForm mode="update" program={program} /> }
             ]}
-            emptyLabel="Nog geen programs gevonden voor deze tenant."
+            emptyLabel="Nog geen programma's gevonden voor deze tenant."
             rows={snapshot.data.programs}
             rowKey={(program) => program.id}
           />
         </Card>
 
         <Card>
-          <SectionHeader title="Subscription plans" count={snapshot.data.subscriptionPlans.length} />
+          <SectionHeader title="Abonnementen" count={snapshot.data.subscriptionPlans.length} />
           <CreateSubscriptionPlanForm />
           <DomainTable
             columns={[
               { header: "Plan", render: (plan) => <StrongText>{plan.name}</StrongText> },
-              { header: "Billing", render: (plan) => plan.billing_interval },
+              { header: "Facturatie", render: (plan) => billingIntervalLabel(plan.billing_interval) },
               { header: "Prijs", render: (plan) => formatMoney(plan.price_cents, plan.currency) },
               { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (plan) => <SubscriptionPlanForm mode="update" plan={plan} /> }
             ]}
-            emptyLabel="Nog geen subscription plans gevonden."
+            emptyLabel="Nog geen abonnementen gevonden."
             rows={snapshot.data.subscriptionPlans}
             rowKey={(plan) => plan.id}
           />
@@ -173,15 +173,15 @@ export function AdminProgramsPage({ snapshot }: DomainPageProps) {
       </div>
 
       <Card>
-        <SectionHeader title="Stage mapping per program" count={snapshot.data.stages.length} />
+        <SectionHeader title="Niveaus per programma" count={snapshot.data.stages.length} />
         <DomainTable
           columns={[
-            { header: "Stage", render: (stage) => <StrongText>{stage.name}</StrongText> },
-            { header: "Program", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend program" },
+            { header: "Niveau", render: (stage) => <StrongText>{stage.name}</StrongText> },
+            { header: "Programma", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend programma" },
             { header: "Code", render: (stage) => <CodeText>{stage.code}</CodeText> },
             { header: "Status", render: (stage) => <StatusPill tone={statusTone(stage.status)}>{stage.status}</StatusPill> }
           ]}
-          emptyLabel="Nog geen stages gevonden."
+          emptyLabel="Nog geen niveaus gevonden."
           rows={snapshot.data.stages}
           rowKey={(stage) => stage.id}
         />
@@ -194,20 +194,20 @@ export function AdminStagesPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - progressie" title="Stages" subtitle="Stages beschrijven alleen leerprogressie binnen een program. Ze bevatten geen prijs, facturatie of abonnement.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - voortgang" title="Niveaus" subtitle="Niveaus beschrijven alleen leerprogressie binnen een programma. Ze bevatten geen prijs, facturatie of abonnement.">
       <Card>
-        <SectionHeader title="Stages" count={snapshot.data.stages.length} />
+        <SectionHeader title="Niveaus" count={snapshot.data.stages.length} />
         <CreateStageForm programs={snapshot.data.programs} />
         <DomainTable
           columns={[
-            { header: "Stage", render: (stage) => <StrongText>{stage.name}</StrongText> },
-            { header: "Program", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend program" },
+            { header: "Niveau", render: (stage) => <StrongText>{stage.name}</StrongText> },
+            { header: "Programma", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend programma" },
             { header: "Code", render: (stage) => <CodeText>{stage.code}</CodeText> },
             { header: "Volgorde", render: (stage) => stage.sort_order },
             { header: "Status", render: (stage) => <StatusPill tone={statusTone(stage.status)}>{stage.status}</StatusPill> },
             { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (stage) => <StageForm mode="update" programs={snapshot.data.programs} stage={stage} /> }
           ]}
-          emptyLabel="Nog geen stages gevonden voor deze tenant."
+          emptyLabel="Nog geen niveaus gevonden voor deze tenant."
           rows={snapshot.data.stages}
           rowKey={(stage) => stage.id}
         />
@@ -220,19 +220,19 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - achievements" title="Badges" subtitle="Badge definitions per program/stage. Awards en achievement cards worden vanuit de instructor workflow toegekend.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - prestaties" title="Badges" subtitle="Badge-definities per programma en niveau. Toekenningen en achievement cards komen vanuit de instructeurworkflow.">
       <Card>
-        <SectionHeader title="Badge definitions" count={snapshot.data.badges.length} />
+        <SectionHeader title="Badge-definities" count={snapshot.data.badges.length} />
         <DomainTable<BadgeRow>
           columns={[
             { header: "Badge", render: (badge) => <StrongText>{badge.name}</StrongText> },
             { header: "Code", render: (badge) => <CodeText>{badge.code}</CodeText> },
-            { header: "Program", render: (badge) => nullableText(lookups.programs.get(badge.program_id ?? "")?.name) },
-            { header: "Stage", render: (badge) => nullableText(lookups.stages.get(badge.stage_id ?? "")?.name) },
+            { header: "Programma", render: (badge) => nullableText(lookups.programs.get(badge.program_id ?? "")?.name) },
+            { header: "Niveau", render: (badge) => nullableText(lookups.stages.get(badge.stage_id ?? "")?.name) },
             { header: "Beschrijving", className: "min-w-[260px] whitespace-normal", render: (badge) => nullableText(badge.description) },
             { header: "Status", render: (badge) => <StatusPill tone={statusTone(badge.status)}>{badge.status}</StatusPill> }
           ]}
-          emptyLabel="Nog geen badge definitions gevonden."
+          emptyLabel="Nog geen badge-definities gevonden."
           rows={snapshot.data.badges}
           rowKey={(badge) => badge.id}
         />
@@ -245,23 +245,23 @@ export function AdminGroupsPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - planning" title="Groups" subtitle="Terugkerende lesgroepen met program, stage, resource, instructor, tijdslot en capaciteit.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - planning" title="Groepen" subtitle="Terugkerende lesgroepen met programma, niveau, locatie, instructeur, tijdslot en capaciteit.">
       <Card>
-        <SectionHeader title="Groups" count={snapshot.data.groups.length} />
+        <SectionHeader title="Groepen" count={snapshot.data.groups.length} />
         <CreateGroupForm data={snapshot.data} />
         <DomainTable
           columns={[
             { header: "Groep", render: (group) => <StrongText>{group.name}</StrongText> },
-            { header: "Program", render: (group) => lookups.programs.get(group.program_id)?.name ?? "Onbekend" },
-            { header: "Stage", render: (group) => lookups.stages.get(group.stage_id)?.name ?? "Onbekend" },
+            { header: "Programma", render: (group) => lookups.programs.get(group.program_id)?.name ?? "Onbekend" },
+            { header: "Niveau", render: (group) => lookups.stages.get(group.stage_id)?.name ?? "Onbekend" },
             { header: "Moment", render: (group) => `${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}` },
-            { header: "Resource", render: (group) => nullableText(lookups.resources.get(group.resource_id ?? "")?.name) },
-            { header: "Instructor", render: (group) => nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name) },
+            { header: "Locatie", render: (group) => nullableText(lookups.resources.get(group.resource_id ?? "")?.name) },
+            { header: "Instructeur", render: (group) => nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name) },
             { header: "Cap.", render: (group) => group.capacity },
             { header: "Status", render: (group) => <StatusPill tone={statusTone(group.status)}>{group.status}</StatusPill> },
             { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (group) => <GroupForm data={snapshot.data} group={group} mode="update" /> }
           ]}
-          emptyLabel="Nog geen groups gevonden voor deze tenant."
+          emptyLabel="Nog geen groepen gevonden voor deze tenant."
           rows={snapshot.data.groups}
           rowKey={(group) => group.id}
         />
@@ -274,21 +274,21 @@ export function AdminSessionsPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - lessen" title="Sessions" subtitle="Concrete lesmomenten die uit groups voortkomen. De lijst blijft beperkt tot de eerste 25 records.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - lessen" title="Lessen" subtitle="Concrete lesmomenten die uit groepen voortkomen. De lijst blijft beperkt tot de eerste 25 records.">
       <Card>
-        <SectionHeader title="Sessions" count={snapshot.data.sessions.length} />
+        <SectionHeader title="Lessen" count={snapshot.data.sessions.length} />
         <CreateSessionForm data={snapshot.data} />
         <DomainTable
           columns={[
             { header: "Datum", render: (session) => formatDateTime(session.starts_at) },
             { header: "Tijd", render: (session) => `${formatDateTimeTime(session.starts_at)}-${formatDateTimeTime(session.ends_at)}` },
             { header: "Groep", render: (session) => lookups.groups.get(session.group_id)?.name ?? "Onbekende groep" },
-            { header: "Resource", render: (session) => nullableText(lookups.resources.get(session.resource_id ?? "")?.name) },
-            { header: "Instructor", render: (session) => nullableText(lookups.instructors.get(session.instructor_id ?? "")?.display_name) },
+            { header: "Locatie", render: (session) => nullableText(lookups.resources.get(session.resource_id ?? "")?.name) },
+            { header: "Instructeur", render: (session) => nullableText(lookups.instructors.get(session.instructor_id ?? "")?.display_name) },
             { header: "Status", render: (session) => <StatusPill tone={statusTone(session.status)}>{session.status}</StatusPill> },
             { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (session) => <SessionForm data={snapshot.data} mode="update" session={session} /> }
           ]}
-          emptyLabel="Nog geen sessions gevonden voor deze tenant."
+          emptyLabel="Nog geen lessen gevonden voor deze tenant."
           rows={snapshot.data.sessions}
           rowKey={(session) => session.id}
         />
@@ -299,13 +299,13 @@ export function AdminSessionsPage({ snapshot }: DomainPageProps) {
 
 export function AdminResourcesPage({ snapshot }: DomainPageProps) {
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - capaciteit" title="Resources" subtitle="Plaatsen, banen, ruimtes of velden waarop groepen en sessions gepland worden.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - capaciteit" title="Locaties en banen" subtitle="Plaatsen, baden, banen, ruimtes of velden waarop groepen en lessen gepland worden.">
       <Card>
-        <SectionHeader title="Resources" count={snapshot.data.resources.length} />
+        <SectionHeader title="Locaties en banen" count={snapshot.data.resources.length} />
         <CreateResourceForm />
         <DomainTable
           columns={[
-            { header: "Resource", render: (resource) => <StrongText>{resource.name}</StrongText> },
+            { header: "Locatie", render: (resource) => <StrongText>{resource.name}</StrongText> },
             { header: "Type", render: (resource) => resource.resource_type },
             { header: "Locatie", render: (resource) => nullableText(resource.location_name) },
             { header: "Capaciteit", render: (resource) => resource.capacity },
@@ -313,7 +313,7 @@ export function AdminResourcesPage({ snapshot }: DomainPageProps) {
             { header: "Status", render: (resource) => <StatusPill tone={statusTone(resource.status)}>{resource.status}</StatusPill> },
             { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (resource) => <ResourceForm mode="update" resource={resource} /> }
           ]}
-          emptyLabel="Nog geen resources gevonden voor deze tenant."
+          emptyLabel="Nog geen locaties of banen gevonden voor deze tenant."
           rows={snapshot.data.resources}
           rowKey={(resource) => resource.id}
         />
@@ -326,21 +326,21 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - deelnemers" title="Enrollments" subtitle="Deelname aan een program met aparte kolommen voor huidige stage en subscription plan.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - inschrijvingen" title="Inschrijvingen" subtitle="Deelname aan een programma met aparte kolommen voor huidig niveau en abonnement.">
       <Card>
-        <SectionHeader title="Enrollments" count={snapshot.data.enrollments.length} />
+        <SectionHeader title="Inschrijvingen" count={snapshot.data.enrollments.length} />
         <CreateEnrollmentForm data={snapshot.data} />
         <DomainTable
           columns={[
             { header: "Leerling", render: (enrollment) => lookups.participants.get(enrollment.participant_id)?.display_name ?? "Onbekende participant" },
-            { header: "Program", render: (enrollment) => lookups.programs.get(enrollment.program_id)?.name ?? "Onbekend" },
-            { header: "Huidige stage", render: (enrollment) => nullableText(lookups.stages.get(enrollment.current_stage_id ?? "")?.name) },
-            { header: "Subscription plan", render: (enrollment) => nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name) },
+            { header: "Programma", render: (enrollment) => lookups.programs.get(enrollment.program_id)?.name ?? "Onbekend" },
+            { header: "Huidig niveau", render: (enrollment) => nullableText(lookups.stages.get(enrollment.current_stage_id ?? "")?.name) },
+            { header: "Abonnement", render: (enrollment) => nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name) },
             { header: "Start", render: (enrollment) => formatDate(enrollment.started_on) },
             { header: "Status", render: (enrollment) => <StatusPill tone={statusTone(enrollment.status)}>{enrollment.status}</StatusPill> },
             { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (enrollment) => <EnrollmentForm data={snapshot.data} enrollment={enrollment} mode="update" /> }
           ]}
-          emptyLabel="Nog geen enrollments gevonden voor deze tenant."
+          emptyLabel="Nog geen inschrijvingen gevonden voor deze tenant."
           rows={snapshot.data.enrollments}
           rowKey={(enrollment) => enrollment.id}
         />
@@ -348,7 +348,7 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
 
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
-          <SectionHeader title="Participants" count={snapshot.data.participants.length} />
+          <SectionHeader title="Leerlingen" count={snapshot.data.participants.length} />
           <CreateParticipantForm />
           <DomainTable
             columns={[
@@ -358,14 +358,14 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
               { header: "Status", render: (participant) => <StatusPill tone={statusTone(participant.status)}>{participant.status}</StatusPill> },
               { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (participant) => <ParticipantForm mode="update" participant={participant} /> }
             ]}
-            emptyLabel="Nog geen participants gevonden."
+            emptyLabel="Nog geen leerlingen gevonden."
             rows={snapshot.data.participants}
             rowKey={(participant) => participant.id}
           />
         </Card>
 
         <Card>
-          <SectionHeader title="Group memberships" count={snapshot.data.groupMemberships.length} />
+          <SectionHeader title="Groepsplaatsingen" count={snapshot.data.groupMemberships.length} />
           <CreateGroupMembershipForm data={snapshot.data} />
           <DomainTable
             columns={[
@@ -375,7 +375,7 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
               { header: "Status", render: (membership) => <StatusPill tone={statusTone(membership.status)}>{membership.status}</StatusPill> },
               { header: "Actie", className: "min-w-[340px] whitespace-normal", render: (membership) => <GroupMembershipForm data={snapshot.data} membership={membership} mode="update" /> }
             ]}
-            emptyLabel="Nog geen group memberships gevonden."
+            emptyLabel="Nog geen groepsplaatsingen gevonden."
             rows={snapshot.data.groupMemberships}
             rowKey={(membership) => membership.id}
           />
@@ -387,20 +387,20 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
 
 export function AdminInstructorsPage({ snapshot }: DomainPageProps) {
   return (
-    <DomainFrame snapshot={snapshot} kicker="Tenant admin - team" title="Instructors" subtitle="Begeleiders die aan groups en sessions gekoppeld kunnen worden.">
+    <DomainFrame snapshot={snapshot} kicker="Backoffice - team" title="Instructeurs" subtitle="Begeleiders die aan groepen en lessen gekoppeld kunnen worden.">
       <Card>
-        <SectionHeader title="Instructors" count={snapshot.data.instructors.length} />
+        <SectionHeader title="Instructeurs" count={snapshot.data.instructors.length} />
         <CreateInstructorForm />
         <DomainTable
           columns={[
             { header: "Naam", render: (instructor) => <StrongText>{instructor.display_name}</StrongText> },
             { header: "E-mail", render: (instructor) => nullableText(instructor.email) },
             { header: "Groepen", render: (instructor) => countBy(snapshot.data.groups, "instructor_id", instructor.id) },
-            { header: "Sessions", render: (instructor) => countBy(snapshot.data.sessions, "instructor_id", instructor.id) },
+            { header: "Lessen", render: (instructor) => countBy(snapshot.data.sessions, "instructor_id", instructor.id) },
             { header: "Status", render: (instructor) => <StatusPill tone={statusTone(instructor.status)}>{instructor.status}</StatusPill> },
             { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (instructor) => <InstructorForm instructor={instructor} mode="update" /> }
           ]}
-          emptyLabel="Nog geen instructors gevonden voor deze tenant."
+          emptyLabel="Nog geen instructeurs gevonden voor deze tenant."
           rows={snapshot.data.instructors}
           rowKey={(instructor) => instructor.id}
         />
@@ -412,7 +412,7 @@ export function AdminInstructorsPage({ snapshot }: DomainPageProps) {
 function DomainFrame({ snapshot, kicker, title, subtitle, children }: DomainPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode }) {
   return (
     <div className="space-y-6">
-      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Limited CRUD</StatusPill>} />
+      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Beheer actief</StatusPill>} />
       <SnapshotStatus snapshot={snapshot} />
       {children}
     </div>
@@ -425,7 +425,7 @@ function SnapshotStatus({ snapshot }: DomainPageProps) {
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-soft">
         <Database className="h-4 w-4 text-primary" />
         <span>
-          Verbonden met <strong className="text-foreground">{snapshot.tenant?.name ?? "actieve tenant"}</strong>. Create/update/status is actief; harde deletes blijven uit.
+          Verbonden met <strong className="text-foreground">{snapshot.tenant?.name ?? "actieve tenant"}</strong>. Aanmaken, bewerken en status wijzigen is actief; harde deletes blijven uit.
         </span>
       </div>
     );
@@ -436,7 +436,7 @@ function SnapshotStatus({ snapshot }: DomainPageProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold">{snapshot.status === "query_error" ? "Domeinquery nog niet groen" : "Domeindata nog niet beschikbaar"}</h2>
-          <p className="mt-1 text-sm text-amber-800">Controleer Supabase env, migrations en tenantmembership voordat CRUD wordt toegevoegd.</p>
+          <p className="mt-1 text-sm text-amber-800">Controleer Supabase env, migraties en tenantmembership voordat beheer beschikbaar is.</p>
         </div>
         <StatusPill tone="warning">{snapshot.status}</StatusPill>
       </div>
@@ -455,7 +455,7 @@ function SnapshotStatus({ snapshot }: DomainPageProps) {
 
 function CreateProgramForm() {
   return (
-    <CreatePanel title="Nieuw program">
+    <CreatePanel title="Nieuw programma">
       <ProgramForm mode="create" />
     </CreatePanel>
   );
@@ -463,7 +463,7 @@ function CreateProgramForm() {
 
 function ProgramForm({ mode, program }: { mode: "create"; program?: never } | { mode: "update"; program: ProgramRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createProgramAction : updateProgramAction} submitLabel={mode === "create" ? "Program opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createProgramAction : updateProgramAction} submitLabel={mode === "create" ? "Programma opslaan" : "Wijzigingen opslaan"}>
       {program ? <input name="id" type="hidden" value={program.id} /> : null}
       <TextField defaultValue={program?.name} label="Naam" name="name" required />
       <TextField defaultValue={program?.code} label="Code" name="code" />
@@ -478,7 +478,7 @@ function ProgramForm({ mode, program }: { mode: "create"; program?: never } | { 
 
 function CreateSubscriptionPlanForm() {
   return (
-    <CreatePanel title="Nieuw subscription plan">
+    <CreatePanel title="Nieuw abonnement">
       <SubscriptionPlanForm mode="create" />
     </CreatePanel>
   );
@@ -491,7 +491,7 @@ function SubscriptionPlanForm({ mode, plan }: { mode: "create"; plan?: never } |
       <TextField defaultValue={plan?.name} label="Naam" name="name" required />
       <TextField defaultValue={plan?.code} label="Code" name="code" />
       <TextAreaField defaultValue={plan?.description} label="Beschrijving" name="description" />
-      <SelectField defaultValue={plan?.billing_interval ?? "monthly"} label="Billing" name="billing_interval" options={billingIntervalOptions} />
+      <SelectField defaultValue={plan?.billing_interval ?? "monthly"} label="Facturatie" name="billing_interval" options={billingIntervalOptions} />
       <TextField defaultValue={plan ? formatPriceInput(plan.price_cents) : "0"} label="Prijs" name="price" step="0.01" type="number" />
       <TextField defaultValue={plan?.currency ?? "EUR"} label="Valuta" name="currency" required />
       <TextField defaultValue={plan?.lesson_frequency_per_week ?? 1} label="Lessen p/w" name="lesson_frequency_per_week" step="0.25" type="number" />
@@ -504,7 +504,7 @@ function SubscriptionPlanForm({ mode, plan }: { mode: "create"; plan?: never } |
 
 function CreateStageForm({ programs }: { programs: ProgramRow[] }) {
   return (
-    <CreatePanel title="Nieuwe stage">
+    <CreatePanel title="Nieuw niveau">
       <StageForm mode="create" programs={programs} />
     </CreatePanel>
   );
@@ -512,9 +512,9 @@ function CreateStageForm({ programs }: { programs: ProgramRow[] }) {
 
 function StageForm({ mode, programs, stage }: { mode: "create"; programs: ProgramRow[]; stage?: never } | { mode: "update"; programs: ProgramRow[]; stage: StageRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createStageAction : updateStageAction} submitLabel={mode === "create" ? "Stage opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createStageAction : updateStageAction} submitLabel={mode === "create" ? "Niveau opslaan" : "Wijzigingen opslaan"}>
       {stage ? <input name="id" type="hidden" value={stage.id} /> : null}
-      <SelectField defaultValue={stage?.program_id} label="Program" name="program_id" options={programs.map(optionFromName)} required />
+      <SelectField defaultValue={stage?.program_id} label="Programma" name="program_id" options={programs.map(optionFromName)} required />
       <TextField defaultValue={stage?.name} label="Naam" name="name" required />
       <TextField defaultValue={stage?.code} label="Code" name="code" />
       <TextAreaField defaultValue={stage?.description} label="Beschrijving" name="description" />
@@ -528,7 +528,7 @@ function StageForm({ mode, programs, stage }: { mode: "create"; programs: Progra
 
 function CreateResourceForm() {
   return (
-    <CreatePanel title="Nieuwe resource">
+    <CreatePanel title="Nieuwe locatie of baan">
       <ResourceForm mode="create" />
     </CreatePanel>
   );
@@ -536,7 +536,7 @@ function CreateResourceForm() {
 
 function ResourceForm({ mode, resource }: { mode: "create"; resource?: never } | { mode: "update"; resource: ResourceRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createResourceAction : updateResourceAction} submitLabel={mode === "create" ? "Resource opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createResourceAction : updateResourceAction} submitLabel={mode === "create" ? "Locatie opslaan" : "Wijzigingen opslaan"}>
       {resource ? <input name="id" type="hidden" value={resource.id} /> : null}
       <TextField defaultValue={resource?.name} label="Naam" name="name" required />
       <TextField defaultValue={resource?.code} label="Code" name="code" />
@@ -552,7 +552,7 @@ function ResourceForm({ mode, resource }: { mode: "create"; resource?: never } |
 
 function CreateInstructorForm() {
   return (
-    <CreatePanel title="Nieuwe instructor">
+    <CreatePanel title="Nieuwe instructeur">
       <InstructorForm mode="create" />
     </CreatePanel>
   );
@@ -560,7 +560,7 @@ function CreateInstructorForm() {
 
 function InstructorForm({ mode, instructor }: { mode: "create"; instructor?: never } | { mode: "update"; instructor: InstructorRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createInstructorAction : updateInstructorAction} submitLabel={mode === "create" ? "Instructor opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createInstructorAction : updateInstructorAction} submitLabel={mode === "create" ? "Instructeur opslaan" : "Wijzigingen opslaan"}>
       {instructor ? <input name="id" type="hidden" value={instructor.id} /> : null}
       <TextField defaultValue={instructor?.display_name} label="Naam" name="display_name" required />
       <TextField defaultValue={instructor?.email} label="E-mail" name="email" type="email" />
@@ -573,7 +573,7 @@ function InstructorForm({ mode, instructor }: { mode: "create"; instructor?: nev
 
 function CreateGroupForm({ data }: { data: AdminDomainData }) {
   return (
-    <CreatePanel title="Nieuwe group">
+    <CreatePanel title="Nieuwe groep">
       <GroupForm data={data} mode="create" />
     </CreatePanel>
   );
@@ -581,14 +581,14 @@ function CreateGroupForm({ data }: { data: AdminDomainData }) {
 
 function GroupForm({ mode, data, group }: { mode: "create"; data: AdminDomainData; group?: never } | { mode: "update"; data: AdminDomainData; group: GroupRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createGroupAction : updateGroupAction} submitLabel={mode === "create" ? "Group opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createGroupAction : updateGroupAction} submitLabel={mode === "create" ? "Groep opslaan" : "Wijzigingen opslaan"}>
       {group ? <input name="id" type="hidden" value={group.id} /> : null}
       <TextField defaultValue={group?.name} label="Naam" name="name" required />
       <TextField defaultValue={group?.code} label="Code" name="code" />
-      <SelectField defaultValue={group?.program_id} label="Program" name="program_id" options={data.programs.map(optionFromName)} required />
-      <SelectField defaultValue={group?.stage_id} label="Stage" name="stage_id" options={data.stages.map(optionFromName)} required />
-      <SelectField defaultValue={group?.resource_id ?? ""} includeEmpty label="Resource" name="resource_id" options={data.resources.map(optionFromName)} />
-      <SelectField defaultValue={group?.instructor_id ?? ""} includeEmpty label="Instructor" name="instructor_id" options={data.instructors.map((instructor) => ({ label: instructor.display_name, value: instructor.id }))} />
+      <SelectField defaultValue={group?.program_id} label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
+      <SelectField defaultValue={group?.stage_id} label="Niveau" name="stage_id" options={data.stages.map(optionFromName)} required />
+      <SelectField defaultValue={group?.resource_id ?? ""} includeEmpty label="Locatie" name="resource_id" options={data.resources.map(optionFromName)} />
+      <SelectField defaultValue={group?.instructor_id ?? ""} includeEmpty label="Instructeur" name="instructor_id" options={data.instructors.map((instructor) => ({ label: instructor.display_name, value: instructor.id }))} />
       <SelectField defaultValue={String(group?.weekday ?? 1)} label="Weekdag" name="weekday" options={weekdayOptions} />
       <TextField defaultValue={group?.starts_at ? formatTime(group.starts_at) : ""} label="Start" name="starts_at" required type="time" />
       <TextField defaultValue={group?.ends_at ? formatTime(group.ends_at) : ""} label="Einde" name="ends_at" required type="time" />
@@ -602,7 +602,7 @@ function GroupForm({ mode, data, group }: { mode: "create"; data: AdminDomainDat
 
 function CreateSessionForm({ data }: { data: AdminDomainData }) {
   return (
-    <CreatePanel title="Nieuwe session">
+    <CreatePanel title="Nieuwe les">
       <SessionForm data={data} mode="create" />
     </CreatePanel>
   );
@@ -610,11 +610,11 @@ function CreateSessionForm({ data }: { data: AdminDomainData }) {
 
 function SessionForm({ mode, data, session }: { mode: "create"; data: AdminDomainData; session?: never } | { mode: "update"; data: AdminDomainData; session: SessionRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createSessionAction : updateSessionAction} submitLabel={mode === "create" ? "Session opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createSessionAction : updateSessionAction} submitLabel={mode === "create" ? "Les opslaan" : "Wijzigingen opslaan"}>
       {session ? <input name="id" type="hidden" value={session.id} /> : null}
-      <SelectField defaultValue={session?.group_id} label="Group" name="group_id" options={data.groups.map(optionFromName)} required />
-      <SelectField defaultValue={session?.resource_id ?? ""} includeEmpty label="Resource" name="resource_id" options={data.resources.map(optionFromName)} />
-      <SelectField defaultValue={session?.instructor_id ?? ""} includeEmpty label="Instructor" name="instructor_id" options={data.instructors.map((instructor) => ({ label: instructor.display_name, value: instructor.id }))} />
+      <SelectField defaultValue={session?.group_id} label="Groep" name="group_id" options={data.groups.map(optionFromName)} required />
+      <SelectField defaultValue={session?.resource_id ?? ""} includeEmpty label="Locatie" name="resource_id" options={data.resources.map(optionFromName)} />
+      <SelectField defaultValue={session?.instructor_id ?? ""} includeEmpty label="Instructeur" name="instructor_id" options={data.instructors.map((instructor) => ({ label: instructor.display_name, value: instructor.id }))} />
       <TextField defaultValue={session ? formatDateTimeInput(session.starts_at) : ""} label="Start" name="starts_at" required type="datetime-local" />
       <TextField defaultValue={session ? formatDateTimeInput(session.ends_at) : ""} label="Einde" name="ends_at" required type="datetime-local" />
       <SelectField defaultValue={session?.status ?? "scheduled"} label="Status" name="status" options={sessionStatusOptions} />
@@ -626,7 +626,7 @@ function SessionForm({ mode, data, session }: { mode: "create"; data: AdminDomai
 
 function CreateParticipantForm() {
   return (
-    <CreatePanel title="Nieuwe participant">
+    <CreatePanel title="Nieuwe leerling">
       <ParticipantForm mode="create" />
     </CreatePanel>
   );
@@ -634,7 +634,7 @@ function CreateParticipantForm() {
 
 function ParticipantForm({ mode, participant }: { mode: "create"; participant?: never } | { mode: "update"; participant: ParticipantRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createParticipantAction : updateParticipantAction} submitLabel={mode === "create" ? "Participant opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createParticipantAction : updateParticipantAction} submitLabel={mode === "create" ? "Leerling opslaan" : "Wijzigingen opslaan"}>
       {participant ? <input name="id" type="hidden" value={participant.id} /> : null}
       <TextField defaultValue={participant?.display_name} label="Naam" name="display_name" required />
       <TextField defaultValue={participant?.birthdate ?? ""} label="Geboortedatum" name="birthdate" type="date" />
@@ -648,7 +648,7 @@ function ParticipantForm({ mode, participant }: { mode: "create"; participant?: 
 
 function CreateEnrollmentForm({ data }: { data: AdminDomainData }) {
   return (
-    <CreatePanel title="Nieuwe enrollment">
+    <CreatePanel title="Nieuwe inschrijving">
       <EnrollmentForm data={data} mode="create" />
     </CreatePanel>
   );
@@ -656,13 +656,13 @@ function CreateEnrollmentForm({ data }: { data: AdminDomainData }) {
 
 function EnrollmentForm({ mode, data, enrollment }: { mode: "create"; data: AdminDomainData; enrollment?: never } | { mode: "update"; data: AdminDomainData; enrollment: EnrollmentRow }) {
   const form = (
-    <DomainForm action={mode === "create" ? createEnrollmentAction : updateEnrollmentAction} submitLabel={mode === "create" ? "Enrollment opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createEnrollmentAction : updateEnrollmentAction} submitLabel={mode === "create" ? "Inschrijving opslaan" : "Wijzigingen opslaan"}>
       {enrollment ? <input name="id" type="hidden" value={enrollment.id} /> : null}
       <TextField defaultValue={enrollment?.external_reference} label="Referentie" name="external_reference" />
-      <SelectField defaultValue={enrollment?.participant_id} label="Participant" name="participant_id" options={data.participants.map((participant) => ({ label: participant.display_name, value: participant.id }))} required />
-      <SelectField defaultValue={enrollment?.program_id} label="Program" name="program_id" options={data.programs.map(optionFromName)} required />
-      <SelectField defaultValue={enrollment?.current_stage_id ?? ""} includeEmpty label="Huidige stage" name="current_stage_id" options={data.stages.map(optionFromName)} />
-      <SelectField defaultValue={enrollment?.subscription_plan_id ?? ""} includeEmpty label="Subscription plan" name="subscription_plan_id" options={data.subscriptionPlans.map(optionFromName)} />
+      <SelectField defaultValue={enrollment?.participant_id} label="Leerling" name="participant_id" options={data.participants.map((participant) => ({ label: participant.display_name, value: participant.id }))} required />
+      <SelectField defaultValue={enrollment?.program_id} label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
+      <SelectField defaultValue={enrollment?.current_stage_id ?? ""} includeEmpty label="Huidig niveau" name="current_stage_id" options={data.stages.map(optionFromName)} />
+      <SelectField defaultValue={enrollment?.subscription_plan_id ?? ""} includeEmpty label="Abonnement" name="subscription_plan_id" options={data.subscriptionPlans.map(optionFromName)} />
       <TextField defaultValue={enrollment?.started_on ?? todayInput()} label="Startdatum" name="started_on" required type="date" />
       <TextField defaultValue={enrollment?.ended_on ?? ""} label="Einddatum" name="ended_on" type="date" />
       <SelectField defaultValue={enrollment?.status ?? "active"} label="Status" name="status" options={enrollmentStatusOptions} />
@@ -674,7 +674,7 @@ function EnrollmentForm({ mode, data, enrollment }: { mode: "create"; data: Admi
 
 function CreateGroupMembershipForm({ data }: { data: AdminDomainData }) {
   return (
-    <CreatePanel title="Nieuwe group membership">
+    <CreatePanel title="Nieuwe groepsplaatsing">
       <GroupMembershipForm data={data} mode="create" />
     </CreatePanel>
   );
@@ -687,10 +687,10 @@ function GroupMembershipForm({ mode, data, membership }: { mode: "create"; data:
     value: enrollment.id
   }));
   const form = (
-    <DomainForm action={mode === "create" ? createGroupMembershipAction : updateGroupMembershipAction} submitLabel={mode === "create" ? "Membership opslaan" : "Wijzigingen opslaan"}>
+    <DomainForm action={mode === "create" ? createGroupMembershipAction : updateGroupMembershipAction} submitLabel={mode === "create" ? "Plaatsing opslaan" : "Wijzigingen opslaan"}>
       {membership ? <input name="id" type="hidden" value={membership.id} /> : null}
-      <SelectField defaultValue={membership?.enrollment_id} label="Enrollment" name="enrollment_id" options={enrollmentOptions} required />
-      <SelectField defaultValue={membership?.group_id} label="Group" name="group_id" options={data.groups.map(optionFromName)} required />
+      <SelectField defaultValue={membership?.enrollment_id} label="Inschrijving" name="enrollment_id" options={enrollmentOptions} required />
+      <SelectField defaultValue={membership?.group_id} label="Groep" name="group_id" options={data.groups.map(optionFromName)} required />
       <TextField defaultValue={membership?.starts_on ?? todayInput()} label="Startdatum" name="starts_on" required type="date" />
       <TextField defaultValue={membership?.ends_on ?? ""} label="Einddatum" name="ends_on" type="date" />
       <SelectField defaultValue={membership?.status ?? "active"} label="Status" name="status" options={membershipStatusOptions} />
@@ -964,6 +964,10 @@ function formatPriceInput(priceCents: number) {
   return (priceCents / 100).toFixed(2);
 }
 
+function billingIntervalLabel(value: string) {
+  return billingIntervalOptions.find((option) => option.value === value)?.label ?? value;
+}
+
 function todayInput() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -982,70 +986,70 @@ function optionFromName(row: { id: string; name: string }) {
 }
 
 const programStatusOptions = [
-  { label: "Draft", value: "draft" },
-  { label: "Active", value: "active" },
-  { label: "Archived", value: "archived" }
+  { label: "Concept", value: "draft" },
+  { label: "Actief", value: "active" },
+  { label: "Gearchiveerd", value: "archived" }
 ];
 
 const billingIntervalOptions = [
-  { label: "Weekly", value: "weekly" },
-  { label: "Monthly", value: "monthly" },
-  { label: "Quarterly", value: "quarterly" },
-  { label: "Yearly", value: "yearly" },
-  { label: "Manual", value: "manual" }
+  { label: "Wekelijks", value: "weekly" },
+  { label: "Maandelijks", value: "monthly" },
+  { label: "Per kwartaal", value: "quarterly" },
+  { label: "Jaarlijks", value: "yearly" },
+  { label: "Handmatig", value: "manual" }
 ];
 
 const resourceTypeOptions = [
-  { label: "Lane", value: "lane" },
-  { label: "Pool", value: "pool" },
-  { label: "Room", value: "room" },
-  { label: "Field", value: "field" },
-  { label: "Space", value: "space" }
+  { label: "Baan", value: "lane" },
+  { label: "Bad", value: "pool" },
+  { label: "Ruimte", value: "room" },
+  { label: "Veld", value: "field" },
+  { label: "Plek", value: "space" }
 ];
 
 const resourceStatusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Maintenance", value: "maintenance" }
+  { label: "Actief", value: "active" },
+  { label: "Inactief", value: "inactive" },
+  { label: "Onderhoud", value: "maintenance" }
 ];
 
 const activeInactiveOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" }
+  { label: "Actief", value: "active" },
+  { label: "Inactief", value: "inactive" }
 ];
 
 const groupStatusOptions = [
-  { label: "Draft", value: "draft" },
-  { label: "Active", value: "active" },
-  { label: "Paused", value: "paused" },
-  { label: "Archived", value: "archived" }
+  { label: "Concept", value: "draft" },
+  { label: "Actief", value: "active" },
+  { label: "Gepauzeerd", value: "paused" },
+  { label: "Gearchiveerd", value: "archived" }
 ];
 
 const sessionStatusOptions = [
-  { label: "Scheduled", value: "scheduled" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" }
+  { label: "Gepland", value: "scheduled" },
+  { label: "Afgerond", value: "completed" },
+  { label: "Geannuleerd", value: "cancelled" }
 ];
 
 const participantStatusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Archived", value: "archived" }
+  { label: "Actief", value: "active" },
+  { label: "Inactief", value: "inactive" },
+  { label: "Gearchiveerd", value: "archived" }
 ];
 
 const enrollmentStatusOptions = [
-  { label: "Pending", value: "pending" },
-  { label: "Active", value: "active" },
-  { label: "Paused", value: "paused" },
-  { label: "Completed", value: "completed" },
-  { label: "Cancelled", value: "cancelled" }
+  { label: "In afwachting", value: "pending" },
+  { label: "Actief", value: "active" },
+  { label: "Gepauzeerd", value: "paused" },
+  { label: "Afgerond", value: "completed" },
+  { label: "Geannuleerd", value: "cancelled" }
 ];
 
 const membershipStatusOptions = [
-  { label: "Planned", value: "planned" },
-  { label: "Active", value: "active" },
-  { label: "Ended", value: "ended" },
-  { label: "Cancelled", value: "cancelled" }
+  { label: "Gepland", value: "planned" },
+  { label: "Actief", value: "active" },
+  { label: "Beeindigd", value: "ended" },
+  { label: "Geannuleerd", value: "cancelled" }
 ];
 
 const weekdayOptions = [

@@ -69,17 +69,17 @@ export function AdminOperationsDashboardPage({ domain, placement, payments }: Op
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 11</StatusPill>}
-        kicker="Tenant admin - operations"
-        subtitle="Echt operationeel overzicht op basis van programs, stages, groups, sessions, resources, enrollments, waitlist en payments."
+        action={<StatusPill tone="info">Live overzicht</StatusPill>}
+        kicker="Backoffice - operatie"
+        subtitle="Operationeel overzicht op basis van programma's, niveaus, groepen, lessen, locaties, inschrijvingen, wachtlijst en betalingen."
         title="Dashboard"
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={<Users className="h-5 w-5" />} label="Actieve leerlingen" value={activeEnrollments.toString()} detail={`${domain.data.participants.length} profielen`} />
-        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Sessies" value={scheduledSessions.toString()} detail="in planning snapshot" />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Lessen" value={scheduledSessions.toString()} detail="in planning" />
         <MetricCard icon={<TrendingUp className="h-5 w-5" />} label="Bezetting" value={`${utilization}%`} detail={`${totalOccupied}/${totalCapacity} plekken`} />
-        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Open betalingen" value={openInvoices.toString()} detail="manual payment status" />
+        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Open betalingen" value={openInvoices.toString()} detail="handmatige status" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -98,7 +98,7 @@ export function AdminOperationsDashboardPage({ domain, placement, payments }: Op
                     <div>
                       <p className="font-semibold">{group?.name ?? "Onbekende groep"}</p>
                       <p className="text-sm text-muted-foreground">
-                        {formatDateTime(session.starts_at)} - {resource?.name ?? "Geen resource"} - {instructor?.display_name ?? "Geen instructor"}
+                        {formatDateTime(session.starts_at)} - {resource?.name ?? "Geen locatie"} - {instructor?.display_name ?? "Geen instructeur"}
                       </p>
                     </div>
                     <StatusPill tone={statusTone(session.status)}>{session.status}</StatusPill>
@@ -116,14 +116,14 @@ export function AdminOperationsDashboardPage({ domain, placement, payments }: Op
       </div>
 
       <Card>
-        <SectionHeader title="Snel naar beheer" count={6} />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <QuickLink href="/admin/programs" label="Programs en plans" text="Aanbod, stages en subscription plans beheren." />
-          <QuickLink href="/admin/groups" label="Groups" text="Vaste groepen, tijden, resources en instructors." />
-          <QuickLink href="/admin/resources" label="Resources" text="Bad, baan, ruimte, capaciteit en status." />
-          <QuickLink href="/admin/leerlingen" label="Students/parents" text="Leerlingen, enrollments en ouderkoppelingen." />
-          <QuickLink href="/admin/plaatsingsvoorstellen" label="Plaatsing" text="Wachtlijst naar slot offer." />
-          <QuickLink href="/admin/payments" label="Payments" text="Manual facturen en betalingen." />
+          <SectionHeader title="Snel naar beheer" count={6} />
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <QuickLink href="/admin/programs" label="Programma's en abonnementen" text="Aanbod, niveaus en abonnementsvormen beheren." />
+          <QuickLink href="/admin/groups" label="Groepen" text="Vaste groepen, tijden, locaties en instructeurs." />
+          <QuickLink href="/admin/resources" label="Locaties" text="Bad, baan, ruimte, capaciteit en status." />
+          <QuickLink href="/admin/leerlingen" label="Leerlingen en ouders" text="Leerlingen, inschrijvingen en ouderkoppelingen." />
+          <QuickLink href="/admin/plaatsingsvoorstellen" label="Plaatsing" text="Wachtlijst naar lesplek-aanbod." />
+          <QuickLink href="/admin/payments" label="Betalingen" text="Handmatige facturen en betalingen." />
         </div>
       </Card>
     </div>
@@ -141,10 +141,10 @@ export function AdminPlanningBoardPage({ snapshot }: DomainProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 11</StatusPill>}
-        kicker="Tenant admin - planning board"
-        subtitle="Terugkerende groups als operationeel planbord met resource, instructor en actuele capaciteit."
-        title="Planning board"
+        action={<StatusPill tone="info">Planbord</StatusPill>}
+        kicker="Backoffice - planning"
+        subtitle="Terugkerende groepen als operationeel planbord met locatie, instructeur en actuele capaciteit."
+        title="Planning"
       />
 
       <div className="grid gap-4 xl:grid-cols-7">
@@ -185,9 +185,9 @@ export function AdminCapacityReportsPage({ domain, placement, payments }: Operat
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 11</StatusPill>}
-        kicker="Tenant admin - rapportages"
-        subtitle="Operationele rapportage over bezetting, wachtlijst, voortgang en manual payment status."
+        action={<StatusPill tone="info">Rapportage</StatusPill>}
+        kicker="Backoffice - rapportages"
+        subtitle="Operationele rapportage over bezetting, wachtlijst, voortgang en handmatige betalingen."
         title="Rapportages"
       />
 
@@ -195,22 +195,22 @@ export function AdminCapacityReportsPage({ domain, placement, payments }: Operat
         <MetricCard icon={<MapPin className="h-5 w-5" />} label="Capaciteit" value={`${totalOccupied}/${totalCapacity}`} detail="actieve plekken" />
         <MetricCard icon={<Waves className="h-5 w-5" />} label="Vrije plekken" value={capacityRows.reduce((sum, row) => sum + row.availableSpots, 0).toString()} detail="op groups/resources" />
         <MetricCard icon={<Clock className="h-5 w-5" />} label="Wachtlijst" value={waiting.toString()} detail="wachtend of gematcht" />
-        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="manual payments" />
+        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="handmatige betalingen" />
       </div>
 
       <Card>
-        <SectionHeader title="Capacity overview" count={capacityRows.length} />
+        <SectionHeader title="Capaciteitsoverzicht" count={capacityRows.length} />
         <DataTable
           columns={[
             { header: "Groep", render: (row) => <StrongText>{row.group.name}</StrongText> },
             { header: "Moment", render: (row) => `${weekdayLabel(row.group.weekday)} ${formatTime(row.group.starts_at)}-${formatTime(row.group.ends_at)}` },
-            { header: "Resource", render: (row) => row.resourceName },
-            { header: "Instructor", render: (row) => row.instructorName },
+            { header: "Locatie", render: (row) => row.resourceName },
+            { header: "Instructeur", render: (row) => row.instructorName },
             { header: "Bezetting", render: (row) => `${row.activeMemberships}/${row.capacityLimit}` },
             { header: "Vrij", render: (row) => row.availableSpots },
             { header: "Status", render: (row) => <StatusPill tone={row.availableSpots < 0 ? "danger" : row.availableSpots === 0 ? "warning" : "success"}>{Math.round(row.utilization)}%</StatusPill> }
           ]}
-          emptyLabel="Geen capacity rows gevonden."
+          emptyLabel="Geen capaciteitsregels gevonden."
           rows={capacityRows}
           rowKey={(row) => row.group.id}
         />
@@ -229,8 +229,8 @@ export function AdminOperationalTasksPage({ domain, placement, payments }: Opera
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 11</StatusPill>}
-        kicker="Tenant admin - taken"
+        action={<StatusPill tone="info">Actielijst</StatusPill>}
+        kicker="Backoffice - taken"
         subtitle="Operationele alerts die uit planning, capaciteit, plaatsing, ouderkoppelingen en betalingen worden afgeleid."
         title="Taken"
       />
@@ -244,8 +244,8 @@ export function AdminOperationalTasksPage({ domain, placement, payments }: Opera
         <Card>
           <SectionHeader title="Rustige operatie" count={4} />
           <div className="grid gap-3">
-            <CheckRow label="Programs/stages/groups/resources" ok={domain.data.programs.length > 0 && domain.data.groups.length > 0 && domain.data.resources.length > 0} />
-            <CheckRow label="Instructors gekoppeld" ok={domain.data.groups.every((group) => Boolean(group.instructor_id))} />
+            <CheckRow label="Programma's, niveaus, groepen en locaties" ok={domain.data.programs.length > 0 && domain.data.groups.length > 0 && domain.data.resources.length > 0} />
+            <CheckRow label="Instructeurs gekoppeld" ok={domain.data.groups.every((group) => Boolean(group.instructor_id))} />
             <CheckRow label="Ouders gekoppeld" ok={domain.data.participants.every((participant) => domain.data.participantGuardians.some((guardian) => guardian.participant_id === participant.id && guardian.status === "active"))} />
             <CheckRow label="Capaciteit binnen limiet" ok={buildCapacityRows(domain.data).every((row) => row.activeMemberships <= row.capacityLimit)} />
           </div>
@@ -257,7 +257,7 @@ export function AdminOperationalTasksPage({ domain, placement, payments }: Opera
 
 export function AdminStudentsParentsPage({ snapshot }: DomainProps) {
   if (snapshot.status !== "ready") {
-    return <OperationsStatusPanel snapshot={snapshot} title="Students/parents niet beschikbaar" />;
+    return <OperationsStatusPanel snapshot={snapshot} title="Leerlingen en ouders niet beschikbaar" />;
   }
 
   const lookups = buildLookups(snapshot.data);
@@ -268,9 +268,9 @@ export function AdminStudentsParentsPage({ snapshot }: DomainProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 11</StatusPill>}
-        kicker="Tenant admin - students/parents"
-        subtitle="Leerlingen, enrollments en ouder/guardian-koppelingen. Productdata blijft gescheiden van billing en stage-progressie."
+        action={<StatusPill tone="info">Beheer actief</StatusPill>}
+        kicker="Backoffice - leerlingen"
+        subtitle="Leerlingen, inschrijvingen en ouderkoppelingen. Productdata blijft gescheiden van betalingen en niveauprogressie."
         title="Leerlingen en ouders"
       />
 
@@ -286,7 +286,7 @@ export function AdminStudentsParentsPage({ snapshot }: DomainProps) {
       </Card>
 
       <Card>
-        <SectionHeader title="Students + parents" count={snapshot.data.participants.length} />
+        <SectionHeader title="Leerlingen en ouders" count={snapshot.data.participants.length} />
         <div className="grid gap-4">
           {snapshot.data.participants.length === 0 ? <EmptyState>Geen leerlingen gevonden.</EmptyState> : null}
           {snapshot.data.participants.map((participant) => (
@@ -312,15 +312,15 @@ function StudentParentCard({ data, lookups, participant }: { data: AdminDomainDa
         <StatusPill tone={statusTone(participant.status)}>{participant.status}</StatusPill>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
-        <InfoTile label="Enrollments" value={enrollments.length.toString()} />
+        <InfoTile label="Inschrijvingen" value={enrollments.length.toString()} />
         <InfoTile label="Ouders" value={guardians.filter((guardian) => guardian.status === "active").length.toString()} />
         <InfoTile label="Referentie" value={participant.external_reference ?? "-"} />
       </div>
       <div className="mt-4 grid gap-3 xl:grid-cols-2">
         <div className="rounded-2xl border border-border bg-card p-3">
-          <p className="mb-3 text-sm font-bold">Enrollments</p>
+          <p className="mb-3 text-sm font-bold">Inschrijvingen</p>
           <div className="grid gap-2">
-            {enrollments.length === 0 ? <EmptyState>Geen enrollment.</EmptyState> : null}
+            {enrollments.length === 0 ? <EmptyState>Geen inschrijving.</EmptyState> : null}
             {enrollments.map((enrollment) => (
               <div key={enrollment.id} className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
                 <p className="font-semibold">{data.programs.find((program) => program.id === enrollment.program_id)?.name ?? "Programma"}</p>
@@ -333,7 +333,7 @@ function StudentParentCard({ data, lookups, participant }: { data: AdminDomainDa
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-3">
-          <p className="mb-3 text-sm font-bold">Ouders/guardians</p>
+          <p className="mb-3 text-sm font-bold">Ouders/verzorgers</p>
           <div className="grid gap-2">
             {guardians.length === 0 ? <EmptyState>Nog geen ouder gekoppeld.</EmptyState> : null}
             {guardians.map((guardian) => (
@@ -461,15 +461,15 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
   }
 
   if (missingInstructor.length > 0) {
-    alerts.push({ title: "Instructor mist op groep", body: `${missingInstructor.length} actieve groep(en) hebben nog geen instructor.`, href: "/admin/groups", tone: "warning" });
+    alerts.push({ title: "Instructeur mist op groep", body: `${missingInstructor.length} actieve groep(en) hebben nog geen instructeur.`, href: "/admin/groups", tone: "warning" });
   }
 
   if (missingGuardian.length > 0) {
-    alerts.push({ title: "Leerlingen zonder ouder", body: `${missingGuardian.length} actieve leerling(en) missen een parent/guardian koppeling.`, href: "/admin/leerlingen", tone: "warning" });
+    alerts.push({ title: "Leerlingen zonder ouder", body: `${missingGuardian.length} actieve leerling(en) missen een ouderkoppeling.`, href: "/admin/leerlingen", tone: "warning" });
   }
 
   if (maintenanceGroups.length > 0) {
-    alerts.push({ title: "Resource in maintenance", body: `${maintenanceGroups.length} actieve groep(en) staan op een resource in maintenance.`, href: "/admin/resources", tone: "danger" });
+    alerts.push({ title: "Locatie in onderhoud", body: `${maintenanceGroups.length} actieve groep(en) staan op een locatie in onderhoud.`, href: "/admin/resources", tone: "danger" });
   }
 
   if (placement.status === "ready") {
@@ -493,7 +493,7 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
     if (overdueInvoices > 0) {
       alerts.push({ title: "Achterstallige betalingen", body: `${overdueInvoices} factuur/facturen staan op overdue.`, href: "/admin/payments", tone: "danger" });
     } else if (openInvoices > 0) {
-      alerts.push({ title: "Open manual payments", body: `${openInvoices} factuur/facturen vragen opvolging.`, href: "/admin/payments", tone: "info" });
+      alerts.push({ title: "Open handmatige betalingen", body: `${openInvoices} factuur/facturen vragen opvolging.`, href: "/admin/payments", tone: "info" });
     }
   }
 
@@ -511,8 +511,8 @@ function buildCapacityRows(data: AdminDomainData): CapacityRow[] {
 
     return {
       group,
-      resourceName: resource?.name ?? "Geen resource",
-      instructorName: instructor?.display_name ?? "Geen instructor",
+      resourceName: resource?.name ?? "Geen locatie",
+      instructorName: instructor?.display_name ?? "Geen instructeur",
       activeMemberships,
       capacityLimit,
       availableSpots: capacityLimit - activeMemberships,
@@ -718,12 +718,12 @@ const weekdayOptions = [
 
 const guardianRelationshipOptions = [
   { label: "Ouder", value: "parent" },
-  { label: "Guardian", value: "guardian" },
-  { label: "Athlete self", value: "athlete_self" }
+  { label: "Verzorger", value: "guardian" },
+  { label: "Leerling zelf", value: "athlete_self" }
 ];
 
 const guardianStatusOptions = [
-  { label: "Active", value: "active" },
-  { label: "Inactive", value: "inactive" },
-  { label: "Revoked", value: "revoked" }
+  { label: "Actief", value: "active" },
+  { label: "Inactief", value: "inactive" },
+  { label: "Ingetrokken", value: "revoked" }
 ];

@@ -1,5 +1,5 @@
 import { RoutePlaceholder } from "@/components/shell/route-placeholder";
 
 export default function InstructorMessagesPage() {
-  return <RoutePlaceholder kicker="Instructor shell" title="Berichten foundation" description="Instructeurcommunicatie blijft voorbereid tot messaging en templates in Phase 12." items={["Berichten", "Templates", "Notificaties", "Ouders"]} />;
+  return <RoutePlaceholder kicker="Instructeur app" title="Berichten" description="Berichten en oudercommunicatie staan klaar als nette placeholder tot templates en verzending volledig gekoppeld zijn." items={["Berichten", "Templates", "Notificaties", "Ouders"]} status="Voorbereid" />;
 }

@@ -51,15 +51,15 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
   const openIntakes = snapshot.data.intakes.filter((intake) => !lookups.waitlistEntriesByIntake.has(intake.id));
 
   return (
-    <PlacementFrame snapshot={snapshot} kicker="Tenant admin - instroom" title="Intake submissions" subtitle="Nieuwe intakes worden beoordeeld en omgezet naar een wachtlijstregel met aanbevolen stage.">
+    <PlacementFrame snapshot={snapshot} kicker="Backoffice - instroom" title="Intake aanvragen" subtitle="Nieuwe intakes worden beoordeeld en omgezet naar een wachtlijstregel met aanbevolen niveau.">
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Submissions" value={snapshot.data.intakes.length.toString()} detail={`${openIntakes.length} nog niet op wachtlijst`} />
+        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Aanvragen" value={snapshot.data.intakes.length.toString()} detail={`${openIntakes.length} nog niet op wachtlijst`} />
         <MetricCard icon={<Users className="h-5 w-5" />} label="Wachtlijst" value={snapshot.data.waitlistEntries.length.toString()} detail="intake en handmatig" />
-        <MetricCard icon={<Send className="h-5 w-5" />} label="Slot offers" value={snapshot.data.slotOffers.length.toString()} detail="sent, accepted, declined" />
+        <MetricCard icon={<Send className="h-5 w-5" />} label="Lesplek-aanbod" value={snapshot.data.slotOffers.length.toString()} detail="verstuurd, geaccepteerd, geweigerd" />
       </div>
 
       <Card>
-        <SectionHeader title="Intake submissions" count={snapshot.data.intakes.length} />
+        <SectionHeader title="Intake aanvragen" count={snapshot.data.intakes.length} />
         <WorkflowTable
           columns={[
             {
@@ -72,7 +72,7 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
                 </div>
               )
             },
-            { header: "Program", render: (intake) => lookups.programs.get(intake.program_id)?.name ?? "Onbekend" },
+            { header: "Programma", render: (intake) => lookups.programs.get(intake.program_id)?.name ?? "Onbekend" },
             { header: "Type", render: (intake) => <StatusPill tone="info">{intakeOptionLabel(intake.intake_type)}</StatusPill> },
             { header: "Status", render: (intake) => <StatusPill tone={workflowTone(intake.status)}>{intake.status}</StatusPill> },
             { header: "Voorkeuren", className: "min-w-[220px] whitespace-normal", render: (intake) => preferenceText(intake.preferred_days, intake.preferred_time_windows) },
@@ -91,7 +91,7 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
               }
             }
           ]}
-          emptyLabel="Nog geen intake submissions gevonden."
+          emptyLabel="Nog geen intake aanvragen gevonden."
           rows={snapshot.data.intakes}
           rowKey={(intake) => intake.id}
         />
@@ -107,11 +107,11 @@ export function AdminWaitlistWorkflowPage({ snapshot }: PlacementPageProps) {
   const offered = snapshot.data.waitlistEntries.filter((entry) => entry.status === "offered").length;
 
   return (
-    <PlacementFrame snapshot={snapshot} kicker="Tenant admin - plaatsing" title="Wachtlijst" subtitle="Wachtlijstregels worden gematcht op programma, stage, voorkeursmomenten en beschikbare capaciteit.">
+    <PlacementFrame snapshot={snapshot} kicker="Backoffice - plaatsing" title="Wachtlijst" subtitle="Wachtlijstregels worden gematcht op programma, niveau, voorkeursmomenten en beschikbare capaciteit.">
       <div className="grid gap-4 md:grid-cols-3">
-        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Queued" value={queued.toString()} detail="klaar voor matching" />
-        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Matched" value={matched.toString()} detail="voorstel aanwezig" />
-        <MetricCard icon={<Send className="h-5 w-5" />} label="Offered" value={offered.toString()} detail="slot offer verstuurd" />
+        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="In wachtrij" value={queued.toString()} detail="klaar voor matching" />
+        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Gematcht" value={matched.toString()} detail="voorstel aanwezig" />
+        <MetricCard icon={<Send className="h-5 w-5" />} label="Aangeboden" value={offered.toString()} detail="lesplek verstuurd" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -120,8 +120,8 @@ export function AdminWaitlistWorkflowPage({ snapshot }: PlacementPageProps) {
           <WorkflowTable
             columns={[
               { header: "Leerling", render: (entry) => intakeName(lookups, entry) },
-              { header: "Program", render: (entry) => lookups.programs.get(entry.program_id)?.name ?? "Onbekend" },
-              { header: "Stage", render: (entry) => nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name) },
+              { header: "Programma", render: (entry) => lookups.programs.get(entry.program_id)?.name ?? "Onbekend" },
+              { header: "Niveau", render: (entry) => nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name) },
               { header: "Status", render: (entry) => <StatusPill tone={workflowTone(entry.status)}>{entry.status}</StatusPill> },
               { header: "Voorkeur", className: "min-w-[220px] whitespace-normal", render: (entry) => preferenceText(entry.preferred_days, entry.preferred_time_windows) },
               {
@@ -146,18 +146,18 @@ export function AdminPlacementSuggestionsPage({ snapshot }: PlacementPageProps) 
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <PlacementFrame snapshot={snapshot} kicker="Tenant admin - approvals" title="Plaatsingsvoorstellen" subtitle="Admin approve/reject flow. Goedkeuren maakt een slot offer aan zonder abonnement of betaling te wijzigen.">
+    <PlacementFrame snapshot={snapshot} kicker="Backoffice - plaatsingsvoorstellen" title="Plaatsingsvoorstellen" subtitle="Goedkeuren maakt lesplek-aanbod aan zonder abonnement of betaling te wijzigen.">
       <Card>
         <SectionHeader title="Plaatsingsvoorstellen" count={snapshot.data.placementSuggestions.length} />
         <WorkflowTable
           columns={[
             { header: "Leerling", render: (suggestion) => suggestionName(lookups, suggestion) },
-            { header: "Program", render: (suggestion) => lookups.programs.get(suggestion.program_id)?.name ?? "Onbekend" },
+            { header: "Programma", render: (suggestion) => lookups.programs.get(suggestion.program_id)?.name ?? "Onbekend" },
             { header: "Groep", render: (suggestion) => groupSummary(lookups, suggestion.group_id) },
             { header: "Score", render: (suggestion) => <ScorePill score={suggestion.score} /> },
             { header: "Status", render: (suggestion) => <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill> },
             { header: "Capaciteit", className: "min-w-[180px] whitespace-normal", render: (suggestion) => capacityText(lookups.capacitiesByGroup.get(suggestion.group_id)) },
-            { header: "Rationale", className: "min-w-[260px] whitespace-normal", render: (suggestion) => nullableText(suggestion.rationale) },
+            { header: "Onderbouwing", className: "min-w-[260px] whitespace-normal", render: (suggestion) => nullableText(suggestion.rationale) },
             {
               header: "Actie",
               className: "min-w-[320px] whitespace-normal",
@@ -180,15 +180,15 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
   const declined = snapshot.data.slotOffers.filter((offer) => offer.status === "declined").length;
 
   return (
-    <PlacementFrame snapshot={snapshot} kicker="Tenant admin - slot offers" title="Slot offers" subtitle="Ouders accepteren of weigeren via een token-link. Bij acceptatie maakt de database enrollment + group membership aan.">
+    <PlacementFrame snapshot={snapshot} kicker="Backoffice - lesplek-aanbod" title="Lesplek-aanbod" subtitle="Ouders accepteren of weigeren via een token-link. Bij acceptatie maakt het systeem een inschrijving en groepsplaatsing aan.">
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard icon={<Send className="h-5 w-5" />} label="Open" value={sent.toString()} detail="wacht op ouder" />
-        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Accepted" value={accepted.toString()} detail="plaatsing aangemaakt" />
-        <MetricCard icon={<CalendarClock className="h-5 w-5" />} label="Declined" value={declined.toString()} detail="plek blijft beschikbaar" />
+        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Geaccepteerd" value={accepted.toString()} detail="plaatsing aangemaakt" />
+        <MetricCard icon={<CalendarClock className="h-5 w-5" />} label="Geweigerd" value={declined.toString()} detail="plek blijft beschikbaar" />
       </div>
 
       <Card>
-        <SectionHeader title="Slot offers" count={snapshot.data.slotOffers.length} />
+        <SectionHeader title="Lesplek-aanbod" count={snapshot.data.slotOffers.length} />
         <WorkflowTable
           columns={[
             { header: "Leerling", render: (offer) => offerName(lookups, offer) },
@@ -196,7 +196,7 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
             { header: "Status", render: (offer) => <StatusPill tone={workflowTone(offer.status)}>{offer.status}</StatusPill> },
             { header: "Verloopt", render: (offer) => formatDate(offer.expires_at) },
             {
-              header: "Offer link",
+              header: "Aanbodlink",
               className: "min-w-[260px] whitespace-normal",
               render: (offer) => (
                 <Link className="font-mono text-xs font-semibold text-primary underline-offset-4 hover:underline" href={`/slot-offers/${offer.offer_token}`}>
@@ -209,7 +209,7 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
               className: "min-w-[260px] whitespace-normal",
               render: (offer) =>
                 offer.status === "accepted" ? (
-                  <InlineNotice tone="success">Enrollment en group membership zijn gekoppeld.</InlineNotice>
+                  <InlineNotice tone="success">Inschrijving en groepsplaatsing zijn gekoppeld.</InlineNotice>
                 ) : offer.parent_response_note ? (
                   <span className="text-sm text-muted-foreground">{offer.parent_response_note}</span>
                 ) : (
@@ -218,7 +218,7 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
             },
             { header: "Actie", className: "min-w-[220px] whitespace-normal", render: (offer) => <SlotOfferActionPanel offer={offer} /> }
           ]}
-          emptyLabel="Nog geen slot offers. Keur eerst een plaatsingsvoorstel goed."
+          emptyLabel="Nog geen lesplek-aanbod. Keur eerst een plaatsingsvoorstel goed."
           rows={snapshot.data.slotOffers}
           rowKey={(offer) => offer.id}
         />
@@ -230,7 +230,7 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
 function PlacementFrame({ snapshot, kicker, title, subtitle, children }: PlacementPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode }) {
   return (
     <div className="grid gap-6">
-      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Phase 5 workflow</StatusPill>} />
+      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Plaatsingsflow</StatusPill>} />
       {snapshot.status === "ready" ? children : <PlacementStatusPanel snapshot={snapshot} />}
     </div>
   );
@@ -243,7 +243,7 @@ function PlacementStatusPanel({ snapshot }: PlacementPageProps) {
         <h2 className="text-lg font-bold">Workflow niet beschikbaar</h2>
         <StatusPill tone={snapshot.status === "not_configured" ? "warning" : "danger"}>{snapshot.status}</StatusPill>
       </div>
-      <p className="text-sm leading-6 text-muted-foreground">Deze pagina heeft tenantdata, Supabase-configuratie en de Phase 5 migratie nodig.</p>
+      <p className="text-sm leading-6 text-muted-foreground">Deze pagina heeft tenantdata, Supabase-configuratie en de plaatsingsmigratie nodig.</p>
       {snapshot.errors.length > 0 ? (
         <div className="mt-4 rounded-2xl bg-muted p-4 text-sm text-muted-foreground">
           {snapshot.errors.map((error) => (
@@ -259,7 +259,7 @@ function WaitlistFromIntakeForm({ intake, stages }: { intake: IntakeSubmissionRo
   return (
     <WorkflowForm action={createWaitlistEntryFromIntakeAction} submitLabel="Naar wachtlijst">
       <input name="intake_submission_id" type="hidden" value={intake.id} />
-      <SelectField includeEmpty label="Aanbevolen stage" name="recommended_stage_id" options={stages.map(optionFromName)} />
+      <SelectField includeEmpty label="Aanbevolen niveau" name="recommended_stage_id" options={stages.map(optionFromName)} />
       <TextField defaultValue={todayInput()} label="Prioriteit vanaf" name="priority_date" type="date" />
       <TextAreaField defaultValue={intake.notes} label="Interne notitie" name="notes" />
     </WorkflowForm>
@@ -285,7 +285,7 @@ function PlacementSuggestionForm({ entry, groups, lookups, suggestions }: { entr
       <WorkflowForm action={createPlacementSuggestionAction} submitLabel="Voorstel maken">
         <input name="waitlist_entry_id" type="hidden" value={entry.id} />
         <SelectField label="Groep" name="group_id" options={groups.map((group) => ({ label: groupOptionLabel(group, lookups), value: group.id }))} required />
-        <TextAreaField label="Rationale" name="rationale" />
+        <TextAreaField label="Onderbouwing" name="rationale" />
       </WorkflowForm>
     </div>
   );
@@ -295,9 +295,9 @@ function SuggestionActionPanel({ suggestion, offer }: { suggestion: PlacementSug
   if (offer) {
     return (
       <div className="grid gap-2">
-        <InlineNotice tone="success">Slot offer: {offer.status}</InlineNotice>
+        <InlineNotice tone="success">Lesplek-aanbod: {offer.status}</InlineNotice>
         <Link className="text-sm font-semibold text-primary underline-offset-4 hover:underline" href="/admin/slot-offers">
-          Bekijk slot offers
+          Bekijk lesplek-aanbod
         </Link>
       </div>
     );
@@ -312,7 +312,7 @@ function SuggestionActionPanel({ suggestion, offer }: { suggestion: PlacementSug
       <form action={approvePlacementSuggestionAction}>
         <input name="placement_suggestion_id" type="hidden" value={suggestion.id} />
         <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
-          Goedkeuren + offer
+          Goedkeuren + aanbod
         </button>
       </form>
       <form action={rejectPlacementSuggestionAction}>
@@ -575,7 +575,7 @@ function offerName(lookups: LookupMaps, offer: SlotOfferRow) {
       <p className="text-xs text-muted-foreground">{intake.parent_email}</p>
     </div>
   ) : (
-    <span className="text-muted-foreground">Slot offer</span>
+    <span className="text-muted-foreground">Lesplek-aanbod</span>
   );
 }
 
@@ -603,7 +603,7 @@ function groupSummary(lookups: LookupMaps, groupId: string) {
 }
 
 function groupOptionLabel(group: GroupLookupRow, lookups: LookupMaps) {
-  const stage = lookups.stages.get(group.stage_id)?.name ?? "Stage onbekend";
+  const stage = lookups.stages.get(group.stage_id)?.name ?? "Niveau onbekend";
   const capacity = lookups.capacitiesByGroup.get(group.id);
 
   return `${group.name} - ${stage} - ${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)} (${capacityText(capacity)})`;

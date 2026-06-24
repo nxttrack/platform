@@ -21,7 +21,7 @@ export default async function PublicSlotOfferPage({ params, searchParams }: Slot
         <section className="w-full rounded-3xl border border-border bg-card p-6 shadow-card md:p-8">
           <span className="inline-flex items-center gap-2 rounded-full border border-border bg-white/85 px-3 py-1 text-xs font-bold text-slate-700 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            NXTTRACK slot offer
+            NXTTRACK lesplek-aanbod
           </span>
 
           {status === "accepted" || status === "declined" ? (
@@ -36,7 +36,7 @@ export default async function PublicSlotOfferPage({ params, searchParams }: Slot
                 Bevestig of we de aangeboden plek mogen vastzetten. Bij acceptatie wordt de leerling aan het programma en de groep gekoppeld; abonnement/betaling blijft een aparte stap.
               </p>
               <div className="mt-5 rounded-2xl bg-muted p-4">
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Offer token</p>
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Aanbodtoken</p>
                 <p className="mt-1 break-all font-mono text-sm font-semibold">{token}</p>
               </div>
               <form action={respondToSlotOfferAction} className="mt-6 grid gap-4">
@@ -81,7 +81,7 @@ function ResponseState({ status }: { status: "accepted" | "declined" }) {
       </div>
       <h1 className="mt-5 text-3xl font-bold tracking-tight md:text-4xl">{accepted ? "Plaatsing geaccepteerd" : "Plaatsing geweigerd"}</h1>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">
-        {accepted ? "De plek is vastgezet. De zwemschool ziet de enrollment en group membership nu in de administratie." : "De zwemschool ziet dat het aanbod is geweigerd en kan de plek opnieuw matchen."}
+        {accepted ? "De plek is vastgezet. De zwemschool ziet de inschrijving en groepsplaatsing nu in de administratie." : "De zwemschool ziet dat het aanbod is geweigerd en kan de plek opnieuw matchen."}
       </p>
     </>
   );

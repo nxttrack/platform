@@ -91,7 +91,7 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - Phase 7"
+      kicker="Instructeur app - vandaag"
       title="Vandaag"
       subtitle="Data-backed instructeursoverzicht met agenda, groepen, aanwezigheid, voortgang en notities."
     >
@@ -104,9 +104,9 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
         <Card>
-          <SectionHeader title="Aankomende sessies" count={upcomingSessions.length} />
+          <SectionHeader title="Aankomende lessen" count={upcomingSessions.length} />
           <div className="grid gap-3">
-            {upcomingSessions.length === 0 ? <EmptyState>Geen sessies gevonden voor deze instructeur.</EmptyState> : null}
+            {upcomingSessions.length === 0 ? <EmptyState>Geen lessen gevonden voor deze instructeur.</EmptyState> : null}
             {upcomingSessions.map((session) => {
               const group = lookups.groups.get(session.group_id);
 
@@ -135,7 +135,7 @@ export function InstructorAgendaPage({ snapshot }: InstructorPageProps) {
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - agenda"
+      kicker="Instructeur app - agenda"
       title="Agenda"
       subtitle="Sessies vanuit groups/sessions met roster en attendance-flow per leerling."
     >
@@ -158,7 +158,7 @@ export function InstructorGroupsPage({ snapshot }: InstructorPageProps) {
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - groepen"
+      kicker="Instructeur app - groepen"
       title="Mijn groepen"
       subtitle="Groepslijsten vanuit group memberships met capaciteit, rooster en voortgangssignalen."
     >
@@ -176,20 +176,20 @@ export function InstructorGroupsPage({ snapshot }: InstructorPageProps) {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <p className="text-lg font-bold">{group.name}</p>
-                  <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Stage"}</p>
+                  <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Niveau"}</p>
                 </div>
                 <StatusPill tone={group.status === "active" ? "success" : "neutral"}>{group.status}</StatusPill>
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 <InfoTile label="Rooster" value={`${weekdayName(group.weekday)} ${formatTime(group.starts_at)}`} />
                 <InfoTile label="Roster" value={`${memberships.length}/${group.capacity}`} />
-                <InfoTile label="Instructor" value={instructor?.display_name ?? "Niet gekoppeld"} />
+                <InfoTile label="Instructeur" value={instructor?.display_name ?? "Niet gekoppeld"} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" href={`/instructor/group/${group.id}`}>
                   Groepslijst openen
                 </Link>
-                <StatusPill tone="info">{sessions.length} sessies</StatusPill>
+                <StatusPill tone="info">{sessions.length} lessen</StatusPill>
               </div>
             </Card>
           );
@@ -208,9 +208,9 @@ export function InstructorGroupDetailPage({ snapshot, groupId }: InstructorPageP
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - groepslijst"
+      kicker="Instructeur app - groepslijst"
       title={group?.name ?? "Groep niet gevonden"}
-      subtitle="Roster, sessies en aanwezigheid voor deze groep."
+      subtitle="Groepslijst, lessen en aanwezigheid voor deze groep."
     >
       {!group ? (
         <EmptyState>Deze groep is niet beschikbaar binnen de actieve tenant of instructeurcontext.</EmptyState>
@@ -219,7 +219,7 @@ export function InstructorGroupDetailPage({ snapshot, groupId }: InstructorPageP
           <Card>
             <div className="grid gap-3 md:grid-cols-4">
               <InfoTile label="Programma" value={lookups.programs.get(group.program_id)?.name ?? "-"} />
-              <InfoTile label="Stage" value={lookups.stages.get(group.stage_id)?.name ?? "-"} />
+              <InfoTile label="Niveau" value={lookups.stages.get(group.stage_id)?.name ?? "-"} />
               <InfoTile label="Capaciteit" value={`${(lookups.membershipsByGroup.get(group.id) ?? []).length}/${group.capacity}`} />
               <InfoTile label="Moment" value={`${weekdayName(group.weekday)} ${formatTime(group.starts_at)}`} />
             </div>
@@ -235,7 +235,7 @@ export function InstructorGroupDetailPage({ snapshot, groupId }: InstructorPageP
                 lookups={lookups}
               />
             ))}
-            {sessions.length === 0 ? <EmptyState>Geen sessies gevonden voor deze groep.</EmptyState> : null}
+            {sessions.length === 0 ? <EmptyState>Geen lessen gevonden voor deze groep.</EmptyState> : null}
           </div>
         </div>
       )}
@@ -250,7 +250,7 @@ export function InstructorStudentsPage({ snapshot }: InstructorPageProps) {
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - leerlingen"
+      kicker="Instructeur app - leerlingen"
       title="Leerlingen"
       subtitle="Leerlingoverzicht met huidige stage, laatste voortgang, aanwezigheid en notities."
     >
@@ -276,7 +276,7 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
   return (
     <InstructorFrame
       snapshot={snapshot}
-      kicker="Instructor portal - beoordeling"
+      kicker="Instructeur app - beoordeling"
       title={student?.participant.display_name ?? "Leerling niet gevonden"}
       subtitle="Voortgang beoordelen, notities vastleggen en complimenten registreren."
     >
@@ -290,7 +290,7 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
               <InfoTile label="Naam" value={student.participant.display_name} />
               <InfoTile label="Leeftijd" value={student.participant.birthdate ? `${ageFromBirthdate(student.participant.birthdate)} jaar` : "Onbekend"} />
               <InfoTile label="Programma" value={lookups.programs.get(primaryEnrollment.program_id)?.name ?? "-"} />
-              <InfoTile label="Stage" value={primaryEnrollment.current_stage_id ? (lookups.stages.get(primaryEnrollment.current_stage_id)?.name ?? "-") : "-"} />
+              <InfoTile label="Niveau" value={primaryEnrollment.current_stage_id ? (lookups.stages.get(primaryEnrollment.current_stage_id)?.name ?? "-") : "-"} />
               <InfoTile label="Groep" value={primaryGroup?.name ?? "-"} />
             </div>
           </Card>
@@ -348,7 +348,7 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
 function InstructorFrame({ snapshot, kicker, title, subtitle, children }: InstructorPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode }) {
   return (
     <div className="grid gap-6">
-      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Phase 7</StatusPill>} />
+      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Trainer workflow</StatusPill>} />
       {snapshot.status === "ready" ? children : <InstructorStatusPanel snapshot={snapshot} />}
     </div>
   );
@@ -358,7 +358,7 @@ function InstructorStatusPanel({ snapshot }: InstructorPageProps) {
   return (
     <Card>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-bold">Instructor portal niet beschikbaar</h2>
+        <h2 className="text-lg font-bold">Instructeur app niet beschikbaar</h2>
         <StatusPill tone={snapshot.status === "not_configured" ? "warning" : "danger"}>{snapshot.status}</StatusPill>
       </div>
       <p className="text-sm leading-6 text-muted-foreground">Deze pagina heeft Supabase-configuratie, tenantcontext en instructorrechten nodig.</p>
@@ -380,7 +380,7 @@ function SessionAttendanceCard({ session, group, rows, lookups }: { session: Ins
         <div>
           <p className="text-lg font-bold">{group.name}</p>
           <p className="text-sm text-muted-foreground">
-            {formatDateTime(session.starts_at)} - {formatTime(session.ends_at)} - {session.resource_id ? (lookups.resources.get(session.resource_id)?.name ?? "Resource") : "Resource volgt"}
+            {formatDateTime(session.starts_at)} - {formatTime(session.ends_at)} - {session.resource_id ? (lookups.resources.get(session.resource_id)?.name ?? "Locatie") : "Locatie volgt"}
           </p>
         </div>
         <StatusPill tone={session.status === "scheduled" ? "success" : session.status === "cancelled" ? "danger" : "neutral"}>{session.status}</StatusPill>
@@ -407,7 +407,7 @@ function AttendanceRow({ row, lookups }: { row: SessionRosterRow; lookups: Looku
             {row.participant.display_name}
           </Link>
           <p className="text-sm text-muted-foreground">
-            {stage?.name ?? "Stage"} - laatste score: {latestProgress?.score ?? "-"}
+            {stage?.name ?? "Niveau"} - laatste score: {latestProgress?.score ?? "-"}
           </p>
         </div>
         <StatusPill tone={attendanceTone(row.attendance?.status)}>{row.attendance?.status ?? "nog niet geregistreerd"}</StatusPill>
@@ -458,7 +458,7 @@ function ProgressForm({
       {group ? <input name="group_id" type="hidden" value={group.id} /> : null}
       <div className="grid gap-3 md:grid-cols-3">
         <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
-          Stage
+          Niveau
           <select className={fieldClassName} defaultValue={enrollment.current_stage_id ?? ""} name="stage_id">
             <option value="">Geen stage</option>
             {programStages.map((stage) => (
@@ -617,7 +617,7 @@ function StageTransitionForm({ enrollment, participant, group, stages }: { enrol
       </label>
       <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
         Reden
-        <textarea className={`${fieldClassName} min-h-20`} name="reason" placeholder="Waarom is doorstroom passend? Subscription blijft ongewijzigd." />
+        <textarea className={`${fieldClassName} min-h-20`} name="reason" placeholder="Waarom is doorstroom passend? Abonnement blijft ongewijzigd." />
       </label>
       <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
         Doorstroom voorstellen
@@ -640,7 +640,7 @@ function StudentListRow({ student, lookups }: { student: StudentRow; lookups: Lo
           <Link className="text-lg font-bold text-foreground hover:text-primary" href={`/instructor/student/${student.participant.id}`}>
             {student.participant.display_name}
           </Link>
-          <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Stage"} - {group?.name ?? "Geen groep"}</p>
+          <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Niveau"} - {group?.name ?? "Geen groep"}</p>
         </div>
         <StatusPill tone={student.participant.status === "active" ? "success" : "neutral"}>{student.participant.status}</StatusPill>
       </div>

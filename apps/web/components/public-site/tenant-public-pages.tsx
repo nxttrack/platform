@@ -1,4 +1,4 @@
-import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MessageSquare, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
+import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MapPin, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -158,9 +158,9 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
               </div>
 
               <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] text-navy md:text-4xl lg:text-5xl">
-                Zwemles met
+                Zwemles met{" "}
                 <br />
-                vertrouwen bij
+                vertrouwen bij{" "}
                 <br />
                 <span className="bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">{tenantName}</span>
               </h1>
@@ -355,6 +355,110 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
   );
 }
 
+export function TenantNewsPage({ snapshot }: PublicPageProps) {
+  if (snapshot.status !== "ready" || !snapshot.tenant) {
+    return <PublicStatusPage snapshot={snapshot} />;
+  }
+
+  const tenantName = snapshot.tenant.name;
+  const items = [
+    {
+      title: "Zomervakantie intensieve lessen en versnelde trajecten",
+      body: "Een nette placeholder voor nieuws vanuit de zwemschool. Later komt dit uit het berichten- en documentensysteem.",
+      date: "15 mei 2026"
+    },
+    {
+      title: "Nieuwe instroommomenten voor Zwemdiploma A",
+      body: "Gebruik dit blok tijdelijk om ouders alvast duidelijkheid te geven over aanbod, wachtlijst en intake.",
+      date: "1 juni 2026"
+    },
+    {
+      title: "Ouderportaal blijft de centrale plek",
+      body: "Voortgang, badges, berichten en diploma's blijven zichtbaar vanuit de persoonlijke omgeving.",
+      date: "24 juni 2026"
+    }
+  ];
+
+  return (
+    <PublicShell snapshot={snapshot}>
+      <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
+        <CompactHero kicker={`${tenantName} - nieuws`} title="Nieuws en updates" sub="Mededelingen, praktische updates en zwemschoolnieuws in dezelfde rustige Lovable-stijl." primary={{ href: "/intake", label: "Plan intake" }} />
+        <section className="mt-8 grid gap-4 md:grid-cols-3">
+          {items.map((item) => (
+            <article key={item.title} className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                <Newspaper className="h-5 w-5" />
+              </div>
+              <p className="mt-5 text-xs font-semibold uppercase tracking-wider text-primary">{item.date}</p>
+              <h2 className="mt-2 font-display text-lg font-bold text-navy">{item.title}</h2>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.body}</p>
+            </article>
+          ))}
+        </section>
+      </main>
+    </PublicShell>
+  );
+}
+
+export function TenantAgendaPage({ snapshot }: PublicPageProps) {
+  if (snapshot.status !== "ready" || !snapshot.tenant) {
+    return <PublicStatusPage snapshot={snapshot} />;
+  }
+
+  const programs = toMarketingPrograms(snapshot.programs);
+  const moments = [
+    { title: "Diploma A instroom", time: "Maandag 16:00", location: "Bad 1 - baan 1" },
+    { title: "Proeflesmoment", time: "Zaterdag 11:00", location: "Instructiebad" },
+    { title: "Afzwemmen Diploma A", time: "Zaterdag 10:00", location: "Wedstrijdbad" }
+  ];
+
+  return (
+    <PublicShell snapshot={snapshot}>
+      <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
+        <CompactHero kicker={`${snapshot.tenant.name} - agenda`} title="Agenda en wachttijden" sub="Een nette publieke placeholder voor instroommomenten, proeflessen en wachttijden per programma." primary={{ href: "/intake", label: "Start intake" }} />
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.85fr]">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="font-display text-xl font-bold text-navy">Komende momenten</h2>
+              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{moments.length}</span>
+            </div>
+            <div className="grid gap-3">
+              {moments.map((moment) => (
+                <div key={moment.title} className="rounded-2xl border border-border bg-muted/35 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{moment.title}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{moment.time}</p>
+                    </div>
+                    <span className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-xs font-semibold text-muted-foreground">
+                      <MapPin className="h-3.5 w-3.5" /> {moment.location}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
+            <h2 className="font-display text-xl font-bold text-navy">Wachttijden</h2>
+            <div className="mt-5 grid gap-3">
+              {programs.slice(0, 4).map((program) => (
+                <div key={program.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+                  <div>
+                    <p className="text-sm font-semibold">{program.name}</p>
+                    <p className="text-xs text-muted-foreground">{program.ageLabel}</p>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${waitlistTone(program.waitlist)}`}>{program.weeks} weken</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
+    </PublicShell>
+  );
+}
+
 export function ProgramOverviewPage({ snapshot }: PublicPageProps) {
   if (snapshot.status !== "ready" || !snapshot.tenant) {
     return <PublicStatusPage snapshot={snapshot} />;
@@ -428,7 +532,7 @@ export function ProgramDetailPage({ snapshot }: PublicPageProps) {
           </div>
 
           <div className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-soft">
-            <h2 className="text-2xl font-bold">Stages</h2>
+            <h2 className="text-2xl font-bold">Niveaus</h2>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
               {program.stages.length > 0 ? (
                 program.stages.map((stage) => (
@@ -537,7 +641,7 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
                   <Link href="/instructor">Instructeur app</Link>
                 </li>
                 <li>
-                  <Link href="/admin">Tenant admin</Link>
+                  <Link href="/admin">Backoffice</Link>
                 </li>
               </ul>
             </div>
@@ -916,6 +1020,6 @@ function fallbackProfile(tenantName: string) {
     primaryCtaLabel: "Bekijk programma's",
     secondaryCtaLabel: "Start intake",
     introTitle: "Van intake naar de juiste groep",
-    introBody: "Programma's, stages en intake-opties worden uit de tenantdata gelezen."
+    introBody: "Programma's, niveaus en intake-opties worden uit de tenantdata gelezen."
   };
 }

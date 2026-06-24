@@ -64,8 +64,8 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 12</StatusPill>}
-        kicker="Tenant admin - berichten"
+        action={<StatusPill tone="info">Communicatie</StatusPill>}
+        kicker="Backoffice - berichten"
         subtitle="SMTP-first met SendGrid als provider. Berichten worden klaargezet in de outbox; er is nog geen live worker."
         title="Berichten"
       />
@@ -79,7 +79,7 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card>
-          <SectionHeader title="Email foundation" count={data.providerConfigs.length} />
+          <SectionHeader title="E-mail instellingen" count={data.providerConfigs.length} />
           <div className="grid gap-3">
             <ProviderConfigCard provider={smtpProvider} title="SMTP via SendGrid" />
             <ProviderConfigCard provider={sendgridProvider} title="SendGrid API voorbereiding" />
@@ -136,8 +136,8 @@ export function AdminTasksTodoPage({ snapshot }: Phase12PageProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 12</StatusPill>}
-        kicker="Tenant admin - taken"
+        action={<StatusPill tone="info">Takenlijst</StatusPill>}
+        kicker="Backoffice - taken"
         subtitle="Persistente todo's naast de operationele signalen uit dashboard en planning."
         title="Taken"
       />
@@ -145,7 +145,7 @@ export function AdminTasksTodoPage({ snapshot }: Phase12PageProps) {
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Open" value={openTasks.length.toString()} detail="todo's" />
         <MetricCard icon={<Inbox className="h-5 w-5" />} label="Urgent/hoog" value={urgentTasks.length.toString()} detail="prioriteit" />
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenttaken" value={data.operationalTasks.filter((task) => task.task_type === "document").length.toString()} detail="records/storage" />
+        <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenttaken" value={data.operationalTasks.filter((task) => task.task_type === "document").length.toString()} detail="documenten/opslag" />
         <MetricCard icon={<Send className="h-5 w-5" />} label="Afgerond" value={doneTasks.length.toString()} detail="operationeel" />
       </div>
 
@@ -182,17 +182,17 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 12</StatusPill>}
-        kicker="Tenant admin - documenten"
-        subtitle="Documentrecords en rechten staan klaar; echte upload/storage-koppeling blijft voorbereid."
+        action={<StatusPill tone="info">Documenten</StatusPill>}
+        kicker="Backoffice - documenten"
+        subtitle="Documenten en rechten staan klaar; echte upload en opslagkoppeling blijft voorbereid."
         title="Documenten"
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Records" value={data.documentRecords.length.toString()} detail="tenant docs" />
+        <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenten" value={data.documentRecords.length.toString()} detail="tenantdocumenten" />
         <MetricCard icon={<Download className="h-5 w-5" />} label="Beschikbaar" value={availableDocuments.toString()} detail="zichtbaar volgens rechten" />
-        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Ouderzichtbaar" value={parentVisible.toString()} detail="parent/all" />
-        <MetricCard icon={<Settings className="h-5 w-5" />} label="Bucket" value="prepared" detail="tenant-documents" />
+        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Ouderzichtbaar" value={parentVisible.toString()} detail="ouder/iedereen" />
+        <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value="voorbereid" detail="tenant-documents" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -202,9 +202,9 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
         </Card>
 
         <Card>
-          <SectionHeader title="Documentrecords" count={data.documentRecords.length} />
+          <SectionHeader title="Documentenlijst" count={data.documentRecords.length} />
           <div className="grid gap-3">
-            {data.documentRecords.length === 0 ? <EmptyState>Nog geen documentrecords.</EmptyState> : null}
+            {data.documentRecords.length === 0 ? <EmptyState>Nog geen documenten.</EmptyState> : null}
             {data.documentRecords.map((document) => (
               <DocumentRecordCard key={document.id} data={data} document={document} lookups={lookups} />
             ))}
@@ -233,8 +233,8 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 12</StatusPill>}
-        kicker="Tenant admin - rapportages"
+        action={<StatusPill tone="info">Rapportage</StatusPill>}
+        kicker="Backoffice - rapportages"
         subtitle="Basisrapportages voor bezetting, wachtlijst, voortgang en betalingen met exportvoorbereiding."
         title="Rapportages"
       />
@@ -242,8 +242,8 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<BarChart3 className="h-5 w-5" />} label="Bezetting" value={`${totalOccupied}/${totalCapacity}`} detail="actieve plekken" />
         <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Wachtlijst" value={waiting.toString()} detail="wachtend/gematcht" />
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Voortgang" value={progressCount.toString()} detail="laatste records" />
-        <MetricCard icon={<Download className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="manual payments" />
+        <MetricCard icon={<FileText className="h-5 w-5" />} label="Voortgang" value={progressCount.toString()} detail="laatste updates" />
+        <MetricCard icon={<Download className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="handmatige betalingen" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -255,16 +255,16 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
         <Card>
           <SectionHeader title="Rapport snapshots" count={4} />
           <div className="grid gap-3">
-            <ReportSnapshotRow label="Occupancy" value={`${totalOccupied}/${totalCapacity}`} detail={`${capacityRows.reduce((sum, row) => sum + row.availableSpots, 0)} vrije plekken`} />
-            <ReportSnapshotRow label="Waitlist" value={waiting.toString()} detail={placement.status === "ready" ? `${placement.data.placementSuggestions.length} plaatsingsvoorstellen` : placement.status} />
-            <ReportSnapshotRow label="Progress" value={progressCount.toString()} detail={domain.status === "ready" ? `${domain.data.badges.length} badges gedefinieerd` : domain.status} />
-            <ReportSnapshotRow label="Payments" value={formatMoney(openAmount, "EUR")} detail={payments.status === "ready" ? `${payments.data.invoices.length} facturen` : payments.status} />
+            <ReportSnapshotRow label="Bezetting" value={`${totalOccupied}/${totalCapacity}`} detail={`${capacityRows.reduce((sum, row) => sum + row.availableSpots, 0)} vrije plekken`} />
+            <ReportSnapshotRow label="Wachtlijst" value={waiting.toString()} detail={placement.status === "ready" ? `${placement.data.placementSuggestions.length} plaatsingsvoorstellen` : placement.status} />
+            <ReportSnapshotRow label="Voortgang" value={progressCount.toString()} detail={domain.status === "ready" ? `${domain.data.badges.length} badges gedefinieerd` : domain.status} />
+            <ReportSnapshotRow label="Betalingen" value={formatMoney(openAmount, "EUR")} detail={payments.status === "ready" ? `${payments.data.invoices.length} facturen` : payments.status} />
           </div>
         </Card>
       </div>
 
       <Card>
-        <SectionHeader title="Export requests" count={phase12.data.reportExports.length} />
+        <SectionHeader title="Exportaanvragen" count={phase12.data.reportExports.length} />
         <div className="grid gap-3">
           {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
           {phase12.data.reportExports.map((request) => (
@@ -301,11 +301,11 @@ function ProviderConfigCard({ provider, title }: { provider: CommunicationProvid
           <SelectField defaultValue={provider.status} label="Status" name="status" options={providerStatusOptions} />
           <TextField defaultValue={provider.host} label="Host" name="host" />
           <TextField defaultValue={provider.port} label="Poort" name="port" type="number" />
-          <TextField defaultValue={provider.from_email} label="From email" name="from_email" type="email" />
-          <TextField defaultValue={provider.from_name} label="From name" name="from_name" />
-          <TextField defaultValue={provider.username_secret_reference} label="Username secret ref" name="username_secret_reference" />
-          <TextField defaultValue={provider.password_secret_reference} label="Password secret ref" name="password_secret_reference" />
-          <TextField defaultValue={provider.api_key_secret_reference} label="API key secret ref" name="api_key_secret_reference" />
+          <TextField defaultValue={provider.from_email} label="Afzender e-mail" name="from_email" type="email" />
+          <TextField defaultValue={provider.from_name} label="Afzender naam" name="from_name" />
+          <TextField defaultValue={provider.username_secret_reference} label="Gebruikersnaam secret" name="username_secret_reference" />
+          <TextField defaultValue={provider.password_secret_reference} label="Wachtwoord secret" name="password_secret_reference" />
+          <TextField defaultValue={provider.api_key_secret_reference} label="API-key secret" name="api_key_secret_reference" />
         </div>
         <button className={primaryButtonClassName} type="submit">
           Provider opslaan
@@ -369,7 +369,7 @@ function QueueMessageForm({ data }: { data: AdminPhase12Data }) {
         <SelectField includeEmpty label="Profiel" name="recipient_profile_id" options={data.profiles.map(optionFromProfile)} />
         <TextField label="E-mail" name="recipient_email" type="email" />
         <SelectField includeEmpty label="Leerling" name="participant_id" options={data.participants.map(optionFromParticipant)} />
-        <SelectField includeEmpty label="Enrollment" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
+        <SelectField includeEmpty label="Inschrijving" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
         <TextField label="Gepland om" name="scheduled_at" type="datetime-local" />
       </div>
       <TextField label="Onderwerp" name="subject" />
@@ -392,7 +392,7 @@ function MessageOutboxCard({ lookups, message }: { lookups: Phase12Lookups; mess
         <div>
           <p className="font-semibold">{message.subject ?? template?.name ?? "Bericht zonder onderwerp"}</p>
           <p className="text-sm text-muted-foreground">
-            {profile?.full_name ?? message.recipient_email ?? "recipient onbekend"} - {participant?.display_name ?? "geen leerling"} - {message.provider}
+            {profile?.full_name ?? message.recipient_email ?? "ontvanger onbekend"} - {participant?.display_name ?? "geen leerling"} - {message.provider}
           </p>
         </div>
         <StatusPill tone={statusTone(message.status)}>{message.status}</StatusPill>
@@ -412,9 +412,9 @@ function OperationalTaskForm({ data, mode, task }: { data: AdminPhase12Data; mod
         <SelectField defaultValue={task?.task_type ?? "general"} label="Type" name="task_type" options={taskTypeOptions} />
         <SelectField defaultValue={task?.status ?? "open"} label="Status" name="status" options={taskStatusOptions} />
         <SelectField defaultValue={task?.priority ?? "normal"} label="Prioriteit" name="priority" options={taskPriorityOptions} />
-        <SelectField includeEmpty defaultValue={task?.assigned_to_profile_id} label="Assignee" name="assigned_to_profile_id" options={data.profiles.map(optionFromProfile)} />
+        <SelectField includeEmpty defaultValue={task?.assigned_to_profile_id} label="Toegewezen aan" name="assigned_to_profile_id" options={data.profiles.map(optionFromProfile)} />
         <SelectField includeEmpty defaultValue={task?.participant_id} label="Leerling" name="participant_id" options={data.participants.map(optionFromParticipant)} />
-        <SelectField includeEmpty defaultValue={task?.enrollment_id} label="Enrollment" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
+        <SelectField includeEmpty defaultValue={task?.enrollment_id} label="Inschrijving" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
         <TextField defaultValue={task?.due_on} label="Deadline" name="due_on" type="date" />
       </div>
       <TextAreaField defaultValue={task?.description} label="Omschrijving" name="description" />
@@ -463,11 +463,11 @@ function DocumentRecordForm({ data, document, mode }: { data: AdminPhase12Data; 
         <SelectField defaultValue={document?.visibility ?? "staff"} label="Zichtbaarheid" name="visibility" options={documentVisibilityOptions} />
         <SelectField defaultValue={document?.status ?? "draft"} label="Status" name="status" options={documentStatusOptions} />
         <SelectField includeEmpty defaultValue={document?.participant_id} label="Leerling" name="participant_id" options={data.participants.map(optionFromParticipant)} />
-        <SelectField includeEmpty defaultValue={document?.enrollment_id} label="Enrollment" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
-        <SelectField includeEmpty defaultValue={document?.certificate_id} label="Certificate" name="certificate_id" options={data.certificates.map((certificate) => ({ label: `${certificate.title} - ${certificate.certificate_number ?? certificate.status}`, value: certificate.id }))} />
+        <SelectField includeEmpty defaultValue={document?.enrollment_id} label="Inschrijving" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
+        <SelectField includeEmpty defaultValue={document?.certificate_id} label="Diploma/certificaat" name="certificate_id" options={data.certificates.map((certificate) => ({ label: `${certificate.title} - ${certificate.certificate_number ?? certificate.status}`, value: certificate.id }))} />
         <TextField defaultValue={document?.available_on} label="Beschikbaar vanaf" name="available_on" type="date" />
-        <TextField defaultValue={document?.storage_bucket ?? "tenant-documents"} label="Storage bucket" name="storage_bucket" />
-        <TextField defaultValue={document?.file_path} label="File path" name="file_path" />
+        <TextField defaultValue={document?.storage_bucket ?? "tenant-documents"} label="Opslagbucket" name="storage_bucket" />
+        <TextField defaultValue={document?.file_path} label="Bestandspad" name="file_path" />
       </div>
       <button className={primaryButtonClassName} type="submit">
         {mode === "create" ? "Documentrecord maken" : "Documentrecord opslaan"}
@@ -493,7 +493,7 @@ function DocumentRecordCard({ data, document, lookups }: { data: AdminPhase12Dat
         </div>
       </summary>
       <div className="mt-3 grid gap-3 md:grid-cols-3">
-        <InfoTile label="Bucket" value={document.storage_bucket} />
+        <InfoTile label="Opslag" value={document.storage_bucket} />
         <InfoTile label="Pad" value={document.file_path ?? "nog geen bestand"} />
         <InfoTile label="Beschikbaar" value={document.available_on ? formatDate(document.available_on) : "-"} />
       </div>
@@ -512,7 +512,7 @@ function ReportExportForm({ mode, request }: { mode: "create" | "update"; reques
         <SelectField defaultValue={request?.report_type ?? "occupancy"} label="Rapport" name="report_type" options={reportTypeOptions} />
         <SelectField defaultValue={request?.export_format ?? "csv"} label="Format" name="export_format" options={exportFormatOptions} />
         <SelectField defaultValue={request?.status ?? "requested"} label="Status" name="status" options={exportStatusOptions} />
-        <TextField defaultValue={request?.file_path} label="File path" name="file_path" />
+        <TextField defaultValue={request?.file_path} label="Bestandspad" name="file_path" />
       </div>
       <TextAreaField defaultValue={request ? formatJson(request.filters) : "{ \"scope\": \"all\" }"} label="Filters JSON" name="filters" />
       <TextAreaField defaultValue={request?.error_message} label="Foutmelding" name="error_message" />
@@ -766,27 +766,27 @@ const fieldClassName = "min-h-10 rounded-xl border border-border bg-background p
 const primaryButtonClassName = "w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90";
 
 const providerStatusOptions = [
-  { label: "Disabled", value: "disabled" },
-  { label: "Configured", value: "configured" },
-  { label: "Active", value: "active" }
+  { label: "Uitgeschakeld", value: "disabled" },
+  { label: "Geconfigureerd", value: "configured" },
+  { label: "Actief", value: "active" }
 ];
 
 const channelOptions = [
-  { label: "Email", value: "email" },
+  { label: "E-mail", value: "email" },
   { label: "In-app", value: "in_app" }
 ];
 
 const audienceOptions = [
-  { label: "Parent", value: "parent" },
-  { label: "Instructor", value: "instructor" },
-  { label: "Tenant admin", value: "tenant_admin" },
-  { label: "All", value: "all" }
+  { label: "Ouder", value: "parent" },
+  { label: "Instructeur", value: "instructor" },
+  { label: "Tenantbeheerder", value: "tenant_admin" },
+  { label: "Iedereen", value: "all" }
 ];
 
 const templateStatusOptions = [
-  { label: "Draft", value: "draft" },
-  { label: "Active", value: "active" },
-  { label: "Archived", value: "archived" }
+  { label: "Concept", value: "draft" },
+  { label: "Actief", value: "active" },
+  { label: "Gearchiveerd", value: "archived" }
 ];
 
 const messageProviderOptions = [
@@ -796,60 +796,60 @@ const messageProviderOptions = [
 ];
 
 const messageDraftStatusOptions = [
-  { label: "Draft", value: "draft" },
-  { label: "Queued", value: "queued" }
+  { label: "Concept", value: "draft" },
+  { label: "In wachtrij", value: "queued" }
 ];
 
 const taskTypeOptions = [
-  { label: "General", value: "general" },
+  { label: "Algemeen", value: "general" },
   { label: "Planning", value: "planning" },
-  { label: "Placement", value: "placement" },
-  { label: "Payment", value: "payment" },
+  { label: "Plaatsing", value: "placement" },
+  { label: "Betaling", value: "payment" },
   { label: "Document", value: "document" },
-  { label: "Follow-up", value: "follow_up" }
+  { label: "Opvolging", value: "follow_up" }
 ];
 
 const taskStatusOptions = [
   { label: "Open", value: "open" },
-  { label: "In progress", value: "in_progress" },
-  { label: "Done", value: "done" },
-  { label: "Cancelled", value: "cancelled" }
+  { label: "Bezig", value: "in_progress" },
+  { label: "Afgerond", value: "done" },
+  { label: "Geannuleerd", value: "cancelled" }
 ];
 
 const taskPriorityOptions = [
-  { label: "Low", value: "low" },
-  { label: "Normal", value: "normal" },
-  { label: "High", value: "high" },
+  { label: "Laag", value: "low" },
+  { label: "Normaal", value: "normal" },
+  { label: "Hoog", value: "high" },
   { label: "Urgent", value: "urgent" }
 ];
 
 const documentTypeOptions = [
   { label: "Document", value: "document" },
-  { label: "Policy", value: "policy" },
-  { label: "Invoice notice", value: "invoice_notice" },
-  { label: "Certificate", value: "certificate" },
+  { label: "Beleid", value: "policy" },
+  { label: "Factuurbericht", value: "invoice_notice" },
+  { label: "Certificaat", value: "certificate" },
   { label: "Diploma", value: "diploma" },
-  { label: "Internal note", value: "internal_note" }
+  { label: "Interne notitie", value: "internal_note" }
 ];
 
 const documentVisibilityOptions = [
-  { label: "Staff", value: "staff" },
-  { label: "Parent", value: "parent" },
-  { label: "Instructor", value: "instructor" },
-  { label: "All", value: "all" }
+  { label: "Medewerkers", value: "staff" },
+  { label: "Ouder", value: "parent" },
+  { label: "Instructeur", value: "instructor" },
+  { label: "Iedereen", value: "all" }
 ];
 
 const documentStatusOptions = [
-  { label: "Draft", value: "draft" },
-  { label: "Available", value: "available" },
-  { label: "Archived", value: "archived" }
+  { label: "Concept", value: "draft" },
+  { label: "Beschikbaar", value: "available" },
+  { label: "Gearchiveerd", value: "archived" }
 ];
 
 const reportTypeOptions = [
-  { label: "Occupancy", value: "occupancy" },
-  { label: "Waitlist", value: "waitlist" },
-  { label: "Progress", value: "progress" },
-  { label: "Payments", value: "payments" }
+  { label: "Bezetting", value: "occupancy" },
+  { label: "Wachtlijst", value: "waitlist" },
+  { label: "Voortgang", value: "progress" },
+  { label: "Betalingen", value: "payments" }
 ];
 
 const exportFormatOptions = [
@@ -860,9 +860,9 @@ const exportFormatOptions = [
 ];
 
 const exportStatusOptions = [
-  { label: "Requested", value: "requested" },
-  { label: "Processing", value: "processing" },
-  { label: "Ready", value: "ready" },
-  { label: "Failed", value: "failed" },
-  { label: "Cancelled", value: "cancelled" }
+  { label: "Aangevraagd", value: "requested" },
+  { label: "Bezig", value: "processing" },
+  { label: "Klaar", value: "ready" },
+  { label: "Mislukt", value: "failed" },
+  { label: "Geannuleerd", value: "cancelled" }
 ];

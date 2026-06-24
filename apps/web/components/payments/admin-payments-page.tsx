@@ -38,28 +38,28 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 10</StatusPill>}
-        kicker="Tenant admin - payments"
-        subtitle="Manual payment status eerst. Subscription plans blijven product/billingconfiguratie; facturen en betalingen staan los van stage/badje."
+        action={<StatusPill tone="info">Handmatig eerst</StatusPill>}
+        kicker="Backoffice - betalingen"
+        subtitle="Handmatige betaalstatus eerst. Abonnementen blijven product- en facturatieconfiguratie; facturen en betalingen staan los van niveau of badje."
         title="Betalingen"
       />
       {snapshot.status === "ready" ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
-            <MetricCard icon={<FileText className="h-5 w-5" />} label="Facturen" value={snapshot.data.invoices.length.toString()} detail="manual first" />
+            <MetricCard icon={<FileText className="h-5 w-5" />} label="Facturen" value={snapshot.data.invoices.length.toString()} detail="handmatig eerst" />
             <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="nog te betalen" />
-            <MetricCard icon={<Banknote className="h-5 w-5" />} label="Geregistreerd" value={formatMoney(paidAmount, "EUR")} detail="manual payments" />
+            <MetricCard icon={<Banknote className="h-5 w-5" />} label="Geregistreerd" value={formatMoney(paidAmount, "EUR")} detail="handmatige betalingen" />
             <MetricCard icon={<CreditCard className="h-5 w-5" />} label="Mollie" value={mollieProvider?.status ?? "disabled"} detail="adapter voorbereid" />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
             <Card>
-              <SectionHeader title="Nieuwe manual factuur" count={snapshot.data.enrollments.length} />
+              <SectionHeader title="Nieuwe handmatige factuur" count={snapshot.data.enrollments.length} />
               <ManualInvoiceForm data={snapshot.data} />
             </Card>
 
             <Card>
-              <SectionHeader title="Provider readiness" count={snapshot.data.providerConfigs.length} />
+              <SectionHeader title="Betaalproviders" count={snapshot.data.providerConfigs.length} />
               <div className="grid gap-3">
                 <ProviderCard provider={manualProvider} fallback="Handmatige betalingen" />
                 <ProviderCard provider={mollieProvider} fallback="Mollie/iDEAL voorbereiding" />
@@ -89,9 +89,9 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
             </Card>
 
             <Card>
-              <SectionHeader title="Payment events" count={snapshot.data.paymentEvents.length} />
+              <SectionHeader title="Betaalgebeurtenissen" count={snapshot.data.paymentEvents.length} />
               <div className="grid gap-3">
-                {snapshot.data.paymentEvents.length === 0 ? <EmptyState>Nog geen payment events.</EmptyState> : null}
+                {snapshot.data.paymentEvents.length === 0 ? <EmptyState>Nog geen betaalgebeurtenissen.</EmptyState> : null}
                 {snapshot.data.paymentEvents.map((event) => (
                   <PaymentEventRowView key={event.id} event={event} />
                 ))}
@@ -114,7 +114,7 @@ function ManualInvoiceForm({ data }: { data: AdminPaymentsData }) {
     const plan = enrollment.subscription_plan_id ? lookups.subscriptionPlans.get(enrollment.subscription_plan_id) : null;
 
     return {
-      label: `${participant?.display_name ?? "Leerling"} - ${program?.name ?? "Programma"} - ${plan?.name ?? "geen plan"}`,
+      label: `${participant?.display_name ?? "Leerling"} - ${program?.name ?? "Programma"} - ${plan?.name ?? "geen abonnement"}`,
       value: enrollment.id
     };
   });
@@ -124,8 +124,8 @@ function ManualInvoiceForm({ data }: { data: AdminPaymentsData }) {
       <div className="grid gap-3 md:grid-cols-2">
         <TextField label="Factuurnummer" name="invoice_number" required />
         <TextField label="Titel" name="title" required />
-        <SelectField label="Enrollment" name="enrollment_id" options={enrollmentOptions} required />
-        <SelectField includeEmpty label="Subscription plan" name="subscription_plan_id" options={data.subscriptionPlans.map(optionFromName)} />
+      <SelectField label="Inschrijving" name="enrollment_id" options={enrollmentOptions} required />
+      <SelectField includeEmpty label="Abonnement" name="subscription_plan_id" options={data.subscriptionPlans.map(optionFromName)} />
         <TextField defaultValue={todayInput()} label="Factuurdatum" name="issued_on" required type="date" />
         <TextField label="Vervaldatum" name="due_on" type="date" />
         <TextField label="Periode start" name="period_start" type="date" />
@@ -150,7 +150,7 @@ function ProviderCard({ provider, fallback }: { provider: PaymentProviderConfigR
           <p className="font-semibold">{provider?.display_name ?? fallback}</p>
           <p className="text-sm text-muted-foreground">{provider?.provider ?? "provider"} - {provider?.mode ?? "test"}</p>
         </div>
-        <StatusPill tone={provider?.status === "active" ? "success" : provider?.status === "configured" ? "warning" : "neutral"}>{provider?.status ?? "missing"}</StatusPill>
+        <StatusPill tone={provider?.status === "active" ? "success" : provider?.status === "configured" ? "warning" : "neutral"}>{paymentProviderStatusLabel(provider?.status)}</StatusPill>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">
         {(provider?.capabilities ?? ["adapter voorbereid"]).join(", ")}
@@ -173,7 +173,7 @@ function InvoiceCard({ invoice, lookups }: { invoice: InvoiceRow; lookups: Looku
         <div>
           <p className="text-lg font-bold">{invoice.invoice_number} - {invoice.title}</p>
           <p className="text-sm text-muted-foreground">
-            {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "geen subscription plan"}
+            {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "geen abonnement"}
           </p>
         </div>
         <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "overdue" ? "danger" : invoice.status === "partially_paid" ? "warning" : "info"}>{invoice.status}</StatusPill>
@@ -378,6 +378,18 @@ function formatDate(value: string) {
 
 function todayInput() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function paymentProviderStatusLabel(status: string | null | undefined) {
+  if (status === "active") {
+    return "actief";
+  }
+
+  if (status === "configured") {
+    return "geconfigureerd";
+  }
+
+  return "ontbreekt";
 }
 
 const fieldClassName = "min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";

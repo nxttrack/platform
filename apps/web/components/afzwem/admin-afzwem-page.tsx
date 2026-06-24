@@ -49,8 +49,8 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Phase 9</StatusPill>}
-        kicker="Tenant admin - afzwemmen"
+        action={<StatusPill tone="info">Afzwem workflow</StatusPill>}
+        kicker="Backoffice - afzwemmen"
         subtitle="Afzwem-ready criteria, momenten, deelnemers, resultaatregistratie en digitale diplomakluis. Intern blijft dit een generieke milestone/certification workflow."
         title="Afzwemmen & diploma vault"
       />
@@ -126,7 +126,7 @@ function CriteriaCard({ criteria, lookups }: { criteria: AfzwemReadinessCriteria
         <div>
           <p className="font-semibold">{criteria.name}</p>
           <p className="text-sm text-muted-foreground">
-            {lookups.programs.get(criteria.program_id)?.name ?? "Programma"} - {criteria.stage_id ? (lookups.stages.get(criteria.stage_id)?.name ?? "Stage") : "Geen vaste stage"}
+            {lookups.programs.get(criteria.program_id)?.name ?? "Programma"} - {criteria.stage_id ? (lookups.stages.get(criteria.stage_id)?.name ?? "Niveau") : "Geen vast niveau"}
           </p>
           {criteria.description ? <p className="mt-2 text-sm text-muted-foreground">{criteria.description}</p> : null}
         </div>
@@ -147,7 +147,7 @@ function AfzwemEventForm({ data }: { data: AdminAfzwemData }) {
         <TextField label="Titel" name="title" required />
         <SelectField label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
         <SelectField includeEmpty label="Afzwem-stage" name="stage_id" options={data.stages.map(optionFromName)} />
-        <SelectField includeEmpty label="Resource" name="resource_id" options={data.resources.map((resource) => ({ label: resource.location_name ? `${resource.name} - ${resource.location_name}` : resource.name, value: resource.id }))} />
+        <SelectField includeEmpty label="Locatie" name="resource_id" options={data.resources.map((resource) => ({ label: resource.location_name ? `${resource.name} - ${resource.location_name}` : resource.name, value: resource.id }))} />
         <TextField label="Start" name="starts_at" required type="datetime-local" />
         <TextField label="Einde" name="ends_at" required type="datetime-local" />
         <TextField defaultValue={12} label="Capaciteit" min={1} name="capacity" type="number" />
@@ -239,7 +239,7 @@ function AfzwemParticipantRow({ eventParticipant, lookups }: { eventParticipant:
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{participant?.display_name ?? "Leerling"}</p>
-          <p className="text-sm text-muted-foreground">{stage?.name ?? "Stage onbekend"} - {eventParticipant.note ?? "Geen notitie"}</p>
+          <p className="text-sm text-muted-foreground">{stage?.name ?? "Niveau onbekend"} - {eventParticipant.note ?? "Geen notitie"}</p>
         </div>
         <StatusPill tone={eventParticipant.status === "confirmed" || eventParticipant.status === "attended" ? "success" : eventParticipant.status === "declined" || eventParticipant.status === "no_show" ? "danger" : "warning"}>{eventParticipant.status}</StatusPill>
       </div>

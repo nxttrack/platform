@@ -20,7 +20,7 @@ const shellLabels = {
     subtitle: "Lessen, aanwezigheid en voortgang"
   },
   tenant_admin: {
-    title: "Tenant admin",
+    title: "Backoffice",
     subtitle: "Backoffice & planning"
   },
   platform_admin: {

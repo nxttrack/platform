@@ -1,5 +1,10 @@
-import { PageHero } from "@/components/lovable/page-kit";
+import { TenantNewsPage } from "@/components/public-site/tenant-public-pages";
+import { getPublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
 
-export default function NewsPage() {
-  return <PageHero kicker="Tenant public" title="Nieuws skeleton" sub="Publieke nieuws-route voor tenant communicatie." primary={{ href: "/", label: "Home" }} />;
+export const dynamic = "force-dynamic";
+
+export default async function NewsPage() {
+  const snapshot = await getPublicTenantSiteSnapshot();
+
+  return <TenantNewsPage snapshot={snapshot} />;
 }

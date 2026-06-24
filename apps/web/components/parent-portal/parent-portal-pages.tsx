@@ -82,7 +82,7 @@ export function ParentDashboardPage({ snapshot }: ParentPageProps) {
   const unread = snapshot.data.notifications.filter((notification) => notification.status === "unread").length;
 
   return (
-    <ParentFrame snapshot={snapshot} kicker="Ouderportaal - Phase 6" title="Dashboard" subtitle="Een data-backed overzicht van kinderen, lessen, notificaties en documenten.">
+    <ParentFrame snapshot={snapshot} kicker="Ouderportaal" title="Dashboard" subtitle="Een overzicht van kinderen, lessen, notificaties en documenten.">
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<UserRound className="h-5 w-5" />} label="Kinderen" value={snapshot.data.participants.length.toString()} detail="gekoppelde profielen" />
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Lessen" value={lessons.length.toString()} detail="aankomende sessies" />
@@ -169,7 +169,7 @@ export function ParentPaymentsPage({ snapshot }: ParentPageProps) {
 
   return (
     <ParentFrame
-      phase="Phase 10"
+      phase="Betalingen"
       snapshot={snapshot}
       kicker="Ouderportaal - betalingen"
       title="Betalingen"
@@ -297,7 +297,7 @@ export function ParentDiplomasPage({ snapshot }: ParentPageProps) {
 
   return (
     <ParentFrame
-      phase="Phase 9"
+      phase="Afzwemmen"
       snapshot={snapshot}
       kicker="Ouderportaal - diploma's"
       title="Afzwemmen & diploma's"
@@ -415,7 +415,7 @@ export function ParentProgressPage({ snapshot }: ParentPageProps) {
 
   return (
     <ParentFrame
-      phase="Phase 8"
+      phase="Voortgang"
       snapshot={snapshot}
       kicker="Ouderportaal - voortgang"
       title="Voortgang"
@@ -433,7 +433,7 @@ export function ParentProgressPage({ snapshot }: ParentPageProps) {
         </Card>
 
         <Card>
-          <SectionHeader title="Stage voorstellen" count={snapshot.data.stageTransitionProposals.length} />
+          <SectionHeader title="Niveauvoorstellen" count={snapshot.data.stageTransitionProposals.length} />
           <div className="grid gap-3">
             {snapshot.data.stageTransitionProposals.length === 0 ? <EmptyState>Geen stage-overgangsvoorstellen gevonden.</EmptyState> : null}
             {snapshot.data.stageTransitionProposals.map((proposal) => (
@@ -473,10 +473,10 @@ export function ParentBadgesPage({ snapshot }: ParentPageProps) {
 
   return (
     <ParentFrame
-      phase="Phase 8"
+      phase="Prestaties"
       snapshot={snapshot}
       kicker="Ouderportaal - achievements"
-      title="Badges en achievement cards"
+      title="Badges en prestatiekaarten"
       subtitle="Verdiende badges, complimentkaarten en mijlpalen voor ouder en kind."
     >
       <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
@@ -528,7 +528,7 @@ export function ParentBadgesPage({ snapshot }: ParentPageProps) {
   );
 }
 
-function ParentFrame({ snapshot, kicker, title, subtitle, children, phase = "Phase 6" }: ParentPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode; phase?: string }) {
+function ParentFrame({ snapshot, kicker, title, subtitle, children, phase = "Ouderportaal" }: ParentPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode; phase?: string }) {
   return (
     <div className="grid gap-6">
       <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">{phase}</StatusPill>} />
@@ -582,7 +582,7 @@ function ChildCards({ data, lookups, expanded = false }: { data: ParentPortalDat
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <InfoTile label="Programma" value={program?.name ?? "-"} />
-              <InfoTile label="Stage" value={stage?.name ?? "-"} />
+              <InfoTile label="Niveau" value={stage?.name ?? "-"} />
               <InfoTile label="Abonnement" value={plan ? `${plan.name} (${formatMoney(plan.price_cents, plan.currency)})` : "-"} />
             </div>
             {expanded ? (
@@ -625,7 +625,7 @@ function LessonSummary({ lesson, lookups }: { lesson: LessonRow; lookups: Lookup
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
         <p className="text-lg font-bold">{lesson.participant.display_name}</p>
-        <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Stage"} - {lesson.group.name}</p>
+        <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Niveau"} - {lesson.group.name}</p>
         <p className="mt-2 text-sm font-semibold">{formatDateTime(lesson.session.starts_at)} - {formatTime(lesson.session.ends_at)}</p>
         <p className="text-xs text-muted-foreground">{lesson.resource?.location_name ?? lesson.resource?.name ?? "Locatie volgt"} </p>
       </div>
@@ -742,7 +742,7 @@ function ProgressChildCard({ participant, lookups }: { participant: ParentPartic
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold">{lookups.programs.get(enrollment.program_id)?.name ?? "Programma"}</p>
-                  <p className="text-sm text-muted-foreground">{stage?.name ?? "Stage onbekend"}</p>
+                  <p className="text-sm text-muted-foreground">{stage?.name ?? "Niveau onbekend"}</p>
                 </div>
                 <StatusPill tone="info">{moduleProgress.filter((progress) => progress.status === "passed").length}/{modules.length} modules</StatusPill>
               </div>

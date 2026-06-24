@@ -1,5 +1,10 @@
-import { PageHero } from "@/components/lovable/page-kit";
+import { TenantAgendaPage } from "@/components/public-site/tenant-public-pages";
+import { getPublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
 
-export default function AgendaPage() {
-  return <PageHero kicker="Tenant public" title="Agenda skeleton" sub="Publieke agenda-route voor tenant events en lesmomenten." primary={{ href: "/", label: "Home" }} />;
+export const dynamic = "force-dynamic";
+
+export default async function AgendaPage() {
+  const snapshot = await getPublicTenantSiteSnapshot();
+
+  return <TenantAgendaPage snapshot={snapshot} />;
 }

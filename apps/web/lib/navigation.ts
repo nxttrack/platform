@@ -46,16 +46,16 @@ export const instructorNav: NavItem[] = [
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/agenda", label: "Planning", icon: Calendar },
-  { href: "/admin/programs", label: "Programs", icon: Waves },
-  { href: "/admin/stages", label: "Stages", icon: TrendingUp },
+  { href: "/admin/programs", label: "Programma's", icon: Waves },
+  { href: "/admin/stages", label: "Niveaus", icon: TrendingUp },
   { href: "/admin/badges", label: "Badges", icon: Award },
-  { href: "/admin/groups", label: "Groups", icon: Users },
-  { href: "/admin/sessions", label: "Sessions", icon: Calendar },
-  { href: "/admin/resources", label: "Resources", icon: MapPin },
-  { href: "/admin/enrollments", label: "Enrollments", icon: Users },
-  { href: "/admin/instructors", label: "Instructors", icon: User },
+  { href: "/admin/groups", label: "Groepen", icon: Users },
+  { href: "/admin/sessions", label: "Lessen", icon: Calendar },
+  { href: "/admin/resources", label: "Locaties", icon: MapPin },
+  { href: "/admin/enrollments", label: "Inschrijvingen", icon: Users },
+  { href: "/admin/instructors", label: "Instructeurs", icon: User },
   { href: "/admin/afzwemmen", label: "Afzwemmen", icon: Award },
-  { href: "/admin/payments", label: "Payments", icon: CircleDollarSign },
+  { href: "/admin/payments", label: "Betalingen", icon: CircleDollarSign },
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3 },
   { href: "/admin/berichten", label: "Berichten", icon: MessageSquare },
   { href: "/admin/taken", label: "Taken", icon: ListChecks },
@@ -63,13 +63,13 @@ export const adminNav: NavItem[] = [
   { href: "/admin/intake", label: "Intake", icon: Inbox },
   { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks },
   { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingen", icon: CheckCircle2 },
-  { href: "/admin/slot-offers", label: "Slot offers", icon: Send },
+  { href: "/admin/slot-offers", label: "Lesplek-aanbod", icon: Send },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings }
 ];
 
 export const platformNav: NavItem[] = [
-  { href: "/platform", label: "Overview", icon: Home },
+  { href: "/platform", label: "Overzicht", icon: Home },
   { href: "/platform/tenants", label: "Tenants", icon: Users },
   { href: "/platform/templates", label: "Templates", icon: Waves },
-  { href: "/platform/settings", label: "Settings", icon: Settings }
+  { href: "/platform/settings", label: "Instellingen", icon: Settings }
 ];
