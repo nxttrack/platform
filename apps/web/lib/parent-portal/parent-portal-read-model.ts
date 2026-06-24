@@ -42,6 +42,17 @@ export type ParentStageRow = {
   sort_order: number;
 };
 
+export type ParentStageModuleRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  status: string;
+};
+
 export type ParentSubscriptionPlanRow = {
   id: string;
   name: string;
@@ -95,6 +106,66 @@ export type ParentProgressRow = {
   score: number | null;
   note: string | null;
   assessed_at: string;
+};
+
+export type ParentStageModuleProgressRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  stage_id: string;
+  stage_module_id: string;
+  status: string;
+  score: number | null;
+  note: string | null;
+  assessed_at: string;
+};
+
+export type ParentBadgeRow = {
+  id: string;
+  program_id: string | null;
+  stage_id: string | null;
+  code: string;
+  name: string;
+  description: string | null;
+  status: string;
+};
+
+export type ParentBadgeAwardRow = {
+  id: string;
+  badge_id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  source: string;
+  note: string | null;
+  status: string;
+  awarded_at: string;
+};
+
+export type ParentAchievementCardRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  badge_award_id: string | null;
+  progress_id: string | null;
+  stage_module_progress_id: string | null;
+  card_type: string;
+  title: string;
+  body: string | null;
+  status: string;
+  visibility: string;
+  published_at: string;
+};
+
+export type ParentStageTransitionProposalRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  from_stage_id: string | null;
+  to_stage_id: string;
+  reason: string | null;
+  status: string;
+  proposed_at: string;
+  reviewed_at: string | null;
 };
 
 export type ParentCertificateRow = {
@@ -151,12 +222,18 @@ export type ParentPortalData = {
   enrollments: ParentEnrollmentRow[];
   programs: ParentProgramRow[];
   stages: ParentStageRow[];
+  stageModules: ParentStageModuleRow[];
   subscriptionPlans: ParentSubscriptionPlanRow[];
   groupMemberships: ParentGroupMembershipRow[];
   groups: ParentGroupRow[];
   sessions: ParentSessionRow[];
   resources: ParentResourceRow[];
   progress: ParentProgressRow[];
+  stageModuleProgress: ParentStageModuleProgressRow[];
+  badges: ParentBadgeRow[];
+  badgeAwards: ParentBadgeAwardRow[];
+  achievementCards: ParentAchievementCardRow[];
+  stageTransitionProposals: ParentStageTransitionProposalRow[];
   certificates: ParentCertificateRow[];
   documents: ParentDocumentRow[];
   notifications: ParentNotificationRow[];
@@ -254,12 +331,56 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
   const enrollments = enrollmentsResult.rows;
   const enrollmentIds = unique(enrollments.map((enrollment) => enrollment.id));
   const programIds = unique(enrollments.map((enrollment) => enrollment.program_id));
-  const stageIds = unique(enrollments.flatMap((enrollment) => (enrollment.current_stage_id ? [enrollment.current_stage_id] : [])));
   const subscriptionPlanIds = unique(enrollments.flatMap((enrollment) => (enrollment.subscription_plan_id ? [enrollment.subscription_plan_id] : [])));
 
-  const [membershipsResult, progressResult, certificatesResult, documentsResult, catchUpRequestsResult, programsResult, stagesResult, subscriptionPlansResult] = await Promise.all([
+  const [
+    membershipsResult,
+    progressResult,
+    moduleProgressResult,
+    badgeAwardsResult,
+    achievementCardsResult,
+    transitionProposalsResult,
+    certificatesResult,
+    documentsResult,
+    catchUpRequestsResult,
+    programsResult,
+    stagesResult,
+    subscriptionPlansResult
+  ] = await Promise.all([
     rowsByIds<ParentGroupMembershipRow>(supabase, "group_memberships", "id, enrollment_id, group_id, status, starts_on, ends_on", tenantId, "enrollment_id", enrollmentIds, "starts_on", false),
     rowsByIds<ParentProgressRow>(supabase, "progress", "id, enrollment_id, stage_id, status, score, note, assessed_at", tenantId, "enrollment_id", enrollmentIds, "assessed_at", false, 25),
+    rowsByIds<ParentStageModuleProgressRow>(
+      supabase,
+      "stage_module_progress",
+      "id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, assessed_at",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "assessed_at",
+      false,
+      80
+    ),
+    rowsByIds<ParentBadgeAwardRow>(supabase, "badge_awards", "id, badge_id, participant_id, enrollment_id, source, note, status, awarded_at", tenantId, "participant_id", participantIds, "awarded_at", false),
+    rowsByIds<ParentAchievementCardRow>(
+      supabase,
+      "achievement_cards",
+      "id, participant_id, enrollment_id, badge_award_id, progress_id, stage_module_progress_id, card_type, title, body, status, visibility, published_at",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "published_at",
+      false
+    ),
+    rowsByIds<ParentStageTransitionProposalRow>(
+      supabase,
+      "stage_transition_proposals",
+      "id, enrollment_id, participant_id, from_stage_id, to_stage_id, reason, status, proposed_at, reviewed_at",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "proposed_at",
+      false
+    ),
     rowsByIds<ParentCertificateRow>(supabase, "certificates", "id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on", tenantId, "participant_id", participantIds, "created_at", false),
     rowsByIds<ParentDocumentRow>(supabase, "parent_documents", "id, participant_id, enrollment_id, certificate_id, title, document_type, status, file_path, available_on, created_at", tenantId, "participant_id", participantIds, "created_at", false),
     rowsByIds<ParentCatchUpRequestRow>(
@@ -273,7 +394,7 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       false
     ),
     rowsByIds<ParentProgramRow>(supabase, "programs", "id, name, code", tenantId, "id", programIds, "name"),
-    rowsByIds<ParentStageRow>(supabase, "stages", "id, program_id, name, code, sort_order", tenantId, "id", stageIds, "sort_order"),
+    rowsByIds<ParentStageRow>(supabase, "stages", "id, program_id, name, code, sort_order", tenantId, "program_id", programIds, "sort_order"),
     rowsByIds<ParentSubscriptionPlanRow>(
       supabase,
       "subscription_plans",
@@ -284,6 +405,26 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "name"
     )
   ]);
+  const stages = stagesResult.rows;
+  const stageIds = unique(stages.map((stage) => stage.id));
+  const stageModulesResult = await rowsByIds<ParentStageModuleRow>(
+    supabase,
+    "stage_modules",
+    "id, program_id, stage_id, code, name, description, sort_order, status",
+    tenantId,
+    "stage_id",
+    stageIds,
+    "sort_order"
+  );
+  const badgeDefinitionsResult = await rowsByIds<ParentBadgeRow>(
+    supabase,
+    "badges",
+    "id, program_id, stage_id, code, name, description, status",
+    tenantId,
+    "program_id",
+    programIds,
+    "name"
+  );
 
   const memberships = membershipsResult.rows;
   const groupIds = unique(memberships.map((membership) => membership.group_id));
@@ -300,11 +441,17 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     enrollments: enrollmentsResult.error,
     group_memberships: membershipsResult.error,
     progress: progressResult.error,
+    stage_module_progress: moduleProgressResult.error,
+    badge_awards: badgeAwardsResult.error,
+    achievement_cards: achievementCardsResult.error,
+    stage_transition_proposals: transitionProposalsResult.error,
     certificates: certificatesResult.error,
     parent_documents: documentsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
     programs: programsResult.error,
     stages: stagesResult.error,
+    stage_modules: stageModulesResult.error,
+    badges: badgeDefinitionsResult.error,
     subscription_plans: subscriptionPlansResult.error,
     groups: groupsResult.error,
     sessions: sessionsResult.error,
@@ -321,13 +468,19 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       participants: participantsResult.rows,
       enrollments,
       programs: programsResult.rows,
-      stages: stagesResult.rows,
+      stages,
+      stageModules: stageModulesResult.rows,
       subscriptionPlans: subscriptionPlansResult.rows,
       groupMemberships: memberships,
       groups,
       sessions: sessionsResult.rows,
       resources: resourcesResult.rows,
       progress: progressResult.rows,
+      stageModuleProgress: moduleProgressResult.rows,
+      badges: badgeDefinitionsResult.rows,
+      badgeAwards: badgeAwardsResult.rows,
+      achievementCards: achievementCardsResult.rows,
+      stageTransitionProposals: transitionProposalsResult.rows,
       certificates: certificatesResult.rows,
       documents: documentsResult.rows,
       notifications: asRows<ParentNotificationRow>(notificationsResult.data),
@@ -372,12 +525,18 @@ function createEmptyData(): ParentPortalData {
     enrollments: [],
     programs: [],
     stages: [],
+    stageModules: [],
     subscriptionPlans: [],
     groupMemberships: [],
     groups: [],
     sessions: [],
     resources: [],
     progress: [],
+    stageModuleProgress: [],
+    badges: [],
+    badgeAwards: [],
+    achievementCards: [],
+    stageTransitionProposals: [],
     certificates: [],
     documents: [],
     notifications: [],

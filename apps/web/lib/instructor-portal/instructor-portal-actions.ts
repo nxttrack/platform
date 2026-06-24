@@ -69,6 +69,79 @@ export async function createStudentNoteAction(formData: FormData) {
   revalidateInstructorPortal({ groupId: optionalString(formData, "group_id"), participantId: optionalString(formData, "participant_id") });
 }
 
+export async function createStageModuleProgressAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireInstructorContext();
+  const groupId = optionalString(formData, "group_id");
+  const participantId = requiredString(formData, "participant_id");
+
+  await throwOnError(
+    supabase.from("stage_module_progress").upsert(
+      {
+        tenant_id: tenantId,
+        enrollment_id: requiredString(formData, "enrollment_id"),
+        participant_id: participantId,
+        stage_id: requiredString(formData, "stage_id"),
+        stage_module_id: requiredString(formData, "stage_module_id"),
+        status: requiredEnum(formData, "status", ["observed", "in_progress", "passed", "needs_attention"]),
+        score: optionalScore(formData, "score"),
+        note: optionalString(formData, "note"),
+        assessed_by_profile_id: profileId,
+        assessed_at: new Date().toISOString()
+      },
+      { onConflict: "tenant_id,enrollment_id,stage_module_id" }
+    )
+  );
+
+  revalidateInstructorPortal({ groupId, participantId });
+}
+
+export async function awardBadgeAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireInstructorContext();
+  const groupId = optionalString(formData, "group_id");
+  const participantId = requiredString(formData, "participant_id");
+
+  await throwOnError(
+    supabase.from("badge_awards").upsert(
+      {
+        tenant_id: tenantId,
+        badge_id: requiredString(formData, "badge_id"),
+        participant_id: participantId,
+        enrollment_id: requiredString(formData, "enrollment_id"),
+        awarded_by_profile_id: profileId,
+        source: "instructor",
+        note: optionalString(formData, "note"),
+        status: "awarded",
+        awarded_at: new Date().toISOString()
+      },
+      { onConflict: "tenant_id,badge_id,participant_id,enrollment_id", ignoreDuplicates: true }
+    )
+  );
+
+  revalidateInstructorPortal({ groupId, participantId });
+}
+
+export async function proposeStageTransitionAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireInstructorContext();
+  const groupId = optionalString(formData, "group_id");
+  const participantId = requiredString(formData, "participant_id");
+
+  await throwOnError(
+    supabase.from("stage_transition_proposals").insert({
+      tenant_id: tenantId,
+      enrollment_id: requiredString(formData, "enrollment_id"),
+      participant_id: participantId,
+      from_stage_id: optionalString(formData, "from_stage_id"),
+      to_stage_id: requiredString(formData, "to_stage_id"),
+      proposed_by_profile_id: profileId,
+      reason: optionalString(formData, "reason"),
+      status: "proposed",
+      proposed_at: new Date().toISOString()
+    })
+  );
+
+  revalidateInstructorPortal({ groupId, participantId });
+}
+
 async function requireInstructorContext() {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
@@ -96,6 +169,10 @@ async function requireInstructorContext() {
 
 function revalidateInstructorPortal({ groupId, participantId }: { groupId?: string | null; participantId?: string | null } = {}) {
   for (const path of ["/instructor", "/instructor/agenda", "/instructor/groepen", "/instructor/leerlingen"]) {
+    revalidatePath(path);
+  }
+
+  for (const path of ["/parent", "/parent/voortgang", "/parent/badges", "/parent/notificaties"]) {
     revalidatePath(path);
   }
 

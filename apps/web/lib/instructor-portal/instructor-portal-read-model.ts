@@ -25,6 +25,17 @@ export type InstructorStageRow = {
   sort_order: number;
 };
 
+export type InstructorStageModuleRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  status: string;
+};
+
 export type InstructorResourceRow = {
   id: string;
   name: string;
@@ -95,6 +106,51 @@ export type InstructorProgressRow = {
   assessed_at: string;
 };
 
+export type InstructorStageModuleProgressRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  stage_id: string;
+  stage_module_id: string;
+  status: string;
+  score: number | null;
+  note: string | null;
+  assessed_at: string;
+};
+
+export type InstructorBadgeRow = {
+  id: string;
+  program_id: string | null;
+  stage_id: string | null;
+  code: string;
+  name: string;
+  description: string | null;
+  status: string;
+};
+
+export type InstructorBadgeAwardRow = {
+  id: string;
+  badge_id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  source: string;
+  note: string | null;
+  status: string;
+  awarded_at: string;
+};
+
+export type InstructorStageTransitionProposalRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  from_stage_id: string | null;
+  to_stage_id: string;
+  reason: string | null;
+  status: string;
+  proposed_at: string;
+  reviewed_at: string | null;
+};
+
 export type InstructorAttendanceRow = {
   id: string;
   session_id: string;
@@ -122,6 +178,7 @@ export type InstructorPortalData = {
   currentInstructor: InstructorRow | null;
   programs: InstructorProgramRow[];
   stages: InstructorStageRow[];
+  stageModules: InstructorStageModuleRow[];
   resources: InstructorResourceRow[];
   groups: InstructorGroupRow[];
   sessions: InstructorSessionRow[];
@@ -129,6 +186,10 @@ export type InstructorPortalData = {
   enrollments: InstructorEnrollmentRow[];
   groupMemberships: InstructorGroupMembershipRow[];
   progress: InstructorProgressRow[];
+  stageModuleProgress: InstructorStageModuleProgressRow[];
+  badges: InstructorBadgeRow[];
+  badgeAwards: InstructorBadgeAwardRow[];
+  stageTransitionProposals: InstructorStageTransitionProposalRow[];
   attendance: InstructorAttendanceRow[];
   notes: InstructorStudentNoteRow[];
 };
@@ -247,10 +308,35 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
   const enrollments = enrollmentsResult.rows;
   const participantIds = unique(enrollments.map((enrollment) => enrollment.participant_id));
   const sessionIds = unique(sessions.map((session) => session.id));
+  const stages = asRows<InstructorStageRow>(stagesResult.data);
+  const stageIds = unique(stages.map((stage) => stage.id));
 
-  const [participantsResult, progressResult, attendanceResult, notesResult] = await Promise.all([
+  const [participantsResult, progressResult, moduleProgressResult, badgesResult, badgeAwardsResult, transitionProposalsResult, attendanceResult, notesResult, stageModulesResult] = await Promise.all([
     rowsByIds<InstructorParticipantRow>(supabase, "participants", "id, external_reference, display_name, birthdate, status", tenantId, "id", participantIds, "display_name"),
     rowsByIds<InstructorProgressRow>(supabase, "progress", "id, enrollment_id, stage_id, status, score, note, assessed_at", tenantId, "enrollment_id", enrollmentIds, "assessed_at", false, 80),
+    rowsByIds<InstructorStageModuleProgressRow>(
+      supabase,
+      "stage_module_progress",
+      "id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, assessed_at",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "assessed_at",
+      false,
+      120
+    ),
+    supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    rowsByIds<InstructorBadgeAwardRow>(supabase, "badge_awards", "id, badge_id, participant_id, enrollment_id, source, note, status, awarded_at", tenantId, "participant_id", participantIds, "awarded_at", false),
+    rowsByIds<InstructorStageTransitionProposalRow>(
+      supabase,
+      "stage_transition_proposals",
+      "id, enrollment_id, participant_id, from_stage_id, to_stage_id, reason, status, proposed_at, reviewed_at",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "proposed_at",
+      false
+    ),
     rowsByIds<InstructorAttendanceRow>(
       supabase,
       "session_attendance",
@@ -271,7 +357,8 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       "created_at",
       false,
       80
-    )
+    ),
+    rowsByIds<InstructorStageModuleRow>(supabase, "stage_modules", "id, program_id, stage_id, code, name, description, sort_order, status", tenantId, "stage_id", stageIds, "sort_order")
   ]);
 
   const errors = collectErrors({
@@ -285,8 +372,13 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
     enrollments: enrollmentsResult.error,
     participants: participantsResult.error,
     progress: progressResult.error,
+    stage_module_progress: moduleProgressResult.error,
+    badges: badgesResult.error,
+    badge_awards: badgeAwardsResult.error,
+    stage_transition_proposals: transitionProposalsResult.error,
     session_attendance: attendanceResult.error,
-    instructor_student_notes: notesResult.error
+    instructor_student_notes: notesResult.error,
+    stage_modules: stageModulesResult.error
   });
 
   return {
@@ -298,7 +390,8 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       instructors,
       currentInstructor: linkedInstructor,
       programs: asRows<InstructorProgramRow>(programsResult.data),
-      stages: asRows<InstructorStageRow>(stagesResult.data),
+      stages,
+      stageModules: stageModulesResult.rows,
       resources: asRows<InstructorResourceRow>(resourcesResult.data),
       groups,
       sessions,
@@ -306,6 +399,10 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       enrollments,
       groupMemberships: memberships,
       progress: progressResult.rows,
+      stageModuleProgress: moduleProgressResult.rows,
+      badges: asRows<InstructorBadgeRow>(badgesResult.data),
+      badgeAwards: badgeAwardsResult.rows,
+      stageTransitionProposals: transitionProposalsResult.rows,
       attendance: attendanceResult.rows,
       notes: notesResult.rows
     }
@@ -351,6 +448,7 @@ function createEmptyData(): InstructorPortalData {
     currentInstructor: null,
     programs: [],
     stages: [],
+    stageModules: [],
     resources: [],
     groups: [],
     sessions: [],
@@ -358,6 +456,10 @@ function createEmptyData(): InstructorPortalData {
     enrollments: [],
     groupMemberships: [],
     progress: [],
+    stageModuleProgress: [],
+    badges: [],
+    badgeAwards: [],
+    stageTransitionProposals: [],
     attendance: [],
     notes: []
   };

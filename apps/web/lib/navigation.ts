@@ -45,6 +45,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/programs", label: "Programs", icon: Waves },
   { href: "/admin/stages", label: "Stages", icon: TrendingUp },
+  { href: "/admin/badges", label: "Badges", icon: Award },
   { href: "/admin/groups", label: "Groups", icon: Users },
   { href: "/admin/sessions", label: "Sessions", icon: Calendar },
   { href: "/admin/resources", label: "Resources", icon: MapPin },

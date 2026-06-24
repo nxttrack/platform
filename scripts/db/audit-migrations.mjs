@@ -36,6 +36,7 @@ checkPublicTenantIntakeContracts(normalizedMigrationSql.join(" "));
 checkPlacementWorkflowContracts(normalizedMigrationSql.join(" "));
 checkParentPortalContracts(normalizedMigrationSql.join(" "));
 checkInstructorPortalContracts(normalizedMigrationSql.join(" "));
+checkProgressBadgesAchievementContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -428,6 +429,74 @@ function checkInstructorPortalContracts(sql) {
 
   if (!progressUpdatePolicyPattern.test(sql)) {
     failures.push("Phase 7 instructor portal contract: public.progress is missing an instructor UPDATE policy.");
+  }
+}
+
+function checkProgressBadgesAchievementContracts(sql) {
+  const requiredPhase8Tables = ["stage_modules", "stage_module_progress", "badge_awards", "achievement_cards", "stage_transition_proposals"];
+
+  for (const table of requiredPhase8Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 8 progress/badges contract is missing public.${table}.`);
+    }
+
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const authenticatedGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const insertGrantPattern = new RegExp(`grant\\s+(?:select,\\s*)?insert[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?update[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 8 progress/badges contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!authenticatedGrantPattern.test(sql)) {
+      failures.push(`Phase 8 progress/badges contract: public.${table} is missing an authenticated grant.`);
+    }
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 8 progress/badges contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 8 progress/badges contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+  }
+
+  const achievementCardsBlock = extractCreateTableBlock(sql, "achievement_cards");
+  const stageTransitionProposalsBlock = extractCreateTableBlock(sql, "stage_transition_proposals");
+  const stageModuleProgressBlock = extractCreateTableBlock(sql, "stage_module_progress");
+
+  if (stageModuleProgressBlock && !/\bstage_module_id\b/.test(stageModuleProgressBlock)) {
+    failures.push("Phase 8 progress/badges contract: public.stage_module_progress must store stage_module_id.");
+  }
+
+  if (achievementCardsBlock && !/\bbadge_award_id\b/.test(achievementCardsBlock)) {
+    failures.push("Phase 8 progress/badges contract: public.achievement_cards must link to badge_award_id.");
+  }
+
+  if (achievementCardsBlock && !/\bstage_module_progress_id\b/.test(achievementCardsBlock)) {
+    failures.push("Phase 8 progress/badges contract: public.achievement_cards must link to stage_module_progress_id.");
+  }
+
+  if (stageTransitionProposalsBlock && (!/\bfrom_stage_id\b/.test(stageTransitionProposalsBlock) || !/\bto_stage_id\b/.test(stageTransitionProposalsBlock))) {
+    failures.push("Phase 8 progress/badges contract: public.stage_transition_proposals must store from_stage_id and to_stage_id.");
+  }
+
+  if (stageTransitionProposalsBlock && /\bsubscription_plan_id\b|\bbilling\b|\bpayment\b/.test(stageTransitionProposalsBlock)) {
+    failures.push("Phase 8 progress/badges contract: stage transition proposals must not mutate billing/subscription.");
+  }
+
+  for (const functionName of ["notify_guardians_for_progress", "publish_stage_module_progress", "publish_badge_award"]) {
+    if (!new RegExp(`create\\s+or\\s+replace\\s+function\\s+app_private\\.${functionName}\\b`).test(sql)) {
+      failures.push(`Phase 8 progress/badges contract is missing app_private.${functionName}.`);
+    }
+  }
+
+  for (const triggerName of ["progress_notify_guardians", "stage_module_progress_publish", "badge_awards_publish"]) {
+    if (!new RegExp(`create\\s+trigger\\s+${triggerName}\\b`).test(sql)) {
+      failures.push(`Phase 8 progress/badges contract is missing trigger ${triggerName}.`);
+    }
   }
 }
 

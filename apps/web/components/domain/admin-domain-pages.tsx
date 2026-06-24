@@ -5,6 +5,7 @@ import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import type {
   AdminDomainData,
   AdminDomainSnapshot,
+  BadgeRow,
   EnrollmentRow,
   GroupMembershipRow,
   GroupRow,
@@ -209,6 +210,31 @@ export function AdminStagesPage({ snapshot }: DomainPageProps) {
           emptyLabel="Nog geen stages gevonden voor deze tenant."
           rows={snapshot.data.stages}
           rowKey={(stage) => stage.id}
+        />
+      </Card>
+    </DomainFrame>
+  );
+}
+
+export function AdminBadgesPage({ snapshot }: DomainPageProps) {
+  const lookups = buildLookups(snapshot.data);
+
+  return (
+    <DomainFrame snapshot={snapshot} kicker="Tenant admin - achievements" title="Badges" subtitle="Badge definitions per program/stage. Awards en achievement cards worden vanuit de instructor workflow toegekend.">
+      <Card>
+        <SectionHeader title="Badge definitions" count={snapshot.data.badges.length} />
+        <DomainTable<BadgeRow>
+          columns={[
+            { header: "Badge", render: (badge) => <StrongText>{badge.name}</StrongText> },
+            { header: "Code", render: (badge) => <CodeText>{badge.code}</CodeText> },
+            { header: "Program", render: (badge) => nullableText(lookups.programs.get(badge.program_id ?? "")?.name) },
+            { header: "Stage", render: (badge) => nullableText(lookups.stages.get(badge.stage_id ?? "")?.name) },
+            { header: "Beschrijving", className: "min-w-[260px] whitespace-normal", render: (badge) => nullableText(badge.description) },
+            { header: "Status", render: (badge) => <StatusPill tone={statusTone(badge.status)}>{badge.status}</StatusPill> }
+          ]}
+          emptyLabel="Nog geen badge definitions gevonden."
+          rows={snapshot.data.badges}
+          rowKey={(badge) => badge.id}
         />
       </Card>
     </DomainFrame>

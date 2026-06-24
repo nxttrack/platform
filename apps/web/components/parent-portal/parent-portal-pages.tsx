@@ -1,10 +1,13 @@
 import type { ReactNode } from "react";
-import { Bell, CalendarDays, FileText, GraduationCap, Repeat2, UserRound, Waves } from "lucide-react";
+import { Award, Bell, CalendarDays, FileText, GraduationCap, Sparkles, TrendingUp, UserRound, Waves } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { markNotificationReadAction, requestCatchUpLessonAction } from "@/lib/parent-portal/parent-portal-actions";
 import type {
   ParentCatchUpRequestRow,
+  ParentAchievementCardRow,
+  ParentBadgeAwardRow,
+  ParentBadgeRow,
   ParentCertificateRow,
   ParentDocumentRow,
   ParentEnrollmentRow,
@@ -18,6 +21,9 @@ import type {
   ParentProgressRow,
   ParentResourceRow,
   ParentSessionRow,
+  ParentStageModuleProgressRow,
+  ParentStageModuleRow,
+  ParentStageTransitionProposalRow,
   ParentStageRow,
   ParentSubscriptionPlanRow
 } from "@/lib/parent-portal/parent-portal-read-model";
@@ -30,6 +36,8 @@ type LookupMaps = {
   participants: Map<string, ParentParticipantRow>;
   programs: Map<string, ParentProgramRow>;
   stages: Map<string, ParentStageRow>;
+  stageModules: Map<string, ParentStageModuleRow>;
+  stageModulesByStage: Map<string, ParentStageModuleRow[]>;
   subscriptionPlans: Map<string, ParentSubscriptionPlanRow>;
   groups: Map<string, ParentGroupRow>;
   resources: Map<string, ParentResourceRow>;
@@ -37,6 +45,11 @@ type LookupMaps = {
   membershipsByEnrollment: Map<string, ParentGroupMembershipRow[]>;
   sessionsByGroup: Map<string, ParentSessionRow[]>;
   progressByEnrollment: Map<string, ParentProgressRow[]>;
+  moduleProgressByEnrollment: Map<string, ParentStageModuleProgressRow[]>;
+  badges: Map<string, ParentBadgeRow>;
+  badgeAwardsByParticipant: Map<string, ParentBadgeAwardRow[]>;
+  achievementCardsByParticipant: Map<string, ParentAchievementCardRow[]>;
+  transitionProposalsByEnrollment: Map<string, ParentStageTransitionProposalRow[]>;
   certificatesByParticipant: Map<string, ParentCertificateRow[]>;
   documentsByParticipant: Map<string, ParentDocumentRow[]>;
   notificationsByParticipant: Map<string, ParentNotificationRow[]>;
@@ -63,7 +76,7 @@ export function ParentDashboardPage({ snapshot }: ParentPageProps) {
         <MetricCard icon={<UserRound className="h-5 w-5" />} label="Kinderen" value={snapshot.data.participants.length.toString()} detail="gekoppelde profielen" />
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Lessen" value={lessons.length.toString()} detail="aankomende sessies" />
         <MetricCard icon={<Bell className="h-5 w-5" />} label="Ongelezen" value={unread.toString()} detail="notificaties" />
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenten" value={snapshot.data.documents.length.toString()} detail="read-only" />
+        <MetricCard icon={<Award className="h-5 w-5" />} label="Achievements" value={snapshot.data.achievementCards.length.toString()} detail="badges en mijlpalen" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -167,10 +180,128 @@ export function ParentDiplomasPage({ snapshot }: ParentPageProps) {
   );
 }
 
-function ParentFrame({ snapshot, kicker, title, subtitle, children }: ParentPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode }) {
+export function ParentProgressPage({ snapshot }: ParentPageProps) {
+  const lookups = buildLookups(snapshot.data);
+
+  return (
+    <ParentFrame
+      phase="Phase 8"
+      snapshot={snapshot}
+      kicker="Ouderportaal - voortgang"
+      title="Voortgang"
+      subtitle="Progressie per stage en module, inclusief stage-overgangsvoorstellen. Abonnement en betaling blijven los van badje/stage."
+    >
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card>
+          <SectionHeader title="Modulevoortgang" count={snapshot.data.stageModuleProgress.length} />
+          <div className="grid gap-4">
+            {snapshot.data.participants.length === 0 ? <EmptyState>Geen gekoppelde kinderen gevonden.</EmptyState> : null}
+            {snapshot.data.participants.map((participant) => (
+              <ProgressChildCard key={participant.id} participant={participant} lookups={lookups} />
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader title="Stage voorstellen" count={snapshot.data.stageTransitionProposals.length} />
+          <div className="grid gap-3">
+            {snapshot.data.stageTransitionProposals.length === 0 ? <EmptyState>Geen stage-overgangsvoorstellen gevonden.</EmptyState> : null}
+            {snapshot.data.stageTransitionProposals.map((proposal) => (
+              <div key={proposal.id} className="rounded-2xl border border-border bg-muted/35 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{participantName(lookups, proposal.participant_id)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {proposal.from_stage_id ? (lookups.stages.get(proposal.from_stage_id)?.name ?? "Huidige stage") : "Geen stage"} naar {lookups.stages.get(proposal.to_stage_id)?.name ?? "Nieuwe stage"}
+                    </p>
+                    {proposal.reason ? <p className="mt-2 text-sm text-muted-foreground">{proposal.reason}</p> : null}
+                  </div>
+                  <StatusPill tone={proposal.status === "approved" || proposal.status === "applied" ? "success" : proposal.status === "rejected" ? "danger" : "warning"}>{proposal.status}</StatusPill>
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">Voorgesteld op {formatDateTime(proposal.proposed_at)}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <Card>
+        <SectionHeader title="Laatste observaties" count={snapshot.data.progress.length} />
+        <div className="grid gap-3">
+          {snapshot.data.progress.length === 0 ? <EmptyState>Nog geen observaties gevonden.</EmptyState> : null}
+          {snapshot.data.progress.map((progress) => (
+            <ProgressTimelineRow key={progress.id} progress={progress} lookups={lookups} />
+          ))}
+        </div>
+      </Card>
+    </ParentFrame>
+  );
+}
+
+export function ParentBadgesPage({ snapshot }: ParentPageProps) {
+  const lookups = buildLookups(snapshot.data);
+
+  return (
+    <ParentFrame
+      phase="Phase 8"
+      snapshot={snapshot}
+      kicker="Ouderportaal - achievements"
+      title="Badges en achievement cards"
+      subtitle="Verdiende badges, complimentkaarten en mijlpalen voor ouder en kind."
+    >
+      <div className="grid gap-4 xl:grid-cols-[1fr_0.85fr]">
+        <Card>
+          <SectionHeader title="Achievement cards" count={snapshot.data.achievementCards.length} />
+          <div className="grid gap-4 md:grid-cols-2">
+            {snapshot.data.achievementCards.length === 0 ? <EmptyState>Nog geen achievement cards gevonden.</EmptyState> : null}
+            {snapshot.data.achievementCards.map((card) => (
+              <div key={card.id} className="rounded-3xl border border-border bg-gradient-to-br from-card to-muted/50 p-5 shadow-soft">
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    {card.card_type === "badge" ? <Award className="h-6 w-6" /> : <Sparkles className="h-6 w-6" />}
+                  </div>
+                  <StatusPill tone={card.card_type === "badge" ? "success" : "info"}>{card.card_type}</StatusPill>
+                </div>
+                <p className="text-lg font-bold">{card.title}</p>
+                {card.body ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{card.body}</p> : null}
+                <p className="mt-4 text-xs font-semibold text-muted-foreground">{participantName(lookups, card.participant_id)} - {formatDate(card.published_at)}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader title="Verdiende badges" count={snapshot.data.badgeAwards.length} />
+          <div className="grid gap-3">
+            {snapshot.data.badgeAwards.length === 0 ? <EmptyState>Nog geen badge awards gevonden.</EmptyState> : null}
+            {snapshot.data.badgeAwards.map((award) => {
+              const badge = lookups.badges.get(award.badge_id);
+
+              return (
+                <div key={award.id} className="rounded-2xl border border-border bg-muted/35 p-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold">{badge?.name ?? "Badge"}</p>
+                      <p className="text-sm text-muted-foreground">{participantName(lookups, award.participant_id)} - {badge?.description ?? "Achievement"}</p>
+                      {award.note ? <p className="mt-2 text-sm text-muted-foreground">{award.note}</p> : null}
+                    </div>
+                    <StatusPill tone={award.status === "awarded" ? "success" : "neutral"}>{award.status}</StatusPill>
+                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">Toegekend op {formatDateTime(award.awarded_at)}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+    </ParentFrame>
+  );
+}
+
+function ParentFrame({ snapshot, kicker, title, subtitle, children, phase = "Phase 6" }: ParentPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode; phase?: string }) {
   return (
     <div className="grid gap-6">
-      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Phase 6</StatusPill>} />
+      <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">{phase}</StatusPill>} />
       {snapshot.status === "ready" ? children : <ParentStatusPanel snapshot={snapshot} />}
     </div>
   );
@@ -358,6 +489,81 @@ function DocumentList({ documents, lookups, title }: { documents: ParentDocument
   );
 }
 
+function ProgressChildCard({ participant, lookups }: { participant: ParentParticipantRow; lookups: LookupMaps }) {
+  const enrollments = lookups.enrollmentsByParticipant.get(participant.id) ?? [];
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-bold">{participant.display_name}</p>
+          <p className="text-sm text-muted-foreground">{participant.birthdate ? `${ageFromBirthdate(participant.birthdate)} jaar` : "Leeftijd onbekend"}</p>
+        </div>
+        <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status}</StatusPill>
+      </div>
+      <div className="grid gap-4">
+        {enrollments.map((enrollment) => {
+          const stage = enrollment.current_stage_id ? lookups.stages.get(enrollment.current_stage_id) : null;
+          const modules = stage ? (lookups.stageModulesByStage.get(stage.id) ?? []) : [];
+          const moduleProgress = lookups.moduleProgressByEnrollment.get(enrollment.id) ?? [];
+
+          return (
+            <div key={enrollment.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold">{lookups.programs.get(enrollment.program_id)?.name ?? "Programma"}</p>
+                  <p className="text-sm text-muted-foreground">{stage?.name ?? "Stage onbekend"}</p>
+                </div>
+                <StatusPill tone="info">{moduleProgress.filter((progress) => progress.status === "passed").length}/{modules.length} modules</StatusPill>
+              </div>
+              <div className="grid gap-2">
+                {modules.length === 0 ? <EmptyState>Geen modules voor deze stage gevonden.</EmptyState> : null}
+                {modules.map((module) => {
+                  const progress = moduleProgress.find((entry) => entry.stage_module_id === module.id) ?? null;
+
+                  return (
+                    <div key={module.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2">
+                      <div>
+                        <p className="text-sm font-semibold">{module.name}</p>
+                        <p className="text-xs text-muted-foreground">{module.description ?? "Module"}</p>
+                      </div>
+                      <StatusPill tone={progress?.status === "passed" ? "success" : progress?.status === "needs_attention" ? "warning" : "neutral"}>
+                        {progress ? `${progress.status}${progress.score === null ? "" : ` ${progress.score}%`}` : "open"}
+                      </StatusPill>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function ProgressTimelineRow({ progress, lookups }: { progress: ParentProgressRow; lookups: LookupMaps }) {
+  const enrollment = snapshotEnrollmentByProgress(lookups, progress.enrollment_id);
+  const stage = progress.stage_id ? lookups.stages.get(progress.stage_id) : null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{enrollment ? participantName(lookups, enrollment.participant_id) : "Leerling"}</p>
+          <p className="text-sm text-muted-foreground">{stage?.name ?? "Algemene voortgang"}</p>
+          {progress.note ? <p className="mt-2 text-sm text-muted-foreground">{progress.note}</p> : null}
+        </div>
+        <StatusPill tone={progress.status === "passed" ? "success" : progress.status === "needs_attention" ? "warning" : "info"}>
+          {progress.status}
+          {progress.score === null ? "" : ` ${progress.score}%`}
+        </StatusPill>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">{formatDateTime(progress.assessed_at)}</p>
+    </div>
+  );
+}
+
 function MetricCard({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {
   return (
     <Card>
@@ -400,6 +606,8 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     participants: byId(data.participants),
     programs: byId(data.programs),
     stages: byId(data.stages),
+    stageModules: byId(data.stageModules),
+    stageModulesByStage: groupBy(data.stageModules, (module) => module.stage_id),
     subscriptionPlans: byId(data.subscriptionPlans),
     groups: byId(data.groups),
     resources: byId(data.resources),
@@ -407,6 +615,11 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     membershipsByEnrollment: groupBy(data.groupMemberships, (membership) => membership.enrollment_id),
     sessionsByGroup: groupBy(data.sessions, (session) => session.group_id),
     progressByEnrollment: groupBy(data.progress, (progress) => progress.enrollment_id),
+    moduleProgressByEnrollment: groupBy(data.stageModuleProgress, (progress) => progress.enrollment_id),
+    badges: byId(data.badges),
+    badgeAwardsByParticipant: groupBy(data.badgeAwards, (award) => award.participant_id),
+    achievementCardsByParticipant: groupBy(data.achievementCards, (card) => card.participant_id),
+    transitionProposalsByEnrollment: groupBy(data.stageTransitionProposals, (proposal) => proposal.enrollment_id),
     certificatesByParticipant: groupBy(data.certificates, (certificate) => certificate.participant_id),
     documentsByParticipant: groupBy(data.documents, (document) => document.participant_id),
     notificationsByParticipant: groupBy(data.notifications.filter((notification) => notification.participant_id), (notification) => notification.participant_id ?? ""),
@@ -467,6 +680,18 @@ function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
 
 function participantName(lookups: LookupMaps, participantId: string) {
   return lookups.participants.get(participantId)?.display_name ?? "Onbekend kind";
+}
+
+function snapshotEnrollmentByProgress(lookups: LookupMaps, enrollmentId: string) {
+  for (const enrollments of lookups.enrollmentsByParticipant.values()) {
+    const match = enrollments.find((enrollment) => enrollment.id === enrollmentId);
+
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
 }
 
 function ageFromBirthdate(birthdate: string) {

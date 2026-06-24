@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentBadgesPage as ParentBadgesPortalPage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentBadgesPage() {
-  return <RoutePlaceholder kicker="Parent shell" title="Badges foundation" description="Achievement cards en complimenten worden hier in Phase 8 data-backed gemaakt." items={["Badges", "Complimenten", "Milestones", "Kindweergave"]} />;
+export default async function ParentBadgesPage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentBadgesPortalPage snapshot={snapshot} />;
 }

@@ -3,9 +3,18 @@ import Link from "next/link";
 import { CalendarDays, ClipboardCheck, MessageSquareText, UsersRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { createProgressUpdateAction, createStudentNoteAction, recordAttendanceAction } from "@/lib/instructor-portal/instructor-portal-actions";
+import {
+  awardBadgeAction,
+  createProgressUpdateAction,
+  createStageModuleProgressAction,
+  createStudentNoteAction,
+  proposeStageTransitionAction,
+  recordAttendanceAction
+} from "@/lib/instructor-portal/instructor-portal-actions";
 import type {
   InstructorAttendanceRow,
+  InstructorBadgeAwardRow,
+  InstructorBadgeRow,
   InstructorEnrollmentRow,
   InstructorGroupMembershipRow,
   InstructorGroupRow,
@@ -17,6 +26,9 @@ import type {
   InstructorProgressRow,
   InstructorResourceRow,
   InstructorSessionRow,
+  InstructorStageModuleProgressRow,
+  InstructorStageModuleRow,
+  InstructorStageTransitionProposalRow,
   InstructorStageRow,
   InstructorStudentNoteRow
 } from "@/lib/instructor-portal/instructor-portal-read-model";
@@ -29,6 +41,8 @@ type LookupMaps = {
   instructors: Map<string, InstructorRow>;
   programs: Map<string, InstructorProgramRow>;
   stages: Map<string, InstructorStageRow>;
+  stageModules: Map<string, InstructorStageModuleRow>;
+  stageModulesByStage: Map<string, InstructorStageModuleRow[]>;
   resources: Map<string, InstructorResourceRow>;
   groups: Map<string, InstructorGroupRow>;
   participants: Map<string, InstructorParticipantRow>;
@@ -37,6 +51,10 @@ type LookupMaps = {
   membershipsByGroup: Map<string, InstructorGroupMembershipRow[]>;
   membershipsByEnrollment: Map<string, InstructorGroupMembershipRow[]>;
   progressByEnrollment: Map<string, InstructorProgressRow[]>;
+  moduleProgressByEnrollment: Map<string, InstructorStageModuleProgressRow[]>;
+  badges: Map<string, InstructorBadgeRow>;
+  badgeAwardsByParticipant: Map<string, InstructorBadgeAwardRow[]>;
+  transitionProposalsByEnrollment: Map<string, InstructorStageTransitionProposalRow[]>;
   attendanceBySessionEnrollment: Map<string, InstructorAttendanceRow>;
   notesByParticipant: Map<string, InstructorStudentNoteRow[]>;
 };
@@ -57,6 +75,9 @@ type StudentRow = {
   enrollments: InstructorEnrollmentRow[];
   memberships: InstructorGroupMembershipRow[];
   progress: InstructorProgressRow[];
+  moduleProgress: InstructorStageModuleProgressRow[];
+  badgeAwards: InstructorBadgeAwardRow[];
+  transitionProposals: InstructorStageTransitionProposalRow[];
   notes: InstructorStudentNoteRow[];
 };
 
@@ -78,7 +99,7 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Sessies" value={snapshot.data.sessions.length.toString()} detail="in de komende planning" />
         <MetricCard icon={<UsersRound className="h-5 w-5" />} label="Leerlingen" value={students.length.toString()} detail="in toegewezen groepen" />
         <MetricCard icon={<ClipboardCheck className="h-5 w-5" />} label="Aanwezigheid" value={`${recorded}/${rosterRows.length}`} detail="vastgelegd" />
-        <MetricCard icon={<MessageSquareText className="h-5 w-5" />} label="Notities" value={snapshot.data.notes.length.toString()} detail="incl. complimenten" />
+        <MetricCard icon={<MessageSquareText className="h-5 w-5" />} label="Badges" value={snapshot.data.badgeAwards.length.toString()} detail="toegekend" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -280,20 +301,42 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
           </Card>
 
           <Card>
+            <SectionHeader title="Module-progress" count={student.moduleProgress.length} />
+            <ModuleProgressForm enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} lookups={lookups} />
+          </Card>
+
+          <Card>
+            <SectionHeader title="Badges en doorstroom" count={student.badgeAwards.length + student.transitionProposals.length} />
+            <div className="grid gap-5">
+              <BadgeAwardForm badges={snapshot.data.badges} enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} />
+              <StageTransitionForm enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} stages={snapshot.data.stages} />
+            </div>
+          </Card>
+
+          <Card>
             <SectionHeader title="Notities en complimenten" count={student.notes.length} />
             <NoteForm enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} />
           </Card>
 
           <Card>
-            <SectionHeader title="Historie" count={student.progress.length + student.notes.length} />
+            <SectionHeader title="Historie" count={student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.notes.length} />
             <div className="grid gap-3">
               {student.progress.map((progress) => (
                 <ProgressHistoryRow key={progress.id} progress={progress} lookups={lookups} />
               ))}
+              {student.moduleProgress.map((progress) => (
+                <ModuleProgressHistoryRow key={progress.id} progress={progress} lookups={lookups} />
+              ))}
+              {student.badgeAwards.map((award) => (
+                <BadgeAwardHistoryRow key={award.id} award={award} lookups={lookups} />
+              ))}
+              {student.transitionProposals.map((proposal) => (
+                <StageTransitionHistoryRow key={proposal.id} proposal={proposal} lookups={lookups} />
+              ))}
               {student.notes.map((note) => (
                 <NoteHistoryRow key={note.id} note={note} />
               ))}
-              {student.progress.length + student.notes.length === 0 ? <EmptyState>Nog geen voortgang of notities gevonden.</EmptyState> : null}
+              {student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.notes.length === 0 ? <EmptyState>Nog geen voortgang of notities gevonden.</EmptyState> : null}
             </div>
           </Card>
         </div>
@@ -475,6 +518,114 @@ function NoteForm({ enrollment, participant, group }: { enrollment: InstructorEn
   );
 }
 
+function ModuleProgressForm({ enrollment, participant, group, lookups }: { enrollment: InstructorEnrollmentRow; participant: InstructorParticipantRow; group: InstructorGroupRow | null; lookups: LookupMaps }) {
+  const currentStageId = enrollment.current_stage_id ?? group?.stage_id ?? "";
+  const modules = currentStageId ? (lookups.stageModulesByStage.get(currentStageId) ?? []) : [];
+
+  return (
+    <form action={createStageModuleProgressAction} className="grid gap-3">
+      <input name="participant_id" type="hidden" value={participant.id} />
+      <input name="enrollment_id" type="hidden" value={enrollment.id} />
+      <input name="stage_id" type="hidden" value={currentStageId} />
+      {group ? <input name="group_id" type="hidden" value={group.id} /> : null}
+      <div className="grid gap-3 md:grid-cols-3">
+        <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+          Module
+          <select className={fieldClassName} name="stage_module_id" required>
+            <option value="">Selecteer module</option>
+            {modules.map((module) => (
+              <option key={module.id} value={module.id}>
+                {module.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+          Status
+          <select className={fieldClassName} defaultValue="in_progress" name="status">
+            <option value="observed">Geobserveerd</option>
+            <option value="in_progress">In ontwikkeling</option>
+            <option value="passed">Behaald</option>
+            <option value="needs_attention">Aandacht nodig</option>
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+          Score
+          <input className={fieldClassName} max="100" min="0" name="score" placeholder="0-100" type="number" />
+        </label>
+      </div>
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Module-notitie
+        <textarea className={`${fieldClassName} min-h-20`} name="note" placeholder="Korte module-observatie" />
+      </label>
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Module-progress opslaan
+      </button>
+    </form>
+  );
+}
+
+function BadgeAwardForm({ badges, enrollment, participant, group }: { badges: InstructorBadgeRow[]; enrollment: InstructorEnrollmentRow; participant: InstructorParticipantRow; group: InstructorGroupRow | null }) {
+  const availableBadges = badges.filter((badge) => badge.status === "active" && (!badge.program_id || badge.program_id === enrollment.program_id));
+
+  return (
+    <form action={awardBadgeAction} className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+      <input name="participant_id" type="hidden" value={participant.id} />
+      <input name="enrollment_id" type="hidden" value={enrollment.id} />
+      {group ? <input name="group_id" type="hidden" value={group.id} /> : null}
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Badge
+        <select className={fieldClassName} name="badge_id" required>
+          <option value="">Selecteer badge</option>
+          {availableBadges.map((badge) => (
+            <option key={badge.id} value={badge.id}>
+              {badge.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Bericht
+        <input className={fieldClassName} name="note" placeholder="Waarom verdient deze leerling de badge?" />
+      </label>
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Badge toekennen
+      </button>
+    </form>
+  );
+}
+
+function StageTransitionForm({ enrollment, participant, group, stages }: { enrollment: InstructorEnrollmentRow; participant: InstructorParticipantRow; group: InstructorGroupRow | null; stages: InstructorStageRow[] }) {
+  const programStages = stages.filter((stage) => stage.program_id === enrollment.program_id && stage.id !== enrollment.current_stage_id);
+
+  return (
+    <form action={proposeStageTransitionAction} className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+      <input name="participant_id" type="hidden" value={participant.id} />
+      <input name="enrollment_id" type="hidden" value={enrollment.id} />
+      <input name="from_stage_id" type="hidden" value={enrollment.current_stage_id ?? ""} />
+      {group ? <input name="group_id" type="hidden" value={group.id} /> : null}
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Nieuwe stage
+        <select className={fieldClassName} name="to_stage_id" required>
+          <option value="">Selecteer stage</option>
+          {programStages.map((stage) => (
+            <option key={stage.id} value={stage.id}>
+              {stage.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Reden
+        <textarea className={`${fieldClassName} min-h-20`} name="reason" placeholder="Waarom is doorstroom passend? Subscription blijft ongewijzigd." />
+      </label>
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Doorstroom voorstellen
+      </button>
+    </form>
+  );
+}
+
 function StudentListRow({ student, lookups }: { student: StudentRow; lookups: LookupMaps }) {
   const enrollment = student.enrollments[0] ?? null;
   const program = enrollment ? lookups.programs.get(enrollment.program_id) : null;
@@ -495,7 +646,7 @@ function StudentListRow({ student, lookups }: { student: StudentRow; lookups: Lo
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <InfoTile label="Laatste voortgang" value={latestProgress ? `${latestProgress.status} ${latestProgress.score ?? "-"}%` : "Nog geen"} />
-        <InfoTile label="Notities" value={student.notes.length.toString()} />
+        <InfoTile label="Badges" value={student.badgeAwards.length.toString()} />
         <InfoTile label="Start" value={enrollment ? formatDate(enrollment.started_on) : "-"} />
       </div>
     </div>
@@ -549,6 +700,60 @@ function ProgressHistoryRow({ progress, lookups }: { progress: InstructorProgres
           {progress.status}
           {progress.score === null ? "" : ` ${progress.score}%`}
         </StatusPill>
+      </div>
+    </div>
+  );
+}
+
+function ModuleProgressHistoryRow({ progress, lookups }: { progress: InstructorStageModuleProgressRow; lookups: LookupMaps }) {
+  const module = lookups.stageModules.get(progress.stage_module_id);
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{module?.name ?? "Module"}</p>
+          {progress.note ? <p className="mt-1 text-sm text-muted-foreground">{progress.note}</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(progress.assessed_at)}</p>
+        </div>
+        <StatusPill tone={progress.status === "passed" ? "success" : progress.status === "needs_attention" ? "warning" : "info"}>
+          {progress.status}
+          {progress.score === null ? "" : ` ${progress.score}%`}
+        </StatusPill>
+      </div>
+    </div>
+  );
+}
+
+function BadgeAwardHistoryRow({ award, lookups }: { award: InstructorBadgeAwardRow; lookups: LookupMaps }) {
+  const badge = lookups.badges.get(award.badge_id);
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{badge?.name ?? "Badge"}</p>
+          {award.note ? <p className="mt-1 text-sm text-muted-foreground">{award.note}</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(award.awarded_at)}</p>
+        </div>
+        <StatusPill tone={award.status === "awarded" ? "success" : "neutral"}>{award.status}</StatusPill>
+      </div>
+    </div>
+  );
+}
+
+function StageTransitionHistoryRow({ proposal, lookups }: { proposal: InstructorStageTransitionProposalRow; lookups: LookupMaps }) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">
+            {proposal.from_stage_id ? (lookups.stages.get(proposal.from_stage_id)?.name ?? "Huidige stage") : "Geen stage"} naar {lookups.stages.get(proposal.to_stage_id)?.name ?? "Nieuwe stage"}
+          </p>
+          {proposal.reason ? <p className="mt-1 text-sm text-muted-foreground">{proposal.reason}</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(proposal.proposed_at)}</p>
+        </div>
+        <StatusPill tone={proposal.status === "approved" || proposal.status === "applied" ? "success" : proposal.status === "rejected" ? "danger" : "warning"}>{proposal.status}</StatusPill>
       </div>
     </div>
   );
@@ -611,6 +816,8 @@ function buildLookups(data: InstructorPortalData): LookupMaps {
     instructors: byId(data.instructors),
     programs: byId(data.programs),
     stages: byId(data.stages),
+    stageModules: byId(data.stageModules),
+    stageModulesByStage: groupBy(data.stageModules, (module) => module.stage_id),
     resources: byId(data.resources),
     groups: byId(data.groups),
     participants: byId(data.participants),
@@ -619,6 +826,10 @@ function buildLookups(data: InstructorPortalData): LookupMaps {
     membershipsByGroup: groupBy(data.groupMemberships, (membership) => membership.group_id),
     membershipsByEnrollment: groupBy(data.groupMemberships, (membership) => membership.enrollment_id),
     progressByEnrollment: groupBy(data.progress, (progress) => progress.enrollment_id),
+    moduleProgressByEnrollment: groupBy(data.stageModuleProgress, (progress) => progress.enrollment_id),
+    badges: byId(data.badges),
+    badgeAwardsByParticipant: groupBy(data.badgeAwards, (award) => award.participant_id),
+    transitionProposalsByEnrollment: groupBy(data.stageTransitionProposals, (proposal) => proposal.enrollment_id),
     attendanceBySessionEnrollment: new Map(data.attendance.map((attendance) => [`${attendance.session_id}:${attendance.enrollment_id}`, attendance])),
     notesByParticipant: groupBy(data.notes, (note) => note.participant_id)
   };
@@ -669,6 +880,9 @@ function buildStudentRows(data: InstructorPortalData, lookups: LookupMaps): Stud
         enrollments,
         memberships: data.groupMemberships.filter((membership) => enrollmentIds.includes(membership.enrollment_id)),
         progress: enrollmentIds.flatMap((enrollmentId) => lookups.progressByEnrollment.get(enrollmentId) ?? []),
+        moduleProgress: enrollmentIds.flatMap((enrollmentId) => lookups.moduleProgressByEnrollment.get(enrollmentId) ?? []),
+        badgeAwards: lookups.badgeAwardsByParticipant.get(participant.id) ?? [],
+        transitionProposals: enrollmentIds.flatMap((enrollmentId) => lookups.transitionProposalsByEnrollment.get(enrollmentId) ?? []),
         notes: lookups.notesByParticipant.get(participant.id) ?? []
       };
     })
