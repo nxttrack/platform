@@ -147,12 +147,59 @@ function checkCoreDomainContracts(sql) {
   if (subscriptionPlansBlock && /\bstage_id\b|\bbadge_id\b|\bbadje\b/.test(subscriptionPlansBlock)) {
     failures.push("Core domain contract: public.subscription_plans must not be tied to stage/badge progression.");
   }
+
+  checkCoreDomainWriteContracts(sql);
 }
 
 function extractCreateTableBlock(sql, table) {
   const match = new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\s*\\([\\s\\S]*?\\);`).exec(sql);
 
   return match?.[0] ?? "";
+}
+
+function checkCoreDomainWriteContracts(sql) {
+  const mutablePhase3Tables = [
+    "programs",
+    "stages",
+    "subscription_plans",
+    "resources",
+    "instructors",
+    "groups",
+    "sessions",
+    "participants",
+    "enrollments",
+    "group_memberships"
+  ];
+
+  for (const table of mutablePhase3Tables) {
+    const escapedTable = escapeRegExp(table);
+    const insertGrantPattern = new RegExp(`grant\\s+insert[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+update[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const insertPolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+insert[\\s\\S]*?to\\s+authenticated[\\s\\S]*?with\\s+check[\\s\\S]*?;`);
+    const updatePolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+update[\\s\\S]*?to\\s+authenticated[\\s\\S]*?using[\\s\\S]*?with\\s+check[\\s\\S]*?;`);
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Core domain write contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Core domain write contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+
+    if (!insertPolicyPattern.test(sql)) {
+      failures.push(`Core domain write contract: public.${table} is missing an INSERT policy with WITH CHECK.`);
+    }
+
+    if (!updatePolicyPattern.test(sql)) {
+      failures.push(`Core domain write contract: public.${table} is missing an UPDATE policy with USING and WITH CHECK.`);
+    }
+  }
+
+  const forbiddenDeleteGrant = /\bgrant\s+delete[\s\S]*?\s+on\s+(?:table\s+)?public\.(programs|stages|subscription_plans|resources|instructors|groups|sessions|participants|enrollments|group_memberships)\s+to\s+authenticated\s*;/;
+
+  if (forbiddenDeleteGrant.test(sql)) {
+    failures.push("Core domain write contract: Phase 3 must not grant hard DELETE to authenticated users.");
+  }
 }
 
 function normalizeSql(sql) {
