@@ -116,6 +116,12 @@ jobs:
           set -euo pipefail
           pnpm build
 
+      - name: Prepare standalone static assets
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          node scripts/deploy/prepare-standalone-assets.mjs
+
       - name: Run database migrations
         working-directory: ${{ env.RELEASE }}
         run: |
