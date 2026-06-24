@@ -47,6 +47,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
+      DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
 
     steps:
       - name: Checkout
@@ -109,6 +111,8 @@ jobs:
             printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_PUBLIC_KEY"
             printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$SUPABASE_SERVICE_ROLE_KEY"
+            printf 'RUN_DB_MIGRATIONS=%s\n' "$RUN_DB_MIGRATIONS"
+            printf 'DB_MIGRATE_DRY_RUN=%s\n' "$DB_MIGRATE_DRY_RUN"
           } > "$BASE_DIR/shared/.env"
 
           chmod 640 "$BASE_DIR/shared/.env"
