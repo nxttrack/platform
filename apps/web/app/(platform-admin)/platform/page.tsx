@@ -1,5 +1,17 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { PlatformAdminDashboard } from "@/components/platform-admin/platform-admin-dashboard";
+import { getPlatformAdminSnapshot } from "@/lib/platform-admin/platform-admin-read-model";
 
-export default function PlatformPage() {
-  return <RoutePlaceholder kicker="Platform admin" title="Platform shell foundation" description="Global tenant/domain/template management blijft gescheiden van tenant admin en gebruikt platformrollen." items={["Tenants", "Domains", "Sector templates", "Audit"]} />;
+type PlatformPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function PlatformPage({ searchParams }: PlatformPageProps) {
+  const params = (await searchParams) ?? {};
+  const snapshot = await getPlatformAdminSnapshot();
+
+  return <PlatformAdminDashboard snapshot={snapshot} notice={getParam(params.notice)} error={getParam(params.error)} />;
+}
+
+function getParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }

@@ -23,6 +23,10 @@ export function buildTenantSwitchPath(nextPath: `/${string}`): `/${string}` {
   return buildPath("/auth/tenant-switch", { next: nextPath });
 }
 
+export function buildChangePasswordPath(nextPath: `/${string}`, reason?: string | null): `/${string}` {
+  return buildPath("/auth/change-password", { next: nextPath, reason });
+}
+
 export function buildPath(pathname: `/${string}`, params: Record<string, string | null | undefined>): `/${string}` {
   const search = new URLSearchParams();
 

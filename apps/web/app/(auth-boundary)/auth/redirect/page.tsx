@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { buildLoginPath, buildNoAccessPath, buildTenantSwitchPath } from "@/lib/auth/redirects";
+import { getPreferredPrivatePathForRoles } from "@/lib/auth/guard";
+import { getPasswordChangeRequirementForCurrentUser } from "@/lib/auth/password-requirements";
+import { buildChangePasswordPath, buildLoginPath, buildNoAccessPath, buildTenantSwitchPath } from "@/lib/auth/redirects";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
-import { getPreferredPrivatePathForRoles } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,12 @@ export default async function DefaultRedirectPage() {
 
   if (context.status === "anonymous") {
     redirect(buildLoginPath("/auth/redirect"));
+  }
+
+  const passwordRequirement = await getPasswordChangeRequirementForCurrentUser();
+
+  if (passwordRequirement.required) {
+    redirect(buildChangePasswordPath("/auth/redirect", passwordRequirement.reason));
   }
 
   if (context.platform?.roles.length) {

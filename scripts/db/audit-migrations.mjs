@@ -40,6 +40,7 @@ checkProgressBadgesAchievementContracts(normalizedMigrationSql.join(" "));
 checkAfzwemDiplomaVaultContracts(normalizedMigrationSql.join(" "));
 checkManualPaymentsContracts(normalizedMigrationSql.join(" "));
 checkMessagesTasksDocsReportsContracts(normalizedMigrationSql.join(" "));
+checkPlatformSuperAdminContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -776,6 +777,53 @@ function checkMessagesTasksDocsReportsContracts(sql) {
 
   if (!/'sendgrid'[\s\S]*?'disabled'/.test(sql)) {
     failures.push("Phase 12 operations contract: SendGrid API provider must be prepared but disabled.");
+  }
+}
+
+function checkPlatformSuperAdminContracts(sql) {
+  const requiredTables = ["user_security_requirements", "tenant_super_admin_invitations"];
+
+  for (const table of requiredTables) {
+    const escapedTable = escapeRegExp(table);
+
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${escapedTable}\\b`).test(sql)) {
+      failures.push(`Platform super admin contract is missing public.${table}.`);
+    }
+
+    if (new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`).test(sql)) {
+      failures.push(`Platform super admin contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!new RegExp(`grant\\s+select\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`).test(sql)) {
+      failures.push(`Platform super admin contract: public.${table} is missing an authenticated SELECT grant.`);
+    }
+
+    if (!new RegExp(`grant\\s+all\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+service_role\\s*;`).test(sql)) {
+      failures.push(`Platform super admin contract: public.${table} is missing a service_role grant.`);
+    }
+  }
+
+  const requirementsBlock = extractCreateTableBlock(sql, "user_security_requirements");
+  const invitationsBlock = extractCreateTableBlock(sql, "tenant_super_admin_invitations");
+
+  for (const columnName of ["user_id", "must_change_password", "reason", "resolved_at"]) {
+    if (requirementsBlock && !new RegExp(`\\b${columnName}\\b`).test(requirementsBlock)) {
+      failures.push(`Platform super admin contract: public.user_security_requirements must store ${columnName}.`);
+    }
+  }
+
+  for (const columnName of ["tenant_id", "user_id", "email", "status", "delivery_provider", "last_sent_at", "accepted_at"]) {
+    if (invitationsBlock && !new RegExp(`\\b${columnName}\\b`).test(invitationsBlock)) {
+      failures.push(`Platform super admin contract: public.tenant_super_admin_invitations must store ${columnName}.`);
+    }
+  }
+
+  if (!/create\s+policy\s+["']?users\s+and\s+platform\s+staff\s+can\s+view\s+security\s+requirements[\s\S]*?on\s+public\.user_security_requirements[\s\S]*?for\s+select[\s\S]*?to\s+authenticated[\s\S]*?using[\s\S]*?;/.test(sql)) {
+    failures.push("Platform super admin contract: user_security_requirements must have a scoped authenticated SELECT policy.");
+  }
+
+  if (!/create\s+policy\s+["']?platform\s+staff\s+can\s+view\s+tenant\s+super\s+admin\s+invitations[\s\S]*?on\s+public\.tenant_super_admin_invitations[\s\S]*?for\s+select[\s\S]*?to\s+authenticated[\s\S]*?using[\s\S]*?;/.test(sql)) {
+    failures.push("Platform super admin contract: tenant_super_admin_invitations must have a platform-scoped SELECT policy.");
   }
 }
 

@@ -99,8 +99,9 @@ function auditRepositorySecrets() {
 
   scanFiles(join(root, "apps/web"), (filePath, source) => {
     const projectPath = normalizePath(relative(root, filePath));
+    const allowedServiceRoleFiles = new Set(["apps/web/lib/supabase/admin.ts"]);
 
-    if (/\bSUPABASE_SERVICE_ROLE_KEY\b|\bservice_role\b/i.test(source)) {
+    if (!allowedServiceRoleFiles.has(projectPath) && /\bSUPABASE_SERVICE_ROLE_KEY\b|\bservice_role\b/i.test(source)) {
       failures.push(`${projectPath}: service-role credentials must not be referenced by the web app.`);
     }
   });

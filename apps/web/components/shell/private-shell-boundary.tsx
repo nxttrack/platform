@@ -3,7 +3,8 @@ import type { ReactNode } from "react";
 
 import { AppShell, type NavItem } from "@/components/shell/app-shell";
 import { privateShellAccess, type PrivateShellKey } from "@/lib/auth/access";
-import { buildLoginPath, buildNoAccessPath, buildTenantSwitchPath } from "@/lib/auth/redirects";
+import { getPasswordChangeRequirementForCurrentUser } from "@/lib/auth/password-requirements";
+import { buildChangePasswordPath, buildLoginPath, buildNoAccessPath, buildTenantSwitchPath } from "@/lib/auth/redirects";
 import { roleLabels } from "@/lib/auth/roles";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
@@ -42,6 +43,12 @@ export async function PrivateShellBoundary({ shell, nav, accent, children }: Pri
 
   if (context.status === "anonymous") {
     redirect(buildLoginPath(access.pathPrefix));
+  }
+
+  const passwordRequirement = await getPasswordChangeRequirementForCurrentUser();
+
+  if (passwordRequirement.required) {
+    redirect(buildChangePasswordPath(access.pathPrefix, passwordRequirement.reason));
   }
 
   const decision = evaluatePrivateShellAccessForContext(access.pathPrefix, context);
