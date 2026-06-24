@@ -43,8 +43,14 @@ export type LiveEmailOptions = {
 };
 
 export function assertLiveEmailConfigured(options: LiveEmailOptions = {}) {
-  if (hasSmtpConfig(options.smtpSettings) || hasSendGridApiConfig(options.smtpSettings)) {
+  const smtpError = getSmtpConfigError(options.smtpSettings);
+
+  if (!smtpError || hasSendGridApiConfig(options.smtpSettings)) {
     return;
+  }
+
+  if (usesGlobalSmtpSettings(options.smtpSettings)) {
+    throw new Error(smtpError.message);
   }
 
   throw new Error("Emailverzending is niet geconfigureerd. Vul SMTP_* of SENDGRID_API_KEY + SMTP_FROM_EMAIL in.");
@@ -182,11 +188,15 @@ function formatFromAddress(fromEmail: string, fromName?: string | null) {
 }
 
 function hasSmtpConfig(settings: LiveSmtpSettings | null | undefined) {
+  return !getSmtpConfigError(settings);
+}
+
+function getSmtpConfigError(settings: LiveSmtpSettings | null | undefined) {
   try {
     resolveSmtpConfig(settings);
-    return true;
+    return null;
   } catch {
-    return false;
+    return new Error("SMTP is niet volledig geconfigureerd. Controleer host, poort, afzender e-mail, SMTP gebruiker en SMTP wachtwoord.");
   }
 }
 
@@ -195,17 +205,18 @@ function hasSendGridApiConfig(settings: LiveSmtpSettings | null | undefined) {
 }
 
 function resolveSmtpConfig(settings: LiveSmtpSettings | null | undefined) {
-  const globalSettingsEnabled = settings?.status === "active" || settings?.status === "configured";
-  const usernameSecretReference = globalSettingsEnabled ? settings.username_secret_reference || "SMTP_USER" : "SMTP_USER";
-  const passwordSecretReference = globalSettingsEnabled ? settings.password_secret_reference || "SMTP_PASS" : "SMTP_PASS";
-  const host = globalSettingsEnabled ? settings.host ?? process.env.SMTP_HOST : process.env.SMTP_HOST;
-  const port = globalSettingsEnabled ? settings.port ?? Number.parseInt(process.env.SMTP_PORT ?? "587", 10) : Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
-  const fromEmail = globalSettingsEnabled ? settings.from_email ?? process.env.SMTP_FROM_EMAIL : process.env.SMTP_FROM_EMAIL;
-  const fromName = globalSettingsEnabled ? settings.from_name ?? process.env.SMTP_FROM_NAME : process.env.SMTP_FROM_NAME;
-  const replyToEmail = globalSettingsEnabled ? settings.reply_to_email ?? null : null;
-  const secure = globalSettingsEnabled ? Boolean(settings.secure) : port === 465;
-  const user = process.env[usernameSecretReference] ?? process.env.SMTP_USER;
-  const pass = process.env[passwordSecretReference] ?? process.env.SMTP_PASS;
+  const globalSettings = usesGlobalSmtpSettings(settings) ? settings : null;
+  const globalSettingsEnabled = Boolean(globalSettings);
+  const usernameSecretReference = globalSettings ? globalSettings.username_secret_reference || "SMTP_USER" : "SMTP_USER";
+  const passwordSecretReference = globalSettings ? globalSettings.password_secret_reference || "SMTP_PASS" : "SMTP_PASS";
+  const host = globalSettings ? globalSettings.host ?? process.env.SMTP_HOST : process.env.SMTP_HOST;
+  const port = globalSettings ? globalSettings.port ?? Number.parseInt(process.env.SMTP_PORT ?? "587", 10) : Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
+  const fromEmail = globalSettings ? globalSettings.from_email ?? process.env.SMTP_FROM_EMAIL : process.env.SMTP_FROM_EMAIL;
+  const fromName = globalSettings ? globalSettings.from_name ?? process.env.SMTP_FROM_NAME : process.env.SMTP_FROM_NAME;
+  const replyToEmail = globalSettings ? globalSettings.reply_to_email ?? null : null;
+  const secure = globalSettings ? Boolean(globalSettings.secure) : port === 465;
+  const user = resolveCredential(usernameSecretReference, "SMTP_USER", globalSettingsEnabled);
+  const pass = resolveCredential(passwordSecretReference, "SMTP_PASS", globalSettingsEnabled);
 
   if (!host || !Number.isFinite(port) || !fromEmail || !user || !pass) {
     throw new Error("SMTP is niet volledig geconfigureerd.");
@@ -221,6 +232,24 @@ function resolveSmtpConfig(settings: LiveSmtpSettings | null | undefined) {
     user,
     pass
   };
+}
+
+function usesGlobalSmtpSettings(settings: LiveSmtpSettings | null | undefined) {
+  return settings?.status === "active" || settings?.status === "configured";
+}
+
+function resolveCredential(referenceOrValue: string, fallbackEnvKey: "SMTP_USER" | "SMTP_PASS", allowDirectValue: boolean) {
+  const envValue = process.env[referenceOrValue] ?? process.env[fallbackEnvKey];
+
+  if (envValue) {
+    return envValue;
+  }
+
+  if (allowDirectValue && referenceOrValue !== fallbackEnvKey) {
+    return referenceOrValue;
+  }
+
+  return null;
 }
 
 function requiredEnv(key: string) {

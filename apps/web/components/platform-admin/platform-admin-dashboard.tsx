@@ -235,12 +235,19 @@ function GlobalSmtpSettingsCard({ settings }: { settings: PlatformSmtpSettingsRo
           <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.reply_to_email ?? ""} name="reply_to_email" type="email" />
         </label>
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">User secret</span>
-          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.username_secret_reference} name="username_secret_reference" placeholder="SMTP_USER" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">SMTP gebruiker</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.username_secret_reference} name="username_secret_reference" placeholder="SMTP_USER of noreply@nxttrack.nl" />
         </label>
         <label className="block">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password secret</span>
-          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.password_secret_reference} name="password_secret_reference" placeholder="SMTP_PASS" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">SMTP wachtwoord</span>
+          <input
+            autoComplete="new-password"
+            className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4"
+            defaultValue={value.password_secret_reference}
+            name="password_secret_reference"
+            placeholder="SMTP_PASS of wachtwoord"
+            type="password"
+          />
         </label>
         <label className="block lg:col-span-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Testontvanger</span>
