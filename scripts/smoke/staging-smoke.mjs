@@ -43,6 +43,10 @@ async function checkHealth(url, label) {
       failures.push(`${label} health commit ${payload.commit} does not match expected ${expectedCommit.slice(0, 7)}.`);
     }
 
+    if (payload.supabaseAuthConfigured !== true) {
+      failures.push(`${label} health reports Supabase Auth is not configured.`);
+    }
+
     console.log(`[smoke:staging] ${label} health ok commit=${payload.commit ?? "unknown"}`);
   } catch (error) {
     failures.push(`${label} health request failed for ${url}: ${error instanceof Error ? error.message : String(error)}.`);

@@ -84,6 +84,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
+Supabase Auth runtime notes:
+
+- `NEXT_PUBLIC_SUPABASE_URL` and a public key are required for login/auth.
+- The deploy workflow accepts public Supabase values as GitHub variables or secrets.
+- Supported URL names: `NEXT_PUBLIC_SUPABASE_URL` or `SUPABASE_URL`.
+- Supported public key names: `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, or `SUPABASE_ANON_KEY`.
+- Supported service-role names: `SUPABASE_SERVICE_ROLE_KEY` or `SUPABASE_SECRET_KEY`.
+- The deploy fails before activation if the public URL or public key is missing.
+
 Email secrets to add only when email code exists:
 
 ```txt
