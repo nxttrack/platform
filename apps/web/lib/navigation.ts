@@ -45,6 +45,7 @@ export const instructorNav: NavItem[] = [
 
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: Home },
+  { href: "/admin/agenda", label: "Planning", icon: Calendar },
   { href: "/admin/programs", label: "Programs", icon: Waves },
   { href: "/admin/stages", label: "Stages", icon: TrendingUp },
   { href: "/admin/badges", label: "Badges", icon: Award },

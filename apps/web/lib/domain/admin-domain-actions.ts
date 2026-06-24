@@ -393,6 +393,43 @@ export async function updateGroupMembershipAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function createParticipantGuardianAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await throwOnError(
+    supabase.from("participant_guardians").insert({
+      tenant_id: tenantId,
+      participant_id: requiredString(formData, "participant_id"),
+      profile_id: requiredString(formData, "profile_id"),
+      relationship: enumValue(formData, "relationship", ["parent", "guardian", "athlete_self"], "parent"),
+      display_name: optionalString(formData, "display_name"),
+      email: optionalString(formData, "email"),
+      status: enumValue(formData, "status", ["active", "inactive", "revoked"], "active")
+    })
+  );
+  revalidateAdminDomain();
+}
+
+export async function updateParticipantGuardianAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await throwOnError(
+    supabase
+      .from("participant_guardians")
+      .update({
+        participant_id: requiredString(formData, "participant_id"),
+        profile_id: requiredString(formData, "profile_id"),
+        relationship: enumValue(formData, "relationship", ["parent", "guardian", "athlete_self"], "parent"),
+        display_name: optionalString(formData, "display_name"),
+        email: optionalString(formData, "email"),
+        status: enumValue(formData, "status", ["active", "inactive", "revoked"], "active")
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+  revalidateAdminDomain();
+}
+
 async function requireTenantWriter() {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
@@ -430,7 +467,9 @@ function revalidateAdminDomain() {
     "/admin/programma",
     "/admin/groepen",
     "/admin/agenda",
-    "/admin/leerlingen"
+    "/admin/leerlingen",
+    "/admin/rapportages",
+    "/admin/taken"
   ]) {
     revalidatePath(path);
   }

@@ -105,6 +105,29 @@ export type GroupMembershipRow = {
   ends_on: string | null;
 };
 
+export type ParticipantGuardianRow = {
+  id: string;
+  participant_id: string;
+  profile_id: string;
+  relationship: string;
+  display_name: string | null;
+  email: string | null;
+  status: string;
+};
+
+export type TenantMemberRow = {
+  id: string;
+  user_id: string;
+  role: string;
+  status: string;
+  invited_email: string | null;
+};
+
+export type ProfileRow = {
+  id: string;
+  full_name: string | null;
+};
+
 export type ProgressRow = {
   id: string;
   enrollment_id: string;
@@ -147,6 +170,9 @@ export type AdminDomainData = {
   participants: ParticipantRow[];
   enrollments: EnrollmentRow[];
   groupMemberships: GroupMembershipRow[];
+  participantGuardians: ParticipantGuardianRow[];
+  tenantMembers: TenantMemberRow[];
+  profiles: ProfileRow[];
   progress: ProgressRow[];
   badges: BadgeRow[];
   certificates: CertificateRow[];
@@ -208,6 +234,8 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     participantsResult,
     enrollmentsResult,
     groupMembershipsResult,
+    participantGuardiansResult,
+    tenantMembersResult,
     progressResult,
     badgesResult,
     certificatesResult
@@ -240,6 +268,8 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .eq("tenant_id", tenantId)
       .order("started_on", { ascending: false }),
     supabase.from("group_memberships").select("id, enrollment_id, group_id, status, starts_on, ends_on").eq("tenant_id", tenantId).order("starts_on", { ascending: false }),
+    supabase.from("participant_guardians").select("id, participant_id, profile_id, relationship, display_name, email, status").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
+    supabase.from("tenant_memberships").select("id, user_id, role, status, invited_email").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase
@@ -248,6 +278,15 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
   ]);
+  const tenantMembers = asRows<TenantMemberRow>(tenantMembersResult.data);
+  const profileIds = unique([
+    ...tenantMembers.map((member) => member.user_id),
+    ...asRows<ParticipantGuardianRow>(participantGuardiansResult.data).map((guardian) => guardian.profile_id)
+  ]);
+  const profilesResult =
+    profileIds.length === 0
+      ? { data: [], error: null }
+      : await supabase.from("profiles").select("id, full_name").in("id", profileIds).order("full_name", { ascending: true });
 
   const errors = collectErrors({
     programs: programsResult.error,
@@ -260,6 +299,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     participants: participantsResult.error,
     enrollments: enrollmentsResult.error,
     group_memberships: groupMembershipsResult.error,
+    participant_guardians: participantGuardiansResult.error,
+    tenant_memberships: tenantMembersResult.error,
+    profiles: profilesResult.error,
     progress: progressResult.error,
     badges: badgesResult.error,
     certificates: certificatesResult.error
@@ -280,6 +322,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       participants: asRows<ParticipantRow>(participantsResult.data),
       enrollments: asRows<EnrollmentRow>(enrollmentsResult.data),
       groupMemberships: asRows<GroupMembershipRow>(groupMembershipsResult.data),
+      participantGuardians: asRows<ParticipantGuardianRow>(participantGuardiansResult.data),
+      tenantMembers,
+      profiles: asRows<ProfileRow>(profilesResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       badges: asRows<BadgeRow>(badgesResult.data),
       certificates: asRows<CertificateRow>(certificatesResult.data)
@@ -299,6 +344,9 @@ export function createEmptyData(): AdminDomainData {
     participants: [],
     enrollments: [],
     groupMemberships: [],
+    participantGuardians: [],
+    tenantMembers: [],
+    profiles: [],
     progress: [],
     badges: [],
     certificates: []
@@ -313,4 +361,8 @@ function collectErrors(errorsByTable: Record<string, { message: string } | null>
 
 function asRows<Row>(rows: unknown): Row[] {
   return Array.isArray(rows) ? (rows as Row[]) : [];
+}
+
+function unique(values: string[]) {
+  return [...new Set(values)];
 }
