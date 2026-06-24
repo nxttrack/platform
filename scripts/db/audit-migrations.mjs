@@ -32,6 +32,7 @@ for (const file of migrationFiles) {
 }
 
 checkCoreDomainContracts(normalizedMigrationSql.join(" "));
+checkPublicTenantIntakeContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -199,6 +200,69 @@ function checkCoreDomainWriteContracts(sql) {
 
   if (forbiddenDeleteGrant.test(sql)) {
     failures.push("Core domain write contract: Phase 3 must not grant hard DELETE to authenticated users.");
+  }
+}
+
+function checkPublicTenantIntakeContracts(sql) {
+  const requiredPhase4Tables = ["tenant_public_profiles", "program_public_settings", "intake_form_configs", "intake_submissions", "intake_submission_events"];
+
+  for (const table of requiredPhase4Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 4 public tenant contract is missing public.${table}.`);
+    }
+  }
+
+  const publicReadableTables = ["tenant_public_profiles", "program_public_settings", "intake_form_configs"];
+
+  for (const table of publicReadableTables) {
+    const escapedTable = escapeRegExp(table);
+    const anonSelectGrantPattern = new RegExp(`grant\\s+select\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const publicSelectPolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+select[\\s\\S]*?to\\s+authenticated,\\s*anon[\\s\\S]*?using[\\s\\S]*?;`);
+
+    if (!anonSelectGrantPattern.test(sql)) {
+      failures.push(`Phase 4 public tenant contract: public.${table} is missing an anon SELECT grant.`);
+    }
+
+    if (!publicSelectPolicyPattern.test(sql)) {
+      failures.push(`Phase 4 public tenant contract: public.${table} is missing a public SELECT policy with USING.`);
+    }
+  }
+
+  for (const table of ["intake_submissions", "intake_submission_events"]) {
+    const escapedTable = escapeRegExp(table);
+    const anonInsertGrantPattern = new RegExp(`grant\\s+insert\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const publicInsertPolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+insert[\\s\\S]*?to\\s+authenticated,\\s*anon[\\s\\S]*?with\\s+check[\\s\\S]*?;`);
+    const anonSelectGrantPattern = new RegExp(`grant\\s+select\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+
+    if (!anonInsertGrantPattern.test(sql)) {
+      failures.push(`Phase 4 public tenant contract: public.${table} is missing an anon INSERT grant.`);
+    }
+
+    if (!publicInsertPolicyPattern.test(sql)) {
+      failures.push(`Phase 4 public tenant contract: public.${table} is missing a public INSERT policy with WITH CHECK.`);
+    }
+
+    if (anonSelectGrantPattern.test(sql)) {
+      failures.push(`Phase 4 public tenant contract: public.${table} must not grant SELECT to anon.`);
+    }
+  }
+
+  const intakeSubmissionsBlock = extractCreateTableBlock(sql, "intake_submissions");
+
+  if (intakeSubmissionsBlock && !/\bintake_type\b/.test(intakeSubmissionsBlock)) {
+    failures.push("Phase 4 public tenant contract: public.intake_submissions must store intake_type.");
+  }
+
+  if (intakeSubmissionsBlock && !/\bpreferred_days\b/.test(intakeSubmissionsBlock)) {
+    failures.push("Phase 4 public tenant contract: public.intake_submissions must store preferred_days.");
+  }
+
+  if (intakeSubmissionsBlock && !/\bpreferred_time_windows\b/.test(intakeSubmissionsBlock)) {
+    failures.push("Phase 4 public tenant contract: public.intake_submissions must store preferred_time_windows.");
+  }
+
+  if (intakeSubmissionsBlock && !/\bstatus\b/.test(intakeSubmissionsBlock)) {
+    failures.push("Phase 4 public tenant contract: public.intake_submissions must store lifecycle status.");
   }
 }
 

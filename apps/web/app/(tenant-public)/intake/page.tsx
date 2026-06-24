@@ -1,14 +1,21 @@
-import { CheckList, PageHero, PageSection } from "@/components/lovable/page-kit";
+import { IntakePage as PublicIntakePage } from "@/components/public-site/tenant-public-pages";
+import { getPublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
 
-export default function IntakePage() {
-  return (
-    <main>
-      <PageHero kicker="Dynamic intake" title="Intake skeleton" sub="Registratie, proefles en wachtlijst blijven een intake-optie, nog geen formulierlogica." primary={{ href: "/programmas", label: "Terug naar programma's" }} />
-      <PageSection title="Nog te bouwen in Phase 5">
-        <div className="mx-auto max-w-2xl rounded-3xl border border-border bg-card p-6 shadow-soft">
-          <CheckList items={["Form config uit database", "Programma-specifieke velden", "Voorkeursdagen en tijden", "Submission status machine"]} />
-        </div>
-      </PageSection>
-    </main>
-  );
+export const dynamic = "force-dynamic";
+
+type IntakeRoutePageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function IntakeRoutePage({ searchParams }: IntakeRoutePageProps) {
+  const params = (await searchParams) ?? {};
+  const program = getParam(params.program);
+  const submitted = getParam(params.submitted) === "1";
+  const snapshot = await getPublicTenantSiteSnapshot(program);
+
+  return <PublicIntakePage snapshot={snapshot} submitted={submitted} />;
+}
+
+function getParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }

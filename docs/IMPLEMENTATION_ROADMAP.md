@@ -1,8 +1,19 @@
 # NXTTRACK Implementation Roadmap
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24
 
 Status: dependency-based roadmap. Implementation starts only after product owner approval.
+
+## Current Sprint Numbering Note
+
+The original roadmap below was created before implementation started and used Phase 4 for core operational domain work and Phase 5 for public tenant intake.
+
+The approved working sprint order now treats the completed core domain foundation as Phase 3 and the public tenant site/intake foundation as Phase 4. The dependency order is unchanged:
+
+1. identity and shells;
+2. core domain;
+3. public tenant site and intake;
+4. waitlist, placement assistant and slot offers.
 
 ## Roadmap Principles
 
