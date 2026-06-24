@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentProfilePage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentProfilePage() {
-  return <RoutePlaceholder kicker="Parent shell" title="Profiel foundation" description="Account, gezinsleden en voorkeuren blijven in Phase 2 read-only shellgebied." items={["Account", "Gezinsleden", "Voorkeuren", "Privacy"]} />;
+export default async function ParentProfileRoutePage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentProfilePage snapshot={snapshot} />;
 }

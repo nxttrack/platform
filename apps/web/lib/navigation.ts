@@ -1,6 +1,7 @@
 import {
   Award,
   BarChart3,
+  Bell,
   Calendar,
   CheckCircle2,
   FileText,
@@ -22,10 +23,12 @@ import type { NavItem } from "@/components/shell/app-shell";
 export const parentNav: NavItem[] = [
   { href: "/parent", label: "Home", icon: Home },
   { href: "/parent/lessen", label: "Mijn lessen", icon: Waves },
+  { href: "/parent/profiel", label: "Kindprofiel", icon: User },
+  { href: "/parent/notificaties", label: "Notificaties", icon: Bell },
+  { href: "/parent/documenten", label: "Documenten", icon: FileText },
   { href: "/parent/voortgang", label: "Voortgang", icon: TrendingUp },
   { href: "/parent/diplomas", label: "Diploma's", icon: GraduationCap },
-  { href: "/parent/badges", label: "Badges", icon: Award },
-  { href: "/parent/profiel", label: "Profiel", icon: User }
+  { href: "/parent/badges", label: "Badges", icon: Award }
 ];
 
 export const instructorNav: NavItem[] = [

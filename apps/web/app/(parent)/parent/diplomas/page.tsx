@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { ParentDiplomasPage } from "@/components/parent-portal/parent-portal-pages";
+import { getParentPortalSnapshot } from "@/lib/parent-portal/parent-portal-read-model";
 
-export default function ParentDiplomasPage() {
-  return <RoutePlaceholder kicker="Parent shell" title="Diploma kluis foundation" description="Read-only diploma en documenttoegang wordt hier in Phase 9 gekoppeld." items={["Diploma records", "Downloads", "Share links", "Privacy"]} />;
+export default async function ParentDiplomasRoutePage() {
+  const snapshot = await getParentPortalSnapshot();
+
+  return <ParentDiplomasPage snapshot={snapshot} />;
 }

@@ -34,6 +34,7 @@ for (const file of migrationFiles) {
 checkCoreDomainContracts(normalizedMigrationSql.join(" "));
 checkPublicTenantIntakeContracts(normalizedMigrationSql.join(" "));
 checkPlacementWorkflowContracts(normalizedMigrationSql.join(" "));
+checkParentPortalContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -320,6 +321,48 @@ function checkPlacementWorkflowContracts(sql) {
 
   if (!/create\s+or\s+replace\s+function\s+app_private\.process_slot_offer_response\b/.test(sql)) {
     failures.push("Phase 5 placement contract: slot offer responses must be processed by app_private.process_slot_offer_response.");
+  }
+}
+
+function checkParentPortalContracts(sql) {
+  const requiredPhase6Tables = ["participant_guardians", "parent_notifications", "lesson_catch_up_requests", "parent_documents"];
+
+  for (const table of requiredPhase6Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 6 parent portal contract is missing public.${table}.`);
+    }
+  }
+
+  for (const table of requiredPhase6Tables) {
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 6 parent portal contract: public.${table} must not grant access to anon.`);
+    }
+  }
+
+  for (const functionName of ["current_user_can_access_participant", "current_user_can_access_enrollment", "current_user_can_request_catch_up"]) {
+    if (!new RegExp(`create\\s+or\\s+replace\\s+function\\s+app_private\\.${functionName}\\b`).test(sql)) {
+      failures.push(`Phase 6 parent portal contract is missing app_private.${functionName}.`);
+    }
+  }
+
+  for (const table of ["participants", "enrollments", "group_memberships", "progress", "certificates"]) {
+    const escapedTable = escapeRegExp(table);
+    const guardianSelectPolicyPattern = new RegExp(`create\\s+policy\\s+["']?participant\\s+guardians[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+select[\\s\\S]*?to\\s+authenticated[\\s\\S]*?using[\\s\\S]*?;`);
+
+    if (!guardianSelectPolicyPattern.test(sql)) {
+      failures.push(`Phase 6 parent portal contract: public.${table} is missing a participant guardian SELECT policy.`);
+    }
+  }
+
+  if (!/create\s+policy\s+["']?parents\s+can\s+update\s+notification\s+read\s+state[\s\S]*?on\s+public\.parent_notifications[\s\S]*?for\s+update[\s\S]*?to\s+authenticated[\s\S]*?with\s+check[\s\S]*?;/.test(sql)) {
+    failures.push("Phase 6 parent portal contract: parent_notifications must support guarded read-status updates.");
+  }
+
+  if (!/create\s+policy\s+["']?parents\s+can\s+insert\s+catch-up\s+requests[\s\S]*?on\s+public\.lesson_catch_up_requests[\s\S]*?for\s+insert[\s\S]*?to\s+authenticated[\s\S]*?with\s+check[\s\S]*?current_user_can_request_catch_up[\s\S]*?;/.test(sql)) {
+    failures.push("Phase 6 parent portal contract: lesson_catch_up_requests must use current_user_can_request_catch_up in its INSERT policy.");
   }
 }
 
