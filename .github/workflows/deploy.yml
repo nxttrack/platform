@@ -108,6 +108,11 @@ jobs:
           fi
 
           {
+            printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' "$NEXT_PUBLIC_SUPABASE_URL"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_PUBLIC_KEY"
+          } >> "$GITHUB_ENV"
+
+          {
             printf 'APP_ENV=%s\n' "$APP_ENV"
             printf 'NODE_ENV=%s\n' "$NODE_ENV"
             printf 'PORT=%s\n' "$PORT"

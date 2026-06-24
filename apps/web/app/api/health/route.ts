@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
+
 export const dynamic = "force-dynamic";
 
 export function GET() {
-  const supabaseAuthConfigured = Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-      (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)
-  );
+  const supabaseAuthConfigured = Boolean(getSupabasePublicConfig());
 
   return NextResponse.json({
     ok: true,
