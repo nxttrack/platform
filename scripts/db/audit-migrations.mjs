@@ -17,17 +17,21 @@ if (!existsSync(migrationsDir)) {
 const migrationFiles = readdirSync(migrationsDir)
   .filter((file) => file.endsWith(".sql"))
   .sort();
+const normalizedMigrationSql = [];
 
 for (const file of migrationFiles) {
   const filePath = join(migrationsDir, file);
   const sql = readFileSync(filePath, "utf8");
   const normalizedSql = normalizeSql(sql);
+  normalizedMigrationSql.push(normalizedSql);
 
   checkForbiddenPatterns(file, normalizedSql);
   checkSecurityDefinerFunctions(file, normalizedSql);
   checkPolicies(file, normalizedSql);
   checkPublicTables(file, normalizedSql);
 }
+
+checkCoreDomainContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -100,6 +104,55 @@ function checkPublicTables(file, sql) {
       failures.push(`${file}: public.${table} is missing an explicit service_role grant.`);
     }
   }
+}
+
+function checkCoreDomainContracts(sql) {
+  const requiredCoreTables = [
+    "programs",
+    "stages",
+    "groups",
+    "sessions",
+    "resources",
+    "instructors",
+    "enrollments",
+    "group_memberships",
+    "subscription_plans",
+    "progress",
+    "badges",
+    "certificates"
+  ];
+
+  for (const table of requiredCoreTables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Core domain contract is missing public.${table}.`);
+    }
+  }
+
+  const enrollmentsBlock = extractCreateTableBlock(sql, "enrollments");
+  const stagesBlock = extractCreateTableBlock(sql, "stages");
+  const subscriptionPlansBlock = extractCreateTableBlock(sql, "subscription_plans");
+
+  if (enrollmentsBlock && !/\bcurrent_stage_id\b/.test(enrollmentsBlock)) {
+    failures.push("Core domain contract: public.enrollments must track current_stage_id separately from billing.");
+  }
+
+  if (enrollmentsBlock && !/\bsubscription_plan_id\b/.test(enrollmentsBlock)) {
+    failures.push("Core domain contract: public.enrollments must track subscription_plan_id separately from stage progression.");
+  }
+
+  if (stagesBlock && /\b(price|billing|payment|subscription_plan)_?[a-z0-9_]*\b/.test(stagesBlock)) {
+    failures.push("Core domain contract: public.stages must not contain billing/payment/subscription columns.");
+  }
+
+  if (subscriptionPlansBlock && /\bstage_id\b|\bbadge_id\b|\bbadje\b/.test(subscriptionPlansBlock)) {
+    failures.push("Core domain contract: public.subscription_plans must not be tied to stage/badge progression.");
+  }
+}
+
+function extractCreateTableBlock(sql, table) {
+  const match = new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\s*\\([\\s\\S]*?\\);`).exec(sql);
+
+  return match?.[0] ?? "";
 }
 
 function normalizeSql(sql) {
