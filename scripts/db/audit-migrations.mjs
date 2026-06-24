@@ -41,6 +41,7 @@ checkAfzwemDiplomaVaultContracts(normalizedMigrationSql.join(" "));
 checkManualPaymentsContracts(normalizedMigrationSql.join(" "));
 checkMessagesTasksDocsReportsContracts(normalizedMigrationSql.join(" "));
 checkPlatformSuperAdminContracts(normalizedMigrationSql.join(" "));
+checkPlatformSmtpSettingsContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -824,6 +825,47 @@ function checkPlatformSuperAdminContracts(sql) {
 
   if (!/create\s+policy\s+["']?platform\s+staff\s+can\s+view\s+tenant\s+super\s+admin\s+invitations[\s\S]*?on\s+public\.tenant_super_admin_invitations[\s\S]*?for\s+select[\s\S]*?to\s+authenticated[\s\S]*?using[\s\S]*?;/.test(sql)) {
     failures.push("Platform super admin contract: tenant_super_admin_invitations must have a platform-scoped SELECT policy.");
+  }
+}
+
+function checkPlatformSmtpSettingsContracts(sql) {
+  const table = "platform_smtp_settings";
+  const escapedTable = escapeRegExp(table);
+
+  if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${escapedTable}\\b`).test(sql)) {
+    failures.push("Platform SMTP contract is missing public.platform_smtp_settings.");
+  }
+
+  if (new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`).test(sql)) {
+    failures.push("Platform SMTP contract: public.platform_smtp_settings must not grant access to anon.");
+  }
+
+  if (!new RegExp(`grant\\s+select\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`).test(sql)) {
+    failures.push("Platform SMTP contract: public.platform_smtp_settings is missing an authenticated SELECT grant.");
+  }
+
+  if (!new RegExp(`grant\\s+all\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+service_role\\s*;`).test(sql)) {
+    failures.push("Platform SMTP contract: public.platform_smtp_settings is missing a service_role grant.");
+  }
+
+  const settingsBlock = extractCreateTableBlock(sql, table);
+
+  for (const columnName of ["status", "mode", "host", "port", "secure", "from_email", "username_secret_reference", "password_secret_reference", "last_test_status"]) {
+    if (settingsBlock && !new RegExp(`\\b${columnName}\\b`).test(settingsBlock)) {
+      failures.push(`Platform SMTP contract: public.platform_smtp_settings must store ${columnName}.`);
+    }
+  }
+
+  if (settingsBlock && /\b(password|api_key|secret)\s+text\b/.test(settingsBlock.replace(/\b(username_secret_reference|password_secret_reference)\s+text\b/g, ""))) {
+    failures.push("Platform SMTP contract: raw SMTP secrets must not be stored in platform_smtp_settings.");
+  }
+
+  if (!/create\s+policy\s+["']?platform\s+staff\s+can\s+view\s+platform\s+smtp\s+settings[\s\S]*?on\s+public\.platform_smtp_settings[\s\S]*?for\s+select[\s\S]*?to\s+authenticated[\s\S]*?using[\s\S]*?;/.test(sql)) {
+    failures.push("Platform SMTP contract: platform_smtp_settings must have a platform-scoped SELECT policy.");
+  }
+
+  if (!/'smtp\.sendgrid\.net'[\s\S]*?'smtp_user'[\s\S]*?'smtp_pass'/.test(sql)) {
+    failures.push("Platform SMTP contract: default SMTP via SendGrid secret references must be seeded.");
   }
 }
 

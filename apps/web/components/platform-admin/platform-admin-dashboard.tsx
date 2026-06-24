@@ -1,9 +1,10 @@
-import { KeyRound, Mail, RotateCcw, ShieldCheck, Users } from "lucide-react";
+import { KeyRound, Mail, RotateCcw, Send, Settings, ShieldCheck, Users } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
+import { sendPlatformSmtpTestEmailAction, updatePlatformSmtpSettingsAction } from "@/lib/platform-admin/smtp-settings-actions";
 import { createTenantSuperAdminAction, resetTenantSuperAdminPasswordAction, updateTenantSuperAdminAction } from "@/lib/platform-admin/super-admin-actions";
-import type { PlatformAdminSnapshot, PlatformTenantWithAdmins } from "@/lib/platform-admin/platform-admin-read-model";
+import type { PlatformAdminSnapshot, PlatformSmtpSettingsRow, PlatformTenantWithAdmins } from "@/lib/platform-admin/platform-admin-read-model";
 
 type PlatformAdminDashboardProps = {
   snapshot: PlatformAdminSnapshot;
@@ -19,8 +20,8 @@ export function PlatformAdminDashboard({ snapshot, notice, error }: PlatformAdmi
     <div className="space-y-6">
       <PageHeader
         kicker="Platform admin"
-        title="Tenant super admins"
-        subtitle="Beheer tenant owners, tijdelijke wachtwoorden en eerste-login wachtwoordwissels vanuit NXTTRACK."
+        title="Platform beheer"
+        subtitle="Beheer globale SMTP instellingen, tenant owners, tijdelijke wachtwoorden en eerste-login wachtwoordwissels vanuit NXTTRACK."
         action={<StatusPill tone={snapshot.status === "ready" ? "success" : "warning"}>{snapshot.status}</StatusPill>}
       />
 
@@ -37,11 +38,14 @@ export function PlatformAdminDashboard({ snapshot, notice, error }: PlatformAdmi
         </Card>
       ) : null}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<Users className="h-5 w-5" />} label="Tenants" value={snapshot.tenants.length.toString()} detail="platform scope" />
         <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Super admins" value={superAdminCount.toString()} detail="tenant_owner rollen" />
         <MetricCard icon={<Mail className="h-5 w-5" />} label="Uitnodigingen" value={pendingInvitations.toString()} detail="open of recent verstuurd" />
+        <MetricCard icon={<Settings className="h-5 w-5" />} label="SMTP" value={snapshot.smtpSettings?.status ?? "missing"} detail={snapshot.smtpSettings?.host ?? "globaal"} />
       </div>
+
+      <GlobalSmtpSettingsCard settings={snapshot.smtpSettings} />
 
       <Card>
         <div className="mb-5 flex items-start justify-between gap-4">
@@ -170,6 +174,119 @@ function TenantAdminCard({ tenant }: { tenant: PlatformTenantWithAdmins }) {
       ) : null}
     </Card>
   );
+}
+
+function GlobalSmtpSettingsCard({ settings }: { settings: PlatformSmtpSettingsRow | null }) {
+  const value = settings ?? createDefaultSmtpSettings();
+  const testTone = value.last_test_status === "sent" ? "success" : value.last_test_status === "failed" ? "danger" : "neutral";
+
+  return (
+    <Card>
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-lg font-bold">Globale SMTP instellingen</h2>
+            <StatusPill tone={value.status === "active" ? "success" : value.status === "disabled" ? "warning" : "info"}>{value.status}</StatusPill>
+            <StatusPill tone={testTone}>{value.last_test_status}</StatusPill>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">Platformbrede verzendconfiguratie voor uitnodigingen en systeemmails. Secrets blijven in de deploymentomgeving.</p>
+        </div>
+        <Mail className="h-5 w-5 text-primary" />
+      </div>
+
+      <form action={updatePlatformSmtpSettingsAction} className="grid gap-3 lg:grid-cols-4">
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</span>
+          <select className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.status} name="status">
+            <option value="disabled">Uitgeschakeld</option>
+            <option value="configured">Geconfigureerd</option>
+            <option value="active">Actief</option>
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Mode</span>
+          <select className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.mode} name="mode">
+            <option value="test">Test</option>
+            <option value="live">Live</option>
+          </select>
+        </label>
+        <label className="block lg:col-span-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Host</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.host} name="host" placeholder="smtp.sendgrid.net" required />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Poort</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.port} max={65535} min={1} name="port" type="number" required />
+        </label>
+        <label className="flex h-11 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm lg:mt-5">
+          <input defaultChecked={value.secure} name="secure" type="checkbox" />
+          TLS direct
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Afzender e-mail</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.from_email ?? ""} name="from_email" placeholder="noreply@nxttrack.nl" type="email" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Afzender naam</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.from_name ?? ""} name="from_name" placeholder="NXTTRACK" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reply-to</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.reply_to_email ?? ""} name="reply_to_email" type="email" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">User secret</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.username_secret_reference} name="username_secret_reference" placeholder="SMTP_USER" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Password secret</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.password_secret_reference} name="password_secret_reference" placeholder="SMTP_PASS" />
+        </label>
+        <label className="block lg:col-span-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Testontvanger</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.test_recipient_email ?? ""} name="test_recipient_email" type="email" />
+        </label>
+        <div className="flex flex-wrap items-end gap-3 lg:col-span-4">
+          <button className="h-11 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow" type="submit">
+            SMTP opslaan
+          </button>
+          {value.last_tested_at ? <span className="pb-3 text-xs text-muted-foreground">Laatste test: {formatDate(value.last_tested_at)}</span> : null}
+          {value.last_test_error ? <span className="pb-3 text-xs text-red-700">{value.last_test_error}</span> : null}
+        </div>
+      </form>
+
+      <form action={sendPlatformSmtpTestEmailAction} className="mt-4 flex flex-wrap items-end gap-3 border-t border-border pt-4">
+        <label className="block min-w-0 flex-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Testmail naar</span>
+          <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" defaultValue={value.test_recipient_email ?? ""} name="test_recipient_email" type="email" />
+        </label>
+        <button className="flex h-11 items-center gap-2 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white hover:bg-slate-800" type="submit">
+          <Send className="h-4 w-4" />
+          Testmail
+        </button>
+      </form>
+    </Card>
+  );
+}
+
+function createDefaultSmtpSettings(): PlatformSmtpSettingsRow {
+  return {
+    id: "global",
+    status: "configured",
+    mode: "test",
+    host: "smtp.sendgrid.net",
+    port: 587,
+    secure: false,
+    from_email: "noreply@nxttrack.nl",
+    from_name: "NXTTRACK",
+    reply_to_email: null,
+    username_secret_reference: "SMTP_USER",
+    password_secret_reference: "SMTP_PASS",
+    test_recipient_email: null,
+    last_tested_at: null,
+    last_test_status: "not_tested",
+    last_test_error: null
+  };
 }
 
 function MetricCard({ icon, label, value, detail }: { icon: ReactNode; label: string; value: string; detail: string }) {

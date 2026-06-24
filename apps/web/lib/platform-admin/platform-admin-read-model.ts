@@ -49,6 +49,24 @@ export type TenantSuperAdminInvitationRow = {
   created_at: string;
 };
 
+export type PlatformSmtpSettingsRow = {
+  id: string;
+  status: string;
+  mode: string;
+  host: string;
+  port: number;
+  secure: boolean;
+  from_email: string | null;
+  from_name: string | null;
+  reply_to_email: string | null;
+  username_secret_reference: string;
+  password_secret_reference: string;
+  test_recipient_email: string | null;
+  last_tested_at: string | null;
+  last_test_status: string;
+  last_test_error: string | null;
+};
+
 export type PlatformTenantWithAdmins = PlatformTenantRow & {
   domains: PlatformTenantDomainRow[];
   superAdmins: Array<
@@ -63,6 +81,7 @@ export type PlatformTenantWithAdmins = PlatformTenantRow & {
 export type PlatformAdminSnapshot = {
   status: "ready" | "not_configured" | "no_access" | "query_error";
   platformRoles: string[];
+  smtpSettings: PlatformSmtpSettingsRow | null;
   tenants: PlatformTenantWithAdmins[];
   errors: string[];
 };
@@ -74,6 +93,7 @@ export async function getPlatformAdminSnapshot(): Promise<PlatformAdminSnapshot>
     return {
       status: "no_access",
       platformRoles: [],
+      smtpSettings: null,
       tenants: [],
       errors: ["Geen platform admin toegang gevonden."]
     };
@@ -83,13 +103,14 @@ export async function getPlatformAdminSnapshot(): Promise<PlatformAdminSnapshot>
     return {
       status: "not_configured",
       platformRoles: [...context.platform.roles],
+      smtpSettings: null,
       tenants: [],
       errors: ["Supabase is nog niet geconfigureerd in deze runtime."]
     };
   }
 
   const supabase = await createClient();
-  const [tenantsResult, domainsResult, membershipsResult, invitationsResult] = await Promise.all([
+  const [tenantsResult, domainsResult, membershipsResult, invitationsResult, smtpSettingsResult] = await Promise.all([
     supabase.from("tenants").select("id, slug, name, sector, status, created_at").order("name", { ascending: true }),
     supabase.from("tenant_domains").select("tenant_id, hostname, status, is_primary").order("is_primary", { ascending: false }),
     supabase.from("tenant_memberships").select("id, tenant_id, user_id, role, status, invited_email, created_at, updated_at").eq("role", "tenant_owner").order("created_at", { ascending: true }),
@@ -97,7 +118,12 @@ export async function getPlatformAdminSnapshot(): Promise<PlatformAdminSnapshot>
       .from("tenant_super_admin_invitations")
       .select("id, tenant_id, user_id, email, full_name, status, delivery_provider, last_sent_at, accepted_at, expires_at, error_message, created_at")
       .order("created_at", { ascending: false })
-      .limit(200)
+      .limit(200),
+    supabase
+      .from("platform_smtp_settings")
+      .select("id, status, mode, host, port, secure, from_email, from_name, reply_to_email, username_secret_reference, password_secret_reference, test_recipient_email, last_tested_at, last_test_status, last_test_error")
+      .eq("id", "global")
+      .maybeSingle()
   ]);
 
   const memberships = asRows<TenantSuperAdminRow>(membershipsResult.data);
@@ -130,12 +156,14 @@ export async function getPlatformAdminSnapshot(): Promise<PlatformAdminSnapshot>
     tenant_domains: domainsResult.error,
     tenant_memberships: membershipsResult.error,
     tenant_super_admin_invitations: invitationsResult.error,
+    platform_smtp_settings: smtpSettingsResult.error,
     profiles: profilesResult.error
   });
 
   return {
     status: errors.length > 0 ? "query_error" : "ready",
     platformRoles: [...context.platform.roles],
+    smtpSettings: (smtpSettingsResult.data as PlatformSmtpSettingsRow | null) ?? null,
     tenants,
     errors
   };

@@ -4,6 +4,18 @@ import nodemailer from "nodemailer";
 
 export type LiveEmailProvider = "smtp" | "sendgrid";
 
+export type LiveSmtpSettings = {
+  status: string;
+  host: string | null;
+  port: number | null;
+  secure: boolean | null;
+  from_email: string | null;
+  from_name: string | null;
+  reply_to_email: string | null;
+  username_secret_reference: string | null;
+  password_secret_reference: string | null;
+};
+
 export type TemporaryPasswordEmailInput = {
   to: string;
   fullName: string | null;
@@ -19,41 +31,65 @@ export type LiveEmailResult = {
   messageId: string | null;
 };
 
-export function assertLiveEmailConfigured() {
-  if (hasSmtpConfig() || hasSendGridApiConfig()) {
+export type LiveEmailMessage = {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+};
+
+export type LiveEmailOptions = {
+  smtpSettings?: LiveSmtpSettings | null;
+};
+
+export function assertLiveEmailConfigured(options: LiveEmailOptions = {}) {
+  if (hasSmtpConfig(options.smtpSettings) || hasSendGridApiConfig(options.smtpSettings)) {
     return;
   }
 
   throw new Error("Emailverzending is niet geconfigureerd. Vul SMTP_* of SENDGRID_API_KEY + SMTP_FROM_EMAIL in.");
 }
 
-export async function sendTemporaryPasswordEmail(input: TemporaryPasswordEmailInput): Promise<LiveEmailResult> {
-  assertLiveEmailConfigured();
+export async function sendLiveEmail(input: LiveEmailMessage, options: LiveEmailOptions = {}): Promise<LiveEmailResult> {
+  assertLiveEmailConfigured(options);
 
-  if (hasSmtpConfig()) {
-    return sendViaSmtp(input);
+  if (hasSmtpConfig(options.smtpSettings)) {
+    return sendViaSmtp(input, options.smtpSettings);
   }
 
-  return sendViaSendGridApi(input);
+  return sendViaSendGridApi(input, options.smtpSettings);
 }
 
-async function sendViaSmtp(input: TemporaryPasswordEmailInput): Promise<LiveEmailResult> {
-  const port = Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
+export async function sendTemporaryPasswordEmail(input: TemporaryPasswordEmailInput, options: LiveEmailOptions = {}): Promise<LiveEmailResult> {
+  return sendLiveEmail(
+    {
+      to: input.to,
+      subject: emailSubject(input),
+      text: emailText(input),
+      html: emailHtml(input)
+    },
+    options
+  );
+}
+
+async function sendViaSmtp(input: LiveEmailMessage, settings: LiveSmtpSettings | null | undefined): Promise<LiveEmailResult> {
+  const config = resolveSmtpConfig(settings);
   const transporter = nodemailer.createTransport({
-    host: requiredEnv("SMTP_HOST"),
-    port,
-    secure: port === 465,
+    host: config.host,
+    port: config.port,
+    secure: config.secure,
     auth: {
-      user: requiredEnv("SMTP_USER"),
-      pass: requiredEnv("SMTP_PASS")
+      user: config.user,
+      pass: config.pass
     }
   });
   const result = await transporter.sendMail({
-    from: formatFromAddress(),
+    from: formatFromAddress(config.fromEmail, config.fromName),
     to: input.to,
-    subject: emailSubject(input),
-    text: emailText(input),
-    html: emailHtml(input)
+    replyTo: config.replyToEmail ?? undefined,
+    subject: input.subject,
+    text: input.text,
+    html: input.html
   });
 
   return {
@@ -62,7 +98,9 @@ async function sendViaSmtp(input: TemporaryPasswordEmailInput): Promise<LiveEmai
   };
 }
 
-async function sendViaSendGridApi(input: TemporaryPasswordEmailInput): Promise<LiveEmailResult> {
+async function sendViaSendGridApi(input: LiveEmailMessage, settings: LiveSmtpSettings | null | undefined): Promise<LiveEmailResult> {
+  const fromEmail = settings?.from_email ?? requiredEnv("SMTP_FROM_EMAIL");
+  const fromName = settings?.from_name ?? process.env.SMTP_FROM_NAME ?? "NXTTRACK";
   const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
@@ -72,18 +110,18 @@ async function sendViaSendGridApi(input: TemporaryPasswordEmailInput): Promise<L
     body: JSON.stringify({
       personalizations: [{ to: [{ email: input.to }] }],
       from: {
-        email: requiredEnv("SMTP_FROM_EMAIL"),
-        name: process.env.SMTP_FROM_NAME || "NXTTRACK"
+        email: fromEmail,
+        name: fromName
       },
-      subject: emailSubject(input),
+      subject: input.subject,
       content: [
         {
           type: "text/plain",
-          value: emailText(input)
+          value: input.text
         },
         {
           type: "text/html",
-          value: emailHtml(input)
+          value: input.html ?? input.text
         }
       ]
     })
@@ -139,19 +177,50 @@ function emailHtml(input: TemporaryPasswordEmailInput) {
   `;
 }
 
-function formatFromAddress() {
-  const fromEmail = requiredEnv("SMTP_FROM_EMAIL");
-  const fromName = process.env.SMTP_FROM_NAME;
-
+function formatFromAddress(fromEmail: string, fromName?: string | null) {
   return fromName ? `"${fromName.replaceAll('"', "")}" <${fromEmail}>` : fromEmail;
 }
 
-function hasSmtpConfig() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS && process.env.SMTP_FROM_EMAIL);
+function hasSmtpConfig(settings: LiveSmtpSettings | null | undefined) {
+  try {
+    resolveSmtpConfig(settings);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function hasSendGridApiConfig() {
-  return Boolean(process.env.SENDGRID_API_KEY && process.env.SMTP_FROM_EMAIL);
+function hasSendGridApiConfig(settings: LiveSmtpSettings | null | undefined) {
+  return Boolean(process.env.SENDGRID_API_KEY && (settings?.from_email ?? process.env.SMTP_FROM_EMAIL));
+}
+
+function resolveSmtpConfig(settings: LiveSmtpSettings | null | undefined) {
+  const globalSettingsEnabled = settings?.status === "active" || settings?.status === "configured";
+  const usernameSecretReference = globalSettingsEnabled ? settings.username_secret_reference || "SMTP_USER" : "SMTP_USER";
+  const passwordSecretReference = globalSettingsEnabled ? settings.password_secret_reference || "SMTP_PASS" : "SMTP_PASS";
+  const host = globalSettingsEnabled ? settings.host ?? process.env.SMTP_HOST : process.env.SMTP_HOST;
+  const port = globalSettingsEnabled ? settings.port ?? Number.parseInt(process.env.SMTP_PORT ?? "587", 10) : Number.parseInt(process.env.SMTP_PORT ?? "587", 10);
+  const fromEmail = globalSettingsEnabled ? settings.from_email ?? process.env.SMTP_FROM_EMAIL : process.env.SMTP_FROM_EMAIL;
+  const fromName = globalSettingsEnabled ? settings.from_name ?? process.env.SMTP_FROM_NAME : process.env.SMTP_FROM_NAME;
+  const replyToEmail = globalSettingsEnabled ? settings.reply_to_email ?? null : null;
+  const secure = globalSettingsEnabled ? Boolean(settings.secure) : port === 465;
+  const user = process.env[usernameSecretReference] ?? process.env.SMTP_USER;
+  const pass = process.env[passwordSecretReference] ?? process.env.SMTP_PASS;
+
+  if (!host || !Number.isFinite(port) || !fromEmail || !user || !pass) {
+    throw new Error("SMTP is niet volledig geconfigureerd.");
+  }
+
+  return {
+    host,
+    port,
+    secure,
+    fromEmail,
+    fromName,
+    replyToEmail,
+    user,
+    pass
+  };
 }
 
 function requiredEnv(key: string) {

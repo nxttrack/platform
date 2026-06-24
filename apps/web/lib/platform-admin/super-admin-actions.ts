@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { createTemporaryPassword } from "@/lib/auth/password-policy";
 import { buildPath } from "@/lib/auth/redirects";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
-import { assertLiveEmailConfigured, sendTemporaryPasswordEmail } from "@/lib/communication/live-email";
+import { assertLiveEmailConfigured, sendTemporaryPasswordEmail, type LiveSmtpSettings } from "@/lib/communication/live-email";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const tenantsPath = "/platform/tenants";
@@ -55,9 +55,12 @@ export async function resetTenantSuperAdminPasswordAction(formData: FormData) {
 async function createTenantSuperAdmin(formData: FormData): Promise<ActionResult> {
   try {
     const actor = await requirePlatformWriter();
-    assertLiveEmailConfigured();
 
     const admin = createAdminClient();
+    const smtpSettings = await getGlobalSmtpSettings(admin);
+
+    assertLiveEmailConfigured({ smtpSettings });
+
     const tenantId = requiredString(formData, "tenant_id");
     const email = normalizeEmail(requiredString(formData, "email"));
     const fullName = optionalString(formData, "full_name");
@@ -97,15 +100,18 @@ async function createTenantSuperAdmin(formData: FormData): Promise<ActionResult>
       }
     });
 
-    const delivery = await sendTemporaryPasswordEmail({
-      to: email,
-      fullName,
-      tenantName: tenant.name,
-      loginUrl: buildTenantLoginUrl(tenant, domains),
-      temporaryPassword,
-      expiresAt: invitation.expires_at,
-      reason: existingUser ? "reset" : "invite"
-    });
+    const delivery = await sendTemporaryPasswordEmail(
+      {
+        to: email,
+        fullName,
+        tenantName: tenant.name,
+        loginUrl: buildTenantLoginUrl(tenant, domains),
+        temporaryPassword,
+        expiresAt: invitation.expires_at,
+        reason: existingUser ? "reset" : "invite"
+      },
+      { smtpSettings }
+    );
 
     await markInvitationSent(admin, invitation.id, delivery.provider, delivery.messageId);
     revalidatePlatform();
@@ -143,9 +149,12 @@ async function updateTenantSuperAdmin(formData: FormData): Promise<ActionResult>
 async function resetTenantSuperAdminPassword(formData: FormData): Promise<ActionResult> {
   try {
     const actor = await requirePlatformWriter();
-    assertLiveEmailConfigured();
 
     const admin = createAdminClient();
+    const smtpSettings = await getGlobalSmtpSettings(admin);
+
+    assertLiveEmailConfigured({ smtpSettings });
+
     const membershipId = requiredString(formData, "membership_id");
     const membership = await getTenantOwnerMembership(admin, membershipId);
     const tenant = await getTenant(admin, membership.tenant_id);
@@ -171,15 +180,18 @@ async function resetTenantSuperAdminPassword(formData: FormData): Promise<Action
         flow: "password_reset"
       }
     });
-    const delivery = await sendTemporaryPasswordEmail({
-      to: email,
-      fullName: optionalString(formData, "full_name"),
-      tenantName: tenant.name,
-      loginUrl: buildTenantLoginUrl(tenant, domains),
-      temporaryPassword,
-      expiresAt: invitation.expires_at,
-      reason: "reset"
-    });
+    const delivery = await sendTemporaryPasswordEmail(
+      {
+        to: email,
+        fullName: optionalString(formData, "full_name"),
+        tenantName: tenant.name,
+        loginUrl: buildTenantLoginUrl(tenant, domains),
+        temporaryPassword,
+        expiresAt: invitation.expires_at,
+        reason: "reset"
+      },
+      { smtpSettings }
+    );
 
     await markInvitationSent(admin, invitation.id, delivery.provider, delivery.messageId);
     revalidatePlatform();
@@ -352,6 +364,20 @@ async function getLatestInvitationEmail(admin: ReturnType<typeof createAdminClie
   }
 
   return typeof data?.email === "string" ? data.email : null;
+}
+
+async function getGlobalSmtpSettings(admin: ReturnType<typeof createAdminClient>): Promise<LiveSmtpSettings | null> {
+  const { data, error } = await admin
+    .from("platform_smtp_settings")
+    .select("status, host, port, secure, from_email, from_name, reply_to_email, username_secret_reference, password_secret_reference")
+    .eq("id", "global")
+    .maybeSingle();
+
+  if (error) {
+    return null;
+  }
+
+  return data as LiveSmtpSettings | null;
 }
 
 function buildTenantLoginUrl(tenant: TenantForInvite, domains: TenantDomainForInvite[]) {
