@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, Clock, ListChecks, ShieldCheck, Users, Waves } from "lucide-react";
+import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MessageSquare, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -36,53 +36,320 @@ const preferredTimes = [
   { label: "Weekend", value: "weekend" }
 ];
 
+const trustItems = [
+  {
+    icon: ShieldCheck,
+    title: "Veilige omgeving",
+    desc: "AVG-proof & veilig volgens de laatste richtlijnen.",
+    tone: "text-sky-600 bg-sky-50"
+  },
+  {
+    icon: Award,
+    title: "Gecertificeerde instructeurs",
+    desc: "Bevoegd, ervaren en volgen jaarlijks bijscholing.",
+    tone: "text-blue-700 bg-blue-50"
+  },
+  {
+    icon: UserCheck,
+    title: "Ouderinzage",
+    desc: "Realtime updates en inzicht in voortgang en prestaties.",
+    tone: "text-amber-600 bg-amber-50"
+  },
+  {
+    icon: GraduationCap,
+    title: "Diploma kluis",
+    desc: "Digitale diploma's en badges veilig bewaard in de kluis.",
+    tone: "text-emerald-600 bg-emerald-50"
+  }
+];
+
+const journeySteps = [
+  { title: "Watergewenning", sub: "Wennen & plezier" },
+  { title: "Diploma A", sub: "Basisvaardigheden" },
+  { title: "Diploma B", sub: "Zelfstandigheid" },
+  { title: "Diploma C", sub: "Gevorderd & veilig" }
+];
+
+const valueProps = [
+  { icon: Waves, title: "Kleine groepen", desc: "Maximale aandacht voor elk kind." },
+  { icon: UserCheck, title: "Persoonlijke begeleiding", desc: "Op het tempo en niveau van jouw kind." },
+  { icon: ShieldCheck, title: "Moderne baden", desc: "Schone, veilige en kindvriendelijke locaties." },
+  { icon: MessageSquare, title: "Heldere communicatie", desc: "We houden ouders altijd op de hoogte." }
+];
+
+type MarketingProgram = {
+  id: string;
+  name: string;
+  ageLabel: string;
+  description: string;
+  slug: string;
+  waitlist: "kort" | "gemiddeld" | "lang";
+  weeks: number;
+};
+
+const waitlistPattern: Array<Pick<MarketingProgram, "waitlist" | "weeks">> = [
+  { waitlist: "kort", weeks: 2 },
+  { waitlist: "gemiddeld", weeks: 6 },
+  { waitlist: "lang", weeks: 10 },
+  { waitlist: "kort", weeks: 1 }
+];
+
+const fallbackMarketingPrograms: MarketingProgram[] = [
+  {
+    id: "zwemdiploma-a",
+    name: "Zwemdiploma A",
+    ageLabel: "5-9 jaar",
+    description: "De eerste officiele stap. Drijven, draaien en zwemmen met kleding aan.",
+    slug: "zwemdiploma-a",
+    waitlist: "kort",
+    weeks: 2
+  },
+  {
+    id: "zwemdiploma-b",
+    name: "Zwemdiploma B",
+    ageLabel: "6-11 jaar",
+    description: "Voortbouwen op A met verdieping, langer onderwater en hogere sprongen.",
+    slug: "zwemdiploma-b",
+    waitlist: "gemiddeld",
+    weeks: 6
+  },
+  {
+    id: "zwemdiploma-c",
+    name: "Zwemdiploma C",
+    ageLabel: "7-12 jaar",
+    description: "Het complete diploma. Zwemmen in alle omstandigheden, veilig en zelfstandig.",
+    slug: "zwemdiploma-c",
+    waitlist: "lang",
+    weeks: 10
+  },
+  {
+    id: "proefles-zwemmen",
+    name: "Proefles zwemmen",
+    ageLabel: "Alle leeftijden",
+    description: "Probeer eerst een les voordat je inschrijft. Lekker laagdrempelig kennismaken.",
+    slug: "proefles-zwemmen",
+    waitlist: "kort",
+    weeks: 1
+  }
+];
+
 export function TenantMarketingPage({ snapshot }: PublicPageProps) {
   if (snapshot.status !== "ready" || !snapshot.tenant) {
     return <PublicStatusPage snapshot={snapshot} />;
   }
 
   const profile = snapshot.profile ?? fallbackProfile(snapshot.tenant.name);
-  const featuredPrograms = snapshot.programs.slice(0, 3);
+  const marketingPrograms = toMarketingPrograms(snapshot.programs);
+  const tenantName = snapshot.tenant.name;
+  const locationLabel = "Den Haag";
 
   return (
     <PublicShell snapshot={snapshot}>
-      <main>
-        <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-sky-50 via-white to-background">
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 md:px-8 md:py-20 lg:grid-cols-[1.05fr_0.95fr]">
-            <div>
-              <Kicker>{snapshot.tenant.name}</Kicker>
-              <h1 className="mt-5 max-w-4xl text-4xl font-bold leading-[1.05] tracking-tight text-slate-950 md:text-6xl">{profile.heroTitle}</h1>
-              <p className="mt-5 max-w-2xl text-base leading-7 text-slate-600 md:text-lg">{profile.heroSubtitle}</p>
-              <div className="mt-7 flex flex-wrap items-center gap-3">
-                <PrimaryLink href="/programmas">{profile.primaryCtaLabel}</PrimaryLink>
-                <SecondaryLink href="/intake">{profile.secondaryCtaLabel}</SecondaryLink>
+      <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
+        <section className="relative mt-6 flex min-h-[280px] overflow-hidden rounded-3xl border border-border bg-card shadow-card md:mt-8 md:min-h-[320px] lg:min-h-[360px]">
+          <div className="pointer-events-none absolute inset-y-0 right-0 hidden md:block md:w-[70%] lg:w-[72%]">
+            <img alt="Lachend kind met zwembril in zwembad" className="h-full w-full scale-110 object-cover object-right md:scale-[1.15] lg:scale-[1.25]" src="/lovable/hero-swim.png" />
+          </div>
+
+          <div className="relative grid flex-1 items-center gap-6 p-5 md:grid-cols-12 md:gap-5 md:p-7 lg:p-8">
+            <div className="md:col-span-7 lg:col-span-6">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> {tenantName} - {locationLabel}
               </div>
-              <div className="mt-7 flex flex-wrap gap-2">
-                {["Programma's", "Intake", "Proefles", "Wachtlijst"].map((label) => (
-                  <span key={label} className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">
-                    {label}
-                  </span>
-                ))}
+
+              <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] text-navy md:text-4xl lg:text-5xl">
+                Zwemles met
+                <br />
+                vertrouwen bij
+                <br />
+                <span className="bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">{tenantName}</span>
+              </h1>
+
+              <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">{profile.heroSubtitle}</p>
+
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95" href="/intake">
+                  Plan intake <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href="/programmas">
+                  Bekijk programma's
+                </Link>
+                <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href="/agenda">
+                  Bekijk wachttijden
+                </Link>
+              </div>
+
+              <div className="mt-7 flex flex-wrap gap-6 text-xs text-muted-foreground">
+                <div>
+                  <p className="font-display text-xl font-bold text-navy">2.400+</p>
+                  Diploma's uitgereikt
+                </div>
+                <div>
+                  <p className="font-display text-xl font-bold text-navy">98%</p>
+                  Ouder-tevredenheid
+                </div>
+                <div>
+                  <p className="font-display text-xl font-bold text-navy">12</p>
+                  Gecertificeerde instructeurs
+                </div>
               </div>
             </div>
-            <TenantHeroVisual programs={snapshot.programs} />
+          </div>
+
+          <div className="relative -mt-2 block px-5 pb-5 md:hidden">
+            <img alt="Kind in zwembad" className="rounded-2xl" src="/lovable/hero-swim.png" />
           </div>
         </section>
 
-        <Section title={profile.introTitle ?? "Zwemles met overzicht"} sub={profile.introBody ?? "Bekijk het aanbod en start direct een intake voor het juiste programma, moment en instroomtype."}>
-          <div className="grid gap-4 md:grid-cols-3">
-            <InfoCard icon={<Waves className="h-5 w-5" />} title="Programma kiezen" text="Ouders starten bij het programma dat past bij de zwemroute." />
-            <InfoCard icon={<CalendarDays className="h-5 w-5" />} title="Voorkeuren doorgeven" text="Dag- en tijdvoorkeuren worden direct bij de intake opgeslagen." />
-            <InfoCard icon={<ListChecks className="h-5 w-5" />} title="Instroom bepalen" text="Proefles, inschrijving en wachtlijst zijn intake-opties, geen losse flows." />
-          </div>
-        </Section>
+        <section className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {trustItems.map((item) => (
+            <div key={item.title} className="rounded-3xl border border-border bg-card p-5 shadow-soft">
+              <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${item.tone}`}>
+                <item.icon className="h-5 w-5" />
+              </div>
+              <h2 className="mt-4 font-display text-sm font-bold text-navy">{item.title}</h2>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.desc}</p>
+            </div>
+          ))}
+        </section>
 
-        <Section tinted title="Programma's" sub="Actueel aanbod vanuit de tenantdata. Stages blijven leerprogressie; abonnementen blijven billing.">
-          <ProgramGrid programs={featuredPrograms.length > 0 ? featuredPrograms : snapshot.programs} />
-          <div className="mt-8 text-center">
-            <SecondaryLink href="/programmas">Alle programma's bekijken</SecondaryLink>
+        <section className="mt-8 grid gap-6 lg:grid-cols-3">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft lg:col-span-2">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Wachtrij & beschikbare plekken</p>
+                <h2 className="mt-1 font-display text-xl font-bold text-navy">Actuele wachttijden per programma</h2>
+              </div>
+              <Link className="hidden text-sm font-semibold text-primary md:block" href="/agenda">
+                Bekijk alle wachttijden -&gt;
+              </Link>
+            </div>
+
+            <div className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border">
+              {marketingPrograms.slice(0, 4).map((program) => (
+                <div key={program.id} className="flex items-center justify-between gap-3 bg-card px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                      <Waves className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-navy">{program.name}</p>
+                      <p className="text-[11px] text-muted-foreground">{program.ageLabel}</p>
+                    </div>
+                  </div>
+                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${waitlistTone(program.waitlist)}`}>Wachttijd: {program.weeks} {program.weeks === 1 ? "week" : "weken"}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </Section>
+
+          <div className="flex flex-col rounded-3xl border border-border bg-card p-6 shadow-soft">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Diploma's & badges</p>
+            <h2 className="mt-1 font-display text-xl font-bold text-navy">Altijd je diploma's bij de hand</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">Geen papier meer kwijt. Elke behaalde mijlpaal wordt veilig en overzichtelijk bewaard in je persoonlijke kluis.</p>
+            <div className="mt-6 flex flex-1 items-center justify-center gap-4">
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-blue-700 text-white shadow-glow">
+                <span className="font-display text-2xl font-bold">B</span>
+              </div>
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-700 text-white shadow-glow">
+                <CheckCircle2 className="h-8 w-8" />
+              </div>
+            </div>
+            <Link className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95" href="/intake">
+              Start je zwemreis <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
+
+        <section className="mt-10 grid gap-6 lg:grid-cols-5">
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft lg:col-span-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Nieuws & updates</p>
+            <h2 className="mt-1 font-display text-lg font-bold text-navy">Zomervakantie intensieve lessen en versnelde trajecten</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">In de zomervakantie bieden wij extra intensieve lessen aan. Ideaal om een voorsprong te maken voor het nieuwe seizoen.</p>
+            <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+              <CalendarCheck className="h-4 w-4" /> 15 mei 2025 - Team {tenantName}
+            </div>
+            <Link className="mt-4 inline-flex text-sm font-semibold text-primary" href="/nieuws">
+              Lees meer -&gt;
+            </Link>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-soft lg:col-span-3">
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Onze lesprogramma's</p>
+                <h2 className="mt-1 font-display text-lg font-bold text-navy">Van eerste plons tot diploma C</h2>
+              </div>
+              <Link className="hidden text-sm font-semibold text-primary md:block" href="/programmas">
+                Bekijk alle -&gt;
+              </Link>
+            </div>
+            <div className="mt-5 space-y-3">
+              {marketingPrograms.slice(0, 4).map((program) => (
+                <div key={program.id} className="flex items-start gap-3 rounded-2xl border border-border bg-background p-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                    <Waves className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-navy">
+                      {program.name} <span className="ml-1 text-xs font-normal text-muted-foreground">({program.ageLabel})</span>
+                    </p>
+                    <p className="text-xs leading-5 text-muted-foreground">{program.description}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-10 rounded-3xl border border-border bg-card p-8 shadow-soft md:p-10">
+          <p className="text-center text-xs font-semibold uppercase tracking-wider text-primary">De zwemreis van jouw kind</p>
+          <h2 className="mt-1 text-center font-display text-2xl font-bold text-navy">Van eerste druppel tot diploma C</h2>
+
+          <div className="relative mt-10">
+            <div className="absolute left-0 right-0 top-6 hidden h-0.5 bg-gradient-to-r from-sky-300 via-blue-500 to-emerald-500 md:block" />
+            <div className="grid gap-6 md:grid-cols-4">
+              {journeySteps.map((step, index) => (
+                <div key={step.title} className="relative flex flex-col items-center text-center">
+                  <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 to-blue-700 text-white shadow-glow ring-4 ring-card">
+                    <span className="font-display text-sm font-bold">{index + 1}</span>
+                  </div>
+                  <p className="mt-3 font-display text-sm font-bold text-navy">{step.title}</p>
+                  <p className="text-xs text-muted-foreground">{step.sub}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-10 rounded-3xl border border-border bg-card p-6 shadow-soft md:p-8">
+          <div className="grid gap-6 md:grid-cols-4">
+            {valueProps.map((item) => (
+              <div key={item.title} className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-navy">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="mb-4 mt-10 rounded-3xl gradient-navy p-8 text-white shadow-card md:p-10">
+          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+            <div className="max-w-xl">
+              <h2 className="font-display text-xl font-bold md:text-2xl">{tenantName} {locationLabel}</h2>
+              <p className="mt-2 text-sm leading-6 text-white/70">De plek waar kinderen leren zwemmen met plezier, vertrouwen en persoonlijke aandacht. Onze software en ouderomgeving worden veilig en betrouwbaar ondersteund door NXTTRACK.</p>
+            </div>
+            <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/5 px-6 py-4 ring-1 ring-white/10">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Platform by</span>
+              <img alt="NXTTRACK" className="h-7 w-auto brightness-0 invert" src="/lovable/nxttrack-logo.svg" />
+            </div>
+          </div>
+        </section>
       </main>
     </PublicShell>
   );
@@ -202,45 +469,88 @@ export function IntakePage({ snapshot, submitted }: IntakePageProps) {
 }
 
 function PublicShell({ snapshot, children }: PublicPageProps & { children: ReactNode }) {
+  const nav = [
+    { href: "/", label: "Home" },
+    { href: "/nieuws", label: "Nieuws" },
+    { href: "/agenda", label: "Agenda" },
+    { href: "/programmas", label: "Programma's" },
+    { href: "/intake", label: "Proefles" },
+    { href: "/intake", label: "Inschrijven" }
+  ];
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-30 border-b border-border bg-white/88 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:px-8">
-          <Link className="flex items-center gap-3" href="/">
-            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-soft">
-              <Waves className="h-5 w-5" />
-            </span>
-            <span className="min-w-0">
-              <span className="block truncate text-sm font-bold">{snapshot.tenant?.name ?? "NXTTRACK"}</span>
-              <span className="block text-xs text-muted-foreground">Tenant website</span>
-            </span>
+    <div className="min-h-screen text-foreground">
+      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-screen-2xl items-center gap-3 px-4 md:px-8">
+          <Link className="flex items-center" href="/">
+            <img alt={snapshot.tenant?.name ?? "Zwemschool Demo"} className="h-5 w-auto" src="/lovable/zwemdemo-logo.png" />
           </Link>
-          <nav className="ml-auto hidden items-center gap-1 md:flex">
-            <HeaderLink href="/">Home</HeaderLink>
-            <HeaderLink href="/programmas">Programma's</HeaderLink>
-            <HeaderLink href="/intake">Intake</HeaderLink>
-            <HeaderLink href="/login">Login</HeaderLink>
+          <nav className="ml-8 hidden items-center gap-1 md:flex">
+            {nav.map((item, index) => (
+              <HeaderLink key={`${item.href}-${index}`} href={item.href}>
+                {item.label}
+              </HeaderLink>
+            ))}
           </nav>
-          <Link className="ml-auto inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-soft md:ml-3" href="/intake">
-            Intake <ArrowRight className="h-4 w-4" />
-          </Link>
+          <div className="ml-auto flex items-center gap-2">
+            <Link className="hidden rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted md:inline-flex" href="/login">
+              Inloggen
+            </Link>
+            <Link className="hidden rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 md:inline-flex" href="/intake">
+              Inschrijven
+            </Link>
+            <Link className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 md:hidden" href="/intake">
+              Intake
+            </Link>
+          </div>
         </div>
       </header>
       {children}
-      <footer className="border-t border-border bg-white">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-muted-foreground md:flex-row md:items-center md:justify-between md:px-8">
-          <p>{snapshot.tenant?.name ?? "NXTTRACK"} draait op NXTTRACK.</p>
-          <div className="flex flex-wrap gap-3">
-            <Link className="hover:text-foreground" href="/programmas">
-              Programma's
-            </Link>
-            <Link className="hover:text-foreground" href="/intake">
-              Intake
-            </Link>
-            <Link className="hover:text-foreground" href="/login">
-              Login
-            </Link>
+      <footer className="mt-20 border-t border-border bg-card">
+        <div className="mx-auto max-w-screen-2xl px-4 py-10 md:px-8">
+          <div className="grid gap-8 md:grid-cols-4">
+            <div>
+              <img alt={snapshot.tenant?.name ?? "Zwemschool Demo"} className="h-4 w-auto" src="/lovable/zwemdemo-logo.png" />
+              <p className="mt-3 text-xs text-muted-foreground">Samen elke druppel vooruit.</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Programma's</p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                <li>
+                  <Link href="/programmas">Diploma A / B / C</Link>
+                </li>
+                <li>
+                  <Link href="/programmas">Priveles</Link>
+                </li>
+                <li>
+                  <Link href="/programmas">Survival zwemmen</Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Portalen</p>
+              <ul className="mt-3 space-y-1.5 text-sm">
+                <li>
+                  <Link href="/parent">Ouderportaal</Link>
+                </li>
+                <li>
+                  <Link href="/instructor">Instructeur app</Link>
+                </li>
+                <li>
+                  <Link href="/admin">Tenant admin</Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                {snapshot.tenant?.name ?? "Zwemschool Demo"}
+                <br />
+                Den Haag
+              </p>
+            </div>
           </div>
+          <p className="mt-8 border-t border-border pt-6 text-xs text-muted-foreground">(c) 2026 NXTTRACK. Swim-first SaaS platform.</p>
         </div>
       </footer>
     </div>
@@ -286,6 +596,38 @@ function ProgramGrid({ programs }: { programs: PublicProgram[] }) {
       ))}
     </div>
   );
+}
+
+function toMarketingPrograms(programs: PublicProgram[]): MarketingProgram[] {
+  if (programs.length === 0) {
+    return fallbackMarketingPrograms;
+  }
+
+  return programs.slice(0, 6).map((program, index) => {
+    const availability = waitlistPattern[index % waitlistPattern.length];
+
+    return {
+      id: program.id,
+      name: program.name,
+      ageLabel: program.ageLabel ?? "Alle leeftijden",
+      description: program.summary ?? program.description ?? "Gepubliceerd zwemprogramma vanuit tenantdata.",
+      slug: program.slug,
+      waitlist: availability.waitlist,
+      weeks: availability.weeks
+    };
+  });
+}
+
+function waitlistTone(waitlist: MarketingProgram["waitlist"]) {
+  if (waitlist === "kort") {
+    return "bg-emerald-50 text-emerald-700";
+  }
+
+  if (waitlist === "gemiddeld") {
+    return "bg-amber-50 text-amber-700";
+  }
+
+  return "bg-rose-50 text-rose-700";
 }
 
 function IntakeForm({ program }: { program: PublicProgram }) {
@@ -368,38 +710,6 @@ function IntakeForm({ program }: { program: PublicProgram }) {
         </div>
       </div>
     </form>
-  );
-}
-
-function TenantHeroVisual({ programs }: { programs: PublicProgram[] }) {
-  return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-border bg-white p-5 shadow-card">
-      <div className="rounded-3xl bg-gradient-to-br from-sky-100 via-white to-blue-50 p-5">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase text-primary">Vandaag</p>
-            <p className="mt-1 text-2xl font-bold">Instroom overzicht</p>
-          </div>
-          <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-700">Live aanbod</span>
-        </div>
-        <div className="mt-6 grid gap-3">
-          {(programs.length > 0 ? programs.slice(0, 3) : fallbackVisualPrograms).map((program) => (
-            <div key={program.name} className="rounded-2xl border border-white/80 bg-white/85 p-4 shadow-soft backdrop-blur">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-semibold">{program.name}</p>
-                  <p className="text-xs text-muted-foreground">{program.capacityLabel ?? "Capaciteit volgt uit planning"}</p>
-                </div>
-                <Waves className="h-5 w-5 text-primary" />
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
-                <div className="h-full w-2/3 rounded-full bg-primary" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -523,16 +833,6 @@ function CheckboxField({ label, name, value }: { label: string; name: string; va
   );
 }
 
-function InfoCard({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
-  return (
-    <div className="rounded-3xl border border-border bg-card p-5 shadow-soft">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">{icon}</div>
-      <h3 className="mt-4 text-lg font-bold">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-muted-foreground">{text}</p>
-    </div>
-  );
-}
-
 function DetailPill({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="rounded-2xl border border-border bg-background p-3">
@@ -619,9 +919,3 @@ function fallbackProfile(tenantName: string) {
     introBody: "Programma's, stages en intake-opties worden uit de tenantdata gelezen."
   };
 }
-
-const fallbackVisualPrograms = [
-  { name: "Zwemdiploma A", capacityLabel: "Instroom op niveau" },
-  { name: "Zwemdiploma B", capacityLabel: "Vervolgroute" },
-  { name: "Priveles", capacityLabel: "Beperkte plekken" }
-];
