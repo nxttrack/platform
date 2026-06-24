@@ -40,6 +40,7 @@ jobs:
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
@@ -80,6 +81,7 @@ jobs:
       - name: Write environment file
         run: |
           set -euo pipefail
+          SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
 
           {
             printf 'APP_ENV=%s\n' "$APP_ENV"
@@ -94,6 +96,7 @@ jobs:
             printf 'SESSION_SECRET=%s\n' "$SESSION_SECRET"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' "$NEXT_PUBLIC_SUPABASE_URL"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_PUBLIC_KEY"
             printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$SUPABASE_SERVICE_ROLE_KEY"
           } > "$BASE_DIR/shared/.env"
