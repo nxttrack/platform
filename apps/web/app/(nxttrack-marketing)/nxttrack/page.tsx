@@ -1,19 +1,15 @@
-import { BarChart3, ListChecks, Users } from "lucide-react";
-import { FeatureGrid, PageHero, PageSection } from "@/components/lovable/page-kit";
+import type { Metadata } from "next";
+import { NxttrackMarketingPage as LovableNxttrackMarketingPage } from "@/components/marketing/nxttrack-marketing";
 
-const items = [
-  { icon: ListChecks, title: "Intake tot plaatsing", description: "Flow blijft centraal in de canon." },
-  { icon: Users, title: "Ouder en instructeur shells", description: "Lovable shellstructuur blijft leidend." },
-  { icon: BarChart3, title: "Tenant backoffice", description: "Planning, capaciteit en rapportage komen later met echte data." }
-];
+export const metadata: Metadata = {
+  title: "NXTTRACK — Het next-gen platform voor moderne zwemscholen",
+  description: "Ouderportaal, trainer app, backoffice, planning, diploma kluis, badges en communicatie. Eén modern platform voor de hele zwemschool.",
+  openGraph: {
+    title: "NXTTRACK — Next-gen platform voor zwemscholen",
+    description: "Van intake tot diploma C. NXTTRACK brengt ouders, kinderen en instructeurs samen in één modern platform."
+  }
+};
 
 export default function NxttrackMarketingPage() {
-  return (
-    <main>
-      <PageHero kicker="NXTTRACK marketing" title="Swim-first SaaS scaffold" sub="Marketing-route voor NXTTRACK, voorbereid op Lovable PageKit port." primary={{ href: "/nxttrack/zwemscholen", label: "Voor zwemscholen" }} secondary={{ href: "/", label: "Scaffold home" }} chips={["Next.js", "Lovable tokens", "Staging first"]} />
-      <PageSection title="Marketing modules">
-        <FeatureGrid items={items} />
-      </PageSection>
-    </main>
-  );
+  return <LovableNxttrackMarketingPage />;
 }
