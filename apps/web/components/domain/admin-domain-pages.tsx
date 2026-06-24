@@ -436,7 +436,7 @@ function SnapshotStatus({ snapshot }: DomainPageProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold">{snapshot.status === "query_error" ? "Domeinquery nog niet groen" : "Domeindata nog niet beschikbaar"}</h2>
-          <p className="mt-1 text-sm text-amber-800">Controleer Supabase env, migraties en tenantmembership voordat beheer beschikbaar is.</p>
+          <p className="mt-1 text-sm text-amber-800">Controleer Supabase env, migraties en tenanttoegang voordat beheer beschikbaar is.</p>
         </div>
         <StatusPill tone="warning">{snapshot.status}</StatusPill>
       </div>

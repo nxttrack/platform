@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { buildLoginPath, buildNoAccessPath, sanitizeLocalPath } from "@/lib/auth/redirects";
+import { roleLabels } from "@/lib/auth/roles";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 
 import { selectTenantAction } from "./actions";
@@ -31,7 +32,7 @@ export default async function TenantSwitchPage({ searchParams }: TenantSwitchPag
         <div className="rounded-3xl border border-border bg-card p-8 shadow-card">
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">Tenant kiezen</p>
           <h1 className="mt-3 text-3xl font-bold tracking-tight md:text-4xl">Kies met welke organisatie je wilt werken.</h1>
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">Deze keuze bepaalt de actieve tenant voor ouder-, instructeur- en admin-shells.</p>
+          <p className="mt-3 text-sm leading-6 text-muted-foreground">Deze keuze bepaalt de actieve organisatie voor ouderportaal, instructeur app en backoffice.</p>
           <div className="mt-6 grid gap-3">
             {context.tenants.map((tenant) => (
               <form key={tenant.tenantId} action={selectTenantAction}>
@@ -42,7 +43,7 @@ export default async function TenantSwitchPage({ searchParams }: TenantSwitchPag
                     <span className="block text-sm font-semibold">{tenant.name}</span>
                     <span className="block text-xs text-muted-foreground">{tenant.slug}</span>
                   </span>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{tenant.roles.join(", ")}</span>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{tenant.roles.map((role) => roleLabels[role]).join(", ")}</span>
                 </button>
               </form>
             ))}

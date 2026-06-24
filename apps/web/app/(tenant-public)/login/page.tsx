@@ -24,7 +24,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         <section>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">NXTTRACK toegang</p>
           <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight text-foreground md:text-6xl">Log in op je persoonlijke omgeving.</h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">Ouders, instructeurs, tenant admins en platform admins komen via dezelfde auth-boundary binnen. De rol en actieve tenant bepalen daarna de shell.</p>
+          <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">Ouders, instructeurs, tenantbeheerders en platformbeheerders loggen via dezelfde veilige toegang in. De rol en actieve organisatie bepalen daarna de omgeving.</p>
           <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
             {["Ouderportaal", "Trainer app", "Backoffice"].map((item) => (
               <div key={item} className="rounded-2xl border border-border bg-card p-4 text-sm font-semibold shadow-soft">

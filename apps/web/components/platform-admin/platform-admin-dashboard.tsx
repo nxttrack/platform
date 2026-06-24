@@ -19,9 +19,9 @@ export function PlatformAdminDashboard({ snapshot, notice, error }: PlatformAdmi
   return (
     <div className="space-y-6">
       <PageHeader
-        kicker="Platform admin"
+        kicker="Platformbeheer"
         title="Platform beheer"
-        subtitle="Beheer globale SMTP instellingen, tenant owners, tijdelijke wachtwoorden en eerste-login wachtwoordwissels vanuit NXTTRACK."
+        subtitle="Beheer globale SMTP instellingen, tenant-eigenaren, tijdelijke wachtwoorden en eerste-login wachtwoordwissels vanuit NXTTRACK."
         action={<StatusPill tone={snapshot.status === "ready" ? "success" : "warning"}>{snapshot.status}</StatusPill>}
       />
 
@@ -39,8 +39,8 @@ export function PlatformAdminDashboard({ snapshot, notice, error }: PlatformAdmi
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard icon={<Users className="h-5 w-5" />} label="Tenants" value={snapshot.tenants.length.toString()} detail="platform scope" />
-        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Super admins" value={superAdminCount.toString()} detail="tenant_owner rollen" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Tenants" value={snapshot.tenants.length.toString()} detail="platformbreed" />
+        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Super admins" value={superAdminCount.toString()} detail="tenant-eigenaren" />
         <MetricCard icon={<Mail className="h-5 w-5" />} label="Uitnodigingen" value={pendingInvitations.toString()} detail="open of recent verstuurd" />
         <MetricCard icon={<Settings className="h-5 w-5" />} label="SMTP" value={snapshot.smtpSettings?.status ?? "missing"} detail={snapshot.smtpSettings?.host ?? "globaal"} />
       </div>
@@ -149,8 +149,8 @@ function TenantAdminCard({ tenant }: { tenant: PlatformTenantWithAdmins }) {
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
                 <span>{admin.invited_email ?? admin.latestInvitation?.email ?? "Geen e-mail bekend"}</span>
-                <span>Rol: tenant_owner</span>
-                {admin.latestInvitation ? <span>Laatste mail: {admin.latestInvitation.status} · {formatDate(admin.latestInvitation.created_at)}</span> : null}
+                <span>Rol: tenant-eigenaar</span>
+                {admin.latestInvitation ? <span>Laatste mail: {admin.latestInvitation.status} - {formatDate(admin.latestInvitation.created_at)}</span> : null}
               </div>
             </div>
           ))}

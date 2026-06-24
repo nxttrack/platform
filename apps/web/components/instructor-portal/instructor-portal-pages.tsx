@@ -160,7 +160,7 @@ export function InstructorGroupsPage({ snapshot }: InstructorPageProps) {
       snapshot={snapshot}
       kicker="Instructeur app - groepen"
       title="Mijn groepen"
-      subtitle="Groepslijsten vanuit group memberships met capaciteit, rooster en voortgangssignalen."
+      subtitle="Groepslijsten vanuit geplaatste leerlingen met capaciteit, rooster en voortgangssignalen."
     >
       <div className="grid gap-4 lg:grid-cols-2">
         {snapshot.data.groups.length === 0 ? <EmptyState>Geen groepen gevonden.</EmptyState> : null}
@@ -182,7 +182,7 @@ export function InstructorGroupsPage({ snapshot }: InstructorPageProps) {
               </div>
               <div className="mt-4 grid gap-3 md:grid-cols-3">
                 <InfoTile label="Rooster" value={`${weekdayName(group.weekday)} ${formatTime(group.starts_at)}`} />
-                <InfoTile label="Roster" value={`${memberships.length}/${group.capacity}`} />
+                <InfoTile label="Groepslijst" value={`${memberships.length}/${group.capacity}`} />
                 <InfoTile label="Instructeur" value={instructor?.display_name ?? "Niet gekoppeld"} />
               </div>
               <div className="mt-4 flex flex-wrap gap-2">

@@ -6,15 +6,15 @@ export type TenantRole = (typeof tenantRoles)[number];
 export type AppRole = PlatformRole | TenantRole;
 
 export const roleLabels: Record<AppRole, string> = {
-  platform_owner: "Platform owner",
-  platform_admin: "Platform admin",
+  platform_owner: "Platform eigenaar",
+  platform_admin: "Platformbeheerder",
   platform_support: "Platform support",
-  tenant_owner: "Tenant owner",
-  tenant_admin: "Tenant admin",
-  tenant_staff: "Tenant staff",
-  instructor: "Instructor",
-  parent: "Parent",
-  athlete: "Athlete"
+  tenant_owner: "Tenant eigenaar",
+  tenant_admin: "Tenantbeheerder",
+  tenant_staff: "Medewerker",
+  instructor: "Instructeur",
+  parent: "Ouder",
+  athlete: "Leerling"
 };
 
 export function isPlatformRole(role: string): role is PlatformRole {

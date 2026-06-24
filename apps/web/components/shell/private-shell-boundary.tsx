@@ -24,7 +24,7 @@ const shellLabels = {
     subtitle: "Backoffice & planning"
   },
   platform_admin: {
-    title: "Platform admin",
+    title: "Platformbeheer",
     subtitle: "NXTTRACK beheer"
   }
 } as const satisfies Record<PrivateShellKey, { title: string; subtitle: string }>;

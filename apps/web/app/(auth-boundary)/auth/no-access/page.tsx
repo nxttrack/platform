@@ -5,9 +5,9 @@ type NoAccessPageProps = {
 };
 
 const reasonCopy: Record<string, string> = {
-  no_membership: "Je account heeft geen actieve membership voor deze omgeving.",
-  role_not_allowed: "Je rol geeft geen toegang tot deze shell.",
-  tenant_required: "Selecteer eerst een actieve tenant."
+  no_membership: "Je account heeft geen actieve toegang tot deze omgeving.",
+  role_not_allowed: "Je rol geeft geen toegang tot deze omgeving.",
+  tenant_required: "Selecteer eerst een actieve organisatie."
 };
 
 export default async function NoAccessPage({ searchParams }: NoAccessPageProps) {

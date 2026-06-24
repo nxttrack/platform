@@ -128,7 +128,7 @@ export function ParentLessonsPage({ snapshot }: ParentPageProps) {
   const lessons = buildLessonRows(snapshot.data, lookups);
 
   return (
-    <ParentFrame snapshot={snapshot} kicker="Ouderportaal - lessen" title="Mijn lessen" subtitle="Aankomende lessen vanuit group memberships en sessions, inclusief basisaanvraag voor een inhaalles.">
+    <ParentFrame snapshot={snapshot} kicker="Ouderportaal - lessen" title="Mijn lessen" subtitle="Aankomende lessen vanuit groepsplaatsingen, inclusief basisaanvraag voor een inhaalles.">
       <Card>
         <SectionHeader title="Mijn lessen" count={lessons.length} />
         <div className="grid gap-4">
