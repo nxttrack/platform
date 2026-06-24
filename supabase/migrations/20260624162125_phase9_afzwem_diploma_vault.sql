@@ -532,7 +532,7 @@ declare
   noah_enrollment_id uuid;
   criteria_id uuid;
   event_id uuid;
-  participant_id uuid;
+  event_participant_record_id uuid;
 begin
   select id into demo_tenant_id
   from public.tenants
@@ -666,6 +666,6 @@ begin
       set readiness_criteria_id = excluded.readiness_criteria_id,
           status = excluded.status,
           note = excluded.note
-    returning id into participant_id;
+    returning id into event_participant_record_id;
   end if;
 end $$;
