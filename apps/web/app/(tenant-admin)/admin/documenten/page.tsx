@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminDocumentsPage } from "@/components/operations/admin-phase12-pages";
+import { getAdminPhase12Snapshot } from "@/lib/operations/admin-phase12-read-model";
 
-export default function AdminDocumentsPage() {
-  return <RoutePlaceholder kicker="Tenant admin" title="Documenten foundation" description="Tenantdocumenten, uploads en rechten worden later via storage gekoppeld." items={["Storage", "Mappen", "Rechten", "Dossiers"]} />;
+export default async function AdminDocumentsRoutePage() {
+  const snapshot = await getAdminPhase12Snapshot();
+
+  return <AdminDocumentsPage snapshot={snapshot} />;
 }

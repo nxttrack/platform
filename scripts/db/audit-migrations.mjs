@@ -39,6 +39,7 @@ checkInstructorPortalContracts(normalizedMigrationSql.join(" "));
 checkProgressBadgesAchievementContracts(normalizedMigrationSql.join(" "));
 checkAfzwemDiplomaVaultContracts(normalizedMigrationSql.join(" "));
 checkManualPaymentsContracts(normalizedMigrationSql.join(" "));
+checkMessagesTasksDocsReportsContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -681,6 +682,100 @@ function checkManualPaymentsContracts(sql) {
 
   if (!/'mollie'[\s\S]*?'disabled'/.test(sql)) {
     failures.push("Phase 10 payments contract: Mollie provider config must be prepared but disabled.");
+  }
+}
+
+function checkMessagesTasksDocsReportsContracts(sql) {
+  const requiredPhase12Tables = [
+    "communication_provider_configs",
+    "message_templates",
+    "message_outbox",
+    "operational_tasks",
+    "tenant_document_records",
+    "report_export_requests"
+  ];
+
+  for (const table of requiredPhase12Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 12 operations contract is missing public.${table}.`);
+    }
+
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const authenticatedGrantPattern = new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const insertGrantPattern = new RegExp(`grant\\s+[^;]*\\binsert\\b[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[^;]*\\bupdate\\b[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 12 operations contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!authenticatedGrantPattern.test(sql)) {
+      failures.push(`Phase 12 operations contract: public.${table} is missing an authenticated grant.`);
+    }
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 12 operations contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 12 operations contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+  }
+
+  const providerConfigsBlock = extractCreateTableBlock(sql, "communication_provider_configs");
+  const templatesBlock = extractCreateTableBlock(sql, "message_templates");
+  const outboxBlock = extractCreateTableBlock(sql, "message_outbox");
+  const tasksBlock = extractCreateTableBlock(sql, "operational_tasks");
+  const documentsBlock = extractCreateTableBlock(sql, "tenant_document_records");
+  const exportsBlock = extractCreateTableBlock(sql, "report_export_requests");
+
+  for (const columnName of ["provider", "mode", "status", "host", "port", "from_email", "username_secret_reference", "password_secret_reference", "api_key_secret_reference"]) {
+    if (providerConfigsBlock && !new RegExp(`\\b${columnName}\\b`).test(providerConfigsBlock)) {
+      failures.push(`Phase 12 operations contract: public.communication_provider_configs must store ${columnName}.`);
+    }
+  }
+
+  if (providerConfigsBlock && /\b(api_key|password|username)\s+text\b/.test(providerConfigsBlock)) {
+    failures.push("Phase 12 operations contract: communication provider secrets must be stored as secret references, not raw secret values.");
+  }
+
+  for (const columnName of ["code", "name", "channel", "audience", "subject_template", "body_template", "status"]) {
+    if (templatesBlock && !new RegExp(`\\b${columnName}\\b`).test(templatesBlock)) {
+      failures.push(`Phase 12 operations contract: public.message_templates must store ${columnName}.`);
+    }
+  }
+
+  for (const columnName of ["template_id", "channel", "provider", "recipient_profile_id", "recipient_email", "participant_id", "enrollment_id", "status"]) {
+    if (outboxBlock && !new RegExp(`\\b${columnName}\\b`).test(outboxBlock)) {
+      failures.push(`Phase 12 operations contract: public.message_outbox must store ${columnName}.`);
+    }
+  }
+
+  for (const columnName of ["title", "task_type", "status", "priority", "assigned_to_profile_id", "participant_id", "enrollment_id", "due_on"]) {
+    if (tasksBlock && !new RegExp(`\\b${columnName}\\b`).test(tasksBlock)) {
+      failures.push(`Phase 12 operations contract: public.operational_tasks must store ${columnName}.`);
+    }
+  }
+
+  for (const columnName of ["title", "document_type", "visibility", "status", "storage_bucket", "file_path", "available_on"]) {
+    if (documentsBlock && !new RegExp(`\\b${columnName}\\b`).test(documentsBlock)) {
+      failures.push(`Phase 12 operations contract: public.tenant_document_records must store ${columnName}.`);
+    }
+  }
+
+  for (const columnName of ["report_type", "export_format", "status", "filters", "metadata", "file_path"]) {
+    if (exportsBlock && !new RegExp(`\\b${columnName}\\b`).test(exportsBlock)) {
+      failures.push(`Phase 12 operations contract: public.report_export_requests must store ${columnName}.`);
+    }
+  }
+
+  if (!/'smtp'[\s\S]*?'smtp\.sendgrid\.net'/.test(sql)) {
+    failures.push("Phase 12 operations contract: SMTP via SendGrid must be seeded as the first email foundation.");
+  }
+
+  if (!/'sendgrid'[\s\S]*?'disabled'/.test(sql)) {
+    failures.push("Phase 12 operations contract: SendGrid API provider must be prepared but disabled.");
   }
 }
 

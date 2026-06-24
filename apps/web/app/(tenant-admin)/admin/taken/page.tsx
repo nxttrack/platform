@@ -1,10 +1,8 @@
-import { AdminOperationalTasksPage } from "@/components/operations/admin-operations-pages";
-import { getAdminDomainSnapshot } from "@/lib/domain/admin-domain-read-model";
-import { getAdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
-import { getPlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
+import { AdminTasksTodoPage } from "@/components/operations/admin-phase12-pages";
+import { getAdminPhase12Snapshot } from "@/lib/operations/admin-phase12-read-model";
 
 export default async function AdminTasksPage() {
-  const [domain, placement, payments] = await Promise.all([getAdminDomainSnapshot(), getPlacementWorkflowSnapshot(), getAdminPaymentsSnapshot()]);
+  const snapshot = await getAdminPhase12Snapshot();
 
-  return <AdminOperationalTasksPage domain={domain} payments={payments} placement={placement} />;
+  return <AdminTasksTodoPage snapshot={snapshot} />;
 }

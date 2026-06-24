@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminMessagesPage } from "@/components/operations/admin-phase12-pages";
+import { getAdminPhase12Snapshot } from "@/lib/operations/admin-phase12-read-model";
 
-export default function AdminMessagesPage() {
-  return <RoutePlaceholder kicker="Tenant admin" title="Berichten foundation" description="SendGrid/SMTP templates en notificatiestromen worden in Phase 12 gekoppeld." items={["SMTP", "SendGrid", "Templates", "Notificaties"]} />;
+export default async function AdminMessagesRoutePage() {
+  const snapshot = await getAdminPhase12Snapshot();
+
+  return <AdminMessagesPage snapshot={snapshot} />;
 }
