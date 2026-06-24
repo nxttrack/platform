@@ -2,6 +2,7 @@ import {
   Award,
   BarChart3,
   Calendar,
+  CheckCircle2,
   FileText,
   GraduationCap,
   Home,
@@ -9,6 +10,7 @@ import {
   ListChecks,
   MapPin,
   MessageSquare,
+  Send,
   Settings,
   TrendingUp,
   User,
@@ -52,6 +54,8 @@ export const adminNav: NavItem[] = [
   { href: "/admin/documenten", label: "Documenten", icon: FileText },
   { href: "/admin/intake", label: "Intake", icon: Inbox },
   { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks },
+  { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingen", icon: CheckCircle2 },
+  { href: "/admin/slot-offers", label: "Slot offers", icon: Send },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings }
 ];
 

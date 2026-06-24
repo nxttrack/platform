@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminIntakeWorkflowPage } from "@/components/placement/admin-placement-pages";
+import { getPlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
 
-export default function AdminIntakePage() {
-  return <RoutePlaceholder kicker="Tenant admin" title="Intake foundation" description="Dynamic intake configuratie en submissions worden in Phase 4 geactiveerd." items={["Form schema", "Submissions", "Voorkeuren", "Trial/waitlist"]} />;
+export default async function AdminIntakePage() {
+  const snapshot = await getPlacementWorkflowSnapshot();
+
+  return <AdminIntakeWorkflowPage snapshot={snapshot} />;
 }

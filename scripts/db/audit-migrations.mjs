@@ -33,6 +33,7 @@ for (const file of migrationFiles) {
 
 checkCoreDomainContracts(normalizedMigrationSql.join(" "));
 checkPublicTenantIntakeContracts(normalizedMigrationSql.join(" "));
+checkPlacementWorkflowContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -263,6 +264,62 @@ function checkPublicTenantIntakeContracts(sql) {
 
   if (intakeSubmissionsBlock && !/\bstatus\b/.test(intakeSubmissionsBlock)) {
     failures.push("Phase 4 public tenant contract: public.intake_submissions must store lifecycle status.");
+  }
+}
+
+function checkPlacementWorkflowContracts(sql) {
+  const requiredPhase5Tables = ["waitlist_entries", "placement_suggestions", "slot_offers", "slot_offer_events", "slot_offer_responses"];
+
+  for (const table of requiredPhase5Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 5 placement contract is missing public.${table}.`);
+    }
+  }
+
+  for (const table of ["waitlist_entries", "placement_suggestions", "slot_offers", "slot_offer_responses"]) {
+    const escapedTable = escapeRegExp(table);
+    const anonSelectGrantPattern = new RegExp(`grant\\s+select\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+
+    if (anonSelectGrantPattern.test(sql)) {
+      failures.push(`Phase 5 placement contract: public.${table} must not grant SELECT to anon.`);
+    }
+  }
+
+  for (const table of ["waitlist_entries", "placement_suggestions", "slot_offers", "slot_offer_events"]) {
+    const escapedTable = escapeRegExp(table);
+    const insertGrantPattern = new RegExp(`grant\\s+(?:select,\\s*)?insert[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?update[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 5 placement contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 5 placement contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+  }
+
+  const slotOffersBlock = extractCreateTableBlock(sql, "slot_offers");
+  const slotOfferResponsesBlock = extractCreateTableBlock(sql, "slot_offer_responses");
+
+  if (slotOffersBlock && !/\boffer_token\b/.test(slotOffersBlock)) {
+    failures.push("Phase 5 placement contract: public.slot_offers must store offer_token.");
+  }
+
+  if (slotOffersBlock && !/\bplacement_suggestion_id\b/.test(slotOffersBlock)) {
+    failures.push("Phase 5 placement contract: public.slot_offers must link to placement_suggestion_id.");
+  }
+
+  if (slotOfferResponsesBlock && (!/\boffer_token\b/.test(slotOfferResponsesBlock) || !/\bresponse\b/.test(slotOfferResponsesBlock))) {
+    failures.push("Phase 5 placement contract: public.slot_offer_responses must store offer_token and response.");
+  }
+
+  if (!/grant\s+insert\s*\([^)]*offer_token[^)]*response[^)]*parent_note[^)]*\)\s+on\s+(?:table\s+)?public\.slot_offer_responses\s+to\s+anon,\s*authenticated\s*;/.test(sql)) {
+    failures.push("Phase 5 placement contract: public.slot_offer_responses must grant only column-limited anon/authenticated INSERT.");
+  }
+
+  if (!/create\s+or\s+replace\s+function\s+app_private\.process_slot_offer_response\b/.test(sql)) {
+    failures.push("Phase 5 placement contract: slot offer responses must be processed by app_private.process_slot_offer_response.");
   }
 }
 
