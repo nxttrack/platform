@@ -33,6 +33,10 @@ jobs:
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       PLATFORM_ADMIN_URL: ${{ vars.PLATFORM_ADMIN_URL }}
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
+      PLATFORM_HOSTNAMES: ${{ vars.PLATFORM_HOSTNAMES }}
+      TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
+      RESERVED_TENANT_SUBDOMAINS: ${{ vars.RESERVED_TENANT_SUBDOMAINS }}
+      DEFAULT_TENANT_SLUG: ${{ vars.DEFAULT_TENANT_SLUG }}
       BASE_PATH: ${{ vars.BASE_PATH }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME }}
 
@@ -82,15 +86,21 @@ jobs:
         run: |
           set -euo pipefail
           SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+          ROUTING_TENANT_BASE_DOMAINS="${TENANT_BASE_DOMAINS:-$TENANT_DOMAIN_SUFFIX}"
 
           {
             printf 'APP_ENV=%s\n' "$APP_ENV"
             printf 'NODE_ENV=%s\n' "$NODE_ENV"
             printf 'PORT=%s\n' "$PORT"
+            printf 'COMMIT_SHA=%s\n' "$GITHUB_SHA"
             printf 'APP_URL=%s\n' "$APP_URL"
             printf 'NEXT_PUBLIC_APP_URL=%s\n' "$NEXT_PUBLIC_APP_URL"
             printf 'PLATFORM_ADMIN_URL=%s\n' "$PLATFORM_ADMIN_URL"
             printf 'TENANT_DOMAIN_SUFFIX=%s\n' "$TENANT_DOMAIN_SUFFIX"
+            printf 'PLATFORM_HOSTNAMES=%s\n' "$PLATFORM_HOSTNAMES"
+            printf 'TENANT_BASE_DOMAINS=%s\n' "$ROUTING_TENANT_BASE_DOMAINS"
+            printf 'RESERVED_TENANT_SUBDOMAINS=%s\n' "$RESERVED_TENANT_SUBDOMAINS"
+            printf 'DEFAULT_TENANT_SLUG=%s\n' "$DEFAULT_TENANT_SLUG"
             printf 'BASE_PATH=%s\n' "$BASE_PATH"
             printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
             printf 'SESSION_SECRET=%s\n' "$SESSION_SECRET"

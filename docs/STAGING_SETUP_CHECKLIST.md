@@ -26,6 +26,10 @@ APP_URL=https://staging.nxttrack.nl
 NEXT_PUBLIC_APP_URL=https://staging.nxttrack.nl
 PLATFORM_ADMIN_URL=https://admin.staging.nxttrack.nl
 TENANT_DOMAIN_SUFFIX=staging.nxttrack.nl
+TENANT_BASE_DOMAINS=nxttrack.nl,staging.nxttrack.nl
+PLATFORM_HOSTNAMES=staging.nxttrack.nl,admin.staging.nxttrack.nl
+RESERVED_TENANT_SUBDOMAINS=admin,api,app,platform,staging,www
+DEFAULT_TENANT_SLUG=aquaswim-demo
 PORT=3801
 SERVICE_NAME=nxttrack-staging
 BASE_PATH=/
@@ -47,6 +51,10 @@ APP_URL
 NEXT_PUBLIC_APP_URL
 PLATFORM_ADMIN_URL
 TENANT_DOMAIN_SUFFIX
+TENANT_BASE_DOMAINS
+PLATFORM_HOSTNAMES
+RESERVED_TENANT_SUBDOMAINS
+DEFAULT_TENANT_SLUG
 BASE_PATH
 SERVICE_NAME
 ```

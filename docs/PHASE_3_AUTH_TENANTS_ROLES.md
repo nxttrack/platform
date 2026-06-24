@@ -104,6 +104,8 @@ Tenant routing config is environment-driven:
 - `TENANT_BASE_DOMAINS`
 - `RESERVED_TENANT_SUBDOMAINS`
 
+`TENANT_DOMAIN_SUFFIX` is still accepted as a legacy fallback for `TENANT_BASE_DOMAINS` in staging deploys. For `aquaswim-demo.nxttrack.nl`, include `nxttrack.nl` in `TENANT_BASE_DOMAINS`.
+
 The proxy may attach internal `x-nxttrack-*` request headers for later server-side tenant lookup. These headers are not an authorization boundary.
 
 ## Supabase Schema Direction
