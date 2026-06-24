@@ -224,6 +224,42 @@ export type ParentCatchUpRequestRow = {
   resolved_at: string | null;
 };
 
+export type ParentInvoiceRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  subscription_plan_id: string | null;
+  invoice_number: string;
+  title: string;
+  description: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  issued_on: string;
+  due_on: string | null;
+  amount_due_cents: number;
+  amount_paid_cents: number;
+  currency: string;
+  status: string;
+  collection_method: string;
+};
+
+export type ParentPaymentRecordRow = {
+  id: string;
+  invoice_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  provider: string;
+  provider_payment_id: string | null;
+  provider_checkout_url: string | null;
+  payment_method: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  received_on: string | null;
+  note: string | null;
+  created_at: string;
+};
+
 export type ParentMilestoneEventRow = {
   id: string;
   program_id: string;
@@ -287,6 +323,8 @@ export type ParentPortalData = {
   documents: ParentDocumentRow[];
   notifications: ParentNotificationRow[];
   catchUpRequests: ParentCatchUpRequestRow[];
+  invoices: ParentInvoiceRow[];
+  paymentRecords: ParentPaymentRecordRow[];
 };
 
 export type ParentPortalSnapshot = {
@@ -394,6 +432,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     certificatesResult,
     documentsResult,
     catchUpRequestsResult,
+    invoicesResult,
+    paymentRecordsResult,
     programsResult,
     stagesResult,
     subscriptionPlansResult
@@ -473,6 +513,26 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "requested_at",
       false
     ),
+    rowsByIds<ParentInvoiceRow>(
+      supabase,
+      "invoices",
+      "id, enrollment_id, participant_id, subscription_plan_id, invoice_number, title, description, period_start, period_end, issued_on, due_on, amount_due_cents, amount_paid_cents, currency, status, collection_method",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "issued_on",
+      false
+    ),
+    rowsByIds<ParentPaymentRecordRow>(
+      supabase,
+      "payment_records",
+      "id, invoice_id, enrollment_id, participant_id, provider, provider_payment_id, provider_checkout_url, payment_method, amount_cents, currency, status, received_on, note, created_at",
+      tenantId,
+      "enrollment_id",
+      enrollmentIds,
+      "created_at",
+      false
+    ),
     rowsByIds<ParentProgramRow>(supabase, "programs", "id, name, code", tenantId, "id", programIds, "name"),
     rowsByIds<ParentStageRow>(supabase, "stages", "id, program_id, name, code, sort_order", tenantId, "program_id", programIds, "sort_order"),
     rowsByIds<ParentSubscriptionPlanRow>(
@@ -545,6 +605,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     certificates: certificatesResult.error,
     parent_documents: documentsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
+    invoices: invoicesResult.error,
+    payment_records: paymentRecordsResult.error,
     programs: programsResult.error,
     stages: stagesResult.error,
     stage_modules: stageModulesResult.error,
@@ -584,7 +646,9 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       certificates: certificatesResult.rows,
       documents: documentsResult.rows,
       notifications: asRows<ParentNotificationRow>(notificationsResult.data),
-      catchUpRequests: catchUpRequestsResult.rows
+      catchUpRequests: catchUpRequestsResult.rows,
+      invoices: invoicesResult.rows,
+      paymentRecords: paymentRecordsResult.rows
     }
   };
 }
@@ -643,7 +707,9 @@ function createEmptyData(): ParentPortalData {
     certificates: [],
     documents: [],
     notifications: [],
-    catchUpRequests: []
+    catchUpRequests: [],
+    invoices: [],
+    paymentRecords: []
   };
 }
 

@@ -4,6 +4,7 @@ import {
   Bell,
   Calendar,
   CheckCircle2,
+  CircleDollarSign,
   FileText,
   GraduationCap,
   Home,
@@ -28,7 +29,8 @@ export const parentNav: NavItem[] = [
   { href: "/parent/documenten", label: "Documenten", icon: FileText },
   { href: "/parent/voortgang", label: "Voortgang", icon: TrendingUp },
   { href: "/parent/diplomas", label: "Diploma's", icon: GraduationCap },
-  { href: "/parent/badges", label: "Badges", icon: Award }
+  { href: "/parent/badges", label: "Badges", icon: Award },
+  { href: "/parent/betalingen", label: "Betalingen", icon: CircleDollarSign }
 ];
 
 export const instructorNav: NavItem[] = [
@@ -52,6 +54,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/enrollments", label: "Enrollments", icon: Users },
   { href: "/admin/instructors", label: "Instructors", icon: User },
   { href: "/admin/afzwemmen", label: "Afzwemmen", icon: Award },
+  { href: "/admin/payments", label: "Payments", icon: CircleDollarSign },
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3 },
   { href: "/admin/berichten", label: "Berichten", icon: MessageSquare },
   { href: "/admin/taken", label: "Taken", icon: ListChecks },

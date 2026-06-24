@@ -38,6 +38,7 @@ checkParentPortalContracts(normalizedMigrationSql.join(" "));
 checkInstructorPortalContracts(normalizedMigrationSql.join(" "));
 checkProgressBadgesAchievementContracts(normalizedMigrationSql.join(" "));
 checkAfzwemDiplomaVaultContracts(normalizedMigrationSql.join(" "));
+checkManualPaymentsContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -572,6 +573,114 @@ function checkAfzwemDiplomaVaultContracts(sql) {
     if (!new RegExp(`create\\s+trigger\\s+${triggerName}\\b`).test(sql)) {
       failures.push(`Phase 9 afzwem/diploma contract is missing trigger ${triggerName}.`);
     }
+  }
+}
+
+function checkManualPaymentsContracts(sql) {
+  const requiredPhase10Tables = ["invoices", "payment_records", "payment_provider_configs", "payment_events"];
+
+  for (const table of requiredPhase10Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 10 payments contract is missing public.${table}.`);
+    }
+
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const authenticatedGrantPattern = new RegExp(`grant\\s+[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 10 payments contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!authenticatedGrantPattern.test(sql)) {
+      failures.push(`Phase 10 payments contract: public.${table} is missing an authenticated grant.`);
+    }
+  }
+
+  for (const table of ["invoices", "payment_records", "payment_provider_configs"]) {
+    const escapedTable = escapeRegExp(table);
+    const insertGrantPattern = new RegExp(`grant\\s+[^;]*\\binsert\\b[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[^;]*\\bupdate\\b[^;]*\\bon\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updatePolicyPattern = new RegExp(`create\\s+policy\\s+["']?[\\s\\S]*?on\\s+public\\.${escapedTable}[\\s\\S]*?for\\s+update[\\s\\S]*?to\\s+authenticated[\\s\\S]*?using[\\s\\S]*?with\\s+check[\\s\\S]*?;`);
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 10 payments contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 10 payments contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+
+    if (!updatePolicyPattern.test(sql)) {
+      failures.push(`Phase 10 payments contract: public.${table} is missing an UPDATE policy with USING and WITH CHECK.`);
+    }
+  }
+
+  if (!/grant\s+[^;]*\binsert\b[^;]*\bon\s+(?:table\s+)?public\.payment_events\s+to\s+authenticated\s*;/.test(sql)) {
+    failures.push("Phase 10 payments contract: public.payment_events is missing an authenticated INSERT grant.");
+  }
+
+  const invoicesBlock = extractCreateTableBlock(sql, "invoices");
+  const paymentRecordsBlock = extractCreateTableBlock(sql, "payment_records");
+  const providerConfigsBlock = extractCreateTableBlock(sql, "payment_provider_configs");
+  const subscriptionPlansBlock = extractCreateTableBlock(sql, "subscription_plans");
+
+  for (const columnName of ["enrollment_id", "participant_id", "subscription_plan_id", "amount_due_cents", "amount_paid_cents", "collection_method"]) {
+    if (invoicesBlock && !new RegExp(`\\b${columnName}\\b`).test(invoicesBlock)) {
+      failures.push(`Phase 10 payments contract: public.invoices must store ${columnName}.`);
+    }
+  }
+
+  if (invoicesBlock && /\bstage_id\b|\bbadge_id\b|\bbadje\b/.test(invoicesBlock)) {
+    failures.push("Phase 10 payments contract: public.invoices must not be tied to stage/badge progression.");
+  }
+
+  for (const columnName of ["invoice_id", "enrollment_id", "participant_id", "provider", "provider_payment_id", "provider_checkout_url", "payment_method", "amount_cents", "status"]) {
+    if (paymentRecordsBlock && !new RegExp(`\\b${columnName}\\b`).test(paymentRecordsBlock)) {
+      failures.push(`Phase 10 payments contract: public.payment_records must store ${columnName}.`);
+    }
+  }
+
+  if (paymentRecordsBlock && /\bstage_id\b|\bbadge_id\b|\bbadje\b/.test(paymentRecordsBlock)) {
+    failures.push("Phase 10 payments contract: public.payment_records must not be tied to stage/badge progression.");
+  }
+
+  for (const columnName of ["provider", "mode", "status", "api_key_secret_reference", "webhook_secret_reference"]) {
+    if (providerConfigsBlock && !new RegExp(`\\b${columnName}\\b`).test(providerConfigsBlock)) {
+      failures.push(`Phase 10 payments contract: public.payment_provider_configs must store ${columnName}.`);
+    }
+  }
+
+  if (subscriptionPlansBlock && /\bstage_id\b|\bbadge_id\b|\bbadje\b/.test(subscriptionPlansBlock)) {
+    failures.push("Phase 10 payments contract: public.subscription_plans must remain separate from stage/badge progression.");
+  }
+
+  if (!/create\s+policy\s+["']?participants\s+and\s+staff\s+can\s+view\s+invoices[\s\S]*?current_user_can_access_enrollment/.test(sql)) {
+    failures.push("Phase 10 payments contract: invoices must use current_user_can_access_enrollment for parent/staff visibility.");
+  }
+
+  if (!/create\s+policy\s+["']?participants\s+and\s+staff\s+can\s+view\s+payment\s+records[\s\S]*?current_user_can_access_enrollment/.test(sql)) {
+    failures.push("Phase 10 payments contract: payment_records must use current_user_can_access_enrollment for parent/staff visibility.");
+  }
+
+  for (const functionName of ["notify_guardians_for_invoice", "sync_invoice_payment_status"]) {
+    if (!new RegExp(`create\\s+or\\s+replace\\s+function\\s+app_private\\.${functionName}\\b`).test(sql)) {
+      failures.push(`Phase 10 payments contract is missing app_private.${functionName}.`);
+    }
+  }
+
+  for (const triggerName of ["invoices_notify_guardians", "payment_records_sync_invoice_status"]) {
+    if (!new RegExp(`create\\s+trigger\\s+${triggerName}\\b`).test(sql)) {
+      failures.push(`Phase 10 payments contract is missing trigger ${triggerName}.`);
+    }
+  }
+
+  if (!/'manual'[\s\S]*?'active'/.test(sql)) {
+    failures.push("Phase 10 payments contract: manual provider config must be seeded active.");
+  }
+
+  if (!/'mollie'[\s\S]*?'disabled'/.test(sql)) {
+    failures.push("Phase 10 payments contract: Mollie provider config must be prepared but disabled.");
   }
 }
 

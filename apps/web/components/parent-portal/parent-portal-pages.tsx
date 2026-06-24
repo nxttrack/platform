@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Award, Bell, CalendarDays, FileText, GraduationCap, Sparkles, TrendingUp, UserRound, Waves } from "lucide-react";
+import { Award, Banknote, Bell, CalendarDays, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { markNotificationReadAction, requestCatchUpLessonAction } from "@/lib/parent-portal/parent-portal-actions";
@@ -13,10 +13,12 @@ import type {
   ParentEnrollmentRow,
   ParentGroupMembershipRow,
   ParentGroupRow,
+  ParentInvoiceRow,
   ParentMilestoneEventParticipantRow,
   ParentMilestoneEventRow,
   ParentMilestoneResultRow,
   ParentNotificationRow,
+  ParentPaymentRecordRow,
   ParentParticipantRow,
   ParentPortalData,
   ParentPortalSnapshot,
@@ -44,6 +46,7 @@ type LookupMaps = {
   subscriptionPlans: Map<string, ParentSubscriptionPlanRow>;
   groups: Map<string, ParentGroupRow>;
   resources: Map<string, ParentResourceRow>;
+  enrollments: Map<string, ParentEnrollmentRow>;
   enrollmentsByParticipant: Map<string, ParentEnrollmentRow[]>;
   membershipsByEnrollment: Map<string, ParentGroupMembershipRow[]>;
   sessionsByGroup: Map<string, ParentSessionRow[]>;
@@ -60,6 +63,8 @@ type LookupMaps = {
   documentsByParticipant: Map<string, ParentDocumentRow[]>;
   notificationsByParticipant: Map<string, ParentNotificationRow[]>;
   catchUpsBySession: Map<string, ParentCatchUpRequestRow[]>;
+  invoicesByParticipant: Map<string, ParentInvoiceRow[]>;
+  paymentRecordsByInvoice: Map<string, ParentPaymentRecordRow[]>;
 };
 
 type LessonRow = {
@@ -152,6 +157,138 @@ export function ParentDocumentsPage({ snapshot }: ParentPageProps) {
     <ParentFrame snapshot={snapshot} kicker="Ouderportaal - documenten" title="Documenten" subtitle="Read-only documenten die aan een kind, enrollment of certificate gekoppeld zijn.">
       <DocumentList documents={snapshot.data.documents} lookups={lookups} title="Documenten" />
     </ParentFrame>
+  );
+}
+
+export function ParentPaymentsPage({ snapshot }: ParentPageProps) {
+  const lookups = buildLookups(snapshot.data);
+  const openInvoices = snapshot.data.invoices.filter((invoice) => ["open", "partially_paid", "overdue"].includes(invoice.status));
+  const totalOpen = openInvoices.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents), 0);
+  const totalPaid = snapshot.data.paymentRecords.filter((payment) => ["recorded", "paid"].includes(payment.status)).reduce((sum, payment) => sum + payment.amount_cents, 0);
+  const nextDueInvoice = [...openInvoices].sort((a, b) => (a.due_on ?? a.issued_on).localeCompare(b.due_on ?? b.issued_on))[0] ?? null;
+
+  return (
+    <ParentFrame
+      phase="Phase 10"
+      snapshot={snapshot}
+      kicker="Ouderportaal - betalingen"
+      title="Betalingen"
+      subtitle="Manual payment status voor ouders. Mollie/iDEAL is voorbereid in de architectuur, maar nog niet actief zolang de handmatige flow leidend is."
+    >
+      <div className="grid gap-4 md:grid-cols-4">
+        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Facturen" value={snapshot.data.invoices.length.toString()} detail="gekoppeld aan deelname" />
+        <MetricCard icon={<Banknote className="h-5 w-5" />} label="Openstaand" value={formatMoney(totalOpen, "EUR")} detail="handmatig te voldoen" />
+        <MetricCard icon={<Award className="h-5 w-5" />} label="Betaald" value={formatMoney(totalPaid, "EUR")} detail="geregistreerd door admin" />
+        <MetricCard icon={<CreditCard className="h-5 w-5" />} label="Online betalen" value="Voorbereid" detail="Mollie/iDEAL later" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card>
+          <SectionHeader title="Facturen" count={snapshot.data.invoices.length} />
+          <div className="grid gap-4">
+            {snapshot.data.invoices.length === 0 ? <EmptyState>Nog geen facturen gevonden.</EmptyState> : null}
+            {snapshot.data.invoices.map((invoice) => (
+              <ParentInvoiceCard key={invoice.id} invoice={invoice} lookups={lookups} />
+            ))}
+          </div>
+        </Card>
+
+        <div className="grid gap-4">
+          <Card>
+            <SectionHeader title="Eerstvolgende betaling" count={nextDueInvoice ? 1 : 0} />
+            {nextDueInvoice ? <ParentInvoiceSummary invoice={nextDueInvoice} lookups={lookups} /> : <EmptyState>Geen openstaande betalingen.</EmptyState>}
+          </Card>
+
+          <Card>
+            <SectionHeader title="Laatste betalingen" count={snapshot.data.paymentRecords.length} />
+            <div className="grid gap-3">
+              {snapshot.data.paymentRecords.length === 0 ? <EmptyState>Nog geen geregistreerde betalingen.</EmptyState> : null}
+              {snapshot.data.paymentRecords.map((payment) => (
+                <ParentPaymentRecordRowView key={payment.id} payment={payment} />
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+
+      <Card>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Manual-first betaalflow</h2>
+            <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              Betalingen worden nu handmatig door de tenant admin geregistreerd. De ouder ziet status en historie, zonder checkout of Mollie-call.
+            </p>
+          </div>
+          <StatusPill tone="warning">Mollie later</StatusPill>
+        </div>
+      </Card>
+    </ParentFrame>
+  );
+}
+
+function ParentInvoiceCard({ invoice, lookups }: { invoice: ParentInvoiceRow; lookups: LookupMaps }) {
+  const payments = lookups.paymentRecordsByInvoice.get(invoice.id) ?? [];
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <ParentInvoiceSummary invoice={invoice} lookups={lookups} />
+      {invoice.description ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{invoice.description}</p> : null}
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <InfoTile label="Periode" value={invoice.period_start && invoice.period_end ? `${formatDate(invoice.period_start)} - ${formatDate(invoice.period_end)}` : "Niet ingesteld"} />
+        <InfoTile label="Betaalmethode" value={invoice.collection_method === "manual" ? "Handmatig" : invoice.collection_method} />
+        <InfoTile label="Vervaldatum" value={invoice.due_on ? formatDate(invoice.due_on) : "Nog niet bekend"} />
+      </div>
+      {payments.length > 0 ? (
+        <div className="mt-4 grid gap-2">
+          {payments.map((payment) => (
+            <ParentPaymentRecordRowView key={payment.id} payment={payment} />
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function ParentInvoiceSummary({ invoice, lookups }: { invoice: ParentInvoiceRow; lookups: LookupMaps }) {
+  const participant = lookups.participants.get(invoice.participant_id);
+  const enrollment = lookups.enrollments.get(invoice.enrollment_id);
+  const program = enrollment ? lookups.programs.get(enrollment.program_id) : null;
+  const plan = invoice.subscription_plan_id ? lookups.subscriptionPlans.get(invoice.subscription_plan_id) : null;
+  const remaining = Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents);
+
+  return (
+    <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-bold">{invoice.invoice_number} - {invoice.title}</p>
+          <p className="text-sm text-muted-foreground">
+            {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "abonnement onbekend"}
+          </p>
+        </div>
+        <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "overdue" ? "danger" : invoice.status === "partially_paid" ? "warning" : "info"}>{invoice.status}</StatusPill>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <InfoTile label="Factuurbedrag" value={formatMoney(invoice.amount_due_cents, invoice.currency)} />
+        <InfoTile label="Betaald" value={formatMoney(invoice.amount_paid_cents, invoice.currency)} />
+        <InfoTile label="Openstaand" value={formatMoney(remaining, invoice.currency)} />
+      </div>
+    </div>
+  );
+}
+
+function ParentPaymentRecordRowView({ payment }: { payment: ParentPaymentRecordRow }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{formatMoney(payment.amount_cents, payment.currency)}</p>
+          <p className="text-sm text-muted-foreground">{payment.payment_method} - {payment.provider}</p>
+          {payment.note ? <p className="mt-1 text-sm text-muted-foreground">{payment.note}</p> : null}
+        </div>
+        <StatusPill tone={payment.status === "recorded" || payment.status === "paid" ? "success" : payment.status === "failed" ? "danger" : "warning"}>{payment.status}</StatusPill>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{payment.received_on ? formatDate(payment.received_on) : formatDate(payment.created_at)}</p>
+    </div>
   );
 }
 
@@ -704,6 +841,7 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     subscriptionPlans: byId(data.subscriptionPlans),
     groups: byId(data.groups),
     resources: byId(data.resources),
+    enrollments: byId(data.enrollments),
     enrollmentsByParticipant: groupBy(data.enrollments, (enrollment) => enrollment.participant_id),
     membershipsByEnrollment: groupBy(data.groupMemberships, (membership) => membership.enrollment_id),
     sessionsByGroup: groupBy(data.sessions, (session) => session.group_id),
@@ -719,7 +857,9 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     certificatesByParticipant: groupBy(data.certificates, (certificate) => certificate.participant_id),
     documentsByParticipant: groupBy(data.documents, (document) => document.participant_id),
     notificationsByParticipant: groupBy(data.notifications.filter((notification) => notification.participant_id), (notification) => notification.participant_id ?? ""),
-    catchUpsBySession: groupBy(data.catchUpRequests, (request) => request.missed_session_id)
+    catchUpsBySession: groupBy(data.catchUpRequests, (request) => request.missed_session_id),
+    invoicesByParticipant: groupBy(data.invoices, (invoice) => invoice.participant_id),
+    paymentRecordsByInvoice: groupBy(data.paymentRecords, (payment) => payment.invoice_id)
   };
 }
 
