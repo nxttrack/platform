@@ -146,7 +146,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
   return (
     <PublicShell snapshot={snapshot}>
       <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
-        <section className="relative mt-6 flex min-h-[280px] overflow-hidden rounded-3xl border border-border bg-card shadow-card md:mt-8 md:min-h-[320px] lg:min-h-[360px]">
+        <section className="relative mt-6 flex min-h-[280px] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card md:mt-8 md:min-h-[320px] md:flex-row lg:min-h-[360px]">
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden md:block md:w-[70%] lg:w-[72%]">
             <img alt="Lachend kind met zwembril in zwembad" className="h-full w-full scale-110 object-cover object-right md:scale-[1.15] lg:scale-[1.25]" src="/lovable/hero-swim.png" />
           </div>
@@ -197,7 +197,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
           </div>
 
           <div className="relative -mt-2 block px-5 pb-5 md:hidden">
-            <img alt="Kind in zwembad" className="rounded-2xl" src="/lovable/hero-swim.png" />
+            <img alt="Kind in zwembad" className="w-full rounded-2xl" src="/lovable/hero-swim.png" />
           </div>
         </section>
 
