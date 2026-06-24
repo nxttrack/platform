@@ -13,6 +13,9 @@ import type {
   ParentEnrollmentRow,
   ParentGroupMembershipRow,
   ParentGroupRow,
+  ParentMilestoneEventParticipantRow,
+  ParentMilestoneEventRow,
+  ParentMilestoneResultRow,
   ParentNotificationRow,
   ParentParticipantRow,
   ParentPortalData,
@@ -50,6 +53,9 @@ type LookupMaps = {
   badgeAwardsByParticipant: Map<string, ParentBadgeAwardRow[]>;
   achievementCardsByParticipant: Map<string, ParentAchievementCardRow[]>;
   transitionProposalsByEnrollment: Map<string, ParentStageTransitionProposalRow[]>;
+  milestoneEvents: Map<string, ParentMilestoneEventRow>;
+  milestoneEventParticipantsByParticipant: Map<string, ParentMilestoneEventParticipantRow[]>;
+  milestoneResultsByParticipant: Map<string, ParentMilestoneResultRow[]>;
   certificatesByParticipant: Map<string, ParentCertificateRow[]>;
   documentsByParticipant: Map<string, ParentDocumentRow[]>;
   notificationsByParticipant: Map<string, ParentNotificationRow[]>;
@@ -153,23 +159,42 @@ export function ParentDiplomasPage({ snapshot }: ParentPageProps) {
   const lookups = buildLookups(snapshot.data);
 
   return (
-    <ParentFrame snapshot={snapshot} kicker="Ouderportaal - diploma's" title="Diploma's" subtitle="Read-only voorbereiding op de digitale diplomakluis. Genereren en delen volgt in Phase 9.">
+    <ParentFrame
+      phase="Phase 9"
+      snapshot={snapshot}
+      kicker="Ouderportaal - diploma's"
+      title="Afzwemmen & diploma's"
+      subtitle="Afzwemmomenten, resultaatregistratie en digitale diplomakluis. Downloaden en delen zijn voorbereid via vault-statussen."
+    >
       <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
         <Card>
-          <SectionHeader title="Certificates" count={snapshot.data.certificates.length} />
+          <SectionHeader title="Afzwemmomenten" count={snapshot.data.milestoneEventParticipants.length} />
+          <div className="grid gap-3">
+            {snapshot.data.milestoneEventParticipants.length === 0 ? <EmptyState>Geen afzwemmomenten gevonden.</EmptyState> : null}
+            {snapshot.data.milestoneEventParticipants.map((eventParticipant) => (
+              <MilestoneEventParticipantCard key={eventParticipant.id} eventParticipant={eventParticipant} lookups={lookups} />
+            ))}
+          </div>
+        </Card>
+
+        <Card>
+          <SectionHeader title="Resultaten" count={snapshot.data.milestoneResults.length} />
+          <div className="grid gap-3">
+            {snapshot.data.milestoneResults.length === 0 ? <EmptyState>Nog geen afzwemresultaten geregistreerd.</EmptyState> : null}
+            {snapshot.data.milestoneResults.map((result) => (
+              <MilestoneResultCard key={result.id} lookups={lookups} result={result} />
+            ))}
+          </div>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+        <Card>
+          <SectionHeader title="Digitale diplomakluis" count={snapshot.data.certificates.length} />
           <div className="grid gap-3">
             {snapshot.data.certificates.length === 0 ? <EmptyState>Nog geen certificaten of diploma's gevonden.</EmptyState> : null}
             {snapshot.data.certificates.map((certificate) => (
-              <div key={certificate.id} className="rounded-2xl border border-border bg-muted/35 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{certificate.title}</p>
-                    <p className="text-sm text-muted-foreground">{participantName(lookups, certificate.participant_id)} - {lookups.programs.get(certificate.program_id)?.name ?? "Programma"}</p>
-                  </div>
-                  <StatusPill tone={certificate.status === "issued" ? "success" : "warning"}>{certificate.status}</StatusPill>
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">Nummer: {certificate.certificate_number ?? "Nog niet uitgegeven"} - Uitgiftedatum: {certificate.issued_on ? formatDate(certificate.issued_on) : "Nog niet bekend"}</p>
-              </div>
+              <DiplomaVaultCard key={certificate.id} certificate={certificate} lookups={lookups} />
             ))}
           </div>
         </Card>
@@ -177,6 +202,74 @@ export function ParentDiplomasPage({ snapshot }: ParentPageProps) {
         <DocumentList documents={snapshot.data.documents.filter((document) => ["diploma", "certificate"].includes(document.document_type))} lookups={lookups} title="Diplomadocumenten" />
       </div>
     </ParentFrame>
+  );
+}
+
+function MilestoneEventParticipantCard({ eventParticipant, lookups }: { eventParticipant: ParentMilestoneEventParticipantRow; lookups: LookupMaps }) {
+  const event = lookups.milestoneEvents.get(eventParticipant.milestone_event_id);
+  const enrollment = snapshotEnrollmentByProgress(lookups, eventParticipant.enrollment_id);
+  const program = enrollment ? lookups.programs.get(enrollment.program_id) : null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{event?.title ?? "Afzwemmoment"}</p>
+          <p className="text-sm text-muted-foreground">
+            {participantName(lookups, eventParticipant.participant_id)} - {program?.name ?? "Programma"}
+          </p>
+          {event ? <p className="mt-2 text-sm font-semibold">{formatDateTime(event.starts_at)} - {formatTime(event.ends_at)}</p> : null}
+          {eventParticipant.note ? <p className="mt-2 text-sm text-muted-foreground">{eventParticipant.note}</p> : null}
+        </div>
+        <StatusPill tone={eventParticipant.status === "confirmed" || eventParticipant.status === "attended" ? "success" : eventParticipant.status === "declined" || eventParticipant.status === "no_show" ? "danger" : "warning"}>{eventParticipant.status}</StatusPill>
+      </div>
+    </div>
+  );
+}
+
+function MilestoneResultCard({ result, lookups }: { result: ParentMilestoneResultRow; lookups: LookupMaps }) {
+  const event = lookups.milestoneEvents.get(result.milestone_event_id);
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{participantName(lookups, result.participant_id)}</p>
+          <p className="text-sm text-muted-foreground">{event?.title ?? "Afzwemresultaat"} - {formatDateTime(result.registered_at)}</p>
+          {result.note ? <p className="mt-2 text-sm text-muted-foreground">{result.note}</p> : null}
+        </div>
+        <StatusPill tone={result.result_status === "passed" ? "success" : result.result_status === "failed" ? "danger" : "warning"}>{result.result_status}</StatusPill>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">Score: {result.score === null ? "-" : `${result.score}%`}</p>
+    </div>
+  );
+}
+
+function DiplomaVaultCard({ certificate, lookups }: { certificate: ParentCertificateRow; lookups: LookupMaps }) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{certificate.title}</p>
+          <p className="text-sm text-muted-foreground">{participantName(lookups, certificate.participant_id)} - {lookups.programs.get(certificate.program_id)?.name ?? "Programma"}</p>
+        </div>
+        <StatusPill tone={certificate.vault_status === "available" || certificate.status === "issued" ? "success" : "warning"}>{certificate.vault_status}</StatusPill>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        <InfoTile label="Nummer" value={certificate.certificate_number ?? "Nog niet uitgegeven"} />
+        <InfoTile label="Uitgiftedatum" value={certificate.issued_on ? formatDate(certificate.issued_on) : "Nog niet bekend"} />
+        <InfoTile label="Download" value={certificate.download_status === "ready" ? "Voorbereid" : certificate.download_status} />
+        <InfoTile label="Delen" value={certificate.share_enabled ? "Voorbereid" : "Nog uit"} />
+      </div>
+      <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+        {certificate.file_path ? `Bestand: ${certificate.file_path}` : "Diploma-PDF wordt gekoppeld zodra de tenant deze publiceert."}
+      </div>
+      {certificate.share_enabled && certificate.share_token ? (
+        <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+          Deelcode voorbereid: {certificate.share_token.slice(0, 8)}... {certificate.share_expires_at ? `tot ${formatDateTime(certificate.share_expires_at)}` : ""}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -620,6 +713,9 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     badgeAwardsByParticipant: groupBy(data.badgeAwards, (award) => award.participant_id),
     achievementCardsByParticipant: groupBy(data.achievementCards, (card) => card.participant_id),
     transitionProposalsByEnrollment: groupBy(data.stageTransitionProposals, (proposal) => proposal.enrollment_id),
+    milestoneEvents: byId(data.milestoneEvents),
+    milestoneEventParticipantsByParticipant: groupBy(data.milestoneEventParticipants, (eventParticipant) => eventParticipant.participant_id),
+    milestoneResultsByParticipant: groupBy(data.milestoneResults, (result) => result.participant_id),
     certificatesByParticipant: groupBy(data.certificates, (certificate) => certificate.participant_id),
     documentsByParticipant: groupBy(data.documents, (document) => document.participant_id),
     notificationsByParticipant: groupBy(data.notifications.filter((notification) => notification.participant_id), (notification) => notification.participant_id ?? ""),

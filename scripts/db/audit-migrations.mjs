@@ -37,6 +37,7 @@ checkPlacementWorkflowContracts(normalizedMigrationSql.join(" "));
 checkParentPortalContracts(normalizedMigrationSql.join(" "));
 checkInstructorPortalContracts(normalizedMigrationSql.join(" "));
 checkProgressBadgesAchievementContracts(normalizedMigrationSql.join(" "));
+checkAfzwemDiplomaVaultContracts(normalizedMigrationSql.join(" "));
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -496,6 +497,80 @@ function checkProgressBadgesAchievementContracts(sql) {
   for (const triggerName of ["progress_notify_guardians", "stage_module_progress_publish", "badge_awards_publish"]) {
     if (!new RegExp(`create\\s+trigger\\s+${triggerName}\\b`).test(sql)) {
       failures.push(`Phase 8 progress/badges contract is missing trigger ${triggerName}.`);
+    }
+  }
+}
+
+function checkAfzwemDiplomaVaultContracts(sql) {
+  const requiredPhase9Tables = ["milestone_readiness_criteria", "milestone_events", "milestone_event_participants", "milestone_results"];
+
+  for (const table of requiredPhase9Tables) {
+    if (!new RegExp(`create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?public\\.${table}\\b`).test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract is missing public.${table}.`);
+    }
+
+    const escapedTable = escapeRegExp(table);
+    const anonGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+anon\\s*;`);
+    const authenticatedGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?\\s+on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const insertGrantPattern = new RegExp(`grant\\s+(?:select,\\s*)?insert[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+    const updateGrantPattern = new RegExp(`grant\\s+[\\s\\S]*?update[\\s\\S]*?on\\s+(?:table\\s+)?public\\.${escapedTable}\\s+to\\s+authenticated\\s*;`);
+
+    if (anonGrantPattern.test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract: public.${table} must not grant access to anon.`);
+    }
+
+    if (!authenticatedGrantPattern.test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract: public.${table} is missing an authenticated grant.`);
+    }
+
+    if (!insertGrantPattern.test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract: public.${table} is missing an authenticated INSERT grant.`);
+    }
+
+    if (!updateGrantPattern.test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract: public.${table} is missing an authenticated UPDATE grant.`);
+    }
+  }
+
+  const milestoneEventsBlock = extractCreateTableBlock(sql, "milestone_events");
+  const milestoneParticipantsBlock = extractCreateTableBlock(sql, "milestone_event_participants");
+  const milestoneResultsBlock = extractCreateTableBlock(sql, "milestone_results");
+
+  if (milestoneEventsBlock && !/\bevent_type\b/.test(milestoneEventsBlock)) {
+    failures.push("Phase 9 afzwem/diploma contract: public.milestone_events must store event_type.");
+  }
+
+  if (milestoneParticipantsBlock && !/\breadiness_criteria_id\b/.test(milestoneParticipantsBlock)) {
+    failures.push("Phase 9 afzwem/diploma contract: public.milestone_event_participants must link readiness criteria.");
+  }
+
+  if (milestoneResultsBlock && (!/\bresult_status\b/.test(milestoneResultsBlock) || !/\bcertificate_id\b/.test(milestoneResultsBlock))) {
+    failures.push("Phase 9 afzwem/diploma contract: public.milestone_results must store result_status and certificate_id.");
+  }
+
+  for (const columnName of ["source_event_id", "source_result_id", "file_path", "download_status", "share_token", "share_enabled", "vault_status"]) {
+    if (!new RegExp(`alter\\s+table\\s+public\\.certificates[\\s\\S]*?add\\s+column\\s+${columnName}\\b`).test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract: public.certificates must add ${columnName}.`);
+    }
+  }
+
+  if (!/grant\s+insert\s*\([^)]*source_event_id[^)]*source_result_id[^)]*file_path[^)]*download_status[^)]*share_token[^)]*vault_status[^)]*\)\s+on\s+(?:table\s+)?public\.certificates\s+to\s+authenticated\s*;/.test(sql)) {
+    failures.push("Phase 9 afzwem/diploma contract: public.certificates is missing a column-limited authenticated INSERT grant for vault fields.");
+  }
+
+  if (!/grant\s+update\s*\([^)]*file_path[^)]*download_status[^)]*share_enabled[^)]*share_expires_at[^)]*vault_status[^)]*\)\s+on\s+(?:table\s+)?public\.certificates\s+to\s+authenticated\s*;/.test(sql)) {
+    failures.push("Phase 9 afzwem/diploma contract: public.certificates is missing a column-limited authenticated UPDATE grant for vault fields.");
+  }
+
+  for (const functionName of ["notify_guardians_for_milestone_participant", "publish_milestone_result"]) {
+    if (!new RegExp(`create\\s+or\\s+replace\\s+function\\s+app_private\\.${functionName}\\b`).test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract is missing app_private.${functionName}.`);
+    }
+  }
+
+  for (const triggerName of ["milestone_event_participants_notify_guardians", "milestone_results_publish"]) {
+    if (!new RegExp(`create\\s+trigger\\s+${triggerName}\\b`).test(sql)) {
+      failures.push(`Phase 9 afzwem/diploma contract is missing trigger ${triggerName}.`);
     }
   }
 }

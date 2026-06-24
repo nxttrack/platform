@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminAfzwemPage } from "@/components/afzwem/admin-afzwem-page";
+import { getAdminAfzwemSnapshot } from "@/lib/afzwem/admin-afzwem-read-model";
 
-export default function AdminGraduationPage() {
-  return <RoutePlaceholder kicker="Tenant admin" title="Afzwemmen foundation" description="Afzwem-ready criteria, momenten en diplomaresultaten volgen in Phase 9." items={["Criteria", "Momenten", "Resultaten", "Diploma kluis"]} />;
+export default async function AdminGraduationPage() {
+  const snapshot = await getAdminAfzwemSnapshot();
+
+  return <AdminAfzwemPage snapshot={snapshot} />;
 }

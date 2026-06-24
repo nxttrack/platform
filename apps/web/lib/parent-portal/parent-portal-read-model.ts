@@ -177,6 +177,14 @@ export type ParentCertificateRow = {
   title: string;
   status: string;
   issued_on: string | null;
+  source_event_id: string | null;
+  source_result_id: string | null;
+  file_path: string | null;
+  download_status: string;
+  share_token: string | null;
+  share_enabled: boolean;
+  share_expires_at: string | null;
+  vault_status: string;
 };
 
 export type ParentDocumentRow = {
@@ -216,6 +224,44 @@ export type ParentCatchUpRequestRow = {
   resolved_at: string | null;
 };
 
+export type ParentMilestoneEventRow = {
+  id: string;
+  program_id: string;
+  stage_id: string | null;
+  resource_id: string | null;
+  event_type: string;
+  title: string;
+  description: string | null;
+  starts_at: string;
+  ends_at: string;
+  status: string;
+};
+
+export type ParentMilestoneEventParticipantRow = {
+  id: string;
+  milestone_event_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  status: string;
+  invited_at: string;
+  responded_at: string | null;
+  note: string | null;
+};
+
+export type ParentMilestoneResultRow = {
+  id: string;
+  milestone_event_participant_id: string;
+  milestone_event_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  program_id: string;
+  result_status: string;
+  score: number | null;
+  note: string | null;
+  registered_at: string;
+  certificate_id: string | null;
+};
+
 export type ParentPortalData = {
   guardians: ParentGuardianRow[];
   participants: ParentParticipantRow[];
@@ -234,6 +280,9 @@ export type ParentPortalData = {
   badgeAwards: ParentBadgeAwardRow[];
   achievementCards: ParentAchievementCardRow[];
   stageTransitionProposals: ParentStageTransitionProposalRow[];
+  milestoneEvents: ParentMilestoneEventRow[];
+  milestoneEventParticipants: ParentMilestoneEventParticipantRow[];
+  milestoneResults: ParentMilestoneResultRow[];
   certificates: ParentCertificateRow[];
   documents: ParentDocumentRow[];
   notifications: ParentNotificationRow[];
@@ -340,6 +389,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     badgeAwardsResult,
     achievementCardsResult,
     transitionProposalsResult,
+    milestoneEventParticipantsResult,
+    milestoneResultsResult,
     certificatesResult,
     documentsResult,
     catchUpRequestsResult,
@@ -381,7 +432,36 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "proposed_at",
       false
     ),
-    rowsByIds<ParentCertificateRow>(supabase, "certificates", "id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on", tenantId, "participant_id", participantIds, "created_at", false),
+    rowsByIds<ParentMilestoneEventParticipantRow>(
+      supabase,
+      "milestone_event_participants",
+      "id, milestone_event_id, enrollment_id, participant_id, status, invited_at, responded_at, note",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "invited_at",
+      false
+    ),
+    rowsByIds<ParentMilestoneResultRow>(
+      supabase,
+      "milestone_results",
+      "id, milestone_event_participant_id, milestone_event_id, enrollment_id, participant_id, program_id, result_status, score, note, registered_at, certificate_id",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "registered_at",
+      false
+    ),
+    rowsByIds<ParentCertificateRow>(
+      supabase,
+      "certificates",
+      "id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on, source_event_id, source_result_id, file_path, download_status, share_token, share_enabled, share_expires_at, vault_status",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "created_at",
+      false
+    ),
     rowsByIds<ParentDocumentRow>(supabase, "parent_documents", "id, participant_id, enrollment_id, certificate_id, title, document_type, status, file_path, available_on, created_at", tenantId, "participant_id", participantIds, "created_at", false),
     rowsByIds<ParentCatchUpRequestRow>(
       supabase,
@@ -425,6 +505,20 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     programIds,
     "name"
   );
+  const milestoneEventIds = unique([
+    ...milestoneEventParticipantsResult.rows.map((eventParticipant) => eventParticipant.milestone_event_id),
+    ...milestoneResultsResult.rows.map((result) => result.milestone_event_id)
+  ]);
+  const milestoneEventsResult = await rowsByIds<ParentMilestoneEventRow>(
+    supabase,
+    "milestone_events",
+    "id, program_id, stage_id, resource_id, event_type, title, description, starts_at, ends_at, status",
+    tenantId,
+    "id",
+    milestoneEventIds,
+    "starts_at",
+    false
+  );
 
   const memberships = membershipsResult.rows;
   const groupIds = unique(memberships.map((membership) => membership.group_id));
@@ -445,6 +539,9 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     badge_awards: badgeAwardsResult.error,
     achievement_cards: achievementCardsResult.error,
     stage_transition_proposals: transitionProposalsResult.error,
+    milestone_event_participants: milestoneEventParticipantsResult.error,
+    milestone_results: milestoneResultsResult.error,
+    milestone_events: milestoneEventsResult.error,
     certificates: certificatesResult.error,
     parent_documents: documentsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
@@ -481,6 +578,9 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       badgeAwards: badgeAwardsResult.rows,
       achievementCards: achievementCardsResult.rows,
       stageTransitionProposals: transitionProposalsResult.rows,
+      milestoneEvents: milestoneEventsResult.rows,
+      milestoneEventParticipants: milestoneEventParticipantsResult.rows,
+      milestoneResults: milestoneResultsResult.rows,
       certificates: certificatesResult.rows,
       documents: documentsResult.rows,
       notifications: asRows<ParentNotificationRow>(notificationsResult.data),
@@ -537,6 +637,9 @@ function createEmptyData(): ParentPortalData {
     badgeAwards: [],
     achievementCards: [],
     stageTransitionProposals: [],
+    milestoneEvents: [],
+    milestoneEventParticipants: [],
+    milestoneResults: [],
     certificates: [],
     documents: [],
     notifications: [],
