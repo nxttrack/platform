@@ -11,6 +11,7 @@ auditLovableBaseline();
 auditForbiddenCopy();
 auditImages();
 auditForms();
+auditNavigationAndFocus();
 auditResponsiveContracts();
 
 if (warnings.length > 0) {
@@ -125,6 +126,40 @@ function auditResponsiveContracts() {
 
     if (/tracking-\[?-\d/.test(source)) {
       fail(`${file} must not use negative letter spacing.`);
+    }
+  }
+}
+
+function auditNavigationAndFocus() {
+  const navigationFiles = [
+    "apps/web/components/shell/app-shell.tsx",
+    "apps/web/components/public-site/tenant-public-pages.tsx",
+    "apps/web/components/parent-portal/parent-portal-pages.tsx",
+    "apps/web/components/instructor-portal/instructor-portal-pages.tsx"
+  ];
+
+  for (const file of navigationFiles) {
+    const source = readProjectFile(file);
+
+    if (source.includes("<nav") && !source.includes("aria-label")) {
+      fail(`${file} contains navigation without an aria-label.`);
+    }
+
+    if (!source.includes("focus:ring") && !source.includes("focus-visible")) {
+      fail(`${file} must define visible focus states for interactive controls.`);
+    }
+  }
+
+  const contrastSensitiveFiles = [
+    "apps/web/components/public-site/tenant-public-pages.tsx",
+    "apps/web/components/shell/app-shell.tsx"
+  ];
+
+  for (const file of contrastSensitiveFiles) {
+    const source = readProjectFile(file);
+
+    if (/text-(?:white|slate-50|gray-50)[^"]*bg-(?:white|slate-50|gray-50)/.test(source)) {
+      fail(`${file} may contain low-contrast light text on a light background.`);
     }
   }
 }

@@ -602,7 +602,7 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
           <Link className="flex items-center" href="/">
             <img alt={tenantName} className="h-5 w-auto" src={logoUrl} />
           </Link>
-          <nav className="ml-8 hidden items-center gap-1 md:flex">
+          <nav aria-label="Tenant website navigatie" className="ml-8 hidden items-center gap-1 md:flex">
             {nav.map((item, index) => (
               <HeaderLink key={`${item.href}-${index}`} href={item.href}>
                 {item.label}

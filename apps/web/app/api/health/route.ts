@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { getReleaseMetadata } from "@/lib/observability/release";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +10,13 @@ export function GET() {
 
   return NextResponse.json({
     ok: true,
+    status: "healthy",
     app: "nxttrack-platform",
-    env: process.env.APP_ENV ?? "development",
-    commit: process.env.COMMIT_SHA ?? null,
-    supabaseAuthConfigured
+    release: getReleaseMetadata(),
+    checks: {
+      supabaseAuthConfigured
+    },
+    supabaseAuthConfigured,
+    timestamp: new Date().toISOString()
   });
 }
