@@ -271,7 +271,9 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
   }
 
   const token = crypto.randomUUID().replaceAll("-", "");
+  const sentAt = new Date().toISOString();
   const offerExpiresAt = expiresAt(14);
+  const reminderSchedule = buildOfferReminderSchedule(sentAt, offerExpiresAt);
   let offerId = existingOffer?.id ?? null;
 
   if (existingOffer) {
@@ -281,10 +283,20 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
         .update({
           offer_token: token,
           status: "sent",
-          sent_at: new Date().toISOString(),
+          sent_at: sentAt,
           expires_at: offerExpiresAt,
           parent_responded_at: null,
-          parent_response_note: null
+          parent_response_note: null,
+          decline_reason: null,
+          cancelled_at: null,
+          cancel_reason: null,
+          processing_status: "idle",
+          processing_error: null,
+          placement_completed_at: null,
+          placement_result: {},
+          reminder_schedule: reminderSchedule,
+          next_reminder_at: nextReminderAt(reminderSchedule),
+          last_reminder_at: null
         })
         .eq("id", existingOffer.id)
         .eq("tenant_id", tenantId)
@@ -302,7 +314,11 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
         group_id: suggestion.group_id,
         offer_token: token,
         status: "sent",
-        expires_at: offerExpiresAt
+        sent_at: sentAt,
+        expires_at: offerExpiresAt,
+        reminder_schedule: reminderSchedule,
+        next_reminder_at: nextReminderAt(reminderSchedule),
+        processing_status: "idle"
       })
       .select("id")
       .single();
@@ -339,6 +355,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
   }
 
   await maybeInsertEvent(supabase, tenantId, suggestion.id, "sent", "Slot offer sent from admin approval.");
+  await maybeInsertEvent(supabase, tenantId, suggestion.id, "reminder_scheduled", `Herinneringen gepland op ${reminderSchedule.map((item) => item.scheduled_at.slice(0, 10)).join(" en ")}.`);
   await maybeQueueSlotOfferMessage(supabase, tenantId, offerId, token, suggestion.intake_submission_id);
   await updateSmartDecisionLifecycle(supabase, {
     tenantId,
@@ -353,14 +370,132 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
   revalidatePlacementWorkflow();
 }
 
+export async function resendSlotOfferAction(formData: FormData) {
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const offerId = requiredString(formData, "slot_offer_id");
+  const offer = await singleRow<{
+    id: string;
+    placement_suggestion_id: string;
+    waitlist_entry_id: string;
+    intake_submission_id: string | null;
+    program_id: string;
+    group_id: string;
+    status: string;
+    resent_count: number | null;
+  }>(
+    supabase
+      .from("slot_offers")
+      .select("id, placement_suggestion_id, waitlist_entry_id, intake_submission_id, program_id, group_id, status, resent_count")
+      .eq("id", offerId)
+      .eq("tenant_id", tenantId)
+      .single()
+  );
+
+  if (offer.status === "accepted") {
+    throw new Error("Een geaccepteerd lesplek-aanbod kan niet opnieuw worden verstuurd.");
+  }
+
+  const { group, snapshot } = await loadGroupCapacitySnapshot(supabase, tenantId, offer.group_id, offer.id);
+
+  if (group.program_id !== offer.program_id) {
+    throw new Error("Deze groep hoort niet meer bij het programma van het aanbod.");
+  }
+
+  if (!snapshot.isAvailable) {
+    throw new Error(capacityUnavailableMessage(snapshot));
+  }
+
+  const token = crypto.randomUUID().replaceAll("-", "");
+  const sentAt = new Date().toISOString();
+  const offerExpiresAt = expiresAt(14);
+  const reminderSchedule = buildOfferReminderSchedule(sentAt, offerExpiresAt);
+
+  await throwOnError(
+    supabase
+      .from("slot_offers")
+      .update({
+        offer_token: token,
+        status: "sent",
+        sent_at: sentAt,
+        expires_at: offerExpiresAt,
+        parent_responded_at: null,
+        parent_response_note: null,
+        decline_reason: null,
+        cancelled_at: null,
+        cancel_reason: null,
+        processing_status: "idle",
+        processing_error: null,
+        placement_completed_at: null,
+        placement_result: {},
+        reminder_schedule: reminderSchedule,
+        next_reminder_at: nextReminderAt(reminderSchedule),
+        last_reminder_at: null,
+        resent_count: (offer.resent_count ?? 0) + 1
+      })
+      .eq("id", offer.id)
+      .eq("tenant_id", tenantId)
+  );
+
+  await upsertCapacityHoldForSlotOffer(supabase, tenantId, {
+    offerId: offer.id,
+    suggestionId: offer.placement_suggestion_id,
+    groupId: offer.group_id,
+    expiresAt: offerExpiresAt,
+    actorProfileId,
+    capacitySnapshot: snapshot
+  });
+
+  await throwOnError(supabase.from("placement_suggestions").update({ status: "offered", reviewed_at: new Date().toISOString(), reviewed_by_profile_id: actorProfileId }).eq("id", offer.placement_suggestion_id).eq("tenant_id", tenantId));
+  await throwOnError(supabase.from("waitlist_entries").update({ status: "offered" }).eq("id", offer.waitlist_entry_id).eq("tenant_id", tenantId));
+  await insertWaitlistEvent(supabase, tenantId, offer.waitlist_entry_id, "slot_offered", "Lesplek-aanbod is opnieuw verstuurd; capaciteit wordt opnieuw vastgehouden.", actorProfileId, { placement_suggestion_id: offer.placement_suggestion_id, slot_offer_id: offer.id });
+  await insertPlacementSuggestionEvent(supabase, tenantId, offer.placement_suggestion_id, "offer_sent", "Lesplek-aanbod opnieuw verstuurd naar ouder.", actorProfileId, { slot_offer_id: offer.id, expires_at: offerExpiresAt, resent: true });
+  await throwOnError(supabase.from("slot_offer_events").insert({ tenant_id: tenantId, slot_offer_id: offer.id, event_type: "resent", note: "Slot offer resent by admin." }));
+  await throwOnError(supabase.from("slot_offer_events").insert({ tenant_id: tenantId, slot_offer_id: offer.id, event_type: "reminder_scheduled", note: `Herinneringen opnieuw gepland op ${reminderSchedule.map((item) => item.scheduled_at.slice(0, 10)).join(" en ")}.` }));
+
+  if (offer.intake_submission_id) {
+    await throwOnError(supabase.from("intake_submissions").update({ status: "slot_offered" }).eq("id", offer.intake_submission_id).eq("tenant_id", tenantId));
+  }
+
+  await maybeQueueSlotOfferMessage(supabase, tenantId, offer.id, token, offer.intake_submission_id);
+  revalidatePlacementWorkflow();
+}
+
 export async function cancelSlotOfferAction(formData: FormData) {
   const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const offerId = requiredString(formData, "slot_offer_id");
-  const offer = await singleRow<{ waitlist_entry_id: string }>(supabase.from("slot_offers").select("waitlist_entry_id").eq("id", offerId).eq("tenant_id", tenantId).single());
+  const cancelReason = optionalString(formData, "cancel_reason") ?? "Geannuleerd door admin.";
+  const offer = await singleRow<{ waitlist_entry_id: string; placement_suggestion_id: string; intake_submission_id: string | null; status: string }>(
+    supabase.from("slot_offers").select("waitlist_entry_id, placement_suggestion_id, intake_submission_id, status").eq("id", offerId).eq("tenant_id", tenantId).single()
+  );
 
-  await throwOnError(supabase.from("slot_offers").update({ status: "cancelled" }).eq("id", offerId).eq("tenant_id", tenantId));
-  await releaseCapacityHoldForSlotOffer(supabase, tenantId, offerId, "cancelled", "slot offer cancelled by admin");
-  await insertWaitlistEvent(supabase, tenantId, offer.waitlist_entry_id, "cancelled", "Lesplek-aanbod geannuleerd; capaciteitshold vrijgegeven.", actorProfileId, { slot_offer_id: offerId });
+  if (offer.status !== "sent") {
+    throw new Error("Alleen open lesplek-aanbod kan worden geannuleerd.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("slot_offers")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancel_reason: cancelReason,
+        processing_status: "completed",
+        processing_error: null,
+        next_reminder_at: null
+      })
+      .eq("id", offerId)
+      .eq("tenant_id", tenantId)
+  );
+  await releaseCapacityHoldForSlotOffer(supabase, tenantId, offerId, "cancelled", `slot offer cancelled by admin: ${cancelReason}`);
+  await throwOnError(supabase.from("placement_suggestions").update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by_profile_id: actorProfileId, override_reason: cancelReason }).eq("id", offer.placement_suggestion_id).eq("tenant_id", tenantId));
+  await throwOnError(supabase.from("waitlist_entries").update({ status: "queued", reevaluation_requested_at: new Date().toISOString() }).eq("id", offer.waitlist_entry_id).eq("tenant_id", tenantId));
+
+  if (offer.intake_submission_id) {
+    await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", offer.intake_submission_id).eq("tenant_id", tenantId));
+  }
+
+  await throwOnError(supabase.from("slot_offer_events").insert({ tenant_id: tenantId, slot_offer_id: offerId, event_type: "cancelled", note: cancelReason }));
+  await insertWaitlistEvent(supabase, tenantId, offer.waitlist_entry_id, "cancelled", "Lesplek-aanbod geannuleerd; capaciteitshold vrijgegeven en kandidaat teruggezet naar herbeoordeling.", actorProfileId, { slot_offer_id: offerId, cancel_reason: cancelReason });
   revalidatePlacementWorkflow();
 }
 
@@ -985,6 +1120,31 @@ function optionalString(formData: FormData, key: string) {
 
 function todayInput() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function buildOfferReminderSchedule(sentAtIso: string, expiresAtIso: string) {
+  const sentAt = new Date(sentAtIso);
+  const expiresAt = new Date(expiresAtIso);
+
+  return [7, 2].map((offsetDays) => {
+    const scheduledAt = new Date(expiresAt);
+    scheduledAt.setDate(scheduledAt.getDate() - offsetDays);
+
+    return {
+      offset_days_before_expiry: offsetDays,
+      scheduled_at: new Date(Math.max(sentAt.getTime(), scheduledAt.getTime())).toISOString(),
+      status: "scheduled"
+    };
+  });
+}
+
+function nextReminderAt(schedule: Array<{ scheduled_at: string; status: string }>) {
+  const now = Date.now();
+  const next = schedule
+    .filter((item) => item.status === "scheduled" && new Date(item.scheduled_at).getTime() > now)
+    .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+
+  return next?.scheduled_at ?? null;
 }
 
 function expiresAt(days: number) {

@@ -96,7 +96,11 @@ export async function releaseExpiredCapacity(client: CapacityClient, tenantId: s
   await client
     .from("slot_offers")
     .update({
-      status: "expired"
+      status: "expired",
+      processing_status: "completed",
+      processing_error: null,
+      next_reminder_at: null,
+      parent_response_note: "Automatisch verlopen; capaciteitshold vrijgegeven."
     })
     .eq("tenant_id", tenantId)
     .eq("status", "sent")

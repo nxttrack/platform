@@ -11,6 +11,7 @@ import {
   recordWaitlistContactAction,
   reevaluateWaitlistEntryAction,
   rejectPlacementSuggestionAction,
+  resendSlotOfferAction,
   updateWaitlistPriorityAction
 } from "@/lib/placement/admin-placement-actions";
 import type {
@@ -26,6 +27,7 @@ import type {
   ProgramLookupRow,
   ResourceLookupRow,
   SmartDecisionSummaryRow,
+  SlotOfferEventRow,
   SlotOfferRow,
   StageLookupRow,
   WaitlistEntryEventRow,
@@ -64,6 +66,7 @@ type LookupMaps = {
   smartDecisionsBySubject: Map<string, SmartDecisionSummaryRow>;
   waitlistEventsByEntry: Map<string, WaitlistEntryEventRow[]>;
   placementEventsBySuggestion: Map<string, PlacementSuggestionEventRow[]>;
+  slotOfferEventsByOffer: Map<string, SlotOfferEventRow[]>;
 };
 
 type Column<Row> = {
@@ -261,8 +264,8 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
           columns={[
             { header: "Leerling", render: (offer) => offerName(lookups, offer) },
             { header: "Groep", render: (offer) => groupSummary(lookups, offer.group_id) },
-            { header: "Status", render: (offer) => <StatusPill tone={workflowTone(offer.status)}>{offer.status}</StatusPill> },
-            { header: "Verloopt", render: (offer) => formatDate(offer.expires_at) },
+            { header: "Status", className: "min-w-[190px] whitespace-normal", render: (offer) => <SlotOfferStatusPanel offer={offer} /> },
+            { header: "Verloopt", className: "min-w-[190px] whitespace-normal", render: (offer) => <SlotOfferTimingPanel offer={offer} /> },
             {
               header: "Aanbodlink",
               className: "min-w-[260px] whitespace-normal",
@@ -276,15 +279,9 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
               header: "Resultaat",
               className: "min-w-[260px] whitespace-normal",
               render: (offer) =>
-                offer.status === "accepted" ? (
-                  <InlineNotice tone="success">Inschrijving en groepsplaatsing zijn gekoppeld.</InlineNotice>
-                ) : offer.parent_response_note ? (
-                  <span className="text-sm text-muted-foreground">{offer.parent_response_note}</span>
-                ) : (
-                  <span className="text-sm text-muted-foreground">Nog geen ouderreactie.</span>
-                )
+                <SlotOfferResultPanel events={lookups.slotOfferEventsByOffer.get(offer.id) ?? []} offer={offer} />
             },
-            { header: "Actie", className: "min-w-[220px] whitespace-normal", render: (offer) => <SlotOfferActionPanel offer={offer} /> }
+            { header: "Actie", className: "min-w-[280px] whitespace-normal", render: (offer) => <SlotOfferActionPanel offer={offer} /> }
           ]}
           emptyLabel="Nog geen lesplek-aanbod. Keur eerst een plaatsingsvoorstel goed."
           rows={snapshot.data.slotOffers}
@@ -770,16 +767,75 @@ function SuggestionActionPanel({ suggestion, offer }: { suggestion: PlacementSug
 
 function SlotOfferActionPanel({ offer }: { offer: SlotOfferRow }) {
   if (offer.status !== "sent") {
-    return <InlineNotice tone="neutral">Afgerond: {offer.status}</InlineNotice>;
+    return <InlineNotice tone="neutral">Geen actie nodig: {slotOfferStatusLabel(offer.status)}</InlineNotice>;
   }
 
   return (
-    <form action={cancelSlotOfferAction}>
-      <input name="slot_offer_id" type="hidden" value={offer.id} />
-      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30" type="submit">
-        Annuleren
-      </button>
-    </form>
+    <div className="grid gap-3">
+      <form action={resendSlotOfferAction} className="grid gap-2 rounded-2xl border border-border bg-muted/25 p-3">
+        <input name="slot_offer_id" type="hidden" value={offer.id} />
+        <p className="text-xs text-muted-foreground">Nieuw token, nieuwe vervaldatum en vernieuwde capacity hold.</p>
+        <button className="rounded-xl border border-primary/20 bg-primary/10 px-3 py-2 text-xs font-bold text-primary transition hover:bg-primary/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30" type="submit">
+          Opnieuw versturen
+        </button>
+      </form>
+      <form action={cancelSlotOfferAction} className="grid gap-2 rounded-2xl border border-red-100 bg-red-50/50 p-3">
+        <input name="slot_offer_id" type="hidden" value={offer.id} />
+        <CompactInput name="cancel_reason" placeholder="Reden annuleren" />
+        <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30" type="submit">
+          Annuleren
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function SlotOfferStatusPanel({ offer }: { offer: SlotOfferRow }) {
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusPill tone={workflowTone(offer.status)}>{slotOfferStatusLabel(offer.status)}</StatusPill>
+        <StatusPill tone={offer.processing_status === "failed" ? "danger" : offer.processing_status === "processing" ? "warning" : "neutral"}>{slotOfferProcessingLabel(offer.processing_status)}</StatusPill>
+      </div>
+      {offer.processing_error ? <p className="text-xs font-semibold text-red-700">{offer.processing_error}</p> : null}
+      {offer.resent_count > 0 ? <p className="text-xs text-muted-foreground">{offer.resent_count}x opnieuw verstuurd</p> : null}
+    </div>
+  );
+}
+
+function SlotOfferTimingPanel({ offer }: { offer: SlotOfferRow }) {
+  return (
+    <div className="grid gap-1 text-sm">
+      <p className="font-semibold">{formatDate(offer.expires_at)}</p>
+      {offer.next_reminder_at && offer.status === "sent" ? <p className="text-xs text-muted-foreground">Reminder: {formatDate(offer.next_reminder_at)}</p> : null}
+      {offer.cancelled_at ? <p className="text-xs text-red-700">Geannuleerd: {formatDate(offer.cancelled_at)}</p> : null}
+      {offer.placement_completed_at ? <p className="text-xs text-emerald-700">Plaatsing: {formatDate(offer.placement_completed_at)}</p> : null}
+    </div>
+  );
+}
+
+function SlotOfferResultPanel({ events, offer }: { events: SlotOfferEventRow[]; offer: SlotOfferRow }) {
+  const latestEvents = events.slice(0, 3);
+
+  return (
+    <div className="grid gap-2">
+      {offer.status === "accepted" ? <InlineNotice tone="success">Inschrijving en groepsplaatsing zijn gekoppeld.</InlineNotice> : null}
+      {offer.status === "declined" ? <InlineNotice tone="danger">Geweigerd: {offer.decline_reason ?? offer.parent_response_note ?? "geen reden opgegeven"}</InlineNotice> : null}
+      {offer.status === "cancelled" ? <InlineNotice tone="danger">Geannuleerd: {offer.cancel_reason ?? "geen reden opgegeven"}</InlineNotice> : null}
+      {offer.status === "expired" ? <InlineNotice tone="warning">Verlopen; capacity hold is vrijgegeven.</InlineNotice> : null}
+      {offer.status === "sent" && !offer.parent_response_note ? <span className="text-sm text-muted-foreground">Nog geen ouderreactie.</span> : null}
+      {offer.status === "sent" && offer.parent_response_note ? <span className="text-sm text-muted-foreground">{offer.parent_response_note}</span> : null}
+      {latestEvents.length > 0 ? (
+        <div className="grid gap-1 rounded-2xl bg-muted/35 p-3 text-xs text-muted-foreground">
+          {latestEvents.map((event) => (
+            <p key={event.id}>
+              <span className="font-semibold text-foreground">{slotOfferEventLabel(event.event_type)}</span>
+              {event.note ? ` - ${event.note}` : ""}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -954,8 +1010,15 @@ function ScorePill({ score }: { score: number }) {
   return <StatusPill tone={score >= 80 ? "success" : score >= 60 ? "info" : "warning"}>{score}/100</StatusPill>;
 }
 
-function InlineNotice({ children, tone }: { children: ReactNode; tone: "success" | "neutral" }) {
-  const className = tone === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-800" : "border-border bg-muted/40 text-muted-foreground";
+function InlineNotice({ children, tone }: { children: ReactNode; tone: "success" | "warning" | "danger" | "neutral" }) {
+  const className =
+    tone === "success"
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-800"
+      : tone === "warning"
+        ? "border-amber-500/20 bg-amber-500/10 text-amber-800"
+        : tone === "danger"
+          ? "border-red-500/20 bg-red-500/10 text-red-800"
+          : "border-border bg-muted/40 text-muted-foreground";
 
   return <div className={`rounded-2xl border px-3 py-2 text-xs font-semibold ${className}`}>{children}</div>;
 }
@@ -1024,7 +1087,8 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     duplicateMatchesByIntake: groupBy(data.intakeDuplicateMatches, (match) => match.intake_submission_id),
     smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision])),
     waitlistEventsByEntry: groupBy(data.waitlistEvents, (event) => event.waitlist_entry_id),
-    placementEventsBySuggestion: groupBy(data.placementEvents, (event) => event.placement_suggestion_id)
+    placementEventsBySuggestion: groupBy(data.placementEvents, (event) => event.placement_suggestion_id),
+    slotOfferEventsByOffer: groupBy(data.slotOfferEvents, (event) => event.slot_offer_id)
   };
 }
 
@@ -1546,6 +1610,48 @@ function placementEventLabel(eventType: string) {
     request_more_info: "Meer info gevraagd",
     keep_waiting: "Laten wachten",
     manual_review: "Handmatige review"
+  };
+
+  return labels[eventType] ?? eventType;
+}
+
+function slotOfferStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    sent: "Open",
+    accepted: "Geaccepteerd",
+    declined: "Geweigerd",
+    expired: "Verlopen",
+    cancelled: "Geannuleerd"
+  };
+
+  return labels[status] ?? status;
+}
+
+function slotOfferProcessingLabel(status: string) {
+  const labels: Record<string, string> = {
+    idle: "Wacht op reactie",
+    processing: "Verwerken",
+    completed: "Afgerond",
+    failed: "Herstel nodig"
+  };
+
+  return labels[status] ?? status;
+}
+
+function slotOfferEventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    sent: "Verstuurd",
+    resent: "Opnieuw verstuurd",
+    accepted: "Geaccepteerd",
+    declined: "Geweigerd",
+    expired: "Verlopen",
+    cancelled: "Geannuleerd",
+    placement_created: "Plaatsing aangemaakt",
+    placement_completed: "Plaatsing afgerond",
+    reminder_scheduled: "Reminder gepland",
+    reminder_sent: "Reminder verstuurd",
+    processing_failed: "Verwerking mislukt",
+    response_ignored: "Reactie genegeerd"
   };
 
   return labels[eventType] ?? eventType;

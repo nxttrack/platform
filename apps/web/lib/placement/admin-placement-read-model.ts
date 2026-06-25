@@ -174,9 +174,29 @@ export type SlotOfferRow = {
   expires_at: string;
   parent_responded_at: string | null;
   parent_response_note: string | null;
+  reminder_schedule: Array<Record<string, unknown>>;
+  next_reminder_at: string | null;
+  last_reminder_at: string | null;
+  reminder_count: number;
+  resent_count: number;
+  processing_status: string;
+  processing_error: string | null;
+  placement_completed_at: string | null;
+  placement_result: Record<string, unknown>;
+  decline_reason: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   participant_id: string | null;
   enrollment_id: string | null;
   group_membership_id: string | null;
+};
+
+export type SlotOfferEventRow = {
+  id: string;
+  slot_offer_id: string;
+  event_type: string;
+  note: string | null;
+  created_at: string;
 };
 
 export type ProgramLookupRow = {
@@ -242,6 +262,7 @@ export type PlacementWorkflowData = {
   placementSuggestions: PlacementSuggestionRow[];
   placementEvents: PlacementSuggestionEventRow[];
   slotOffers: SlotOfferRow[];
+  slotOfferEvents: SlotOfferEventRow[];
   programs: ProgramLookupRow[];
   stages: StageLookupRow[];
   groups: GroupLookupRow[];
@@ -299,7 +320,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
   const tenantId = tenant.id;
   await releaseExpiredCapacity(supabase, tenantId);
 
-  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, waitlistEventsResult, suggestionsResult, placementEventsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, instructorsResult, membershipsResult, capacityHoldsResult, smartDecisionsResult] = await Promise.all([
+  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, waitlistEventsResult, suggestionsResult, placementEventsResult, offersResult, slotOfferEventsResult, programsResult, stagesResult, groupsResult, resourcesResult, instructorsResult, membershipsResult, capacityHoldsResult, smartDecisionsResult] = await Promise.all([
     supabase
       .from("intake_submissions")
       .select("id, program_id, intake_form_config_id, intake_config_version, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, answers, notes, recommendation_snapshot, duplicate_snapshot, missing_information, stage_recommendation_decision_id, reviewed_at, review_note, status, created_at")
@@ -334,9 +355,15 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       .limit(250),
     supabase
       .from("slot_offers")
-      .select("id, placement_suggestion_id, waitlist_entry_id, intake_submission_id, program_id, stage_id, group_id, offer_token, status, sent_at, expires_at, parent_responded_at, parent_response_note, participant_id, enrollment_id, group_membership_id")
+      .select("id, placement_suggestion_id, waitlist_entry_id, intake_submission_id, program_id, stage_id, group_id, offer_token, status, sent_at, expires_at, parent_responded_at, parent_response_note, reminder_schedule, next_reminder_at, last_reminder_at, reminder_count, resent_count, processing_status, processing_error, placement_completed_at, placement_result, decline_reason, cancelled_at, cancel_reason, participant_id, enrollment_id, group_membership_id")
       .eq("tenant_id", tenantId)
       .order("sent_at", { ascending: false }),
+    supabase
+      .from("slot_offer_events")
+      .select("id, slot_offer_id, event_type, note, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(250),
     supabase.from("programs").select("id, name, code").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
     supabase.from("stages").select("id, program_id, name, code").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
     supabase
@@ -366,6 +393,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     placement_suggestions: suggestionsResult.error,
     placement_suggestion_events: placementEventsResult.error,
     slot_offers: offersResult.error,
+    slot_offer_events: slotOfferEventsResult.error,
     programs: programsResult.error,
     stages: stagesResult.error,
     groups: groupsResult.error,
@@ -396,6 +424,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       placementSuggestions: asRows<PlacementSuggestionRow>(suggestionsResult.data),
       placementEvents: asRows<PlacementSuggestionEventRow>(placementEventsResult.data),
       slotOffers,
+      slotOfferEvents: asRows<SlotOfferEventRow>(slotOfferEventsResult.data),
       programs: asRows<ProgramLookupRow>(programsResult.data),
       stages: asRows<StageLookupRow>(stagesResult.data),
       groups,
@@ -419,6 +448,7 @@ function createEmptyData(): PlacementWorkflowData {
     placementSuggestions: [],
     placementEvents: [],
     slotOffers: [],
+    slotOfferEvents: [],
     programs: [],
     stages: [],
     groups: [],
