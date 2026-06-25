@@ -197,12 +197,22 @@ export type ParentCertificateRow = {
   issued_on: string | null;
   source_event_id: string | null;
   source_result_id: string | null;
+  storage_bucket: string;
   file_path: string | null;
+  current_version_id: string | null;
+  version_number: number;
+  file_source: string;
   download_status: string;
   share_token: string | null;
   share_enabled: boolean;
+  share_created_at: string | null;
   share_expires_at: string | null;
+  share_revoked_at: string | null;
   vault_status: string;
+  retention_until: string | null;
+  last_downloaded_at: string | null;
+  revoked_at: string | null;
+  revoked_reason: string | null;
 };
 
 export type ParentDocumentRow = {
@@ -572,7 +582,7 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     rowsByIds<ParentCertificateRow>(
       supabase,
       "certificates",
-      "id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on, source_event_id, source_result_id, file_path, download_status, share_token, share_enabled, share_expires_at, vault_status",
+      "id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on, source_event_id, source_result_id, storage_bucket, file_path, current_version_id, version_number, file_source, download_status, share_token, share_enabled, share_created_at, share_expires_at, share_revoked_at, vault_status, retention_until, last_downloaded_at, revoked_at, revoked_reason",
       tenantId,
       "participant_id",
       participantIds,

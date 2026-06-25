@@ -2,7 +2,15 @@ import type { ReactNode } from "react";
 import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { createParentDocumentShareLinkAction, markNotificationReadAction, requestCatchUpLessonAction, revokeParentDocumentShareLinkAction, selectMakeupCandidateAction } from "@/lib/parent-portal/parent-portal-actions";
+import {
+  createParentCertificateShareLinkAction,
+  createParentDocumentShareLinkAction,
+  markNotificationReadAction,
+  requestCatchUpLessonAction,
+  revokeParentCertificateShareLinkAction,
+  revokeParentDocumentShareLinkAction,
+  selectMakeupCandidateAction
+} from "@/lib/parent-portal/parent-portal-actions";
 import type {
   ParentCatchUpRequestRow,
   ParentAchievementCardRow,
@@ -420,6 +428,8 @@ function MilestoneResultCard({ result, lookups }: { result: ParentMilestoneResul
 }
 
 function DiplomaVaultCard({ certificate, lookups }: { certificate: ParentCertificateRow; lookups: LookupMaps }) {
+  const isDownloadable = certificate.status === "issued" && certificate.vault_status === "available" && certificate.download_status === "ready" && Boolean(certificate.file_path) && !certificate.revoked_at;
+
   return (
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -427,24 +437,64 @@ function DiplomaVaultCard({ certificate, lookups }: { certificate: ParentCertifi
           <p className="font-semibold">{certificate.title}</p>
           <p className="text-sm text-muted-foreground">{participantName(lookups, certificate.participant_id)} - {lookups.programs.get(certificate.program_id)?.name ?? "Programma"}</p>
         </div>
-        <StatusPill tone={certificate.vault_status === "available" || certificate.status === "issued" ? "success" : "warning"}>{certificate.vault_status}</StatusPill>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={certificate.status === "revoked" ? "danger" : certificate.vault_status === "available" || certificate.status === "issued" ? "success" : "warning"}>{certificate.status}</StatusPill>
+          <StatusPill tone={certificate.vault_status === "available" ? "success" : certificate.vault_status === "archived" ? "neutral" : "warning"}>{certificate.vault_status}</StatusPill>
+        </div>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-2">
         <InfoTile label="Nummer" value={certificate.certificate_number ?? "Nog niet uitgegeven"} />
         <InfoTile label="Uitgiftedatum" value={certificate.issued_on ? formatDate(certificate.issued_on) : "Nog niet bekend"} />
-        <InfoTile label="Download" value={certificate.download_status === "ready" ? "Voorbereid" : certificate.download_status} />
-        <InfoTile label="Delen" value={certificate.share_enabled ? "Voorbereid" : "Nog uit"} />
+        <InfoTile label="Download" value={isDownloadable ? "Beschikbaar" : certificate.download_status} />
+        <InfoTile label="Versie" value={`v${certificate.version_number}`} />
+        <InfoTile label="Bewaren tot" value={certificate.retention_until ? formatDate(certificate.retention_until) : "Niet ingesteld"} />
+        <InfoTile label="Laatst download" value={certificate.last_downloaded_at ? formatDateTime(certificate.last_downloaded_at) : "Nog nooit"} />
       </div>
       <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
         {certificate.file_path ? `Bestand: ${certificate.file_path}` : "Diploma-PDF wordt gekoppeld zodra de tenant deze publiceert."}
       </div>
+      {certificate.status === "revoked" ? (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+          Dit diploma is ingetrokken{certificate.revoked_reason ? `: ${certificate.revoked_reason}` : "."}
+        </div>
+      ) : null}
+      {isDownloadable ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <a className="inline-flex w-fit rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" href={`/api/certificates/${certificate.id}/download`}>
+            Download diploma
+          </a>
+          {certificate.share_enabled && certificate.share_token ? (
+            <form action={revokeParentCertificateShareLinkAction}>
+              <input name="certificate_id" type="hidden" value={certificate.id} />
+              <button className="inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                Deellink intrekken
+              </button>
+            </form>
+          ) : (
+            <form action={createParentCertificateShareLinkAction}>
+              <input name="certificate_id" type="hidden" value={certificate.id} />
+              <button className="inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                Deellink maken
+              </button>
+            </form>
+          )}
+        </div>
+      ) : null}
       {certificate.share_enabled && certificate.share_token ? (
-        <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
-          Deelcode voorbereid: {certificate.share_token.slice(0, 8)}... {certificate.share_expires_at ? `tot ${formatDateTime(certificate.share_expires_at)}` : ""}
+        <div className="mt-3 rounded-2xl border border-border bg-card p-3">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">Deellink</p>
+          <input className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground" readOnly value={certificateShareUrl(certificate)} />
+          <p className="mt-2 text-xs text-muted-foreground">
+            Geldig tot {certificate.share_expires_at ? formatDateTime(certificate.share_expires_at) : "nader order"}.
+          </p>
         </div>
       ) : null}
     </div>
   );
+}
+
+function certificateShareUrl(certificate: ParentCertificateRow) {
+  return certificate.share_token ? `/api/certificates/${certificate.id}/download?share=${certificate.share_token}` : "";
 }
 
 export function ParentProgressPage({ snapshot }: ParentPageProps) {

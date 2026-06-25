@@ -15,7 +15,9 @@ import type {
   AdminAfzwemData,
   AdminAfzwemSnapshot,
   AfzwemEventCandidateSuggestionRow,
+  AfzwemCertificateAccessEventRow,
   AfzwemCertificateRow,
+  AfzwemCertificateVersionRow,
   AfzwemEnrollmentRow,
   DiplomaReadinessEventRow,
   DiplomaReadinessRadarRow,
@@ -44,6 +46,8 @@ type LookupMaps = {
   eventParticipantsByEvent: Map<string, AfzwemEventParticipantRow[]>;
   resultsByEventParticipant: Map<string, AfzwemResultRow>;
   certificatesByResult: Map<string, AfzwemCertificateRow>;
+  certificateVersionsByCertificate: Map<string, AfzwemCertificateVersionRow[]>;
+  certificateAccessEventsByCertificate: Map<string, AfzwemCertificateAccessEventRow[]>;
   readinessByEnrollment: Map<string, DiplomaReadinessRadarRow>;
   suggestionsByRadar: Map<string, AfzwemEventCandidateSuggestionRow[]>;
   readinessEventsByRadar: Map<string, DiplomaReadinessEventRow[]>;
@@ -119,7 +123,13 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
               <div className="grid gap-3">
                 {snapshot.data.certificates.length === 0 ? <EmptyState>Nog geen diploma-records gevonden.</EmptyState> : null}
                 {snapshot.data.certificates.map((certificate) => (
-                  <CertificateVaultCard key={certificate.id} certificate={certificate} lookups={lookups} />
+                  <CertificateVaultCard
+                    key={certificate.id}
+                    certificate={certificate}
+                    events={lookups.certificateAccessEventsByCertificate.get(certificate.id) ?? []}
+                    lookups={lookups}
+                    versions={lookups.certificateVersionsByCertificate.get(certificate.id) ?? []}
+                  />
                 ))}
               </div>
             </Card>
@@ -473,7 +483,19 @@ function ResultRow({ result, lookups }: { result: AfzwemResultRow; lookups: Look
   );
 }
 
-function CertificateVaultCard({ certificate, lookups }: { certificate: AfzwemCertificateRow; lookups: LookupMaps }) {
+function CertificateVaultCard({
+  certificate,
+  events,
+  lookups,
+  versions
+}: {
+  certificate: AfzwemCertificateRow;
+  events: AfzwemCertificateAccessEventRow[];
+  lookups: LookupMaps;
+  versions: AfzwemCertificateVersionRow[];
+}) {
+  const currentVersion = versions.find((version) => version.id === certificate.current_version_id) ?? versions.find((version) => version.status === "current") ?? versions[0] ?? null;
+
   return (
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -481,31 +503,83 @@ function CertificateVaultCard({ certificate, lookups }: { certificate: AfzwemCer
           <p className="font-semibold">{certificate.title}</p>
           <p className="text-sm text-muted-foreground">{lookups.participants.get(certificate.participant_id)?.display_name ?? "Leerling"} - {certificate.certificate_number ?? "geen nummer"}</p>
         </div>
-        <StatusPill tone={certificate.vault_status === "available" ? "success" : certificate.vault_status === "archived" ? "neutral" : "warning"}>{certificate.vault_status}</StatusPill>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={certificate.status === "revoked" ? "danger" : certificate.vault_status === "available" ? "success" : certificate.vault_status === "archived" ? "neutral" : "warning"}>{certificate.status}</StatusPill>
+          <StatusPill tone={certificate.vault_status === "available" ? "success" : certificate.vault_status === "archived" ? "neutral" : "warning"}>{certificate.vault_status}</StatusPill>
+        </div>
       </div>
-      <div className="mt-3 grid gap-2 md:grid-cols-2">
+      <div className="mt-3 grid gap-2 md:grid-cols-3">
         <InfoTile label="Download" value={certificate.download_status} />
         <InfoTile label="Delen" value={certificate.share_enabled ? "aan" : "uit"} />
+        <InfoTile label="Versie" value={`v${certificate.version_number}`} />
+        <InfoTile label="Retentie" value={certificate.retention_until ? formatDate(certificate.retention_until) : "Niet ingesteld"} />
+        <InfoTile label="Laatst download" value={certificate.last_downloaded_at ? formatDateTime(certificate.last_downloaded_at) : "Nog nooit"} />
+        <InfoTile label="Bucket" value={certificate.storage_bucket} />
       </div>
+      {currentVersion ? (
+        <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+          Huidige versie: v{currentVersion.version_number} - {currentVersion.file_source} - {currentVersion.file_path}
+        </div>
+      ) : null}
+      {certificate.status === "revoked" ? (
+        <div className="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700">
+          Ingetrokken {certificate.revoked_at ? formatDateTime(certificate.revoked_at) : ""}: {certificate.revoked_reason ?? "Geen reden opgegeven"}
+        </div>
+      ) : null}
       <details className="mt-4 rounded-2xl border border-border bg-card p-3">
         <summary className="cursor-pointer text-sm font-semibold text-primary">Vault voorbereiden</summary>
         <form action={updateCertificateVaultAction} className="mt-4 grid gap-3">
           <input name="certificate_id" type="hidden" value={certificate.id} />
-          <TextField defaultValue={certificate.file_path ?? ""} label="Bestandspad" name="file_path" />
           <div className="grid gap-3 md:grid-cols-2">
+            <SelectField defaultValue={certificate.status} label="Certificaatstatus" name="status" options={certificateStatusOptions} />
             <SelectField defaultValue={certificate.download_status} label="Downloadstatus" name="download_status" options={downloadStatusOptions} />
             <SelectField defaultValue={certificate.vault_status} label="Vaultstatus" name="vault_status" options={vaultStatusOptions} />
+            <SelectField defaultValue={certificate.file_source} label="Bestandsbron" name="file_source" options={fileSourceOptions} />
+            <TextField defaultValue={certificate.storage_bucket} label="Storage bucket" name="storage_bucket" />
+            <TextField defaultValue={certificate.retention_until ?? ""} label="Bewaren tot" name="retention_until" type="date" />
+            <TextField defaultValue={currentVersion?.mime_type ?? ""} label="MIME type" name="mime_type" />
+            <TextField defaultValue={currentVersion?.file_size_bytes ?? ""} label="Bestandsgrootte bytes" min={0} name="file_size_bytes" type="number" />
           </div>
+          <TextField defaultValue={certificate.file_path ?? ""} label="Bestandspad" name="file_path" />
+          <TextField defaultValue={currentVersion?.original_filename ?? ""} label="Originele bestandsnaam" name="original_filename" />
+          <TextAreaField defaultValue={currentVersion?.notes ?? ""} label="Versienotitie" name="version_notes" />
           <label className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 text-xs font-semibold text-muted-foreground">
             <input className="h-4 w-4 accent-primary" defaultChecked={certificate.share_enabled} name="share_enabled" type="checkbox" />
             Delen voorbereiden
           </label>
           <TextField defaultValue={certificate.share_expires_at ? formatDateTimeInput(certificate.share_expires_at) : ""} label="Share verloopt op" name="share_expires_at" type="datetime-local" />
+          <TextAreaField defaultValue={certificate.revoked_reason} label="Intrekreden" name="revoked_reason" />
           <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
             Vault opslaan
           </button>
         </form>
       </details>
+      {versions.length > 0 ? (
+        <details className="mt-3 rounded-2xl border border-border bg-card p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-primary">Versiehistorie ({versions.length})</summary>
+          <div className="mt-3 grid gap-2">
+            {versions.slice(0, 5).map((version) => (
+              <div key={version.id} className="rounded-xl bg-muted/50 p-3 text-xs text-muted-foreground">
+                <p className="font-bold text-foreground">v{version.version_number} - {version.status}</p>
+                <p>{version.file_path}</p>
+                <p>{formatDateTime(version.created_at)} {version.retention_until ? `- bewaren tot ${formatDate(version.retention_until)}` : ""}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+      {events.length > 0 ? (
+        <details className="mt-3 rounded-2xl border border-border bg-card p-3">
+          <summary className="cursor-pointer text-sm font-semibold text-primary">Audit ({events.length})</summary>
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+            {events.slice(0, 8).map((event) => (
+              <span key={event.id} className="rounded-full border border-border bg-background px-3 py-1">
+                {event.event_type} - {formatDateTime(event.created_at)}
+              </span>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
@@ -659,6 +733,8 @@ function buildLookups(data: AdminAfzwemData): LookupMaps {
     eventParticipantsByEvent: groupBy(data.eventParticipants, (eventParticipant) => eventParticipant.milestone_event_id),
     resultsByEventParticipant: new Map(data.results.map((result) => [result.milestone_event_participant_id, result])),
     certificatesByResult: new Map(data.certificates.flatMap((certificate) => (certificate.source_result_id ? [[certificate.source_result_id, certificate] as const] : []))),
+    certificateVersionsByCertificate: groupBy(data.certificateVersions, (version) => version.certificate_id),
+    certificateAccessEventsByCertificate: groupBy(data.certificateAccessEvents, (event) => event.certificate_id),
     readinessByEnrollment: new Map(data.readinessRadar.map((radarRow) => [radarRow.enrollment_id, radarRow])),
     suggestionsByRadar: groupBy(data.candidateSuggestions, (suggestion) => suggestion.readiness_radar_id),
     readinessEventsByRadar: groupBy(data.readinessEvents, (event) => event.readiness_radar_id)
@@ -689,6 +765,10 @@ function optionFromName(row: { id: string; name: string }) {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
 }
 
 function formatNumber(value: number) {
@@ -773,6 +853,12 @@ const resultStatusOptions = [
   { label: "In afwachting", value: "pending" }
 ];
 
+const certificateStatusOptions = [
+  { label: "Draft", value: "draft" },
+  { label: "Uitgegeven", value: "issued" },
+  { label: "Ingetrokken", value: "revoked" }
+];
+
 const readinessStatusOptions = [
   { label: "Niet klaar", value: "not_ready" },
   { label: "Bijna klaar", value: "almost_ready" },
@@ -789,4 +875,11 @@ const vaultStatusOptions = [
   { label: "Draft", value: "draft" },
   { label: "Available", value: "available" },
   { label: "Archived", value: "archived" }
+];
+
+const fileSourceOptions = [
+  { label: "Generated placeholder", value: "generated_placeholder" },
+  { label: "Admin upload", value: "admin_upload" },
+  { label: "External import", value: "external_import" },
+  { label: "Manual path", value: "manual_path" }
 ];

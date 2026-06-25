@@ -103,12 +103,49 @@ export type AfzwemCertificateRow = {
   issued_on: string | null;
   source_event_id: string | null;
   source_result_id: string | null;
+  storage_bucket: string;
   file_path: string | null;
+  current_version_id: string | null;
+  version_number: number;
+  file_source: string;
   download_status: string;
   share_token: string | null;
   share_enabled: boolean;
+  share_created_at: string | null;
   share_expires_at: string | null;
+  share_revoked_at: string | null;
   vault_status: string;
+  retention_until: string | null;
+  last_downloaded_at: string | null;
+  revoked_at: string | null;
+  revoked_reason: string | null;
+};
+
+export type AfzwemCertificateVersionRow = {
+  id: string;
+  certificate_id: string;
+  version_number: number;
+  storage_bucket: string;
+  file_path: string;
+  file_source: string;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  original_filename: string | null;
+  status: string;
+  retention_until: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type AfzwemCertificateAccessEventRow = {
+  id: string;
+  certificate_id: string;
+  certificate_version_id: string | null;
+  participant_id: string | null;
+  event_type: string;
+  access_channel: string;
+  metadata: Record<string, unknown>;
+  created_at: string;
 };
 
 export type DiplomaReadinessRadarRow = {
@@ -176,6 +213,8 @@ export type AdminAfzwemData = {
   eventParticipants: AfzwemEventParticipantRow[];
   results: AfzwemResultRow[];
   certificates: AfzwemCertificateRow[];
+  certificateVersions: AfzwemCertificateVersionRow[];
+  certificateAccessEvents: AfzwemCertificateAccessEventRow[];
   readinessRadar: DiplomaReadinessRadarRow[];
   candidateSuggestions: AfzwemEventCandidateSuggestionRow[];
   readinessEvents: DiplomaReadinessEventRow[];
@@ -237,6 +276,8 @@ export async function getAdminAfzwemSnapshot(): Promise<AdminAfzwemSnapshot> {
     eventParticipantsResult,
     resultsResult,
     certificatesResult,
+    certificateVersionsResult,
+    certificateAccessEventsResult,
     readinessRadarResult,
     candidateSuggestionsResult,
     readinessEventsResult
@@ -271,10 +312,22 @@ export async function getAdminAfzwemSnapshot(): Promise<AdminAfzwemSnapshot> {
       .limit(100),
     supabase
       .from("certificates")
-      .select("id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on, source_event_id, source_result_id, file_path, download_status, share_token, share_enabled, share_expires_at, vault_status")
+      .select("id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on, source_event_id, source_result_id, storage_bucket, file_path, current_version_id, version_number, file_source, download_status, share_token, share_enabled, share_created_at, share_expires_at, share_revoked_at, vault_status, retention_until, last_downloaded_at, revoked_at, revoked_reason")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(100),
+    supabase
+      .from("certificate_versions")
+      .select("id, certificate_id, version_number, storage_bucket, file_path, file_source, mime_type, file_size_bytes, original_filename, status, retention_until, notes, created_at")
+      .eq("tenant_id", tenantId)
+      .order("version_number", { ascending: false })
+      .limit(200),
+    supabase
+      .from("certificate_access_events")
+      .select("id, certificate_id, certificate_version_id, participant_id, event_type, access_channel, metadata, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(200),
     supabase
       .from("diploma_readiness_radar")
       .select("id, enrollment_id, participant_id, program_id, stage_id, readiness_criteria_id, smart_decision_id, recommended_event_id, milestone_event_participant_id, certificate_id, readiness_status, score, confidence, progress_snapshot, attendance_snapshot, badge_snapshot, period_snapshot, criteria_results, missing_criteria, reasons, blockers, review_note, reviewed_at, last_evaluated_at")
@@ -306,6 +359,8 @@ export async function getAdminAfzwemSnapshot(): Promise<AdminAfzwemSnapshot> {
     milestone_event_participants: eventParticipantsResult.error,
     milestone_results: resultsResult.error,
     certificates: certificatesResult.error,
+    certificate_versions: certificateVersionsResult.error,
+    certificate_access_events: certificateAccessEventsResult.error,
     diploma_readiness_radar: readinessRadarResult.error,
     afzwem_event_candidate_suggestions: candidateSuggestionsResult.error,
     diploma_readiness_events: readinessEventsResult.error
@@ -326,6 +381,8 @@ export async function getAdminAfzwemSnapshot(): Promise<AdminAfzwemSnapshot> {
       eventParticipants: asRows<AfzwemEventParticipantRow>(eventParticipantsResult.data),
       results: asRows<AfzwemResultRow>(resultsResult.data),
       certificates: asRows<AfzwemCertificateRow>(certificatesResult.data),
+      certificateVersions: asRows<AfzwemCertificateVersionRow>(certificateVersionsResult.data),
+      certificateAccessEvents: asRows<AfzwemCertificateAccessEventRow>(certificateAccessEventsResult.data),
       readinessRadar: asRows<DiplomaReadinessRadarRow>(readinessRadarResult.data),
       candidateSuggestions: asRows<AfzwemEventCandidateSuggestionRow>(candidateSuggestionsResult.data),
       readinessEvents: asRows<DiplomaReadinessEventRow>(readinessEventsResult.data)
@@ -345,6 +402,8 @@ function createEmptyData(): AdminAfzwemData {
     eventParticipants: [],
     results: [],
     certificates: [],
+    certificateVersions: [],
+    certificateAccessEvents: [],
     readinessRadar: [],
     candidateSuggestions: [],
     readinessEvents: []

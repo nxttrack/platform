@@ -462,26 +462,138 @@ export async function registerAfzwemResultAction(formData: FormData) {
 }
 
 export async function updateCertificateVaultAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
   const certificateId = requiredString(formData, "certificate_id");
+  const certificate = await singleRow<{
+    id: string;
+    participant_id: string;
+    file_path: string | null;
+    storage_bucket: string | null;
+    version_number: number | null;
+    current_version_id: string | null;
+    status: string;
+  }>(
+    supabase
+      .from("certificates")
+      .select("id, participant_id, file_path, storage_bucket, version_number, current_version_id, status")
+      .eq("tenant_id", tenantId)
+      .eq("id", certificateId)
+      .single()
+  );
+  const filePath = optionalString(formData, "file_path");
+  const storageBucket = optionalString(formData, "storage_bucket") ?? "tenant-documents";
+  const fileSource = enumValue(formData, "file_source", ["generated_placeholder", "admin_upload", "external_import", "manual_path"], "manual_path");
+  const certificateStatus = enumValue(formData, "status", ["draft", "issued", "revoked"], "issued");
   const downloadStatus = enumValue(formData, "download_status", ["pending", "ready", "blocked"], "pending");
   const vaultStatus = enumValue(formData, "vault_status", ["draft", "available", "archived"], "draft");
+  const retentionUntil = optionalString(formData, "retention_until");
+  const revokedReason = optionalString(formData, "revoked_reason");
+  const isRevoked = certificateStatus === "revoked";
+  const nextDownloadStatus = isRevoked ? "blocked" : downloadStatus;
+  const nextVaultStatus = isRevoked ? "archived" : vaultStatus;
+  let currentVersionId = certificate.current_version_id;
+  let nextVersionNumber = certificate.version_number ?? 1;
+
+  if (filePath && filePath !== certificate.file_path) {
+    nextVersionNumber += 1;
+
+    await throwOnError(
+      supabase
+        .from("certificate_versions")
+        .update({ status: "superseded" })
+        .eq("tenant_id", tenantId)
+        .eq("certificate_id", certificate.id)
+        .eq("status", "current")
+    );
+
+    const versionResult = await supabase
+      .from("certificate_versions")
+      .insert({
+        tenant_id: tenantId,
+        certificate_id: certificate.id,
+        version_number: nextVersionNumber,
+        storage_bucket: storageBucket,
+        file_path: filePath,
+        file_source: fileSource,
+        mime_type: optionalString(formData, "mime_type"),
+        file_size_bytes: optionalBigInt(formData, "file_size_bytes"),
+        original_filename: optionalString(formData, "original_filename"),
+        status: isRevoked ? "revoked" : "current",
+        retention_until: retentionUntil,
+        notes: optionalString(formData, "version_notes"),
+        created_by_profile_id: profileId
+      })
+      .select("id")
+      .single();
+
+    if (versionResult.error || !versionResult.data) {
+      throw new Error(versionResult.error?.message ?? "Diplomaversie kon niet worden aangemaakt.");
+    }
+
+    currentVersionId = (versionResult.data as { id: string }).id;
+    await insertCertificateAccessEvent(supabase, tenantId, certificate.id, currentVersionId, certificate.participant_id, profileId, "version_created", "admin", {
+      version_number: nextVersionNumber,
+      file_path: filePath,
+      storage_bucket: storageBucket
+    });
+  } else if (filePath && !currentVersionId) {
+    const versionResult = await supabase
+      .from("certificate_versions")
+      .upsert(
+        {
+          tenant_id: tenantId,
+          certificate_id: certificate.id,
+          version_number: nextVersionNumber,
+          storage_bucket: storageBucket,
+          file_path: filePath,
+          file_source: fileSource,
+          status: isRevoked ? "revoked" : "current",
+          retention_until: retentionUntil,
+          notes: optionalString(formData, "version_notes"),
+          created_by_profile_id: profileId
+        },
+        { onConflict: "tenant_id,certificate_id,version_number" }
+      )
+      .select("id")
+      .single();
+
+    if (versionResult.error || !versionResult.data) {
+      throw new Error(versionResult.error?.message ?? "Diplomaversie kon niet worden gekoppeld.");
+    }
+
+    currentVersionId = (versionResult.data as { id: string }).id;
+  }
 
   await throwOnError(
     supabase
       .from("certificates")
       .update({
-        file_path: optionalString(formData, "file_path"),
-        download_status: downloadStatus,
-        share_enabled: formData.get("share_enabled") === "on",
+        file_path: filePath,
+        storage_bucket: storageBucket,
+        file_source: fileSource,
+        current_version_id: currentVersionId,
+        version_number: nextVersionNumber,
+        status: certificateStatus,
+        download_status: nextDownloadStatus,
+        share_enabled: isRevoked ? false : formData.get("share_enabled") === "on",
         share_expires_at: optionalDateTime(formData, "share_expires_at"),
-        vault_status: vaultStatus
+        share_revoked_at: isRevoked ? new Date().toISOString() : null,
+        vault_status: nextVaultStatus,
+        retention_until: retentionUntil,
+        revoked_at: isRevoked ? new Date().toISOString() : null,
+        revoked_reason: isRevoked ? revokedReason : null
       })
       .eq("tenant_id", tenantId)
       .eq("id", certificateId)
   );
 
-  if (downloadStatus === "ready" && vaultStatus === "available") {
+  if (isRevoked) {
+    await insertCertificateAccessEvent(supabase, tenantId, certificate.id, currentVersionId, certificate.participant_id, profileId, "revoked", "admin", {
+      reason: revokedReason
+    });
+  }
+
+  if (nextDownloadStatus === "ready" && nextVaultStatus === "available") {
     await maybeQueueDiplomaIssuedMessage(supabase, tenantId, certificateId);
   }
 
@@ -577,6 +689,31 @@ async function insertReadinessGuardrailEvent(
   }
 
   await insertReadinessEvent(supabase, tenantId, radarId, "guardrail_blocked", "Resultaatregistratie geblokkeerd door afzwem guardrail.", profileId, metadata);
+}
+
+async function insertCertificateAccessEvent(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  certificateId: string,
+  certificateVersionId: string | null,
+  participantId: string,
+  profileId: string | null,
+  eventType: "version_created" | "revoked",
+  accessChannel: "admin",
+  metadata: Record<string, unknown> = {}
+) {
+  await throwOnError(
+    supabase.from("certificate_access_events").insert({
+      tenant_id: tenantId,
+      certificate_id: certificateId,
+      certificate_version_id: certificateVersionId,
+      participant_id: participantId,
+      actor_profile_id: profileId,
+      event_type: eventType,
+      access_channel: accessChannel,
+      metadata
+    })
+  );
 }
 
 async function requireTenantWriter() {
@@ -782,6 +919,22 @@ function optionalScore(formData: FormData, key: string) {
 
   if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
     throw new Error("Score moet tussen 0 en 100 liggen.");
+  }
+
+  return parsed;
+}
+
+function optionalBigInt(formData: FormData, key: string) {
+  const value = optionalString(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${key} heeft geen geldige waarde.`);
   }
 
   return parsed;

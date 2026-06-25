@@ -203,6 +203,71 @@ export async function revokeParentDocumentShareLinkAction(formData: FormData) {
   revalidateParentPortal();
 }
 
+export async function createParentCertificateShareLinkAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const certificateId = requiredString(formData, "certificate_id");
+  const certificate = await getAccessibleParentCertificate(supabase, tenantId, certificateId);
+  const token = randomBytes(24).toString("base64url");
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const admin = createAdminClient();
+
+  await throwOnError(
+    admin
+      .from("certificates")
+      .update({
+        share_enabled: true,
+        share_token: token,
+        share_created_at: new Date().toISOString(),
+        share_expires_at: expiresAt,
+        share_revoked_at: null
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", certificate.id)
+  );
+
+  await logCertificateAccessEvent(admin, {
+    tenantId,
+    certificateId: certificate.id,
+    certificateVersionId: certificate.current_version_id,
+    participantId: certificate.participant_id,
+    actorProfileId: profileId,
+    eventType: "share_link_created",
+    metadata: { share_expires_at: expiresAt }
+  });
+
+  revalidateParentPortal();
+}
+
+export async function revokeParentCertificateShareLinkAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const certificateId = requiredString(formData, "certificate_id");
+  const certificate = await getAccessibleParentCertificate(supabase, tenantId, certificateId);
+  const admin = createAdminClient();
+
+  await throwOnError(
+    admin
+      .from("certificates")
+      .update({
+        share_enabled: false,
+        share_token: null,
+        share_revoked_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", certificate.id)
+  );
+
+  await logCertificateAccessEvent(admin, {
+    tenantId,
+    certificateId: certificate.id,
+    certificateVersionId: certificate.current_version_id,
+    participantId: certificate.participant_id,
+    actorProfileId: profileId,
+    eventType: "share_link_revoked"
+  });
+
+  revalidateParentPortal();
+}
+
 async function requireParentContext() {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
@@ -228,6 +293,41 @@ async function requireParentContext() {
   };
 }
 
+async function getAccessibleParentCertificate(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, certificateId: string) {
+  const result = await supabase
+    .from("certificates")
+    .select("id, tenant_id, participant_id, status, file_path, current_version_id, download_status, vault_status, revoked_at")
+    .eq("tenant_id", tenantId)
+    .eq("id", certificateId)
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "Diploma niet gevonden.");
+  }
+
+  const certificate = result.data as {
+    id: string;
+    tenant_id: string;
+    participant_id: string;
+    status: string;
+    file_path: string | null;
+    current_version_id: string | null;
+    download_status: string;
+    vault_status: string;
+    revoked_at: string | null;
+  };
+
+  if (certificate.status === "revoked" || certificate.revoked_at) {
+    throw new Error("Dit diploma is ingetrokken en kan niet gedeeld worden.");
+  }
+
+  if (!certificate.file_path || certificate.download_status !== "ready" || certificate.vault_status !== "available") {
+    throw new Error("Dit diploma is nog niet beschikbaar om te delen.");
+  }
+
+  return certificate;
+}
+
 async function getAccessibleParentDocument(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, documentId: string) {
   const result = await supabase
     .from("parent_documents")
@@ -246,6 +346,40 @@ async function getAccessibleParentDocument(supabase: Awaited<ReturnType<typeof c
   }
 
   return result.data as { id: string; tenant_id: string; participant_id: string; status: string; file_path: string | null };
+}
+
+async function logCertificateAccessEvent(
+  admin: ReturnType<typeof createAdminClient>,
+  {
+    actorProfileId,
+    certificateId,
+    certificateVersionId,
+    eventType,
+    metadata,
+    participantId,
+    tenantId
+  }: {
+    actorProfileId: string | null;
+    certificateId: string;
+    certificateVersionId: string | null;
+    eventType: "share_link_created" | "share_link_revoked";
+    metadata?: Record<string, unknown>;
+    participantId: string;
+    tenantId: string;
+  }
+) {
+  await throwOnError(
+    admin.from("certificate_access_events").insert({
+      tenant_id: tenantId,
+      certificate_id: certificateId,
+      certificate_version_id: certificateVersionId,
+      participant_id: participantId,
+      actor_profile_id: actorProfileId,
+      event_type: eventType,
+      access_channel: "web",
+      metadata: metadata ?? {}
+    })
+  );
 }
 
 async function ensureMakeupCreditForRequest(
