@@ -55,7 +55,7 @@ const actionContracts = [
   {
     label: "Payment workflow handles manual corrections and reminders",
     file: "apps/web/lib/payments/admin-payments-actions.ts",
-    snippets: ["updateInvoiceCorrectionAction", "queueInvoiceReminderAction", 'from("payment_events").insert', 'from("message_outbox").insert']
+    snippets: ["updateInvoiceNumberingRuleAction", "updateInvoiceCorrectionAction", "recordManualRefundAction", "calculateOverdueInvoicesAction", "queueInvoiceReminderAction", "generateFinanceExportAction", 'from("payment_events").insert', 'from("message_outbox").insert']
   }
 ];
 

@@ -46,11 +46,28 @@ export type InvoiceRow = {
   period_end: string | null;
   issued_on: string;
   due_on: string | null;
+  period_mode: string;
+  reminder_count: number;
+  last_reminder_at: string | null;
+  overdue_checked_at: string | null;
+  correction_reason: string | null;
+  refunded_amount_cents: number;
   amount_due_cents: number;
   amount_paid_cents: number;
   currency: string;
   status: string;
   collection_method: string;
+};
+
+export type InvoiceNumberingRuleRow = {
+  id: string;
+  rule_name: string;
+  prefix: string;
+  next_number: number;
+  padding: number;
+  period_mode: string;
+  due_days: number;
+  status: string;
 };
 
 export type PaymentRecordRow = {
@@ -67,6 +84,35 @@ export type PaymentRecordRow = {
   status: string;
   received_on: string | null;
   note: string | null;
+  created_at: string;
+};
+
+export type PaymentRefundRow = {
+  id: string;
+  invoice_id: string;
+  payment_record_id: string | null;
+  enrollment_id: string;
+  participant_id: string;
+  provider: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  reason: string | null;
+  refunded_on: string | null;
+  created_at: string;
+};
+
+export type FinanceExportRequestRow = {
+  id: string;
+  export_type: string;
+  export_format: string;
+  period_start: string | null;
+  period_end: string | null;
+  status: string;
+  file_path: string | null;
+  row_count: number | null;
+  completed_at: string | null;
+  error_message: string | null;
   created_at: string;
 };
 
@@ -94,10 +140,13 @@ export type AdminPaymentsData = {
   participants: PaymentParticipantRow[];
   enrollments: PaymentEnrollmentRow[];
   subscriptionPlans: PaymentSubscriptionPlanRow[];
+  invoiceNumberingRules: InvoiceNumberingRuleRow[];
   invoices: InvoiceRow[];
   paymentRecords: PaymentRecordRow[];
+  paymentRefunds: PaymentRefundRow[];
   providerConfigs: PaymentProviderConfigRow[];
   paymentEvents: PaymentEventRow[];
+  financeExports: FinanceExportRequestRow[];
 };
 
 export type AdminPaymentsSnapshot = {
@@ -149,18 +198,22 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
     participantsResult,
     enrollmentsResult,
     subscriptionPlansResult,
+    invoiceNumberingRulesResult,
     invoicesResult,
     paymentRecordsResult,
+    paymentRefundsResult,
     providerConfigsResult,
-    paymentEventsResult
+    paymentEventsResult,
+    financeExportsResult
   ] = await Promise.all([
     supabase.from("programs").select("id, name, code").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase.from("participants").select("id, display_name, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase.from("enrollments").select("id, participant_id, program_id, subscription_plan_id, status, started_on").eq("tenant_id", tenantId).order("started_on", { ascending: false }),
     supabase.from("subscription_plans").select("id, name, billing_interval, price_cents, currency, lesson_frequency_per_week, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    supabase.from("invoice_numbering_rules").select("id, rule_name, prefix, next_number, padding, period_mode, due_days, status").eq("tenant_id", tenantId).order("status", { ascending: true }),
     supabase
       .from("invoices")
-      .select("id, enrollment_id, participant_id, subscription_plan_id, invoice_number, title, description, period_start, period_end, issued_on, due_on, amount_due_cents, amount_paid_cents, currency, status, collection_method")
+      .select("id, enrollment_id, participant_id, subscription_plan_id, invoice_number, title, description, period_start, period_end, issued_on, due_on, period_mode, reminder_count, last_reminder_at, overdue_checked_at, correction_reason, refunded_amount_cents, amount_due_cents, amount_paid_cents, currency, status, collection_method")
       .eq("tenant_id", tenantId)
       .order("issued_on", { ascending: false })
       .limit(100),
@@ -170,8 +223,20 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(100),
+    supabase
+      .from("payment_refunds")
+      .select("id, invoice_id, payment_record_id, enrollment_id, participant_id, provider, amount_cents, currency, status, reason, refunded_on, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(100),
     supabase.from("payment_provider_configs").select("id, provider, mode, status, display_name, external_profile_id, capabilities").eq("tenant_id", tenantId).order("provider", { ascending: true }),
-    supabase.from("payment_events").select("id, invoice_id, payment_record_id, provider, event_type, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(25)
+    supabase.from("payment_events").select("id, invoice_id, payment_record_id, provider, event_type, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(25),
+    supabase
+      .from("finance_export_requests")
+      .select("id, export_type, export_format, period_start, period_end, status, file_path, row_count, completed_at, error_message, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(25)
   ]);
 
   const errors = collectErrors({
@@ -179,10 +244,13 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
     participants: participantsResult.error,
     enrollments: enrollmentsResult.error,
     subscription_plans: subscriptionPlansResult.error,
+    invoice_numbering_rules: invoiceNumberingRulesResult.error,
     invoices: invoicesResult.error,
     payment_records: paymentRecordsResult.error,
+    payment_refunds: paymentRefundsResult.error,
     payment_provider_configs: providerConfigsResult.error,
-    payment_events: paymentEventsResult.error
+    payment_events: paymentEventsResult.error,
+    finance_export_requests: financeExportsResult.error
   });
 
   return {
@@ -194,10 +262,13 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
       participants: asRows<PaymentParticipantRow>(participantsResult.data),
       enrollments: asRows<PaymentEnrollmentRow>(enrollmentsResult.data),
       subscriptionPlans: asRows<PaymentSubscriptionPlanRow>(subscriptionPlansResult.data),
+      invoiceNumberingRules: asRows<InvoiceNumberingRuleRow>(invoiceNumberingRulesResult.data),
       invoices: asRows<InvoiceRow>(invoicesResult.data),
       paymentRecords: asRows<PaymentRecordRow>(paymentRecordsResult.data),
+      paymentRefunds: asRows<PaymentRefundRow>(paymentRefundsResult.data),
       providerConfigs: asRows<PaymentProviderConfigRow>(providerConfigsResult.data),
-      paymentEvents: asRows<PaymentEventRow>(paymentEventsResult.data)
+      paymentEvents: asRows<PaymentEventRow>(paymentEventsResult.data),
+      financeExports: asRows<FinanceExportRequestRow>(financeExportsResult.data)
     }
   };
 }
@@ -208,10 +279,13 @@ function createEmptyData(): AdminPaymentsData {
     participants: [],
     enrollments: [],
     subscriptionPlans: [],
+    invoiceNumberingRules: [],
     invoices: [],
     paymentRecords: [],
+    paymentRefunds: [],
     providerConfigs: [],
-    paymentEvents: []
+    paymentEvents: [],
+    financeExports: []
   };
 }
 

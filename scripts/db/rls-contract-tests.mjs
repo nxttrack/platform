@@ -31,11 +31,14 @@ if (!existsSync(migrationsDir)) {
     "stage_module_progress",
     "badge_awards",
     "certificates",
+    "invoice_numbering_rules",
     "invoices",
     "payment_records",
+    "payment_refunds",
     "message_outbox",
     "tenant_document_records",
     "report_export_requests",
+    "finance_export_requests",
     "platform_smtp_settings",
     "audit_events"
   ];
@@ -46,9 +49,12 @@ if (!existsSync(migrationsDir)) {
     "group_memberships",
     "invoices",
     "payment_records",
+    "payment_refunds",
+    "invoice_numbering_rules",
     "message_outbox",
     "tenant_document_records",
     "report_export_requests",
+    "finance_export_requests",
     "platform_smtp_settings"
   ];
 
