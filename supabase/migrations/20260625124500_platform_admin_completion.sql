@@ -130,17 +130,20 @@ do $$
 declare
   platform_settings_id_type text;
 begin
-  select udt_name into platform_settings_id_type
-  from information_schema.columns
-  where table_schema = 'public'
-    and table_name = 'platform_settings'
-    and column_name = 'id';
+  select attribute.atttypid::regtype::text into platform_settings_id_type
+  from pg_attribute attribute
+  join pg_class relation on relation.oid = attribute.attrelid
+  join pg_namespace namespace on namespace.oid = relation.relnamespace
+  where namespace.nspname = 'public'
+    and relation.relname = 'platform_settings'
+    and attribute.attname = 'id'
+    and not attribute.attisdropped;
 
   if exists (select 1 from public.platform_settings) then
     return;
   end if;
 
-  if platform_settings_id_type = 'uuid' then
+  if platform_settings_id_type in ('uuid', 'pg_catalog.uuid') then
     insert into public.platform_settings (
       id,
       platform_name,
@@ -165,7 +168,7 @@ begin
       'staging',
       '{"source":"platform_admin_completion"}'::jsonb
     );
-  else
+  elsif platform_settings_id_type in ('text', 'pg_catalog.text', 'character varying', 'pg_catalog.varchar') then
     insert into public.platform_settings (
       id,
       platform_name,
@@ -190,6 +193,8 @@ begin
       'staging',
       '{"source":"platform_admin_completion"}'::jsonb
     );
+  else
+    raise exception 'Unsupported platform_settings.id type: %', coalesce(platform_settings_id_type, 'unknown');
   end if;
 end $$;
 
