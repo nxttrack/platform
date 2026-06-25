@@ -128,6 +128,32 @@ export type ProfileRow = {
   full_name: string | null;
 };
 
+export type TenantAccountInvitationRow = {
+  id: string;
+  participant_id: string | null;
+  user_id: string | null;
+  email: string;
+  full_name: string | null;
+  role: string;
+  status: string;
+  delivery_provider: string | null;
+  last_sent_at: string | null;
+  expires_at: string;
+  error_message: string | null;
+  created_at: string;
+};
+
+export type PeopleAuditEventRow = {
+  id: string;
+  actor_profile_id: string | null;
+  participant_id: string | null;
+  enrollment_id: string | null;
+  group_membership_id: string | null;
+  event_type: string;
+  summary: string;
+  created_at: string;
+};
+
 export type ProgressRow = {
   id: string;
   enrollment_id: string;
@@ -173,6 +199,8 @@ export type AdminDomainData = {
   participantGuardians: ParticipantGuardianRow[];
   tenantMembers: TenantMemberRow[];
   profiles: ProfileRow[];
+  tenantAccountInvitations: TenantAccountInvitationRow[];
+  peopleAuditEvents: PeopleAuditEventRow[];
   progress: ProgressRow[];
   badges: BadgeRow[];
   certificates: CertificateRow[];
@@ -236,6 +264,8 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     groupMembershipsResult,
     participantGuardiansResult,
     tenantMembersResult,
+    tenantAccountInvitationsResult,
+    peopleAuditEventsResult,
     progressResult,
     badgesResult,
     certificatesResult
@@ -270,6 +300,18 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     supabase.from("group_memberships").select("id, enrollment_id, group_id, status, starts_on, ends_on").eq("tenant_id", tenantId).order("starts_on", { ascending: false }),
     supabase.from("participant_guardians").select("id, participant_id, profile_id, relationship, display_name, email, status").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
     supabase.from("tenant_memberships").select("id, user_id, role, status, invited_email").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
+    supabase
+      .from("tenant_account_invitations")
+      .select("id, participant_id, user_id, email, full_name, role, status, delivery_provider, last_sent_at, expires_at, error_message, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("people_audit_events")
+      .select("id, actor_profile_id, participant_id, enrollment_id, group_membership_id, event_type, summary, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(80),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase
@@ -281,7 +323,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
   const tenantMembers = asRows<TenantMemberRow>(tenantMembersResult.data);
   const profileIds = unique([
     ...tenantMembers.map((member) => member.user_id),
-    ...asRows<ParticipantGuardianRow>(participantGuardiansResult.data).map((guardian) => guardian.profile_id)
+    ...asRows<ParticipantGuardianRow>(participantGuardiansResult.data).map((guardian) => guardian.profile_id),
+    ...asRows<TenantAccountInvitationRow>(tenantAccountInvitationsResult.data).flatMap((invitation) => (invitation.user_id ? [invitation.user_id] : [])),
+    ...asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data).flatMap((event) => (event.actor_profile_id ? [event.actor_profile_id] : []))
   ]);
   const profilesResult =
     profileIds.length === 0
@@ -301,6 +345,8 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     group_memberships: groupMembershipsResult.error,
     participant_guardians: participantGuardiansResult.error,
     tenant_memberships: tenantMembersResult.error,
+    tenant_account_invitations: tenantAccountInvitationsResult.error,
+    people_audit_events: peopleAuditEventsResult.error,
     profiles: profilesResult.error,
     progress: progressResult.error,
     badges: badgesResult.error,
@@ -325,6 +371,8 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       participantGuardians: asRows<ParticipantGuardianRow>(participantGuardiansResult.data),
       tenantMembers,
       profiles: asRows<ProfileRow>(profilesResult.data),
+      tenantAccountInvitations: asRows<TenantAccountInvitationRow>(tenantAccountInvitationsResult.data),
+      peopleAuditEvents: asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       badges: asRows<BadgeRow>(badgesResult.data),
       certificates: asRows<CertificateRow>(certificatesResult.data)
@@ -347,6 +395,8 @@ export function createEmptyData(): AdminDomainData {
     participantGuardians: [],
     tenantMembers: [],
     profiles: [],
+    tenantAccountInvitations: [],
+    peopleAuditEvents: [],
     progress: [],
     badges: [],
     certificates: []

@@ -20,6 +20,7 @@ export type TemporaryPasswordEmailInput = {
   to: string;
   fullName: string | null;
   tenantName: string;
+  accessLabel?: string;
   loginUrl: string;
   temporaryPassword: string;
   expiresAt: string;
@@ -150,11 +151,12 @@ function emailSubject(input: TemporaryPasswordEmailInput) {
 
 function emailText(input: TemporaryPasswordEmailInput) {
   const greeting = input.fullName ? `Hallo ${input.fullName},` : "Hallo,";
+  const accessLabel = input.accessLabel ?? "tenant super admin toegang";
 
   return [
     greeting,
     "",
-    `Er is tenant super admin toegang voor ${input.tenantName} klaargezet in NXTTRACK.`,
+    `Er is ${accessLabel} voor ${input.tenantName} klaargezet in NXTTRACK.`,
     "",
     `Login: ${input.loginUrl}`,
     `E-mail: ${input.to}`,
@@ -169,11 +171,12 @@ function emailText(input: TemporaryPasswordEmailInput) {
 
 function emailHtml(input: TemporaryPasswordEmailInput) {
   const greeting = input.fullName ? `Hallo ${escapeHtml(input.fullName)},` : "Hallo,";
+  const accessLabel = input.accessLabel ?? "tenant super admin toegang";
 
   return `
     <div style="font-family:Inter,Arial,sans-serif;color:#0f172a;line-height:1.6">
       <p>${greeting}</p>
-      <p>Er is tenant super admin toegang voor <strong>${escapeHtml(input.tenantName)}</strong> klaargezet in NXTTRACK.</p>
+      <p>Er is ${escapeHtml(accessLabel)} voor <strong>${escapeHtml(input.tenantName)}</strong> klaargezet in NXTTRACK.</p>
       <p><a href="${escapeHtml(input.loginUrl)}">Log in op NXTTRACK</a></p>
       <p><strong>E-mail:</strong> ${escapeHtml(input.to)}<br><strong>Tijdelijk wachtwoord:</strong> ${escapeHtml(input.temporaryPassword)}</p>
       <p>Na het inloggen moet je direct een nieuw wachtwoord instellen.</p>
