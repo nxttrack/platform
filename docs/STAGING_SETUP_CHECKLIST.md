@@ -1,6 +1,6 @@
 # Staging Setup Checklist
 
-Last updated: 2026-06-23
+Last updated: 2026-06-25
 
 Status: preparation checklist only. Do not make VPS, DNS, Supabase, or production changes from this document without explicit approval.
 
@@ -195,9 +195,39 @@ Run only after app scaffold exists:
 - [ ] Health endpoint commit matches the pushed commit.
 - [ ] Old releases remain available for rollback.
 
+## Enterprise Hardening Gate
+
+Run before product owner acceptance:
+
+- [ ] `pnpm run typecheck`
+- [ ] `pnpm run auth:audit`
+- [ ] `pnpm run db:audit`
+- [ ] `pnpm run rls:test`
+- [ ] `pnpm run e2e:critical`
+- [ ] `pnpm run ui:audit`
+- [ ] `pnpm run security:audit`
+- [ ] `pnpm run build`
+- [ ] Optional live HTTP check: `E2E_BASE_URL=https://aquaswim-demo.staging.nxttrack.nl pnpm run e2e:critical`
+
+Sprint 6 details live in `docs/SPRINT_6_ENTERPRISE_HARDENING.md`.
+
+## Product Owner Acceptance
+
+Staging is ready for real tenant acceptance when:
+
+- [ ] Public tenant homepage, programs, program detail and intake load without scaffold copy.
+- [ ] Tenant admin can complete learner, guardian, enrollment, planning, attendance, payment, document, message and report workflows.
+- [ ] Parent portal shows current lessons, catch-up, notifications, documents, payments and progress.
+- [ ] Instructor portal works on mobile width for agenda, roster, attendance and progress.
+- [ ] Document uploads remain private and downloads use signed URLs.
+- [ ] Message dispatch records status, retry count and failure reason.
+- [ ] Payment corrections and reminders create events/outbox records.
+- [ ] Audit events exist for sensitive writes.
+- [ ] Key screens are checked on mobile and desktop against the Lovable direction.
+
 ## Acceptance Criteria
 
-Staging is ready for Phase 2 when:
+Staging is ready for product owner acceptance when:
 
 - GitHub Environment `staging` exists with required variables/secrets.
 - VPS prerequisites are confirmed.
@@ -205,4 +235,5 @@ Staging is ready for Phase 2 when:
 - systemd target shape is confirmed.
 - Supabase staging project is identified.
 - Migration runner decision is recorded.
+- Enterprise hardening gate passes.
 - No production environment is touched.
