@@ -22,7 +22,10 @@ Product owner decisions now locked:
 - Lovable UI source of truth is `nxttrack/swim-school-pro`.
 - First target is staging, not a commercial launch tenant.
 - Email provider is SendGrid, using SMTP first.
-- Payments are manual first, with architecture ready for Mollie/iDEAL.
+- Payments are manual first, with architecture ready for Mollie/iDEAL and SEPA via Mollie.
+- Multi-language readiness starts with Dutch (`nl`) and English (`en`).
+- WhatsApp provider is not selected yet.
+- Helpdesk is a native NXTTRACK ticket system, including parent-to-tenant and tenant-to-platform support.
 
 Lovable access status:
 
@@ -402,7 +405,7 @@ Later direction:
 
 - Mollie checkout.
 - iDEAL.
-- SEPA direct debit / incasso.
+- SEPA direct debit / incasso through Mollie.
 - Registration fee payment.
 - One-off payments.
 - Payment batches.
@@ -599,7 +602,7 @@ Later:
 
 - Mollie/iDEAL checkout.
 - Registration fees.
-- SEPA incasso.
+- SEPA incasso through Mollie.
 - Payment batches.
 - One-off payments.
 - Webhook verification.
@@ -704,7 +707,7 @@ Later:
 - Full child portal.
 - Advanced AI.
 - Full Mollie/iDEAL automation.
-- SEPA incasso and payment batches.
+- SEPA incasso through Mollie and payment batches.
 - Webshop and credit sales.
 - Flex schedule and automatic open-spot fill.
 - Staff leave and competency-aware scheduling.
@@ -733,7 +736,7 @@ Purpose: make payment operations production-grade while keeping billing separate
 Scope:
 
 - iDEAL.
-- SEPA direct debit / incasso.
+- SEPA direct debit / incasso through Mollie.
 - Registration fee.
 - One-off payments.
 - Batch payments.
@@ -847,7 +850,7 @@ Scope:
 - No-response escalation.
 - Delivery/audit trail.
 
-WhatsApp and SMS are later modules because they require provider approval, cost controls, consent, opt-out handling, and channel policies.
+WhatsApp and SMS are later modules because they require provider approval, cost controls, consent, opt-out handling, and channel policies. The WhatsApp provider is not selected yet.
 
 ### Integration Layer
 
@@ -860,7 +863,7 @@ Scope:
 - WhatsApp Business API later.
 - SMS provider later.
 - Access control hardware later.
-- CRM/ticket systems later.
+- Optional external CRM/ticket sync later.
 - Webhooks.
 - API keys.
 - Integration settings per tenant.
@@ -874,6 +877,7 @@ Purpose: give parents and tenants a support layer connected to operational conte
 Scope:
 
 - Parent support tickets.
+- Tenant-to-platform support tickets.
 - Ticket status flow.
 - Ticket categories.
 - Internal notes.
@@ -883,6 +887,32 @@ Scope:
 - Self-service FAQ.
 
 Ticket context must respect permissions. Parent support should never expose internal notes, other families, or cross-tenant data.
+
+Tenant-to-platform tickets are also native NXTTRACK records. They let a tenant ask the NXTTRACK operator for support without giving tenant admins platform-admin permissions. Optional external CRM/ticket sync can be added later, but it is not the core helpdesk.
+
+### Multi-Language Readiness
+
+Purpose: prepare public pages, intake, parent-facing messages, templates, notifications, helpdesk, and knowledge base articles for multiple languages without breaking the Dutch swim-first UI.
+
+First supported languages:
+
+- Dutch (`nl`).
+- English (`en`).
+
+Later candidates:
+
+- Polish (`pl`).
+- Turkish (`tr`).
+- Arabic (`ar`).
+- Ukrainian (`uk`).
+
+Fallback order:
+
+1. User/guardian preferred language.
+2. Tenant default language.
+3. Dutch fallback.
+
+Language is separate from tenant terminology. Internal concepts stay generic; display labels and tenant-owned content become language-aware over time.
 
 ## 35. Design-To-Production Mapping
 

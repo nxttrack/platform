@@ -33,8 +33,8 @@ The latest swim-school feature comparison adds important future modules. They ar
 Dependency rules:
 
 - Multi-language readiness must be prepared early because it affects copy, templates, tenant settings, public pages, and communication.
-- Registration fee and SEPA/incasso readiness belong near billing architecture, but live collection comes after manual payments are reliable.
-- Communication channel modeling must exist before WhatsApp, SMS, emergency broadcast, and segmented messaging.
+- Registration fee and SEPA via Mollie readiness belong near billing architecture. Live collection comes after manual payments are reliable.
+- Communication channel modeling must exist before WhatsApp, SMS, emergency broadcast, and segmented messaging. The WhatsApp provider is not selected yet.
 - Staff competencies can start as a basic model before competency-aware scheduling and leave planning.
 - Integration settings can exist as placeholders before any external provider is activated.
 - Hardware access control and auto attendance are enterprise/later because they depend on provider selection, hardware contracts, privacy policy, and audit rules.
@@ -44,7 +44,7 @@ Roadmap placement:
 
 | Placement | Modules/features |
 | --- | --- |
-| Early architecture preparation | Multi-language readiness, registration fee model, SEPA/incasso readiness, communication channel model, staff competencies basic model, integration settings placeholder |
+| Early architecture preparation | Multi-language readiness for `nl` and `en`, registration fee model, SEPA via Mollie readiness, communication channel model, staff competencies basic model, integration settings placeholder |
 | Growth / Pro modules | Batch payments, one-off payments, flexrooster, auto-fill empty spots, webshop, credit/extra-lesson sales, staff leave planning, segmented communication, tenant helpdesk, knowledge base |
 | Enterprise / later modules | QR/barcode/RFID access control, auto attendance through access control, Safety & Compliance Engine, incident/BHV/complaints/checklists, advanced integrations, WhatsApp Business API, SMS fallback, advanced multilingual templates |
 
@@ -837,18 +837,18 @@ Scope:
 
 - Multi-language readiness.
 - Registration fee model.
-- SEPA/incasso readiness.
+- SEPA via Mollie readiness.
 - Communication channel model.
 - Staff competency basic model.
 - Integration settings placeholder.
 
 Tasks:
 
-- Add locale/language strategy to tenant settings, public content, templates, and notification copy.
-- Extend billing vocabulary for registration fees, one-off payments, payment periods, and SEPA/incasso placeholders.
+- Add locale/language strategy to tenant settings, public content, templates, and notification copy with Dutch and English first.
+- Extend billing vocabulary for registration fees, one-off payments, payment periods, and SEPA via Mollie placeholders.
 - Add communication channel taxonomy: app, email, push, WhatsApp, SMS, emergency.
 - Add staff profile/competency/credential vocabulary with swim examples and generic internals.
-- Add integration settings placeholder for Mollie, bookkeeping, WhatsApp Business, SMS, access hardware, CRM/ticket systems, webhooks, and API keys.
+- Add integration settings placeholder for Mollie, bookkeeping, WhatsApp Business, SMS, access hardware, optional external CRM/ticket sync, webhooks, and API keys.
 - Update secrets registry before any external provider is wired.
 
 Dependencies:
@@ -881,7 +881,7 @@ Acceptance criteria:
 
 What not to do:
 
-- Do not implement Mollie, SEPA, WhatsApp, SMS, hardware, or bookkeeping calls.
+- Do not implement Mollie, SEPA collection, WhatsApp, SMS, hardware, or bookkeeping calls.
 - Do not create production automation for these modules.
 
 ## Phase 15 - Billing & Incasso Engine
@@ -893,7 +893,7 @@ Move from manual payments to robust billing operations while preserving the sepa
 Scope:
 
 - iDEAL.
-- SEPA incasso.
+- SEPA incasso through Mollie.
 - Registration fee.
 - One-off payments.
 - Batch payments.
@@ -906,7 +906,7 @@ Tasks:
 
 - Define invoice numbering, period, and fee rules.
 - Add registration fee and one-off payment lifecycle.
-- Add SEPA mandate/collection readiness.
+- Add SEPA mandate/collection readiness through Mollie.
 - Add payment batch planning and export/reconciliation.
 - Add failed payment and overdue signals.
 - Add parent/admin financial views.
@@ -1030,6 +1030,7 @@ Scope:
 - Emergency broadcast.
 - Segmented communication.
 - Parent support tickets.
+- Tenant-to-platform support tickets.
 - Ticket categories and status flow.
 - Internal notes.
 - Context from child/program/group/payment.
@@ -1042,6 +1043,7 @@ Tasks:
 - Add segmented audience builder.
 - Add emergency broadcast workflow with audit.
 - Add ticket model and support workspace.
+- Add native tenant-to-platform support workspace for tenants requesting help from NXTTRACK.
 - Add article/FAQ model with tenant and platform content.
 - Suggest help articles based on ticket category/context.
 
@@ -1049,7 +1051,7 @@ Dependencies:
 
 - Phase 12 messages/tasks/documents.
 - Phase 14 communication channel model.
-- Provider/secret approval for WhatsApp/SMS/push.
+- Provider/secret approval for WhatsApp/SMS/push; WhatsApp provider is not selected yet.
 
 Acceptance criteria:
 
@@ -1087,7 +1089,7 @@ Scope:
 - WhatsApp Business API.
 - SMS provider.
 - Access control hardware.
-- CRM/ticket systems.
+- Optional external CRM/ticket sync.
 - Webhooks and API keys.
 
 Tasks:

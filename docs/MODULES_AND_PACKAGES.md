@@ -65,12 +65,12 @@ Goal: make tenant operations commercially stronger and more efficient.
 
 | Module group | Included modules | Dependencies |
 | --- | --- | --- |
-| Billing & Incasso Engine | Registration fee, one-off payments, payment periods, reminders, failed-payment signals, batch payments, SEPA readiness, iDEAL/Mollie activation later | Manual payments, provider secrets, billing audit |
+| Billing & Incasso Engine | Registration fee, one-off payments, payment periods, reminders, failed-payment signals, batch payments, SEPA via Mollie readiness, iDEAL/Mollie activation later | Manual payments, provider secrets, billing audit |
 | Flexrooster & Flex Fill Engine | Flex schedule, open spot detection, auto-fill suggestions, make-up credit placement, trial placement, extra paid lesson placement | Sessions, capacity, credits, placement rules |
 | Webshop & Credits Engine | Activities, articles, extra lessons, make-up credits, vacation lessons, entitlements after purchase | Billing, catalog, sessions, capacity |
 | Staff Competency & Leave Engine | Staff profile, competencies, certificates, BHV/EHBO tracking, leave requests, replacement signals | Staff model, planning, tenant policy |
 | Communication Escalation Engine | Segmented communication, escalation policies, emergency broadcast without external WhatsApp/SMS by default | Communication foundation, consent/preference model |
-| Tenant Customer Helpdesk | Parent tickets, ticket categories/status, internal notes, child/program/group/payment context | Parent identity, messages, permissions |
+| Tenant Customer Helpdesk | Native parent tickets, tenant-to-platform support tickets, ticket categories/status, internal notes, child/program/group/payment context | Parent identity, messages, permissions |
 | Knowledge Base | Tenant/platform articles, FAQ, suggested help articles | Helpdesk, content management, multilingual readiness |
 
 Pro modules can be released incrementally. None of them should bypass Swim Start security or audit.
@@ -83,8 +83,8 @@ Goal: support larger tenants, physical access workflows, compliance administrati
 | --- | --- | --- |
 | Access Control & Auto Attendance | QR, barcode, RFID, lesson-window validation, auto attendance, manual correction | Sessions, attendance, provider/hardware integration, audit |
 | Safety & Compliance Engine | Incidents, accidents, BHV records, complaints, checklists, instructor certification tracking, tenant-defined standards, NRZ-related tracking | Permissions, audit logs, legal wording |
-| Advanced Communication | WhatsApp Business API urgent escalation, SMS fallback, push if available, advanced multilingual templates | Consent, channel policy, provider secrets |
-| Advanced Integration Layer | Bookkeeping, CRM/ticket systems, access hardware, webhooks, API keys, retry logs | Integration registry, secret storage, provider contracts |
+| Advanced Communication | WhatsApp Business API urgent escalation after provider selection, SMS fallback, push if available, advanced multilingual templates | Consent, channel policy, provider secrets |
+| Advanced Integration Layer | Bookkeeping, optional external CRM/ticket sync, access hardware, webhooks, API keys, retry logs | Integration registry, secret storage, provider contracts |
 
 Enterprise modules require explicit provider, privacy, and legal decisions before implementation.
 
@@ -104,6 +104,8 @@ Used by:
 Implementation posture:
 
 - Prepare early.
+- First supported languages are Dutch (`nl`) and English (`en`).
+- Later candidates are Polish (`pl`), Turkish (`tr`), Arabic (`ar`), and Ukrainian (`uk`).
 - Translate display content, not internal keys.
 - Dutch remains first swim-school language.
 - Advanced multilingual template management is later.
@@ -117,7 +119,7 @@ Used by:
 - WhatsApp Business API.
 - SMS provider.
 - Access control hardware.
-- CRM/ticket systems.
+- Optional external CRM/ticket sync.
 - Webhooks/API keys.
 
 Implementation posture:
@@ -142,6 +144,6 @@ Reasoning:
 
 - Billing and capacity must exist before paid credits or webshop fulfillment.
 - Staff profiles and planning must exist before leave and replacement signals are meaningful.
-- Communication channels and consent must exist before WhatsApp/SMS escalation.
+- Communication channels and consent must exist before WhatsApp/SMS escalation; the WhatsApp provider is not selected yet.
 - Access control hardware must wait for attendance, sessions, audit, and provider contracts.
 - Safety/compliance must wait for strong permissions and legal wording.

@@ -61,6 +61,7 @@ Rules:
 - Subscription/payment plan remains separate from stage, group, and progress.
 - Registration fees can be tied to an enrollment lifecycle, but must not automatically place a participant.
 - SEPA mandates require explicit consent and audit.
+- SEPA direct debit is planned through Mollie first; do not design a separate bank-incasso provider unless explicitly approved.
 - Payment batches must be traceable and reversible by correction flow, not by deleting history.
 
 Roadmap placement:
@@ -280,6 +281,7 @@ Core concepts:
 Rules:
 
 - WhatsApp and SMS are not default bulk channels.
+- WhatsApp provider is not selected yet.
 - Urgent escalation needs tenant policy, consent, cost controls, opt-out handling, and provider approval.
 - Emergency broadcast must be auditable.
 
@@ -300,7 +302,7 @@ Included integrations:
 - WhatsApp Business API later.
 - SMS provider later.
 - Access control hardware later.
-- CRM/ticket systems later.
+- Optional external CRM/ticket sync later.
 - Webhooks.
 - API keys.
 - Integration settings per tenant.
@@ -335,6 +337,7 @@ Purpose: give parents a structured support path and reduce admin workload.
 Included features:
 
 - Parent support tickets.
+- Tenant-to-platform support tickets.
 - Ticket status flow.
 - Ticket categories.
 - Internal notes.
@@ -346,6 +349,7 @@ Included features:
 Core concepts:
 
 - Support ticket.
+- Tenant platform-support ticket.
 - Ticket category.
 - Ticket status.
 - Ticket assignment.
@@ -357,6 +361,7 @@ Core concepts:
 Rules:
 
 - Parent-facing ticket views must never show internal notes.
+- Tenant-to-platform support is native to NXTTRACK; an external CRM/ticket provider is only an optional future integration.
 - Automatic context must respect permissions.
 - Knowledge base content can be platform-level or tenant-level.
 - Suggested help articles are suggestions, not AI-only support decisions.
@@ -373,6 +378,8 @@ Scope:
 
 - Tenant default language.
 - Supported languages per tenant.
+- First supported languages: `nl` and `en`.
+- Later language candidates: `pl`, `tr`, `ar`, and `uk`.
 - Public content translations.
 - Program/stage labels.
 - Message templates.
@@ -383,7 +390,9 @@ Rules:
 
 - Keep internal keys stable and translate display labels/copy.
 - Dutch remains the first swim-school language.
+- English is the second supported language for architecture and future public/portal content.
 - Avoid hardcoding visible Dutch strings into core logic.
+- No external translation provider is selected for the current readiness phase.
 - Advanced multilingual template management belongs after the basic template system is stable.
 
 Roadmap placement:
