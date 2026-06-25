@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, ClipboardList, Link2, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -88,7 +89,13 @@ export function AdminPeopleOperationsPage({ snapshot }: Props) {
       </div>
 
       <Card>
-        <SectionHeader count={snapshot.data.participants.length} icon={<Users className="h-5 w-5" />} title="Leerlingdossiers" />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <SectionHeader count={snapshot.data.participants.length} icon={<Users className="h-5 w-5" />} title="Leerlingdossiers" />
+          <div className="flex flex-wrap gap-2">
+            <ExportLink href="/api/admin-exports/participants/download">Leerlingen CSV</ExportLink>
+            <ExportLink href="/api/admin-exports/guardians/download">Ouders CSV</ExportLink>
+          </div>
+        </div>
         <div className="grid gap-4">
           {snapshot.data.participants.length === 0 ? <EmptyState>Geen leerlingen gevonden.</EmptyState> : null}
           {snapshot.data.participants.map((participant) => (
@@ -160,7 +167,9 @@ function LearnerDossierCard({ data, lookups, participant }: { data: AdminDomainD
     <article className="rounded-3xl border border-border bg-muted/35 p-4 shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-bold text-foreground">{participant.display_name}</p>
+          <Link className="text-lg font-bold text-primary hover:underline" href={`/admin/leerlingen/${participant.id}`}>
+            {participant.display_name}
+          </Link>
           <p className="text-sm text-muted-foreground">
             {participant.birthdate ? formatDate(participant.birthdate) : "Geboortedatum onbekend"} - {participant.external_reference ?? "geen referentie"}
           </p>
@@ -570,6 +579,14 @@ function SectionHeader({ icon, title, count }: { icon: ReactNode; title: string;
       </div>
       <StatusPill tone="neutral">{count}</StatusPill>
     </div>
+  );
+}
+
+function ExportLink({ children, href }: { children: ReactNode; href: string }) {
+  return (
+    <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href={href}>
+      {children}
+    </Link>
   );
 }
 

@@ -66,7 +66,9 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
               header: "Kind / ouder",
               render: (intake) => (
                 <div>
-                  <StrongText>{intake.participant_name}</StrongText>
+                  <Link className="font-semibold text-primary hover:underline" href={`/admin/intake/${intake.id}`}>
+                    {intake.participant_name}
+                  </Link>
                   <p className="text-xs text-muted-foreground">{intake.parent_name}</p>
                   <p className="text-xs text-muted-foreground">{intake.parent_email}</p>
                 </div>

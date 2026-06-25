@@ -198,6 +198,13 @@ export async function updateInstructorAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function transitionInstructorStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await transitionRowStatus(supabase, tenantId, "instructors", requiredString(formData, "id"), enumValue(formData, "status", ["active", "inactive"], "active"));
+  revalidateAdminDomain();
+}
+
 export async function createGroupAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
   const name = requiredString(formData, "name");
@@ -247,6 +254,13 @@ export async function updateGroupAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function transitionGroupStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await transitionRowStatus(supabase, tenantId, "groups", requiredString(formData, "id"), enumValue(formData, "status", ["draft", "active", "paused", "archived"], "active"));
+  revalidateAdminDomain();
+}
+
 export async function createSessionAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
@@ -284,6 +298,13 @@ export async function updateSessionAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function transitionSessionStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await transitionRowStatus(supabase, tenantId, "sessions", requiredString(formData, "id"), enumValue(formData, "status", ["scheduled", "completed", "cancelled"], "scheduled"));
+  revalidateAdminDomain();
+}
+
 export async function createParticipantAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
@@ -314,6 +335,13 @@ export async function updateParticipantAction(formData: FormData) {
       .eq("id", requiredString(formData, "id"))
       .eq("tenant_id", tenantId)
   );
+  revalidateAdminDomain();
+}
+
+export async function transitionParticipantStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await transitionRowStatus(supabase, tenantId, "participants", requiredString(formData, "id"), enumValue(formData, "status", ["active", "inactive", "archived"], "active"));
   revalidateAdminDomain();
 }
 
@@ -358,6 +386,23 @@ export async function updateEnrollmentAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function transitionEnrollmentStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const status = enumValue(formData, "status", ["pending", "active", "paused", "completed", "cancelled"], "active");
+
+  await throwOnError(
+    supabase
+      .from("enrollments")
+      .update({
+        status,
+        ended_on: ["completed", "cancelled"].includes(status) ? new Date().toISOString().slice(0, 10) : null
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+  revalidateAdminDomain();
+}
+
 export async function createGroupMembershipAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
@@ -386,6 +431,23 @@ export async function updateGroupMembershipAction(formData: FormData) {
         status: enumValue(formData, "status", ["planned", "active", "ended", "cancelled"], "active"),
         starts_on: requiredDate(formData, "starts_on"),
         ends_on: optionalDate(formData, "ends_on")
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+  revalidateAdminDomain();
+}
+
+export async function transitionGroupMembershipStatusAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const status = enumValue(formData, "status", ["planned", "active", "ended", "cancelled"], "active");
+
+  await throwOnError(
+    supabase
+      .from("group_memberships")
+      .update({
+        status,
+        ends_on: ["ended", "cancelled"].includes(status) ? new Date().toISOString().slice(0, 10) : null
       })
       .eq("id", requiredString(formData, "id"))
       .eq("tenant_id", tenantId)
@@ -572,6 +634,10 @@ async function throwOnError(builder: PromiseLike<{ error: { message: string } | 
   if (error) {
     throw new Error(error.message);
   }
+}
+
+async function transitionRowStatus(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, table: string, id: string, status: string) {
+  await throwOnError(supabase.from(table).update({ status }).eq("id", id).eq("tenant_id", tenantId));
 }
 
 function requiredString(formData: FormData, key: string) {

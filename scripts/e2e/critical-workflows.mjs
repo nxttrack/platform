@@ -19,6 +19,14 @@ const routeContracts = [
   ["Instructor portal", "apps/web/app/(instructor)/instructor/page.tsx"],
   ["Document download route", "apps/web/app/api/documents/[id]/download/route.ts"],
   ["Report download route", "apps/web/app/api/reports/[id]/download/route.ts"]
+  ,["Admin CSV export route", "apps/web/app/api/admin-exports/[type]/download/route.ts"]
+  ,["Learner detail route", "apps/web/app/(tenant-admin)/admin/leerlingen/[id]/page.tsx"]
+  ,["Guardian detail route", "apps/web/app/(tenant-admin)/admin/guardians/[id]/page.tsx"]
+  ,["Instructor detail route", "apps/web/app/(tenant-admin)/admin/instructors/[id]/page.tsx"]
+  ,["Group detail route", "apps/web/app/(tenant-admin)/admin/groups/[id]/page.tsx"]
+  ,["Session detail route", "apps/web/app/(tenant-admin)/admin/sessions/[id]/page.tsx"]
+  ,["Invoice detail route", "apps/web/app/(tenant-admin)/admin/payments/[id]/page.tsx"]
+  ,["Intake detail route", "apps/web/app/(tenant-admin)/admin/intake/[id]/page.tsx"]
 ];
 
 const actionContracts = [
@@ -51,6 +59,16 @@ const actionContracts = [
     label: "Reporting workflow uses query-backed dashboards and filtered exports",
     file: "apps/web/lib/operations/reporting.ts",
     snippets: ["getReportingDashboardData", "buildReportRows", "normalizeReportFilters", "reportFilterColumns", "canRoleExportReport", "attendance", "revenue"]
+  },
+  {
+    label: "Admin UX has detail routes, action form states, and CSV exports",
+    file: "apps/web/components/admin/action-form.tsx",
+    snippets: ["useActionState", "Bezig", "success", "error"]
+  },
+  {
+    label: "Admin UX has client-side search, sorting, pagination, and filters",
+    file: "apps/web/components/admin/table-enhancer.tsx",
+    snippets: ["Zoeken", "Alle statussen", "Sortering", "Pagina"]
   },
   {
     label: "Private download routes use signed URLs",

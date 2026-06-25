@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { CalendarDays, CircleDollarSign, Database, MapPin, Users, Waves } from "lucide-react";
 
+import { AdminActionForm, AdminSubmitButton } from "@/components/admin/action-form";
+import { AdminTableEnhancer } from "@/components/admin/table-enhancer";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import type {
   AdminDomainData,
@@ -34,6 +37,12 @@ import {
   createStageAction,
   createSubscriptionPlanAction,
   reviewStageTransitionProposalAction,
+  transitionEnrollmentStatusAction,
+  transitionGroupMembershipStatusAction,
+  transitionGroupStatusAction,
+  transitionInstructorStatusAction,
+  transitionParticipantStatusAction,
+  transitionSessionStatusAction,
   updateEnrollmentAction,
   updateGroupAction,
   updateGroupMembershipAction,
@@ -344,18 +353,18 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
 
 function StageTransitionReviewForm({ proposal }: { proposal: StageTransitionProposalRow }) {
   return (
-    <form action={reviewStageTransitionProposalAction} className="flex flex-wrap gap-2">
+    <AdminActionForm action={reviewStageTransitionProposalAction} className="flex flex-wrap gap-2" successMessage="Doorstroomstatus bijgewerkt.">
       <input name="id" type="hidden" value={proposal.id} />
-      <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" name="decision" type="submit" value="approved">
+      <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-60" name="decision" type="submit" value="approved">
         Goedkeuren
       </button>
-      <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" name="decision" type="submit" value="applied">
+      <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60" name="decision" type="submit" value="applied">
         Toepassen
       </button>
-      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100" name="decision" type="submit" value="rejected">
+      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-60" name="decision" type="submit" value="rejected">
         Afwijzen
       </button>
-    </form>
+    </AdminActionForm>
   );
 }
 
@@ -365,11 +374,14 @@ export function AdminGroupsPage({ snapshot }: DomainPageProps) {
   return (
     <DomainFrame snapshot={snapshot} kicker="Backoffice - planning" title="Groepen" subtitle="Terugkerende lesgroepen met programma, niveau, locatie, instructeur, tijdslot en capaciteit.">
       <Card>
-        <SectionHeader title="Groepen" count={snapshot.data.groups.length} />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <SectionHeader title="Groepen" count={snapshot.data.groups.length} />
+          <ExportLink href="/api/admin-exports/groups/download">Groepen CSV</ExportLink>
+        </div>
         <CreateGroupForm data={snapshot.data} />
         <DomainTable
           columns={[
-            { header: "Groep", render: (group) => <StrongText>{group.name}</StrongText> },
+            { header: "Groep", render: (group) => <DetailLink href={`/admin/groups/${group.id}`}>{group.name}</DetailLink> },
             { header: "Programma", render: (group) => lookups.programs.get(group.program_id)?.name ?? "Onbekend" },
             { header: "Niveau", render: (group) => lookups.stages.get(group.stage_id)?.name ?? "Onbekend" },
             { header: "Moment", render: (group) => `${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}` },
@@ -377,7 +389,7 @@ export function AdminGroupsPage({ snapshot }: DomainPageProps) {
             { header: "Instructeur", render: (group) => nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name) },
             { header: "Cap.", render: (group) => group.capacity },
             { header: "Status", render: (group) => <StatusPill tone={statusTone(group.status)}>{group.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (group) => <GroupForm data={snapshot.data} group={group} mode="update" /> }
+            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (group) => <ActionStack><StatusTransitionButtons action={transitionGroupStatusAction} id={group.id} statuses={["draft", "active", "paused", "archived"]} /><GroupForm data={snapshot.data} group={group} mode="update" /></ActionStack> }
           ]}
           emptyLabel="Nog geen groepen gevonden voor deze tenant."
           rows={snapshot.data.groups}
@@ -398,13 +410,13 @@ export function AdminSessionsPage({ snapshot }: DomainPageProps) {
         <CreateSessionForm data={snapshot.data} />
         <DomainTable
           columns={[
-            { header: "Datum", render: (session) => formatDateTime(session.starts_at) },
+            { header: "Datum", render: (session) => <DetailLink href={`/admin/sessions/${session.id}`}>{formatDateTime(session.starts_at)}</DetailLink> },
             { header: "Tijd", render: (session) => `${formatDateTimeTime(session.starts_at)}-${formatDateTimeTime(session.ends_at)}` },
             { header: "Groep", render: (session) => lookups.groups.get(session.group_id)?.name ?? "Onbekende groep" },
             { header: "Locatie", render: (session) => nullableText(lookups.resources.get(session.resource_id ?? "")?.name) },
             { header: "Instructeur", render: (session) => nullableText(lookups.instructors.get(session.instructor_id ?? "")?.display_name) },
             { header: "Status", render: (session) => <StatusPill tone={statusTone(session.status)}>{session.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (session) => <SessionForm data={snapshot.data} mode="update" session={session} /> }
+            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (session) => <ActionStack><StatusTransitionButtons action={transitionSessionStatusAction} id={session.id} statuses={["scheduled", "completed", "cancelled"]} /><SessionForm data={snapshot.data} mode="update" session={session} /></ActionStack> }
           ]}
           emptyLabel="Nog geen lessen gevonden voor deze tenant."
           rows={snapshot.data.sessions}
@@ -456,7 +468,7 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
             { header: "Abonnement", render: (enrollment) => nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name) },
             { header: "Start", render: (enrollment) => formatDate(enrollment.started_on) },
             { header: "Status", render: (enrollment) => <StatusPill tone={statusTone(enrollment.status)}>{enrollment.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (enrollment) => <EnrollmentForm data={snapshot.data} enrollment={enrollment} mode="update" /> }
+            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (enrollment) => <ActionStack><StatusTransitionButtons action={transitionEnrollmentStatusAction} id={enrollment.id} statuses={["pending", "active", "paused", "completed", "cancelled"]} /><EnrollmentForm data={snapshot.data} enrollment={enrollment} mode="update" /></ActionStack> }
           ]}
           emptyLabel="Nog geen inschrijvingen gevonden voor deze tenant."
           rows={snapshot.data.enrollments}
@@ -470,11 +482,11 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
           <CreateParticipantForm />
           <DomainTable
             columns={[
-              { header: "Naam", render: (participant) => <StrongText>{participant.display_name}</StrongText> },
+              { header: "Naam", render: (participant) => <DetailLink href={`/admin/leerlingen/${participant.id}`}>{participant.display_name}</DetailLink> },
               { header: "Geboortedatum", render: (participant) => nullableText(participant.birthdate ? formatDate(participant.birthdate) : null) },
               { header: "Referentie", render: (participant) => nullableText(participant.external_reference) },
               { header: "Status", render: (participant) => <StatusPill tone={statusTone(participant.status)}>{participant.status}</StatusPill> },
-              { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (participant) => <ParticipantForm mode="update" participant={participant} /> }
+              { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (participant) => <ActionStack><StatusTransitionButtons action={transitionParticipantStatusAction} id={participant.id} statuses={["active", "inactive", "archived"]} /><ParticipantForm mode="update" participant={participant} /></ActionStack> }
             ]}
             emptyLabel="Nog geen leerlingen gevonden."
             rows={snapshot.data.participants}
@@ -491,7 +503,7 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
               { header: "Groep", render: (membership) => lookups.groups.get(membership.group_id)?.name ?? "Onbekend" },
               { header: "Vanaf", render: (membership) => formatDate(membership.starts_on) },
               { header: "Status", render: (membership) => <StatusPill tone={statusTone(membership.status)}>{membership.status}</StatusPill> },
-              { header: "Actie", className: "min-w-[340px] whitespace-normal", render: (membership) => <GroupMembershipForm data={snapshot.data} membership={membership} mode="update" /> }
+              { header: "Actie", className: "min-w-[340px] whitespace-normal", render: (membership) => <ActionStack><StatusTransitionButtons action={transitionGroupMembershipStatusAction} id={membership.id} statuses={["planned", "active", "ended", "cancelled"]} /><GroupMembershipForm data={snapshot.data} membership={membership} mode="update" /></ActionStack> }
             ]}
             emptyLabel="Nog geen groepsplaatsingen gevonden."
             rows={snapshot.data.groupMemberships}
@@ -511,12 +523,12 @@ export function AdminInstructorsPage({ snapshot }: DomainPageProps) {
         <CreateInstructorForm />
         <DomainTable
           columns={[
-            { header: "Naam", render: (instructor) => <StrongText>{instructor.display_name}</StrongText> },
+            { header: "Naam", render: (instructor) => <DetailLink href={`/admin/instructors/${instructor.id}`}>{instructor.display_name}</DetailLink> },
             { header: "E-mail", render: (instructor) => nullableText(instructor.email) },
             { header: "Groepen", render: (instructor) => countBy(snapshot.data.groups, "instructor_id", instructor.id) },
             { header: "Lessen", render: (instructor) => countBy(snapshot.data.sessions, "instructor_id", instructor.id) },
             { header: "Status", render: (instructor) => <StatusPill tone={statusTone(instructor.status)}>{instructor.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (instructor) => <InstructorForm instructor={instructor} mode="update" /> }
+            { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (instructor) => <ActionStack><StatusTransitionButtons action={transitionInstructorStatusAction} id={instructor.id} statuses={["active", "inactive"]} /><InstructorForm instructor={instructor} mode="update" /></ActionStack> }
           ]}
           emptyLabel="Nog geen instructeurs gevonden voor deze tenant."
           rows={snapshot.data.instructors}
@@ -836,16 +848,33 @@ function EditPanel({ children }: { children: ReactNode }) {
   );
 }
 
+function ActionStack({ children }: { children: ReactNode }) {
+  return <div className="grid gap-3">{children}</div>;
+}
+
+function StatusTransitionButtons({ action, id, statuses }: { action: (formData: FormData) => Promise<void>; id: string; statuses: string[] }) {
+  return (
+    <AdminActionForm action={action} className="flex flex-wrap gap-2" successMessage="Status bijgewerkt.">
+      <input name="id" type="hidden" value={id} />
+      {statuses.map((status) => (
+        <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-60" key={status} name="status" type="submit" value={status}>
+          {status}
+        </button>
+      ))}
+    </AdminActionForm>
+  );
+}
+
 function DomainForm({ action, submitLabel, children }: { action: (formData: FormData) => Promise<void>; submitLabel: string; children: ReactNode }) {
   return (
-    <form action={action} className="grid gap-3">
+    <AdminActionForm action={action} className="grid gap-3" successMessage="Wijziging opgeslagen.">
       <div className="grid gap-3 md:grid-cols-2">{children}</div>
       <div>
-        <button className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        <AdminSubmitButton className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90">
           {submitLabel}
-        </button>
+        </AdminSubmitButton>
       </div>
-    </form>
+    </AdminActionForm>
   );
 }
 
@@ -956,35 +985,73 @@ function DomainTable<Row>({ columns, rows, rowKey, emptyLabel }: { columns: Colu
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
-        <thead>
-          <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-            {columns.map((column) => (
-              <th key={column.header} className={`whitespace-nowrap px-3 py-3 font-semibold ${column.className ?? ""}`}>
-                {column.header}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {rows.map((row) => (
-            <tr key={rowKey(row)} className="align-top">
+    <AdminTableEnhancer rowCount={rows.length}>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-left text-sm">
+          <thead>
+            <tr className="border-b border-border text-xs uppercase text-muted-foreground">
               {columns.map((column) => (
-                <td key={column.header} className={`whitespace-nowrap px-3 py-3 ${column.className ?? ""}`}>
-                  {column.render(row)}
-                </td>
+                <th key={column.header} className={`whitespace-nowrap px-3 py-3 font-semibold ${column.className ?? ""}`}>
+                  {column.header}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((row) => (
+              <tr key={rowKey(row)} className="align-top" data-admin-row data-search-text={rowSearchText(row)} data-sort-text={rowSortText(row)} data-status={rowStatus(row)}>
+                {columns.map((column) => (
+                  <td key={column.header} className={`whitespace-nowrap px-3 py-3 ${column.className ?? ""}`}>
+                    {column.render(row)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </AdminTableEnhancer>
   );
+}
+
+function rowSearchText(row: unknown) {
+  return JSON.stringify(row);
+}
+
+function rowSortText(row: unknown) {
+  if (row && typeof row === "object" && "name" in row && typeof row.name === "string") {
+    return row.name;
+  }
+
+  if (row && typeof row === "object" && "display_name" in row && typeof row.display_name === "string") {
+    return row.display_name;
+  }
+
+  return rowSearchText(row);
+}
+
+function rowStatus(row: unknown) {
+  return row && typeof row === "object" && "status" in row && typeof row.status === "string" ? row.status : "";
 }
 
 function StrongText({ children }: { children: ReactNode }) {
   return <span className="font-semibold text-foreground">{children}</span>;
+}
+
+function DetailLink({ children, href }: { children: ReactNode; href: string }) {
+  return (
+    <Link className="font-semibold text-primary hover:underline" href={href}>
+      {children}
+    </Link>
+  );
+}
+
+function ExportLink({ children, href }: { children: ReactNode; href: string }) {
+  return (
+    <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href={href}>
+      {children}
+    </Link>
+  );
 }
 
 function CodeText({ children }: { children: ReactNode }) {

@@ -26,6 +26,9 @@ if (!existsSync(migrationsDir)) {
     "participant_guardians",
     "enrollments",
     "group_memberships",
+    "instructors",
+    "groups",
+    "sessions",
     "session_attendance",
     "progress",
     "stage_module_progress",
@@ -40,14 +43,22 @@ if (!existsSync(migrationsDir)) {
     "report_export_requests",
     "report_permission_grants",
     "finance_export_requests",
+    "tenant_account_invitations",
+    "waitlist_entries",
+    "placement_suggestions",
+    "slot_offers",
     "platform_smtp_settings",
     "audit_events"
   ];
   const expectedAuditTriggers = [
     "tenant_memberships",
+    "participants",
     "participant_guardians",
     "enrollments",
     "group_memberships",
+    "instructors",
+    "groups",
+    "sessions",
     "invoices",
     "payment_records",
     "payment_refunds",
@@ -57,6 +68,10 @@ if (!existsSync(migrationsDir)) {
     "report_export_requests",
     "report_permission_grants",
     "finance_export_requests",
+    "tenant_account_invitations",
+    "waitlist_entries",
+    "placement_suggestions",
+    "slot_offers",
     "platform_smtp_settings"
   ];
 

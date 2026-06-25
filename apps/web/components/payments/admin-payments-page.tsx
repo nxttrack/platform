@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Banknote, CircleDollarSign, CreditCard, FileText } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -107,7 +108,12 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
           </div>
 
           <Card>
-            <SectionHeader title="Facturen en betalingen" count={snapshot.data.invoices.length} />
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <SectionHeader title="Facturen en betalingen" count={snapshot.data.invoices.length} />
+              <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href="/api/admin-exports/payments/download">
+                Payments CSV
+              </Link>
+            </div>
             <div className="grid gap-4">
               {snapshot.data.invoices.length === 0 ? <EmptyState>Nog geen facturen gevonden.</EmptyState> : null}
               {snapshot.data.invoices.map((invoice) => (
@@ -267,7 +273,9 @@ function InvoiceCard({ invoice, lookups }: { invoice: InvoiceRow; lookups: Looku
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-lg font-bold">{invoice.invoice_number} - {invoice.title}</p>
+          <Link className="text-lg font-bold text-primary hover:underline" href={`/admin/payments/${invoice.id}`}>
+            {invoice.invoice_number} - {invoice.title}
+          </Link>
           <p className="text-sm text-muted-foreground">
             {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "geen abonnement"}
           </p>
