@@ -91,6 +91,7 @@ Notes:
 | Feature/module | Secret dependencies |
 | --- | --- |
 | iDEAL | `MOLLIE_API_KEY`, `MOLLIE_WEBHOOK_SECRET`, `MOLLIE_PROFILE_ID` |
+| Registration fee payment | `MOLLIE_API_KEY`, `MOLLIE_WEBHOOK_SECRET`, `MOLLIE_PROFILE_ID` when iDEAL/Mollie is activated; none for manual admin-only status |
 | SEPA incasso | `MOLLIE_API_KEY`, `MOLLIE_WEBHOOK_SECRET`, conditionally `SEPA_CREDITOR_ID` only if required by Mollie/provider setup |
 | Payment batches | Provider secret if provider-submitted; none for manual/export-only batch |
 | WhatsApp urgent escalation | `WHATSAPP_BUSINESS_TOKEN`, `WHATSAPP_BUSINESS_PHONE_NUMBER_ID`, `WHATSAPP_WEBHOOK_SECRET` |
