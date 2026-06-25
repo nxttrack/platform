@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { capacitySnapshotToRecord, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
-import { smartBlocker, smartReason, upsertSmartDecision } from "@/lib/smart-flow/decision";
+import { smartBlocker, smartReason, upsertSmartDecision, type SmartDecisionBlocker, type SmartDecisionReason } from "@/lib/smart-flow/decision";
+import { placementAssistantRuleVersion, type PlacementAssistantMode, type PlacementSuggestedAction } from "@/lib/smart-flow/placement-assistant";
 
 type PlacementDecisionInput = {
   tenantId: string;
@@ -32,6 +33,11 @@ type PlacementDecisionInput = {
   rationale: string;
   waitlistScore?: number | null;
   waitlistReasons?: unknown[];
+  assistantMode?: PlacementAssistantMode;
+  suggestedAction?: PlacementSuggestedAction;
+  matchReasons?: SmartDecisionReason[];
+  matchBlockers?: SmartDecisionBlocker[];
+  matchSnapshot?: Record<string, unknown>;
 };
 
 type SmartDecisionClient = Pick<SupabaseClient, "from">;
@@ -43,6 +49,7 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
     subjectType: "placement_suggestion",
     subjectId: input.suggestionId,
     inputSnapshot: {
+      ...(input.matchSnapshot ?? {}),
       waitlist_entry_id: input.waitlistEntryId,
       intake_submission_id: input.intakeSubmissionId,
       program_id: input.programId,
@@ -59,11 +66,13 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
       available_spots: input.availableSpots,
       capacity_snapshot: capacitySnapshotToRecord(input.capacitySnapshot),
       waitlist_score: input.waitlistScore ?? null,
-      waitlist_reasons: input.waitlistReasons ?? []
+      waitlist_reasons: input.waitlistReasons ?? [],
+      assistant_mode: input.assistantMode ?? "manual",
+      suggested_action: input.suggestedAction ?? "offer_slot"
     },
-    ruleVersion: "placement-v1",
+    ruleVersion: input.matchReasons ? placementAssistantRuleVersion : "placement-v1",
     score: input.score,
-    reasons: [
+    reasons: input.matchReasons ?? [
       smartReason({
         code: "capacity_available",
         label: "Capaciteit beschikbaar",
@@ -104,16 +113,18 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
         }
       })
     ],
-    blockers: input.capacitySnapshot.blockers.map((blocker) =>
-      smartBlocker({
-        code: blocker.code,
-        label: blocker.label,
-        detail: blocker.detail,
-        severity: blocker.severity === "blocking" ? "blocking" : "warning"
-      })
-    ),
+    blockers:
+      input.matchBlockers ??
+      input.capacitySnapshot.blockers.map((blocker) =>
+        smartBlocker({
+          code: blocker.code,
+          label: blocker.label,
+          detail: blocker.detail,
+          severity: blocker.severity === "blocking" ? "blocking" : "warning"
+        })
+      ),
     recommendation: {
-      action: "approve_slot_offer",
+      action: input.suggestedAction ?? "offer_slot",
       group_id: input.group.id,
       waitlist_score: input.waitlistScore ?? null,
       score: input.score,

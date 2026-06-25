@@ -6,8 +6,8 @@ import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   approvePlacementSuggestionAction,
   cancelSlotOfferAction,
-  createPlacementSuggestionAction,
   createWaitlistEntryFromIntakeAction,
+  createBatchPlacementSuggestionsAction,
   recordWaitlistContactAction,
   reevaluateWaitlistEntryAction,
   rejectPlacementSuggestionAction,
@@ -16,9 +16,11 @@ import {
 import type {
   CapacitySnapshot,
   GroupLookupRow,
+  InstructorLookupRow,
   IntakeDuplicateMatchRow,
   IntakeSubmissionRow,
   PlacementSuggestionRow,
+  PlacementSuggestionEventRow,
   PlacementWorkflowData,
   PlacementWorkflowSnapshot,
   ProgramLookupRow,
@@ -29,6 +31,7 @@ import type {
   WaitlistEntryEventRow,
   WaitlistEntryRow
 } from "@/lib/placement/admin-placement-read-model";
+import { scorePlacementMatch, type PlacementMatchResult } from "@/lib/smart-flow/placement-assistant";
 
 type WaitlistFilters = {
   program?: string;
@@ -51,6 +54,7 @@ type LookupMaps = {
   stages: Map<string, StageLookupRow>;
   groups: Map<string, GroupLookupRow>;
   resources: Map<string, ResourceLookupRow>;
+  instructors: Map<string, InstructorLookupRow>;
   waitlistEntries: Map<string, WaitlistEntryRow>;
   waitlistEntriesByIntake: Map<string, WaitlistEntryRow>;
   suggestionsByWaitlist: Map<string, PlacementSuggestionRow[]>;
@@ -59,6 +63,7 @@ type LookupMaps = {
   duplicateMatchesByIntake: Map<string, IntakeDuplicateMatchRow[]>;
   smartDecisionsBySubject: Map<string, SmartDecisionSummaryRow>;
   waitlistEventsByEntry: Map<string, WaitlistEntryEventRow[]>;
+  placementEventsBySuggestion: Map<string, PlacementSuggestionEventRow[]>;
 };
 
 type Column<Row> = {
@@ -180,8 +185,8 @@ export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementP
               },
               {
                 header: "Voorstel",
-                className: "min-w-[360px] whitespace-normal",
-                render: (entry) => <PlacementSuggestionForm entry={entry} groups={activeGroupsForEntry(snapshot.data.groups, entry)} lookups={lookups} suggestions={lookups.suggestionsByWaitlist.get(entry.id) ?? []} />
+                className: "min-w-[520px] whitespace-normal",
+                render: (entry) => <PlacementAssistantForEntry data={snapshot.data} entry={entry} lookups={lookups} suggestions={lookups.suggestionsByWaitlist.get(entry.id) ?? []} />
               }
             ]}
             emptyLabel="Nog geen wachtlijstregels. Zet een intake eerst om naar de wachtlijst."
@@ -192,6 +197,7 @@ export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementP
 
         <div className="grid gap-4">
           <CapacityPanel data={snapshot.data} lookups={lookups} />
+          <BestLearnersForGroupsPanel data={snapshot.data} lookups={lookups} />
           <WaitlistTimelinePanel events={snapshot.data.waitlistEvents} lookups={lookups} />
         </div>
       </div>
@@ -212,17 +218,13 @@ export function AdminPlacementSuggestionsPage({ snapshot }: PlacementPageProps) 
             { header: "Programma", render: (suggestion) => lookups.programs.get(suggestion.program_id)?.name ?? "Onbekend" },
             { header: "Groep", render: (suggestion) => groupSummary(lookups, suggestion.group_id) },
             { header: "Score", render: (suggestion) => <ScorePill score={suggestion.score} /> },
+            { header: "Advies", render: (suggestion) => <StatusPill tone={suggestedActionTone(suggestion.suggested_action)}>{suggestedActionLabel(suggestion.suggested_action)}</StatusPill> },
             { header: "Status", render: (suggestion) => <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill> },
             { header: "Capaciteit", className: "min-w-[240px] whitespace-normal", render: (suggestion) => <CapacityMini capacity={lookups.capacitiesByGroup.get(suggestion.group_id)} /> },
             {
               header: "Onderbouwing",
               className: "min-w-[320px] whitespace-normal",
-              render: (suggestion) => (
-                <div className="grid gap-2">
-                  <span>{nullableText(suggestion.rationale)}</span>
-                  <SmartDecisionPanel decision={smartDecisionFor(lookups, "placement", "placement_suggestion", suggestion.id)} compact />
-                </div>
-              )
+              render: (suggestion) => <PlacementSuggestionExplanation suggestion={suggestion} events={lookups.placementEventsBySuggestion.get(suggestion.id) ?? []} smartDecision={smartDecisionFor(lookups, "placement", "placement_suggestion", suggestion.id)} />
             },
             {
               header: "Actie",
@@ -532,10 +534,12 @@ function WaitlistTimelinePanel({ events, lookups }: { events: WaitlistEntryEvent
   );
 }
 
-function PlacementSuggestionForm({ entry, groups, lookups, suggestions }: { entry: WaitlistEntryRow; groups: GroupLookupRow[]; lookups: LookupMaps; suggestions: PlacementSuggestionRow[] }) {
+function PlacementAssistantForEntry({ data, entry, lookups, suggestions }: { data: PlacementWorkflowData; entry: WaitlistEntryRow; lookups: LookupMaps; suggestions: PlacementSuggestionRow[] }) {
   if (["offered", "placed", "declined", "rejected", "cancelled"].includes(entry.status)) {
     return <InlineNotice tone="neutral">Geen nieuw voorstel nodig: {entry.status}</InlineNotice>;
   }
+
+  const matches = bestGroupsForEntry(entry, data, lookups).slice(0, 4);
 
   return (
     <div className="grid gap-3">
@@ -543,16 +547,173 @@ function PlacementSuggestionForm({ entry, groups, lookups, suggestions }: { entr
         <div className="grid gap-1 text-xs text-muted-foreground">
           {suggestions.map((suggestion) => (
             <p key={suggestion.id}>
-              {lookups.groups.get(suggestion.group_id)?.name ?? "Onbekende groep"} - {suggestion.status}
+              {lookups.groups.get(suggestion.group_id)?.name ?? "Onbekende groep"} - {suggestion.status} - {suggestedActionLabel(suggestion.suggested_action)}
             </p>
           ))}
         </div>
       ) : null}
-      <WorkflowForm action={createPlacementSuggestionAction} submitLabel="Voorstel maken">
-        <input name="waitlist_entry_id" type="hidden" value={entry.id} />
-        <SelectField label="Groep" name="group_id" options={groups.map((group) => ({ label: groupOptionLabel(group, lookups), value: group.id }))} required />
-        <TextAreaField label="Onderbouwing" name="rationale" />
-      </WorkflowForm>
+      {matches.length === 0 ? <InlineNotice tone="neutral">Geen actieve groepen gevonden voor dit programma.</InlineNotice> : null}
+      {matches.length > 0 ? (
+        <form action={createBatchPlacementSuggestionsAction} className="grid gap-3">
+          <input name="assistant_mode" type="hidden" value="candidate_to_groups" />
+          <div className="grid gap-2">
+            {matches.map(({ group, match }) => (
+              <PlacementMatchCard key={`${entry.id}-${group.id}`} entry={entry} group={group} lookups={lookups} match={match} selectable />
+            ))}
+          </div>
+          <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_auto]">
+            <CompactInput defaultValue={todayInput()} name="start_date" placeholder="Startdatum" />
+            <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+              Batch voorstellen maken
+            </button>
+          </div>
+        </form>
+      ) : null}
+    </div>
+  );
+}
+
+function BestLearnersForGroupsPanel({ data, lookups }: { data: PlacementWorkflowData; lookups: LookupMaps }) {
+  const activeGroups = data.groups.filter((group) => group.status === "active").slice(0, 5);
+
+  return (
+    <Card>
+      <SectionHeader title="Beste leerlingen per groep" count={activeGroups.length} />
+      <div className="grid gap-4">
+        {activeGroups.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">Nog geen actieve groepen.</div> : null}
+        {activeGroups.map((group) => {
+          const matches = bestLearnersForGroup(group, data, lookups).slice(0, 3);
+
+          return (
+            <form key={group.id} action={createBatchPlacementSuggestionsAction} className="rounded-2xl border border-border bg-muted/30 p-3">
+              <input name="assistant_mode" type="hidden" value="group_to_candidates" />
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="font-semibold">{group.name}</p>
+                  <p className="text-xs text-muted-foreground">{groupOptionLabel(group, lookups)}</p>
+                </div>
+                <StatusPill tone={capacityTone(lookups.capacitiesByGroup.get(group.id))}>{capacityText(lookups.capacitiesByGroup.get(group.id))}</StatusPill>
+              </div>
+              <div className="grid gap-2">
+                {matches.length === 0 ? <p className="text-xs text-muted-foreground">Geen kandidaten gevonden.</p> : null}
+                {matches.map(({ entry, match }) => (
+                  <PlacementCandidateMini key={`${group.id}-${entry.id}`} entry={entry} group={group} lookups={lookups} match={match} />
+                ))}
+              </div>
+              {matches.length > 0 ? (
+                <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+                  <CompactInput defaultValue={todayInput()} name="start_date" placeholder="Startdatum" />
+                  <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+                    Batch maken
+                  </button>
+                </div>
+              ) : null}
+            </form>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function PlacementMatchCard({ entry, group, lookups, match, selectable }: { entry: WaitlistEntryRow; group: GroupLookupRow; lookups: LookupMaps; match: PlacementMatchResult; selectable?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/30 p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <label className="flex min-w-0 items-start gap-2">
+          {selectable ? <input className="mt-1 h-4 w-4 rounded border-border" defaultChecked={match.suggestedAction === "offer_slot"} name="match_pair" type="checkbox" value={`${entry.id}::${group.id}`} /> : null}
+          <span className="min-w-0">
+            <span className="block font-semibold">{group.name}</span>
+            <span className="block text-xs text-muted-foreground">{groupSummaryText(lookups, group)}</span>
+          </span>
+        </label>
+        <div className="flex flex-wrap justify-end gap-2">
+          <ScorePill score={match.score} />
+          <StatusPill tone={suggestedActionTone(match.suggestedAction)}>{suggestedActionLabel(match.suggestedAction)}</StatusPill>
+        </div>
+      </div>
+      <PlacementExplanationPanel match={match} />
+    </div>
+  );
+}
+
+function PlacementCandidateMini({ entry, group, lookups, match }: { entry: WaitlistEntryRow; group: GroupLookupRow; lookups: LookupMaps; match: PlacementMatchResult }) {
+  return (
+    <label className="rounded-2xl border border-border bg-card p-3">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="flex min-w-0 items-start gap-2">
+          <input className="mt-1 h-4 w-4 rounded border-border" defaultChecked={match.suggestedAction === "offer_slot"} name="match_pair" type="checkbox" value={`${entry.id}::${group.id}`} />
+          <div className="min-w-0">
+            {intakeName(lookups, entry)}
+            <p className="mt-1 text-xs text-muted-foreground">{preferencePlainText(entry.preferred_days, entry.preferred_time_windows)}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <ScorePill score={match.score} />
+          <StatusPill tone={suggestedActionTone(match.suggestedAction)}>{suggestedActionLabel(match.suggestedAction)}</StatusPill>
+        </div>
+      </div>
+      <PlacementExplanationPanel compact match={match} />
+    </label>
+  );
+}
+
+function PlacementExplanationPanel({ compact, match }: { compact?: boolean; match: PlacementMatchResult }) {
+  const blockers = match.blockers.slice(0, compact ? 2 : 3);
+  const reasons = match.reasons.slice(0, compact ? 2 : 4);
+
+  return (
+    <div className="mt-3 grid gap-2 text-xs">
+      <p className="leading-5 text-muted-foreground">{match.rationale}</p>
+      {blockers.length > 0 ? (
+        <div className="grid gap-1 rounded-xl border border-amber-300 bg-amber-50 p-2 text-amber-900">
+          {blockers.map((blocker) => (
+            <p key={`${match.waitlistEntryId}-${match.groupId}-${blocker.code}`}>
+              <span className="font-semibold">{blocker.label}</span>
+              {blocker.detail ? ` - ${blocker.detail}` : ""}
+            </p>
+          ))}
+        </div>
+      ) : null}
+      <div className="grid gap-1 text-muted-foreground">
+        {reasons.map((reason) => (
+          <p key={`${match.waitlistEntryId}-${match.groupId}-${reason.code}`}>
+            <span className="font-semibold text-foreground">{reason.label}</span>
+            {reason.detail ? ` - ${reason.detail}` : ""}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PlacementSuggestionExplanation({ events, smartDecision, suggestion }: { events: PlacementSuggestionEventRow[]; smartDecision: SmartDecisionSummaryRow | null; suggestion: PlacementSuggestionRow }) {
+  const blockers = suggestion.match_blockers.slice(0, 2);
+  const reasons = suggestion.match_reasons.slice(0, 3);
+
+  return (
+    <div className="grid gap-2">
+      <span>{nullableText(suggestion.rationale)}</span>
+      {blockers.length > 0 ? (
+        <div className="grid gap-1 rounded-xl border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900">
+          {blockers.map((blocker) => (
+            <p key={`${suggestion.id}-${blocker.code}`}>
+              <span className="font-semibold">{blocker.label ?? blocker.code}</span>
+              {blocker.detail ? ` - ${blocker.detail}` : ""}
+            </p>
+          ))}
+        </div>
+      ) : null}
+      <div className="grid gap-1 text-xs text-muted-foreground">
+        {reasons.map((reason) => (
+          <p key={`${suggestion.id}-${reason.code}`}>
+            <span className="font-semibold text-foreground">{reason.label ?? reason.code}</span>
+            {reason.detail ? ` - ${reason.detail}` : ""}
+          </p>
+        ))}
+      </div>
+      <SmartDecisionPanel decision={smartDecision} compact />
+      {events.length > 0 ? <p className="text-xs text-muted-foreground">Laatste event: {placementEventLabel(events[0]?.event_type ?? "")} - {formatDate(events[0]?.created_at ?? suggestion.created_at)}</p> : null}
     </div>
   );
 }
@@ -573,6 +734,21 @@ function SuggestionActionPanel({ suggestion, offer }: { suggestion: PlacementSug
     return <InlineNotice tone="neutral">Geen actie: {suggestion.status}</InlineNotice>;
   }
 
+  if (suggestion.suggested_action !== "offer_slot") {
+    return (
+      <div className="grid gap-2">
+        <InlineNotice tone="neutral">Advies: {suggestedActionLabel(suggestion.suggested_action)}</InlineNotice>
+        <form action={rejectPlacementSuggestionAction} className="grid gap-2">
+          <input name="placement_suggestion_id" type="hidden" value={suggestion.id} />
+          <CompactInput name="override_reason" placeholder="Reden / reviewnotitie" />
+          <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" type="submit">
+            Afwijzen / bewaren als override
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-wrap gap-2">
       <form action={approvePlacementSuggestionAction}>
@@ -583,7 +759,8 @@ function SuggestionActionPanel({ suggestion, offer }: { suggestion: PlacementSug
       </form>
       <form action={rejectPlacementSuggestionAction}>
         <input name="placement_suggestion_id" type="hidden" value={suggestion.id} />
-        <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" type="submit">
+        <CompactInput name="override_reason" placeholder="Afwijsreden" />
+        <button className="mt-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" type="submit">
           Afwijzen
         </button>
       </form>
@@ -838,6 +1015,7 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     stages: byId(data.stages),
     groups: byId(data.groups),
     resources: byId(data.resources),
+    instructors: byId(data.instructors),
     waitlistEntries: byId(data.waitlistEntries),
     waitlistEntriesByIntake: new Map(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [[entry.intake_submission_id, entry] as const] : []))),
     suggestionsByWaitlist: groupBy(data.placementSuggestions, (suggestion) => suggestion.waitlist_entry_id),
@@ -845,7 +1023,8 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     capacitiesByGroup: new Map(data.capacities.map((capacity) => [capacity.groupId, capacity])),
     duplicateMatchesByIntake: groupBy(data.intakeDuplicateMatches, (match) => match.intake_submission_id),
     smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision])),
-    waitlistEventsByEntry: groupBy(data.waitlistEvents, (event) => event.waitlist_entry_id)
+    waitlistEventsByEntry: groupBy(data.waitlistEvents, (event) => event.waitlist_entry_id),
+    placementEventsBySuggestion: groupBy(data.placementEvents, (event) => event.placement_suggestion_id)
   };
 }
 
@@ -914,6 +1093,9 @@ function smartDecisionKey(engineKey: string, subjectType: string, subjectId: str
 function smartActionLabel(action: string) {
   const labels: Record<string, string> = {
     approve_slot_offer: "Lesplek-aanbod voorbereiden",
+    offer_slot: "Lesplek aanbieden",
+    request_more_info: "Meer info vragen",
+    keep_waiting: "Laten wachten",
     manual_review: "Handmatige review",
     recommend_start_stage: "Startniveau adviseren"
   };
@@ -1000,6 +1182,69 @@ function findWaitlistEntryByEvent(lookups: LookupMaps, event: WaitlistEntryEvent
   return lookups.waitlistEntries.get(event.waitlist_entry_id) ?? null;
 }
 
+function bestGroupsForEntry(entry: WaitlistEntryRow, data: PlacementWorkflowData, lookups: LookupMaps) {
+  return data.groups
+    .filter((group) => group.status === "active" && group.program_id === entry.program_id)
+    .map((group) => ({
+      group,
+      match: scorePlacementMatch({
+        mode: "candidate_to_groups",
+        entry,
+        group,
+        capacity: lookups.capacitiesByGroup.get(group.id) ?? emptyCapacity(group),
+        resource: group.resource_id ? (lookups.resources.get(group.resource_id) ?? null) : null,
+        instructor: group.instructor_id ? (lookups.instructors.get(group.instructor_id) ?? null) : null,
+        startDate: todayInput()
+      })
+    }))
+    .sort((a, b) => b.match.score - a.match.score);
+}
+
+function bestLearnersForGroup(group: GroupLookupRow, data: PlacementWorkflowData, lookups: LookupMaps) {
+  return data.waitlistEntries
+    .filter((entry) => ["queued", "matched"].includes(entry.status) && entry.program_id === group.program_id)
+    .map((entry) => ({
+      entry,
+      match: scorePlacementMatch({
+        mode: "group_to_candidates",
+        entry,
+        group,
+        capacity: lookups.capacitiesByGroup.get(group.id) ?? emptyCapacity(group),
+        resource: group.resource_id ? (lookups.resources.get(group.resource_id) ?? null) : null,
+        instructor: group.instructor_id ? (lookups.instructors.get(group.instructor_id) ?? null) : null,
+        startDate: todayInput()
+      })
+    }))
+    .sort((a, b) => b.match.score - a.match.score);
+}
+
+function emptyCapacity(group: GroupLookupRow): CapacitySnapshot {
+  return {
+    groupId: group.id,
+    groupCapacity: group.capacity,
+    resourceCapacity: null,
+    capacityLimit: group.capacity,
+    fixedSpots: group.capacity,
+    activeMemberships: 0,
+    futureStarts: 0,
+    endingMemberships: 0,
+    pendingSlotOffers: 0,
+    heldSpots: 0,
+    reservedSpots: 0,
+    trialSpots: 0,
+    makeupSpots: 0,
+    blockedSpots: 0,
+    usedSpots: 0,
+    openSpots: group.capacity,
+    availableSpots: group.capacity,
+    overbookingPolicy: "blocked",
+    isAvailable: group.status === "active",
+    status: group.status === "active" ? "available" : "blocked",
+    reasons: [],
+    blockers: group.status === "active" ? [] : [{ code: "group_not_active", label: "Groep niet actief", detail: "Groep is niet actief.", severity: "blocking" }]
+  };
+}
+
 function activeGroupsForEntry(groups: GroupLookupRow[], entry: WaitlistEntryRow) {
   return groups.filter((group) => {
     if (group.status !== "active" || group.program_id !== entry.program_id) {
@@ -1080,6 +1325,45 @@ function groupOptionLabel(group: GroupLookupRow, lookups: LookupMaps) {
   return `${group.name} - ${stage} - ${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)} (${capacityText(capacity)})`;
 }
 
+function groupSummaryText(lookups: LookupMaps, group: GroupLookupRow) {
+  const stage = lookups.stages.get(group.stage_id)?.name ?? "Niveau onbekend";
+  const resource = group.resource_id ? lookups.resources.get(group.resource_id) : null;
+  const instructor = group.instructor_id ? lookups.instructors.get(group.instructor_id) : null;
+
+  return `${stage} - ${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}${resource ? ` - ${resource.name}` : ""}${instructor ? ` - ${instructor.display_name}` : ""}`;
+}
+
+function suggestedActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    offer_slot: "Lesplek aanbieden",
+    request_more_info: "Meer info vragen",
+    keep_waiting: "Laten wachten",
+    manual_review: "Handmatige review"
+  };
+
+  return labels[action] ?? action;
+}
+
+function suggestedActionTone(action: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (action === "offer_slot") {
+    return "success";
+  }
+
+  if (action === "manual_review") {
+    return "warning";
+  }
+
+  if (action === "request_more_info") {
+    return "info";
+  }
+
+  if (action === "keep_waiting") {
+    return "neutral";
+  }
+
+  return "neutral";
+}
+
 function capacityText(capacity: CapacitySnapshot | undefined) {
   if (!capacity) {
     return "Cap. onbekend";
@@ -1135,6 +1419,13 @@ function preferenceText(days: string[], times: string[]) {
       {timeText}
     </span>
   );
+}
+
+function preferencePlainText(days: string[], times: string[]) {
+  const dayText = days.length > 0 ? days.map(preferredDayLabel).join(", ") : "Geen dagvoorkeur";
+  const timeText = times.length > 0 ? times.map(preferredTimeLabel).join(", ") : "Geen tijdvoorkeur";
+
+  return `${dayText} - ${timeText}`;
 }
 
 function nullableText(value: string | null | undefined) {
@@ -1239,6 +1530,22 @@ function waitlistEventLabel(eventType: string) {
     slot_offered: "Lesplek-aanbod",
     placed: "Geplaatst",
     cancelled: "Geannuleerd"
+  };
+
+  return labels[eventType] ?? eventType;
+}
+
+function placementEventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    created: "Aangemaakt",
+    batch_created: "Batch aangemaakt",
+    approved: "Goedgekeurd",
+    rejected: "Afgewezen",
+    overridden: "Override",
+    offer_sent: "Aanbod verstuurd",
+    request_more_info: "Meer info gevraagd",
+    keep_waiting: "Laten wachten",
+    manual_review: "Handmatige review"
   };
 
   return labels[eventType] ?? eventType;

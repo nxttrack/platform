@@ -491,3 +491,91 @@ Not included in S3:
 - automatic offer sending
 - AI ranking
 - automatic waitlist rematch
+
+## 16. Phase S4 Placement Assistant 2.0 Policy
+
+Phase S4 makes placement the main smart admin showpiece.
+
+The Placement Assistant supports two matching modes:
+
+- best groups for one learner
+- best learners for one group
+
+The match score uses:
+
+- program match
+- stage match
+- preferred day fit
+- preferred time fit
+- capacity availability
+- resource availability
+- instructor availability
+- waitlist priority
+- start date fit
+- blockers
+
+The canonical S4 placement suggestion shape stores:
+
+```txt
+assistant mode
+suggested action
+match score
+match reasons
+match blockers
+match snapshot
+start date
+batch id
+reviewed by
+override reason
+assistant metadata
+smart decision id
+```
+
+The allowed suggested actions are:
+
+- offer slot
+- request more info
+- keep waiting
+- manual review
+
+Only `offer slot` suggestions can be approved into a slot offer. Other suggestions remain admin workflow signals until the admin creates a better match or rejects/overrides with a reason.
+
+The assistant must explain its result in Dutch. Admin-facing UI shows score, reasons, blockers, capacity status, waitlist priority and suggested next action. Parent-facing messaging never exposes internal scoring.
+
+Batch suggestion creation is allowed for selected candidate/group pairs. Batch creation does not place a learner, does not create a group membership, and does not change billing. It only creates placement suggestions.
+
+Audit trail is explicit:
+
+- placement suggestion created
+- batch created
+- approved
+- rejected
+- overridden
+- offer sent
+- request more info
+- keep waiting
+- manual review
+
+Approval flow remains:
+
+```txt
+placement suggestion
+-> admin approve
+-> slot offer
+-> capacity hold
+-> parent accept/decline
+-> enrollment and group membership only after accept
+```
+
+Billing remains separate:
+
+```txt
+Placement Assistant changes placement workflow only.
+It must never change subscriptions, invoices, payment plans or billing state.
+```
+
+Not included in S4:
+
+- fully automatic placement
+- direct payment integration
+- automatic parent messaging for unapproved suggestions
