@@ -168,7 +168,8 @@ export async function getPlatformCompletionSnapshot(filters: Partial<{ query: st
     supabase
       .from("platform_settings")
       .select("id, platform_name, default_locale, default_timezone, support_email, tenant_domain_suffix, staging_domain, production_domain, maintenance_mode, signup_mode, release_channel, updated_at")
-      .eq("id", "global")
+      .order("created_at", { ascending: true })
+      .limit(1)
       .maybeSingle(),
     supabase
       .from("sector_templates")

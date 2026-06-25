@@ -1,4 +1,4 @@
-create table public.platform_settings (
+create table if not exists public.platform_settings (
   id text primary key default 'global',
   platform_name text not null default 'NXTTRACK',
   default_locale text not null default 'nl-NL',
@@ -126,31 +126,72 @@ create trigger platform_integration_statuses_audit_events
   after insert or update or delete on public.platform_integration_statuses
   for each row execute function app_private.record_audit_event();
 
-insert into public.platform_settings (
-  id,
-  platform_name,
-  default_locale,
-  default_timezone,
-  support_email,
-  tenant_domain_suffix,
-  staging_domain,
-  production_domain,
-  release_channel,
-  metadata
-)
-values (
-  'global',
-  'NXTTRACK',
-  'nl-NL',
-  'Europe/Amsterdam',
-  'support@nxttrack.nl',
-  'staging.nxttrack.nl',
-  'staging.nxttrack.nl',
-  'nxttrack.nl',
-  'staging',
-  '{"source":"platform_admin_completion"}'::jsonb
-)
-on conflict (id) do nothing;
+do $$
+declare
+  platform_settings_id_type text;
+begin
+  select udt_name into platform_settings_id_type
+  from information_schema.columns
+  where table_schema = 'public'
+    and table_name = 'platform_settings'
+    and column_name = 'id';
+
+  if exists (select 1 from public.platform_settings) then
+    return;
+  end if;
+
+  if platform_settings_id_type = 'uuid' then
+    insert into public.platform_settings (
+      id,
+      platform_name,
+      default_locale,
+      default_timezone,
+      support_email,
+      tenant_domain_suffix,
+      staging_domain,
+      production_domain,
+      release_channel,
+      metadata
+    )
+    values (
+      '00000000-0000-0000-0000-000000000001'::uuid,
+      'NXTTRACK',
+      'nl-NL',
+      'Europe/Amsterdam',
+      'support@nxttrack.nl',
+      'staging.nxttrack.nl',
+      'staging.nxttrack.nl',
+      'nxttrack.nl',
+      'staging',
+      '{"source":"platform_admin_completion"}'::jsonb
+    );
+  else
+    insert into public.platform_settings (
+      id,
+      platform_name,
+      default_locale,
+      default_timezone,
+      support_email,
+      tenant_domain_suffix,
+      staging_domain,
+      production_domain,
+      release_channel,
+      metadata
+    )
+    values (
+      'global',
+      'NXTTRACK',
+      'nl-NL',
+      'Europe/Amsterdam',
+      'support@nxttrack.nl',
+      'staging.nxttrack.nl',
+      'staging.nxttrack.nl',
+      'nxttrack.nl',
+      'staging',
+      '{"source":"platform_admin_completion"}'::jsonb
+    );
+  end if;
+end $$;
 
 insert into public.sector_templates (
   sector,

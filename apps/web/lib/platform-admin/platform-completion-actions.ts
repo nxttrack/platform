@@ -36,27 +36,31 @@ async function updatePlatformSettings(formData: FormData): Promise<ActionResult>
   try {
     const actor = await requirePlatformWriter("platforminstellingen");
     const admin = createAdminClient();
+    const payload = {
+      platform_name: requiredString(formData, "platform_name"),
+      default_locale: requiredString(formData, "default_locale"),
+      default_timezone: requiredString(formData, "default_timezone"),
+      support_email: optionalEmail(formData, "support_email"),
+      tenant_domain_suffix: optionalString(formData, "tenant_domain_suffix"),
+      staging_domain: optionalString(formData, "staging_domain"),
+      production_domain: optionalString(formData, "production_domain"),
+      maintenance_mode: formData.get("maintenance_mode") === "on",
+      signup_mode: enumValue(formData, "signup_mode", ["invite_only", "request_access", "open"], "invite_only"),
+      release_channel: enumValue(formData, "release_channel", ["staging", "production", "maintenance"], "staging"),
+      updated_by_profile_id: actor.userId,
+      metadata: { updated_via: "platform_settings" }
+    };
+    const existingSettings = await admin.from("platform_settings").select("id").order("created_at", { ascending: true }).limit(1).maybeSingle();
 
-    await throwOnError(
-      admin.from("platform_settings").upsert(
-        {
-          id: "global",
-          platform_name: requiredString(formData, "platform_name"),
-          default_locale: requiredString(formData, "default_locale"),
-          default_timezone: requiredString(formData, "default_timezone"),
-          support_email: optionalEmail(formData, "support_email"),
-          tenant_domain_suffix: optionalString(formData, "tenant_domain_suffix"),
-          staging_domain: optionalString(formData, "staging_domain"),
-          production_domain: optionalString(formData, "production_domain"),
-          maintenance_mode: formData.get("maintenance_mode") === "on",
-          signup_mode: enumValue(formData, "signup_mode", ["invite_only", "request_access", "open"], "invite_only"),
-          release_channel: enumValue(formData, "release_channel", ["staging", "production", "maintenance"], "staging"),
-          updated_by_profile_id: actor.userId,
-          metadata: { updated_via: "platform_settings" }
-        },
-        { onConflict: "id" }
-      )
-    );
+    if (existingSettings.error) {
+      throw new Error(existingSettings.error.message);
+    }
+
+    if (existingSettings.data?.id) {
+      await throwOnError(admin.from("platform_settings").update(payload).eq("id", existingSettings.data.id));
+    } else {
+      await throwOnError(admin.from("platform_settings").insert(payload));
+    }
 
     revalidatePlatform();
     return { notice: "Platforminstellingen zijn opgeslagen.", targetPath: platformSettingsPath };
