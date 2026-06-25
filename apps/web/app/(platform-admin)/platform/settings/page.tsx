@@ -1,5 +1,22 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { PlatformSettingsCompletionPage } from "@/components/platform-admin/platform-completion-pages";
+import { getPlatformCompletionSnapshot } from "@/lib/platform-admin/platform-completion-read-model";
 
-export default function PlatformSettingsPage() {
-  return <RoutePlaceholder kicker="Platformbeheer" title="Instellingen" description="Globale platforminstellingen, audit, domeinen en integraties blijven platform-only en krijgen hier een nette beheerplek." items={["Beveiliging", "Audit", "Domeinen", "Integraties"]} status="Voorbereid" />;
+type PlatformSettingsPageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function PlatformSettingsPage({ searchParams }: PlatformSettingsPageProps) {
+  const params = (await searchParams) ?? {};
+  const snapshot = await getPlatformCompletionSnapshot({
+    query: getParam(params.query),
+    sector: getParam(params.sector),
+    status: getParam(params.status),
+    auditTable: getParam(params.auditTable)
+  });
+
+  return <PlatformSettingsCompletionPage snapshot={snapshot} notice={getParam(params.notice)} error={getParam(params.error)} />;
+}
+
+function getParam(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
 }
