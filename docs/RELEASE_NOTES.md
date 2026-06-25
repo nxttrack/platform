@@ -15,6 +15,7 @@ Scope:
 - Added production observability maturity: external log sink hooks, error reporting hook, persistent deployment release metadata, platform admin release visibility, and monitorable uptime/ready contract.
 - Added UI/UX enterprise audit notes, route-aware shell navigation, mobile/tablet shell menu and tenant CTA contrast hardening.
 - Added Lovable pixel QA Playwright suite with desktop/mobile screenshot baselines and CI artifact upload on visual mismatch.
+- Added staging fallback resolution for `E2E_BASE_URL` so browser E2E uses the AquaSwim staging tenant when the repository variable is not configured.
 
 Verification:
 

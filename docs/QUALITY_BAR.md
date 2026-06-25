@@ -27,7 +27,7 @@ When `E2E_BASE_URL` is configured, the smoke test also requests `/api/health`, `
 - manual payment admin boundary
 - private document download route
 
-CI requires `E2E_BASE_URL` for every push to `staging` or `production`. Optional fixture secrets (`E2E_ADMIN_EMAIL`, `E2E_PARENT_EMAIL`, `E2E_INSTRUCTOR_EMAIL`, `E2E_SLOT_OFFER_TOKEN`, `E2E_DOCUMENT_ID`) promote the smoke suite from auth-boundary checks to real workflow checks.
+CI requires an E2E base URL for every push to `staging` or `production`. The workflow uses the `E2E_BASE_URL` repository variable when present; staging falls back to `https://aquaswim-demo.staging.nxttrack.nl` so staging CI does not fail on a missing variable. Production still requires an explicit `E2E_BASE_URL`. Optional fixture secrets (`E2E_ADMIN_EMAIL`, `E2E_PARENT_EMAIL`, `E2E_INSTRUCTOR_EMAIL`, `E2E_SLOT_OFFER_TOKEN`, `E2E_DOCUMENT_ID`) promote the smoke suite from auth-boundary checks to real workflow checks.
 
 ## Responsive And Accessibility QA
 
