@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
+import { createIntakeRecommendationDecision } from "@/lib/smart-flow/intake-recommendation";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicTenantSiteSnapshot } from "./tenant-site";
@@ -65,6 +67,20 @@ export async function submitIntakeAction(formData: FormData) {
   if (eventResult.error) {
     throw new Error(eventResult.error.message);
   }
+
+  const decisionClient = createAdminClient();
+  const stageRecommendationDecisionId = await createIntakeRecommendationDecision(decisionClient, {
+    id: submissionId,
+    tenantId: snapshot.tenant.id,
+    program,
+    intakeType,
+    participantBirthdate: submission.participant_birthdate,
+    preferredDays: submission.preferred_days,
+    preferredTimeWindows: submission.preferred_time_windows,
+    answers: submission.answers,
+    intakeFormConfigId: config.id
+  });
+  await throwOnError(decisionClient.from("intake_submissions").update({ stage_recommendation_decision_id: stageRecommendationDecisionId }).eq("id", submissionId).eq("tenant_id", snapshot.tenant.id));
 
   await queueDirectEventMessage(supabase, {
     tenantId: snapshot.tenant.id,
@@ -155,4 +171,12 @@ function enumValue(formData: FormData, key: string, allowed: string[], fallback:
   const value = optionalString(formData, key) ?? fallback;
 
   return allowed.includes(value) ? value : fallback;
+}
+
+async function throwOnError(builder: PromiseLike<{ error: { message: string } | null }>) {
+  const { error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
 }

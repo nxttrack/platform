@@ -300,3 +300,27 @@ The next work should focus on:
 - Adding decision snapshots and audit.
 - Improving admin, parent, and instructor UX around next-best-actions.
 - Keeping automation semi-automatic until confidence is earned.
+
+## 12. Phase S0 Architecture Decision
+
+Phase S0 introduces a generic smart decision layer instead of extending every module table with a different scoring shape.
+
+The platform uses:
+
+- `tenant_smart_engine_settings` for per-tenant engine mode, rule version, weights, thresholds, expiry settings, hold settings, notification settings, and metadata.
+- `smart_decisions` for explainable recommendations and human decisions.
+
+The first engines wired to this shape are:
+
+- `intake_recommendation`
+- `placement`
+
+This gives every later smart engine the same contract:
+
+```txt
+input snapshot -> rule version -> score/confidence -> reasons/blockers -> recommendation -> human decision -> result -> audit
+```
+
+The default automation mode remains `semi_automatic`.
+
+Rule versioning is documented in `docs/SMART_FLOW_RULE_VERSIONING.md`.

@@ -19,6 +19,7 @@ import type {
   PlacementWorkflowSnapshot,
   ProgramLookupRow,
   ResourceLookupRow,
+  SmartDecisionSummaryRow,
   SlotOfferRow,
   StageLookupRow,
   WaitlistEntryRow
@@ -38,6 +39,7 @@ type LookupMaps = {
   suggestionsByWaitlist: Map<string, PlacementSuggestionRow[]>;
   offersBySuggestion: Map<string, SlotOfferRow>;
   capacitiesByGroup: Map<string, CapacitySnapshot>;
+  smartDecisionsBySubject: Map<string, SmartDecisionSummaryRow>;
 };
 
 type Column<Row> = {
@@ -75,6 +77,11 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
               )
             },
             { header: "Programma", render: (intake) => lookups.programs.get(intake.program_id)?.name ?? "Onbekend" },
+            {
+              header: "Smart advies",
+              className: "min-w-[260px] whitespace-normal",
+              render: (intake) => <SmartDecisionPanel decision={smartDecisionFor(lookups, "intake_recommendation", "intake_submission", intake.id)} />
+            },
             { header: "Type", render: (intake) => <StatusPill tone="info">{intakeOptionLabel(intake.intake_type)}</StatusPill> },
             { header: "Status", render: (intake) => <StatusPill tone={workflowTone(intake.status)}>{intake.status}</StatusPill> },
             { header: "Voorkeuren", className: "min-w-[220px] whitespace-normal", render: (intake) => preferenceText(intake.preferred_days, intake.preferred_time_windows) },
@@ -159,7 +166,16 @@ export function AdminPlacementSuggestionsPage({ snapshot }: PlacementPageProps) 
             { header: "Score", render: (suggestion) => <ScorePill score={suggestion.score} /> },
             { header: "Status", render: (suggestion) => <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill> },
             { header: "Capaciteit", className: "min-w-[180px] whitespace-normal", render: (suggestion) => capacityText(lookups.capacitiesByGroup.get(suggestion.group_id)) },
-            { header: "Onderbouwing", className: "min-w-[260px] whitespace-normal", render: (suggestion) => nullableText(suggestion.rationale) },
+            {
+              header: "Onderbouwing",
+              className: "min-w-[320px] whitespace-normal",
+              render: (suggestion) => (
+                <div className="grid gap-2">
+                  <span>{nullableText(suggestion.rationale)}</span>
+                  <SmartDecisionPanel decision={smartDecisionFor(lookups, "placement", "placement_suggestion", suggestion.id)} compact />
+                </div>
+              )
+            },
             {
               header: "Actie",
               className: "min-w-[320px] whitespace-normal",
@@ -512,8 +528,58 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     waitlistEntriesByIntake: new Map(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [[entry.intake_submission_id, entry] as const] : []))),
     suggestionsByWaitlist: groupBy(data.placementSuggestions, (suggestion) => suggestion.waitlist_entry_id),
     offersBySuggestion: new Map(data.slotOffers.map((offer) => [offer.placement_suggestion_id, offer])),
-    capacitiesByGroup: new Map(data.capacities.map((capacity) => [capacity.groupId, capacity]))
+    capacitiesByGroup: new Map(data.capacities.map((capacity) => [capacity.groupId, capacity])),
+    smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision]))
   };
+}
+
+function SmartDecisionPanel({ compact, decision }: { compact?: boolean; decision: SmartDecisionSummaryRow | null }) {
+  if (!decision) {
+    return <span className="text-xs text-muted-foreground">Nog geen smart decision.</span>;
+  }
+
+  const recommendedStage = typeof decision.recommendation.recommended_stage_label === "string" ? decision.recommendation.recommended_stage_label : null;
+  const action = typeof decision.recommendation.action === "string" ? decision.recommendation.action : null;
+  const reasons = decision.reasons_json.slice(0, compact ? 2 : 3);
+  const blockers = decision.blockers_json.filter((blocker) => blocker.severity !== "warning");
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-3 text-xs">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <StatusPill tone={decision.confidence === "high" ? "success" : decision.confidence === "medium" ? "info" : "warning"}>{decision.confidence}</StatusPill>
+        {typeof decision.score === "number" ? <span className="font-semibold text-foreground">{decision.score}/100</span> : null}
+        <span className="text-muted-foreground">{decision.rule_version}</span>
+      </div>
+      {recommendedStage ? <p className="font-semibold text-foreground">Advies: {recommendedStage}</p> : action ? <p className="font-semibold text-foreground">Actie: {smartActionLabel(action)}</p> : null}
+      {blockers.length > 0 ? <p className="mt-1 font-semibold text-red-700">{blockers.length} blocker{blockers.length === 1 ? "" : "s"}</p> : null}
+      <ul className="mt-2 grid gap-1 text-muted-foreground">
+        {reasons.map((reason) => (
+          <li key={`${reason.code ?? reason.label}`}>
+            <span className="font-semibold text-foreground">{reason.label ?? reason.code}</span>
+            {reason.detail ? ` - ${reason.detail}` : ""}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function smartDecisionFor(lookups: LookupMaps, engineKey: string, subjectType: string, subjectId: string) {
+  return lookups.smartDecisionsBySubject.get(smartDecisionKey(engineKey, subjectType, subjectId)) ?? null;
+}
+
+function smartDecisionKey(engineKey: string, subjectType: string, subjectId: string) {
+  return `${engineKey}:${subjectType}:${subjectId}`;
+}
+
+function smartActionLabel(action: string) {
+  const labels: Record<string, string> = {
+    approve_slot_offer: "Lesplek-aanbod voorbereiden",
+    manual_review: "Handmatige review",
+    recommend_start_stage: "Startniveau adviseren"
+  };
+
+  return labels[action] ?? action;
 }
 
 function byId<Row extends { id: string }>(rows: Row[]) {

@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
+import { updateSmartDecisionLifecycle } from "@/lib/smart-flow/decision";
+import { createPlacementSmartDecision } from "@/lib/smart-flow/placement-decision";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -101,9 +103,11 @@ export async function createPlacementSuggestionAction(formData: FormData) {
   const dayMatch = waitlistEntry.preferred_days.includes(preferredWeekday);
   const stageMatch = !waitlistEntry.recommended_stage_id || waitlistEntry.recommended_stage_id === group.stage_id;
   const score = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, availableSpots * 2));
+  const rationale = optionalString(formData, "rationale") ?? `Capaciteit beschikbaar (${availableSpots} plek${availableSpots === 1 ? "" : "ken"}).${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`;
 
-  await throwOnError(
-    supabase.from("placement_suggestions").insert({
+  const suggestionResult = await supabase
+    .from("placement_suggestions")
+    .insert({
       tenant_id: tenantId,
       waitlist_entry_id: waitlistEntry.id,
       intake_submission_id: waitlistEntry.intake_submission_id,
@@ -119,10 +123,39 @@ export async function createPlacementSuggestionAction(formData: FormData) {
         active_memberships: activeMemberships,
         available_spots: availableSpots
       },
-      rationale: optionalString(formData, "rationale") ?? `Capaciteit beschikbaar (${availableSpots} plek${availableSpots === 1 ? "" : "ken"}).${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`,
+      rationale,
       status: "suggested"
     })
-  );
+    .select("id")
+    .single();
+
+  if (suggestionResult.error || !suggestionResult.data) {
+    throw new Error(suggestionResult.error?.message ?? "Plaatsingsvoorstel kon niet worden aangemaakt.");
+  }
+
+  const suggestionId = (suggestionResult.data as { id: string }).id;
+  const smartDecisionId = await createPlacementSmartDecision(supabase, {
+    tenantId,
+    suggestionId,
+    waitlistEntryId: waitlistEntry.id,
+    intakeSubmissionId: waitlistEntry.intake_submission_id,
+    programId: waitlistEntry.program_id,
+    recommendedStageId: waitlistEntry.recommended_stage_id,
+    group,
+    preferredWeekday,
+    preferredDays: waitlistEntry.preferred_days,
+    preferredTimeWindows: waitlistEntry.preferred_time_windows,
+    dayMatch,
+    stageMatch,
+    activeMemberships,
+    capacityLimit,
+    availableSpots,
+    resourceCapacity: resource?.capacity ?? null,
+    score,
+    rationale
+  });
+
+  await throwOnError(supabase.from("placement_suggestions").update({ smart_decision_id: smartDecisionId }).eq("id", suggestionId).eq("tenant_id", tenantId));
 
   await throwOnError(supabase.from("waitlist_entries").update({ status: "matched" }).eq("id", waitlistEntry.id).eq("tenant_id", tenantId));
 
@@ -134,7 +167,7 @@ export async function createPlacementSuggestionAction(formData: FormData) {
 }
 
 export async function rejectPlacementSuggestionAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const suggestionId = requiredString(formData, "placement_suggestion_id");
   const suggestion = await singleRow<{ id: string; waitlist_entry_id: string; intake_submission_id: string | null }>(
     supabase.from("placement_suggestions").select("id, waitlist_entry_id, intake_submission_id").eq("id", suggestionId).eq("tenant_id", tenantId).single()
@@ -147,11 +180,22 @@ export async function rejectPlacementSuggestionAction(formData: FormData) {
     await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", suggestion.intake_submission_id).eq("tenant_id", tenantId));
   }
 
+  await updateSmartDecisionLifecycle(supabase, {
+    tenantId,
+    engineKey: "placement",
+    subjectType: "placement_suggestion",
+    subjectId: suggestion.id,
+    decisionStatus: "rejected",
+    humanDecision: "rejected",
+    result: { waitlist_entry_status: "queued" },
+    decidedByProfileId: actorProfileId
+  });
+
   revalidatePlacementWorkflow();
 }
 
 export async function approvePlacementSuggestionAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const suggestionId = requiredString(formData, "placement_suggestion_id");
   const suggestion = await singleRow<{
     id: string;
@@ -226,6 +270,16 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
 
   await maybeInsertEvent(supabase, tenantId, suggestion.id, "sent", "Slot offer sent from admin approval.");
   await maybeQueueSlotOfferMessage(supabase, tenantId, offerId, token, suggestion.intake_submission_id);
+  await updateSmartDecisionLifecycle(supabase, {
+    tenantId,
+    engineKey: "placement",
+    subjectType: "placement_suggestion",
+    subjectId: suggestion.id,
+    decisionStatus: "approved",
+    humanDecision: "approved",
+    result: { slot_offer_id: offerId, slot_offer_status: "sent" },
+    decidedByProfileId: actorProfileId
+  });
   revalidatePlacementWorkflow();
 }
 
@@ -257,7 +311,8 @@ async function requireTenantWriter() {
 
   return {
     supabase: await createClient(),
-    tenantId: context.activeTenant.tenantId
+    tenantId: context.activeTenant.tenantId,
+    actorProfileId: context.user.id
   };
 }
 

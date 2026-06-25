@@ -49,6 +49,37 @@ export type PlacementSuggestionRow = {
   created_at: string;
 };
 
+export type SmartDecisionSummaryRow = {
+  id: string;
+  engine_key: string;
+  subject_type: string;
+  subject_id: string;
+  rule_version: string;
+  score: number | null;
+  confidence: string;
+  reasons_json: SmartDecisionReasonSummary[];
+  blockers_json: SmartDecisionBlockerSummary[];
+  recommendation: Record<string, unknown>;
+  decision_status: string;
+  human_decision: string | null;
+  override_reason: string | null;
+  created_at: string;
+};
+
+export type SmartDecisionReasonSummary = {
+  code?: string;
+  label?: string;
+  detail?: string;
+  weight?: number;
+};
+
+export type SmartDecisionBlockerSummary = {
+  code?: string;
+  label?: string;
+  detail?: string;
+  severity?: string;
+};
+
 export type SlotOfferRow = {
   id: string;
   placement_suggestion_id: string;
@@ -128,6 +159,7 @@ export type PlacementWorkflowData = {
   resources: ResourceLookupRow[];
   memberships: GroupMembershipLookupRow[];
   capacities: CapacitySnapshot[];
+  smartDecisions: SmartDecisionSummaryRow[];
 };
 
 export type PlacementWorkflowSnapshot = {
@@ -175,7 +207,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
   const supabase = await createClient();
   const tenantId = tenant.id;
 
-  const [intakesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult] = await Promise.all([
+  const [intakesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, smartDecisionsResult] = await Promise.all([
     supabase
       .from("intake_submissions")
       .select("id, program_id, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, notes, status, created_at")
@@ -207,7 +239,13 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       .order("weekday", { ascending: true })
       .order("starts_at", { ascending: true }),
     supabase.from("resources").select("id, name, capacity, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
-    supabase.from("group_memberships").select("id, group_id, status, ends_on").eq("tenant_id", tenantId)
+    supabase.from("group_memberships").select("id, group_id, status, ends_on").eq("tenant_id", tenantId),
+    supabase
+      .from("smart_decisions")
+      .select("id, engine_key, subject_type, subject_id, rule_version, score, confidence, reasons_json, blockers_json, recommendation, decision_status, human_decision, override_reason, created_at")
+      .eq("tenant_id", tenantId)
+      .in("engine_key", ["intake_recommendation", "placement"])
+      .order("created_at", { ascending: false })
   ]);
 
   const errors = collectErrors({
@@ -219,7 +257,8 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     stages: stagesResult.error,
     groups: groupsResult.error,
     resources: resourcesResult.error,
-    group_memberships: membershipsResult.error
+    group_memberships: membershipsResult.error,
+    smart_decisions: smartDecisionsResult.error
   });
 
   const resources = asRows<ResourceLookupRow>(resourcesResult.data);
@@ -240,7 +279,8 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       groups,
       resources,
       memberships,
-      capacities: computeCapacities(groups, resources, memberships)
+      capacities: computeCapacities(groups, resources, memberships),
+      smartDecisions: asRows<SmartDecisionSummaryRow>(smartDecisionsResult.data)
     }
   };
 }
@@ -276,7 +316,8 @@ function createEmptyData(): PlacementWorkflowData {
     groups: [],
     resources: [],
     memberships: [],
-    capacities: []
+    capacities: [],
+    smartDecisions: []
   };
 }
 
