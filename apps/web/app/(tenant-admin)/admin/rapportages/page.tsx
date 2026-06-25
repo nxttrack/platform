@@ -4,8 +4,13 @@ import { getAdminPhase12Snapshot } from "@/lib/operations/admin-phase12-read-mod
 import { getAdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import { getPlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
 
-export default async function AdminReportsPage() {
-  const [phase12, domain, placement, payments] = await Promise.all([getAdminPhase12Snapshot(), getAdminDomainSnapshot(), getPlacementWorkflowSnapshot(), getAdminPaymentsSnapshot()]);
+type AdminReportsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminReportsPage({ searchParams }: AdminReportsPageProps) {
+  const params = await searchParams;
+  const [phase12, domain, placement, payments] = await Promise.all([getAdminPhase12Snapshot({ reportFilters: params }), getAdminDomainSnapshot(), getPlacementWorkflowSnapshot(), getAdminPaymentsSnapshot()]);
 
   return <AdminReportsExportsPage domain={domain} payments={payments} phase12={phase12} placement={placement} />;
 }

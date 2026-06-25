@@ -6,6 +6,7 @@ import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { extractTemplateVariables, prepareEmailEnvelope, renderTemplate, validateTemplateVariables, type EmailProvider } from "@/lib/communication/email-adapter";
 import { sendLiveEmail, type LiveSmtpSettings } from "@/lib/communication/live-email";
+import { buildReportRows as buildReportingRows, canRoleExportReport, normalizeReportFilters, normalizeReportType, reportFilterColumns, reportFiltersToJson } from "@/lib/operations/reporting";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -498,18 +499,23 @@ export async function updateTenantDocumentRecordAction(formData: FormData) {
 }
 
 export async function createReportExportRequestAction(formData: FormData) {
-  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const { supabase, tenantId, profileId, roles } = await requireTenantWriter();
+  const reportType = normalizeReportType(optionalString(formData, "report_type"));
+  const filters = normalizeReportFilters({ ...jsonObjectValue(formData, "filters"), ...formDataToReportFilterObject(formData) });
+  await requireReportExportPermission(supabase, tenantId, roles, reportType);
 
   await throwOnError(
     supabase.from("report_export_requests").insert({
       tenant_id: tenantId,
-      report_type: enumValue(formData, "report_type", ["occupancy", "waitlist", "progress", "payments"], "occupancy"),
-      export_format: enumValue(formData, "export_format", ["csv", "xlsx", "pdf", "json"], "csv"),
+      report_type: reportType,
+      export_format: enumValue(formData, "export_format", ["csv", "xlsx", "json"], "csv"),
       status: enumValue(formData, "status", ["requested", "processing", "ready", "failed", "cancelled"], "requested"),
-      filters: jsonObjectValue(formData, "filters"),
+      filters: reportFiltersToJson(filters),
+      ...reportFilterColumns(filters),
+      export_scope: roles.includes("instructor") && !roles.some((role) => ["tenant_owner", "tenant_admin", "tenant_staff"].includes(role)) ? "instructor" : "tenant_admin",
       file_path: optionalString(formData, "file_path"),
       requested_by_profile_id: profileId,
-      metadata: { phase: "phase12", export_worker: "prepared" }
+      metadata: { phase: "reporting", export_worker: "query_backed" }
     })
   );
 
@@ -517,21 +523,25 @@ export async function createReportExportRequestAction(formData: FormData) {
 }
 
 export async function updateReportExportRequestAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, roles } = await requireTenantWriter();
   const status = enumValue(formData, "status", ["requested", "processing", "ready", "failed", "cancelled"], "requested");
+  const reportType = normalizeReportType(optionalString(formData, "report_type"));
+  const filters = normalizeReportFilters({ ...jsonObjectValue(formData, "filters"), ...formDataToReportFilterObject(formData) });
+  await requireReportExportPermission(supabase, tenantId, roles, reportType);
 
   await throwOnError(
     supabase
       .from("report_export_requests")
       .update({
-        report_type: enumValue(formData, "report_type", ["occupancy", "waitlist", "progress", "payments"], "occupancy"),
-        export_format: enumValue(formData, "export_format", ["csv", "xlsx", "pdf", "json"], "csv"),
+        report_type: reportType,
+        export_format: enumValue(formData, "export_format", ["csv", "xlsx", "json"], "csv"),
         status,
-        filters: jsonObjectValue(formData, "filters"),
+        filters: reportFiltersToJson(filters),
+        ...reportFilterColumns(filters),
         file_path: optionalString(formData, "file_path"),
         completed_at: status === "ready" ? new Date().toISOString() : null,
         error_message: optionalString(formData, "error_message"),
-        metadata: { phase: "phase12", export_worker: "prepared" }
+        metadata: { phase: "reporting", export_worker: "query_backed" }
       })
       .eq("id", requiredString(formData, "id"))
       .eq("tenant_id", tenantId)
@@ -541,11 +551,11 @@ export async function updateReportExportRequestAction(formData: FormData) {
 }
 
 export async function generateReportExportAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, roles } = await requireTenantWriter();
   const requestId = requiredString(formData, "id");
   const requestResult = await supabase
     .from("report_export_requests")
-    .select("id, report_type, export_format, filters")
+    .select("id, report_type, export_format, filters, program_id, stage_id, group_id, instructor_id, status_filter, date_from, date_to")
     .eq("tenant_id", tenantId)
     .eq("id", requestId)
     .single();
@@ -557,15 +567,37 @@ export async function generateReportExportAction(formData: FormData) {
   await supabase.from("report_export_requests").update({ status: "processing", error_message: null }).eq("tenant_id", tenantId).eq("id", requestId);
 
   try {
-    const request = requestResult.data as { id: string; report_type: string; export_format: string; filters: Record<string, unknown> };
-    const rows = await buildReportRows(supabase, tenantId, request.report_type);
-    const generatedFormat = request.export_format === "json" ? "json" : "csv";
-    const body = generatedFormat === "json" ? JSON.stringify(rows, null, 2) : toCsv(rows);
-    const contentType = generatedFormat === "json" ? "application/json" : "text/csv";
-    const filePath = `${tenantId}/reports/${request.report_type}-${request.id}.${generatedFormat}`;
+    const request = requestResult.data as {
+      id: string;
+      report_type: string;
+      export_format: string;
+      filters: Record<string, unknown>;
+      program_id: string | null;
+      stage_id: string | null;
+      group_id: string | null;
+      instructor_id: string | null;
+      status_filter: string | null;
+      date_from: string | null;
+      date_to: string | null;
+    };
+    const reportType = normalizeReportType(request.report_type);
+    const filters = normalizeReportFilters({
+      ...(request.filters ?? {}),
+      program_id: request.program_id,
+      stage_id: request.stage_id,
+      group_id: request.group_id,
+      instructor_id: request.instructor_id,
+      status_filter: request.status_filter,
+      date_from: request.date_from,
+      date_to: request.date_to
+    });
+    await requireReportExportPermission(supabase, tenantId, roles, reportType);
+    const rows = await buildReportingRows(supabase, tenantId, reportType, filters);
+    const generated = buildReportFile(rows, request.export_format);
+    const filePath = `${tenantId}/reports/${request.report_type}-${request.id}.${generated.extension}`;
     const admin = createAdminClient();
-    const uploadResult = await admin.storage.from(documentBucket).upload(filePath, new Blob([body], { type: contentType }), {
-      contentType,
+    const uploadResult = await admin.storage.from(documentBucket).upload(filePath, new Blob([generated.body], { type: generated.contentType }), {
+      contentType: generated.contentType,
       upsert: true
     });
 
@@ -579,14 +611,15 @@ export async function generateReportExportAction(formData: FormData) {
         .update({
           status: "ready",
           file_path: filePath,
+          row_count: rows.length,
           completed_at: new Date().toISOString(),
           error_message: null,
           metadata: {
-            phase: "sprint5",
+            phase: "reporting",
             row_count: rows.length,
             requested_format: request.export_format,
-            generated_format: generatedFormat,
-            filters: request.filters ?? {}
+            generated_format: generated.generatedFormat,
+            filters: reportFiltersToJson(filters)
           }
         })
         .eq("tenant_id", tenantId)
@@ -604,6 +637,27 @@ export async function generateReportExportAction(formData: FormData) {
       .eq("id", requestId);
     throw error;
   }
+
+  revalidatePhase12();
+}
+
+export async function upsertReportPermissionGrantAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantAdmin();
+
+  await throwOnError(
+    supabase.from("report_permission_grants").upsert(
+      {
+        tenant_id: tenantId,
+        report_key: enumValue(formData, "report_key", ["occupancy", "waitlist", "progress", "attendance", "payments", "revenue", "exports"], "occupancy"),
+        role: enumValue(formData, "role", ["tenant_owner", "tenant_admin", "tenant_staff", "instructor"], "tenant_staff"),
+        can_view: boolValue(formData, "can_view"),
+        can_export: boolValue(formData, "can_export"),
+        created_by_profile_id: profileId,
+        metadata: { phase: "reporting", source: "tenant_admin" }
+      },
+      { onConflict: "tenant_id,report_key,role" }
+    )
+  );
 
   revalidatePhase12();
 }
@@ -774,54 +828,6 @@ async function syncParentDocumentVisibility(supabase: TenantSupabaseClient, docu
   }
 }
 
-async function buildReportRows(supabase: TenantSupabaseClient, tenantId: string, reportType: string) {
-  if (reportType === "occupancy") {
-    const [groupsResult, membershipsResult] = await Promise.all([
-      supabase.from("groups").select("id, name, capacity, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
-      supabase.from("group_memberships").select("group_id, status").eq("tenant_id", tenantId).in("status", ["planned", "active"])
-    ]);
-    throwResultError(groupsResult.error);
-    throwResultError(membershipsResult.error);
-
-    return (groupsResult.data ?? []).map((group) => {
-      const active = (membershipsResult.data ?? []).filter((membership) => membership.group_id === group.id).length;
-
-      return {
-        group: group.name,
-        status: group.status,
-        capacity: group.capacity,
-        active_memberships: active,
-        available_spots: Math.max(0, group.capacity - active)
-      };
-    });
-  }
-
-  if (reportType === "waitlist") {
-    const result = await supabase.from("waitlist_entries").select("status, priority, requested_option, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false });
-    throwResultError(result.error);
-    return result.data ?? [];
-  }
-
-  if (reportType === "progress") {
-    const result = await supabase.from("progress").select("participant_id, enrollment_id, stage_id, status, score, assessed_at, updated_at").eq("tenant_id", tenantId).order("updated_at", { ascending: false });
-    throwResultError(result.error);
-    return result.data ?? [];
-  }
-
-  const result = await supabase.from("invoices").select("invoice_number, title, status, amount_due_cents, amount_paid_cents, currency, issued_on, due_on").eq("tenant_id", tenantId).order("issued_on", { ascending: false });
-  throwResultError(result.error);
-  return (result.data ?? []).map((invoice) => ({
-    ...invoice,
-    open_amount_cents: Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents)
-  }));
-}
-
-function throwResultError(error: { message: string } | null) {
-  if (error) {
-    throw new Error(error.message);
-  }
-}
-
 function toCsv(rows: Array<Record<string, unknown>>) {
   if (rows.length === 0) {
     return "";
@@ -833,6 +839,53 @@ function toCsv(rows: Array<Record<string, unknown>>) {
     headers.join(","),
     ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(","))
   ].join("\n");
+}
+
+function buildReportFile(rows: Array<Record<string, unknown>>, requestedFormat: string) {
+  if (requestedFormat === "json") {
+    return {
+      body: JSON.stringify(rows, null, 2),
+      contentType: "application/json",
+      extension: "json",
+      generatedFormat: "json"
+    };
+  }
+
+  if (requestedFormat === "xlsx") {
+    return {
+      body: toExcelHtml(rows),
+      contentType: "application/vnd.ms-excel",
+      extension: "xls",
+      generatedFormat: "excel_compatible_html"
+    };
+  }
+
+  return {
+    body: toCsv(rows),
+    contentType: "text/csv",
+    extension: "csv",
+    generatedFormat: "csv"
+  };
+}
+
+function toExcelHtml(rows: Array<Record<string, unknown>>) {
+  const headers = Object.keys(rows[0] ?? {});
+  const headerCells = headers.map((header) => `<th>${escapeHtml(header)}</th>`).join("");
+  const bodyRows = rows
+    .map((row) => `<tr>${headers.map((header) => `<td>${escapeHtml(row[header])}</td>`).join("")}</tr>`)
+    .join("");
+
+  return `<!doctype html><html><head><meta charset="utf-8" /></head><body><table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
+}
+
+function escapeHtml(value: unknown) {
+  const stringValue = value === null || value === undefined ? "" : typeof value === "string" ? value : JSON.stringify(value);
+
+  return stringValue
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
 }
 
 function csvCell(value: unknown) {
@@ -882,8 +935,47 @@ async function requireTenantWriter() {
   return {
     supabase: await createClient(),
     tenantId: context.activeTenant.tenantId,
-    profileId: context.user.id
+    profileId: context.user.id,
+    roles: context.activeTenant.roles
   };
+}
+
+async function requireTenantAdmin() {
+  const selection = await getActiveTenantSelection();
+  const context = await getTrustedAuthContext(selection);
+
+  if (context.status !== "authenticated" || !context.activeTenant) {
+    throw new Error("Geen actieve tenant gevonden.");
+  }
+
+  const canManage = context.activeTenant.roles.some((role) => ["tenant_owner", "tenant_admin"].includes(role));
+
+  if (!canManage) {
+    throw new Error("Je hebt geen rechten om rapportrechten te wijzigen.");
+  }
+
+  if (!getSupabasePublicConfig()) {
+    throw new Error("Supabase is niet geconfigureerd.");
+  }
+
+  return {
+    supabase: await createClient(),
+    tenantId: context.activeTenant.tenantId,
+    profileId: context.user.id,
+    roles: context.activeTenant.roles
+  };
+}
+
+async function requireReportExportPermission(supabase: TenantSupabaseClient, tenantId: string, roles: readonly string[], reportType: string) {
+  const result = await supabase.from("report_permission_grants").select("id, report_key, role, can_view, can_export").eq("tenant_id", tenantId);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  if (!canRoleExportReport(result.data ?? [], roles, reportType)) {
+    throw new Error("Je hebt geen rechten om dit rapport te exporteren.");
+  }
 }
 
 function revalidatePhase12() {
@@ -995,6 +1087,22 @@ function optionalDateTime(formData: FormData, key: string) {
   }
 
   return value;
+}
+
+function boolValue(formData: FormData, key: string) {
+  return formData.get(key) === "on" || formData.get(key) === "true";
+}
+
+function formDataToReportFilterObject(formData: FormData) {
+  return {
+    program_id: optionalString(formData, "program_id"),
+    stage_id: optionalString(formData, "stage_id"),
+    group_id: optionalString(formData, "group_id"),
+    instructor_id: optionalString(formData, "instructor_id"),
+    status_filter: optionalString(formData, "status_filter"),
+    date_from: optionalString(formData, "date_from"),
+    date_to: optionalString(formData, "date_to")
+  };
 }
 
 function listValue(formData: FormData, key: string) {

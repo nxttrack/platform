@@ -38,6 +38,7 @@ if (!existsSync(migrationsDir)) {
     "message_outbox",
     "tenant_document_records",
     "report_export_requests",
+    "report_permission_grants",
     "finance_export_requests",
     "platform_smtp_settings",
     "audit_events"
@@ -54,6 +55,7 @@ if (!existsSync(migrationsDir)) {
     "message_outbox",
     "tenant_document_records",
     "report_export_requests",
+    "report_permission_grants",
     "finance_export_requests",
     "platform_smtp_settings"
   ];

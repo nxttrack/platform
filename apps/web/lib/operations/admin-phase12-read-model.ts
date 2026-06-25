@@ -1,5 +1,6 @@
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { getReportingDashboardData, normalizeReportFilters, type ReportFilters, type ReportPermissionGrantRow, type ReportingDashboardData } from "@/lib/operations/reporting";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -105,6 +106,15 @@ export type ReportExportRequestRow = {
   export_format: string;
   status: string;
   filters: Record<string, unknown>;
+  program_id: string | null;
+  stage_id: string | null;
+  group_id: string | null;
+  instructor_id: string | null;
+  status_filter: string | null;
+  date_from: string | null;
+  date_to: string | null;
+  row_count: number | null;
+  export_scope: string;
   metadata: Record<string, unknown>;
   file_path: string | null;
   completed_at: string | null;
@@ -150,6 +160,8 @@ export type AdminPhase12Data = {
   operationalTasks: OperationalTaskRow[];
   documentRecords: TenantDocumentRecordRow[];
   reportExports: ReportExportRequestRow[];
+  reportPermissionGrants: ReportPermissionGrantRow[];
+  reporting: ReportingDashboardData;
   participants: OperationsParticipantRow[];
   enrollments: OperationsEnrollmentRow[];
   programs: OperationsProgramRow[];
@@ -169,10 +181,11 @@ export type AdminPhase12Snapshot = {
   errors: string[];
 };
 
-export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
+export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportFilters | Record<string, unknown> } = {}): Promise<AdminPhase12Snapshot> {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
   const emptyData = createEmptyData();
+  const reportFilters = isReportFilters(options.reportFilters) ? options.reportFilters : normalizeReportFilters(options.reportFilters);
 
   if (context.status !== "authenticated" || !context.activeTenant) {
     return {
@@ -245,7 +258,7 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
       .order("created_at", { ascending: false }),
     supabase
       .from("report_export_requests")
-      .select("id, report_type, export_format, status, filters, metadata, file_path, completed_at, error_message, created_at")
+      .select("id, report_type, export_format, status, filters, program_id, stage_id, group_id, instructor_id, status_filter, date_from, date_to, row_count, export_scope, metadata, file_path, completed_at, error_message, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
     supabase.from("participants").select("id, display_name, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
@@ -268,6 +281,14 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
     profileIds.length === 0
       ? { data: [], error: null }
       : await supabase.from("profiles").select("id, full_name").in("id", profileIds).order("full_name", { ascending: true });
+  let reporting = createEmptyReporting(reportFilters);
+  let reportingError: { message: string } | null = null;
+
+  try {
+    reporting = await getReportingDashboardData(supabase, tenantId, reportFilters);
+  } catch (error) {
+    reportingError = { message: error instanceof Error ? error.message : "Rapportagequeries mislukt." };
+  }
 
   const errors = collectErrors({
     communication_provider_configs: providerConfigsResult.error,
@@ -282,7 +303,8 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
     certificates: certificatesResult.error,
     tenant_memberships: tenantMembersResult.error,
     participant_guardians: guardiansResult.error,
-    profiles: profilesResult.error
+    profiles: profilesResult.error,
+    reporting: reportingError
   });
 
   return {
@@ -296,6 +318,8 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
       operationalTasks: tasks,
       documentRecords: asRows<TenantDocumentRecordRow>(documentRecordsResult.data),
       reportExports: asRows<ReportExportRequestRow>(reportExportsResult.data),
+      reportPermissionGrants: reporting.permissions,
+      reporting,
       participants: asRows<OperationsParticipantRow>(participantsResult.data),
       enrollments: asRows<OperationsEnrollmentRow>(enrollmentsResult.data),
       programs: asRows<OperationsProgramRow>(programsResult.data),
@@ -313,12 +337,40 @@ function createEmptyData(): AdminPhase12Data {
     operationalTasks: [],
     documentRecords: [],
     reportExports: [],
+    reportPermissionGrants: [],
+    reporting: createEmptyReporting(normalizeReportFilters(undefined)),
     participants: [],
     enrollments: [],
     programs: [],
     profiles: [],
     certificates: []
   };
+}
+
+function createEmptyReporting(filters: ReportFilters): ReportingDashboardData {
+  const emptySection = { summary: {}, rows: [] };
+
+  return {
+    filters,
+    lookups: {
+      programs: [],
+      stages: [],
+      groups: [],
+      instructors: []
+    },
+    permissions: [],
+    occupancy: emptySection,
+    waitlist: emptySection,
+    progress: emptySection,
+    attendance: emptySection,
+    payments: emptySection,
+    revenue: emptySection,
+    auditEvents: []
+  };
+}
+
+function isReportFilters(value: unknown): value is ReportFilters {
+  return Boolean(value && typeof value === "object" && "programId" in value);
 }
 
 function collectErrors(errorsByTable: Record<string, { message: string } | null>): string[] {

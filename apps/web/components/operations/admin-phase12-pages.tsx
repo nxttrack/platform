@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BarChart3, ClipboardList, Download, FileText, Inbox, Mail, Send, Settings } from "lucide-react";
+import { BarChart3, ClipboardList, Download, FileText, Filter, Inbox, Mail, Send, Settings, ShieldCheck } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
@@ -17,6 +17,7 @@ import {
   updateMessageTemplateAction,
   updateOperationalTaskAction,
   updateReportExportRequestAction,
+  upsertReportPermissionGrantAction,
   updateTenantDocumentRecordAction,
   uploadTenantDocumentAction
 } from "@/lib/operations/admin-phase12-actions";
@@ -33,6 +34,7 @@ import type {
   ReportExportRequestRow,
   TenantDocumentRecordRow
 } from "@/lib/operations/admin-phase12-read-model";
+import type { ReportPermissionGrantRow, ReportingDashboardData, ReportSection } from "@/lib/operations/reporting";
 import type { AdminDomainData, AdminDomainSnapshot, GroupRow } from "@/lib/domain/admin-domain-read-model";
 import type { AdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import type { PlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
@@ -241,47 +243,65 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
     return <Phase12StatusPanel snapshot={phase12} title="Rapportages niet beschikbaar" />;
   }
 
-  const capacityRows = domain.status === "ready" ? buildCapacityRows(domain.data) : [];
-  const totalCapacity = capacityRows.reduce((sum, row) => sum + row.capacityLimit, 0);
-  const totalOccupied = capacityRows.reduce((sum, row) => sum + row.activeMemberships, 0);
-  const waiting = placement.status === "ready" ? placement.data.waitlistEntries.filter((entry) => ["waiting", "matched"].includes(entry.status)).length : 0;
-  const progressCount = domain.status === "ready" ? domain.data.progress.length : 0;
-  const openAmount =
-    payments.status === "ready"
-      ? payments.data.invoices.filter((invoice) => ["open", "partially_paid", "overdue"].includes(invoice.status)).reduce((sum, invoice) => sum + Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents), 0)
-      : 0;
+  const reporting = phase12.data.reporting;
+  const occupancy = reporting.occupancy.summary;
+  const waitlist = reporting.waitlist.summary;
+  const attendance = reporting.attendance.summary;
+  const revenue = reporting.revenue.summary;
+  const dataState = [domain.status, placement.status, payments.status].filter((status) => status !== "ready");
 
   return (
     <div className="grid gap-6">
       <PageHeader
         action={<StatusPill tone="info">Rapportage</StatusPill>}
         kicker="Backoffice - rapportages"
-        subtitle="Basisrapportages voor bezetting, wachtlijst, voortgang en betalingen met exportvoorbereiding."
+        subtitle="Query-backed dashboards voor bezetting, wachtlijst, voortgang, aanwezigheid, betalingen en omzet met filters, exports, rechten en audit."
         title="Rapportages"
       />
 
+      {dataState.length > 0 ? (
+        <Card>
+          <p className="text-sm text-muted-foreground">Enkele ondersteunende snapshots zijn beperkt beschikbaar: {dataState.join(", ")}. De rapportagequeries blijven leidend.</p>
+        </Card>
+      ) : null}
+
       <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard icon={<BarChart3 className="h-5 w-5" />} label="Bezetting" value={`${totalOccupied}/${totalCapacity}`} detail="actieve plekken" />
-        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Wachtlijst" value={waiting.toString()} detail="wachtend/gematcht" />
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Voortgang" value={progressCount.toString()} detail="laatste updates" />
-        <MetricCard icon={<Download className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="handmatige betalingen" />
+        <MetricCard icon={<BarChart3 className="h-5 w-5" />} label="Bezetting" value={`${numberValue(occupancy.occupied)}/${numberValue(occupancy.capacity)}`} detail={`${numberValue(occupancy.occupancy_rate)}% bezet`} />
+        <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="Wachtlijst" value={numberValue(waitlist.total).toString()} detail={`${numberValue(waitlist.matched)} gematcht`} />
+        <MetricCard icon={<FileText className="h-5 w-5" />} label="Aanwezigheid" value={`${numberValue(attendance.attendance_rate)}%`} detail={`${numberValue(attendance.records)} registraties`} />
+        <MetricCard icon={<Download className="h-5 w-5" />} label="Omzet netto" value={formatMoney(numberValue(revenue.net_cents), "EUR")} detail="query-backed" />
       </div>
+
+      <Card>
+        <SectionHeader title="Filters" count={activeFilterCount(reporting.filters)} />
+        <ReportFilterForm reporting={reporting} />
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card>
           <SectionHeader title="Export aanvragen" count={phase12.data.reportExports.length} />
-          <ReportExportForm mode="create" />
+          <ReportExportForm mode="create" reporting={reporting} />
         </Card>
 
         <Card>
-          <SectionHeader title="Rapport snapshots" count={4} />
+          <SectionHeader title="Rapportrechten" count={reporting.permissions.length} />
           <div className="grid gap-3">
-            <ReportSnapshotRow label="Bezetting" value={`${totalOccupied}/${totalCapacity}`} detail={`${capacityRows.reduce((sum, row) => sum + row.availableSpots, 0)} vrije plekken`} />
-            <ReportSnapshotRow label="Wachtlijst" value={waiting.toString()} detail={placement.status === "ready" ? `${placement.data.placementSuggestions.length} plaatsingsvoorstellen` : placement.status} />
-            <ReportSnapshotRow label="Voortgang" value={progressCount.toString()} detail={domain.status === "ready" ? `${domain.data.badges.length} badges gedefinieerd` : domain.status} />
-            <ReportSnapshotRow label="Betalingen" value={formatMoney(openAmount, "EUR")} detail={payments.status === "ready" ? `${payments.data.invoices.length} facturen` : payments.status} />
+            <ReportPermissionForm />
+            {reporting.permissions.length === 0 ? <EmptyState>Nog geen expliciete rapportrechten. Tenant owners/admins houden standaard beheerrechten.</EmptyState> : null}
+            {reporting.permissions.map((grant) => (
+              <ReportPermissionCard key={grant.id} grant={grant} />
+            ))}
           </div>
         </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ReportDashboardCard section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
+        <ReportDashboardCard section={reporting.waitlist} title="Wachtlijst" value={numberValue(reporting.waitlist.summary.total).toString()} />
+        <ReportDashboardCard section={reporting.progress} title="Voortgang" value={numberValue(reporting.progress.summary.updates).toString()} />
+        <ReportDashboardCard section={reporting.attendance} title="Aanwezigheid" value={`${numberValue(reporting.attendance.summary.attendance_rate)}%`} />
+        <ReportDashboardCard section={reporting.payments} title="Betalingen" value={formatMoney(numberValue(reporting.payments.summary.open_amount_cents), "EUR")} />
+        <ReportDashboardCard section={reporting.revenue} title="Omzet" value={formatMoney(numberValue(reporting.revenue.summary.net_cents), "EUR")} />
       </div>
 
       <Card>
@@ -289,7 +309,17 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
         <div className="grid gap-3">
           {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
           {phase12.data.reportExports.map((request) => (
-            <ReportExportCard key={request.id} request={request} />
+            <ReportExportCard key={request.id} reporting={reporting} request={request} />
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader title="Rapportage audit" count={reporting.auditEvents.length} />
+        <div className="grid gap-3">
+          {reporting.auditEvents.length === 0 ? <EmptyState>Nog geen rapportage-auditregels.</EmptyState> : null}
+          {reporting.auditEvents.map((event) => (
+            <ReportSnapshotRow key={event.id} detail={`${event.source_table} - ${event.risk_level} - ${formatDateTime(event.created_at)}`} label={event.action} value={event.source_record_id?.slice(0, 8) ?? "-"} />
           ))}
         </div>
       </Card>
@@ -590,7 +620,44 @@ function DocumentRecordCard({ data, document, lookups }: { data: AdminPhase12Dat
   );
 }
 
-function ReportExportForm({ mode, request }: { mode: "create" | "update"; request?: ReportExportRequestRow }) {
+function ReportFilterForm({ reporting }: { reporting: ReportingDashboardData }) {
+  const filters = reporting.filters;
+
+  return (
+    <form action="/admin/rapportages" className="grid gap-3 md:grid-cols-4" method="get">
+      <SelectField includeEmpty defaultValue={filters.programId} label="Programma" name="program_id" options={reporting.lookups.programs.map(optionFromLookup)} />
+      <SelectField includeEmpty defaultValue={filters.stageId} label="Stage" name="stage_id" options={reporting.lookups.stages.map(optionFromLookup)} />
+      <SelectField includeEmpty defaultValue={filters.groupId} label="Groep" name="group_id" options={reporting.lookups.groups.map(optionFromLookup)} />
+      <SelectField includeEmpty defaultValue={filters.instructorId} label="Instructeur" name="instructor_id" options={reporting.lookups.instructors.map(optionFromLookup)} />
+      <TextField defaultValue={filters.status} label="Status" name="status" />
+      <TextField defaultValue={filters.dateFrom} label="Vanaf" name="date_from" type="date" />
+      <TextField defaultValue={filters.dateTo} label="Tot en met" name="date_to" type="date" />
+      <div className="flex items-end gap-2">
+        <button className={primaryButtonClassName} type="submit">
+          <Filter className="mr-2 inline h-4 w-4" />
+          Filteren
+        </button>
+        <a className={secondaryButtonClassName} href="/admin/rapportages">
+          Reset
+        </a>
+      </div>
+    </form>
+  );
+}
+
+function ReportExportForm({ mode, reporting, request }: { mode: "create" | "update"; reporting: ReportingDashboardData; request?: ReportExportRequestRow }) {
+  const filters = request
+    ? {
+        programId: request.program_id,
+        stageId: request.stage_id,
+        groupId: request.group_id,
+        instructorId: request.instructor_id,
+        status: request.status_filter,
+        dateFrom: request.date_from,
+        dateTo: request.date_to
+      }
+    : reporting.filters;
+
   return (
     <form action={mode === "create" ? createReportExportRequestAction : updateReportExportRequestAction} className="grid gap-3">
       {request ? <input name="id" type="hidden" value={request.id} /> : null}
@@ -598,9 +665,16 @@ function ReportExportForm({ mode, request }: { mode: "create" | "update"; reques
         <SelectField defaultValue={request?.report_type ?? "occupancy"} label="Rapport" name="report_type" options={reportTypeOptions} />
         <SelectField defaultValue={request?.export_format ?? "csv"} label="Format" name="export_format" options={exportFormatOptions} />
         <SelectField defaultValue={request?.status ?? "requested"} label="Status" name="status" options={exportStatusOptions} />
-        <TextField defaultValue={request?.file_path} label="Bestandspad" name="file_path" />
+        <SelectField includeEmpty defaultValue={filters.programId} label="Programmafilter" name="program_id" options={reporting.lookups.programs.map(optionFromLookup)} />
+        <SelectField includeEmpty defaultValue={filters.stageId} label="Stagefilter" name="stage_id" options={reporting.lookups.stages.map(optionFromLookup)} />
+        <SelectField includeEmpty defaultValue={filters.groupId} label="Groepfilter" name="group_id" options={reporting.lookups.groups.map(optionFromLookup)} />
+        <SelectField includeEmpty defaultValue={filters.instructorId} label="Instructeurfilter" name="instructor_id" options={reporting.lookups.instructors.map(optionFromLookup)} />
+        <TextField defaultValue={filters.status} label="Statusfilter" name="status_filter" />
+        <TextField defaultValue={filters.dateFrom} label="Vanaf" name="date_from" type="date" />
+        <TextField defaultValue={filters.dateTo} label="Tot en met" name="date_to" type="date" />
       </div>
-      <TextAreaField defaultValue={request ? formatJson(request.filters) : "{ \"scope\": \"all\" }"} label="Filters JSON" name="filters" />
+      <input name="file_path" type="hidden" value={request?.file_path ?? ""} />
+      <TextAreaField defaultValue={request ? formatJson(request.filters) : "{ \"scope\": \"filtered_dashboard\" }"} label="Extra filters JSON" name="filters" />
       <TextAreaField defaultValue={request?.error_message} label="Foutmelding" name="error_message" />
       <button className={primaryButtonClassName} type="submit">
         {mode === "create" ? "Export aanvragen" : "Export opslaan"}
@@ -609,7 +683,7 @@ function ReportExportForm({ mode, request }: { mode: "create" | "update"; reques
   );
 }
 
-function ReportExportCard({ request }: { request: ReportExportRequestRow }) {
+function ReportExportCard({ reporting, request }: { reporting: ReportingDashboardData; request: ReportExportRequestRow }) {
   return (
     <details className="rounded-2xl border border-border bg-muted/35 p-4">
       <summary className="cursor-pointer">
@@ -618,13 +692,15 @@ function ReportExportCard({ request }: { request: ReportExportRequestRow }) {
             <p className="font-semibold">
               {request.report_type} - {request.export_format}
             </p>
-            <p className="text-sm text-muted-foreground">{request.file_path ?? "export worker moet bestand nog maken"}</p>
+            <p className="text-sm text-muted-foreground">
+              {request.file_path ?? "export worker moet bestand nog maken"} {request.row_count !== null ? `- ${request.row_count} regels` : ""}
+            </p>
           </div>
           <StatusPill tone={statusTone(request.status)}>{request.status}</StatusPill>
         </div>
       </summary>
       <div className="mt-4">
-        <ReportExportForm mode="update" request={request} />
+        <ReportExportForm mode="update" reporting={reporting} request={request} />
         <div className="mt-4 flex flex-wrap gap-2">
           <form action={generateReportExportAction}>
             <input name="id" type="hidden" value={request.id} />
@@ -640,6 +716,87 @@ function ReportExportCard({ request }: { request: ReportExportRequestRow }) {
         </div>
       </div>
     </details>
+  );
+}
+
+function ReportPermissionForm() {
+  return (
+    <form action={upsertReportPermissionGrantAction} className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-4">
+      <SelectField defaultValue="occupancy" label="Rapport" name="report_key" options={reportPermissionReportOptions} />
+      <SelectField defaultValue="tenant_staff" label="Rol" name="role" options={reportPermissionRoleOptions} />
+      <label className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold">
+        <input defaultChecked name="can_view" type="checkbox" />
+        Bekijken
+      </label>
+      <label className="flex min-h-10 items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold">
+        <input name="can_export" type="checkbox" />
+        Exporteren
+      </label>
+      <button className={primaryButtonClassName} type="submit">
+        Recht opslaan
+      </button>
+    </form>
+  );
+}
+
+function ReportPermissionCard({ grant }: { grant: ReportPermissionGrantRow }) {
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{grant.report_key}</p>
+          <p className="text-sm text-muted-foreground">{grant.role}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={grant.can_view ? "success" : "neutral"}>{grant.can_view ? "bekijken" : "geen view"}</StatusPill>
+          <StatusPill tone={grant.can_export ? "success" : "neutral"}>{grant.can_export ? "export" : "geen export"}</StatusPill>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportDashboardCard({ section, title, value }: { section: ReportSection; title: string; value: string }) {
+  const rows = section.rows.slice(0, 8);
+  const headers = Object.keys(rows[0] ?? {}).slice(0, 5);
+
+  return (
+    <Card>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold">{title}</h2>
+          <p className="text-sm text-muted-foreground">{section.rows.length} regels uit echte tenantdata.</p>
+        </div>
+        <p className="text-2xl font-bold">{value}</p>
+      </div>
+      {rows.length === 0 ? <EmptyState>Geen data voor deze filterset.</EmptyState> : null}
+      {rows.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-left text-sm">
+            <thead className="text-xs uppercase text-muted-foreground">
+              <tr>
+                {headers.map((header) => (
+                  <th key={header} className="border-b border-border px-2 py-2">
+                    {header.replaceAll("_", " ")}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, index) => (
+                <tr key={`${title}-${index}`}>
+                  {headers.map((header) => (
+                    <td key={header} className="border-b border-border/70 px-2 py-2">
+                      {formatReportCell(row[header])}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </Card>
   );
 }
 
@@ -759,6 +916,31 @@ function SelectField({
       </select>
     </label>
   );
+}
+
+function optionFromLookup(row: { id: string; name: string; status?: string }) {
+  return { label: row.status ? `${row.name} - ${row.status}` : row.name, value: row.id };
+}
+
+function numberValue(value: unknown) {
+  return typeof value === "number" ? value : 0;
+}
+
+function activeFilterCount(filters: ReportingDashboardData["filters"]) {
+  return Object.values(filters).filter(Boolean).length;
+}
+
+function formatReportCell(value: unknown) {
+  if (value === null || value === undefined) {
+    return "-";
+  }
+
+  if (typeof value === "number") {
+    return value.toString();
+  }
+
+  const stringValue = typeof value === "string" ? value : JSON.stringify(value);
+  return stringValue.length > 36 ? `${stringValue.slice(0, 33)}...` : stringValue;
 }
 
 function buildLookups(data: AdminPhase12Data): Phase12Lookups {
@@ -962,14 +1144,27 @@ const reportTypeOptions = [
   { label: "Bezetting", value: "occupancy" },
   { label: "Wachtlijst", value: "waitlist" },
   { label: "Voortgang", value: "progress" },
-  { label: "Betalingen", value: "payments" }
+  { label: "Aanwezigheid", value: "attendance" },
+  { label: "Betalingen", value: "payments" },
+  { label: "Omzet", value: "revenue" }
 ];
 
 const exportFormatOptions = [
   { label: "CSV", value: "csv" },
   { label: "XLSX", value: "xlsx" },
-  { label: "PDF", value: "pdf" },
   { label: "JSON", value: "json" }
+];
+
+const reportPermissionReportOptions = [
+  ...reportTypeOptions,
+  { label: "Exports", value: "exports" }
+];
+
+const reportPermissionRoleOptions = [
+  { label: "Tenant owner", value: "tenant_owner" },
+  { label: "Tenant admin", value: "tenant_admin" },
+  { label: "Tenant medewerker", value: "tenant_staff" },
+  { label: "Instructeur", value: "instructor" }
 ];
 
 const exportStatusOptions = [

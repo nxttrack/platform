@@ -45,7 +45,12 @@ const actionContracts = [
   {
     label: "Operations workflow sends messages, uploads documents, and generates reports",
     file: "apps/web/lib/operations/admin-phase12-actions.ts",
-    snippets: ["runMessageDispatchWorkerAction", "uploadTenantDocumentAction", "generateReportExportAction", "sendLiveEmail"]
+    snippets: ["runMessageDispatchWorkerAction", "uploadTenantDocumentAction", "generateReportExportAction", "upsertReportPermissionGrantAction", "sendLiveEmail"]
+  },
+  {
+    label: "Reporting workflow uses query-backed dashboards and filtered exports",
+    file: "apps/web/lib/operations/reporting.ts",
+    snippets: ["getReportingDashboardData", "buildReportRows", "normalizeReportFilters", "reportFilterColumns", "canRoleExportReport", "attendance", "revenue"]
   },
   {
     label: "Private download routes use signed URLs",
