@@ -1,4 +1,6 @@
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { getObservabilityRuntimeStatus, type ObservabilityRuntimeStatus } from "@/lib/observability/config";
+import { getReleaseMetadata, type ReleaseMetadata } from "@/lib/observability/release";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -68,6 +70,25 @@ export type PlatformAuditRow = {
   tenant_name: string | null;
 };
 
+export type DeploymentReleaseRow = {
+  id: string;
+  environment: string;
+  deployment_target: string | null;
+  commit_sha: string;
+  version: string | null;
+  release_path: string | null;
+  github_run_id: string;
+  github_run_number: string | null;
+  github_ref_name: string | null;
+  app_url: string | null;
+  tenant_domain_suffix: string | null;
+  status: string;
+  health_status: string;
+  activated_at: string | null;
+  verified_at: string | null;
+  created_at: string;
+};
+
 export type PlatformCompletionSnapshot =
   | {
       status: "not_configured" | "no_access";
@@ -77,6 +98,9 @@ export type PlatformCompletionSnapshot =
       integrations: [];
       tenants: [];
       audit: [];
+      releases: [];
+      runtimeRelease: ReleaseMetadata;
+      observability: ObservabilityRuntimeStatus;
       errors: string[];
     }
   | {
@@ -86,6 +110,9 @@ export type PlatformCompletionSnapshot =
       integrations: PlatformIntegrationStatusRow[];
       tenants: PlatformTenantSearchRow[];
       audit: PlatformAuditRow[];
+      releases: DeploymentReleaseRow[];
+      runtimeRelease: ReleaseMetadata;
+      observability: ObservabilityRuntimeStatus;
       errors: string[];
       filters: {
         query: string;
@@ -97,13 +124,15 @@ export type PlatformCompletionSnapshot =
 
 export async function getPlatformCompletionSnapshot(filters: Partial<{ query: string; sector: string; status: string; auditTable: string }> = {}): Promise<PlatformCompletionSnapshot> {
   const context = await getTrustedAuthContext();
+  const runtimeRelease = getReleaseMetadata();
+  const observability = getObservabilityRuntimeStatus();
 
   if (context.status !== "authenticated" || !context.platform?.roles.length) {
-    return fallback("no_access", "Geen platform admin toegang gevonden.");
+    return fallback("no_access", "Geen platform admin toegang gevonden.", runtimeRelease, observability);
   }
 
   if (!getSupabasePublicConfig()) {
-    return fallback("not_configured", "Supabase is nog niet geconfigureerd in deze runtime.");
+    return fallback("not_configured", "Supabase is nog niet geconfigureerd in deze runtime.", runtimeRelease, observability);
   }
 
   const supabase = await createClient();
@@ -135,7 +164,7 @@ export async function getPlatformCompletionSnapshot(filters: Partial<{ query: st
     auditQuery = auditQuery.eq("source_table", auditTable);
   }
 
-  const [settingsResult, templatesResult, integrationsResult, tenantsResult, domainsResult, membershipsResult, auditResult] = await Promise.all([
+  const [settingsResult, templatesResult, integrationsResult, tenantsResult, domainsResult, membershipsResult, auditResult, releasesResult] = await Promise.all([
     supabase
       .from("platform_settings")
       .select("id, platform_name, default_locale, default_timezone, support_email, tenant_domain_suffix, staging_domain, production_domain, maintenance_mode, signup_mode, release_channel, updated_at")
@@ -154,7 +183,12 @@ export async function getPlatformCompletionSnapshot(filters: Partial<{ query: st
     tenantQuery,
     supabase.from("tenant_domains").select("tenant_id, hostname, kind, status, is_primary").order("is_primary", { ascending: false }),
     supabase.from("tenant_memberships").select("tenant_id, role").eq("role", "tenant_owner").eq("status", "active"),
-    auditQuery
+    auditQuery,
+    supabase
+      .from("deployment_releases")
+      .select("id, environment, deployment_target, commit_sha, version, release_path, github_run_id, github_run_number, github_ref_name, app_url, tenant_domain_suffix, status, health_status, activated_at, verified_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(12)
   ]);
 
   const tenantRows = asRows<Omit<PlatformTenantSearchRow, "domains" | "super_admin_count">>(tenantsResult.data);
@@ -180,7 +214,8 @@ export async function getPlatformCompletionSnapshot(filters: Partial<{ query: st
     tenants: tenantsResult.error,
     tenant_domains: domainsResult.error,
     tenant_memberships: membershipsResult.error,
-    audit_events: auditResult.error
+    audit_events: auditResult.error,
+    deployment_releases: releasesResult.error
   });
 
   return {
@@ -190,12 +225,15 @@ export async function getPlatformCompletionSnapshot(filters: Partial<{ query: st
     integrations: asRows<PlatformIntegrationStatusRow>(integrationsResult.data),
     tenants,
     audit,
+    releases: asRows<DeploymentReleaseRow>(releasesResult.data),
+    runtimeRelease,
+    observability,
     errors,
     filters: { query, sector, status, auditTable }
   };
 }
 
-function fallback(status: "not_configured" | "no_access", error: string): PlatformCompletionSnapshot {
+function fallback(status: "not_configured" | "no_access", error: string, runtimeRelease: ReleaseMetadata, observability: ObservabilityRuntimeStatus): PlatformCompletionSnapshot {
   return {
     status,
     error,
@@ -204,6 +242,9 @@ function fallback(status: "not_configured" | "no_access", error: string): Platfo
     integrations: [],
     tenants: [],
     audit: [],
+    releases: [],
+    runtimeRelease,
+    observability,
     errors: [error]
   };
 }

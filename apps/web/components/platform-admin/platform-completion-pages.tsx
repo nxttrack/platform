@@ -1,4 +1,4 @@
-import { Activity, Globe2, Layers3, Search, Settings } from "lucide-react";
+import { Activity, Globe2, Layers3, Rocket, Search, Server, Settings } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { updateIntegrationStatusAction, updatePlatformSettingsAction, upsertSectorTemplateAction } from "@/lib/platform-admin/platform-completion-actions";
@@ -56,6 +56,8 @@ export function PlatformSettingsCompletionPage({
       </div>
 
       <PlatformSettingsCard settings={readySnapshot.settings} />
+      <ReleaseMetadataCard snapshot={readySnapshot} />
+      <ObservabilityStatusCard snapshot={readySnapshot} />
       <IntegrationStatusGrid integrations={readySnapshot.integrations} />
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -131,6 +133,72 @@ export function PlatformTemplatesCompletionPage({
   );
 }
 
+function ReleaseMetadataCard({ snapshot }: { snapshot: Extract<PlatformCompletionSnapshot, { status: "ready" | "query_error" }> }) {
+  const release = snapshot.runtimeRelease;
+
+  return (
+    <Card>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold">Deployment release metadata</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Actuele runtime metadata en laatste geverifieerde releases vanuit de GitHub runner.</p>
+        </div>
+        <Rocket className="h-5 w-5 text-primary" />
+      </div>
+      <div className="grid gap-3 md:grid-cols-4">
+        <MiniInfo label="Environment" value={release.environment} />
+        <MiniInfo label="Commit" value={shortCommit(release.commit)} />
+        <MiniInfo label="Target" value={release.deploymentTarget ?? "onbekend"} />
+        <MiniInfo label="Build" value={release.builtAt ? formatDate(release.builtAt) : "onbekend"} />
+      </div>
+      <div className="mt-4 overflow-hidden rounded-2xl border border-border">
+        <div className="grid grid-cols-[1fr_120px_110px_100px] gap-3 bg-muted px-4 py-3 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+          <span>Release</span>
+          <span>Status</span>
+          <span>Health</span>
+          <span>Run</span>
+        </div>
+        {snapshot.releases.length === 0 ? (
+          <p className="border-t border-border px-4 py-4 text-sm text-muted-foreground">Nog geen release-records. De deploy runner vult dit na activatie/health verification.</p>
+        ) : (
+          snapshot.releases.map((item) => (
+            <div key={item.id} className="grid grid-cols-[1fr_120px_110px_100px] gap-3 border-t border-border px-4 py-3 text-sm">
+              <div>
+                <p className="font-semibold">{shortCommit(item.commit_sha)}</p>
+                <p className="text-xs text-muted-foreground">{item.environment} - {item.deployment_target ?? "target onbekend"} - {item.created_at ? formatDate(item.created_at) : ""}</p>
+              </div>
+              <StatusPill tone={item.status === "verified" ? "success" : item.status === "failed" ? "danger" : "info"}>{item.status}</StatusPill>
+              <StatusPill tone={item.health_status === "ready" || item.health_status === "healthy" ? "success" : item.health_status === "failed" ? "danger" : "warning"}>{item.health_status}</StatusPill>
+              <span className="text-xs text-muted-foreground">#{item.github_run_number ?? item.github_run_id}</span>
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function ObservabilityStatusCard({ snapshot }: { snapshot: Extract<PlatformCompletionSnapshot, { status: "ready" | "query_error" }> }) {
+  const observability = snapshot.observability;
+
+  return (
+    <Card>
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold">Observability runtime</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Monitorbare endpoints, externe log sink en error reporting configuratie zonder secrets te tonen.</p>
+        </div>
+        <Server className="h-5 w-5 text-primary" />
+      </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <RuntimeStatusItem title="Structured logs" configured={observability.logSink.configured} detail={`${observability.logSink.provider} ${observability.logSink.endpointHost ?? ""}`} />
+        <RuntimeStatusItem title="Error reporting" configured={observability.errorReporting.configured} detail={`${observability.errorReporting.provider} ${observability.errorReporting.endpointHost ?? ""}`} />
+        <RuntimeStatusItem title="Uptime monitor" configured={observability.uptime.externalMonitorConfigured} detail={`${observability.uptime.healthPath} + ${observability.uptime.readyPath}`} />
+      </div>
+    </Card>
+  );
+}
+
 function PlatformSettingsCard({ settings }: { settings: PlatformSettingsRow | null }) {
   const value = settings ?? {
     platform_name: "NXTTRACK",
@@ -189,6 +257,27 @@ function PlatformSettingsCard({ settings }: { settings: PlatformSettingsRow | nu
         </div>
       </form>
     </Card>
+  );
+}
+
+function RuntimeStatusItem({ title, configured, detail }: { title: string; configured: boolean; detail: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-bold">{title}</p>
+        <StatusPill tone={configured ? "success" : "warning"}>{configured ? "configured" : "missing"}</StatusPill>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground">{detail || "Geen endpoint geconfigureerd"}</p>
+    </div>
+  );
+}
+
+function MiniInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 break-words text-sm font-bold">{value}</p>
+    </div>
   );
 }
 
@@ -469,4 +558,8 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function shortCommit(value: string | null) {
+  return value ? value.slice(0, 7) : "onbekend";
 }

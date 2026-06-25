@@ -11,6 +11,7 @@ Scope:
 - Added structured health and readiness responses with release metadata.
 - Added structured logging and server error reporting helpers.
 - Added tenant website CMS maturity: manageable news, agenda, SEO/social settings, domain status, and tenant asset uploads.
+- Added production observability maturity: external log sink hooks, error reporting hook, persistent deployment release metadata, platform admin release visibility, and monitorable uptime/ready contract.
 
 Verification:
 
