@@ -52,15 +52,23 @@ A child moving from Badje 1 to Badje 2 usually keeps the same subscription. Bill
 
 ## 4. Automation Policy
 
-NXTTRACK must support three automation levels:
+NXTTRACK originally described three high-level automation modes:
 
 - Manual: the system shows data and an admin decides.
 - Semi-automatic: the system recommends, scores, explains, and prepares actions; an admin approves.
 - Automatic: the system executes configured actions within tenant-approved rules.
 
-MVP and the next product stage must default to semi-automatic.
+Phase S12 refines these into the operational automation ladder used in the product:
 
-Fully automatic placement, flow-through, slot offers, and AI-assisted decisions come later. They may only be enabled when:
+1. `disabled`: the engine is visible but does not automate.
+2. `recommend_only`: the engine only produces insight and explanation.
+3. `recommend_and_prepare`: the engine may prepare a draft action, but never execute.
+4. `execute_with_approval`: the system prepares execution and requires explicit admin approval.
+5. `execute_automatically`: the system may execute only when tenant feature flags and safety gates pass.
+
+The default product posture remains `recommend_and_prepare`.
+
+Fully automatic placement, flow-through, slot offers, and diploma actions may only be enabled when:
 
 - Tenant settings explicitly allow them.
 - Rules are explainable.
@@ -68,6 +76,14 @@ Fully automatic placement, flow-through, slot offers, and AI-assisted decisions 
 - Admin override is possible.
 - Parent-facing communication is clear.
 - RLS and role isolation are verified.
+- Safety limits pass:
+  - max automatic slot offers per day;
+  - no automatic placement below the confidence/score threshold;
+  - no automatic placement when duplicate risk exists;
+  - no automatic flow-through without an available target group;
+  - no automatic diploma action without a registered result.
+- Tenant-level feature flags allow the relevant engine.
+- Every automatic or blocked action is stored in `automation_execution_logs`.
 
 ## 5. AI Policy
 

@@ -2,6 +2,7 @@ import {
   Award,
   BarChart3,
   Bell,
+  Bot,
   Calendar,
   CheckCircle2,
   CircleDollarSign,
@@ -81,6 +82,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3, section: "Financieel & inzicht" },
 
   { href: "/admin/imports", label: "Imports", icon: Upload, section: "Beheer" },
+  { href: "/admin/automatisering", label: "Automatisering", icon: Bot, section: "Beheer" },
   { href: "/admin/mail-instellingen", label: "Mailinstellingen", icon: Mail, section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
 ];

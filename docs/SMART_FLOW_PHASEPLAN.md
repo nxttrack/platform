@@ -632,6 +632,18 @@ Manual and semi-automatic workflows exist. Automation settings need consolidatio
 - Every automatic action is logged.
 - Safety limits prevent risky execution.
 
+### Implementation Notes
+
+Phase S12 adds:
+
+- `automation_level` on `tenant_smart_engine_settings`.
+- `safety_limits` and `feature_flags` per smart engine.
+- `tenant_feature_flags` for tenant-level kill switches and rollout state.
+- `automation_execution_logs` for prepared, approval-required, executed, blocked, failed, rollback and rollback-unavailable states.
+- `/admin/automatisering` for tenant admins to manage automation settings safely.
+
+The first production-safe default remains `recommend_and_prepare`. `execute_automatically` is guarded by feature flags and safety checks and does not introduce AI-generated decisions.
+
 ### Not In This Phase
 
 - AI-generated decisions.

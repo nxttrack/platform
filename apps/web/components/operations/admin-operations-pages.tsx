@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, BadgeCheck, CalendarDays, CircleDollarSign, Clock, FileWarning, Inbox, LifeBuoy, MailWarning, MapPin, Route, TrendingUp, UserCheck, UserRound, Users, Waves } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Bot, CalendarDays, CircleDollarSign, Clock, FileWarning, Inbox, LifeBuoy, MailWarning, MapPin, Route, TrendingUp, UserCheck, UserRound, Users, Waves } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import type { AdminAfzwemSnapshot } from "@/lib/afzwem/admin-afzwem-read-model";
+import type { AdminAutomationSnapshot } from "@/lib/automation/admin-automation-read-model";
 import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { createParticipantGuardianAction, updateParticipantGuardianAction } from "@/lib/domain/admin-domain-actions";
 import type {
@@ -27,6 +28,7 @@ type DomainProps = {
 
 type OperationsProps = {
   afzwem?: AdminAfzwemSnapshot;
+  automation?: AdminAutomationSnapshot;
   domain: AdminDomainSnapshot;
   phase12?: AdminPhase12Snapshot;
   placement: PlacementWorkflowSnapshot;
@@ -81,15 +83,15 @@ type TrendCardData = {
   rows: TrendRow[];
 };
 
-export function AdminOperationsDashboardPage({ afzwem, domain, phase12, placement, payments }: OperationsProps) {
+export function AdminOperationsDashboardPage({ afzwem, automation, domain, phase12, placement, payments }: OperationsProps) {
   if (domain.status !== "ready") {
     return <OperationsStatusPanel snapshot={domain} title="Tenant dashboard niet beschikbaar" />;
   }
 
   const capacityRows = buildCapacityRows(domain.data);
   const alerts = buildOperationalAlerts(domain, placement, payments, capacityRows);
-  const smartSignals = buildSmartDashboardSignals({ afzwem, domain, phase12, placement, payments, capacityRows });
-  const trendCards = buildTrendCards({ afzwem, domain, phase12, placement, payments, capacityRows });
+  const smartSignals = buildSmartDashboardSignals({ afzwem, automation, domain, phase12, placement, payments, capacityRows });
+  const trendCards = buildTrendCards({ afzwem, automation, domain, phase12, placement, payments, capacityRows });
   const activeEnrollments = domain.data.enrollments.filter((enrollment) => enrollment.status === "active").length;
   const scheduledSessions = domain.data.sessions.filter((session) => session.status === "scheduled").length;
   const totalCapacity = capacityRows.reduce((sum, row) => sum + row.capacityLimit, 0);
@@ -599,6 +601,7 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
 
 function buildSmartDashboardSignals({
   afzwem,
+  automation,
   domain,
   phase12,
   placement,
@@ -606,6 +609,7 @@ function buildSmartDashboardSignals({
   capacityRows
 }: {
   afzwem?: AdminAfzwemSnapshot;
+  automation?: AdminAutomationSnapshot;
   domain: AdminDomainSnapshot;
   phase12?: AdminPhase12Snapshot;
   placement: PlacementWorkflowSnapshot;
@@ -629,6 +633,7 @@ function buildSmartDashboardSignals({
     afzwem?.status === "ready"
       ? afzwem.data.readinessRadar.filter((row) => ["ready_for_review", "almost_ready"].includes(row.readiness_status)).length + afzwem.data.candidateSuggestions.filter((suggestion) => suggestion.suggested_status === "candidate").length
       : 0;
+  const automationBlocked = automation?.status === "ready" ? automation.data.executionLogs.filter((log) => ["blocked", "failed", "rollback_unavailable"].includes(log.action_status)).length : 0;
 
   return [
     {
@@ -740,12 +745,23 @@ function buildSmartDashboardSignals({
       tone: afzwemReady > 0 ? "info" : "success",
       urgency: afzwemReady > 0 ? "vandaag" : "monitor",
       icon: <BadgeCheck className="h-5 w-5" />
+    },
+    {
+      key: "automation-safety",
+      title: "Automation safety",
+      body: "Geblokkeerde of mislukte automation logs vragen review.",
+      value: automationBlocked.toString(),
+      href: "/admin/automatisering",
+      tone: automationBlocked > 0 ? "danger" : "success",
+      urgency: automationBlocked > 0 ? "nu" : "monitor",
+      icon: <Bot className="h-5 w-5" />
     }
   ];
 }
 
 function buildTrendCards({
   afzwem,
+  automation,
   domain,
   phase12,
   placement,
@@ -753,6 +769,7 @@ function buildTrendCards({
   capacityRows
 }: {
   afzwem?: AdminAfzwemSnapshot;
+  automation?: AdminAutomationSnapshot;
   domain: AdminDomainSnapshot;
   phase12?: AdminPhase12Snapshot;
   placement: PlacementWorkflowSnapshot;
@@ -767,7 +784,8 @@ function buildTrendCards({
     buildOccupancyTrend(reporting, capacityRows),
     buildAttendanceTrend(reporting, domain),
     buildProgressReadinessTrend(reporting, domain, afzwem),
-    buildRevenuePaymentTrend(reporting, payments)
+    buildRevenuePaymentTrend(reporting, payments),
+    buildAutomationTrend(automation)
   ];
 }
 
@@ -891,6 +909,25 @@ function buildRevenuePaymentTrend(reporting: ReportingDashboardData | null, paym
       trendRow("Open", openInvoices, "open", "warning"),
       trendRow("Overdue", overdueInvoices, "overdue", overdueInvoices > 0 ? "danger" : "success"),
       trendRow("Geincasseerd", numberFrom(revenueSummary?.collected_cents), formatMoney(numberFrom(revenueSummary?.collected_cents), "EUR"), "info")
+    ]
+  };
+}
+
+function buildAutomationTrend(automation?: AdminAutomationSnapshot): TrendCardData {
+  const logs = automation?.status === "ready" ? automation.data.executionLogs : [];
+  const engineHealth = automation?.status === "ready" ? automation.data.engineHealth : [];
+  const automaticEngines = automation?.status === "ready" ? automation.data.engineSettings.filter((setting) => setting.automation_level === "execute_automatically").length : 0;
+
+  return {
+    title: "Automation safety",
+    value: automaticEngines.toString(),
+    detail: "engine levels en safety logs",
+    href: "/admin/automatisering",
+    rows: [
+      trendRow("Prepared", logs.filter((log) => log.action_status === "prepared").length, "prepared", "info"),
+      trendRow("Executed", logs.filter((log) => log.action_status === "executed").length, "executed", "success"),
+      trendRow("Blocked", logs.filter((log) => log.action_status === "blocked").length, "blocked", "danger"),
+      trendRow("Safe engines", engineHealth.filter((entry) => entry.safeForAutomatic).length, "auto safe", "success")
     ]
   };
 }
