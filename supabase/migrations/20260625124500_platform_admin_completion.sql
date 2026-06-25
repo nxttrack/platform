@@ -1,5 +1,5 @@
 create table if not exists public.platform_settings (
-  id text primary key default 'global',
+  id uuid primary key default gen_random_uuid(),
   platform_name text not null default 'NXTTRACK',
   default_locale text not null default 'nl-NL',
   default_timezone text not null default 'Europe/Amsterdam',
@@ -14,7 +14,6 @@ create table if not exists public.platform_settings (
   metadata jsonb not null default '{}'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  constraint platform_settings_singleton_check check (id = 'global'),
   constraint platform_settings_signup_mode_check check (signup_mode in ('invite_only', 'request_access', 'open')),
   constraint platform_settings_release_channel_check check (release_channel in ('staging', 'production', 'maintenance')),
   constraint platform_settings_metadata_check check (jsonb_typeof(metadata) = 'object'),
@@ -24,6 +23,7 @@ create table if not exists public.platform_settings (
 do $$
 declare
   platform_settings_id_type text;
+  platform_settings_has_audit_trigger boolean;
 begin
   alter table public.platform_settings drop constraint if exists platform_settings_singleton_check;
 
@@ -36,8 +36,35 @@ begin
     and attribute.attname = 'id'
     and not attribute.attisdropped;
 
+  select exists (
+    select 1
+    from pg_trigger trigger
+    join pg_class relation on relation.oid = trigger.tgrelid
+    join pg_namespace namespace on namespace.oid = relation.relnamespace
+    where namespace.nspname = 'public'
+      and relation.relname = 'platform_settings'
+      and trigger.tgname = 'platform_settings_audit_events'
+      and not trigger.tgisinternal
+  ) into platform_settings_has_audit_trigger;
+
   if platform_settings_id_type in ('uuid', 'pg_catalog.uuid') then
     alter table public.platform_settings alter column id set default gen_random_uuid();
+  elsif platform_settings_id_type in ('text', 'pg_catalog.text', 'character varying', 'pg_catalog.varchar') then
+    if platform_settings_has_audit_trigger then
+      alter table public.platform_settings disable trigger platform_settings_audit_events;
+    end if;
+
+    update public.platform_settings
+    set id = '00000000-0000-0000-0000-000000000001'
+    where id = 'global';
+
+    alter table public.platform_settings alter column id drop default;
+    alter table public.platform_settings alter column id type uuid using id::uuid;
+    alter table public.platform_settings alter column id set default gen_random_uuid();
+
+    if platform_settings_has_audit_trigger then
+      alter table public.platform_settings enable trigger platform_settings_audit_events;
+    end if;
   end if;
 end $$;
 
@@ -146,81 +173,30 @@ create trigger platform_integration_statuses_audit_events
   after insert or update or delete on public.platform_integration_statuses
   for each row execute function app_private.record_audit_event();
 
-do $$
-declare
-  platform_settings_id_type text;
-begin
-  select attribute.atttypid::regtype::text into platform_settings_id_type
-  from pg_attribute attribute
-  join pg_class relation on relation.oid = attribute.attrelid
-  join pg_namespace namespace on namespace.oid = relation.relnamespace
-  where namespace.nspname = 'public'
-    and relation.relname = 'platform_settings'
-    and attribute.attname = 'id'
-    and not attribute.attisdropped;
-
-  if exists (select 1 from public.platform_settings) then
-    return;
-  end if;
-
-  if platform_settings_id_type in ('uuid', 'pg_catalog.uuid') then
-    execute $seed$
-      insert into public.platform_settings (
-        id,
-        platform_name,
-        default_locale,
-        default_timezone,
-        support_email,
-        tenant_domain_suffix,
-        staging_domain,
-        production_domain,
-        release_channel,
-        metadata
-      )
-      values (
-        gen_random_uuid(),
-        'NXTTRACK',
-        'nl-NL',
-        'Europe/Amsterdam',
-        'support@nxttrack.nl',
-        'staging.nxttrack.nl',
-        'staging.nxttrack.nl',
-        'nxttrack.nl',
-        'staging',
-        '{"source":"platform_admin_completion"}'::jsonb
-      )
-    $seed$;
-  elsif platform_settings_id_type in ('text', 'pg_catalog.text', 'character varying', 'pg_catalog.varchar') then
-    execute $seed$
-      insert into public.platform_settings (
-        id,
-        platform_name,
-        default_locale,
-        default_timezone,
-        support_email,
-        tenant_domain_suffix,
-        staging_domain,
-        production_domain,
-        release_channel,
-        metadata
-      )
-      values (
-        'global',
-        'NXTTRACK',
-        'nl-NL',
-        'Europe/Amsterdam',
-        'support@nxttrack.nl',
-        'staging.nxttrack.nl',
-        'staging.nxttrack.nl',
-        'nxttrack.nl',
-        'staging',
-        '{"source":"platform_admin_completion"}'::jsonb
-      )
-    $seed$;
-  else
-    raise exception 'Unsupported platform_settings.id type: %', coalesce(platform_settings_id_type, 'unknown');
-  end if;
-end $$;
+insert into public.platform_settings (
+  id,
+  platform_name,
+  default_locale,
+  default_timezone,
+  support_email,
+  tenant_domain_suffix,
+  staging_domain,
+  production_domain,
+  release_channel,
+  metadata
+)
+select
+  '00000000-0000-0000-0000-000000000001'::uuid,
+  'NXTTRACK',
+  'nl-NL',
+  'Europe/Amsterdam',
+  'support@nxttrack.nl',
+  'staging.nxttrack.nl',
+  'staging.nxttrack.nl',
+  'nxttrack.nl',
+  'staging',
+  '{"source":"platform_admin_completion"}'::jsonb
+where not exists (select 1 from public.platform_settings);
 
 insert into public.sector_templates (
   sector,
