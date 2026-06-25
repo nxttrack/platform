@@ -25,6 +25,8 @@ do $$
 declare
   platform_settings_id_type text;
 begin
+  alter table public.platform_settings drop constraint if exists platform_settings_singleton_check;
+
   select attribute.atttypid::regtype::text into platform_settings_id_type
   from pg_attribute attribute
   join pg_class relation on relation.oid = attribute.attrelid
@@ -35,7 +37,6 @@ begin
     and not attribute.attisdropped;
 
   if platform_settings_id_type in ('uuid', 'pg_catalog.uuid') then
-    alter table public.platform_settings drop constraint if exists platform_settings_singleton_check;
     alter table public.platform_settings alter column id set default gen_random_uuid();
   end if;
 end $$;
