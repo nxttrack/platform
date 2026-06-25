@@ -18,6 +18,7 @@ import {
   Newspaper,
   Send,
   Settings,
+  Sparkles,
   TrendingUp,
   Upload,
   User,
@@ -83,6 +84,7 @@ export const adminNav: NavItem[] = [
 
   { href: "/admin/imports", label: "Imports", icon: Upload, section: "Beheer" },
   { href: "/admin/automatisering", label: "Automatisering", icon: Bot, section: "Beheer" },
+  { href: "/admin/ai-assistent", label: "AI-assistent", icon: Sparkles, section: "Beheer" },
   { href: "/admin/mail-instellingen", label: "Mailinstellingen", icon: Mail, section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
 ];

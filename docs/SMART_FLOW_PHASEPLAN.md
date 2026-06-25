@@ -675,6 +675,27 @@ Add AI as an assistant after the rules-based system is stable.
 - AI improves speed and clarity without taking over decisions.
 - Admin remains accountable for final decisions.
 
+### Implementation Notes
+
+Phase S13 adds the AI assistant as a separate suggestion layer, not as a decision engine:
+
+- `tenant_ai_assistant_settings` stores per-tenant capability settings, model, prompt version, context level and sensitive-data review status.
+- `ai_assistant_suggestions` stores every AI draft, blocked attempt, provider failure, prompt snapshot, source-of-truth pointer, editable output and human decision.
+- `/admin/ai-assistent` lets tenant admins configure AI capabilities, generate suggestions from existing workflow context and edit/accept/dismiss drafts.
+- Server-side provider calls use the OpenAI Responses API only when `AI_ASSISTANT_ENABLED=true`, `OPENAI_API_KEY` is configured, the tenant capability is enabled and sensitive-data review is approved.
+- The default posture is off and guarded. A disabled or unreviewed capability creates a blocked audit draft instead of calling the provider.
+
+The first S13 capabilities are:
+
+- Intake summary assistant.
+- Admin explanation assistant.
+- Parent message draft assistant.
+- Progress note rewrite assistant.
+- Report insight assistant.
+- Risk signal summary assistant.
+
+Every output remains labelled as an AI suggestion. The source of truth remains the rules-based data, smart decisions and human admin action.
+
 ## 4. First Recommended Sprint
 
 Start with Phase S0 and Phase S1 together as one focused sprint:

@@ -87,24 +87,39 @@ Fully automatic placement, flow-through, slot offers, and diploma actions may on
 
 ## 5. AI Policy
 
-AI may become an assistant layer later, not the first decision-maker.
+AI is an assistant layer, not a decision-maker.
 
-Allowed later:
+Allowed:
 
 - Intake summaries.
-- Suggested stage recommendation explanation.
-- Suggested parent-friendly progress text.
-- Admin insight summaries.
-- Risk or attention signals.
-- Message draft suggestions.
+- Admin explanations for existing rules-based recommendations.
+- Parent message draft suggestions.
+- Parent-friendly progress note rewrites.
+- Report insight summaries.
+- Risk or attention signal summaries.
 
-Not allowed in the current smart MVP:
+Required guardrails:
+
+- AI suggestions must be labelled as suggestions.
+- AI cannot be the only source of truth.
+- AI output must be editable.
+- Sensitive data handling must be reviewed before activation.
+- Admins remain accountable for the final decision.
+- Every generated, blocked or failed suggestion is auditable.
+
+The platform uses:
+
+- `tenant_ai_assistant_settings` for per-tenant capability settings, model, prompt version, context level and sensitive-data review status.
+- `ai_assistant_suggestions` for AI draft output, provider errors, blocked attempts, prompt snapshots, source-of-truth pointers, editable text and human decision.
+
+Not allowed:
 
 - Fully automatic placement without admin approval.
 - AI-only stage assignment.
 - AI-only afzwem readiness.
-- Unexplained scoring.
-- Decisions that cannot be audited or overridden.
+- AI-only diploma issuing.
+- AI-only scoring or ranking.
+- Decisions that cannot be audited, edited or overridden.
 
 ## 6. Smart Engine Map
 
