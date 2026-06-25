@@ -105,6 +105,17 @@ export type GroupMembershipRow = {
   ends_on: string | null;
 };
 
+export type SessionAttendanceRow = {
+  id: string;
+  session_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  status: string;
+  note: string | null;
+  recorded_at: string;
+  recorded_by_profile_id: string | null;
+};
+
 export type ParticipantGuardianRow = {
   id: string;
   participant_id: string;
@@ -154,6 +165,19 @@ export type PeopleAuditEventRow = {
   created_at: string;
 };
 
+export type LessonCatchUpRequestRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string;
+  missed_session_id: string;
+  requested_by_profile_id: string;
+  preferred_time_windows: string[];
+  reason: string | null;
+  status: string;
+  requested_at: string;
+  resolved_at: string | null;
+};
+
 export type ProgressRow = {
   id: string;
   enrollment_id: string;
@@ -196,11 +220,13 @@ export type AdminDomainData = {
   participants: ParticipantRow[];
   enrollments: EnrollmentRow[];
   groupMemberships: GroupMembershipRow[];
+  attendance: SessionAttendanceRow[];
   participantGuardians: ParticipantGuardianRow[];
   tenantMembers: TenantMemberRow[];
   profiles: ProfileRow[];
   tenantAccountInvitations: TenantAccountInvitationRow[];
   peopleAuditEvents: PeopleAuditEventRow[];
+  catchUpRequests: LessonCatchUpRequestRow[];
   progress: ProgressRow[];
   badges: BadgeRow[];
   certificates: CertificateRow[];
@@ -262,10 +288,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     participantsResult,
     enrollmentsResult,
     groupMembershipsResult,
+    attendanceResult,
     participantGuardiansResult,
     tenantMembersResult,
     tenantAccountInvitationsResult,
     peopleAuditEventsResult,
+    catchUpRequestsResult,
     progressResult,
     badgesResult,
     certificatesResult
@@ -290,7 +318,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .select("id, group_id, resource_id, instructor_id, starts_at, ends_at, status")
       .eq("tenant_id", tenantId)
       .order("starts_at", { ascending: true })
-      .limit(25),
+      .limit(120),
     supabase.from("participants").select("id, external_reference, display_name, birthdate, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase
       .from("enrollments")
@@ -298,6 +326,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .eq("tenant_id", tenantId)
       .order("started_on", { ascending: false }),
     supabase.from("group_memberships").select("id, enrollment_id, group_id, status, starts_on, ends_on").eq("tenant_id", tenantId).order("starts_on", { ascending: false }),
+    supabase
+      .from("session_attendance")
+      .select("id, session_id, enrollment_id, participant_id, status, note, recorded_at, recorded_by_profile_id")
+      .eq("tenant_id", tenantId)
+      .order("recorded_at", { ascending: false })
+      .limit(240),
     supabase.from("participant_guardians").select("id, participant_id, profile_id, relationship, display_name, email, status").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
     supabase.from("tenant_memberships").select("id, user_id, role, status, invited_email").eq("tenant_id", tenantId).order("created_at", { ascending: true }),
     supabase
@@ -312,6 +346,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(80),
+    supabase
+      .from("lesson_catch_up_requests")
+      .select("id, participant_id, enrollment_id, missed_session_id, requested_by_profile_id, preferred_time_windows, reason, status, requested_at, resolved_at")
+      .eq("tenant_id", tenantId)
+      .order("requested_at", { ascending: false })
+      .limit(120),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase
@@ -343,10 +383,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     participants: participantsResult.error,
     enrollments: enrollmentsResult.error,
     group_memberships: groupMembershipsResult.error,
+    session_attendance: attendanceResult.error,
     participant_guardians: participantGuardiansResult.error,
     tenant_memberships: tenantMembersResult.error,
     tenant_account_invitations: tenantAccountInvitationsResult.error,
     people_audit_events: peopleAuditEventsResult.error,
+    lesson_catch_up_requests: catchUpRequestsResult.error,
     profiles: profilesResult.error,
     progress: progressResult.error,
     badges: badgesResult.error,
@@ -368,11 +410,13 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       participants: asRows<ParticipantRow>(participantsResult.data),
       enrollments: asRows<EnrollmentRow>(enrollmentsResult.data),
       groupMemberships: asRows<GroupMembershipRow>(groupMembershipsResult.data),
+      attendance: asRows<SessionAttendanceRow>(attendanceResult.data),
       participantGuardians: asRows<ParticipantGuardianRow>(participantGuardiansResult.data),
       tenantMembers,
       profiles: asRows<ProfileRow>(profilesResult.data),
       tenantAccountInvitations: asRows<TenantAccountInvitationRow>(tenantAccountInvitationsResult.data),
       peopleAuditEvents: asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data),
+      catchUpRequests: asRows<LessonCatchUpRequestRow>(catchUpRequestsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       badges: asRows<BadgeRow>(badgesResult.data),
       certificates: asRows<CertificateRow>(certificatesResult.data)
@@ -392,11 +436,13 @@ export function createEmptyData(): AdminDomainData {
     participants: [],
     enrollments: [],
     groupMemberships: [],
+    attendance: [],
     participantGuardians: [],
     tenantMembers: [],
     profiles: [],
     tenantAccountInvitations: [],
     peopleAuditEvents: [],
+    catchUpRequests: [],
     progress: [],
     badges: [],
     certificates: []

@@ -9,7 +9,8 @@ import {
   createStageModuleProgressAction,
   createStudentNoteAction,
   proposeStageTransitionAction,
-  recordAttendanceAction
+  recordAttendanceAction,
+  recordBulkAttendanceAction
 } from "@/lib/instructor-portal/instructor-portal-actions";
 import type {
   InstructorAttendanceRow,
@@ -387,11 +388,49 @@ function SessionAttendanceCard({ session, group, rows, lookups }: { session: Ins
       </div>
       <div className="grid gap-3">
         {rows.length === 0 ? <EmptyState>Geen leerlingen in deze sessie gevonden.</EmptyState> : null}
+        {rows.length > 0 ? <BulkAttendanceForm group={group} rows={rows} session={session} /> : null}
         {rows.map((row) => (
           <AttendanceRow key={`${row.session.id}-${row.enrollment.id}`} row={row} lookups={lookups} />
         ))}
       </div>
     </Card>
+  );
+}
+
+function BulkAttendanceForm({ group, rows, session }: { group: InstructorGroupRow; rows: SessionRosterRow[]; session: InstructorSessionRow }) {
+  return (
+    <form action={recordBulkAttendanceAction} className="grid gap-3 rounded-2xl border border-border bg-primary/5 p-4">
+      <input name="group_id" type="hidden" value={group.id} />
+      <input name="session_id" type="hidden" value={session.id} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-bold">Bulk aanwezigheid</p>
+          <p className="text-sm text-muted-foreground">Mobiel rooster: status per leerling en alles in een keer opslaan.</p>
+        </div>
+        <StatusPill tone="info">{rows.length} leerlingen</StatusPill>
+      </div>
+      <div className="grid gap-3">
+        {rows.map((row) => (
+          <div key={`${row.session.id}-${row.enrollment.id}-bulk`} className="grid gap-2 rounded-xl border border-border bg-card p-3 md:grid-cols-[1fr_160px_1fr]">
+            <input name="attendance_row" type="hidden" value={`${row.enrollment.id}|${row.participant.id}`} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{row.participant.display_name}</p>
+              <p className="text-xs text-muted-foreground">{row.attendance ? `Huidig: ${row.attendance.status}` : "Nog open"}</p>
+            </div>
+            <select className={fieldClassName} defaultValue={row.attendance?.status ?? "present"} name={`status_${row.enrollment.id}`}>
+              <option value="present">Aanwezig</option>
+              <option value="absent">Afwezig</option>
+              <option value="late">Te laat</option>
+              <option value="excused">Afbericht</option>
+            </select>
+            <input className={fieldClassName} defaultValue={row.attendance?.note ?? ""} name={`note_${row.enrollment.id}`} placeholder="Notitie optioneel" />
+          </div>
+        ))}
+      </div>
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Aanwezigheid bulk opslaan
+      </button>
+    </form>
   );
 }
 

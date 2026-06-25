@@ -33,6 +33,47 @@ export async function recordAttendanceAction(formData: FormData) {
   revalidateInstructorPortal({ groupId, participantId: optionalString(formData, "participant_id") });
 }
 
+export async function recordBulkAttendanceAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireInstructorContext();
+  const sessionId = requiredString(formData, "session_id");
+  const groupId = optionalString(formData, "group_id");
+  const rows = formData
+    .getAll("attendance_row")
+    .map((value) => (typeof value === "string" ? value.split("|") : []))
+    .filter((parts): parts is [string, string] => parts.length === 2 && Boolean(parts[0]) && Boolean(parts[1]));
+
+  if (rows.length === 0) {
+    throw new Error("Geen leerlingen gevonden om aanwezigheid voor op te slaan.");
+  }
+
+  const recordedAt = new Date().toISOString();
+  const attendanceRows = rows.map(([enrollmentId, participantId]) => ({
+    tenant_id: tenantId,
+    session_id: sessionId,
+    enrollment_id: enrollmentId,
+    participant_id: participantId,
+    status: requiredEnum(formData, `status_${enrollmentId}`, ["present", "absent", "late", "excused"]),
+    note: optionalString(formData, `note_${enrollmentId}`),
+    recorded_by_profile_id: profileId,
+    recorded_at: recordedAt
+  }));
+
+  await throwOnError(supabase.from("session_attendance").upsert(attendanceRows, { onConflict: "tenant_id,session_id,enrollment_id" }));
+  await notifyAttendanceGuardians(
+    supabase,
+    tenantId,
+    attendanceRows
+      .filter((row): row is (typeof attendanceRows)[number] & { status: "absent" | "excused" } => row.status === "absent" || row.status === "excused")
+      .map((row) => ({
+        participantId: row.participant_id,
+        enrollmentId: row.enrollment_id,
+        status: row.status
+      }))
+  );
+
+  revalidateInstructorPortal({ groupId });
+}
+
 export async function createProgressUpdateAction(formData: FormData) {
   const { supabase, tenantId } = await requireInstructorContext();
 
@@ -165,6 +206,48 @@ async function requireInstructorContext() {
     tenantId: context.activeTenant.tenantId,
     profileId: context.user.id
   };
+}
+
+async function notifyAttendanceGuardians(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  rows: { participantId: string; enrollmentId: string; status: "absent" | "excused" }[]
+) {
+  if (rows.length === 0) {
+    return;
+  }
+
+  const participantIds = [...new Set(rows.map((row) => row.participantId))];
+  const { data, error } = await supabase
+    .from("participant_guardians")
+    .select("participant_id, profile_id")
+    .eq("tenant_id", tenantId)
+    .eq("status", "active")
+    .in("participant_id", participantIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const guardians = Array.isArray(data) ? (data as { participant_id: string; profile_id: string }[]) : [];
+  const notifications = rows.flatMap((row) => {
+    return guardians
+      .filter((guardian) => guardian.participant_id === row.participantId)
+      .map((guardian) => ({
+        tenant_id: tenantId,
+        recipient_profile_id: guardian.profile_id,
+        participant_id: row.participantId,
+        enrollment_id: row.enrollmentId,
+        title: row.status === "excused" ? "Afmelding geregistreerd" : "Afwezigheid geregistreerd",
+        body: row.status === "excused" ? "De afmelding voor de les is verwerkt." : "De afwezigheid voor de les is geregistreerd.",
+        notification_type: "lesson",
+        status: "unread"
+      }));
+  });
+
+  if (notifications.length > 0) {
+    await throwOnError(supabase.from("parent_notifications").insert(notifications));
+  }
 }
 
 function revalidateInstructorPortal({ groupId, participantId }: { groupId?: string | null; participantId?: string | null } = {}) {
