@@ -178,7 +178,7 @@ function SiteHeader() {
           <Link href="/nxttrack/login" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 md:inline-flex">
             Inloggen
           </Link>
-          <Link href="/nxttrack/demo" className="hidden items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 md:inline-flex">
+          <Link href="/nxttrack/demo" className={`${nxtButtonClassName} hidden md:inline-flex`} style={whiteTextStyle}>
             Plan demo <ArrowRight className="h-3.5 w-3.5" />
           </Link>
           <button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
@@ -197,7 +197,7 @@ function SiteHeader() {
             <Link href="/nxttrack/login" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Inloggen
             </Link>
-            <Link href="/nxttrack/demo" onClick={() => setOpen(false)} className="mt-2 rounded-lg bg-slate-900 px-3 py-2.5 text-center text-sm font-semibold text-white">
+            <Link href="/nxttrack/demo" onClick={() => setOpen(false)} className={`${nxtButtonClassName} mt-2 justify-center`} style={whiteTextStyle}>
               Plan demo
             </Link>
           </div>
@@ -228,7 +228,7 @@ function Hero() {
               Van ouderportaal en trainer app tot planning, diploma's, badges, wachtrijbeheer en communicatie — NXTTRACK brengt de volledige zwemreis samen in één modern platform.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              <Link href="/nxttrack/demo" className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
+              <Link href="/nxttrack/demo" className={`${nxtButtonClassName} px-5 py-3`} style={whiteTextStyle}>
                 Plan demo <ArrowRight className="h-4 w-4" />
               </Link>
               <Link href="/nxttrack/zwemscholen" className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">
@@ -331,7 +331,7 @@ function ParentExperience() {
   return (
     <SplitSection kicker="Ouders & kinderen" title="Een positieve zwemreis voor ieder kind." sub="Ouders krijgen overzicht. Kinderen krijgen vertrouwen." imageLabel="Foto: ouder en kind kijken samen in de app">
       <CheckList items={["Duidelijke voortgang zonder rapportgevoel", "Badges die kinderen trots maken", "Complimenten van de instructeur na de les", "Diploma's veilig bewaard in de kluis", "Ouders altijd op de hoogte"]} />
-      <Link href="/nxttrack/ouderportaal" className="mt-7 inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800">
+      <Link href="/nxttrack/ouderportaal" className={`${nxtButtonClassName} mt-7 px-4 py-2.5`} style={whiteTextStyle}>
         Meer over het ouderportaal <ArrowRight className="h-4 w-4" />
       </Link>
     </SplitSection>
@@ -764,3 +764,6 @@ function Stat({ v, l, small }: { v: string; l: string; small?: boolean }) {
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
+
+const nxtButtonClassName = "inline-flex items-center gap-1.5 rounded-lg bg-[#0f172a] px-3.5 py-2 text-sm font-semibold shadow-sm transition-colors hover:bg-[#111c34]";
+const whiteTextStyle = { color: "#ffffff" } as const;

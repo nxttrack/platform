@@ -1,4 +1,4 @@
-import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MapPin, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
+import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MapPin, Menu, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -189,7 +189,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
               <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">{profile.heroSubtitle}</p>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95" href="/intake">
+                <Link className={tenantPrimaryButtonClassName} href="/intake">
                   {profile.primaryCtaLabel} <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href="/programmas">
@@ -276,7 +276,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
                 <CheckCircle2 className="h-8 w-8" />
               </div>
             </div>
-            <Link className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95" href="/intake">
+            <Link className={`${tenantPrimaryButtonClassName} mt-6 w-full justify-center`} href="/intake">
               Start je zwemreis <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -588,6 +588,10 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
     "--ring": profile.brandPrimaryHex,
     "--accent": profile.brandAccentHex
   } as CSSProperties;
+  const primaryButtonStyle = {
+    backgroundColor: profile.brandPrimaryHex,
+    color: readableForegroundFor(profile.brandPrimaryHex)
+  } as CSSProperties;
   const nav = [
     { href: "/", label: "Home" },
     { href: "/nieuws", label: "Nieuws" },
@@ -615,12 +619,29 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
             <Link className="hidden rounded-xl border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-muted md:inline-flex" href="/login">
               Inloggen
             </Link>
-            <Link className="hidden rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 md:inline-flex" href="/intake">
+            <Link className="hidden rounded-xl px-4 py-2 text-sm font-semibold shadow-glow hover:opacity-90 md:inline-flex" href="/intake" style={primaryButtonStyle}>
               Inschrijven
             </Link>
-            <Link className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-90 md:hidden" href="/intake">
+            <Link className="rounded-xl px-4 py-2 text-sm font-semibold shadow-glow hover:opacity-90 md:hidden" href="/intake" style={primaryButtonStyle}>
               Intake
             </Link>
+            <details className="group relative md:hidden">
+              <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-background text-foreground shadow-soft hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [&::-webkit-details-marker]:hidden">
+                <Menu className="h-5 w-5" />
+              </summary>
+              <div className="absolute right-0 top-12 z-50 w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+                <nav aria-label="Tenant website mobiele navigatie" className="grid gap-1 p-3">
+                  {nav.map((item, index) => (
+                    <Link key={`${item.href}-mobile-${index}`} className="rounded-2xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" href={item.href}>
+                      {item.label}
+                    </Link>
+                  ))}
+                  <Link className="rounded-2xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground" href="/login">
+                    Inloggen
+                  </Link>
+                </nav>
+              </div>
+            </details>
           </div>
         </div>
       </header>
@@ -717,7 +738,7 @@ function ProgramGrid({ programs }: { programs: PublicProgram[] }) {
             <Link className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3.5 py-2 text-sm font-semibold hover:bg-muted" href={`/programmas/${program.slug}`}>
               Details
             </Link>
-            <Link className="inline-flex items-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" href={`/intake?program=${program.slug}`}>
+            <Link className={`${tenantPrimaryButtonClassName} rounded-lg px-3.5 py-2 shadow-soft`} href={`/intake?program=${program.slug}`}>
               Intake <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -833,7 +854,7 @@ function IntakeForm({ program }: { program: PublicProgram }) {
 
           <TextAreaField label="Opmerkingen" name="notes" />
 
-          <button className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-glow hover:bg-primary/90 md:w-fit" type="submit">
+          <button className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-[var(--primary-foreground)] shadow-glow hover:bg-primary/90 md:w-fit" type="submit">
             Intake versturen <ArrowRight className="h-4 w-4" />
           </button>
         </div>
@@ -1003,7 +1024,7 @@ function HeaderLink({ href, children }: { href: string; children: ReactNode }) {
 
 function PrimaryLink({ href, children }: { href: string; children: ReactNode }) {
   return (
-    <Link className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-slate-800" href={href}>
+    <Link className="inline-flex items-center gap-2 rounded-lg bg-[#0f172a] px-5 py-3 text-sm font-bold text-white shadow-sm hover:bg-[#111c34]" href={href} style={{ color: "#ffffff" }}>
       {children} <ArrowRight className="h-4 w-4" />
     </Link>
   );
@@ -1025,6 +1046,8 @@ function Kicker({ children }: { children: ReactNode }) {
     </span>
   );
 }
+
+const tenantPrimaryButtonClassName = "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] shadow-glow hover:opacity-95";
 
 function statusCopy(snapshot: PublicTenantSiteSnapshot) {
   if (snapshot.status === "not_configured") {
