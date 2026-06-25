@@ -224,11 +224,47 @@ export type ParentCatchUpRequestRow = {
   participant_id: string;
   enrollment_id: string;
   missed_session_id: string;
+  makeup_credit_id: string | null;
+  target_session_id: string | null;
+  candidate_session_id: string | null;
+  approval_mode: string;
+  decision_reason: string | null;
   preferred_time_windows: string[];
   reason: string | null;
   status: string;
   requested_at: string;
   resolved_at: string | null;
+};
+
+export type ParentMakeupCreditRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string;
+  source_session_id: string | null;
+  source_request_id: string | null;
+  credit_code: string;
+  status: string;
+  reason: string | null;
+  granted_by: string;
+  granted_at: string;
+  expires_at: string;
+  used_session_id: string | null;
+};
+
+export type ParentMakeupCandidateSessionRow = {
+  id: string;
+  makeup_credit_id: string;
+  session_id: string;
+  group_id: string;
+  score: number;
+  status: string;
+  reasons: Array<Record<string, string>>;
+  blockers: Array<Record<string, string>>;
+  capacity_snapshot: Record<string, unknown>;
+  expires_at: string | null;
+  selected_at: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
 };
 
 export type ParentInvoiceRow = {
@@ -330,6 +366,8 @@ export type ParentPortalData = {
   documents: ParentDocumentRow[];
   notifications: ParentNotificationRow[];
   catchUpRequests: ParentCatchUpRequestRow[];
+  makeupCredits: ParentMakeupCreditRow[];
+  makeupCandidates: ParentMakeupCandidateSessionRow[];
   invoices: ParentInvoiceRow[];
   paymentRecords: ParentPaymentRecordRow[];
 };
@@ -439,6 +477,7 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     certificatesResult,
     documentsResult,
     catchUpRequestsResult,
+    makeupCreditsResult,
     invoicesResult,
     paymentRecordsResult,
     programsResult,
@@ -522,12 +561,21 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     rowsByIds<ParentCatchUpRequestRow>(
       supabase,
       "lesson_catch_up_requests",
-      "id, participant_id, enrollment_id, missed_session_id, preferred_time_windows, reason, status, requested_at, resolved_at",
+      "id, participant_id, enrollment_id, missed_session_id, makeup_credit_id, target_session_id, candidate_session_id, approval_mode, decision_reason, preferred_time_windows, reason, status, requested_at, resolved_at",
       tenantId,
       "participant_id",
       participantIds,
       "requested_at",
       false
+    ),
+    rowsByIds<ParentMakeupCreditRow>(
+      supabase,
+      "makeup_credits",
+      "id, participant_id, enrollment_id, source_session_id, source_request_id, credit_code, status, reason, granted_by, granted_at, expires_at, used_session_id",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "expires_at"
     ),
     rowsByIds<ParentInvoiceRow>(
       supabase,
@@ -562,6 +610,18 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     )
   ]);
   const stages = stagesResult.rows;
+  const makeupCreditIds = unique(makeupCreditsResult.rows.map((credit) => credit.id));
+  const makeupCandidatesResult = await rowsByIds<ParentMakeupCandidateSessionRow>(
+    supabase,
+    "makeup_candidate_sessions",
+    "id, makeup_credit_id, session_id, group_id, score, status, reasons, blockers, capacity_snapshot, expires_at, selected_at, reviewed_at, review_note",
+    tenantId,
+    "makeup_credit_id",
+    makeupCreditIds,
+    "score",
+    false,
+    80
+  );
   const stageIds = unique(stages.map((stage) => stage.id));
   const stageModulesResult = await rowsByIds<ParentStageModuleRow>(
     supabase,
@@ -597,11 +657,11 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
   );
 
   const memberships = membershipsResult.rows;
-  const groupIds = unique(memberships.map((membership) => membership.group_id));
+  const groupIds = unique([...memberships.map((membership) => membership.group_id), ...makeupCandidatesResult.rows.map((candidate) => candidate.group_id)]);
   const groupsResult = await rowsByIds<ParentGroupRow>(supabase, "groups", "id, program_id, stage_id, resource_id, name, weekday, starts_at, ends_at, status", tenantId, "id", groupIds, "weekday");
   const groups = groupsResult.rows;
   const resourceIds = unique(groups.flatMap((group) => (group.resource_id ? [group.resource_id] : [])));
-  const sessionsResult = await rowsByIds<ParentSessionRow>(supabase, "sessions", "id, group_id, resource_id, starts_at, ends_at, status", tenantId, "group_id", groupIds, "starts_at", true, 30);
+  const sessionsResult = await rowsByIds<ParentSessionRow>(supabase, "sessions", "id, group_id, resource_id, starts_at, ends_at, status", tenantId, "group_id", groupIds, "starts_at", true, 80);
   const resourcesResult = await rowsByIds<ParentResourceRow>(supabase, "resources", "id, name, location_name", tenantId, "id", resourceIds, "name");
 
   const errors = collectErrors({
@@ -621,6 +681,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     certificates: certificatesResult.error,
     parent_documents: documentsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
+    makeup_credits: makeupCreditsResult.error,
+    makeup_candidate_sessions: makeupCandidatesResult.error,
     invoices: invoicesResult.error,
     payment_records: paymentRecordsResult.error,
     programs: programsResult.error,
@@ -663,6 +725,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       documents: documentsResult.rows,
       notifications: asRows<ParentNotificationRow>(notificationsResult.data),
       catchUpRequests: catchUpRequestsResult.rows,
+      makeupCredits: makeupCreditsResult.rows,
+      makeupCandidates: makeupCandidatesResult.rows,
       invoices: invoicesResult.rows,
       paymentRecords: paymentRecordsResult.rows
     }
@@ -724,6 +788,8 @@ function createEmptyData(): ParentPortalData {
     documents: [],
     notifications: [],
     catchUpRequests: [],
+    makeupCredits: [],
+    makeupCandidates: [],
     invoices: [],
     paymentRecords: []
   };

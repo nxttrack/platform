@@ -175,12 +175,61 @@ export type LessonCatchUpRequestRow = {
   participant_id: string;
   enrollment_id: string;
   missed_session_id: string;
+  makeup_credit_id: string | null;
+  target_session_id: string | null;
+  candidate_session_id: string | null;
+  approval_mode: string;
+  decision_reason: string | null;
+  admin_note: string | null;
   requested_by_profile_id: string;
   preferred_time_windows: string[];
   reason: string | null;
   status: string;
   requested_at: string;
   resolved_at: string | null;
+};
+
+export type MakeupCreditRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string;
+  source_session_id: string | null;
+  source_request_id: string | null;
+  credit_code: string;
+  status: string;
+  reason: string | null;
+  granted_by: string;
+  granted_at: string;
+  expires_at: string;
+  used_session_id: string | null;
+};
+
+export type MakeupCandidateSessionRow = {
+  id: string;
+  makeup_credit_id: string;
+  session_id: string;
+  group_id: string;
+  score: number;
+  status: string;
+  reasons: Array<Record<string, string>>;
+  blockers: Array<Record<string, string>>;
+  capacity_snapshot: Record<string, unknown>;
+  expires_at: string | null;
+  selected_at: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+};
+
+export type LessonMakeupEventRow = {
+  id: string;
+  makeup_credit_id: string | null;
+  catch_up_request_id: string | null;
+  candidate_session_id: string | null;
+  participant_id: string | null;
+  enrollment_id: string | null;
+  event_type: string;
+  summary: string;
+  created_at: string;
 };
 
 export type CapacityHoldRow = {
@@ -306,6 +355,9 @@ export type AdminDomainData = {
   tenantAccountInvitations: TenantAccountInvitationRow[];
   peopleAuditEvents: PeopleAuditEventRow[];
   catchUpRequests: LessonCatchUpRequestRow[];
+  makeupCredits: MakeupCreditRow[];
+  makeupCandidates: MakeupCandidateSessionRow[];
+  makeupEvents: LessonMakeupEventRow[];
   capacityHolds: CapacityHoldRow[];
   progress: ProgressRow[];
   stageModules: StageModuleRow[];
@@ -379,6 +431,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     tenantAccountInvitationsResult,
     peopleAuditEventsResult,
     catchUpRequestsResult,
+    makeupCreditsResult,
+    makeupCandidatesResult,
+    makeupEventsResult,
     capacityHoldsResult,
     progressResult,
     stageModulesResult,
@@ -439,9 +494,27 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .limit(80),
     supabase
       .from("lesson_catch_up_requests")
-      .select("id, participant_id, enrollment_id, missed_session_id, requested_by_profile_id, preferred_time_windows, reason, status, requested_at, resolved_at")
+      .select("id, participant_id, enrollment_id, missed_session_id, makeup_credit_id, target_session_id, candidate_session_id, approval_mode, decision_reason, admin_note, requested_by_profile_id, preferred_time_windows, reason, status, requested_at, resolved_at")
       .eq("tenant_id", tenantId)
       .order("requested_at", { ascending: false })
+      .limit(120),
+    supabase
+      .from("makeup_credits")
+      .select("id, participant_id, enrollment_id, source_session_id, source_request_id, credit_code, status, reason, granted_by, granted_at, expires_at, used_session_id")
+      .eq("tenant_id", tenantId)
+      .order("expires_at", { ascending: true })
+      .limit(160),
+    supabase
+      .from("makeup_candidate_sessions")
+      .select("id, makeup_credit_id, session_id, group_id, score, status, reasons, blockers, capacity_snapshot, expires_at, selected_at, reviewed_at, review_note")
+      .eq("tenant_id", tenantId)
+      .order("score", { ascending: false })
+      .limit(200),
+    supabase
+      .from("lesson_makeup_events")
+      .select("id, makeup_credit_id, catch_up_request_id, candidate_session_id, participant_id, enrollment_id, event_type, summary, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
       .limit(120),
     supabase.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("tenant_id", tenantId).order("expires_at", { ascending: true }),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
@@ -506,6 +579,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     tenant_account_invitations: tenantAccountInvitationsResult.error,
     people_audit_events: peopleAuditEventsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
+    makeup_credits: makeupCreditsResult.error,
+    makeup_candidate_sessions: makeupCandidatesResult.error,
+    lesson_makeup_events: makeupEventsResult.error,
     capacity_holds: capacityHoldsResult.error,
     profiles: profilesResult.error,
     progress: progressResult.error,
@@ -540,6 +616,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       tenantAccountInvitations: asRows<TenantAccountInvitationRow>(tenantAccountInvitationsResult.data),
       peopleAuditEvents: asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data),
       catchUpRequests: asRows<LessonCatchUpRequestRow>(catchUpRequestsResult.data),
+      makeupCredits: asRows<MakeupCreditRow>(makeupCreditsResult.data),
+      makeupCandidates: asRows<MakeupCandidateSessionRow>(makeupCandidatesResult.data),
+      makeupEvents: asRows<LessonMakeupEventRow>(makeupEventsResult.data),
       capacityHolds: asRows<CapacityHoldRow>(capacityHoldsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       stageModules: asRows<StageModuleRow>(stageModulesResult.data),
@@ -572,6 +651,9 @@ export function createEmptyData(): AdminDomainData {
     tenantAccountInvitations: [],
     peopleAuditEvents: [],
     catchUpRequests: [],
+    makeupCredits: [],
+    makeupCandidates: [],
+    makeupEvents: [],
     capacityHolds: [],
     progress: [],
     stageModules: [],

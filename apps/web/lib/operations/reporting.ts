@@ -113,6 +113,31 @@ type AttendanceRow = {
   participant_id: string;
   status: string;
   recorded_at: string;
+  makeup_credit_id?: string | null;
+  makeup_eligible?: boolean | null;
+};
+
+type MakeupCreditRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  source_session_id: string | null;
+  status: string;
+  granted_by: string;
+  granted_at: string;
+  expires_at: string;
+  used_session_id: string | null;
+};
+
+type CatchUpRequestRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  missed_session_id: string;
+  target_session_id: string | null;
+  makeup_credit_id: string | null;
+  status: string;
+  requested_at: string;
 };
 
 type WaitlistRow = {
@@ -245,6 +270,8 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
     enrollmentsResult,
     sessionsResult,
     attendanceResult,
+    makeupCreditsResult,
+    catchUpRequestsResult,
     waitlistResult,
     progressResult,
     moduleProgressResult,
@@ -262,7 +289,9 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
     supabase.from("group_memberships").select("id, enrollment_id, group_id, status, ends_on").eq("tenant_id", tenantId).limit(2000),
     supabase.from("enrollments").select("id, participant_id, program_id, current_stage_id, status").eq("tenant_id", tenantId).limit(2000),
     supabase.from("sessions").select("id, group_id, instructor_id, starts_at, status").eq("tenant_id", tenantId).order("starts_at", { ascending: false }).limit(1000),
-    supabase.from("session_attendance").select("id, session_id, enrollment_id, participant_id, status, recorded_at").eq("tenant_id", tenantId).order("recorded_at", { ascending: false }).limit(2000),
+    supabase.from("session_attendance").select("id, session_id, enrollment_id, participant_id, status, recorded_at, makeup_credit_id, makeup_eligible").eq("tenant_id", tenantId).order("recorded_at", { ascending: false }).limit(2000),
+    supabase.from("makeup_credits").select("id, enrollment_id, participant_id, source_session_id, status, granted_by, granted_at, expires_at, used_session_id").eq("tenant_id", tenantId).order("granted_at", { ascending: false }).limit(1000),
+    supabase.from("lesson_catch_up_requests").select("id, enrollment_id, participant_id, missed_session_id, target_session_id, makeup_credit_id, status, requested_at").eq("tenant_id", tenantId).order("requested_at", { ascending: false }).limit(1000),
     supabase.from("waitlist_entries").select("id, program_id, recommended_stage_id, status, priority_date, source, admin_priority, waitlist_score, created_at").eq("tenant_id", tenantId).order("priority_date", { ascending: true }).limit(1000),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(1000),
     supabase.from("stage_module_progress").select("id, enrollment_id, participant_id, stage_id, status, score, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(1000),
@@ -282,6 +311,8 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
   throwResultError(enrollmentsResult.error);
   throwResultError(sessionsResult.error);
   throwResultError(attendanceResult.error);
+  throwResultError(makeupCreditsResult.error);
+  throwResultError(catchUpRequestsResult.error);
   throwResultError(waitlistResult.error);
   throwResultError(progressResult.error);
   throwResultError(moduleProgressResult.error);
@@ -300,6 +331,8 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
   const enrollments = asRows<EnrollmentRow>(enrollmentsResult.data);
   const sessions = asRows<SessionRow>(sessionsResult.data);
   const attendance = asRows<AttendanceRow>(attendanceResult.data);
+  const makeupCredits = asRows<MakeupCreditRow>(makeupCreditsResult.data);
+  const catchUpRequests = asRows<CatchUpRequestRow>(catchUpRequestsResult.data);
   const waitlist = asRows<WaitlistRow>(waitlistResult.data);
   const progress = asRows<ProgressRow>(progressResult.data);
   const moduleProgress = asRows<StageModuleProgressRow>(moduleProgressResult.data);
@@ -319,7 +352,7 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
     occupancy: buildOccupancySection(groups, resources, memberships, filters),
     waitlist: buildWaitlistSection(waitlist, filters),
     progress: buildProgressSection(progress, moduleProgress, enrollments, filters),
-    attendance: buildAttendanceSection(attendance, sessions, groups, filters),
+    attendance: buildAttendanceSection(attendance, sessions, groups, makeupCredits, catchUpRequests, filters),
     payments: buildPaymentsSection(invoices, enrollments, filters),
     revenue: buildRevenueSection(invoices, paymentRecords, refunds, enrollments, filters),
     auditEvents: asRows<ReportAuditEventRow>(auditEventsResult.data)
@@ -430,9 +463,11 @@ function getProgressParticipantId(entry: ProgressRow & { source: string } | Stag
   return "participant_id" in entry ? entry.participant_id : enrollmentsById.get(entry.enrollment_id)?.participant_id ?? null;
 }
 
-function buildAttendanceSection(attendance: AttendanceRow[], sessions: SessionRow[], groups: GroupRow[], filters: ReportFilters): ReportSection {
+function buildAttendanceSection(attendance: AttendanceRow[], sessions: SessionRow[], groups: GroupRow[], makeupCredits: MakeupCreditRow[], catchUpRequests: CatchUpRequestRow[], filters: ReportFilters): ReportSection {
   const sessionsById = new Map(sessions.map((session) => [session.id, session]));
   const groupsById = new Map(groups.map((group) => [group.id, group]));
+  const creditsByAttendanceId = new Map(attendance.flatMap((entry) => (entry.makeup_credit_id ? [[entry.id, makeupCredits.find((credit) => credit.id === entry.makeup_credit_id) ?? null] as const] : [])));
+  const requestsByCreditId = new Map(catchUpRequests.flatMap((request) => (request.makeup_credit_id ? [[request.makeup_credit_id, request] as const] : [])));
   const rows = attendance
     .filter((entry) => {
       const session = sessionsById.get(entry.session_id);
@@ -450,6 +485,9 @@ function buildAttendanceSection(attendance: AttendanceRow[], sessions: SessionRo
         group: group?.name ?? "Onbekende groep",
         participant_id: entry.participant_id,
         status: entry.status,
+        makeup_eligible: entry.makeup_eligible ? "yes" : "no",
+        makeup_credit_status: entry.makeup_credit_id ? (creditsByAttendanceId.get(entry.id)?.status ?? "unknown") : null,
+        catch_up_status: entry.makeup_credit_id ? (requestsByCreditId.get(entry.makeup_credit_id)?.status ?? null) : null,
         session_date: session?.starts_at ?? entry.recorded_at,
         recorded_at: entry.recorded_at
       };
@@ -461,6 +499,9 @@ function buildAttendanceSection(attendance: AttendanceRow[], sessions: SessionRo
       present: countBy(rows, "status", "present"),
       absent: countBy(rows, "status", "absent"),
       late: countBy(rows, "status", "late"),
+      makeup_credits: rows.filter((row) => row.makeup_credit_status).length,
+      makeup_requests: rows.filter((row) => row.catch_up_status).length,
+      makeup_used: rows.filter((row) => row.makeup_credit_status === "used").length,
       attendance_rate: percentage(countBy(rows, "status", "present") + countBy(rows, "status", "late"), rows.length)
     },
     rows

@@ -3,7 +3,7 @@ import { AlertTriangle, CalendarClock, CalendarDays, ClipboardCheck, RotateCcw, 
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
-import { createConflictCheckedSessionAction, generateGroupSessionsAction, updateCatchUpRequestAction } from "@/lib/planning/admin-planning-actions";
+import { createConflictCheckedSessionAction, generateGroupSessionsAction, refreshCatchUpCandidatesAction, updateCatchUpRequestAction } from "@/lib/planning/admin-planning-actions";
 import type {
   AdminDomainData,
   AdminDomainSnapshot,
@@ -12,6 +12,9 @@ import type {
   GroupRow,
   InstructorRow,
   LessonCatchUpRequestRow,
+  MakeupCandidateSessionRow,
+  MakeupCreditRow,
+  LessonMakeupEventRow,
   ParticipantRow,
   ResourceRow,
   SessionAttendanceRow,
@@ -29,8 +32,12 @@ type LookupMaps = {
   membershipsByGroup: Map<string, GroupMembershipRow[]>;
   participants: Map<string, ParticipantRow>;
   resources: Map<string, ResourceRow>;
+  sessions: Map<string, SessionRow>;
   sessionsByGroup: Map<string, SessionRow[]>;
   attendanceBySession: Map<string, SessionAttendanceRow[]>;
+  makeupCredits: Map<string, MakeupCreditRow>;
+  makeupCandidatesByCredit: Map<string, MakeupCandidateSessionRow[]>;
+  makeupEventsByRequest: Map<string, LessonMakeupEventRow[]>;
 };
 
 type GroupPlanningRow = {
@@ -271,6 +278,10 @@ function AttendanceReportCard({ row }: { row: ReturnType<typeof buildAttendanceS
 function CatchUpRequestCard({ lookups, request }: { lookups: LookupMaps; request: LessonCatchUpRequestRow }) {
   const participant = lookups.participants.get(request.participant_id);
   const missedSession = request.missed_session_id ? [...lookups.sessionsByGroup.values()].flat().find((session) => session.id === request.missed_session_id) : null;
+  const credit = request.makeup_credit_id ? lookups.makeupCredits.get(request.makeup_credit_id) : null;
+  const candidates = request.makeup_credit_id ? (lookups.makeupCandidatesByCredit.get(request.makeup_credit_id) ?? []) : [];
+  const targetSession = request.target_session_id ? lookups.sessions.get(request.target_session_id) : null;
+  const events = lookups.makeupEventsByRequest.get(request.id) ?? [];
 
   return (
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
@@ -285,7 +296,54 @@ function CatchUpRequestCard({ lookups, request }: { lookups: LookupMaps; request
         </div>
         <StatusPill tone={request.status === "approved" || request.status === "used" ? "success" : request.status === "rejected" ? "danger" : "warning"}>{request.status}</StatusPill>
       </div>
-      <form action={updateCatchUpRequestAction} className="mt-4 grid gap-3 md:grid-cols-[180px_1fr_auto]">
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
+        <InfoTile label="Credit" value={credit ? `${credit.credit_code} - ${credit.status}` : "Nog geen credit"} />
+        <InfoTile label="Geldig tot" value={credit ? formatDateTime(credit.expires_at) : "-"} />
+        <InfoTile label="Bron" value={credit?.granted_by ?? request.approval_mode} />
+        <InfoTile label="Doelmoment" value={targetSession ? formatDateTime(targetSession.starts_at) : "Nog te kiezen"} />
+      </div>
+
+      {candidates.length > 0 ? (
+        <div className="mt-4 grid gap-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">Kandidaatlessen</p>
+          {candidates.slice(0, 3).map((candidate) => {
+            const session = lookups.sessions.get(candidate.session_id);
+            const group = lookups.groups.get(candidate.group_id);
+            const hasBlocker = candidate.blockers.length > 0;
+
+            return (
+              <div key={candidate.id} className={`rounded-2xl border p-3 ${hasBlocker ? "border-amber-200 bg-amber-50/80" : "border-border bg-card"}`}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{group?.name ?? "Groep"} - {session ? formatDateTime(session.starts_at) : "Moment"}</p>
+                    <p className="text-xs text-muted-foreground">{candidate.reasons[0]?.detail ?? "Match op programma, niveau en capaciteit."}</p>
+                    {hasBlocker ? <p className="mt-1 text-xs font-semibold text-amber-800">{candidate.blockers[0]?.label}: {candidate.blockers[0]?.detail}</p> : null}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <StatusPill tone={hasBlocker ? "warning" : "success"}>{candidate.score}/100</StatusPill>
+                    <StatusPill tone="neutral">{candidate.status}</StatusPill>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="mt-4 rounded-2xl border border-dashed border-border bg-card p-3 text-sm text-muted-foreground">
+          Nog geen kandidaatlessen berekend.
+        </div>
+      )}
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        <form action={refreshCatchUpCandidatesAction}>
+          <input name="id" type="hidden" value={request.id} />
+          <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+            Kandidaten verversen
+          </button>
+        </form>
+      </div>
+
+      <form action={updateCatchUpRequestAction} className="mt-4 grid gap-3 md:grid-cols-[160px_minmax(180px,1fr)_minmax(180px,1fr)_auto]">
         <input name="id" type="hidden" value={request.id} />
         <select className={fieldClassName} defaultValue={request.status} name="status">
           <option value="requested">Aangevraagd</option>
@@ -294,11 +352,31 @@ function CatchUpRequestCard({ lookups, request }: { lookups: LookupMaps; request
           <option value="cancelled">Geannuleerd</option>
           <option value="used">Gebruikt</option>
         </select>
-        <input className={fieldClassName} name="note" placeholder="Bericht aan ouder optioneel" />
+        <select className={fieldClassName} defaultValue={request.candidate_session_id ?? ""} name="candidate_session_id">
+          <option value="">Geen kandidaat gekozen</option>
+          {candidates.map((candidate) => {
+            const session = lookups.sessions.get(candidate.session_id);
+            const group = lookups.groups.get(candidate.group_id);
+
+            return (
+              <option key={candidate.id} value={candidate.id}>
+                {candidate.score}/100 - {group?.name ?? "Groep"} - {session ? formatDateTime(session.starts_at) : "moment"}
+              </option>
+            );
+          })}
+        </select>
+        <input className={fieldClassName} name="note" placeholder="Bericht / override reden" required={request.status === "rejected" || request.status === "cancelled"} />
         <button className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
           Status opslaan
         </button>
       </form>
+      {events.length > 0 ? (
+        <div className="mt-4 grid gap-2 text-xs text-muted-foreground">
+          {events.slice(0, 3).map((event) => (
+            <p key={event.id}>{formatDateTime(event.created_at)} - {event.summary}</p>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -330,8 +408,15 @@ function buildLookups(data: AdminDomainData): LookupMaps {
     membershipsByGroup: groupBy(data.groupMemberships.filter((membership) => ["planned", "active"].includes(membership.status)), (membership) => membership.group_id),
     participants: byId(data.participants),
     resources: byId(data.resources),
+    sessions: byId(data.sessions),
     sessionsByGroup: groupBy(data.sessions, (session) => session.group_id),
-    attendanceBySession: groupBy(data.attendance, (attendance) => attendance.session_id)
+    attendanceBySession: groupBy(data.attendance, (attendance) => attendance.session_id),
+    makeupCredits: byId(data.makeupCredits),
+    makeupCandidatesByCredit: groupBy(data.makeupCandidates, (candidate) => candidate.makeup_credit_id),
+    makeupEventsByRequest: groupBy(
+      data.makeupEvents.filter((event): event is LessonMakeupEventRow & { catch_up_request_id: string } => Boolean(event.catch_up_request_id)),
+      (event) => event.catch_up_request_id
+    )
   };
 }
 

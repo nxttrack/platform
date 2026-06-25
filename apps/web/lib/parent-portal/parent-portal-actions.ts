@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { createMakeupCapacityHold, refreshMakeupCandidates } from "@/lib/makeup/makeup-engine";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -31,19 +32,110 @@ export async function markNotificationReadAction(formData: FormData) {
 
 export async function requestCatchUpLessonAction(formData: FormData) {
   const { supabase, tenantId, profileId } = await requireParentContext();
+  const participantId = requiredString(formData, "participant_id");
+  const enrollmentId = requiredString(formData, "enrollment_id");
+  const sessionId = requiredString(formData, "session_id");
+  const reason = optionalString(formData, "reason");
+  const preferredTimeWindows = formData.getAll("preferred_time_windows").filter((value): value is string => typeof value === "string");
 
-  await throwOnError(
-    supabase.from("lesson_catch_up_requests").insert({
+  const { data, error } = await supabase
+    .from("lesson_catch_up_requests")
+    .insert({
       tenant_id: tenantId,
-      participant_id: requiredString(formData, "participant_id"),
-      enrollment_id: requiredString(formData, "enrollment_id"),
-      missed_session_id: requiredString(formData, "session_id"),
+      participant_id: participantId,
+      enrollment_id: enrollmentId,
+      missed_session_id: sessionId,
       requested_by_profile_id: profileId,
-      preferred_time_windows: formData.getAll("preferred_time_windows").filter((value): value is string => typeof value === "string"),
-      reason: optionalString(formData, "reason"),
+      preferred_time_windows: preferredTimeWindows,
+      reason,
       status: "requested"
     })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Inhaalaanvraag kon niet worden aangemaakt.");
+  }
+
+  const admin = createAdminClient();
+  const credit = await ensureMakeupCreditForRequest(admin, {
+    tenantId,
+    participantId,
+    enrollmentId,
+    sessionId,
+    requestId: (data as { id: string }).id,
+    reason
+  });
+
+  if (credit?.id) {
+    await throwOnError(
+      admin
+        .from("lesson_catch_up_requests")
+        .update({ makeup_credit_id: credit.id })
+        .eq("tenant_id", tenantId)
+        .eq("id", (data as { id: string }).id)
+    );
+    await refreshMakeupCandidates(admin, tenantId, credit.id);
+  }
+
+  revalidateParentPortal();
+}
+
+export async function selectMakeupCandidateAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const requestId = requiredString(formData, "request_id");
+  const candidateId = requiredString(formData, "candidate_id");
+  const request = await getAccessibleCatchUpRequest(supabase, tenantId, requestId);
+  const candidate = await getAccessibleMakeupCandidate(supabase, tenantId, candidateId, request.makeup_credit_id);
+  const admin = createAdminClient();
+
+  await throwOnError(
+    admin
+      .from("makeup_candidate_sessions")
+      .update({
+        status: "selected",
+        selected_by_profile_id: profileId,
+        selected_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", candidate.id)
   );
+
+  await throwOnError(
+    admin
+      .from("lesson_catch_up_requests")
+      .update({
+        candidate_session_id: candidate.id,
+        target_session_id: candidate.session_id,
+        approval_mode: "parent_choice",
+        decision_reason: "Ouder heeft dit inhaalmoment gekozen."
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", request.id)
+  );
+
+  await createMakeupCapacityHold(admin, {
+    tenantId,
+    groupId: candidate.group_id,
+    enrollmentId: request.enrollment_id,
+    expiresAt: candidate.expires_at ?? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+    makeupCreditId: request.makeup_credit_id,
+    catchUpRequestId: request.id,
+    targetSessionId: candidate.session_id,
+    createdByProfileId: profileId
+  });
+
+  await logMakeupEvent(admin, {
+    tenantId,
+    requestId: request.id,
+    creditId: request.makeup_credit_id,
+    candidateId: candidate.id,
+    participantId: request.participant_id,
+    enrollmentId: request.enrollment_id,
+    profileId,
+    eventType: "candidate_selected",
+    summary: "Ouder heeft een kandidaat-inhaalles gekozen."
+  });
 
   revalidateParentPortal();
 }
@@ -154,6 +246,144 @@ async function getAccessibleParentDocument(supabase: Awaited<ReturnType<typeof c
   }
 
   return result.data as { id: string; tenant_id: string; participant_id: string; status: string; file_path: string | null };
+}
+
+async function ensureMakeupCreditForRequest(
+  admin: ReturnType<typeof createAdminClient>,
+  input: {
+    tenantId: string;
+    participantId: string;
+    enrollmentId: string;
+    sessionId: string;
+    requestId: string;
+    reason: string | null;
+  }
+) {
+  const existing = await admin
+    .from("makeup_credits")
+    .select("id")
+    .eq("tenant_id", input.tenantId)
+    .eq("source_request_id", input.requestId)
+    .maybeSingle();
+
+  if (existing.error) {
+    throw new Error(existing.error.message);
+  }
+
+  if (existing.data) {
+    return existing.data as { id: string };
+  }
+
+  const ruleResult = await admin
+    .from("tenant_lesson_cancellation_rules")
+    .select("id, credit_valid_days, makeup_credit_granted")
+    .eq("tenant_id", input.tenantId)
+    .eq("status", "active")
+    .eq("rule_key", "default")
+    .maybeSingle();
+
+  if (ruleResult.error) {
+    throw new Error(ruleResult.error.message);
+  }
+
+  const rule = ruleResult.data as { id: string; credit_valid_days: number; makeup_credit_granted: boolean } | null;
+
+  if (!rule?.makeup_credit_granted) {
+    return null;
+  }
+
+  const creditResult = await admin
+    .from("makeup_credits")
+    .insert({
+      tenant_id: input.tenantId,
+      participant_id: input.participantId,
+      enrollment_id: input.enrollmentId,
+      source_session_id: input.sessionId,
+      source_request_id: input.requestId,
+      rule_id: rule.id,
+      status: "available",
+      reason: input.reason,
+      granted_by: "parent_cancel",
+      expires_at: new Date(Date.now() + rule.credit_valid_days * 24 * 60 * 60 * 1000).toISOString(),
+      metadata: {
+        source: "parent_catch_up_request",
+        request_id: input.requestId
+      }
+    })
+    .select("id")
+    .single();
+
+  if (creditResult.error || !creditResult.data) {
+    throw new Error(creditResult.error?.message ?? "Inhaalcredit kon niet worden aangemaakt.");
+  }
+
+  return creditResult.data as { id: string };
+}
+
+async function getAccessibleCatchUpRequest(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, requestId: string) {
+  const { data, error } = await supabase
+    .from("lesson_catch_up_requests")
+    .select("id, participant_id, enrollment_id, makeup_credit_id")
+    .eq("tenant_id", tenantId)
+    .eq("id", requestId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Inhaalaanvraag niet gevonden.");
+  }
+
+  const request = data as { id: string; participant_id: string; enrollment_id: string; makeup_credit_id: string | null };
+
+  if (!request.makeup_credit_id) {
+    throw new Error("Deze aanvraag heeft nog geen inhaalcredit.");
+  }
+
+  return { ...request, makeup_credit_id: request.makeup_credit_id };
+}
+
+async function getAccessibleMakeupCandidate(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, candidateId: string, creditId: string) {
+  const { data, error } = await supabase
+    .from("makeup_candidate_sessions")
+    .select("id, makeup_credit_id, session_id, group_id, expires_at")
+    .eq("tenant_id", tenantId)
+    .eq("id", candidateId)
+    .eq("makeup_credit_id", creditId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Inhaalmoment niet gevonden.");
+  }
+
+  return data as { id: string; makeup_credit_id: string; session_id: string; group_id: string; expires_at: string | null };
+}
+
+async function logMakeupEvent(
+  admin: ReturnType<typeof createAdminClient>,
+  input: {
+    tenantId: string;
+    requestId: string;
+    creditId: string | null;
+    candidateId: string;
+    participantId: string;
+    enrollmentId: string;
+    profileId: string;
+    eventType: string;
+    summary: string;
+  }
+) {
+  await throwOnError(
+    admin.from("lesson_makeup_events").insert({
+      tenant_id: input.tenantId,
+      makeup_credit_id: input.creditId,
+      catch_up_request_id: input.requestId,
+      candidate_session_id: input.candidateId,
+      participant_id: input.participantId,
+      enrollment_id: input.enrollmentId,
+      event_type: input.eventType,
+      summary: input.summary,
+      created_by_profile_id: input.profileId
+    })
+  );
 }
 
 async function logDocumentAccessEvent(

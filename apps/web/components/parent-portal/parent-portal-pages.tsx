@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { createParentDocumentShareLinkAction, markNotificationReadAction, requestCatchUpLessonAction, revokeParentDocumentShareLinkAction } from "@/lib/parent-portal/parent-portal-actions";
+import { createParentDocumentShareLinkAction, markNotificationReadAction, requestCatchUpLessonAction, revokeParentDocumentShareLinkAction, selectMakeupCandidateAction } from "@/lib/parent-portal/parent-portal-actions";
 import type {
   ParentCatchUpRequestRow,
   ParentAchievementCardRow,
@@ -17,6 +17,8 @@ import type {
   ParentMilestoneEventParticipantRow,
   ParentMilestoneEventRow,
   ParentMilestoneResultRow,
+  ParentMakeupCandidateSessionRow,
+  ParentMakeupCreditRow,
   ParentNotificationRow,
   ParentPaymentRecordRow,
   ParentParticipantRow,
@@ -63,6 +65,8 @@ type LookupMaps = {
   documentsByParticipant: Map<string, ParentDocumentRow[]>;
   notificationsByParticipant: Map<string, ParentNotificationRow[]>;
   catchUpsBySession: Map<string, ParentCatchUpRequestRow[]>;
+  makeupCredits: Map<string, ParentMakeupCreditRow>;
+  makeupCandidatesByCredit: Map<string, ParentMakeupCandidateSessionRow[]>;
   invoicesByParticipant: Map<string, ParentInvoiceRow[]>;
   paymentRecordsByInvoice: Map<string, ParentPaymentRecordRow[]>;
 };
@@ -647,13 +651,61 @@ function LessonCard({ lesson, lookups }: { lesson: LessonRow; lookups: LookupMap
       <LessonSummary lesson={lesson} lookups={lookups} />
       <div className="mt-4 border-t border-border pt-4">
         {catchUps.length > 0 ? (
-          <div className="mb-3 rounded-2xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
-            Inhaalaanvraag: {catchUps[0]?.status ?? "requested"}
-          </div>
+          <CatchUpStatus request={catchUps[0]} lookups={lookups} />
         ) : (
           <CatchUpForm lesson={lesson} />
         )}
       </div>
+    </div>
+  );
+}
+
+function CatchUpStatus({ request, lookups }: { request: ParentCatchUpRequestRow | undefined; lookups: LookupMaps }) {
+  if (!request) {
+    return null;
+  }
+
+  const credit = request.makeup_credit_id ? lookups.makeupCredits.get(request.makeup_credit_id) : null;
+  const candidates = request.makeup_credit_id ? (lookups.makeupCandidatesByCredit.get(request.makeup_credit_id) ?? []) : [];
+  const target = request.target_session_id ? findSession(lookups, request.target_session_id) : null;
+
+  return (
+    <div className="grid gap-3">
+      <div className="rounded-2xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
+        Inhaalaanvraag: {request.status}
+        {credit ? ` - credit ${credit.status} tot ${formatDate(credit.expires_at)}` : ""}
+        {target ? ` - gekozen: ${formatDateTime(target.starts_at)}` : ""}
+      </div>
+      {request.decision_reason ? <p className="text-sm text-muted-foreground">{request.decision_reason}</p> : null}
+      {request.status === "requested" && candidates.length > 0 ? (
+        <div className="grid gap-2">
+          <p className="text-xs font-semibold uppercase text-muted-foreground">Passende inhaalmomenten</p>
+          {candidates.slice(0, 3).map((candidate) => {
+            const session = findSession(lookups, candidate.session_id);
+            const group = lookups.groups.get(candidate.group_id);
+            const blocked = candidate.blockers.length > 0;
+
+            return (
+              <form key={candidate.id} action={selectMakeupCandidateAction} className={`rounded-2xl border p-3 ${blocked ? "border-amber-200 bg-amber-50/80" : "border-border bg-card"}`}>
+                <input name="request_id" type="hidden" value={request.id} />
+                <input name="candidate_id" type="hidden" value={candidate.id} />
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{group?.name ?? "Groep"} - {session ? formatDateTime(session.starts_at) : "moment volgt"}</p>
+                    <p className="text-xs text-muted-foreground">{blocked ? candidate.blockers[0]?.detail : "Past bij programma, niveau en beschikbare inhaalcapaciteit."}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill tone={blocked ? "warning" : "success"}>{candidate.score}/100</StatusPill>
+                    <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50" disabled={blocked} type="submit">
+                      Kies moment
+                    </button>
+                  </div>
+                </div>
+              </form>
+            );
+          })}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -950,9 +1002,22 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     documentsByParticipant: groupBy(data.documents, (document) => document.participant_id),
     notificationsByParticipant: groupBy(data.notifications.filter((notification) => notification.participant_id), (notification) => notification.participant_id ?? ""),
     catchUpsBySession: groupBy(data.catchUpRequests, (request) => request.missed_session_id),
+    makeupCredits: byId(data.makeupCredits),
+    makeupCandidatesByCredit: groupBy(data.makeupCandidates, (candidate) => candidate.makeup_credit_id),
     invoicesByParticipant: groupBy(data.invoices, (invoice) => invoice.participant_id),
     paymentRecordsByInvoice: groupBy(data.paymentRecords, (payment) => payment.invoice_id)
   };
+}
+
+function findSession(lookups: LookupMaps, sessionId: string) {
+  for (const sessions of lookups.sessionsByGroup.values()) {
+    const session = sessions.find((row) => row.id === sessionId);
+    if (session) {
+      return session;
+    }
+  }
+
+  return null;
 }
 
 function buildLessonRows(data: ParentPortalData, lookups: LookupMaps): LessonRow[] {

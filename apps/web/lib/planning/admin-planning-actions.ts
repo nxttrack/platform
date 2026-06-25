@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { createMakeupCapacityHold, refreshMakeupCandidates } from "@/lib/makeup/makeup-engine";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -126,22 +127,80 @@ export async function createConflictCheckedSessionAction(formData: FormData) {
 }
 
 export async function updateCatchUpRequestAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
   const requestId = requiredString(formData, "id");
   const status = requiredEnum(formData, "status", ["requested", "approved", "rejected", "cancelled", "used"], "approved");
   const note = optionalString(formData, "note");
+  const candidateSessionId = optionalString(formData, "candidate_session_id");
+  const targetSessionId = optionalString(formData, "target_session_id");
   const request = await getCatchUpRequest(supabase, tenantId, requestId);
+  const selectedCandidate = candidateSessionId ? await getMakeupCandidate(supabase, tenantId, candidateSessionId) : null;
+  const resolvedTargetSessionId = targetSessionId ?? selectedCandidate?.session_id ?? request.target_session_id;
+  const selectedCandidateId = candidateSessionId ?? request.candidate_session_id;
 
   await throwOnError(
     supabase
       .from("lesson_catch_up_requests")
       .update({
         status,
+        candidate_session_id: selectedCandidateId,
+        target_session_id: resolvedTargetSessionId,
+        decision_reason: optionalString(formData, "decision_reason") ?? note,
+        admin_note: note,
         resolved_at: status === "requested" ? null : new Date().toISOString()
       })
       .eq("tenant_id", tenantId)
       .eq("id", requestId)
   );
+
+  if (request.makeup_credit_id) {
+    await updateMakeupCreditForRequest(supabase, {
+      tenantId,
+      makeupCreditId: request.makeup_credit_id,
+      status,
+      targetSessionId: resolvedTargetSessionId
+    });
+  }
+
+  if (selectedCandidateId) {
+    await updateMakeupCandidateForRequest(supabase, {
+      tenantId,
+      candidateId: selectedCandidateId,
+      status,
+      note,
+      profileId
+    });
+  }
+
+  if ((status === "approved" || status === "used") && resolvedTargetSessionId && request.makeup_credit_id) {
+    const targetSession = await getTargetSession(supabase, tenantId, resolvedTargetSessionId);
+    await ensureMakeupHold(supabase, {
+      tenantId,
+      groupId: targetSession.group_id,
+      enrollmentId: request.enrollment_id,
+      expiresAt: targetSession.starts_at,
+      makeupCreditId: request.makeup_credit_id,
+      catchUpRequestId: request.id,
+      targetSessionId: targetSession.id,
+      profileId
+    });
+  }
+
+  if (status === "rejected" || status === "cancelled" || status === "used") {
+    await releaseMakeupHolds(supabase, tenantId, request.id, status);
+  }
+
+  await logMakeupEvent(supabase, {
+    tenantId,
+    requestId: request.id,
+    creditId: request.makeup_credit_id,
+    candidateId: selectedCandidateId,
+    participantId: request.participant_id,
+    enrollmentId: request.enrollment_id,
+    profileId,
+    eventType: `request_${status}`,
+    summary: `Inhaalaanvraag bijgewerkt naar ${status}.`
+  });
 
   await notifyGuardians(supabase, tenantId, request.participant_id, {
     participantId: request.participant_id,
@@ -151,6 +210,19 @@ export async function updateCatchUpRequestAction(formData: FormData) {
     notificationType: "catch_up"
   });
 
+  revalidatePlanning();
+}
+
+export async function refreshCatchUpCandidatesAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const requestId = requiredString(formData, "id");
+  const request = await getCatchUpRequest(supabase, tenantId, requestId);
+
+  if (!request.makeup_credit_id) {
+    throw new Error("Deze aanvraag heeft nog geen inhaalcredit.");
+  }
+
+  await refreshMakeupCandidates(supabase, tenantId, request.makeup_credit_id);
   revalidatePlanning();
 }
 
@@ -174,7 +246,8 @@ async function requireTenantWriter() {
 
   return {
     supabase: await createClient(),
-    tenantId: context.activeTenant.tenantId
+    tenantId: context.activeTenant.tenantId,
+    profileId: context.user.id
   };
 }
 
@@ -196,7 +269,7 @@ async function getGroup(supabase: SupabaseClient, tenantId: string, groupId: str
 async function getCatchUpRequest(supabase: SupabaseClient, tenantId: string, requestId: string) {
   const { data, error } = await supabase
     .from("lesson_catch_up_requests")
-    .select("id, participant_id, enrollment_id")
+    .select("id, participant_id, enrollment_id, makeup_credit_id, target_session_id, candidate_session_id")
     .eq("tenant_id", tenantId)
     .eq("id", requestId)
     .single();
@@ -205,7 +278,163 @@ async function getCatchUpRequest(supabase: SupabaseClient, tenantId: string, req
     throw new Error(error?.message ?? "Inhaallesaanvraag niet gevonden.");
   }
 
-  return data as { id: string; participant_id: string; enrollment_id: string };
+  return data as { id: string; participant_id: string; enrollment_id: string; makeup_credit_id: string | null; target_session_id: string | null; candidate_session_id: string | null };
+}
+
+async function getTargetSession(supabase: SupabaseClient, tenantId: string, sessionId: string) {
+  const { data, error } = await supabase.from("sessions").select("id, group_id, starts_at").eq("tenant_id", tenantId).eq("id", sessionId).single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Inhaallesmoment niet gevonden.");
+  }
+
+  return data as { id: string; group_id: string; starts_at: string };
+}
+
+async function getMakeupCandidate(supabase: SupabaseClient, tenantId: string, candidateId: string) {
+  const { data, error } = await supabase.from("makeup_candidate_sessions").select("id, session_id, group_id").eq("tenant_id", tenantId).eq("id", candidateId).single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Inhaalkandidaat niet gevonden.");
+  }
+
+  return data as { id: string; session_id: string; group_id: string };
+}
+
+async function updateMakeupCreditForRequest(
+  supabase: SupabaseClient,
+  input: {
+    tenantId: string;
+    makeupCreditId: string;
+    status: string;
+    targetSessionId: string | null;
+  }
+) {
+  const updates =
+    input.status === "used"
+      ? { status: "used", used_session_id: input.targetSessionId, used_at: new Date().toISOString() }
+      : input.status === "approved"
+        ? { status: "reserved", used_session_id: input.targetSessionId, used_at: null }
+        : input.status === "cancelled"
+          ? { status: "cancelled", used_session_id: null, used_at: null }
+          : input.status === "rejected"
+            ? { status: "available", used_session_id: null, used_at: null }
+            : { status: "available", used_session_id: null, used_at: null };
+
+  await throwOnError(supabase.from("makeup_credits").update(updates).eq("tenant_id", input.tenantId).eq("id", input.makeupCreditId));
+}
+
+async function updateMakeupCandidateForRequest(
+  supabase: SupabaseClient,
+  input: {
+    tenantId: string;
+    candidateId: string;
+    status: string;
+    note: string | null;
+    profileId: string;
+  }
+) {
+  const candidateStatus = input.status === "approved" || input.status === "used" ? "approved" : input.status === "rejected" || input.status === "cancelled" ? "rejected" : "selected";
+
+  await throwOnError(
+    supabase
+      .from("makeup_candidate_sessions")
+      .update({
+        status: candidateStatus,
+        reviewed_by_profile_id: input.profileId,
+        reviewed_at: new Date().toISOString(),
+        review_note: input.note
+      })
+      .eq("tenant_id", input.tenantId)
+      .eq("id", input.candidateId)
+  );
+}
+
+async function ensureMakeupHold(
+  supabase: SupabaseClient,
+  input: {
+    tenantId: string;
+    groupId: string;
+    enrollmentId: string;
+    expiresAt: string;
+    makeupCreditId: string;
+    catchUpRequestId: string;
+    targetSessionId: string;
+    profileId: string;
+  }
+) {
+  const existing = await supabase
+    .from("capacity_holds")
+    .select("id")
+    .eq("tenant_id", input.tenantId)
+    .eq("hold_type", "makeup")
+    .eq("status", "active")
+    .contains("metadata", { catch_up_request_id: input.catchUpRequestId })
+    .maybeSingle();
+
+  if (existing.error) {
+    throw new Error(existing.error.message);
+  }
+
+  if (existing.data) {
+    return;
+  }
+
+  await createMakeupCapacityHold(supabase, {
+    tenantId: input.tenantId,
+    groupId: input.groupId,
+    enrollmentId: input.enrollmentId,
+    expiresAt: input.expiresAt,
+    makeupCreditId: input.makeupCreditId,
+    catchUpRequestId: input.catchUpRequestId,
+    targetSessionId: input.targetSessionId,
+    createdByProfileId: input.profileId
+  });
+}
+
+async function releaseMakeupHolds(supabase: SupabaseClient, tenantId: string, requestId: string, status: string) {
+  await throwOnError(
+    supabase
+      .from("capacity_holds")
+      .update({
+        status: status === "used" ? "converted" : "released",
+        released_at: new Date().toISOString(),
+        release_reason: `catch_up_${status}`
+      })
+      .eq("tenant_id", tenantId)
+      .eq("hold_type", "makeup")
+      .eq("status", "active")
+      .contains("metadata", { catch_up_request_id: requestId })
+  );
+}
+
+async function logMakeupEvent(
+  supabase: SupabaseClient,
+  input: {
+    tenantId: string;
+    requestId: string;
+    creditId: string | null;
+    candidateId: string | null;
+    participantId: string;
+    enrollmentId: string;
+    profileId: string;
+    eventType: string;
+    summary: string;
+  }
+) {
+  await throwOnError(
+    supabase.from("lesson_makeup_events").insert({
+      tenant_id: input.tenantId,
+      makeup_credit_id: input.creditId,
+      catch_up_request_id: input.requestId,
+      candidate_session_id: input.candidateId,
+      participant_id: input.participantId,
+      enrollment_id: input.enrollmentId,
+      event_type: input.eventType,
+      summary: input.summary,
+      created_by_profile_id: input.profileId
+    })
+  );
 }
 
 async function findSessionConflict(
