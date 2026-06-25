@@ -1,12 +1,14 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
+import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, LifeBuoy, MessageSquare, Paperclip, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   createParentCertificateShareLinkAction,
   createParentDocumentShareLinkAction,
+  createParentHelpdeskTicketAction,
   markNotificationReadAction,
   requestCatchUpLessonAction,
+  replyParentHelpdeskTicketAction,
   revokeParentCertificateShareLinkAction,
   revokeParentDocumentShareLinkAction,
   selectMakeupCandidateAction
@@ -21,6 +23,8 @@ import type {
   ParentEnrollmentRow,
   ParentGroupMembershipRow,
   ParentGroupRow,
+  ParentHelpdeskTicketMessageRow,
+  ParentHelpdeskTicketRow,
   ParentInvoiceRow,
   ParentMilestoneEventParticipantRow,
   ParentMilestoneEventRow,
@@ -79,6 +83,7 @@ type LookupMaps = {
   makeupCandidatesByCredit: Map<string, ParentMakeupCandidateSessionRow[]>;
   invoicesByParticipant: Map<string, ParentInvoiceRow[]>;
   paymentRecordsByInvoice: Map<string, ParentPaymentRecordRow[]>;
+  helpdeskMessagesByTicket: Map<string, ParentHelpdeskTicketMessageRow[]>;
 };
 
 type LessonRow = {
@@ -191,6 +196,62 @@ export function ParentNotificationsPage({ snapshot }: ParentPageProps) {
   return (
     <ParentFrame snapshot={snapshot} kicker="Ouderportaal - berichten" title="Notificaties" subtitle="Read status wordt opgeslagen op parent_notifications.read_at.">
       <NotificationList notifications={snapshot.data.notifications} title="Alle notificaties" />
+    </ParentFrame>
+  );
+}
+
+export function ParentHelpdeskPage({ snapshot }: ParentPageProps) {
+  const lookups = buildLookups(snapshot.data);
+  const activeTickets = snapshot.data.helpdeskTickets.filter((ticket) => !["resolved", "closed"].includes(ticket.status));
+  const waitingForParent = snapshot.data.helpdeskTickets.filter((ticket) => ticket.status === "waiting_for_parent");
+  const resolvedTickets = snapshot.data.helpdeskTickets.filter((ticket) => ["resolved", "closed"].includes(ticket.status));
+
+  return (
+    <ParentFrame
+      phase="Helpdesk"
+      snapshot={snapshot}
+      kicker="Ouderportaal - helpdesk"
+      title="Contact met de zwemschool"
+      subtitle="Stel een vraag over lessen, betalingen, voortgang, documenten of accounttoegang. Interne notities zijn alleen zichtbaar voor de zwemschool."
+    >
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<LifeBuoy className="h-5 w-5" />} label="Open tickets" value={activeTickets.length.toString()} detail="in behandeling" />
+        <MetricCard icon={<MessageSquare className="h-5 w-5" />} label="Reactie nodig" value={waitingForParent.length.toString()} detail="wacht op ouder" />
+        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Afgerond" value={resolvedTickets.length.toString()} detail="opgelost of gesloten" />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card>
+          <SectionHeader title="Nieuw ticket" count={snapshot.data.guardians.length} />
+          <form action={createParentHelpdeskTicketAction} className="grid gap-3">
+            <ParentSelectField label="Ouder/verzorger" name="guardian_id" options={snapshot.data.guardians.map((guardian) => ({ label: `${participantName(lookups, guardian.participant_id)} - ${guardian.relationship}`, value: guardian.id }))} required />
+            <ParentSelectField label="Leerling" name="participant_id" options={snapshot.data.participants.map((participant) => ({ label: participant.display_name, value: participant.id }))} />
+            <ParentSelectField label="Categorie" name="category" options={helpdeskCategoryOptions} required />
+            <ParentTextField label="Onderwerp" name="subject" required />
+            <ParentTextAreaField label="Bericht" name="message" required />
+            <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 font-semibold text-foreground">
+                <Paperclip className="h-4 w-4" />
+                Bijlage placeholder
+              </div>
+              <p className="mt-1">Bestandsupload wordt later gekoppeld aan de documentkluis. Beschrijf nu kort welk bestand nodig is.</p>
+            </div>
+            <button className={parentPrimaryButtonClassName} type="submit">
+              Ticket versturen
+            </button>
+          </form>
+        </Card>
+
+        <Card>
+          <SectionHeader title="Mijn tickets" count={snapshot.data.helpdeskTickets.length} />
+          <div className="grid gap-4">
+            {snapshot.data.helpdeskTickets.length === 0 ? <EmptyState>Nog geen helpdesktickets.</EmptyState> : null}
+            {snapshot.data.helpdeskTickets.map((ticket) => (
+              <ParentHelpdeskTicketCard key={ticket.id} lookups={lookups} ticket={ticket} />
+            ))}
+          </div>
+        </Card>
+      </div>
     </ParentFrame>
   );
 }
@@ -333,6 +394,66 @@ function ParentPaymentRecordRowView({ payment }: { payment: ParentPaymentRecordR
         <StatusPill tone={payment.status === "recorded" || payment.status === "paid" ? "success" : payment.status === "failed" ? "danger" : "warning"}>{payment.status}</StatusPill>
       </div>
       <p className="mt-2 text-xs text-muted-foreground">{payment.received_on ? formatDate(payment.received_on) : formatDate(payment.created_at)}</p>
+    </div>
+  );
+}
+
+function ParentHelpdeskTicketCard({ ticket, lookups }: { ticket: ParentHelpdeskTicketRow; lookups: LookupMaps }) {
+  const messages = lookups.helpdeskMessagesByTicket.get(ticket.id) ?? [];
+  const context = ticket.context_json ?? {};
+  const nextLessonStartsAt = stringContext(context, "next_lesson_starts_at");
+  const contextRows = [
+    ["Leerling", ticket.participant_id ? participantName(lookups, ticket.participant_id) : stringContext(context, "participant_name")],
+    ["Programma", stringContext(context, "program_name")],
+    ["Groep", stringContext(context, "group_name")],
+    ["Volgende les", nextLessonStartsAt ? formatDateTime(nextLessonStartsAt) : null],
+    ["Open bedrag", typeof context.open_invoice_amount_cents === "number" ? formatMoney(context.open_invoice_amount_cents, stringContext(context, "open_invoice_currency") ?? "EUR") : null]
+  ].filter((row): row is [string, string] => Boolean(row[1]));
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-bold">{ticket.subject}</p>
+          <p className="text-sm text-muted-foreground">
+            {helpdeskCategoryLabel(ticket.category)} - aangemaakt op {formatDate(ticket.created_at)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={helpdeskStatusTone(ticket.status)}>{helpdeskStatusLabel(ticket.status)}</StatusPill>
+          <StatusPill tone={ticket.priority === "urgent" || ticket.priority === "high" ? "warning" : "neutral"}>{helpdeskPriorityLabel(ticket.priority)}</StatusPill>
+        </div>
+      </div>
+
+      {contextRows.length > 0 ? (
+        <div className="mt-4 grid gap-2 md:grid-cols-2">
+          {contextRows.map(([label, value]) => (
+            <InfoTile key={label} label={label} value={value} />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-3">
+        {messages.map((message) => (
+          <div key={message.id} className={`rounded-2xl border border-border p-3 ${message.author_type === "parent" ? "bg-card" : "bg-primary/5"}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold">{message.author_type === "parent" ? "Jij" : "Zwemschool"}</p>
+              <p className="text-xs text-muted-foreground">{formatDateTime(message.created_at)}</p>
+            </div>
+            <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">{message.message}</p>
+          </div>
+        ))}
+      </div>
+
+      {!["closed"].includes(ticket.status) ? (
+        <form action={replyParentHelpdeskTicketAction} className="mt-4 grid gap-3">
+          <input name="ticket_id" type="hidden" value={ticket.id} />
+          <ParentTextAreaField label="Antwoord" name="message" required />
+          <button className={parentSecondaryButtonClassName} type="submit">
+            Antwoord versturen
+          </button>
+        </form>
+      ) : null}
     </div>
   );
 }
@@ -1059,6 +1180,40 @@ function EmptyState({ children }: { children: ReactNode }) {
   return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{children}</div>;
 }
 
+function ParentTextField({ label, name, required }: { label: string; name: string; required?: boolean }) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold">
+      <span className="text-muted-foreground">{label}</span>
+      <input className={parentFieldClassName} name={name} required={required} />
+    </label>
+  );
+}
+
+function ParentTextAreaField({ label, name, required }: { label: string; name: string; required?: boolean }) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold">
+      <span className="text-muted-foreground">{label}</span>
+      <textarea className={`${parentFieldClassName} min-h-28`} name={name} required={required} />
+    </label>
+  );
+}
+
+function ParentSelectField({ label, name, options, required }: { label: string; name: string; options: Array<{ label: string; value: string }>; required?: boolean }) {
+  return (
+    <label className="grid gap-2 text-sm font-semibold">
+      <span className="text-muted-foreground">{label}</span>
+      <select className={parentFieldClassName} name={name} required={required}>
+        <option value="">Maak een keuze</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 function buildLookups(data: ParentPortalData): LookupMaps {
   return {
     participants: byId(data.participants),
@@ -1090,7 +1245,8 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     makeupCredits: byId(data.makeupCredits),
     makeupCandidatesByCredit: groupBy(data.makeupCandidates, (candidate) => candidate.makeup_credit_id),
     invoicesByParticipant: groupBy(data.invoices, (invoice) => invoice.participant_id),
-    paymentRecordsByInvoice: groupBy(data.paymentRecords, (payment) => payment.invoice_id)
+    paymentRecordsByInvoice: groupBy(data.paymentRecords, (payment) => payment.invoice_id),
+    helpdeskMessagesByTicket: groupBy(data.helpdeskMessages, (message) => message.ticket_id)
   };
 }
 
@@ -1195,6 +1351,67 @@ function parentEvidenceLabel(type: string) {
   return labels[type] ?? type;
 }
 
+function helpdeskCategoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    lesson_planning: "Lesplanning",
+    catch_up_lessons: "Inhaallessen",
+    payments: "Betalingen",
+    progress: "Voortgang",
+    afzwemmen: "Afzwemmen",
+    account_login: "Account/login",
+    documents: "Documenten",
+    complaint: "Klacht",
+    general_question: "Algemene vraag"
+  };
+
+  return labels[category] ?? category;
+}
+
+function helpdeskStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    new: "Nieuw",
+    open: "Open",
+    waiting_for_parent: "Wacht op ouder",
+    waiting_internal: "Intern in behandeling",
+    resolved: "Opgelost",
+    closed: "Gesloten"
+  };
+
+  return labels[status] ?? status;
+}
+
+function helpdeskPriorityLabel(priority: string) {
+  const labels: Record<string, string> = {
+    low: "Laag",
+    normal: "Normaal",
+    high: "Hoog",
+    urgent: "Urgent"
+  };
+
+  return labels[priority] ?? priority;
+}
+
+function helpdeskStatusTone(status: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (["resolved", "closed"].includes(status)) {
+    return "success";
+  }
+
+  if (status === "waiting_for_parent") {
+    return "info";
+  }
+
+  if (status === "waiting_internal") {
+    return "warning";
+  }
+
+  return "neutral";
+}
+
+function stringContext(context: Record<string, unknown>, key: string) {
+  const value = context[key];
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
 function snapshotEnrollmentByProgress(lookups: LookupMaps, enrollmentId: string) {
   for (const enrollments of lookups.enrollmentsByParticipant.values()) {
     const match = enrollments.find((enrollment) => enrollment.id === enrollmentId);
@@ -1241,4 +1458,20 @@ const preferredTimes = [
   { label: "Middag", value: "afternoon" },
   { label: "Avond", value: "evening" },
   { label: "Weekend", value: "weekend" }
+];
+
+const parentFieldClassName = "min-h-11 rounded-2xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";
+const parentPrimaryButtonClassName = "inline-flex w-fit items-center justify-center rounded-2xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground shadow-soft hover:bg-primary/90";
+const parentSecondaryButtonClassName = "inline-flex w-fit items-center justify-center rounded-2xl border border-border bg-background px-4 py-2 text-sm font-bold text-foreground hover:bg-muted";
+
+const helpdeskCategoryOptions = [
+  { label: "Lesplanning", value: "lesson_planning" },
+  { label: "Inhaallessen", value: "catch_up_lessons" },
+  { label: "Betalingen", value: "payments" },
+  { label: "Voortgang", value: "progress" },
+  { label: "Afzwemmen", value: "afzwemmen" },
+  { label: "Account/login", value: "account_login" },
+  { label: "Documenten", value: "documents" },
+  { label: "Klacht", value: "complaint" },
+  { label: "Algemene vraag", value: "general_question" }
 ];

@@ -177,6 +177,7 @@ export type OperationsInstructorRow = {
 };
 
 export type OperationsGuardianRow = {
+  id: string;
   participant_id: string;
   profile_id: string;
   display_name: string | null;
@@ -190,6 +191,30 @@ export type OperationsCertificateRow = {
   title: string;
   status: string;
   certificate_number: string | null;
+};
+
+export type HelpdeskTicketRow = {
+  id: string;
+  guardian_id: string;
+  participant_id: string | null;
+  category: string;
+  subject: string;
+  status: string;
+  priority: string;
+  assigned_to: string | null;
+  context_json: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HelpdeskTicketMessageRow = {
+  id: string;
+  ticket_id: string;
+  author_profile_id: string | null;
+  author_type: string;
+  message: string;
+  visibility: string;
+  created_at: string;
 };
 
 export type AdminPhase12Data = {
@@ -210,6 +235,8 @@ export type AdminPhase12Data = {
   instructors: OperationsInstructorRow[];
   guardians: OperationsGuardianRow[];
   certificates: OperationsCertificateRow[];
+  helpdeskTickets: HelpdeskTicketRow[];
+  helpdeskMessages: HelpdeskTicketMessageRow[];
 };
 
 export type AdminPhase12Snapshot = {
@@ -270,6 +297,8 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     groupsResult,
     instructorsResult,
     certificatesResult,
+    helpdeskTicketsResult,
+    helpdeskMessagesResult,
     tenantMembersResult,
     guardiansResult
   ] = await Promise.all([
@@ -312,18 +341,34 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     supabase.from("groups").select("id, name, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase.from("instructors").select("id, profile_id, display_name, email, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase.from("certificates").select("id, participant_id, title, status, certificate_number").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
+    supabase
+      .from("helpdesk_tickets")
+      .select("id, guardian_id, participant_id, category, subject, status, priority, assigned_to, context_json, created_at, updated_at")
+      .eq("tenant_id", tenantId)
+      .order("updated_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("helpdesk_ticket_messages")
+      .select("id, ticket_id, author_profile_id, author_type, message, visibility, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: true })
+      .limit(300),
     supabase.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId),
-    supabase.from("participant_guardians").select("participant_id, profile_id, display_name, email, status").eq("tenant_id", tenantId)
+    supabase.from("participant_guardians").select("id, participant_id, profile_id, display_name, email, status").eq("tenant_id", tenantId)
   ]);
   const documentStorage = await getDocumentStorageStatus();
 
   const messageOutbox = asRows<MessageOutboxRow>(messageOutboxResult.data);
   const tasks = asRows<OperationalTaskRow>(operationalTasksResult.data);
+  const helpdeskTickets = asRows<HelpdeskTicketRow>(helpdeskTicketsResult.data);
+  const helpdeskMessages = asRows<HelpdeskTicketMessageRow>(helpdeskMessagesResult.data);
   const profileIds = unique([
     ...asRows<{ user_id: string }>(tenantMembersResult.data).map((member) => member.user_id),
     ...asRows<{ profile_id: string }>(guardiansResult.data).map((guardian) => guardian.profile_id),
     ...messageOutbox.flatMap((message) => [message.recipient_profile_id].filter(Boolean) as string[]),
-    ...tasks.flatMap((task) => [task.assigned_to_profile_id].filter(Boolean) as string[])
+    ...tasks.flatMap((task) => [task.assigned_to_profile_id].filter(Boolean) as string[]),
+    ...helpdeskTickets.flatMap((ticket) => [ticket.assigned_to].filter(Boolean) as string[]),
+    ...helpdeskMessages.flatMap((message) => [message.author_profile_id].filter(Boolean) as string[])
   ]);
   const profilesResult =
     profileIds.length === 0
@@ -351,6 +396,8 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     groups: groupsResult.error,
     instructors: instructorsResult.error,
     certificates: certificatesResult.error,
+    helpdesk_tickets: helpdeskTicketsResult.error,
+    helpdesk_ticket_messages: helpdeskMessagesResult.error,
     tenant_memberships: tenantMembersResult.error,
     participant_guardians: guardiansResult.error,
     profiles: profilesResult.error,
@@ -378,7 +425,9 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
       groups: asRows<OperationsGroupRow>(groupsResult.data),
       instructors: asRows<OperationsInstructorRow>(instructorsResult.data),
       guardians: asRows<OperationsGuardianRow>(guardiansResult.data),
-      certificates: asRows<OperationsCertificateRow>(certificatesResult.data)
+      certificates: asRows<OperationsCertificateRow>(certificatesResult.data),
+      helpdeskTickets,
+      helpdeskMessages
     }
   };
 }
@@ -408,7 +457,9 @@ function createEmptyData(): AdminPhase12Data {
     groups: [],
     instructors: [],
     guardians: [],
-    certificates: []
+    certificates: [],
+    helpdeskTickets: [],
+    helpdeskMessages: []
   };
 }
 

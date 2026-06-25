@@ -32,6 +32,7 @@ export const parentNav: NavItem[] = [
   { href: "/parent/lessen", label: "Mijn lessen", icon: Waves },
   { href: "/parent/profiel", label: "Kindprofiel", icon: User },
   { href: "/parent/notificaties", label: "Notificaties", icon: Bell },
+  { href: "/parent/helpdesk", label: "Helpdesk", icon: MessageSquare },
   { href: "/parent/documenten", label: "Documenten", icon: FileText },
   { href: "/parent/voortgang", label: "Voortgang", icon: TrendingUp },
   { href: "/parent/diplomas", label: "Diploma's", icon: GraduationCap },
@@ -72,6 +73,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/instructors", label: "Instructeurs", icon: User, section: "Mensen" },
 
   { href: "/admin/berichten", label: "Berichten", icon: MessageSquare, section: "Communicatie" },
+  { href: "/admin/helpdesk", label: "Helpdesk", icon: Inbox, section: "Communicatie" },
   { href: "/admin/nieuwsbrief", label: "Nieuwsbrief", icon: Megaphone, section: "Communicatie" },
   { href: "/admin/nieuws", label: "Nieuws", icon: Newspaper, section: "Communicatie" },
   { href: "/admin/mailtemplates", label: "Mailtemplates", icon: Mail, section: "Communicatie" },

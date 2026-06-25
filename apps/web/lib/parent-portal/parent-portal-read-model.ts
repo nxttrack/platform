@@ -331,6 +331,30 @@ export type ParentPaymentRecordRow = {
   created_at: string;
 };
 
+export type ParentHelpdeskTicketRow = {
+  id: string;
+  guardian_id: string;
+  participant_id: string | null;
+  category: string;
+  subject: string;
+  status: string;
+  priority: string;
+  assigned_to: string | null;
+  context_json: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ParentHelpdeskTicketMessageRow = {
+  id: string;
+  ticket_id: string;
+  author_profile_id: string | null;
+  author_type: string;
+  message: string;
+  visibility: string;
+  created_at: string;
+};
+
 export type ParentMilestoneEventRow = {
   id: string;
   program_id: string;
@@ -399,6 +423,8 @@ export type ParentPortalData = {
   makeupCandidates: ParentMakeupCandidateSessionRow[];
   invoices: ParentInvoiceRow[];
   paymentRecords: ParentPaymentRecordRow[];
+  helpdeskTickets: ParentHelpdeskTicketRow[];
+  helpdeskMessages: ParentHelpdeskTicketMessageRow[];
 };
 
 export type ParentPortalSnapshot = {
@@ -477,6 +503,7 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
 
   const guardians = asRows<ParentGuardianRow>(guardiansResult.data);
   const participantIds = unique(guardians.map((guardian) => guardian.participant_id));
+  const guardianIds = unique(guardians.map((guardian) => guardian.id));
 
   const participantsResult = await rowsByIds<ParentParticipantRow>(supabase, "participants", "id, display_name, birthdate, status", tenantId, "id", participantIds, "display_name");
   const enrollmentsResult = await rowsByIds<ParentEnrollmentRow>(
@@ -510,6 +537,7 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     makeupCreditsResult,
     invoicesResult,
     paymentRecordsResult,
+    helpdeskTicketsResult,
     programsResult,
     stagesResult,
     subscriptionPlansResult
@@ -638,6 +666,17 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "created_at",
       false
     ),
+    rowsByIds<ParentHelpdeskTicketRow>(
+      supabase,
+      "helpdesk_tickets",
+      "id, guardian_id, participant_id, category, subject, status, priority, assigned_to, context_json, created_at, updated_at",
+      tenantId,
+      "guardian_id",
+      guardianIds,
+      "updated_at",
+      false,
+      80
+    ),
     rowsByIds<ParentProgramRow>(supabase, "programs", "id, name, code", tenantId, "id", programIds, "name"),
     rowsByIds<ParentStageRow>(supabase, "stages", "id, program_id, name, code, sort_order", tenantId, "program_id", programIds, "sort_order"),
     rowsByIds<ParentSubscriptionPlanRow>(
@@ -650,6 +689,18 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "name"
     )
   ]);
+  const helpdeskTicketIds = unique(helpdeskTicketsResult.rows.map((ticket) => ticket.id));
+  const helpdeskMessagesResult = await rowsByIds<ParentHelpdeskTicketMessageRow>(
+    supabase,
+    "helpdesk_ticket_messages",
+    "id, ticket_id, author_profile_id, author_type, message, visibility, created_at",
+    tenantId,
+    "ticket_id",
+    helpdeskTicketIds,
+    "created_at",
+    true,
+    200
+  );
   const stages = stagesResult.rows;
   const makeupCreditIds = unique(makeupCreditsResult.rows.map((credit) => credit.id));
   const makeupCandidatesResult = await rowsByIds<ParentMakeupCandidateSessionRow>(
@@ -727,6 +778,8 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
     makeup_candidate_sessions: makeupCandidatesResult.error,
     invoices: invoicesResult.error,
     payment_records: paymentRecordsResult.error,
+    helpdesk_tickets: helpdeskTicketsResult.error,
+    helpdesk_ticket_messages: helpdeskMessagesResult.error,
     programs: programsResult.error,
     stages: stagesResult.error,
     stage_modules: stageModulesResult.error,
@@ -771,7 +824,9 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       makeupCredits: makeupCreditsResult.rows,
       makeupCandidates: makeupCandidatesResult.rows,
       invoices: invoicesResult.rows,
-      paymentRecords: paymentRecordsResult.rows
+      paymentRecords: paymentRecordsResult.rows,
+      helpdeskTickets: helpdeskTicketsResult.rows,
+      helpdeskMessages: helpdeskMessagesResult.rows
     }
   };
 }
@@ -835,7 +890,9 @@ function createEmptyData(): ParentPortalData {
     makeupCredits: [],
     makeupCandidates: [],
     invoices: [],
-    paymentRecords: []
+    paymentRecords: [],
+    helpdeskTickets: [],
+    helpdeskMessages: []
   };
 }
 

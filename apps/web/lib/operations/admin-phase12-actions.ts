@@ -15,6 +15,9 @@ const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as con
 const documentBucket = "tenant-documents";
 const maxDocumentUploadBytes = 10 * 1024 * 1024;
 const allowedDocumentMimeTypes = ["application/pdf", "image/png", "image/jpeg", "text/csv", "application/json", "text/plain"] as const;
+const helpdeskStatuses = ["new", "open", "waiting_for_parent", "waiting_internal", "resolved", "closed"] as const;
+const helpdeskPriorities = ["low", "normal", "high", "urgent"] as const;
+const helpdeskVisibilities = ["public_to_parent", "internal"] as const;
 
 type MessageTemplateForSend = {
   id: string;
@@ -407,6 +410,56 @@ export async function updateOperationalTaskAction(formData: FormData) {
       .eq("id", requiredString(formData, "id"))
       .eq("tenant_id", tenantId)
   );
+
+  revalidatePhase12();
+}
+
+export async function updateHelpdeskTicketAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await throwOnError(
+    supabase
+      .from("helpdesk_tickets")
+      .update({
+        status: enumValue(formData, "status", helpdeskStatuses, "open"),
+        priority: enumValue(formData, "priority", helpdeskPriorities, "normal"),
+        assigned_to: optionalString(formData, "assigned_to")
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", requiredString(formData, "ticket_id"))
+  );
+
+  revalidatePhase12();
+}
+
+export async function addHelpdeskTicketMessageAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const ticketId = requiredString(formData, "ticket_id");
+  const visibility = enumValue(formData, "visibility", helpdeskVisibilities, "public_to_parent");
+  const nextStatus = enumValue(formData, "next_status", helpdeskStatuses, visibility === "public_to_parent" ? "waiting_for_parent" : "waiting_internal");
+
+  await throwOnError(
+    supabase.from("helpdesk_ticket_messages").insert({
+      tenant_id: tenantId,
+      ticket_id: ticketId,
+      author_profile_id: profileId,
+      author_type: "admin",
+      message: requiredString(formData, "message"),
+      visibility
+    })
+  );
+
+  await throwOnError(
+    supabase
+      .from("helpdesk_tickets")
+      .update({ status: nextStatus })
+      .eq("tenant_id", tenantId)
+      .eq("id", ticketId)
+  );
+
+  if (visibility === "public_to_parent") {
+    await notifyGuardianAboutHelpdeskReply(tenantId, ticketId);
+  }
 
   revalidatePhase12();
 }
@@ -1264,9 +1317,47 @@ async function requireReportExportPermission(supabase: TenantSupabaseClient, ten
 }
 
 function revalidatePhase12() {
-  for (const path of ["/admin", "/admin/berichten", "/admin/mail-instellingen", "/admin/mailtemplates", "/admin/notificatietemplates", "/admin/nieuwsbrief", "/admin/taken", "/admin/documenten", "/admin/rapportages", "/parent/notificaties", "/parent/documenten"]) {
+  for (const path of ["/admin", "/admin/berichten", "/admin/helpdesk", "/admin/mail-instellingen", "/admin/mailtemplates", "/admin/notificatietemplates", "/admin/nieuwsbrief", "/admin/taken", "/admin/documenten", "/admin/rapportages", "/parent/notificaties", "/parent/documenten", "/parent/helpdesk"]) {
     revalidatePath(path);
   }
+}
+
+async function notifyGuardianAboutHelpdeskReply(tenantId: string, ticketId: string) {
+  const admin = createAdminClient();
+  const ticketResult = await admin
+    .from("helpdesk_tickets")
+    .select("id, guardian_id, participant_id, subject")
+    .eq("tenant_id", tenantId)
+    .eq("id", ticketId)
+    .single();
+
+  if (ticketResult.error || !ticketResult.data) {
+    throw new Error(ticketResult.error?.message ?? "Helpdeskticket niet gevonden voor notificatie.");
+  }
+
+  const ticket = ticketResult.data as { id: string; guardian_id: string; participant_id: string | null; subject: string };
+  const guardianResult = await admin
+    .from("participant_guardians")
+    .select("profile_id")
+    .eq("tenant_id", tenantId)
+    .eq("id", ticket.guardian_id)
+    .single();
+
+  if (guardianResult.error || !guardianResult.data) {
+    throw new Error(guardianResult.error?.message ?? "Ouder/verzorger niet gevonden voor notificatie.");
+  }
+
+  await throwOnError(
+    admin.from("parent_notifications").insert({
+      tenant_id: tenantId,
+      recipient_profile_id: (guardianResult.data as { profile_id: string }).profile_id,
+      participant_id: ticket.participant_id,
+      title: "Reactie van de zwemschool",
+      body: ticket.subject,
+      notification_type: "general",
+      status: "unread"
+    })
+  );
 }
 
 async function throwOnError(builder: PromiseLike<{ error: { message: string } | null }>) {

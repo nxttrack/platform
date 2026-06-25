@@ -11,6 +11,7 @@ import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 const parentRoles = ["parent", "athlete"] as const;
+const helpdeskCategories = ["lesson_planning", "catch_up_lessons", "payments", "progress", "afzwemmen", "account_login", "documents", "complaint", "general_question"] as const;
 
 export async function markNotificationReadAction(formData: FormData) {
   const { supabase, tenantId } = await requireParentContext();
@@ -77,6 +78,83 @@ export async function requestCatchUpLessonAction(formData: FormData) {
     );
     await refreshMakeupCandidates(admin, tenantId, credit.id);
   }
+
+  revalidateParentPortal();
+}
+
+export async function createParentHelpdeskTicketAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const guardianId = requiredString(formData, "guardian_id");
+  const guardian = await getAccessibleGuardian(supabase, tenantId, profileId, guardianId);
+  const participantId = optionalString(formData, "participant_id") ?? guardian.participant_id;
+
+  if (participantId !== guardian.participant_id) {
+    throw new Error("Deze leerling hoort niet bij de geselecteerde ouder/verzorger.");
+  }
+
+  const subject = requiredString(formData, "subject");
+  const message = requiredString(formData, "message");
+  const category = enumValue(formData, "category", helpdeskCategories, "general_question");
+  const contextJson = await buildHelpdeskContextJson(supabase, tenantId, participantId);
+
+  const ticketResult = await supabase
+    .from("helpdesk_tickets")
+    .insert({
+      tenant_id: tenantId,
+      guardian_id: guardian.id,
+      participant_id: participantId,
+      category,
+      subject,
+      status: "new",
+      priority: category === "complaint" ? "high" : "normal",
+      context_json: contextJson
+    })
+    .select("id")
+    .single();
+
+  if (ticketResult.error || !ticketResult.data) {
+    throw new Error(ticketResult.error?.message ?? "Helpdeskticket kon niet worden aangemaakt.");
+  }
+
+  await throwOnError(
+    supabase.from("helpdesk_ticket_messages").insert({
+      tenant_id: tenantId,
+      ticket_id: (ticketResult.data as { id: string }).id,
+      author_profile_id: profileId,
+      author_type: "parent",
+      message,
+      visibility: "public_to_parent"
+    })
+  );
+
+  revalidateParentPortal();
+}
+
+export async function replyParentHelpdeskTicketAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const ticketId = requiredString(formData, "ticket_id");
+  const message = requiredString(formData, "message");
+  const ticket = await getAccessibleHelpdeskTicket(supabase, tenantId, ticketId);
+
+  await throwOnError(
+    supabase.from("helpdesk_ticket_messages").insert({
+      tenant_id: tenantId,
+      ticket_id: ticket.id,
+      author_profile_id: profileId,
+      author_type: "parent",
+      message,
+      visibility: "public_to_parent"
+    })
+  );
+
+  const admin = createAdminClient();
+  await throwOnError(
+    admin
+      .from("helpdesk_tickets")
+      .update({ status: ["waiting_for_parent", "resolved", "closed"].includes(ticket.status) ? "open" : ticket.status })
+      .eq("tenant_id", tenantId)
+      .eq("id", ticket.id)
+  );
 
   revalidateParentPortal();
 }
@@ -348,6 +426,133 @@ async function getAccessibleParentDocument(supabase: Awaited<ReturnType<typeof c
   return result.data as { id: string; tenant_id: string; participant_id: string; status: string; file_path: string | null };
 }
 
+async function getAccessibleGuardian(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, profileId: string, guardianId: string) {
+  const result = await supabase
+    .from("participant_guardians")
+    .select("id, participant_id, profile_id, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", guardianId)
+    .eq("profile_id", profileId)
+    .eq("status", "active")
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "Ouder/verzorger-koppeling niet gevonden.");
+  }
+
+  return result.data as { id: string; participant_id: string; profile_id: string; status: string };
+}
+
+async function getAccessibleHelpdeskTicket(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, ticketId: string) {
+  const result = await supabase
+    .from("helpdesk_tickets")
+    .select("id, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", ticketId)
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "Helpdeskticket niet gevonden.");
+  }
+
+  return result.data as { id: string; status: string };
+}
+
+async function buildHelpdeskContextJson(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, participantId: string) {
+  const context: Record<string, unknown> = { participant_id: participantId };
+
+  const participantResult = await supabase.from("participants").select("id, display_name, status").eq("tenant_id", tenantId).eq("id", participantId).maybeSingle();
+
+  if (!participantResult.error && participantResult.data) {
+    context.participant_name = participantResult.data.display_name;
+    context.participant_status = participantResult.data.status;
+  }
+
+  const enrollmentResult = await supabase
+    .from("enrollments")
+    .select("id, program_id, current_stage_id, status")
+    .eq("tenant_id", tenantId)
+    .eq("participant_id", participantId)
+    .in("status", ["pending", "active"])
+    .order("started_on", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (enrollmentResult.error || !enrollmentResult.data) {
+    return context;
+  }
+
+  const enrollment = enrollmentResult.data as { id: string; program_id: string; current_stage_id: string | null; status: string };
+  context.enrollment_id = enrollment.id;
+  context.enrollment_status = enrollment.status;
+
+  const [programResult, stageResult, membershipResult, invoiceResult] = await Promise.all([
+    supabase.from("programs").select("name").eq("tenant_id", tenantId).eq("id", enrollment.program_id).maybeSingle(),
+    enrollment.current_stage_id ? supabase.from("stages").select("name").eq("tenant_id", tenantId).eq("id", enrollment.current_stage_id).maybeSingle() : Promise.resolve({ data: null, error: null }),
+    supabase
+      .from("group_memberships")
+      .select("group_id, status")
+      .eq("tenant_id", tenantId)
+      .eq("enrollment_id", enrollment.id)
+      .in("status", ["planned", "active"])
+      .order("starts_on", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("invoices")
+      .select("id, invoice_number, status, amount_due_cents, amount_paid_cents, currency")
+      .eq("tenant_id", tenantId)
+      .eq("enrollment_id", enrollment.id)
+      .in("status", ["open", "partially_paid", "overdue"])
+      .order("due_on", { ascending: true, nullsFirst: false })
+      .limit(3)
+  ]);
+
+  if (!programResult.error && programResult.data) {
+    context.program_name = programResult.data.name;
+  }
+
+  if (!stageResult.error && stageResult.data) {
+    context.stage_name = stageResult.data.name;
+  }
+
+  if (!membershipResult.error && membershipResult.data) {
+    const membership = membershipResult.data as { group_id: string; status: string };
+    context.group_id = membership.group_id;
+    context.group_membership_status = membership.status;
+    const groupResult = await supabase.from("groups").select("name").eq("tenant_id", tenantId).eq("id", membership.group_id).maybeSingle();
+
+    if (!groupResult.error && groupResult.data) {
+      context.group_name = groupResult.data.name;
+    }
+
+    const sessionResult = await supabase
+      .from("sessions")
+      .select("starts_at, ends_at")
+      .eq("tenant_id", tenantId)
+      .eq("group_id", membership.group_id)
+      .gte("starts_at", new Date().toISOString())
+      .order("starts_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!sessionResult.error && sessionResult.data) {
+      context.next_lesson_starts_at = sessionResult.data.starts_at;
+      context.next_lesson_ends_at = sessionResult.data.ends_at;
+    }
+  }
+
+  if (!invoiceResult.error && invoiceResult.data) {
+    const invoices = invoiceResult.data as Array<{ id: string; invoice_number: string; status: string; amount_due_cents: number; amount_paid_cents: number; currency: string }>;
+    context.open_invoice_count = invoices.length;
+    context.open_invoice_amount_cents = invoices.reduce((sum, invoice) => sum + Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents), 0);
+    context.open_invoice_currency = invoices[0]?.currency ?? null;
+    context.open_invoice_numbers = invoices.map((invoice) => invoice.invoice_number);
+  }
+
+  return context;
+}
+
 async function logCertificateAccessEvent(
   admin: ReturnType<typeof createAdminClient>,
   {
@@ -552,7 +757,7 @@ async function logDocumentAccessEvent(
 }
 
 function revalidateParentPortal() {
-  for (const path of ["/parent", "/parent/lessen", "/parent/notificaties", "/parent/documenten", "/parent/diplomas", "/parent/profiel"]) {
+  for (const path of ["/parent", "/parent/lessen", "/parent/notificaties", "/parent/documenten", "/parent/diplomas", "/parent/profiel", "/parent/helpdesk"]) {
     revalidatePath(path);
   }
 }
@@ -585,4 +790,10 @@ function optionalString(formData: FormData, key: string) {
   const trimmed = value.trim();
 
   return trimmed === "" ? null : trimmed;
+}
+
+function enumValue<const Value extends string>(formData: FormData, key: string, allowed: readonly Value[], fallback: Value) {
+  const value = optionalString(formData, key) ?? fallback;
+
+  return allowed.includes(value as Value) ? (value as Value) : fallback;
 }

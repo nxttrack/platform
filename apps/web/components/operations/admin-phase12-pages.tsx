@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
-import { BarChart3, CalendarDays, ClipboardList, Download, FileText, Filter, Inbox, Mail, Megaphone, Newspaper, Send, Settings, ShieldCheck, Users } from "lucide-react";
+import { BarChart3, CalendarDays, ClipboardList, Download, FileText, Filter, Inbox, Mail, Megaphone, MessageSquare, Newspaper, Send, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   cancelMessageAction,
+  addHelpdeskTicketMessageAction,
   createMessageTemplateAction,
   createOperationalTaskAction,
   createReportExportRequestAction,
@@ -13,6 +14,7 @@ import {
   queueMessageAction,
   retryMessageAction,
   runMessageDispatchWorkerAction,
+  updateHelpdeskTicketAction,
   updateCommunicationProviderConfigAction,
   updateMessageTemplateAction,
   updateOperationalTaskAction,
@@ -25,11 +27,14 @@ import type {
   AdminPhase12Data,
   AdminPhase12Snapshot,
   CommunicationProviderConfigRow,
+  HelpdeskTicketMessageRow,
+  HelpdeskTicketRow,
   MessageOutboxRow,
   MessageTemplateRow,
   OperationalTaskRow,
   OperationsEnrollmentRow,
   OperationsGroupRow,
+  OperationsGuardianRow,
   OperationsInstructorRow,
   OperationsParticipantRow,
   OperationsProfileRow,
@@ -45,6 +50,14 @@ type Phase12PageProps = {
   snapshot: AdminPhase12Snapshot;
 };
 
+type AdminHelpdeskPageProps = Phase12PageProps & {
+  filters?: {
+    status?: string;
+    category?: string;
+    priority?: string;
+  };
+};
+
 type Phase12ReportsPageProps = {
   phase12: AdminPhase12Snapshot;
   domain: AdminDomainSnapshot;
@@ -57,6 +70,8 @@ type Phase12Lookups = {
   enrollments: Map<string, OperationsEnrollmentRow>;
   profiles: Map<string, OperationsProfileRow>;
   templates: Map<string, MessageTemplateRow>;
+  guardians: Map<string, OperationsGuardianRow>;
+  helpdeskMessagesByTicket: Map<string, HelpdeskTicketMessageRow[]>;
 };
 
 export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
@@ -137,6 +152,72 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
           {data.messageOutbox.length === 0 ? <EmptyState>Nog geen berichten in de outbox.</EmptyState> : null}
           {data.messageOutbox.map((message) => (
             <MessageOutboxCard key={message.id} lookups={lookups} message={message} />
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export function AdminHelpdeskPage({ snapshot, filters }: AdminHelpdeskPageProps) {
+  if (snapshot.status !== "ready") {
+    return <Phase12StatusPanel snapshot={snapshot} title="Helpdesk niet beschikbaar" />;
+  }
+
+  const data = snapshot.data;
+  const lookups = buildLookups(data);
+  const normalizedFilters = {
+    status: filters?.status && helpdeskStatusOptions.some((option) => option.value === filters.status) ? filters.status : "",
+    category: filters?.category && helpdeskCategoryOptions.some((option) => option.value === filters.category) ? filters.category : "",
+    priority: filters?.priority && helpdeskPriorityOptions.some((option) => option.value === filters.priority) ? filters.priority : ""
+  };
+  const filteredTickets = data.helpdeskTickets.filter((ticket) => {
+    return (
+      (!normalizedFilters.status || ticket.status === normalizedFilters.status)
+      && (!normalizedFilters.category || ticket.category === normalizedFilters.category)
+      && (!normalizedFilters.priority || ticket.priority === normalizedFilters.priority)
+    );
+  });
+  const openTickets = data.helpdeskTickets.filter((ticket) => !["resolved", "closed"].includes(ticket.status));
+  const waitingForParent = data.helpdeskTickets.filter((ticket) => ticket.status === "waiting_for_parent");
+  const complaints = data.helpdeskTickets.filter((ticket) => ticket.category === "complaint" && !["resolved", "closed"].includes(ticket.status));
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader
+        action={<StatusPill tone="info">Tenant helpdesk</StatusPill>}
+        kicker="Backoffice - helpdesk"
+        subtitle="Beheer oudervragen, klachten en supportcontext zonder dit te mengen met platform support of algemene berichtverzending."
+        title="Ouderhelpdesk"
+      />
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Open tickets" value={openTickets.length.toString()} detail="nieuw of in behandeling" />
+        <MetricCard icon={<MessageSquare className="h-5 w-5" />} label="Wacht op ouder" value={waitingForParent.length.toString()} detail="publieke reactie verstuurd" />
+        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Klachten" value={complaints.length.toString()} detail="hoge prioriteit" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Guardians" value={data.guardians.length.toString()} detail="met oudercontext" />
+      </div>
+
+      <Card>
+        <form className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto_auto]" method="get">
+          <SelectField defaultValue={normalizedFilters.status} includeEmpty label="Status" name="status" options={helpdeskStatusOptions} />
+          <SelectField defaultValue={normalizedFilters.category} includeEmpty label="Categorie" name="category" options={helpdeskCategoryOptions} />
+          <SelectField defaultValue={normalizedFilters.priority} includeEmpty label="Prioriteit" name="priority" options={helpdeskPriorityOptions} />
+          <button className={`${primaryButtonClassName} self-end`} type="submit">
+            Filteren
+          </button>
+          <a className={`${secondaryButtonClassName} self-end`} href="/admin/helpdesk">
+            Reset
+          </a>
+        </form>
+      </Card>
+
+      <Card>
+        <SectionHeader title="Ticket inbox" count={filteredTickets.length} />
+        <div className="grid gap-4">
+          {filteredTickets.length === 0 ? <EmptyState>Geen helpdesktickets gevonden voor deze filters.</EmptyState> : null}
+          {filteredTickets.map((ticket) => (
+            <AdminHelpdeskTicketCard key={ticket.id} data={data} lookups={lookups} ticket={ticket} />
           ))}
         </div>
       </Card>
@@ -612,6 +693,102 @@ function QueueMessageForm({ data, newsletter }: { data: AdminPhase12Data; newsle
         {newsletter ? "Nieuwsbrief als concept opslaan" : "Bericht klaarzetten"}
       </button>
     </form>
+  );
+}
+
+function AdminHelpdeskTicketCard({ data, lookups, ticket }: { data: AdminPhase12Data; lookups: Phase12Lookups; ticket: HelpdeskTicketRow }) {
+  const guardian = lookups.guardians.get(ticket.guardian_id);
+  const participant = ticket.participant_id ? lookups.participants.get(ticket.participant_id) : guardian ? lookups.participants.get(guardian.participant_id) : null;
+  const assigned = ticket.assigned_to ? lookups.profiles.get(ticket.assigned_to) : null;
+  const messages = lookups.helpdeskMessagesByTicket.get(ticket.id) ?? [];
+  const publicMessages = messages.filter((message) => message.visibility === "public_to_parent").length;
+  const internalNotes = messages.filter((message) => message.visibility === "internal").length;
+  const context = ticket.context_json ?? {};
+  const nextLessonStartsAt = stringContext(context, "next_lesson_starts_at");
+  const contextRows = [
+    ["Kind", participant?.display_name ?? stringContext(context, "participant_name")],
+    ["Programma", stringContext(context, "program_name")],
+    ["Niveau", stringContext(context, "stage_name")],
+    ["Groep", stringContext(context, "group_name")],
+    ["Volgende les", nextLessonStartsAt ? formatDateTime(nextLessonStartsAt) : null],
+    ["Open bedrag", typeof context.open_invoice_amount_cents === "number" ? formatMoney(context.open_invoice_amount_cents, stringContext(context, "open_invoice_currency") ?? "EUR") : null]
+  ].filter((row): row is [string, string] => Boolean(row[1]));
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-lg font-bold">{ticket.subject}</p>
+          <p className="text-sm text-muted-foreground">
+            {guardian?.display_name ?? guardian?.email ?? "Ouder onbekend"} - {helpdeskCategoryLabel(ticket.category)} - {formatDateTime(ticket.updated_at)}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={statusTone(ticket.status)}>{helpdeskStatusLabel(ticket.status)}</StatusPill>
+          <StatusPill tone={priorityTone(ticket.priority)}>{helpdeskPriorityLabel(ticket.priority)}</StatusPill>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <InfoTile label="Toegewezen aan" value={assigned?.full_name ?? "Nog niet toegewezen"} />
+        <InfoTile label="Publieke berichten" value={publicMessages.toString()} />
+        <InfoTile label="Interne notities" value={internalNotes.toString()} />
+      </div>
+
+      {contextRows.length > 0 ? (
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {contextRows.map(([label, value]) => (
+            <InfoTile key={label} label={label} value={value} />
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-3">
+        {messages.length === 0 ? <EmptyState>Nog geen berichten op dit ticket.</EmptyState> : null}
+        {messages.map((message) => {
+          const author = message.author_profile_id ? lookups.profiles.get(message.author_profile_id) : null;
+
+          return (
+            <div key={message.id} className={`rounded-2xl border border-border p-3 ${message.visibility === "internal" ? "bg-amber-50" : message.author_type === "parent" ? "bg-card" : "bg-primary/5"}`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-bold">{message.author_type === "parent" ? "Ouder" : author?.full_name ?? "Backoffice"}</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusPill tone={message.visibility === "internal" ? "warning" : "info"}>{message.visibility === "internal" ? "Intern" : "Publiek"}</StatusPill>
+                  <p className="text-xs text-muted-foreground">{formatDateTime(message.created_at)}</p>
+                </div>
+              </div>
+              <p className="mt-2 whitespace-pre-line text-sm leading-6 text-muted-foreground">{message.message}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 grid gap-4 xl:grid-cols-[0.8fr_1.2fr]">
+        <form action={updateHelpdeskTicketAction} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+          <input name="ticket_id" type="hidden" value={ticket.id} />
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+            <SelectField defaultValue={ticket.status} label="Status" name="status" options={helpdeskStatusOptions} />
+            <SelectField defaultValue={ticket.priority} label="Prioriteit" name="priority" options={helpdeskPriorityOptions} />
+            <SelectField defaultValue={ticket.assigned_to} includeEmpty label="Toewijzen aan" name="assigned_to" options={data.profiles.map(optionFromProfile)} />
+          </div>
+          <button className={secondaryButtonClassName} type="submit">
+            Ticket bijwerken
+          </button>
+        </form>
+
+        <form action={addHelpdeskTicketMessageAction} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+          <input name="ticket_id" type="hidden" value={ticket.id} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <SelectField defaultValue="public_to_parent" label="Zichtbaarheid" name="visibility" options={helpdeskVisibilityOptions} />
+            <SelectField defaultValue="waiting_for_parent" label="Volgende status" name="next_status" options={helpdeskStatusOptions} />
+          </div>
+          <TextAreaField label="Reactie of interne notitie" name="message" required />
+          <button className={primaryButtonClassName} type="submit">
+            Toevoegen
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 
@@ -1213,7 +1390,9 @@ function buildLookups(data: AdminPhase12Data): Phase12Lookups {
     participants: byId(data.participants),
     enrollments: byId(data.enrollments),
     profiles: byId(data.profiles),
-    templates: byId(data.messageTemplates)
+    templates: byId(data.messageTemplates),
+    guardians: byId(data.guardians),
+    helpdeskMessagesByTicket: groupBy(data.helpdeskMessages, (message) => message.ticket_id)
   };
 }
 
@@ -1236,6 +1415,17 @@ function buildCapacityRows(data: AdminDomainData) {
 
 function byId<Row extends { id: string }>(rows: Row[]) {
   return new Map(rows.map((row) => [row.id, row]));
+}
+
+function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
+  const grouped = new Map<string, Row[]>();
+
+  for (const row of rows) {
+    const key = getKey(row);
+    grouped.set(key, [...(grouped.get(key) ?? []), row]);
+  }
+
+  return grouped;
 }
 
 function optionFromTemplate(template: MessageTemplateRow) {
@@ -1298,6 +1488,51 @@ function priorityTone(priority: string): "success" | "warning" | "danger" | "inf
   }
 
   return "info";
+}
+
+function helpdeskCategoryLabel(category: string) {
+  const labels: Record<string, string> = {
+    lesson_planning: "Lesplanning",
+    catch_up_lessons: "Inhaallessen",
+    payments: "Betalingen",
+    progress: "Voortgang",
+    afzwemmen: "Afzwemmen",
+    account_login: "Account/login",
+    documents: "Documenten",
+    complaint: "Klacht",
+    general_question: "Algemene vraag"
+  };
+
+  return labels[category] ?? category;
+}
+
+function helpdeskStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    new: "Nieuw",
+    open: "Open",
+    waiting_for_parent: "Wacht op ouder",
+    waiting_internal: "Intern in behandeling",
+    resolved: "Opgelost",
+    closed: "Gesloten"
+  };
+
+  return labels[status] ?? status;
+}
+
+function helpdeskPriorityLabel(priority: string) {
+  const labels: Record<string, string> = {
+    low: "Laag",
+    normal: "Normaal",
+    high: "Hoog",
+    urgent: "Urgent"
+  };
+
+  return labels[priority] ?? priority;
+}
+
+function stringContext(context: Record<string, unknown>, key: string) {
+  const value = context[key];
+  return typeof value === "string" && value.trim() ? value : null;
 }
 
 function formatDate(value: string) {
@@ -1456,6 +1691,39 @@ const taskPriorityOptions = [
   { label: "Normaal", value: "normal" },
   { label: "Hoog", value: "high" },
   { label: "Urgent", value: "urgent" }
+];
+
+const helpdeskStatusOptions = [
+  { label: "Nieuw", value: "new" },
+  { label: "Open", value: "open" },
+  { label: "Wacht op ouder", value: "waiting_for_parent" },
+  { label: "Intern in behandeling", value: "waiting_internal" },
+  { label: "Opgelost", value: "resolved" },
+  { label: "Gesloten", value: "closed" }
+];
+
+const helpdeskPriorityOptions = [
+  { label: "Laag", value: "low" },
+  { label: "Normaal", value: "normal" },
+  { label: "Hoog", value: "high" },
+  { label: "Urgent", value: "urgent" }
+];
+
+const helpdeskCategoryOptions = [
+  { label: "Lesplanning", value: "lesson_planning" },
+  { label: "Inhaallessen", value: "catch_up_lessons" },
+  { label: "Betalingen", value: "payments" },
+  { label: "Voortgang", value: "progress" },
+  { label: "Afzwemmen", value: "afzwemmen" },
+  { label: "Account/login", value: "account_login" },
+  { label: "Documenten", value: "documents" },
+  { label: "Klacht", value: "complaint" },
+  { label: "Algemene vraag", value: "general_question" }
+];
+
+const helpdeskVisibilityOptions = [
+  { label: "Publiek naar ouder", value: "public_to_parent" },
+  { label: "Interne notitie", value: "internal" }
 ];
 
 const documentTypeOptions = [
