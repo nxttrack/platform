@@ -127,75 +127,33 @@ create trigger platform_integration_statuses_audit_events
   for each row execute function app_private.record_audit_event();
 
 do $$
-declare
-  platform_settings_id_type text;
 begin
-  select attribute.atttypid::regtype::text into platform_settings_id_type
-  from pg_attribute attribute
-  join pg_class relation on relation.oid = attribute.attrelid
-  join pg_namespace namespace on namespace.oid = relation.relnamespace
-  where namespace.nspname = 'public'
-    and relation.relname = 'platform_settings'
-    and attribute.attname = 'id'
-    and not attribute.attisdropped;
-
   if exists (select 1 from public.platform_settings) then
     return;
   end if;
 
-  if platform_settings_id_type in ('uuid', 'pg_catalog.uuid') then
-    insert into public.platform_settings (
-      id,
-      platform_name,
-      default_locale,
-      default_timezone,
-      support_email,
-      tenant_domain_suffix,
-      staging_domain,
-      production_domain,
-      release_channel,
-      metadata
-    )
-    values (
-      '00000000-0000-0000-0000-000000000001'::uuid,
-      'NXTTRACK',
-      'nl-NL',
-      'Europe/Amsterdam',
-      'support@nxttrack.nl',
-      'staging.nxttrack.nl',
-      'staging.nxttrack.nl',
-      'nxttrack.nl',
-      'staging',
-      '{"source":"platform_admin_completion"}'::jsonb
-    );
-  elsif platform_settings_id_type in ('text', 'pg_catalog.text', 'character varying', 'pg_catalog.varchar') then
-    insert into public.platform_settings (
-      id,
-      platform_name,
-      default_locale,
-      default_timezone,
-      support_email,
-      tenant_domain_suffix,
-      staging_domain,
-      production_domain,
-      release_channel,
-      metadata
-    )
-    values (
-      'global',
-      'NXTTRACK',
-      'nl-NL',
-      'Europe/Amsterdam',
-      'support@nxttrack.nl',
-      'staging.nxttrack.nl',
-      'staging.nxttrack.nl',
-      'nxttrack.nl',
-      'staging',
-      '{"source":"platform_admin_completion"}'::jsonb
-    );
-  else
-    raise exception 'Unsupported platform_settings.id type: %', coalesce(platform_settings_id_type, 'unknown');
-  end if;
+  insert into public.platform_settings (
+    platform_name,
+    default_locale,
+    default_timezone,
+    support_email,
+    tenant_domain_suffix,
+    staging_domain,
+    production_domain,
+    release_channel,
+    metadata
+  )
+  values (
+    'NXTTRACK',
+    'nl-NL',
+    'Europe/Amsterdam',
+    'support@nxttrack.nl',
+    'staging.nxttrack.nl',
+    'staging.nxttrack.nl',
+    'nxttrack.nl',
+    'staging',
+    '{"source":"platform_admin_completion"}'::jsonb
+  );
 end $$;
 
 insert into public.sector_templates (
