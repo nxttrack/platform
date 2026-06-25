@@ -146,10 +146,20 @@ When a translation key is missing:
 
 Public anonymous routes should use:
 
-1. URL/query or future language route segment.
-2. Browser `Accept-Language` only if tenant enabled.
-3. Tenant default language.
-4. Dutch.
+1. URL language segment as canonical public route, e.g. `/en`, `/en/programs`, `/en/intake`.
+2. Cookie/query only as a future convenience for remembering preference or campaign links.
+3. Browser `Accept-Language` only if tenant enabled.
+4. Tenant default language.
+5. Dutch.
+
+Decision:
+
+- Public language choice uses URL segments because this is best for SEO, shareable links, metadata, browser history, analytics, and crawler indexing.
+- Dutch remains the canonical default without a `/nl` prefix for now.
+- English is exposed through `/en/*`.
+- Backoffice/admin/instructor operational shells stay Dutch-only until there is a real product reason to internationalize staff workflows.
+- Arabic/RTL QA is not active yet. Arabic stays a future language candidate until RTL design and regression testing are explicitly scheduled.
+- Tenant-managed translations are not enabled yet. English translation ownership is platform-only in this phase.
 
 ## 7. What To Translate Now
 
@@ -158,6 +168,9 @@ Current small implementation scope:
 - `apps/web/lib/i18n/languages.ts`
 - `apps/web/lib/i18n/dictionary.ts`
 - `apps/web/lib/i18n/index.ts`
+- `apps/web/lib/i18n/public-routing.ts`
+- `apps/web/app/[language]/*`
+- `apps/web/components/public-site/tenant-public-pages.tsx`
 
 This adds:
 
@@ -167,8 +180,11 @@ This adds:
 - Language preference resolver.
 - Basic Dutch/English dictionary for shared labels.
 - Translation helper with Dutch fallback and interpolation.
+- Public URL segment helper.
+- English public tenant website chrome for home, programs, program detail, intake, news, and agenda.
+- Intake redirect preservation for `/en/intake`.
 
-No broad UI refactor is included.
+No broad admin/backoffice UI refactor is included.
 
 ## 8. What To Translate Later
 
@@ -177,9 +193,10 @@ Later implementation should cover:
 - Tenant public homepage copy and navigation.
 - Program overview/detail public copy.
 - Intake question labels, help text, options, consent text, and confirmation text.
+- Tenant-owned CMS content translation bundles after platform approval.
 - Slot offer public pages.
 - Parent portal chrome and parent-facing content.
-- Instructor/admin chrome only where necessary; tenant staff can remain Dutch-first initially.
+- Instructor/admin chrome only where necessary; tenant staff remains Dutch-first initially.
 - Email/message templates per language.
 - Parent notifications with source language metadata.
 - Knowledge base and FAQ articles.
@@ -211,7 +228,8 @@ Risks:
 - Unique constraints on `message_templates(tenant_id, code)` must be redesigned before per-language templates.
 - Translation JSON can become inconsistent without validation.
 - Parent-facing fallback could show mixed Dutch/English if content is partially translated.
-- Arabic will require RTL UI QA before activation.
+- Tenant-owned Dutch CMS text can still appear on `/en/*` until platform-managed translation bundles are implemented.
+- Arabic will require RTL UI QA before activation and is explicitly not active now.
 
 Mitigation:
 
@@ -220,19 +238,20 @@ Mitigation:
 - Validate translation bundles in server actions before saving.
 - Keep Dutch as hard fallback.
 - Add language-specific tests before enabling public language switcher.
+- Keep tenant-managed translation editing disabled until the platform translation model, validation, and workflow are approved.
 
 ## 11. Implementation Tasks
 
 Recommended next tasks:
 
-1. Add migration for tenant/profile/guardian language fields.
-2. Add typed translation bundle validators for public content, intake configs, and templates.
-3. Add tenant admin language settings UI in existing Lovable-style settings page.
-4. Add language-aware read helpers for public tenant content.
-5. Add language selector for public tenant pages only after content fallback works.
-6. Add template language model and preview validation.
-7. Add parent/guardian preferred language capture during intake and account invitation.
-8. Add knowledge base/helpdesk language fields when those modules are implemented.
+1. Add typed platform-managed translation bundle validators for public content, intake configs, and templates.
+2. Add language-aware read helpers for tenant-owned public content without exposing tenant editing yet.
+3. Extend the route-aware public language switcher to slot offers and future public/support pages.
+4. Add migration for tenant/profile/guardian language fields after the public fallback contract is stable.
+5. Add template language model and preview validation.
+6. Add parent/guardian preferred language capture during intake and account invitation.
+7. Add knowledge base/helpdesk language fields when those modules are implemented.
+8. Schedule RTL QA before activating Arabic.
 
 ## 12. Testing Plan
 

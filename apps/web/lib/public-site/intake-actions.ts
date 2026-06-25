@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
+import { defaultLanguage, normalizeSupportedLanguage, publicHref } from "@/lib/i18n";
 import type { IntakeQuestion } from "@/lib/public-site/tenant-site";
 import { detectAndStoreIntakeDuplicates } from "@/lib/smart-flow/intake-duplicates";
 import { createIntakeRecommendationDecision } from "@/lib/smart-flow/intake-recommendation";
@@ -17,6 +18,7 @@ export async function submitIntakeAction(formData: FormData) {
   }
 
   const programSlug = requiredString(formData, "program_slug");
+  const publicLanguage = normalizeSupportedLanguage(optionalString(formData, "public_language"), defaultLanguage);
   const snapshot = await getPublicTenantSiteSnapshot(programSlug);
 
   const selectedProgram = snapshot.selectedProgram;
@@ -140,7 +142,7 @@ export async function submitIntakeAction(formData: FormData) {
     })
   );
 
-  redirect(`/intake?program=${encodeURIComponent(program.slug)}&submitted=1`);
+  redirect(publicHref(publicLanguage, "intake", { program: program.slug, submitted: true }));
 }
 
 function requiredString(formData: FormData, key: string) {
