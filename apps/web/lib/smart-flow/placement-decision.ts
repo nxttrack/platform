@@ -30,6 +30,8 @@ type PlacementDecisionInput = {
   capacitySnapshot: CapacitySnapshot;
   score: number;
   rationale: string;
+  waitlistScore?: number | null;
+  waitlistReasons?: unknown[];
 };
 
 type SmartDecisionClient = Pick<SupabaseClient, "from">;
@@ -55,7 +57,9 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
       capacity_limit: input.capacityLimit,
       active_memberships: input.activeMemberships,
       available_spots: input.availableSpots,
-      capacity_snapshot: capacitySnapshotToRecord(input.capacitySnapshot)
+      capacity_snapshot: capacitySnapshotToRecord(input.capacitySnapshot),
+      waitlist_score: input.waitlistScore ?? null,
+      waitlist_reasons: input.waitlistReasons ?? []
     },
     ruleVersion: "placement-v1",
     score: input.score,
@@ -88,6 +92,16 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
         detail: input.stageMatch ? "Het aanbevolen niveau komt overeen met de groep." : "Er is geen aanbevolen niveau of het niveau wijkt af.",
         weight: 25,
         evidence: { recommended_stage_id: input.recommendedStageId, group_stage_id: input.group.stage_id }
+      }),
+      smartReason({
+        code: "waitlist_rank",
+        label: "Wachtlijstranking",
+        detail: typeof input.waitlistScore === "number" ? `Kandidaat heeft wachtlijstscore ${input.waitlistScore}/100.` : "Nog geen opgeslagen wachtlijstscore.",
+        weight: 15,
+        evidence: {
+          waitlist_score: input.waitlistScore ?? null,
+          waitlist_reasons: input.waitlistReasons ?? []
+        }
       })
     ],
     blockers: input.capacitySnapshot.blockers.map((blocker) =>
@@ -101,6 +115,7 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
     recommendation: {
       action: "approve_slot_offer",
       group_id: input.group.id,
+      waitlist_score: input.waitlistScore ?? null,
       score: input.score,
       rationale: input.rationale,
       capacity_explanation: capacitySnapshotToRecord(input.capacitySnapshot),

@@ -9,6 +9,7 @@ import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
 import { detectAndStoreIntakeDuplicates } from "@/lib/smart-flow/intake-duplicates";
 import { updateSmartDecisionLifecycle } from "@/lib/smart-flow/decision";
 import { createPlacementSmartDecision } from "@/lib/smart-flow/placement-decision";
+import { normalizeDuplicateRisk, scoreWaitlistEntry, upsertWaitlistSmartDecision, type WaitlistAdminPriority, type WaitlistDuplicateRisk, type WaitlistRankingEntryInput } from "@/lib/smart-flow/waitlist-ranking";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -24,6 +25,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     parent_email: string;
     participant_name: string;
     participant_birthdate: string | null;
+    intake_type: string;
     preferred_days: string[];
     preferred_time_windows: string[];
     notes: string | null;
@@ -32,7 +34,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   }>(
     supabase
       .from("intake_submissions")
-      .select("id, program_id, parent_email, participant_name, participant_birthdate, preferred_days, preferred_time_windows, notes, recommendation_snapshot, stage_recommendation_decision_id")
+      .select("id, program_id, parent_email, participant_name, participant_birthdate, intake_type, preferred_days, preferred_time_windows, notes, recommendation_snapshot, stage_recommendation_decision_id")
       .eq("id", intakeId)
       .eq("tenant_id", tenantId)
       .single()
@@ -44,8 +46,9 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     throw new Error("Geef een override-reden wanneer je afwijkt van het smart advies.");
   }
 
-  await throwOnError(
-    supabase.from("waitlist_entries").upsert(
+  const waitlistResult = await supabase
+    .from("waitlist_entries")
+    .upsert(
       {
         tenant_id: tenantId,
         intake_submission_id: intake.id,
@@ -60,7 +63,16 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
       },
       { onConflict: "intake_submission_id" }
     )
-  );
+    .select("id")
+    .single();
+
+  if (waitlistResult.error || !waitlistResult.data) {
+    throw new Error(waitlistResult.error?.message ?? "Wachtlijstregel kon niet worden opgeslagen.");
+  }
+
+  const waitlistEntryId = (waitlistResult.data as { id: string }).id;
+  await insertWaitlistEvent(supabase, tenantId, waitlistEntryId, "created", "Intake is omgezet naar een wachtlijstregel.", actorProfileId, { intake_submission_id: intake.id, intake_type: intake.intake_type });
+  await refreshWaitlistScore(supabase, tenantId, waitlistEntryId, actorProfileId, "Wachtlijstscore berekend na intake-review.");
 
   await throwOnError(
     supabase
@@ -130,7 +142,7 @@ export async function refreshIntakeDuplicateMatchesAction(formData: FormData) {
 }
 
 export async function createPlacementSuggestionAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const waitlistEntryId = requiredString(formData, "waitlist_entry_id");
   const groupId = requiredString(formData, "group_id");
 
@@ -139,12 +151,14 @@ export async function createPlacementSuggestionAction(formData: FormData) {
     intake_submission_id: string | null;
     program_id: string;
     recommended_stage_id: string | null;
+    waitlist_score: number | null;
+    score_reasons: unknown[];
     preferred_days: string[];
     preferred_time_windows: string[];
   }>(
     supabase
       .from("waitlist_entries")
-      .select("id, intake_submission_id, program_id, recommended_stage_id, preferred_days, preferred_time_windows")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, waitlist_score, score_reasons, preferred_days, preferred_time_windows")
       .eq("id", waitlistEntryId)
       .eq("tenant_id", tenantId)
       .single()
@@ -166,8 +180,12 @@ export async function createPlacementSuggestionAction(formData: FormData) {
   const preferredWeekday = weekdayToPreference(group.weekday);
   const dayMatch = waitlistEntry.preferred_days.includes(preferredWeekday);
   const stageMatch = !waitlistEntry.recommended_stage_id || waitlistEntry.recommended_stage_id === group.stage_id;
-  const score = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, snapshot.availableSpots * 2));
-  const rationale = optionalString(formData, "rationale") ?? `${capacitySummaryText(snapshot)}.${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`;
+  const placementBaseScore = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, snapshot.availableSpots * 2));
+  const waitlistScore = typeof waitlistEntry.waitlist_score === "number" ? waitlistEntry.waitlist_score : 50;
+  const score = Math.min(100, Math.round(placementBaseScore * 0.75 + waitlistScore * 0.25));
+  const rationale =
+    optionalString(formData, "rationale") ??
+    `${capacitySummaryText(snapshot)}.${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""} Wachtlijstscore ${waitlistScore}/100 meegewogen.`;
 
   const suggestionResult = await supabase
     .from("placement_suggestions")
@@ -211,12 +229,15 @@ export async function createPlacementSuggestionAction(formData: FormData) {
     resourceCapacity: resource?.capacity ?? null,
     capacitySnapshot: snapshot,
     score,
-    rationale
+    rationale,
+    waitlistScore,
+    waitlistReasons: waitlistEntry.score_reasons
   });
 
   await throwOnError(supabase.from("placement_suggestions").update({ smart_decision_id: smartDecisionId }).eq("id", suggestionId).eq("tenant_id", tenantId));
 
   await throwOnError(supabase.from("waitlist_entries").update({ status: "matched" }).eq("id", waitlistEntry.id).eq("tenant_id", tenantId));
+  await insertWaitlistEvent(supabase, tenantId, waitlistEntry.id, "placement_suggested", "Plaatsingsvoorstel aangemaakt vanuit de wachtlijst.", actorProfileId, { placement_suggestion_id: suggestionId, group_id: group.id, score });
 
   if (waitlistEntry.intake_submission_id) {
     await throwOnError(supabase.from("intake_submissions").update({ status: "matched" }).eq("id", waitlistEntry.intake_submission_id).eq("tenant_id", tenantId));
@@ -234,6 +255,7 @@ export async function rejectPlacementSuggestionAction(formData: FormData) {
 
   await throwOnError(supabase.from("placement_suggestions").update({ status: "rejected", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
   await throwOnError(supabase.from("waitlist_entries").update({ status: "queued" }).eq("id", suggestion.waitlist_entry_id).eq("tenant_id", tenantId));
+  await insertWaitlistEvent(supabase, tenantId, suggestion.waitlist_entry_id, "placement_rejected", "Plaatsingsvoorstel afgewezen; kandidaat terug naar wachtrij.", actorProfileId, { placement_suggestion_id: suggestion.id });
 
   if (suggestion.intake_submission_id) {
     await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", suggestion.intake_submission_id).eq("tenant_id", tenantId));
@@ -338,6 +360,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
 
   await throwOnError(supabase.from("placement_suggestions").update({ status: "offered", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
   await throwOnError(supabase.from("waitlist_entries").update({ status: "offered" }).eq("id", suggestion.waitlist_entry_id).eq("tenant_id", tenantId));
+  await insertWaitlistEvent(supabase, tenantId, suggestion.waitlist_entry_id, "slot_offered", "Lesplek-aanbod is verstuurd; capaciteit wordt tijdelijk vastgehouden.", actorProfileId, { placement_suggestion_id: suggestion.id, slot_offer_id: offerId });
 
   if (suggestion.intake_submission_id) {
     await throwOnError(supabase.from("intake_submissions").update({ status: "slot_offered" }).eq("id", suggestion.intake_submission_id).eq("tenant_id", tenantId));
@@ -359,11 +382,98 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
 }
 
 export async function cancelSlotOfferAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const offerId = requiredString(formData, "slot_offer_id");
+  const offer = await singleRow<{ waitlist_entry_id: string }>(supabase.from("slot_offers").select("waitlist_entry_id").eq("id", offerId).eq("tenant_id", tenantId).single());
 
   await throwOnError(supabase.from("slot_offers").update({ status: "cancelled" }).eq("id", offerId).eq("tenant_id", tenantId));
   await releaseCapacityHoldForSlotOffer(supabase, tenantId, offerId, "cancelled", "slot offer cancelled by admin");
+  await insertWaitlistEvent(supabase, tenantId, offer.waitlist_entry_id, "cancelled", "Lesplek-aanbod geannuleerd; capaciteitshold vrijgegeven.", actorProfileId, { slot_offer_id: offerId });
+  revalidatePlacementWorkflow();
+}
+
+export async function updateWaitlistPriorityAction(formData: FormData) {
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const waitlistEntryId = requiredString(formData, "waitlist_entry_id");
+  const adminPriority = requiredString(formData, "admin_priority") as WaitlistAdminPriority;
+  const priorityReason = optionalString(formData, "priority_reason");
+  const urgencyReason = optionalString(formData, "urgency_reason");
+  const tenantReasonCode = optionalString(formData, "tenant_reason_code");
+
+  if (!["low", "normal", "high", "urgent"].includes(adminPriority)) {
+    throw new Error("Onbekende prioriteit.");
+  }
+
+  if (adminPriority !== "normal" && !priorityReason) {
+    throw new Error("Geef een prioriteitsreden bij een handmatige override.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("waitlist_entries")
+      .update({
+        admin_priority: adminPriority,
+        priority_reason: priorityReason,
+        urgency_reason: urgencyReason,
+        tenant_reason_code: tenantReasonCode
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", waitlistEntryId)
+  );
+
+  await insertWaitlistEvent(supabase, tenantId, waitlistEntryId, "priority_updated", "Admin-prioriteit aangepast.", actorProfileId, { admin_priority: adminPriority, priority_reason: priorityReason, urgency_reason: urgencyReason, tenant_reason_code: tenantReasonCode });
+  await refreshWaitlistScore(supabase, tenantId, waitlistEntryId, actorProfileId, "Wachtlijstscore herberekend na prioriteitswijziging.");
+
+  if (adminPriority !== "normal") {
+    await updateSmartDecisionLifecycle(supabase, {
+      tenantId,
+      engineKey: "waitlist",
+      subjectType: "waitlist_entry",
+      subjectId: waitlistEntryId,
+      decisionStatus: "overridden",
+      humanDecision: "overridden",
+      overrideReason: priorityReason,
+      result: {
+        admin_priority: adminPriority,
+        urgency_reason: urgencyReason,
+        tenant_reason_code: tenantReasonCode
+      },
+      decidedByProfileId: actorProfileId
+    });
+  }
+
+  revalidatePlacementWorkflow();
+}
+
+export async function recordWaitlistContactAction(formData: FormData) {
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const waitlistEntryId = requiredString(formData, "waitlist_entry_id");
+  const channel = requiredString(formData, "last_contact_channel");
+  const note = optionalString(formData, "contact_note");
+
+  if (!["internal", "email", "phone", "sms", "whatsapp", "manual"].includes(channel)) {
+    throw new Error("Onbekend contactkanaal.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("waitlist_entries")
+      .update({
+        last_contacted_at: new Date().toISOString(),
+        last_contact_channel: channel
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", waitlistEntryId)
+  );
+  await insertWaitlistEvent(supabase, tenantId, waitlistEntryId, "contacted", note ?? "Contactmoment geregistreerd.", actorProfileId, { channel });
+  revalidatePlacementWorkflow();
+}
+
+export async function reevaluateWaitlistEntryAction(formData: FormData) {
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const waitlistEntryId = requiredString(formData, "waitlist_entry_id");
+
+  await refreshWaitlistScore(supabase, tenantId, waitlistEntryId, actorProfileId, "Wachtlijstscore handmatig herberekend.");
   revalidatePlacementWorkflow();
 }
 
@@ -390,6 +500,122 @@ async function requireTenantWriter() {
     tenantId: context.activeTenant.tenantId,
     actorProfileId: context.user.id
   };
+}
+
+async function refreshWaitlistScore(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  waitlistEntryId: string,
+  actorProfileId: string | null,
+  note: string
+) {
+  const entry = await singleRow<
+    WaitlistRankingEntryInput & {
+      intake_submission_id: string | null;
+      waitlist_score: number | null;
+    }
+  >(
+    supabase
+      .from("waitlist_entries")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, priority_date, preferred_days, preferred_time_windows, source, admin_priority, priority_reason, urgency_reason, tenant_reason_code, family_key, sibling_participant_id, duplicate_risk, created_at, waitlist_score")
+      .eq("tenant_id", tenantId)
+      .eq("id", waitlistEntryId)
+      .single()
+  );
+  const intake = entry.intake_submission_id
+    ? await maybeRow<{ intake_type: string }>(supabase.from("intake_submissions").select("intake_type").eq("tenant_id", tenantId).eq("id", entry.intake_submission_id).maybeSingle())
+    : null;
+  const duplicateMatches = entry.intake_submission_id
+    ? await rows<{ severity: string; score: number }>(
+        supabase
+          .from("intake_duplicate_matches")
+          .select("severity, score")
+          .eq("tenant_id", tenantId)
+          .eq("intake_submission_id", entry.intake_submission_id)
+          .eq("status", "open")
+      )
+    : [];
+  const duplicateRisk = duplicateRiskFromMatches(duplicateMatches, entry.duplicate_risk);
+  const ranking = scoreWaitlistEntry({
+    entry: {
+      ...entry,
+      duplicate_risk: duplicateRisk,
+      intake_type: intake?.intake_type ?? entry.source
+    }
+  });
+  const smartDecisionId = await upsertWaitlistSmartDecision(supabase, {
+    tenantId,
+    waitlistEntryId,
+    ranking,
+    result: {
+      waitlist_score: ranking.score,
+      duplicate_risk: duplicateRisk
+    },
+    metadata: {
+      duplicate_match_count: duplicateMatches.length
+    }
+  });
+
+  await throwOnError(
+    supabase
+      .from("waitlist_entries")
+      .update({
+        waitlist_score: ranking.score,
+        score_reasons: ranking.reasons,
+        score_snapshot: ranking.snapshot,
+        smart_decision_id: smartDecisionId,
+        duplicate_risk: duplicateRisk,
+        evaluated_at: new Date().toISOString(),
+        reevaluation_requested_at: null
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", waitlistEntryId)
+  );
+  await insertWaitlistEvent(supabase, tenantId, waitlistEntryId, "scored", note, actorProfileId, {
+    score: ranking.score,
+    confidence: ranking.confidence,
+    duplicate_risk: duplicateRisk,
+    smart_decision_id: smartDecisionId
+  });
+
+  return ranking;
+}
+
+function duplicateRiskFromMatches(matches: { severity: string }[], currentRisk: string | null | undefined): WaitlistDuplicateRisk {
+  if (matches.some((match) => match.severity === "blocking")) {
+    return "blocking";
+  }
+
+  if (matches.length > 0) {
+    return "warning";
+  }
+
+  if (currentRisk === "blocking" || currentRisk === "warning") {
+    return normalizeDuplicateRisk(currentRisk);
+  }
+
+  return "none";
+}
+
+async function insertWaitlistEvent(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  waitlistEntryId: string,
+  eventType: string,
+  note: string,
+  actorProfileId: string | null,
+  metadata: Record<string, unknown> = {}
+) {
+  await throwOnError(
+    supabase.from("waitlist_entry_events").insert({
+      tenant_id: tenantId,
+      waitlist_entry_id: waitlistEntryId,
+      event_type: eventType,
+      note,
+      created_by_profile_id: actorProfileId,
+      metadata
+    })
+  );
 }
 
 async function maybeInsertEvent(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, suggestionId: string, eventType: string, note: string) {

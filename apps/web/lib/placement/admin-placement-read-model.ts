@@ -65,6 +65,31 @@ export type WaitlistEntryRow = {
   preferred_time_windows: string[];
   source: string;
   notes: string | null;
+  waitlist_score: number | null;
+  score_reasons: SmartDecisionReasonSummary[];
+  score_snapshot: Record<string, unknown>;
+  smart_decision_id: string | null;
+  admin_priority: string;
+  priority_reason: string | null;
+  urgency_reason: string | null;
+  tenant_reason_code: string | null;
+  family_key: string | null;
+  sibling_participant_id: string | null;
+  last_contacted_at: string | null;
+  last_contact_channel: string | null;
+  duplicate_risk: string;
+  reevaluation_requested_at: string | null;
+  evaluated_at: string | null;
+  created_at: string;
+};
+
+export type WaitlistEntryEventRow = {
+  id: string;
+  waitlist_entry_id: string;
+  event_type: string;
+  note: string | null;
+  metadata: Record<string, unknown>;
+  created_by_profile_id: string | null;
   created_at: string;
 };
 
@@ -186,6 +211,7 @@ export type PlacementWorkflowData = {
   intakeEvents: IntakeSubmissionEventRow[];
   intakeDuplicateMatches: IntakeDuplicateMatchRow[];
   waitlistEntries: WaitlistEntryRow[];
+  waitlistEvents: WaitlistEntryEventRow[];
   placementSuggestions: PlacementSuggestionRow[];
   slotOffers: SlotOfferRow[];
   programs: ProgramLookupRow[];
@@ -244,7 +270,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
   const tenantId = tenant.id;
   await releaseExpiredCapacity(supabase, tenantId);
 
-  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, capacityHoldsResult, smartDecisionsResult] = await Promise.all([
+  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, waitlistEventsResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, capacityHoldsResult, smartDecisionsResult] = await Promise.all([
     supabase
       .from("intake_submissions")
       .select("id, program_id, intake_form_config_id, intake_config_version, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, answers, notes, recommendation_snapshot, duplicate_snapshot, missing_information, stage_recommendation_decision_id, reviewed_at, review_note, status, created_at")
@@ -255,10 +281,17 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     supabase.from("intake_duplicate_matches").select("id, intake_submission_id, matched_record_type, matched_record_id, match_type, severity, score, label, detail, metadata, status, created_at").eq("tenant_id", tenantId).eq("status", "open").order("severity", { ascending: true }).order("score", { ascending: false }),
     supabase
       .from("waitlist_entries")
-      .select("id, intake_submission_id, program_id, recommended_stage_id, status, priority_date, preferred_days, preferred_time_windows, source, notes, created_at")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, status, priority_date, preferred_days, preferred_time_windows, source, notes, waitlist_score, score_reasons, score_snapshot, smart_decision_id, admin_priority, priority_reason, urgency_reason, tenant_reason_code, family_key, sibling_participant_id, last_contacted_at, last_contact_channel, duplicate_risk, reevaluation_requested_at, evaluated_at, created_at")
       .eq("tenant_id", tenantId)
+      .order("waitlist_score", { ascending: false })
       .order("priority_date", { ascending: true })
       .order("created_at", { ascending: true }),
+    supabase
+      .from("waitlist_entry_events")
+      .select("id, waitlist_entry_id, event_type, note, metadata, created_by_profile_id, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(250),
     supabase
       .from("placement_suggestions")
       .select("id, waitlist_entry_id, intake_submission_id, program_id, stage_id, group_id, resource_id, score, capacity_snapshot, rationale, status, reviewed_at, created_at")
@@ -284,7 +317,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       .from("smart_decisions")
       .select("id, engine_key, subject_type, subject_id, rule_version, score, confidence, reasons_json, blockers_json, recommendation, decision_status, human_decision, override_reason, created_at")
       .eq("tenant_id", tenantId)
-      .in("engine_key", ["intake_recommendation", "placement"])
+      .in("engine_key", ["intake_recommendation", "waitlist", "placement"])
       .order("created_at", { ascending: false })
   ]);
 
@@ -293,6 +326,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     intake_submission_events: intakeEventsResult.error,
     intake_duplicate_matches: duplicateMatchesResult.error,
     waitlist_entries: waitlistResult.error,
+    waitlist_entry_events: waitlistEventsResult.error,
     placement_suggestions: suggestionsResult.error,
     slot_offers: offersResult.error,
     programs: programsResult.error,
@@ -309,6 +343,7 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
   const memberships = asRows<GroupMembershipLookupRow>(membershipsResult.data);
   const slotOffers = asRows<SlotOfferRow>(offersResult.data);
   const capacityHolds = asRows<CapacityHoldRow>(capacityHoldsResult.data);
+  const waitlistEntries = asRows<WaitlistEntryRow>(waitlistResult.data).sort(sortWaitlistEntries);
 
   return {
     status: errors.length > 0 ? "query_error" : "ready",
@@ -318,7 +353,8 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       intakes: asRows<IntakeSubmissionRow>(intakesResult.data),
       intakeEvents: asRows<IntakeSubmissionEventRow>(intakeEventsResult.data),
       intakeDuplicateMatches: asRows<IntakeDuplicateMatchRow>(duplicateMatchesResult.data),
-      waitlistEntries: asRows<WaitlistEntryRow>(waitlistResult.data),
+      waitlistEntries,
+      waitlistEvents: asRows<WaitlistEntryEventRow>(waitlistEventsResult.data),
       placementSuggestions: asRows<PlacementSuggestionRow>(suggestionsResult.data),
       slotOffers,
       programs: asRows<ProgramLookupRow>(programsResult.data),
@@ -339,6 +375,7 @@ function createEmptyData(): PlacementWorkflowData {
     intakeEvents: [],
     intakeDuplicateMatches: [],
     waitlistEntries: [],
+    waitlistEvents: [],
     placementSuggestions: [],
     slotOffers: [],
     programs: [],
@@ -360,4 +397,22 @@ function collectErrors(errorsByTable: Record<string, { message: string } | null>
 
 function asRows<Row>(rows: unknown): Row[] {
   return Array.isArray(rows) ? (rows as Row[]) : [];
+}
+
+function sortWaitlistEntries(a: WaitlistEntryRow, b: WaitlistEntryRow) {
+  const scoreA = typeof a.waitlist_score === "number" ? a.waitlist_score : -1;
+  const scoreB = typeof b.waitlist_score === "number" ? b.waitlist_score : -1;
+
+  if (scoreA !== scoreB) {
+    return scoreB - scoreA;
+  }
+
+  const priorityA = new Date(a.priority_date).getTime();
+  const priorityB = new Date(b.priority_date).getTime();
+
+  if (priorityA !== priorityB) {
+    return priorityA - priorityB;
+  }
+
+  return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
 }

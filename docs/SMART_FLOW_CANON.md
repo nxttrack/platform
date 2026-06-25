@@ -422,3 +422,72 @@ Not included in S2:
 - automatic waitlist rematch
 - makeup slot marketplace
 - fully automatic placement
+
+## 15. Phase S3 Smart Waitlist Policy
+
+Phase S3 turns the waitlist into an explainable ranked queue.
+
+The waitlist score uses:
+
+- priority date
+- stage match
+- preferred day match
+- preferred time match
+- sibling or family signal
+- trial, registration, waitlist, or manual source
+- admin priority flag
+- urgency or tenant-specific reason
+- duplicate risk
+
+The score is stored directly on `waitlist_entries` for fast admin filtering and sorting. The full decision shape is stored in `smart_decisions` with engine key `waitlist`.
+
+The canonical S3 waitlist shape stores:
+
+```txt
+waitlist score
+score reasons
+score snapshot
+smart decision id
+admin priority
+priority reason
+urgency reason
+tenant reason code
+family signal
+last contact timestamp/channel
+duplicate risk
+reevaluation requested timestamp
+evaluated timestamp
+```
+
+Admin override is allowed, but a non-normal priority requires a reason. The override is visible in the waitlist event timeline and the smart decision lifecycle.
+
+Waitlist timeline events include:
+
+- created
+- scored
+- priority updated
+- contacted
+- reevaluation requested
+- placement suggested
+- placement rejected
+- slot offered
+- placed
+- cancelled
+
+When group capacity, group status, group stage, schedule, reserved spots, trial spots, makeup spots, or overbooking policy changes, matching waitlist candidates are marked for reevaluation. This does not automatically send offers. It creates an admin-visible signal and timeline event only.
+
+The Placement Assistant must use the stored waitlist score as one input. It may still reject or block a placement based on capacity, group mismatch, duplicate blockers, or admin review.
+
+Parent-facing messaging remains human and clear:
+
+```txt
+The swim school reviews the queue based on preferences, level, capacity, and fairness.
+```
+
+Parents do not see internal scoring, weights, or duplicate-risk logic.
+
+Not included in S3:
+
+- automatic offer sending
+- AI ranking
+- automatic waitlist rematch

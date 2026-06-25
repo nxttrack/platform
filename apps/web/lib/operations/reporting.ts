@@ -121,7 +121,9 @@ type WaitlistRow = {
   recommended_stage_id: string | null;
   status: string;
   priority_date: string;
-  requested_option: string | null;
+  source: string;
+  admin_priority?: string | null;
+  waitlist_score?: number | null;
   created_at: string;
 };
 
@@ -261,7 +263,7 @@ export async function getReportingDashboardData(supabase: QueryClient, tenantId:
     supabase.from("enrollments").select("id, participant_id, program_id, current_stage_id, status").eq("tenant_id", tenantId).limit(2000),
     supabase.from("sessions").select("id, group_id, instructor_id, starts_at, status").eq("tenant_id", tenantId).order("starts_at", { ascending: false }).limit(1000),
     supabase.from("session_attendance").select("id, session_id, enrollment_id, participant_id, status, recorded_at").eq("tenant_id", tenantId).order("recorded_at", { ascending: false }).limit(2000),
-    supabase.from("waitlist_entries").select("id, program_id, recommended_stage_id, status, priority_date, requested_option, created_at").eq("tenant_id", tenantId).order("priority_date", { ascending: true }).limit(1000),
+    supabase.from("waitlist_entries").select("id, program_id, recommended_stage_id, status, priority_date, source, admin_priority, waitlist_score, created_at").eq("tenant_id", tenantId).order("priority_date", { ascending: true }).limit(1000),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(1000),
     supabase.from("stage_module_progress").select("id, enrollment_id, participant_id, stage_id, status, score, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(1000),
     supabase.from("invoices").select("id, enrollment_id, participant_id, invoice_number, status, amount_due_cents, amount_paid_cents, refunded_amount_cents, currency, issued_on, due_on").eq("tenant_id", tenantId).order("issued_on", { ascending: false }).limit(1000),
@@ -370,7 +372,9 @@ function buildWaitlistSection(waitlist: WaitlistRow[], filters: ReportFilters): 
       program_id: entry.program_id,
       stage_id: entry.recommended_stage_id,
       status: entry.status,
-      requested_option: entry.requested_option,
+      source: entry.source,
+      admin_priority: entry.admin_priority ?? null,
+      waitlist_score: entry.waitlist_score ?? null,
       priority_date: entry.priority_date,
       created_at: entry.created_at,
       age_days: daysSince(entry.priority_date)

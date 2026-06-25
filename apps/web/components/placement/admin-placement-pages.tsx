@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { CalendarClock, CheckCircle2, ClipboardList, Send, Users } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, ClipboardList, Filter, PhoneCall, RotateCcw, Send, Users } from "lucide-react";
 import Link from "next/link";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -8,7 +8,10 @@ import {
   cancelSlotOfferAction,
   createPlacementSuggestionAction,
   createWaitlistEntryFromIntakeAction,
-  rejectPlacementSuggestionAction
+  recordWaitlistContactAction,
+  reevaluateWaitlistEntryAction,
+  rejectPlacementSuggestionAction,
+  updateWaitlistPriorityAction
 } from "@/lib/placement/admin-placement-actions";
 import type {
   CapacitySnapshot,
@@ -23,11 +26,23 @@ import type {
   SmartDecisionSummaryRow,
   SlotOfferRow,
   StageLookupRow,
+  WaitlistEntryEventRow,
   WaitlistEntryRow
 } from "@/lib/placement/admin-placement-read-model";
 
+type WaitlistFilters = {
+  program?: string;
+  stage?: string;
+  preferred_day?: string;
+  status?: string;
+  priority?: string;
+  duplicate?: string;
+  contact?: string;
+};
+
 type PlacementPageProps = {
   snapshot: PlacementWorkflowSnapshot;
+  filters?: WaitlistFilters;
 };
 
 type LookupMaps = {
@@ -36,12 +51,14 @@ type LookupMaps = {
   stages: Map<string, StageLookupRow>;
   groups: Map<string, GroupLookupRow>;
   resources: Map<string, ResourceLookupRow>;
+  waitlistEntries: Map<string, WaitlistEntryRow>;
   waitlistEntriesByIntake: Map<string, WaitlistEntryRow>;
   suggestionsByWaitlist: Map<string, PlacementSuggestionRow[]>;
   offersBySuggestion: Map<string, SlotOfferRow>;
   capacitiesByGroup: Map<string, CapacitySnapshot>;
   duplicateMatchesByIntake: Map<string, IntakeDuplicateMatchRow[]>;
   smartDecisionsBySubject: Map<string, SmartDecisionSummaryRow>;
+  waitlistEventsByEntry: Map<string, WaitlistEntryEventRow[]>;
 };
 
 type Column<Row> = {
@@ -116,30 +133,51 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
   );
 }
 
-export function AdminWaitlistWorkflowPage({ snapshot }: PlacementPageProps) {
+export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementPageProps) {
   const lookups = buildLookups(snapshot.data);
-  const queued = snapshot.data.waitlistEntries.filter((entry) => entry.status === "queued").length;
-  const matched = snapshot.data.waitlistEntries.filter((entry) => entry.status === "matched").length;
-  const offered = snapshot.data.waitlistEntries.filter((entry) => entry.status === "offered").length;
+  const waitlistEntries = applyWaitlistFilters(snapshot.data.waitlistEntries, filters);
+  const rankByEntry = new Map(waitlistEntries.map((entry, index) => [entry.id, index + 1]));
+  const queued = waitlistEntries.filter((entry) => entry.status === "queued").length;
+  const priority = waitlistEntries.filter((entry) => entry.admin_priority === "high" || entry.admin_priority === "urgent").length;
+  const reevaluation = waitlistEntries.filter((entry) => entry.reevaluation_requested_at).length;
 
   return (
     <PlacementFrame snapshot={snapshot} kicker="Backoffice - plaatsing" title="Wachtlijst" subtitle="Wachtlijstregels worden gematcht op programma, niveau, voorkeursmomenten en beschikbare capaciteit.">
       <div className="grid gap-4 md:grid-cols-3">
         <MetricCard icon={<ClipboardList className="h-5 w-5" />} label="In wachtrij" value={queued.toString()} detail="klaar voor matching" />
-        <MetricCard icon={<CheckCircle2 className="h-5 w-5" />} label="Gematcht" value={matched.toString()} detail="voorstel aanwezig" />
-        <MetricCard icon={<Send className="h-5 w-5" />} label="Aangeboden" value={offered.toString()} detail="lesplek verstuurd" />
+        <MetricCard icon={<AlertTriangle className="h-5 w-5" />} label="Prioriteit" value={priority.toString()} detail="high of urgent" />
+        <MetricCard icon={<RotateCcw className="h-5 w-5" />} label="Hercheck" value={reevaluation.toString()} detail="capaciteit gewijzigd" />
       </div>
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card>
-          <SectionHeader title="Wachtlijstregels" count={snapshot.data.waitlistEntries.length} />
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <SectionHeader title="Wachtlijstregels" count={waitlistEntries.length} />
+            {hasActiveWaitlistFilters(filters) ? (
+              <Link className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" href="/admin/wachtlijst">
+                Filters wissen
+              </Link>
+            ) : null}
+          </div>
+          <WaitlistFilterBar data={snapshot.data} filters={filters} />
           <WorkflowTable
             columns={[
-              { header: "Leerling", render: (entry) => intakeName(lookups, entry) },
+              { header: "Rang", render: (entry) => <span className="text-lg font-bold">#{rankByEntry.get(entry.id) ?? "-"}</span> },
+              { header: "Leerling", className: "min-w-[180px] whitespace-normal", render: (entry) => intakeName(lookups, entry) },
+              {
+                header: "Score",
+                className: "min-w-[300px] whitespace-normal",
+                render: (entry) => <WaitlistScorePanel decision={smartDecisionFor(lookups, "waitlist", "waitlist_entry", entry.id)} entry={entry} />
+              },
               { header: "Programma", render: (entry) => lookups.programs.get(entry.program_id)?.name ?? "Onbekend" },
               { header: "Niveau", render: (entry) => nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name) },
               { header: "Status", render: (entry) => <StatusPill tone={workflowTone(entry.status)}>{entry.status}</StatusPill> },
               { header: "Voorkeur", className: "min-w-[220px] whitespace-normal", render: (entry) => preferenceText(entry.preferred_days, entry.preferred_time_windows) },
+              {
+                header: "Prioriteit / contact",
+                className: "min-w-[320px] whitespace-normal",
+                render: (entry) => <WaitlistPriorityPanel entry={entry} events={lookups.waitlistEventsByEntry.get(entry.id) ?? []} />
+              },
               {
                 header: "Voorstel",
                 className: "min-w-[360px] whitespace-normal",
@@ -147,12 +185,15 @@ export function AdminWaitlistWorkflowPage({ snapshot }: PlacementPageProps) {
               }
             ]}
             emptyLabel="Nog geen wachtlijstregels. Zet een intake eerst om naar de wachtlijst."
-            rows={snapshot.data.waitlistEntries}
+            rows={waitlistEntries}
             rowKey={(entry) => entry.id}
           />
         </Card>
 
-        <CapacityPanel data={snapshot.data} lookups={lookups} />
+        <div className="grid gap-4">
+          <CapacityPanel data={snapshot.data} lookups={lookups} />
+          <WaitlistTimelinePanel events={snapshot.data.waitlistEvents} lookups={lookups} />
+        </div>
       </div>
     </PlacementFrame>
   );
@@ -291,6 +332,203 @@ function WaitlistFromIntakeForm({ intake, stages }: { intake: IntakeSubmissionRo
       <TextAreaField label="Override-reden bij afwijking" name="override_reason" />
       <TextAreaField defaultValue={intake.notes} label="Interne notitie" name="notes" />
     </WorkflowForm>
+  );
+}
+
+function WaitlistFilterBar({ data, filters }: { data: PlacementWorkflowData; filters: WaitlistFilters }) {
+  return (
+    <form action="/admin/wachtlijst" className="mb-4 grid gap-3 rounded-2xl border border-border bg-muted/30 p-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+      <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground lg:col-span-1">
+        <Filter className="h-4 w-4" />
+        Filters
+      </div>
+      <CompactSelect defaultValue={filters.program ?? ""} name="program" options={[{ label: "Alle programma's", value: "" }, ...data.programs.map(optionFromName)]} />
+      <CompactSelect defaultValue={filters.stage ?? ""} name="stage" options={[{ label: "Alle niveaus", value: "" }, ...data.stages.map(optionFromName)]} />
+      <CompactSelect
+        defaultValue={filters.preferred_day ?? ""}
+        name="preferred_day"
+        options={[
+          { label: "Alle dagen", value: "" },
+          { label: "Maandag", value: "monday" },
+          { label: "Dinsdag", value: "tuesday" },
+          { label: "Woensdag", value: "wednesday" },
+          { label: "Donderdag", value: "thursday" },
+          { label: "Vrijdag", value: "friday" },
+          { label: "Zaterdag", value: "saturday" },
+          { label: "Zondag", value: "sunday" }
+        ]}
+      />
+      <CompactSelect
+        defaultValue={filters.status ?? ""}
+        name="status"
+        options={[
+          { label: "Alle statussen", value: "" },
+          { label: "Queued", value: "queued" },
+          { label: "Matched", value: "matched" },
+          { label: "Offered", value: "offered" },
+          { label: "Placed", value: "placed" },
+          { label: "Declined", value: "declined" }
+        ]}
+      />
+      <CompactSelect
+        defaultValue={filters.priority ?? ""}
+        name="priority"
+        options={[
+          { label: "Alle prioriteit", value: "" },
+          { label: "Laag", value: "low" },
+          { label: "Normaal", value: "normal" },
+          { label: "Hoog", value: "high" },
+          { label: "Urgent", value: "urgent" }
+        ]}
+      />
+      <CompactSelect
+        defaultValue={filters.duplicate ?? ""}
+        name="duplicate"
+        options={[
+          { label: "Alle duplicaten", value: "" },
+          { label: "Geen risico", value: "none" },
+          { label: "Waarschuwing", value: "warning" },
+          { label: "Blokkerend", value: "blocking" },
+          { label: "Onbekend", value: "unknown" }
+        ]}
+      />
+      <CompactSelect
+        defaultValue={filters.contact ?? ""}
+        name="contact"
+        options={[
+          { label: "Alle contact", value: "" },
+          { label: "Nooit benaderd", value: "never" },
+          { label: "Ouder dan 30 dagen", value: "stale_30" },
+          { label: "Recent contact", value: "recent_14" }
+        ]}
+      />
+      <div>
+        <button className="h-10 w-full rounded-xl bg-primary px-3 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+          Toepassen
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function WaitlistScorePanel({ decision, entry }: { decision: SmartDecisionSummaryRow | null; entry: WaitlistEntryRow }) {
+  const reasons = entry.score_reasons?.slice(0, 3) ?? [];
+
+  return (
+    <div className="grid gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {typeof entry.waitlist_score === "number" ? <ScorePill score={entry.waitlist_score} /> : <StatusPill tone="warning">Geen score</StatusPill>}
+        <StatusPill tone={duplicateTone(entry.duplicate_risk)}>{duplicateRiskLabel(entry.duplicate_risk)}</StatusPill>
+        {entry.reevaluation_requested_at ? <StatusPill tone="warning">Hercheck nodig</StatusPill> : null}
+      </div>
+      <div className="grid gap-1 text-xs text-muted-foreground">
+        {reasons.length > 0 ? (
+          reasons.map((reason) => (
+            <p key={`${entry.id}-${reason.code ?? reason.label}`}>
+              <span className="font-semibold text-foreground">{reason.label ?? reason.code}</span>
+              {reason.detail ? ` - ${reason.detail}` : ""}
+            </p>
+          ))
+        ) : (
+          <p>Nog geen opgeslagen redenen.</p>
+        )}
+      </div>
+      <SmartDecisionPanel compact decision={decision} />
+    </div>
+  );
+}
+
+function WaitlistPriorityPanel({ entry, events }: { entry: WaitlistEntryRow; events: WaitlistEntryEventRow[] }) {
+  const lastEvent = events[0] ?? null;
+
+  return (
+    <div className="grid gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusPill tone={priorityTone(entry.admin_priority)}>{priorityLabel(entry.admin_priority)}</StatusPill>
+        {entry.last_contacted_at ? (
+          <StatusPill tone="info">
+            {entry.last_contact_channel ?? "contact"} {formatDate(entry.last_contacted_at)}
+          </StatusPill>
+        ) : (
+          <StatusPill tone="warning">Nog niet benaderd</StatusPill>
+        )}
+      </div>
+      {entry.priority_reason ? <p className="text-xs text-muted-foreground">Reden: {entry.priority_reason}</p> : null}
+      <form action={updateWaitlistPriorityAction} className="grid gap-2 rounded-2xl border border-border bg-muted/30 p-3">
+        <input name="waitlist_entry_id" type="hidden" value={entry.id} />
+        <CompactSelect
+          defaultValue={entry.admin_priority}
+          name="admin_priority"
+          options={[
+            { label: "Laag", value: "low" },
+            { label: "Normaal", value: "normal" },
+            { label: "Hoog", value: "high" },
+            { label: "Urgent", value: "urgent" }
+          ]}
+        />
+        <CompactInput defaultValue={entry.priority_reason} name="priority_reason" placeholder="Prioriteitsreden" />
+        <CompactInput defaultValue={entry.urgency_reason} name="urgency_reason" placeholder="Urgentie/tenantreden" />
+        <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+          Prioriteit opslaan
+        </button>
+      </form>
+      <div className="grid gap-2 rounded-2xl border border-border bg-muted/30 p-3">
+        <form action={recordWaitlistContactAction} className="grid gap-2">
+          <input name="waitlist_entry_id" type="hidden" value={entry.id} />
+          <CompactSelect
+            defaultValue="email"
+            name="last_contact_channel"
+            options={[
+              { label: "E-mail", value: "email" },
+              { label: "Telefoon", value: "phone" },
+              { label: "WhatsApp", value: "whatsapp" },
+              { label: "Intern", value: "internal" },
+              { label: "Handmatig", value: "manual" }
+            ]}
+          />
+          <CompactInput name="contact_note" placeholder="Contactnotitie" />
+          <button className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+            <PhoneCall className="h-3.5 w-3.5" />
+            Contact loggen
+          </button>
+        </form>
+        <form action={reevaluateWaitlistEntryAction}>
+          <input name="waitlist_entry_id" type="hidden" value={entry.id} />
+          <button className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+            <RotateCcw className="h-3.5 w-3.5" />
+            Herberekenen
+          </button>
+        </form>
+      </div>
+      {lastEvent ? <p className="text-xs text-muted-foreground">Laatste event: {waitlistEventLabel(lastEvent.event_type)} - {formatDate(lastEvent.created_at)}</p> : null}
+    </div>
+  );
+}
+
+function WaitlistTimelinePanel({ events, lookups }: { events: WaitlistEntryEventRow[]; lookups: LookupMaps }) {
+  return (
+    <Card>
+      <SectionHeader title="Wachtlijst timeline" count={events.length} />
+      <div className="grid gap-3">
+        {events.length === 0 ? <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">Nog geen wachtlijst-events.</div> : null}
+        {events.slice(0, 10).map((event) => {
+          const waitlistEntry = findWaitlistEntryByEvent(lookups, event);
+
+          return (
+            <div key={event.id} className="rounded-2xl border border-border bg-muted/35 p-3 text-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="font-semibold">{waitlistEventLabel(event.event_type)}</p>
+                  <p className="text-xs text-muted-foreground">{event.note ?? "Geen notitie."}</p>
+                </div>
+                <StatusPill tone="neutral">{formatDate(event.created_at)}</StatusPill>
+              </div>
+              {waitlistEntry ? <div className="mt-2 text-xs text-muted-foreground">{intakeName(lookups, waitlistEntry)}</div> : null}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
@@ -519,6 +757,22 @@ function SelectField({
   );
 }
 
+function CompactSelect({ defaultValue, name, options }: { defaultValue?: string | null; name: string; options: { label: string; value: string }[] }) {
+  return (
+    <select className="h-10 min-w-0 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none ring-primary/20 focus:ring-2" defaultValue={defaultValue ?? ""} name={name}>
+      {options.map((option) => (
+        <option key={`${name}-${option.value}`} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+function CompactInput({ defaultValue, name, placeholder }: { defaultValue?: string | null; name: string; placeholder: string }) {
+  return <input className="h-10 min-w-0 rounded-xl border border-border bg-card px-3 text-xs font-semibold text-foreground outline-none ring-primary/20 placeholder:text-muted-foreground focus:ring-2" defaultValue={defaultValue ?? ""} name={name} placeholder={placeholder} />;
+}
+
 function ScorePill({ score }: { score: number }) {
   return <StatusPill tone={score >= 80 ? "success" : score >= 60 ? "info" : "warning"}>{score}/100</StatusPill>;
 }
@@ -584,12 +838,14 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     stages: byId(data.stages),
     groups: byId(data.groups),
     resources: byId(data.resources),
+    waitlistEntries: byId(data.waitlistEntries),
     waitlistEntriesByIntake: new Map(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [[entry.intake_submission_id, entry] as const] : []))),
     suggestionsByWaitlist: groupBy(data.placementSuggestions, (suggestion) => suggestion.waitlist_entry_id),
     offersBySuggestion: new Map(data.slotOffers.map((offer) => [offer.placement_suggestion_id, offer])),
     capacitiesByGroup: new Map(data.capacities.map((capacity) => [capacity.groupId, capacity])),
     duplicateMatchesByIntake: groupBy(data.intakeDuplicateMatches, (match) => match.intake_submission_id),
-    smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision]))
+    smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision])),
+    waitlistEventsByEntry: groupBy(data.waitlistEvents, (event) => event.waitlist_entry_id)
   };
 }
 
@@ -678,6 +934,70 @@ function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
   }
 
   return grouped;
+}
+
+function applyWaitlistFilters(entries: WaitlistEntryRow[], filters: WaitlistFilters) {
+  return entries.filter((entry) => {
+    if (filters.program && entry.program_id !== filters.program) {
+      return false;
+    }
+
+    if (filters.stage && entry.recommended_stage_id !== filters.stage) {
+      return false;
+    }
+
+    if (filters.preferred_day && !entry.preferred_days.includes(filters.preferred_day)) {
+      return false;
+    }
+
+    if (filters.status && entry.status !== filters.status) {
+      return false;
+    }
+
+    if (filters.priority && entry.admin_priority !== filters.priority) {
+      return false;
+    }
+
+    if (filters.duplicate && entry.duplicate_risk !== filters.duplicate) {
+      return false;
+    }
+
+    if (filters.contact && !matchesContactFilter(entry, filters.contact)) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function matchesContactFilter(entry: WaitlistEntryRow, filter: string) {
+  if (filter === "never") {
+    return !entry.last_contacted_at;
+  }
+
+  if (!entry.last_contacted_at) {
+    return filter === "stale_30";
+  }
+
+  const days = daysSince(entry.last_contacted_at);
+
+  if (filter === "stale_30") {
+    return days >= 30;
+  }
+
+  if (filter === "recent_14") {
+    return days <= 14;
+  }
+
+  return true;
+}
+
+function hasActiveWaitlistFilters(filters: WaitlistFilters) {
+  return Object.values(filters).some((value) => typeof value === "string" && value.trim() !== "");
+}
+
+function findWaitlistEntryByEvent(lookups: LookupMaps, event: WaitlistEntryEventRow) {
+  return lookups.waitlistEntries.get(event.waitlist_entry_id) ?? null;
 }
 
 function activeGroupsForEntry(groups: GroupLookupRow[], entry: WaitlistEntryRow) {
@@ -852,6 +1172,78 @@ function workflowTone(status: string): "success" | "warning" | "danger" | "info"
   return "neutral";
 }
 
+function priorityTone(priority: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (priority === "urgent") {
+    return "danger";
+  }
+
+  if (priority === "high") {
+    return "warning";
+  }
+
+  if (priority === "low") {
+    return "neutral";
+  }
+
+  return "info";
+}
+
+function priorityLabel(priority: string) {
+  const labels: Record<string, string> = {
+    low: "Lage prioriteit",
+    normal: "Normaal",
+    high: "Hoge prioriteit",
+    urgent: "Urgent"
+  };
+
+  return labels[priority] ?? priority;
+}
+
+function duplicateTone(risk: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (risk === "blocking") {
+    return "danger";
+  }
+
+  if (risk === "warning") {
+    return "warning";
+  }
+
+  if (risk === "none") {
+    return "success";
+  }
+
+  return "neutral";
+}
+
+function duplicateRiskLabel(risk: string) {
+  const labels: Record<string, string> = {
+    unknown: "Duplicaat onbekend",
+    none: "Geen duplicaat",
+    warning: "Duplicaat waarschuwing",
+    blocking: "Duplicaat blokkade"
+  };
+
+  return labels[risk] ?? risk;
+}
+
+function waitlistEventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    created: "Aangemaakt",
+    scored: "Score berekend",
+    priority_updated: "Prioriteit aangepast",
+    status_changed: "Status gewijzigd",
+    contacted: "Contactmoment",
+    reevaluation_requested: "Herbeoordeling gevraagd",
+    placement_suggested: "Plaatsingsvoorstel",
+    placement_rejected: "Voorstel afgewezen",
+    slot_offered: "Lesplek-aanbod",
+    placed: "Geplaatst",
+    cancelled: "Geannuleerd"
+  };
+
+  return labels[eventType] ?? eventType;
+}
+
 function intakeOptionLabel(value: string) {
   const labels: Record<string, string> = {
     trial: "Proefles",
@@ -899,6 +1291,10 @@ function formatTime(value: string) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function daysSince(value: string) {
+  return Math.floor((Date.now() - new Date(value).getTime()) / 86_400_000);
 }
 
 function shortToken(token: string) {
