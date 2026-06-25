@@ -44,6 +44,8 @@ CI requires `E2E_BASE_URL` for every push to `staging` or `production`. Optional
 
 `pnpm run ui:lovable` keeps marketing and tenant public pages tied to the Lovable audit baseline. It verifies the local implementation still carries the expected hero, card, responsive, spacing, and shell markers from the approved prototype direction.
 
+`pnpm run e2e:visual` runs Playwright pixel comparison for desktop and mobile screenshots of `/nxttrack`, tenant homepage, programs, intake, login, admin dashboard, parent portal and instructor portal. Use `pnpm run e2e:visual:update` with `E2E_BASE_URL` and approved credentials to refresh screenshot baselines. CI restores screenshot baselines from the GitHub Actions cache; when no baseline exists yet it creates the first baseline for that branch, then future runs compare against it. CI uploads `test-results` and `playwright-report` as Lovable pixel QA artifacts when visual comparison fails. Set `VISUAL_REQUIRE_AUTH=true` in GitHub variables to make admin, parent and instructor visual fixtures mandatory.
+
 ## Observability
 
 Runtime observability is based on:

@@ -31,7 +31,7 @@ Scope: full NXTTRACK platform UI compared against the local Lovable reference in
 
 ## Remaining Visual QA Notes
 
-- Pixel-level screenshot comparison is still not automated. `pnpm run ui:lovable` validates Lovable traceability at source level; Playwright screenshot baselines should be added once stable staging screenshots are approved.
+- Pixel-level screenshot comparison is automated through `pnpm run e2e:visual` for desktop and mobile. CI stores branch baselines in the GitHub Actions cache and uploads visual diffs as artifacts on mismatch. Private dashboard baselines require `E2E_ADMIN_EMAIL`, `E2E_PARENT_EMAIL` and `E2E_INSTRUCTOR_EMAIL` fixture credentials so the suite captures real dashboards instead of login boundaries. Set `VISUAL_REQUIRE_AUTH=true` once those fixtures are available.
 - The NXTTRACK marketing page is intentionally close to Lovable, but still uses Next-specific links/assets. Any future redesign must be tracked against the Lovable reference first.
 - Tenant-selected colors can now remain readable on CTAs, but tenant admins should still be guided toward accessible brand palettes in future CMS validation.
 
@@ -39,6 +39,8 @@ Scope: full NXTTRACK platform UI compared against the local Lovable reference in
 
 - `pnpm run ui:audit`
 - `pnpm run ui:lovable`
+- `pnpm run e2e:visual`
+- `pnpm run e2e:visual:update`
 - `pnpm run e2e:browser -- --list`
 - `pnpm run typecheck`
 - `pnpm run build`

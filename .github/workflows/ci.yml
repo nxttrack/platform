@@ -62,6 +62,54 @@ jobs:
           E2E_DOCUMENT_ID: ${{ vars.E2E_DOCUMENT_ID }}
         run: pnpm run e2e:browser
 
+      - name: Restore Lovable pixel baselines
+        id: lovable-pixel-baselines
+        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
+        uses: actions/cache@v4
+        with:
+          path: tests/e2e/__screenshots__
+          key: lovable-pixel-${{ github.ref_name }}-${{ hashFiles('tests/e2e/lovable-pixel.spec.ts') }}
+          restore-keys: |
+            lovable-pixel-${{ github.ref_name }}-
+
+      - name: Create Lovable pixel baseline
+        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production') && steps.lovable-pixel-baselines.outputs.cache-hit != 'true'
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+          E2E_REQUIRE_BASE_URL: "true"
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
+          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
+          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+          VISUAL_REQUIRE_AUTH: ${{ vars.VISUAL_REQUIRE_AUTH }}
+        run: pnpm run e2e:visual:update
+
+      - name: Compare Lovable pixel baseline
+        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+          E2E_REQUIRE_BASE_URL: "true"
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
+          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
+          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+          VISUAL_REQUIRE_AUTH: ${{ vars.VISUAL_REQUIRE_AUTH }}
+        run: pnpm run e2e:visual
+
+      - name: Upload Lovable pixel QA artifacts
+        if: failure() && github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
+        uses: actions/upload-artifact@v4
+        with:
+          name: lovable-pixel-qa-${{ github.ref_name }}
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+
       - name: Audit migrations
         run: pnpm run db:audit
 

@@ -8,6 +8,7 @@ if (process.env.E2E_REQUIRE_BASE_URL === "true" && !process.env.E2E_BASE_URL) {
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  snapshotPathTemplate: "{testDir}/__screenshots__/{testFilePath}/{arg}-{projectName}{ext}",
   timeout: 45_000,
   expect: {
     timeout: 10_000
