@@ -1,9 +1,9 @@
 import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MapPin, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { submitIntakeAction } from "@/lib/public-site/intake-actions";
-import type { PublicProgram, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
+import type { PublicProgram, PublicTenantProfile, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
 
 type PublicPageProps = {
   snapshot: PublicTenantSiteSnapshot;
@@ -133,6 +133,30 @@ const fallbackMarketingPrograms: MarketingProgram[] = [
   }
 ];
 
+const fallbackNewsItems = [
+  {
+    title: "Zomervakantie intensieve lessen en versnelde trajecten",
+    body: "In de zomervakantie bieden wij extra intensieve lessen aan. Ideaal om een voorsprong te maken voor het nieuwe seizoen.",
+    date: "15 mei 2026"
+  },
+  {
+    title: "Nieuwe instroommomenten voor Zwemdiploma A",
+    body: "Gebruik dit blok tijdelijk om ouders duidelijkheid te geven over aanbod, wachtlijst en intake.",
+    date: "1 juni 2026"
+  },
+  {
+    title: "Ouderportaal blijft de centrale plek",
+    body: "Voortgang, badges, berichten en diploma's blijven zichtbaar vanuit de persoonlijke omgeving.",
+    date: "24 juni 2026"
+  }
+];
+
+const fallbackAgendaItems = [
+  { title: "Diploma A instroom", time: "Maandag 16:00", location: "Bad 1 - baan 1" },
+  { title: "Proeflesmoment", time: "Zaterdag 11:00", location: "Instructiebad" },
+  { title: "Afzwemmen Diploma A", time: "Zaterdag 10:00", location: "Wedstrijdbad" }
+];
+
 export function TenantMarketingPage({ snapshot }: PublicPageProps) {
   if (snapshot.status !== "ready" || !snapshot.tenant) {
     return <PublicStatusPage snapshot={snapshot} />;
@@ -141,14 +165,17 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
   const profile = snapshot.profile ?? fallbackProfile(snapshot.tenant.name);
   const marketingPrograms = toMarketingPrograms(snapshot.programs);
   const tenantName = snapshot.tenant.name;
-  const locationLabel = "Den Haag";
+  const locationLabel = profile.locationLabel ?? "Den Haag";
+  const heroImageUrl = profile.heroImageUrl ?? "/lovable/hero-swim.png";
+  const heroImageAlt = profile.heroImageAlt ?? "Kind in zwembad";
+  const newsItem = profile.newsItems[0] ?? fallbackNewsItems[0];
 
   return (
     <PublicShell snapshot={snapshot}>
       <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
         <section className="relative mt-6 flex min-h-[280px] flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-card md:mt-8 md:min-h-[320px] md:flex-row lg:min-h-[360px]">
           <div className="pointer-events-none absolute inset-y-0 right-0 hidden md:block md:w-[70%] lg:w-[72%]">
-            <img alt="Lachend kind met zwembril in zwembad" className="h-full w-full scale-110 object-cover object-right md:scale-[1.15] lg:scale-[1.25]" src="/lovable/hero-swim.png" />
+            <img alt={heroImageAlt} className="h-full w-full scale-110 object-cover object-right md:scale-[1.15] lg:scale-[1.25]" src={heroImageUrl} />
           </div>
 
           <div className="relative grid flex-1 items-center gap-6 p-5 md:grid-cols-12 md:gap-5 md:p-7 lg:p-8">
@@ -157,22 +184,16 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
                 <Sparkles className="h-3.5 w-3.5" /> {tenantName} - {locationLabel}
               </div>
 
-              <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] text-navy md:text-4xl lg:text-5xl">
-                Zwemles met{" "}
-                <br />
-                vertrouwen bij{" "}
-                <br />
-                <span className="bg-gradient-to-r from-sky-500 to-blue-700 bg-clip-text text-transparent">{tenantName}</span>
-              </h1>
+              <h1 className="mt-3 max-w-xl font-display text-3xl font-bold leading-[1.05] text-navy md:text-4xl lg:text-5xl">{profile.heroTitle}</h1>
 
               <p className="mt-3 max-w-md text-sm leading-6 text-muted-foreground">{profile.heroSubtitle}</p>
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-glow hover:opacity-95" href="/intake">
-                  Plan intake <ArrowRight className="h-4 w-4" />
+                  {profile.primaryCtaLabel} <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href="/programmas">
-                  Bekijk programma's
+                  {profile.secondaryCtaLabel}
                 </Link>
                 <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href="/agenda">
                   Bekijk wachttijden
@@ -197,7 +218,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
           </div>
 
           <div className="relative -mt-2 block px-5 pb-5 md:hidden">
-            <img alt="Kind in zwembad" className="w-full rounded-2xl" src="/lovable/hero-swim.png" />
+            <img alt={heroImageAlt} className="w-full rounded-2xl" src={heroImageUrl} />
           </div>
         </section>
 
@@ -264,10 +285,10 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
         <section className="mt-10 grid gap-6 lg:grid-cols-5">
           <div className="rounded-3xl border border-border bg-card p-6 shadow-soft lg:col-span-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Nieuws & updates</p>
-            <h2 className="mt-1 font-display text-lg font-bold text-navy">Zomervakantie intensieve lessen en versnelde trajecten</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">In de zomervakantie bieden wij extra intensieve lessen aan. Ideaal om een voorsprong te maken voor het nieuwe seizoen.</p>
+            <h2 className="mt-1 font-display text-lg font-bold text-navy">{newsItem.title}</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{newsItem.body}</p>
             <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
-              <CalendarCheck className="h-4 w-4" /> 15 mei 2025 - Team {tenantName}
+              <CalendarCheck className="h-4 w-4" /> {newsItem.date || "Vandaag"} - Team {tenantName}
             </div>
             <Link className="mt-4 inline-flex text-sm font-semibold text-primary" href="/nieuws">
               Lees meer -&gt;
@@ -342,7 +363,7 @@ export function TenantMarketingPage({ snapshot }: PublicPageProps) {
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="max-w-xl">
               <h2 className="font-display text-xl font-bold md:text-2xl">{tenantName} {locationLabel}</h2>
-              <p className="mt-2 text-sm leading-6 text-white/70">De plek waar kinderen leren zwemmen met plezier, vertrouwen en persoonlijke aandacht. Onze software en ouderomgeving worden veilig en betrouwbaar ondersteund door NXTTRACK.</p>
+              <p className="mt-2 text-sm leading-6 text-white/70">{profile.footerTagline ?? "De plek waar kinderen leren zwemmen met plezier, vertrouwen en persoonlijke aandacht. Onze software en ouderomgeving worden veilig en betrouwbaar ondersteund door NXTTRACK."}</p>
             </div>
             <div className="flex flex-col items-center gap-2 rounded-2xl bg-white/5 px-6 py-4 ring-1 ring-white/10">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/60">Platform by</span>
@@ -361,28 +382,13 @@ export function TenantNewsPage({ snapshot }: PublicPageProps) {
   }
 
   const tenantName = snapshot.tenant.name;
-  const items = [
-    {
-      title: "Zomervakantie intensieve lessen en versnelde trajecten",
-      body: "Een nette placeholder voor nieuws vanuit de zwemschool. Later komt dit uit het berichten- en documentensysteem.",
-      date: "15 mei 2026"
-    },
-    {
-      title: "Nieuwe instroommomenten voor Zwemdiploma A",
-      body: "Gebruik dit blok tijdelijk om ouders alvast duidelijkheid te geven over aanbod, wachtlijst en intake.",
-      date: "1 juni 2026"
-    },
-    {
-      title: "Ouderportaal blijft de centrale plek",
-      body: "Voortgang, badges, berichten en diploma's blijven zichtbaar vanuit de persoonlijke omgeving.",
-      date: "24 juni 2026"
-    }
-  ];
+  const profile = snapshot.profile ?? fallbackProfile(tenantName);
+  const items = profile.newsItems.length > 0 ? profile.newsItems : fallbackNewsItems;
 
   return (
     <PublicShell snapshot={snapshot}>
       <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
-        <CompactHero kicker={`${tenantName} - nieuws`} title="Nieuws en updates" sub="Mededelingen, praktische updates en zwemschoolnieuws in dezelfde rustige Lovable-stijl." primary={{ href: "/intake", label: "Plan intake" }} />
+        <CompactHero kicker={`${tenantName} - nieuws`} title="Nieuws en updates" sub={profile.seoDescription ?? "Mededelingen, praktische updates en zwemschoolnieuws in dezelfde rustige Lovable-stijl."} primary={{ href: "/intake", label: profile.primaryCtaLabel }} />
         <section className="mt-8 grid gap-4 md:grid-cols-3">
           {items.map((item) => (
             <article key={item.title} className="rounded-3xl border border-border bg-card p-6 shadow-soft">
@@ -406,16 +412,13 @@ export function TenantAgendaPage({ snapshot }: PublicPageProps) {
   }
 
   const programs = toMarketingPrograms(snapshot.programs);
-  const moments = [
-    { title: "Diploma A instroom", time: "Maandag 16:00", location: "Bad 1 - baan 1" },
-    { title: "Proeflesmoment", time: "Zaterdag 11:00", location: "Instructiebad" },
-    { title: "Afzwemmen Diploma A", time: "Zaterdag 10:00", location: "Wedstrijdbad" }
-  ];
+  const profile = snapshot.profile ?? fallbackProfile(snapshot.tenant.name);
+  const moments = profile.agendaItems.length > 0 ? profile.agendaItems : fallbackAgendaItems;
 
   return (
     <PublicShell snapshot={snapshot}>
       <main className="mx-auto max-w-screen-2xl px-4 md:px-8">
-        <CompactHero kicker={`${snapshot.tenant.name} - agenda`} title="Agenda en wachttijden" sub="Een nette publieke placeholder voor instroommomenten, proeflessen en wachttijden per programma." primary={{ href: "/intake", label: "Start intake" }} />
+        <CompactHero kicker={`${snapshot.tenant.name} - agenda`} title="Agenda en wachttijden" sub={profile.introBody ?? "Instroommomenten, proeflessen en wachttijden per programma."} primary={{ href: "/intake", label: profile.primaryCtaLabel }} />
         <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_0.85fr]">
           <div className="rounded-3xl border border-border bg-card p-6 shadow-soft">
             <div className="mb-5 flex items-center justify-between gap-4">
@@ -573,6 +576,16 @@ export function IntakePage({ snapshot, submitted }: IntakePageProps) {
 }
 
 function PublicShell({ snapshot, children }: PublicPageProps & { children: ReactNode }) {
+  const tenantName = snapshot.tenant?.name ?? "Zwemschool Demo";
+  const profile = snapshot.profile ?? fallbackProfile(tenantName);
+  const logoUrl = profile.logoUrl ?? "/lovable/zwemdemo-logo.png";
+  const location = profile.locationLabel ?? "Den Haag";
+  const addressLines = profile.addressLines.length > 0 ? profile.addressLines : [location];
+  const visiblePrograms = snapshot.programs.slice(0, 4);
+  const style = {
+    "--primary": profile.brandPrimaryHex,
+    "--accent": profile.brandAccentHex
+  } as CSSProperties;
   const nav = [
     { href: "/", label: "Home" },
     { href: "/nieuws", label: "Nieuws" },
@@ -583,11 +596,11 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
   ];
 
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen text-foreground" style={style}>
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-screen-2xl items-center gap-3 px-4 md:px-8">
           <Link className="flex items-center" href="/">
-            <img alt={snapshot.tenant?.name ?? "Zwemschool Demo"} className="h-5 w-auto" src="/lovable/zwemdemo-logo.png" />
+            <img alt={tenantName} className="h-5 w-auto" src={logoUrl} />
           </Link>
           <nav className="ml-8 hidden items-center gap-1 md:flex">
             {nav.map((item, index) => (
@@ -614,21 +627,23 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
         <div className="mx-auto max-w-screen-2xl px-4 py-10 md:px-8">
           <div className="grid gap-8 md:grid-cols-4">
             <div>
-              <img alt={snapshot.tenant?.name ?? "Zwemschool Demo"} className="h-4 w-auto" src="/lovable/zwemdemo-logo.png" />
-              <p className="mt-3 text-xs text-muted-foreground">Samen elke druppel vooruit.</p>
+              <img alt={tenantName} className="h-4 w-auto" src={logoUrl} />
+              <p className="mt-3 text-xs text-muted-foreground">{profile.footerTagline ?? "Samen elke druppel vooruit."}</p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Programma's</p>
               <ul className="mt-3 space-y-1.5 text-sm">
-                <li>
-                  <Link href="/programmas">Diploma A / B / C</Link>
-                </li>
-                <li>
-                  <Link href="/programmas">Priveles</Link>
-                </li>
-                <li>
-                  <Link href="/programmas">Survival zwemmen</Link>
-                </li>
+                {visiblePrograms.length > 0 ? (
+                  visiblePrograms.map((program) => (
+                    <li key={program.id}>
+                      <Link href={`/programmas/${program.slug}`}>{program.name}</Link>
+                    </li>
+                  ))
+                ) : (
+                  <li>
+                    <Link href="/programmas">Programma-overzicht</Link>
+                  </li>
+                )}
               </ul>
             </div>
             <div>
@@ -647,10 +662,18 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Contact</p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                {snapshot.tenant?.name ?? "Zwemschool Demo"}
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                {tenantName}
                 <br />
-                Den Haag
+                {addressLines.map((line) => (
+                  <span key={line}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+                {profile.contactEmail ? <Link href={`mailto:${profile.contactEmail}`}>{profile.contactEmail}</Link> : null}
+                {profile.contactEmail && profile.contactPhone ? <br /> : null}
+                {profile.contactPhone ? <Link href={`tel:${profile.contactPhone.replace(/\s+/g, "")}`}>{profile.contactPhone}</Link> : null}
               </p>
             </div>
           </div>
@@ -1013,13 +1036,27 @@ function statusCopy(snapshot: PublicTenantSiteSnapshot) {
   return "De tenantdata kon niet worden gelezen.";
 }
 
-function fallbackProfile(tenantName: string) {
+function fallbackProfile(tenantName: string): PublicTenantProfile {
   return {
     heroTitle: `${tenantName} zwemschool`,
     heroSubtitle: "Bekijk programma's en start een intake voor proefles, inschrijving of wachtlijst.",
     primaryCtaLabel: "Bekijk programma's",
     secondaryCtaLabel: "Start intake",
     introTitle: "Van intake naar de juiste groep",
-    introBody: "Programma's, niveaus en intake-opties worden uit de tenantdata gelezen."
+    introBody: "Programma's, niveaus en intake-opties worden uit de tenantdata gelezen.",
+    logoUrl: "/lovable/zwemdemo-logo.png",
+    heroImageUrl: "/lovable/hero-swim.png",
+    heroImageAlt: "Kind in zwembad",
+    brandPrimaryHex: "#1d4ed8",
+    brandAccentHex: "#b6ff2e",
+    locationLabel: "Den Haag",
+    footerTagline: "Samen elke druppel vooruit.",
+    contactEmail: null,
+    contactPhone: null,
+    addressLines: [],
+    seoTitle: null,
+    seoDescription: null,
+    newsItems: fallbackNewsItems,
+    agendaItems: fallbackAgendaItems
   };
 }

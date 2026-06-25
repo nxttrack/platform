@@ -24,6 +24,32 @@ export type PublicTenantProfile = {
   secondaryCtaLabel: string;
   introTitle: string | null;
   introBody: string | null;
+  logoUrl: string | null;
+  heroImageUrl: string | null;
+  heroImageAlt: string | null;
+  brandPrimaryHex: string;
+  brandAccentHex: string;
+  locationLabel: string | null;
+  footerTagline: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  addressLines: string[];
+  seoTitle: string | null;
+  seoDescription: string | null;
+  newsItems: PublicNewsItem[];
+  agendaItems: PublicAgendaItem[];
+};
+
+export type PublicNewsItem = {
+  title: string;
+  body: string;
+  date: string;
+};
+
+export type PublicAgendaItem = {
+  title: string;
+  time: string;
+  location: string;
 };
 
 export type PublicProgram = {
@@ -73,6 +99,20 @@ type ProfileRow = {
   secondary_cta_label: string;
   intro_title: string | null;
   intro_body: string | null;
+  logo_url: string | null;
+  hero_image_url: string | null;
+  hero_image_alt: string | null;
+  brand_primary_hex: string;
+  brand_accent_hex: string;
+  location_label: string | null;
+  footer_tagline: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  address_lines: string[] | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  news_items: unknown;
+  agenda_items: unknown;
 };
 
 type ProgramRow = {
@@ -144,7 +184,14 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
   };
 
   const [profileResult, programSettingsResult, programsResult, stagesResult, intakeConfigsResult] = await Promise.all([
-    supabase.from("tenant_public_profiles").select("hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body").eq("tenant_id", tenant.id).eq("status", "published").maybeSingle(),
+    supabase
+      .from("tenant_public_profiles")
+      .select(
+        "hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body, logo_url, hero_image_url, hero_image_alt, brand_primary_hex, brand_accent_hex, location_label, footer_tagline, contact_email, contact_phone, address_lines, seo_title, seo_description, news_items, agenda_items"
+      )
+      .eq("tenant_id", tenant.id)
+      .eq("status", "published")
+      .maybeSingle(),
     supabase
       .from("program_public_settings")
       .select("program_id, public_slug, summary, detail, age_label, duration_label, price_label, capacity_label, trial_enabled, registration_enabled, waitlist_enabled, sort_order")
@@ -219,7 +266,21 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
         primaryCtaLabel: profileRow.primary_cta_label,
         secondaryCtaLabel: profileRow.secondary_cta_label,
         introTitle: profileRow.intro_title,
-        introBody: profileRow.intro_body
+        introBody: profileRow.intro_body,
+        logoUrl: profileRow.logo_url,
+        heroImageUrl: profileRow.hero_image_url,
+        heroImageAlt: profileRow.hero_image_alt,
+        brandPrimaryHex: profileRow.brand_primary_hex,
+        brandAccentHex: profileRow.brand_accent_hex,
+        locationLabel: profileRow.location_label,
+        footerTagline: profileRow.footer_tagline,
+        contactEmail: profileRow.contact_email,
+        contactPhone: profileRow.contact_phone,
+        addressLines: profileRow.address_lines ?? [],
+        seoTitle: profileRow.seo_title,
+        seoDescription: profileRow.seo_description,
+        newsItems: parseNewsItems(profileRow.news_items),
+        agendaItems: parseAgendaItems(profileRow.agenda_items)
       }
     : null;
 
@@ -244,6 +305,44 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
 
     return supabase.from("tenants").select("id, slug, name, sector").eq("id", (domainResult.data as { tenant_id: string }).tenant_id).eq("status", "active").maybeSingle();
   }
+}
+
+function parseNewsItems(value: unknown): PublicNewsItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    const title = typeof row.title === "string" ? row.title : "";
+    const body = typeof row.body === "string" ? row.body : "";
+    const date = typeof row.date === "string" ? row.date : "";
+
+    return title && body ? [{ title, body, date }] : [];
+  });
+}
+
+function parseAgendaItems(value: unknown): PublicAgendaItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    const title = typeof row.title === "string" ? row.title : "";
+    const time = typeof row.time === "string" ? row.time : "";
+    const location = typeof row.location === "string" ? row.location : "";
+
+    return title && time ? [{ title, time, location }] : [];
+  });
 }
 
 async function resolveTenantLookup(): Promise<{ kind: "slug"; slug: string } | { kind: "domain"; hostname: string }> {

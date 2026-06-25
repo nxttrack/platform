@@ -1,5 +1,8 @@
-import { RoutePlaceholder } from "@/components/shell/route-placeholder";
+import { AdminTenantWebsiteSettingsPage } from "@/components/tenant-website-settings/admin-tenant-website-settings-page";
+import { getAdminTenantWebsiteSettingsSnapshot } from "@/lib/tenant-website-settings/admin-tenant-website-read-model";
 
-export default function AdminSettingsPage() {
-  return <RoutePlaceholder kicker="Backoffice - instellingen" title="Instellingen" description="Tenantinstellingen, sector-termen en branding staan klaar als nette placeholder tot het echte beheer wordt gekoppeld." items={["Tenantprofiel", "Terminologie", "Branding", "Rechten"]} status="Voorbereid" />;
+export default async function AdminSettingsPage() {
+  const snapshot = await getAdminTenantWebsiteSettingsSnapshot();
+
+  return <AdminTenantWebsiteSettingsPage snapshot={snapshot} />;
 }
