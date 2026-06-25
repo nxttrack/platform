@@ -1,6 +1,7 @@
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { getReportingDashboardData, normalizeReportFilters, type ReportFilters, type ReportPermissionGrantRow, type ReportingDashboardData } from "@/lib/operations/reporting";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -100,6 +101,15 @@ export type TenantDocumentRecordRow = {
   created_at: string;
 };
 
+export type DocumentStorageStatus = {
+  bucket: string;
+  status: "ready" | "missing" | "error";
+  isPrivate: boolean;
+  fileSizeLimit: number | null;
+  allowedMimeTypes: string[];
+  message: string | null;
+};
+
 export type ReportExportRequestRow = {
   id: string;
   report_type: string;
@@ -159,6 +169,7 @@ export type AdminPhase12Data = {
   messageOutbox: MessageOutboxRow[];
   operationalTasks: OperationalTaskRow[];
   documentRecords: TenantDocumentRecordRow[];
+  documentStorage: DocumentStorageStatus;
   reportExports: ReportExportRequestRow[];
   reportPermissionGrants: ReportPermissionGrantRow[];
   reporting: ReportingDashboardData;
@@ -268,6 +279,7 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     supabase.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId),
     supabase.from("participant_guardians").select("profile_id").eq("tenant_id", tenantId)
   ]);
+  const documentStorage = await getDocumentStorageStatus();
 
   const messageOutbox = asRows<MessageOutboxRow>(messageOutboxResult.data);
   const tasks = asRows<OperationalTaskRow>(operationalTasksResult.data);
@@ -317,6 +329,7 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
       messageOutbox,
       operationalTasks: tasks,
       documentRecords: asRows<TenantDocumentRecordRow>(documentRecordsResult.data),
+      documentStorage,
       reportExports: asRows<ReportExportRequestRow>(reportExportsResult.data),
       reportPermissionGrants: reporting.permissions,
       reporting,
@@ -336,6 +349,14 @@ function createEmptyData(): AdminPhase12Data {
     messageOutbox: [],
     operationalTasks: [],
     documentRecords: [],
+    documentStorage: {
+      bucket: "tenant-documents",
+      status: "missing",
+      isPrivate: true,
+      fileSizeLimit: null,
+      allowedMimeTypes: [],
+      message: "Nog niet gecontroleerd."
+    },
     reportExports: [],
     reportPermissionGrants: [],
     reporting: createEmptyReporting(normalizeReportFilters(undefined)),
@@ -381,6 +402,42 @@ function collectErrors(errorsByTable: Record<string, { message: string } | null>
 
 function asRows<Row>(rows: unknown): Row[] {
   return Array.isArray(rows) ? (rows as Row[]) : [];
+}
+
+async function getDocumentStorageStatus(): Promise<DocumentStorageStatus> {
+  try {
+    const admin = createAdminClient();
+    const result = await admin.storage.getBucket("tenant-documents");
+
+    if (result.error || !result.data) {
+      return {
+        bucket: "tenant-documents",
+        status: "missing",
+        isPrivate: true,
+        fileSizeLimit: null,
+        allowedMimeTypes: [],
+        message: result.error?.message ?? "Bucket tenant-documents bestaat nog niet."
+      };
+    }
+
+    return {
+      bucket: result.data.name,
+      status: result.data.public ? "error" : "ready",
+      isPrivate: !result.data.public,
+      fileSizeLimit: result.data.file_size_limit ?? null,
+      allowedMimeTypes: result.data.allowed_mime_types ?? [],
+      message: result.data.public ? "Bucket moet private zijn voor documentkluis." : null
+    };
+  } catch (error) {
+    return {
+      bucket: "tenant-documents",
+      status: "error",
+      isPrivate: true,
+      fileSizeLimit: null,
+      allowedMimeTypes: [],
+      message: error instanceof Error ? error.message : "Bucketcheck mislukt."
+    };
+  }
 }
 
 function unique(values: string[]) {

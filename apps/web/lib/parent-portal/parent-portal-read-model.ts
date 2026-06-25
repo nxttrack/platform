@@ -197,6 +197,13 @@ export type ParentDocumentRow = {
   status: string;
   file_path: string | null;
   available_on: string | null;
+  share_enabled: boolean;
+  share_token: string | null;
+  share_created_at: string | null;
+  share_expires_at: string | null;
+  share_revoked_at: string | null;
+  download_count: number;
+  last_downloaded_at: string | null;
   created_at: string;
 };
 
@@ -502,7 +509,16 @@ export async function getParentPortalSnapshot(): Promise<ParentPortalSnapshot> {
       "created_at",
       false
     ),
-    rowsByIds<ParentDocumentRow>(supabase, "parent_documents", "id, participant_id, enrollment_id, certificate_id, title, document_type, status, file_path, available_on, created_at", tenantId, "participant_id", participantIds, "created_at", false),
+    rowsByIds<ParentDocumentRow>(
+      supabase,
+      "parent_documents",
+      "id, participant_id, enrollment_id, certificate_id, title, document_type, status, file_path, available_on, share_enabled, share_token, share_created_at, share_expires_at, share_revoked_at, download_count, last_downloaded_at, created_at",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "created_at",
+      false
+    ),
     rowsByIds<ParentCatchUpRequestRow>(
       supabase,
       "lesson_catch_up_requests",

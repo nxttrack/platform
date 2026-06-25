@@ -1,9 +1,11 @@
 "use server";
 
+import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -46,6 +48,69 @@ export async function requestCatchUpLessonAction(formData: FormData) {
   revalidateParentPortal();
 }
 
+export async function createParentDocumentShareLinkAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const documentId = requiredString(formData, "document_id");
+  const document = await getAccessibleParentDocument(supabase, tenantId, documentId);
+  const token = randomBytes(24).toString("base64url");
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+  const admin = createAdminClient();
+
+  await throwOnError(
+    admin
+      .from("parent_documents")
+      .update({
+        share_enabled: true,
+        share_token: token,
+        share_created_at: new Date().toISOString(),
+        share_expires_at: expiresAt,
+        share_revoked_at: null
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", document.id)
+  );
+
+  await logDocumentAccessEvent(admin, {
+    tenantId,
+    parentDocumentId: document.id,
+    participantId: document.participant_id,
+    actorProfileId: profileId,
+    eventType: "share_link_created",
+    metadata: { share_expires_at: expiresAt }
+  });
+
+  revalidateParentPortal();
+}
+
+export async function revokeParentDocumentShareLinkAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireParentContext();
+  const documentId = requiredString(formData, "document_id");
+  const document = await getAccessibleParentDocument(supabase, tenantId, documentId);
+  const admin = createAdminClient();
+
+  await throwOnError(
+    admin
+      .from("parent_documents")
+      .update({
+        share_enabled: false,
+        share_token: null,
+        share_revoked_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", document.id)
+  );
+
+  await logDocumentAccessEvent(admin, {
+    tenantId,
+    parentDocumentId: document.id,
+    participantId: document.participant_id,
+    actorProfileId: profileId,
+    eventType: "share_link_revoked"
+  });
+
+  revalidateParentPortal();
+}
+
 async function requireParentContext() {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
@@ -69,6 +134,57 @@ async function requireParentContext() {
     tenantId: context.activeTenant.tenantId,
     profileId: context.user.id
   };
+}
+
+async function getAccessibleParentDocument(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, documentId: string) {
+  const result = await supabase
+    .from("parent_documents")
+    .select("id, tenant_id, participant_id, status, file_path")
+    .eq("tenant_id", tenantId)
+    .eq("id", documentId)
+    .eq("status", "available")
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "Document niet gevonden.");
+  }
+
+  if (!result.data.file_path) {
+    throw new Error("Document heeft nog geen bestand.");
+  }
+
+  return result.data as { id: string; tenant_id: string; participant_id: string; status: string; file_path: string | null };
+}
+
+async function logDocumentAccessEvent(
+  admin: ReturnType<typeof createAdminClient>,
+  {
+    actorProfileId,
+    eventType,
+    metadata,
+    parentDocumentId,
+    participantId,
+    tenantId
+  }: {
+    actorProfileId: string | null;
+    eventType: "share_link_created" | "share_link_revoked";
+    metadata?: Record<string, unknown>;
+    parentDocumentId: string;
+    participantId: string;
+    tenantId: string;
+  }
+) {
+  await throwOnError(
+    admin.from("document_access_events").insert({
+      tenant_id: tenantId,
+      parent_document_id: parentDocumentId,
+      participant_id: participantId,
+      actor_profile_id: actorProfileId,
+      event_type: eventType,
+      access_channel: "web",
+      metadata: metadata ?? {}
+    })
+  );
 }
 
 function revalidateParentPortal() {

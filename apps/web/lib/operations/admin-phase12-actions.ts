@@ -13,6 +13,8 @@ import { createClient } from "@/lib/supabase/server";
 
 const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
 const documentBucket = "tenant-documents";
+const maxDocumentUploadBytes = 10 * 1024 * 1024;
+const allowedDocumentMimeTypes = ["application/pdf", "image/png", "image/jpeg", "text/csv", "application/json", "text/plain"] as const;
 
 type MessageTemplateForSend = {
   id: string;
@@ -402,7 +404,7 @@ export async function createTenantDocumentRecordAction(formData: FormData) {
 }
 
 export async function uploadTenantDocumentAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
   const documentId = requiredString(formData, "id");
   const file = formData.get("file");
 
@@ -426,6 +428,7 @@ export async function uploadTenantDocumentAction(formData: FormData) {
   const filename = safeFileName(file.name);
   const filePath = `${tenantId}/${documentId}/v${nextVersion}/${filename}`;
   const admin = createAdminClient();
+  await assertDocumentBucketReady(admin, file);
   const uploadResult = await admin.storage.from(documentBucket).upload(filePath, file, {
     contentType: file.type || "application/octet-stream",
     upsert: true
@@ -462,12 +465,27 @@ export async function uploadTenantDocumentAction(formData: FormData) {
     throw new Error(updatedResult.error?.message ?? "Documentrecord kon niet worden bijgewerkt.");
   }
 
-  await syncParentDocumentVisibility(supabase, updatedResult.data as TenantDocumentForSync);
+  const parentDocumentId = await syncParentDocumentVisibility(supabase, updatedResult.data as TenantDocumentForSync);
+  await logDocumentAccessEvent({
+    tenantId,
+    tenantDocumentId: documentId,
+    parentDocumentId,
+    participantId: current.participant_id,
+    actorProfileId: profileId,
+    eventType: "upload",
+    metadata: {
+      file_path: filePath,
+      original_filename: filename,
+      mime_type: file.type || "application/octet-stream",
+      file_size_bytes: file.size,
+      version_number: nextVersion
+    }
+  });
   revalidatePhase12();
 }
 
 export async function updateTenantDocumentRecordAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
 
   const result = await supabase
     .from("tenant_document_records")
@@ -493,7 +511,22 @@ export async function updateTenantDocumentRecordAction(formData: FormData) {
     throw new Error(result.error?.message ?? "Documentrecord kon niet worden bijgewerkt.");
   }
 
-  await syncParentDocumentVisibility(supabase, result.data as TenantDocumentForSync);
+  const syncedDocument = result.data as TenantDocumentForSync;
+  const parentDocumentId = await syncParentDocumentVisibility(supabase, syncedDocument);
+  await logDocumentAccessEvent({
+    tenantId,
+    tenantDocumentId: syncedDocument.id,
+    parentDocumentId,
+    participantId: syncedDocument.participant_id,
+    actorProfileId: profileId,
+    eventType: "visibility_synced",
+    metadata: {
+      visibility: syncedDocument.visibility,
+      status: syncedDocument.status,
+      file_path: syncedDocument.file_path,
+      retention_until: optionalDate(formData, "retention_until")
+    }
+  });
 
   revalidatePhase12();
 }
@@ -768,10 +801,19 @@ async function syncParentDocumentVisibility(supabase: TenantSupabaseClient, docu
 
   if (!parentVisible) {
     if (document.parent_document_id) {
-      await supabase.from("parent_documents").update({ status: "archived" }).eq("tenant_id", document.tenant_id).eq("id", document.parent_document_id);
+      await supabase
+        .from("parent_documents")
+        .update({
+          status: "archived",
+          share_enabled: false,
+          share_token: null,
+          share_revoked_at: new Date().toISOString()
+        })
+        .eq("tenant_id", document.tenant_id)
+        .eq("id", document.parent_document_id);
     }
 
-    return;
+    return document.parent_document_id ?? null;
   }
 
   const payload = {
@@ -825,6 +867,64 @@ async function syncParentDocumentVisibility(supabase: TenantSupabaseClient, docu
 
   if (notifications.length > 0) {
     await throwOnError(supabase.from("parent_notifications").insert(notifications));
+  }
+
+  return parentDocumentId;
+}
+
+async function assertDocumentBucketReady(admin: ReturnType<typeof createAdminClient>, file: File) {
+  if (file.size > maxDocumentUploadBytes) {
+    throw new Error("Document is groter dan 10 MB.");
+  }
+
+  const mimeType = file.type || "application/octet-stream";
+
+  if (!allowedDocumentMimeTypes.includes(mimeType as (typeof allowedDocumentMimeTypes)[number])) {
+    throw new Error(`Bestandstype ${mimeType} is niet toegestaan voor de documentkluis.`);
+  }
+
+  const bucketResult = await admin.storage.getBucket(documentBucket);
+
+  if (bucketResult.error || !bucketResult.data) {
+    throw new Error(`Supabase Storage bucket ${documentBucket} is niet beschikbaar: ${bucketResult.error?.message ?? "bucket ontbreekt"}.`);
+  }
+
+  if (bucketResult.data.public) {
+    throw new Error(`Supabase Storage bucket ${documentBucket} moet private zijn.`);
+  }
+}
+
+async function logDocumentAccessEvent({
+  actorProfileId,
+  eventType,
+  metadata,
+  parentDocumentId,
+  participantId,
+  tenantDocumentId,
+  tenantId
+}: {
+  actorProfileId: string | null;
+  eventType: "upload" | "download" | "share_link_created" | "share_link_revoked" | "visibility_synced";
+  metadata?: Record<string, unknown>;
+  parentDocumentId?: string | null;
+  participantId?: string | null;
+  tenantDocumentId?: string | null;
+  tenantId: string;
+}) {
+  const admin = createAdminClient();
+  const result = await admin.from("document_access_events").insert({
+    tenant_id: tenantId,
+    tenant_document_id: tenantDocumentId ?? null,
+    parent_document_id: parentDocumentId ?? null,
+    participant_id: participantId ?? null,
+    actor_profile_id: actorProfileId,
+    event_type: eventType,
+    access_channel: "web",
+    metadata: metadata ?? {}
+  });
+
+  if (result.error) {
+    throw new Error(result.error.message);
   }
 }
 

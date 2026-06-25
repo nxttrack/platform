@@ -201,6 +201,7 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
   const lookups = buildLookups(data);
   const availableDocuments = data.documentRecords.filter((document) => document.status === "available").length;
   const parentVisible = data.documentRecords.filter((document) => ["parent", "all"].includes(document.visibility)).length;
+  const storage = data.documentStorage;
 
   return (
     <div className="grid gap-6">
@@ -215,7 +216,7 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenten" value={data.documentRecords.length.toString()} detail="tenantdocumenten" />
         <MetricCard icon={<Download className="h-5 w-5" />} label="Beschikbaar" value={availableDocuments.toString()} detail="zichtbaar volgens rechten" />
         <MetricCard icon={<Inbox className="h-5 w-5" />} label="Ouderzichtbaar" value={parentVisible.toString()} detail="ouder/iedereen" />
-        <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value="private" detail="tenant-documents" />
+        <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value={storage.status} detail={storage.bucket} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -225,6 +226,19 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
         </Card>
 
         <Card>
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+            <div>
+              <p className="font-semibold">Supabase Storage bucket</p>
+              <p className="text-sm text-muted-foreground">
+                {storage.bucket} - {storage.isPrivate ? "private" : "public"} - limiet {storage.fileSizeLimit ? formatBytes(storage.fileSizeLimit) : "onbekend"}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Toegestaan: {storage.allowedMimeTypes.length > 0 ? storage.allowedMimeTypes.join(", ") : "nog niet uit bucket gelezen"}
+              </p>
+              {storage.message ? <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{storage.message}</p> : null}
+            </div>
+            <StatusPill tone={storage.status === "ready" ? "success" : storage.status === "missing" ? "warning" : "danger"}>{storage.status}</StatusPill>
+          </div>
           <SectionHeader title="Documentenlijst" count={data.documentRecords.length} />
           <div className="grid gap-3">
             {data.documentRecords.length === 0 ? <EmptyState>Nog geen documenten.</EmptyState> : null}
@@ -595,13 +609,19 @@ function DocumentRecordCard({ data, document, lookups }: { data: AdminPhase12Dat
         <InfoTile label="Versie" value={`v${document.version_number}`} />
         <InfoTile label="Upload" value={document.upload_status} />
         <InfoTile label="Bestand" value={document.original_filename ?? document.mime_type ?? "-"} />
+        <InfoTile label="Grootte" value={document.file_size_bytes ? formatBytes(document.file_size_bytes) : "-"} />
+        <InfoTile label="Retentie" value={document.retention_until ? formatDate(document.retention_until) : "geen einddatum"} />
+        <InfoTile label="Laatst gedownload" value={document.last_downloaded_at ? formatDateTime(document.last_downloaded_at) : "-"} />
       </div>
+      <p className="mt-3 rounded-2xl border border-border bg-card p-3 text-xs text-muted-foreground">
+        Uploads worden als nieuwe versie opgeslagen onder tenant/document/vN. Ouderzichtbaarheid volgt de velden status + zichtbaarheid; retentie is zichtbaar voor beleid en toekomstige opschoning.
+      </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <form action={uploadTenantDocumentAction} className="flex flex-wrap items-end gap-2">
           <input name="id" type="hidden" value={document.id} />
           <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
             <span>Bestand uploaden</span>
-            <input className={fieldClassName} name="file" required type="file" />
+            <input accept=".pdf,.png,.jpg,.jpeg,.csv,.json,.txt,application/pdf,image/png,image/jpeg,text/csv,application/json,text/plain" className={fieldClassName} name="file" required type="file" />
           </label>
           <button className={primaryButtonClassName} type="submit">
             Uploaden
@@ -1037,6 +1057,18 @@ function formatDateTime(value: string) {
 
 function formatMoney(priceCents: number, currency: string) {
   return new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(priceCents / 100);
+}
+
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) {
+    return "-";
+  }
+
+  const units = ["B", "KB", "MB", "GB"];
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+  const value = bytes / 1024 ** index;
+
+  return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
 function formatJson(value: Record<string, unknown>) {

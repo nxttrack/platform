@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { markNotificationReadAction, requestCatchUpLessonAction } from "@/lib/parent-portal/parent-portal-actions";
+import { createParentDocumentShareLinkAction, markNotificationReadAction, requestCatchUpLessonAction, revokeParentDocumentShareLinkAction } from "@/lib/parent-portal/parent-portal-actions";
 import type {
   ParentCatchUpRequestRow,
   ParentAchievementCardRow,
@@ -747,13 +747,44 @@ function DocumentList({ documents, lookups, title }: { documents: ParentDocument
                 <p className="font-semibold">{document.title}</p>
                 <p className="text-sm text-muted-foreground">{participantName(lookups, document.participant_id)} - {document.document_type}</p>
                 <p className="mt-2 text-xs text-muted-foreground">Beschikbaar: {document.available_on ? formatDate(document.available_on) : formatDate(document.created_at)}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Downloads: {document.download_count} {document.last_downloaded_at ? `- laatst ${formatDateTime(document.last_downloaded_at)}` : ""}
+                </p>
               </div>
               <StatusPill tone={document.status === "available" ? "success" : "neutral"}>{document.status}</StatusPill>
             </div>
             {document.file_path ? (
-              <a className="mt-3 inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" href={`/api/documents/${document.id}/download`}>
-                Download document
-              </a>
+              <div className="mt-3 grid gap-3">
+                <div className="flex flex-wrap gap-2">
+                  <a className="inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" href={`/api/documents/${document.id}/download`}>
+                    Download document
+                  </a>
+                  {document.share_enabled && document.share_token ? (
+                    <form action={revokeParentDocumentShareLinkAction}>
+                      <input name="document_id" type="hidden" value={document.id} />
+                      <button className="inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                        Deellink intrekken
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={createParentDocumentShareLinkAction}>
+                      <input name="document_id" type="hidden" value={document.id} />
+                      <button className="inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                        Deellink maken
+                      </button>
+                    </form>
+                  )}
+                </div>
+                {document.share_enabled && document.share_token ? (
+                  <div className="rounded-2xl border border-border bg-card p-3">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">Deellink</p>
+                    <input className="mt-2 w-full rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground" readOnly value={documentShareUrl(document)} />
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Geldig tot {document.share_expires_at ? formatDateTime(document.share_expires_at) : "nader order"}.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
             ) : (
               <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">Bestand is nog niet gekoppeld.</div>
             )}
@@ -762,6 +793,10 @@ function DocumentList({ documents, lookups, title }: { documents: ParentDocument
       </div>
     </Card>
   );
+}
+
+function documentShareUrl(document: ParentDocumentRow) {
+  return document.share_token ? `/api/documents/${document.id}/download?share=${document.share_token}` : "";
 }
 
 function ProgressChildCard({ participant, lookups }: { participant: ParentParticipantRow; lookups: LookupMaps }) {
