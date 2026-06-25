@@ -172,7 +172,7 @@ export function AdminPlacementSuggestionsPage({ snapshot }: PlacementPageProps) 
             { header: "Groep", render: (suggestion) => groupSummary(lookups, suggestion.group_id) },
             { header: "Score", render: (suggestion) => <ScorePill score={suggestion.score} /> },
             { header: "Status", render: (suggestion) => <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill> },
-            { header: "Capaciteit", className: "min-w-[180px] whitespace-normal", render: (suggestion) => capacityText(lookups.capacitiesByGroup.get(suggestion.group_id)) },
+            { header: "Capaciteit", className: "min-w-[240px] whitespace-normal", render: (suggestion) => <CapacityMini capacity={lookups.capacitiesByGroup.get(suggestion.group_id)} /> },
             {
               header: "Onderbouwing",
               className: "min-w-[320px] whitespace-normal",
@@ -387,11 +387,12 @@ function CapacityPanel({ data, lookups }: { data: PlacementWorkflowData; lookups
                     {weekdayLabel(group.weekday)} {formatTime(group.starts_at)}-{formatTime(group.ends_at)} - {resource?.name ?? "Geen resource"}
                   </p>
                 </div>
-                <StatusPill tone={capacity && capacity.availableSpots > 0 ? "success" : "warning"}>{capacityText(capacity)}</StatusPill>
+                <StatusPill tone={capacityTone(capacity)}>{capacityText(capacity)}</StatusPill>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-background">
                 <div className="h-full rounded-full bg-primary" style={{ width: `${capacityPercent(capacity)}%` }} />
               </div>
+              <CapacityBreakdown capacity={capacity} />
             </div>
           );
         })}
@@ -526,6 +527,54 @@ function InlineNotice({ children, tone }: { children: ReactNode; tone: "success"
   const className = tone === "success" ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-800" : "border-border bg-muted/40 text-muted-foreground";
 
   return <div className={`rounded-2xl border px-3 py-2 text-xs font-semibold ${className}`}>{children}</div>;
+}
+
+function CapacityMini({ capacity }: { capacity: CapacitySnapshot | undefined }) {
+  if (!capacity) {
+    return <span className="text-sm text-muted-foreground">Cap. onbekend</span>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      <StatusPill tone={capacityTone(capacity)}>{capacityText(capacity)}</StatusPill>
+      <div className="grid gap-1 text-xs text-muted-foreground">
+        <p>
+          <span className="font-semibold text-foreground">{capacity.activeMemberships}</span> actief,{" "}
+          <span className="font-semibold text-foreground">{capacity.heldSpots}</span> hold,{" "}
+          <span className="font-semibold text-foreground">{capacity.reservedSpots + capacity.trialSpots + capacity.makeupSpots}</span> gereserveerd
+        </p>
+        {capacity.blockers.length > 0 ? <p className="font-semibold text-red-700">{capacity.blockers[0]?.label}</p> : null}
+      </div>
+    </div>
+  );
+}
+
+function CapacityBreakdown({ capacity }: { capacity: CapacitySnapshot | undefined }) {
+  if (!capacity) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 grid gap-2 text-xs text-muted-foreground">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <CapacityStat label="Open" value={capacity.openSpots} />
+        <CapacityStat label="Bezet" value={capacity.activeMemberships} />
+        <CapacityStat label="Hold" value={capacity.heldSpots} />
+        <CapacityStat label="Reserve" value={capacity.reservedSpots + capacity.trialSpots + capacity.makeupSpots} />
+      </div>
+      {capacity.blockedSpots > 0 ? <p className="font-semibold text-red-700">{capacity.blockedSpots} plek{capacity.blockedSpots === 1 ? "" : "ken"} overboekt of geblokkeerd.</p> : null}
+      {capacity.pendingSlotOffers > 0 ? <p>{capacity.pendingSlotOffers} open lesplek-aanbod{capacity.pendingSlotOffers === 1 ? "" : "en"} houden capaciteit vast.</p> : null}
+    </div>
+  );
+}
+
+function CapacityStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-border bg-card px-3 py-2">
+      <p className="font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-base font-bold text-foreground">{value}</p>
+    </div>
+  );
 }
 
 function buildLookups(data: PlacementWorkflowData): LookupMaps {
@@ -716,7 +765,15 @@ function capacityText(capacity: CapacitySnapshot | undefined) {
     return "Cap. onbekend";
   }
 
-  return `${capacity.availableSpots}/${capacity.capacityLimit} vrij`;
+  if (capacity.status === "blocked") {
+    return "Geblokkeerd";
+  }
+
+  if (capacity.blockedSpots > 0) {
+    return `${capacity.blockedSpots} overboekt`;
+  }
+
+  return `${capacity.openSpots}/${capacity.capacityLimit} vrij`;
 }
 
 function capacityPercent(capacity: CapacitySnapshot | undefined) {
@@ -724,7 +781,27 @@ function capacityPercent(capacity: CapacitySnapshot | undefined) {
     return 0;
   }
 
-  return Math.min(100, Math.max(0, (capacity.activeMemberships / capacity.capacityLimit) * 100));
+  return Math.min(100, Math.max(0, (capacity.usedSpots / capacity.capacityLimit) * 100));
+}
+
+function capacityTone(capacity: CapacitySnapshot | undefined): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (!capacity) {
+    return "neutral";
+  }
+
+  if (capacity.status === "blocked" || capacity.blockers.some((blocker) => blocker.severity === "blocking")) {
+    return "danger";
+  }
+
+  if (capacity.status === "overbooked" || capacity.status === "full") {
+    return "warning";
+  }
+
+  if (capacity.status === "nearly_full") {
+    return "info";
+  }
+
+  return "success";
 }
 
 function preferenceText(days: string[], times: string[]) {

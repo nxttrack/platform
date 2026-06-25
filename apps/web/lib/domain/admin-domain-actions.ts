@@ -222,6 +222,11 @@ export async function createGroupAction(formData: FormData) {
       starts_at: requiredTime(formData, "starts_at"),
       ends_at: requiredTime(formData, "ends_at"),
       capacity: intValue(formData, "capacity", 1, 1),
+      reserved_spots: intValue(formData, "reserved_spots", 0, 0),
+      trial_spots: intValue(formData, "trial_spots", 0, 0),
+      makeup_spots: intValue(formData, "makeup_spots", 0, 0),
+      overbooking_policy: enumValue(formData, "overbooking_policy", ["blocked", "warn", "allow"], "blocked"),
+      capacity_policy: capacityPolicyJson(formData),
       status: enumValue(formData, "status", ["draft", "active", "paused", "archived"], "active")
     })
   );
@@ -246,6 +251,11 @@ export async function updateGroupAction(formData: FormData) {
         starts_at: requiredTime(formData, "starts_at"),
         ends_at: requiredTime(formData, "ends_at"),
         capacity: intValue(formData, "capacity", 1, 1),
+        reserved_spots: intValue(formData, "reserved_spots", 0, 0),
+        trial_spots: intValue(formData, "trial_spots", 0, 0),
+        makeup_spots: intValue(formData, "makeup_spots", 0, 0),
+        overbooking_policy: enumValue(formData, "overbooking_policy", ["blocked", "warn", "allow"], "blocked"),
+        capacity_policy: capacityPolicyJson(formData),
         status: enumValue(formData, "status", ["draft", "active", "paused", "archived"], "active")
       })
       .eq("id", requiredString(formData, "id"))
@@ -706,6 +716,26 @@ function decimalValue(formData: FormData, key: string, fallback: number, min = 0
 
 function priceCents(formData: FormData, key: string) {
   return Math.round(decimalValue(formData, key, 0, 0) * 100);
+}
+
+function capacityPolicyJson(formData: FormData) {
+  const raw = optionalString(formData, "capacity_policy");
+
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      throw new Error("Capacity policy moet een JSON-object zijn.");
+    }
+
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error("Capacity policy bevat geen geldige JSON.");
+  }
 }
 
 function requiredTime(formData: FormData, key: string) {

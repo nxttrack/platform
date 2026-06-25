@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { buildCapacitySnapshot, capacitySnapshotToRecord, capacitySummaryText, releaseExpiredCapacity, type CapacityHoldInput, type CapacityMembershipInput, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
 import { detectAndStoreIntakeDuplicates } from "@/lib/smart-flow/intake-duplicates";
 import { updateSmartDecisionLifecycle } from "@/lib/smart-flow/decision";
@@ -148,9 +149,7 @@ export async function createPlacementSuggestionAction(formData: FormData) {
       .eq("tenant_id", tenantId)
       .single()
   );
-  const group = await singleRow<{ id: string; program_id: string; stage_id: string; resource_id: string | null; weekday: number; capacity: number; status: string }>(
-    supabase.from("groups").select("id, program_id, stage_id, resource_id, weekday, capacity, status").eq("id", groupId).eq("tenant_id", tenantId).single()
-  );
+  const { group, resource, snapshot } = await loadGroupCapacitySnapshot(supabase, tenantId, groupId);
 
   if (group.status !== "active") {
     throw new Error("Deze groep is niet actief.");
@@ -160,26 +159,15 @@ export async function createPlacementSuggestionAction(formData: FormData) {
     throw new Error("Deze groep hoort niet bij het gekozen programma.");
   }
 
-  const resource = group.resource_id
-    ? await maybeRow<{ id: string; capacity: number }>(supabase.from("resources").select("id, capacity").eq("id", group.resource_id).eq("tenant_id", tenantId).maybeSingle())
-    : null;
-  const memberships = await rows<{ id: string; status: string; ends_on: string | null }>(
-    supabase.from("group_memberships").select("id, status, ends_on").eq("group_id", group.id).eq("tenant_id", tenantId)
-  );
-  const today = todayInput();
-  const activeMemberships = memberships.filter((membership) => ["planned", "active"].includes(membership.status) && (!membership.ends_on || membership.ends_on >= today)).length;
-  const capacityLimit = Math.min(group.capacity, resource?.capacity ?? group.capacity);
-  const availableSpots = Math.max(0, capacityLimit - activeMemberships);
-
-  if (availableSpots <= 0) {
-    throw new Error("Deze groep heeft geen beschikbare capaciteit.");
+  if (!snapshot.isAvailable) {
+    throw new Error(capacityUnavailableMessage(snapshot));
   }
 
   const preferredWeekday = weekdayToPreference(group.weekday);
   const dayMatch = waitlistEntry.preferred_days.includes(preferredWeekday);
   const stageMatch = !waitlistEntry.recommended_stage_id || waitlistEntry.recommended_stage_id === group.stage_id;
-  const score = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, availableSpots * 2));
-  const rationale = optionalString(formData, "rationale") ?? `Capaciteit beschikbaar (${availableSpots} plek${availableSpots === 1 ? "" : "ken"}).${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`;
+  const score = Math.min(100, 55 + (dayMatch ? 20 : 0) + (stageMatch ? 15 : 0) + Math.min(10, snapshot.availableSpots * 2));
+  const rationale = optionalString(formData, "rationale") ?? `${capacitySummaryText(snapshot)}.${dayMatch ? " Voorkeursdag matcht." : ""}${stageMatch ? " Stage matcht." : ""}`;
 
   const suggestionResult = await supabase
     .from("placement_suggestions")
@@ -192,13 +180,7 @@ export async function createPlacementSuggestionAction(formData: FormData) {
       group_id: group.id,
       resource_id: group.resource_id,
       score,
-      capacity_snapshot: {
-        group_capacity: group.capacity,
-        resource_capacity: resource?.capacity ?? null,
-        capacity_limit: capacityLimit,
-        active_memberships: activeMemberships,
-        available_spots: availableSpots
-      },
+      capacity_snapshot: capacitySnapshotToRecord(snapshot),
       rationale,
       status: "suggested"
     })
@@ -223,10 +205,11 @@ export async function createPlacementSuggestionAction(formData: FormData) {
     preferredTimeWindows: waitlistEntry.preferred_time_windows,
     dayMatch,
     stageMatch,
-    activeMemberships,
-    capacityLimit,
-    availableSpots,
+    activeMemberships: snapshot.activeMemberships,
+    capacityLimit: snapshot.capacityLimit,
+    availableSpots: snapshot.availableSpots,
     resourceCapacity: resource?.capacity ?? null,
+    capacitySnapshot: snapshot,
     score,
     rationale
   });
@@ -288,8 +271,15 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
       .eq("tenant_id", tenantId)
       .single()
   );
-  const token = crypto.randomUUID().replaceAll("-", "");
   const existingOffer = await maybeRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestion.id).eq("tenant_id", tenantId).maybeSingle());
+  const { snapshot } = await loadGroupCapacitySnapshot(supabase, tenantId, suggestion.group_id, existingOffer?.id ?? null);
+
+  if (!snapshot.isAvailable) {
+    throw new Error(capacityUnavailableMessage(snapshot));
+  }
+
+  const token = crypto.randomUUID().replaceAll("-", "");
+  const offerExpiresAt = expiresAt(14);
   let offerId = existingOffer?.id ?? null;
 
   if (existingOffer) {
@@ -300,7 +290,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
           offer_token: token,
           status: "sent",
           sent_at: new Date().toISOString(),
-          expires_at: expiresAt(14),
+          expires_at: offerExpiresAt,
           parent_responded_at: null,
           parent_response_note: null
         })
@@ -320,7 +310,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
         group_id: suggestion.group_id,
         offer_token: token,
         status: "sent",
-        expires_at: expiresAt(14)
+        expires_at: offerExpiresAt
       })
       .select("id")
       .single();
@@ -336,6 +326,15 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
     const offer = await singleRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestion.id).eq("tenant_id", tenantId).single());
     offerId = offer.id;
   }
+
+  await upsertCapacityHoldForSlotOffer(supabase, tenantId, {
+    offerId,
+    suggestionId: suggestion.id,
+    groupId: suggestion.group_id,
+    expiresAt: offerExpiresAt,
+    actorProfileId,
+    capacitySnapshot: snapshot
+  });
 
   await throwOnError(supabase.from("placement_suggestions").update({ status: "offered", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
   await throwOnError(supabase.from("waitlist_entries").update({ status: "offered" }).eq("id", suggestion.waitlist_entry_id).eq("tenant_id", tenantId));
@@ -364,6 +363,7 @@ export async function cancelSlotOfferAction(formData: FormData) {
   const offerId = requiredString(formData, "slot_offer_id");
 
   await throwOnError(supabase.from("slot_offers").update({ status: "cancelled" }).eq("id", offerId).eq("tenant_id", tenantId));
+  await releaseCapacityHoldForSlotOffer(supabase, tenantId, offerId, "cancelled", "slot offer cancelled by admin");
   revalidatePlacementWorkflow();
 }
 
@@ -435,6 +435,116 @@ async function maybeQueueSlotOfferMessage(supabase: Awaited<ReturnType<typeof cr
     fallbackSubject: `Er is een plek beschikbaar voor ${intake.participant_name}`,
     fallbackBody: `Hallo ${intake.parent_name},\n\nEr is een plek beschikbaar. Bevestig via ${slotOfferUrl}.\n\nNXTTRACK`
   });
+}
+
+type CapacityGroupRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  resource_id: string | null;
+  weekday: number;
+  capacity: number;
+  reserved_spots: number;
+  trial_spots: number;
+  makeup_spots: number;
+  overbooking_policy: string;
+  status: string;
+};
+
+type CapacityResourceRow = {
+  id: string;
+  capacity: number;
+  status: string;
+};
+
+async function loadGroupCapacitySnapshot(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, groupId: string, excludeHoldSlotOfferId: string | null = null) {
+  await releaseExpiredCapacity(supabase, tenantId);
+
+  const group = await singleRow<CapacityGroupRow>(
+    supabase
+      .from("groups")
+      .select("id, program_id, stage_id, resource_id, weekday, capacity, reserved_spots, trial_spots, makeup_spots, overbooking_policy, status")
+      .eq("id", groupId)
+      .eq("tenant_id", tenantId)
+      .single()
+  );
+  const [resource, memberships, holds, slotOffers] = await Promise.all([
+    group.resource_id ? maybeRow<CapacityResourceRow>(supabase.from("resources").select("id, capacity, status").eq("id", group.resource_id).eq("tenant_id", tenantId).maybeSingle()) : Promise.resolve(null),
+    rows<CapacityMembershipInput>(supabase.from("group_memberships").select("id, group_id, status, starts_on, ends_on").eq("group_id", group.id).eq("tenant_id", tenantId)),
+    rows<CapacityHoldInput>(supabase.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("group_id", group.id).eq("tenant_id", tenantId)),
+    rows<{ id: string; group_id: string; status: string; expires_at: string }>(supabase.from("slot_offers").select("id, group_id, status, expires_at").eq("group_id", group.id).eq("tenant_id", tenantId))
+  ]);
+  const snapshot = buildCapacitySnapshot({
+    group,
+    resource,
+    memberships,
+    holds,
+    slotOffers,
+    excludeHoldSlotOfferId
+  });
+
+  return { group, resource, snapshot };
+}
+
+async function upsertCapacityHoldForSlotOffer(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  input: {
+    offerId: string;
+    suggestionId: string;
+    groupId: string;
+    expiresAt: string;
+    actorProfileId: string;
+    capacitySnapshot: CapacitySnapshot;
+  }
+) {
+  const existingHold = await maybeRow<{ id: string }>(supabase.from("capacity_holds").select("id").eq("tenant_id", tenantId).eq("slot_offer_id", input.offerId).eq("status", "active").maybeSingle());
+  const payload = {
+    tenant_id: tenantId,
+    group_id: input.groupId,
+    placement_suggestion_id: input.suggestionId,
+    slot_offer_id: input.offerId,
+    hold_type: "slot_offer",
+    status: "active",
+    quantity: 1,
+    starts_on: todayInput(),
+    expires_at: input.expiresAt,
+    released_at: null,
+    release_reason: null,
+    created_by_profile_id: input.actorProfileId,
+    metadata: {
+      source: "placement_approval",
+      capacity_snapshot: capacitySnapshotToRecord(input.capacitySnapshot)
+    }
+  };
+
+  if (existingHold) {
+    await throwOnError(supabase.from("capacity_holds").update(payload).eq("tenant_id", tenantId).eq("id", existingHold.id));
+    return;
+  }
+
+  await throwOnError(supabase.from("capacity_holds").insert(payload));
+}
+
+async function releaseCapacityHoldForSlotOffer(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, offerId: string, status: "released" | "expired" | "cancelled" | "converted", reason: string) {
+  await throwOnError(
+    supabase
+      .from("capacity_holds")
+      .update({
+        status,
+        released_at: new Date().toISOString(),
+        release_reason: reason
+      })
+      .eq("tenant_id", tenantId)
+      .eq("slot_offer_id", offerId)
+      .eq("status", "active")
+  );
+}
+
+function capacityUnavailableMessage(snapshot: CapacitySnapshot) {
+  const blocker = snapshot.blockers.find((entry) => entry.severity === "blocking");
+
+  return blocker ? `${blocker.label}: ${blocker.detail}` : `Deze groep heeft geen beschikbare capaciteit (${capacitySummaryText(snapshot)}).`;
 }
 
 function revalidatePlacementWorkflow() {

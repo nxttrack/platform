@@ -63,6 +63,11 @@ export type GroupRow = {
   starts_at: string;
   ends_at: string;
   capacity: number;
+  reserved_spots: number;
+  trial_spots: number;
+  makeup_spots: number;
+  overbooking_policy: string;
+  capacity_policy: Record<string, unknown>;
   status: string;
 };
 
@@ -178,6 +183,19 @@ export type LessonCatchUpRequestRow = {
   resolved_at: string | null;
 };
 
+export type CapacityHoldRow = {
+  id: string;
+  group_id: string;
+  hold_type: string;
+  status: string;
+  quantity: number;
+  starts_on: string;
+  ends_on: string | null;
+  expires_at: string;
+  slot_offer_id: string | null;
+  release_reason: string | null;
+};
+
 export type ProgressRow = {
   id: string;
   enrollment_id: string;
@@ -288,6 +306,7 @@ export type AdminDomainData = {
   tenantAccountInvitations: TenantAccountInvitationRow[];
   peopleAuditEvents: PeopleAuditEventRow[];
   catchUpRequests: LessonCatchUpRequestRow[];
+  capacityHolds: CapacityHoldRow[];
   progress: ProgressRow[];
   stageModules: StageModuleRow[];
   stageModuleProgress: StageModuleProgressRow[];
@@ -360,6 +379,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     tenantAccountInvitationsResult,
     peopleAuditEventsResult,
     catchUpRequestsResult,
+    capacityHoldsResult,
     progressResult,
     stageModulesResult,
     stageModuleProgressResult,
@@ -380,7 +400,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     supabase.from("instructors").select("id, display_name, email, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase
       .from("groups")
-      .select("id, program_id, stage_id, resource_id, instructor_id, code, name, weekday, starts_at, ends_at, capacity, status")
+      .select("id, program_id, stage_id, resource_id, instructor_id, code, name, weekday, starts_at, ends_at, capacity, reserved_spots, trial_spots, makeup_spots, overbooking_policy, capacity_policy, status")
       .eq("tenant_id", tenantId)
       .order("weekday", { ascending: true })
       .order("starts_at", { ascending: true }),
@@ -423,6 +443,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .eq("tenant_id", tenantId)
       .order("requested_at", { ascending: false })
       .limit(120),
+    supabase.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("tenant_id", tenantId).order("expires_at", { ascending: true }),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
     supabase.from("stage_modules").select("id, program_id, stage_id, code, name, description, sort_order, status").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
     supabase
@@ -485,6 +506,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     tenant_account_invitations: tenantAccountInvitationsResult.error,
     people_audit_events: peopleAuditEventsResult.error,
     lesson_catch_up_requests: catchUpRequestsResult.error,
+    capacity_holds: capacityHoldsResult.error,
     profiles: profilesResult.error,
     progress: progressResult.error,
     stage_modules: stageModulesResult.error,
@@ -518,6 +540,7 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       tenantAccountInvitations: asRows<TenantAccountInvitationRow>(tenantAccountInvitationsResult.data),
       peopleAuditEvents: asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data),
       catchUpRequests: asRows<LessonCatchUpRequestRow>(catchUpRequestsResult.data),
+      capacityHolds: asRows<CapacityHoldRow>(capacityHoldsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       stageModules: asRows<StageModuleRow>(stageModulesResult.data),
       stageModuleProgress: asRows<StageModuleProgressRow>(stageModuleProgressResult.data),
@@ -549,6 +572,7 @@ export function createEmptyData(): AdminDomainData {
     tenantAccountInvitations: [],
     peopleAuditEvents: [],
     catchUpRequests: [],
+    capacityHolds: [],
     progress: [],
     stageModules: [],
     stageModuleProgress: [],

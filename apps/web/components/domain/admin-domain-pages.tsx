@@ -387,7 +387,18 @@ export function AdminGroupsPage({ snapshot }: DomainPageProps) {
             { header: "Moment", render: (group) => `${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}` },
             { header: "Locatie", render: (group) => nullableText(lookups.resources.get(group.resource_id ?? "")?.name) },
             { header: "Instructeur", render: (group) => nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name) },
-            { header: "Cap.", render: (group) => group.capacity },
+            {
+              header: "Cap.",
+              className: "min-w-[160px] whitespace-normal",
+              render: (group) => (
+                <div>
+                  <StrongText>{group.capacity}</StrongText>
+                  <p className="text-xs text-muted-foreground">
+                    {group.reserved_spots} reserve / {group.trial_spots} proef / {group.makeup_spots} inhaal
+                  </p>
+                </div>
+              )
+            },
             { header: "Status", render: (group) => <StatusPill tone={statusTone(group.status)}>{group.status}</StatusPill> },
             { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (group) => <ActionStack><StatusTransitionButtons action={transitionGroupStatusAction} id={group.id} statuses={["draft", "active", "paused", "archived"]} /><GroupForm data={snapshot.data} group={group} mode="update" /></ActionStack> }
           ]}
@@ -688,6 +699,11 @@ function GroupForm({ mode, data, group }: { mode: "create"; data: AdminDomainDat
       <TextField defaultValue={group?.starts_at ? formatTime(group.starts_at) : ""} label="Start" name="starts_at" required type="time" />
       <TextField defaultValue={group?.ends_at ? formatTime(group.ends_at) : ""} label="Einde" name="ends_at" required type="time" />
       <TextField defaultValue={group?.capacity ?? 1} label="Capaciteit" min={1} name="capacity" type="number" />
+      <TextField defaultValue={group?.reserved_spots ?? 0} label="Reserve plekken" min={0} name="reserved_spots" type="number" />
+      <TextField defaultValue={group?.trial_spots ?? 0} label="Proefles plekken" min={0} name="trial_spots" type="number" />
+      <TextField defaultValue={group?.makeup_spots ?? 0} label="Inhaal plekken" min={0} name="makeup_spots" type="number" />
+      <SelectField defaultValue={group?.overbooking_policy ?? "blocked"} label="Overboeking" name="overbooking_policy" options={overbookingPolicyOptions} />
+      <TextAreaField defaultValue={JSON.stringify(group?.capacity_policy ?? {}, null, 2)} label="Capacity policy JSON" name="capacity_policy" />
       <SelectField defaultValue={group?.status ?? "active"} label="Status" name="status" options={groupStatusOptions} />
     </DomainForm>
   );
@@ -1175,6 +1191,12 @@ const groupStatusOptions = [
   { label: "Actief", value: "active" },
   { label: "Gepauzeerd", value: "paused" },
   { label: "Gearchiveerd", value: "archived" }
+];
+
+const overbookingPolicyOptions = [
+  { label: "Blokkeren", value: "blocked" },
+  { label: "Waarschuwen", value: "warn" },
+  { label: "Toestaan", value: "allow" }
 ];
 
 const sessionStatusOptions = [

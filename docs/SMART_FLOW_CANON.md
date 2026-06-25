@@ -356,3 +356,69 @@ Duplicate detection currently checks:
 - active enrollment on a matched participant
 
 Duplicate detection is advisory. It warns the admin before conversion to waitlist or enrollment. It does not automatically block the parent submission.
+
+## 14. Phase S2 Capacity Engine Policy
+
+Phase S2 makes capacity an explainable engine instead of a page-level count.
+
+Capacity is calculated from:
+
+- fixed group capacity
+- optional resource capacity
+- active group memberships
+- future group membership starts
+- ending memberships within the next planning window
+- active capacity holds
+- pending slot offers without a hold, for legacy safety
+- reserved spots
+- trial spots
+- makeup spots
+- group overbooking policy
+
+The canonical S2 capacity shape stores and exposes:
+
+```txt
+fixed spots
+active memberships
+future starts
+ending memberships
+pending slot offers
+held spots
+reserved spots
+trial spots
+makeup spots
+open spots
+blocked or overbooked spots
+overbooking policy
+reasons
+blockers
+```
+
+Slot offers now reserve capacity through `capacity_holds`.
+
+The lifecycle is:
+
+```txt
+placement suggestion approved
+-> slot offer created or resent
+-> capacity hold created
+-> pending offer reduces available capacity
+-> parent accepts, declines, offer expires or admin cancels
+-> hold is converted, released, expired or cancelled
+```
+
+Existing active group memberships remain the source of truth for real placement. They are not double-counted with pending slot offers. A slot offer hold is temporary capacity protection, not a group membership.
+
+Overbooking is explicit:
+
+- `blocked`: no placement or slot offer when capacity is full.
+- `warn`: admin can continue, but UI and smart decision show warning blockers.
+- `allow`: admin can continue, but audit and explanation still show that overbooking policy was used.
+
+Admin-facing UI must show why a group is available or blocked. Parent-facing UI only receives clear human wording and never sees internal scoring details.
+
+Not included in S2:
+
+- automatic waitlist rematch
+- makeup slot marketplace
+- fully automatic placement

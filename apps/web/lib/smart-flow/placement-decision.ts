@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-import { smartReason, upsertSmartDecision } from "@/lib/smart-flow/decision";
+import { capacitySnapshotToRecord, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
+import { smartBlocker, smartReason, upsertSmartDecision } from "@/lib/smart-flow/decision";
 
 type PlacementDecisionInput = {
   tenantId: string;
@@ -26,6 +27,7 @@ type PlacementDecisionInput = {
   capacityLimit: number;
   availableSpots: number;
   resourceCapacity: number | null;
+  capacitySnapshot: CapacitySnapshot;
   score: number;
   rationale: string;
 };
@@ -52,7 +54,8 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
       preferred_time_windows: input.preferredTimeWindows,
       capacity_limit: input.capacityLimit,
       active_memberships: input.activeMemberships,
-      available_spots: input.availableSpots
+      available_spots: input.availableSpots,
+      capacity_snapshot: capacitySnapshotToRecord(input.capacitySnapshot)
     },
     ruleVersion: "placement-v1",
     score: input.score,
@@ -60,13 +63,16 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
       smartReason({
         code: "capacity_available",
         label: "Capaciteit beschikbaar",
-        detail: `${input.availableSpots} plek${input.availableSpots === 1 ? "" : "ken"} vrij binnen de groep/resource capaciteit.`,
+        detail: `${input.availableSpots} plek${input.availableSpots === 1 ? "" : "ken"} vrij binnen groep, resource, holds en reserveringen.`,
         weight: 30,
         evidence: {
           capacity_limit: input.capacityLimit,
           active_memberships: input.activeMemberships,
           available_spots: input.availableSpots,
-          resource_capacity: input.resourceCapacity
+          resource_capacity: input.resourceCapacity,
+          held_spots: input.capacitySnapshot.heldSpots,
+          reserved_spots: input.capacitySnapshot.reservedSpots,
+          future_starts: input.capacitySnapshot.futureStarts
         }
       }),
       smartReason({
@@ -84,11 +90,20 @@ export async function createPlacementSmartDecision(client: SmartDecisionClient, 
         evidence: { recommended_stage_id: input.recommendedStageId, group_stage_id: input.group.stage_id }
       })
     ],
+    blockers: input.capacitySnapshot.blockers.map((blocker) =>
+      smartBlocker({
+        code: blocker.code,
+        label: blocker.label,
+        detail: blocker.detail,
+        severity: blocker.severity === "blocking" ? "blocking" : "warning"
+      })
+    ),
     recommendation: {
       action: "approve_slot_offer",
       group_id: input.group.id,
       score: input.score,
       rationale: input.rationale,
+      capacity_explanation: capacitySnapshotToRecord(input.capacitySnapshot),
       parent_summary: "Er lijkt een passende lesplek beschikbaar. De zwemschool controleert dit voordat er een aanbod wordt verstuurd."
     },
     metadata: {

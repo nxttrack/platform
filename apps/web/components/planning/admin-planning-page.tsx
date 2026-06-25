@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, CalendarClock, CalendarDays, ClipboardCheck, RotateCcw, UsersRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
+import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { createConflictCheckedSessionAction, generateGroupSessionsAction, updateCatchUpRequestAction } from "@/lib/planning/admin-planning-actions";
 import type {
   AdminDomainData,
@@ -38,6 +39,7 @@ type GroupPlanningRow = {
   instructor: InstructorRow | null;
   memberships: GroupMembershipRow[];
   sessions: SessionRow[];
+  capacity: CapacitySnapshot;
   utilization: number;
   freeSpots: number;
 };
@@ -152,17 +154,22 @@ function GroupPlanningCard({ row }: { row: GroupPlanningRow }) {
             {formatTime(row.group.starts_at)}-{formatTime(row.group.ends_at)} - {row.resource?.name ?? "Geen locatie"} - {row.instructor?.display_name ?? "Geen instructeur"}
           </p>
         </div>
-        <StatusPill tone={row.freeSpots < 0 ? "danger" : row.freeSpots === 0 ? "warning" : "success"}>
-          {row.memberships.length}/{row.group.capacity}
-        </StatusPill>
+        <StatusPill tone={capacityTone(row.capacity)}>{capacityText(row.capacity)}</StatusPill>
       </div>
       <div className="mt-3 h-2 overflow-hidden rounded-full bg-border">
         <div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, Math.max(0, row.utilization))}%` }} />
       </div>
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
         <InfoTile label="Sessies" value={row.sessions.length.toString()} />
-        <InfoTile label="Vrij" value={row.freeSpots.toString()} />
+        <InfoTile label="Open" value={row.capacity.openSpots.toString()} />
+        <InfoTile label="Hold" value={row.capacity.heldSpots.toString()} />
         <InfoTile label="Status" value={row.group.status} />
+      </div>
+      <div className="mt-3 grid gap-1 text-xs text-muted-foreground">
+        <p>
+          {row.capacity.activeMemberships} actief, {row.capacity.futureStarts} toekomstige start, {row.capacity.reservedSpots + row.capacity.trialSpots + row.capacity.makeupSpots} gereserveerd.
+        </p>
+        {row.capacity.blockers.length > 0 ? <p className="font-semibold text-red-700">{row.capacity.blockers[0]?.label}: {row.capacity.blockers[0]?.detail}</p> : null}
       </div>
       <form action={generateGroupSessionsAction} className="mt-4 grid gap-3 md:grid-cols-[1fr_120px_auto]">
         <input name="group_id" type="hidden" value={row.group.id} />
@@ -225,11 +232,12 @@ function ConflictList({ conflicts }: { conflicts: ConflictRow[] }) {
   return (
     <div className="grid gap-3">
       {conflicts.map((conflict) => (
-        <div key={conflict.id} className="rounded-2xl border border-border bg-muted/35 p-4">
+        <div key={conflict.id} className={`rounded-2xl border p-4 ${conflict.tone === "danger" ? "border-red-200 bg-red-50/80" : "border-amber-200 bg-amber-50/80"}`}>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-semibold">{conflict.title}</p>
               <p className="mt-1 text-sm text-muted-foreground">{conflict.detail}</p>
+              <p className="mt-2 text-xs font-semibold text-foreground">Actie: verplaats een les, resource of instructeur voordat je nieuwe sessies genereert.</p>
             </div>
             <StatusPill tone={conflict.tone}>check</StatusPill>
           </div>
@@ -328,9 +336,19 @@ function buildLookups(data: AdminDomainData): LookupMaps {
 }
 
 function buildGroupRows(data: AdminDomainData, lookups: LookupMaps): GroupPlanningRow[] {
+  const capacities = new Map(
+    buildCapacitySnapshots({
+      groups: data.groups,
+      resources: data.resources,
+      memberships: data.groupMemberships,
+      holds: data.capacityHolds
+    }).map((capacity) => [capacity.groupId, capacity])
+  );
+
   return data.groups
     .map((group) => {
       const memberships = lookups.membershipsByGroup.get(group.id) ?? [];
+      const capacity = capacities.get(group.id) ?? buildCapacitySnapshots({ groups: [group], resources: data.resources, memberships, holds: [] })[0];
 
       return {
         group,
@@ -338,8 +356,9 @@ function buildGroupRows(data: AdminDomainData, lookups: LookupMaps): GroupPlanni
         instructor: group.instructor_id ? (lookups.instructors.get(group.instructor_id) ?? null) : null,
         memberships,
         sessions: lookups.sessionsByGroup.get(group.id) ?? [],
-        utilization: group.capacity > 0 ? (memberships.length / group.capacity) * 100 : 0,
-        freeSpots: group.capacity - memberships.length
+        capacity,
+        utilization: capacity.capacityLimit > 0 ? (capacity.usedSpots / capacity.capacityLimit) * 100 : 0,
+        freeSpots: capacity.openSpots
       };
     })
     .sort((a, b) => a.group.weekday - b.group.weekday || a.group.starts_at.localeCompare(b.group.starts_at));
@@ -463,6 +482,34 @@ function InfoTile({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
   );
+}
+
+function capacityText(capacity: CapacitySnapshot) {
+  if (capacity.status === "blocked") {
+    return "Geblokkeerd";
+  }
+
+  if (capacity.blockedSpots > 0) {
+    return `${capacity.blockedSpots} overboekt`;
+  }
+
+  return `${capacity.openSpots}/${capacity.capacityLimit} vrij`;
+}
+
+function capacityTone(capacity: CapacitySnapshot): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (capacity.status === "blocked" || capacity.blockers.some((blocker) => blocker.severity === "blocking")) {
+    return "danger";
+  }
+
+  if (capacity.status === "overbooked" || capacity.status === "full") {
+    return "warning";
+  }
+
+  if (capacity.status === "nearly_full") {
+    return "info";
+  }
+
+  return "success";
 }
 
 function SelectField({ defaultValue, label, name, options, required }: { defaultValue?: string; label: string; name: string; options: { label: string; value: string }[]; required?: boolean }) {

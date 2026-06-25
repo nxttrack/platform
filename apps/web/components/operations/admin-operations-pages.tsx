@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AlertTriangle, CalendarDays, CircleDollarSign, Clock, MapPin, TrendingUp, UserRound, Users, Waves } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
+import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { createParticipantGuardianAction, updateParticipantGuardianAction } from "@/lib/domain/admin-domain-actions";
 import type {
   AdminDomainData,
@@ -43,6 +44,7 @@ type CapacityRow = {
   capacityLimit: number;
   availableSpots: number;
   utilization: number;
+  snapshot: CapacitySnapshot;
 };
 
 type AlertItem = {
@@ -208,7 +210,7 @@ export function AdminCapacityReportsPage({ domain, placement, payments }: Operat
             { header: "Instructeur", render: (row) => row.instructorName },
             { header: "Bezetting", render: (row) => `${row.activeMemberships}/${row.capacityLimit}` },
             { header: "Vrij", render: (row) => row.availableSpots },
-            { header: "Status", render: (row) => <StatusPill tone={row.availableSpots < 0 ? "danger" : row.availableSpots === 0 ? "warning" : "success"}>{Math.round(row.utilization)}%</StatusPill> }
+            { header: "Status", render: (row) => <StatusPill tone={capacityTone(row.snapshot)}>{Math.round(row.utilization)}%</StatusPill> }
           ]}
           emptyLabel="Geen capaciteitsregels gevonden."
           rows={capacityRows}
@@ -247,7 +249,7 @@ export function AdminOperationalTasksPage({ domain, placement, payments }: Opera
             <CheckRow label="Programma's, niveaus, groepen en locaties" ok={domain.data.programs.length > 0 && domain.data.groups.length > 0 && domain.data.resources.length > 0} />
             <CheckRow label="Instructeurs gekoppeld" ok={domain.data.groups.every((group) => Boolean(group.instructor_id))} />
             <CheckRow label="Ouders gekoppeld" ok={domain.data.participants.every((participant) => domain.data.participantGuardians.some((guardian) => guardian.participant_id === participant.id && guardian.status === "active"))} />
-            <CheckRow label="Capaciteit binnen limiet" ok={buildCapacityRows(domain.data).every((row) => row.activeMemberships <= row.capacityLimit)} />
+            <CheckRow label="Capaciteit binnen limiet" ok={buildCapacityRows(domain.data).every((row) => row.snapshot.blockedSpots === 0)} />
           </div>
         </Card>
       </div>
@@ -389,7 +391,7 @@ function PlanningGroupCard({ row }: { row: CapacityRow }) {
           <p className="truncate text-sm font-bold">{row.group.name}</p>
           <p className="text-xs text-muted-foreground">{formatTime(row.group.starts_at)}-{formatTime(row.group.ends_at)}</p>
         </div>
-        <StatusPill tone={row.availableSpots < 0 ? "danger" : row.availableSpots === 0 ? "warning" : "success"}>{row.activeMemberships}/{row.capacityLimit}</StatusPill>
+        <StatusPill tone={capacityTone(row.snapshot)}>{row.activeMemberships}/{row.capacityLimit}</StatusPill>
       </div>
       <p className="mt-2 truncate text-xs text-muted-foreground">{row.resourceName}</p>
       <p className="truncate text-xs text-muted-foreground">{row.instructorName}</p>
@@ -447,7 +449,7 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
   }
 
   const alerts: AlertItem[] = [];
-  const overCapacity = capacityRows.filter((row) => row.activeMemberships > row.capacityLimit);
+  const overCapacity = capacityRows.filter((row) => row.snapshot.blockedSpots > 0);
   const missingInstructor = domain.data.groups.filter((group) => group.status === "active" && !group.instructor_id);
   const missingGuardian = domain.data.participants.filter((participant) => participant.status === "active" && !domain.data.participantGuardians.some((guardian) => guardian.participant_id === participant.id && guardian.status === "active"));
   const maintenanceGroups = domain.data.groups.filter((group) => {
@@ -501,24 +503,47 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
 }
 
 function buildCapacityRows(data: AdminDomainData): CapacityRow[] {
-  const today = new Date().toISOString().slice(0, 10);
+  const snapshots = new Map(
+    buildCapacitySnapshots({
+      groups: data.groups,
+      resources: data.resources,
+      memberships: data.groupMemberships,
+      holds: data.capacityHolds
+    }).map((snapshot) => [snapshot.groupId, snapshot])
+  );
 
   return data.groups.map((group) => {
     const resource = data.resources.find((entry) => entry.id === group.resource_id);
     const instructor = data.instructors.find((entry) => entry.id === group.instructor_id);
-    const activeMemberships = data.groupMemberships.filter((membership) => membership.group_id === group.id && ["planned", "active"].includes(membership.status) && (!membership.ends_on || membership.ends_on >= today)).length;
-    const capacityLimit = Math.min(group.capacity, resource?.capacity ?? group.capacity);
+    const snapshot = snapshots.get(group.id) ?? buildCapacitySnapshots({ groups: [group], resources: data.resources, memberships: data.groupMemberships, holds: [] })[0];
 
     return {
       group,
       resourceName: resource?.name ?? "Geen locatie",
       instructorName: instructor?.display_name ?? "Geen instructeur",
-      activeMemberships,
-      capacityLimit,
-      availableSpots: capacityLimit - activeMemberships,
-      utilization: capacityLimit > 0 ? (activeMemberships / capacityLimit) * 100 : 0
+      activeMemberships: snapshot.activeMemberships,
+      capacityLimit: snapshot.capacityLimit,
+      availableSpots: snapshot.openSpots,
+      utilization: snapshot.capacityLimit > 0 ? (snapshot.usedSpots / snapshot.capacityLimit) * 100 : 0,
+      snapshot
     };
   });
+}
+
+function capacityTone(snapshot: CapacitySnapshot): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (snapshot.status === "blocked" || snapshot.blockers.some((blocker) => blocker.severity === "blocking")) {
+    return "danger";
+  }
+
+  if (snapshot.status === "overbooked" || snapshot.status === "full") {
+    return "warning";
+  }
+
+  if (snapshot.status === "nearly_full") {
+    return "info";
+  }
+
+  return "success";
 }
 
 function buildLookups(data: AdminDomainData): LookupMaps {

@@ -1,7 +1,10 @@
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { buildCapacitySnapshots, releaseExpiredCapacity, type CapacityHoldInput, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
+
+export type { CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 
 export type IntakeSubmissionRow = {
   id: string;
@@ -154,6 +157,10 @@ export type GroupLookupRow = {
   starts_at: string;
   ends_at: string;
   capacity: number;
+  reserved_spots: number;
+  trial_spots: number;
+  makeup_spots: number;
+  overbooking_policy: string;
   status: string;
 };
 
@@ -168,17 +175,11 @@ export type GroupMembershipLookupRow = {
   id: string;
   group_id: string;
   status: string;
+  starts_on: string;
   ends_on: string | null;
 };
 
-export type CapacitySnapshot = {
-  groupId: string;
-  groupCapacity: number;
-  resourceCapacity: number | null;
-  capacityLimit: number;
-  activeMemberships: number;
-  availableSpots: number;
-};
+export type CapacityHoldRow = CapacityHoldInput;
 
 export type PlacementWorkflowData = {
   intakes: IntakeSubmissionRow[];
@@ -192,6 +193,7 @@ export type PlacementWorkflowData = {
   groups: GroupLookupRow[];
   resources: ResourceLookupRow[];
   memberships: GroupMembershipLookupRow[];
+  capacityHolds: CapacityHoldRow[];
   capacities: CapacitySnapshot[];
   smartDecisions: SmartDecisionSummaryRow[];
 };
@@ -240,8 +242,9 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
 
   const supabase = await createClient();
   const tenantId = tenant.id;
+  await releaseExpiredCapacity(supabase, tenantId);
 
-  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, smartDecisionsResult] = await Promise.all([
+  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, capacityHoldsResult, smartDecisionsResult] = await Promise.all([
     supabase
       .from("intake_submissions")
       .select("id, program_id, intake_form_config_id, intake_config_version, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, answers, notes, recommendation_snapshot, duplicate_snapshot, missing_information, stage_recommendation_decision_id, reviewed_at, review_note, status, created_at")
@@ -270,12 +273,13 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     supabase.from("stages").select("id, program_id, name, code").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
     supabase
       .from("groups")
-      .select("id, program_id, stage_id, resource_id, name, weekday, starts_at, ends_at, capacity, status")
+      .select("id, program_id, stage_id, resource_id, name, weekday, starts_at, ends_at, capacity, reserved_spots, trial_spots, makeup_spots, overbooking_policy, status")
       .eq("tenant_id", tenantId)
       .order("weekday", { ascending: true })
       .order("starts_at", { ascending: true }),
     supabase.from("resources").select("id, name, capacity, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
-    supabase.from("group_memberships").select("id, group_id, status, ends_on").eq("tenant_id", tenantId),
+    supabase.from("group_memberships").select("id, group_id, status, starts_on, ends_on").eq("tenant_id", tenantId),
+    supabase.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("tenant_id", tenantId).order("expires_at", { ascending: true }),
     supabase
       .from("smart_decisions")
       .select("id, engine_key, subject_type, subject_id, rule_version, score, confidence, reasons_json, blockers_json, recommendation, decision_status, human_decision, override_reason, created_at")
@@ -296,12 +300,15 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     groups: groupsResult.error,
     resources: resourcesResult.error,
     group_memberships: membershipsResult.error,
+    capacity_holds: capacityHoldsResult.error,
     smart_decisions: smartDecisionsResult.error
   });
 
   const resources = asRows<ResourceLookupRow>(resourcesResult.data);
   const groups = asRows<GroupLookupRow>(groupsResult.data);
   const memberships = asRows<GroupMembershipLookupRow>(membershipsResult.data);
+  const slotOffers = asRows<SlotOfferRow>(offersResult.data);
+  const capacityHolds = asRows<CapacityHoldRow>(capacityHoldsResult.data);
 
   return {
     status: errors.length > 0 ? "query_error" : "ready",
@@ -313,36 +320,17 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
       intakeDuplicateMatches: asRows<IntakeDuplicateMatchRow>(duplicateMatchesResult.data),
       waitlistEntries: asRows<WaitlistEntryRow>(waitlistResult.data),
       placementSuggestions: asRows<PlacementSuggestionRow>(suggestionsResult.data),
-      slotOffers: asRows<SlotOfferRow>(offersResult.data),
+      slotOffers,
       programs: asRows<ProgramLookupRow>(programsResult.data),
       stages: asRows<StageLookupRow>(stagesResult.data),
       groups,
       resources,
       memberships,
-      capacities: computeCapacities(groups, resources, memberships),
+      capacityHolds,
+      capacities: buildCapacitySnapshots({ groups, resources, memberships, holds: capacityHolds, slotOffers }),
       smartDecisions: asRows<SmartDecisionSummaryRow>(smartDecisionsResult.data)
     }
   };
-}
-
-export function computeCapacities(groups: GroupLookupRow[], resources: ResourceLookupRow[], memberships: GroupMembershipLookupRow[]): CapacitySnapshot[] {
-  const resourcesById = new Map(resources.map((resource) => [resource.id, resource]));
-  const today = new Date().toISOString().slice(0, 10);
-
-  return groups.map((group) => {
-    const resource = group.resource_id ? resourcesById.get(group.resource_id) : null;
-    const activeMemberships = memberships.filter((membership) => membership.group_id === group.id && ["planned", "active"].includes(membership.status) && (!membership.ends_on || membership.ends_on >= today)).length;
-    const capacityLimit = Math.min(group.capacity, resource?.capacity ?? group.capacity);
-
-    return {
-      groupId: group.id,
-      groupCapacity: group.capacity,
-      resourceCapacity: resource?.capacity ?? null,
-      capacityLimit,
-      activeMemberships,
-      availableSpots: Math.max(0, capacityLimit - activeMemberships)
-    };
-  });
 }
 
 function createEmptyData(): PlacementWorkflowData {
@@ -358,6 +346,7 @@ function createEmptyData(): PlacementWorkflowData {
     groups: [],
     resources: [],
     memberships: [],
+    capacityHolds: [],
     capacities: [],
     smartDecisions: []
   };
