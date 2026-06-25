@@ -114,6 +114,67 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
   );
 }
 
+export function AdminTenantNewsPage({ snapshot }: Props) {
+  if (snapshot.status !== "ready" || !snapshot.tenant) {
+    return <WebsiteSettingsStatus snapshot={snapshot} />;
+  }
+
+  const profile = snapshot.data.profile ?? createFallbackProfile(snapshot.tenant.name);
+  const newsItems = normalizedNewsItems(profile.news_items);
+  const agendaItems = normalizedAgendaItems(profile.agenda_items);
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader
+        action={<StatusPill tone={profile.status === "published" ? "success" : "warning"}>{profile.status}</StatusPill>}
+        kicker="Backoffice - nieuws"
+        subtitle="Beheer nieuws en agenda voor de publieke tenantwebsite met dezelfde publicatieflow als de homepage."
+        title="Nieuws en agenda"
+      />
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<Newspaper className="h-5 w-5" />} label="Nieuwsitems" value={newsItems.length.toString()} detail="publieke website" />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Agendamomenten" value={agendaItems.length.toString()} detail="publieke website" />
+        <MetricCard icon={<Globe2 className="h-5 w-5" />} label="SEO titel" value={profile.seo_title ? "ingesteld" : "leeg"} detail="social preview blijft bij instellingen" />
+      </div>
+      <Card>
+        <SectionHeader icon={<Newspaper className="h-5 w-5" />} title="Nieuws en agenda beheren" />
+        <form action={updateTenantPublicProfileAction} className="mt-4 grid gap-5">
+          <HiddenTenantProfileFields profile={profile} />
+          <div className="grid gap-4 lg:grid-cols-2">
+            <EditableList title="Nieuws" icon={<Newspaper className="h-4 w-4" />}>
+              {[0, 1, 2].map((index) => {
+                const item = newsItems[index];
+
+                return (
+                  <div key={`news-page-${index}`} className="grid gap-2 rounded-2xl border border-border bg-muted/35 p-3">
+                    <TextField defaultValue={item?.title ?? ""} label={`Nieuws ${index + 1} titel`} name={`news_${index}_title`} />
+                    <TextField defaultValue={item?.date ?? ""} label="Publicatielabel" name={`news_${index}_date`} placeholder="Vandaag" />
+                    <BlockBuilderTextarea defaultValue={item?.body ?? ""} label="Nieuws body" name={`news_${index}_body`} />
+                  </div>
+                );
+              })}
+            </EditableList>
+            <EditableList title="Agenda" icon={<CalendarDays className="h-4 w-4" />}>
+              {[0, 1, 2].map((index) => {
+                const item = agendaItems[index];
+
+                return (
+                  <div key={`agenda-page-${index}`} className="grid gap-2 rounded-2xl border border-border bg-muted/35 p-3">
+                    <TextField defaultValue={item?.title ?? ""} label={`Moment ${index + 1} titel`} name={`agenda_${index}_title`} />
+                    <TextField defaultValue={item?.time ?? ""} label="Tijd" name={`agenda_${index}_time`} placeholder="Zaterdag 11:00" />
+                    <TextField defaultValue={item?.location ?? ""} label="Locatie" name={`agenda_${index}_location`} placeholder="Instructiebad" />
+                  </div>
+                );
+              })}
+            </EditableList>
+          </div>
+          <SubmitButton>Nieuws en agenda publiceren</SubmitButton>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
 function TenantPublicProfileForm({ profile, tenantName }: { profile: TenantPublicProfileSettingsRow; tenantName: string }) {
   const newsItems = normalizedNewsItems(profile.news_items);
   const agendaItems = normalizedAgendaItems(profile.agenda_items);
@@ -197,6 +258,51 @@ function AssetUploadPanel({ profile }: { profile: TenantPublicProfileSettingsRow
       <AssetUploadForm currentUrl={profile.logo_url} kind="logo" label="Logo uploaden" />
       <AssetUploadForm currentUrl={profile.hero_image_url} kind="hero" label="Hero afbeelding uploaden" />
       <AssetUploadForm currentUrl={profile.social_image_url} kind="social" label="Social share afbeelding uploaden" />
+    </div>
+  );
+}
+
+function HiddenTenantProfileFields({ profile }: { profile: TenantPublicProfileSettingsRow }) {
+  return (
+    <>
+      <input name="status" type="hidden" value={profile.status} />
+      <input name="brand_primary_hex" type="hidden" value={profile.brand_primary_hex} />
+      <input name="brand_accent_hex" type="hidden" value={profile.brand_accent_hex} />
+      <input name="logo_url" type="hidden" value={profile.logo_url ?? ""} />
+      <input name="hero_image_url" type="hidden" value={profile.hero_image_url ?? ""} />
+      <input name="hero_image_alt" type="hidden" value={profile.hero_image_alt ?? ""} />
+      <input name="location_label" type="hidden" value={profile.location_label ?? ""} />
+      <input name="hero_title" type="hidden" value={profile.hero_title} />
+      <input name="hero_subtitle" type="hidden" value={profile.hero_subtitle} />
+      <input name="primary_cta_label" type="hidden" value={profile.primary_cta_label} />
+      <input name="secondary_cta_label" type="hidden" value={profile.secondary_cta_label} />
+      <input name="intro_title" type="hidden" value={profile.intro_title ?? ""} />
+      <input name="intro_body" type="hidden" value={profile.intro_body ?? ""} />
+      <input name="footer_tagline" type="hidden" value={profile.footer_tagline ?? ""} />
+      <input name="contact_email" type="hidden" value={profile.contact_email ?? ""} />
+      <input name="contact_phone" type="hidden" value={profile.contact_phone ?? ""} />
+      <input name="address_lines" type="hidden" value={profile.address_lines.join("\n")} />
+      <input name="seo_title" type="hidden" value={profile.seo_title ?? ""} />
+      <input name="seo_description" type="hidden" value={profile.seo_description ?? ""} />
+      <input name="social_image_url" type="hidden" value={profile.social_image_url ?? ""} />
+    </>
+  );
+}
+
+function BlockBuilderTextarea({ defaultValue, label, name }: { defaultValue?: string; label: string; name: string }) {
+  return (
+    <div className="grid gap-2 rounded-xl border border-border bg-card p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">TipTap block builder</span>
+        <div className="flex flex-wrap gap-1">
+          {["Kop", "Tekst", "Afbeelding", "Knop"].map((block) => (
+            <span key={block} className="rounded-full border border-border bg-muted px-2 py-1 text-xs font-semibold">
+              {block}
+            </span>
+          ))}
+        </div>
+      </div>
+      <TextAreaField defaultValue={defaultValue} label={label} name={name} />
     </div>
   );
 }

@@ -47,6 +47,13 @@ type CommunicationProviderConfigForDispatch = {
   api_key_secret_reference: string | null;
 };
 
+type MessageRecipient = {
+  recipient_profile_id: string | null;
+  recipient_email: string | null;
+  participant_id: string | null;
+  label: string;
+};
+
 type TenantDocumentForSync = {
   id: string;
   tenant_id: string;
@@ -270,6 +277,7 @@ export async function queueMessageAction(formData: FormData) {
   const requestedStatus = enumValue(formData, "status", ["draft", "queued"], "draft");
   const recipientProfileId = optionalString(formData, "recipient_profile_id");
   const recipientEmail = optionalString(formData, "recipient_email");
+  const targetKind = enumValue(formData, "target_kind", ["direct", "participant_guardians", "group_guardians", "instructor", "all_instructors", "all_parents"], "direct");
   const renderContext = jsonObjectValue(formData, "render_context");
   let subject = optionalString(formData, "subject");
   let body = optionalString(formData, "body");
@@ -303,21 +311,33 @@ export async function queueMessageAction(formData: FormData) {
     throw new Error(`Ontbrekende templatevariabelen: ${validationErrors.join(", ")}.`);
   }
 
-  if (channel === "email" && !recipientEmail && !recipientProfileId) {
-    throw new Error("Kies een profiel of vul een e-mailadres in voor email.");
+  const prepared = prepareEmailEnvelope(provider, requestedStatus);
+  const recipients = await resolveMessageRecipients(supabase, tenantId, formData, {
+    targetKind,
+    recipientProfileId,
+    recipientEmail
+  });
+
+  if (recipients.length === 0) {
+    throw new Error("Geen ontvangers gevonden voor deze selectie.");
   }
 
-  const prepared = prepareEmailEnvelope(provider, requestedStatus);
+  const deliverableRecipients = channel === "email" ? recipients.filter((recipient) => recipient.recipient_email) : recipients;
+
+  if (deliverableRecipients.length === 0) {
+    throw new Error("Geen ontvangers met e-mailadres gevonden voor e-mail.");
+  }
 
   await throwOnError(
-    supabase.from("message_outbox").insert({
+    supabase.from("message_outbox").insert(
+      deliverableRecipients.map((recipient) => ({
       tenant_id: tenantId,
       template_id: templateId,
       channel,
       provider,
-      recipient_profile_id: recipientProfileId,
-      recipient_email: recipientEmail,
-      participant_id: optionalString(formData, "participant_id"),
+      recipient_profile_id: recipient.recipient_profile_id,
+      recipient_email: recipient.recipient_email,
+      participant_id: recipient.participant_id,
       enrollment_id: optionalString(formData, "enrollment_id"),
       subject,
       body,
@@ -328,8 +348,15 @@ export async function queueMessageAction(formData: FormData) {
       template_variables: templateVariables,
       validation_errors: validationErrors,
       created_by_profile_id: profileId,
-      metadata: { phase: "phase12", email_foundation: prepared }
-    })
+      metadata: {
+        phase: "phase12",
+        email_foundation: prepared,
+        target_kind: targetKind,
+        recipient_label: recipient.label,
+        requested_recipients: recipients.length
+      }
+    }))
+    )
   );
 
   revalidatePhase12();
@@ -787,6 +814,145 @@ async function markDispatchFailed(supabase: TenantSupabaseClient, tenantId: stri
   );
 }
 
+async function resolveMessageRecipients(
+  supabase: TenantSupabaseClient,
+  tenantId: string,
+  formData: FormData,
+  input: {
+    targetKind: string;
+    recipientProfileId: string | null;
+    recipientEmail: string | null;
+  }
+): Promise<MessageRecipient[]> {
+  if (input.targetKind === "direct") {
+    return uniqueRecipients([
+      {
+        recipient_profile_id: input.recipientProfileId,
+        recipient_email: input.recipientEmail,
+        participant_id: optionalString(formData, "participant_id"),
+        label: input.recipientEmail ?? input.recipientProfileId ?? "direct"
+      }
+    ]);
+  }
+
+  if (input.targetKind === "participant_guardians") {
+    const participantId = requiredString(formData, "participant_id");
+    return getGuardianRecipients(supabase, tenantId, [participantId]);
+  }
+
+  if (input.targetKind === "group_guardians") {
+    const groupId = requiredString(formData, "group_id");
+    const membershipsResult = await supabase
+      .from("group_memberships")
+      .select("enrollment_id")
+      .eq("tenant_id", tenantId)
+      .eq("group_id", groupId)
+      .in("status", ["planned", "active"]);
+
+    if (membershipsResult.error) {
+      throw new Error(membershipsResult.error.message);
+    }
+
+    const enrollmentIds = uniqueStrings((membershipsResult.data ?? []).map((membership) => membership.enrollment_id).filter(Boolean));
+
+    if (enrollmentIds.length === 0) {
+      return [];
+    }
+
+    const enrollmentsResult = await supabase.from("enrollments").select("participant_id").eq("tenant_id", tenantId).in("id", enrollmentIds);
+
+    if (enrollmentsResult.error) {
+      throw new Error(enrollmentsResult.error.message);
+    }
+
+    const participantIds = uniqueStrings((enrollmentsResult.data ?? []).map((enrollment) => enrollment.participant_id).filter(Boolean));
+    return getGuardianRecipients(supabase, tenantId, participantIds);
+  }
+
+  if (input.targetKind === "instructor") {
+    const instructorId = requiredString(formData, "instructor_id");
+    const instructorResult = await supabase.from("instructors").select("profile_id, display_name, email").eq("tenant_id", tenantId).eq("id", instructorId).single();
+
+    if (instructorResult.error || !instructorResult.data) {
+      throw new Error(instructorResult.error?.message ?? "Instructeur niet gevonden.");
+    }
+
+    return uniqueRecipients([
+      {
+        recipient_profile_id: instructorResult.data.profile_id,
+        recipient_email: instructorResult.data.email,
+        participant_id: null,
+        label: instructorResult.data.display_name ?? instructorResult.data.email ?? "instructeur"
+      }
+    ]);
+  }
+
+  if (input.targetKind === "all_instructors") {
+    const instructorsResult = await supabase.from("instructors").select("profile_id, display_name, email").eq("tenant_id", tenantId).eq("status", "active");
+
+    if (instructorsResult.error) {
+      throw new Error(instructorsResult.error.message);
+    }
+
+    return uniqueRecipients(
+      (instructorsResult.data ?? []).map((instructor) => ({
+        recipient_profile_id: instructor.profile_id,
+        recipient_email: instructor.email,
+        participant_id: null,
+        label: instructor.display_name ?? instructor.email ?? "instructeur"
+      }))
+    );
+  }
+
+  if (input.targetKind === "all_parents") {
+    return getGuardianRecipients(supabase, tenantId, null);
+  }
+
+  return [];
+}
+
+async function getGuardianRecipients(supabase: TenantSupabaseClient, tenantId: string, participantIds: string[] | null): Promise<MessageRecipient[]> {
+  let query = supabase.from("participant_guardians").select("participant_id, profile_id, display_name, email").eq("tenant_id", tenantId).eq("status", "active");
+
+  if (participantIds) {
+    if (participantIds.length === 0) {
+      return [];
+    }
+
+    query = query.in("participant_id", participantIds);
+  }
+
+  const guardiansResult = await query;
+
+  if (guardiansResult.error) {
+    throw new Error(guardiansResult.error.message);
+  }
+
+  return uniqueRecipients(
+    (guardiansResult.data ?? []).map((guardian) => ({
+      recipient_profile_id: guardian.profile_id,
+      recipient_email: guardian.email,
+      participant_id: guardian.participant_id,
+      label: guardian.display_name ?? guardian.email ?? "ouder"
+    }))
+  );
+}
+
+function uniqueRecipients(recipients: MessageRecipient[]) {
+  const seen = new Set<string>();
+
+  return recipients.filter((recipient) => {
+    const key = recipient.recipient_email ? `email:${recipient.recipient_email.toLowerCase()}` : recipient.recipient_profile_id ? `profile:${recipient.recipient_profile_id}` : "";
+
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
 function toLiveSmtpSettings(provider: CommunicationProviderConfigForDispatch | undefined): LiveSmtpSettings | null {
   if (!provider || provider.status === "disabled") {
     return null;
@@ -1098,7 +1264,7 @@ async function requireReportExportPermission(supabase: TenantSupabaseClient, ten
 }
 
 function revalidatePhase12() {
-  for (const path of ["/admin", "/admin/berichten", "/admin/taken", "/admin/documenten", "/admin/rapportages", "/parent/notificaties", "/parent/documenten"]) {
+  for (const path of ["/admin", "/admin/berichten", "/admin/mail-instellingen", "/admin/mailtemplates", "/admin/notificatietemplates", "/admin/nieuwsbrief", "/admin/taken", "/admin/documenten", "/admin/rapportages", "/parent/notificaties", "/parent/documenten"]) {
     revalidatePath(path);
   }
 }

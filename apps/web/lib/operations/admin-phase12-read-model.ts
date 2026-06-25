@@ -162,6 +162,28 @@ export type OperationsProfileRow = {
   full_name: string | null;
 };
 
+export type OperationsGroupRow = {
+  id: string;
+  name: string;
+  status: string;
+};
+
+export type OperationsInstructorRow = {
+  id: string;
+  profile_id: string | null;
+  display_name: string;
+  email: string | null;
+  status: string;
+};
+
+export type OperationsGuardianRow = {
+  participant_id: string;
+  profile_id: string;
+  display_name: string | null;
+  email: string | null;
+  status: string;
+};
+
 export type OperationsCertificateRow = {
   id: string;
   participant_id: string;
@@ -184,6 +206,9 @@ export type AdminPhase12Data = {
   enrollments: OperationsEnrollmentRow[];
   programs: OperationsProgramRow[];
   profiles: OperationsProfileRow[];
+  groups: OperationsGroupRow[];
+  instructors: OperationsInstructorRow[];
+  guardians: OperationsGuardianRow[];
   certificates: OperationsCertificateRow[];
 };
 
@@ -242,6 +267,8 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     participantsResult,
     enrollmentsResult,
     programsResult,
+    groupsResult,
+    instructorsResult,
     certificatesResult,
     tenantMembersResult,
     guardiansResult
@@ -282,9 +309,11 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     supabase.from("participants").select("id, display_name, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase.from("enrollments").select("id, participant_id, program_id, status").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
     supabase.from("programs").select("id, name").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    supabase.from("groups").select("id, name, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    supabase.from("instructors").select("id, profile_id, display_name, email, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
     supabase.from("certificates").select("id, participant_id, title, status, certificate_number").eq("tenant_id", tenantId).order("created_at", { ascending: false }),
     supabase.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId),
-    supabase.from("participant_guardians").select("profile_id").eq("tenant_id", tenantId)
+    supabase.from("participant_guardians").select("participant_id, profile_id, display_name, email, status").eq("tenant_id", tenantId)
   ]);
   const documentStorage = await getDocumentStorageStatus();
 
@@ -319,6 +348,8 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
     participants: participantsResult.error,
     enrollments: enrollmentsResult.error,
     programs: programsResult.error,
+    groups: groupsResult.error,
+    instructors: instructorsResult.error,
     certificates: certificatesResult.error,
     tenant_memberships: tenantMembersResult.error,
     participant_guardians: guardiansResult.error,
@@ -344,6 +375,9 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
       enrollments: asRows<OperationsEnrollmentRow>(enrollmentsResult.data),
       programs: asRows<OperationsProgramRow>(programsResult.data),
       profiles: asRows<OperationsProfileRow>(profilesResult.data),
+      groups: asRows<OperationsGroupRow>(groupsResult.data),
+      instructors: asRows<OperationsInstructorRow>(instructorsResult.data),
+      guardians: asRows<OperationsGuardianRow>(guardiansResult.data),
       certificates: asRows<OperationsCertificateRow>(certificatesResult.data)
     }
   };
@@ -371,6 +405,9 @@ function createEmptyData(): AdminPhase12Data {
     enrollments: [],
     programs: [],
     profiles: [],
+    groups: [],
+    instructors: [],
+    guardians: [],
     certificates: []
   };
 }

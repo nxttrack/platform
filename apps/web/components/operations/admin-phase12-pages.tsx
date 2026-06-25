@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { BarChart3, ClipboardList, Download, FileText, Filter, Inbox, Mail, Send, Settings, ShieldCheck } from "lucide-react";
+import { BarChart3, CalendarDays, ClipboardList, Download, FileText, Filter, Inbox, Mail, Megaphone, Newspaper, Send, Settings, ShieldCheck, Users } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
@@ -29,6 +29,8 @@ import type {
   MessageTemplateRow,
   OperationalTaskRow,
   OperationsEnrollmentRow,
+  OperationsGroupRow,
+  OperationsInstructorRow,
   OperationsParticipantRow,
   OperationsProfileRow,
   ReportExportRequestRow,
@@ -64,27 +66,45 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
 
   const data = snapshot.data;
   const lookups = buildLookups(data);
-  const activeTemplates = data.messageTemplates.filter((template) => template.status === "active").length;
   const queuedMessages = data.messageOutbox.filter((message) => message.status === "queued").length;
   const failedMessages = data.messageOutbox.filter((message) => ["failed", "retrying"].includes(message.status));
-  const smtpProvider = data.providerConfigs.find((provider) => provider.provider === "smtp");
-  const sendgridProvider = data.providerConfigs.find((provider) => provider.provider === "sendgrid");
+  const sentMessages = data.messageOutbox.filter((message) => message.status === "sent" || message.delivery_status === "sent").length;
 
   return (
     <div className="grid gap-6">
       <PageHeader
         action={<StatusPill tone="info">Communicatie</StatusPill>}
         kicker="Backoffice - berichten"
-        subtitle="SMTP-first met SendGrid-ready fallback. Berichten worden vanuit de outbox verzonden, gevolgd en opnieuw geprobeerd bij fouten."
-        title="Berichten"
+        subtitle="Stuur interne berichten en/of mail naar ouders, groepen, instructeurs of losse ontvangers. Templates, instellingen en nieuwsbrieven staan op eigen beheerpagina's."
+        title="Berichten versturen"
       />
 
       <div className="grid gap-4 md:grid-cols-4">
-        <MetricCard icon={<Settings className="h-5 w-5" />} label="Providers" value={data.providerConfigs.length.toString()} detail="SMTP + SendGrid" />
-        <MetricCard icon={<Mail className="h-5 w-5" />} label="Templates actief" value={activeTemplates.toString()} detail={`${data.messageTemplates.length} totaal`} />
-        <MetricCard icon={<Send className="h-5 w-5" />} label="Outbox queued" value={queuedMessages.toString()} detail="klaar voor worker" />
-        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Retry dashboard" value={failedMessages.length.toString()} detail="failed/retrying" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Ouders" value={data.guardians.length.toString()} detail="bereikbaar vanuit profielen" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Instructeurs" value={data.instructors.length.toString()} detail="actief en gepland" />
+        <MetricCard icon={<Send className="h-5 w-5" />} label="In wachtrij" value={queuedMessages.toString()} detail="klaar voor verzending" />
+        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Fouten" value={failedMessages.length.toString()} detail={`${sentMessages} verzonden`} />
       </div>
+
+      <Card>
+        <SectionHeader title="Nieuw bericht" count={data.participants.length + data.instructors.length} />
+        <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+          <QueueMessageForm data={data} />
+          <div className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4 text-sm text-muted-foreground">
+            <p className="font-semibold text-foreground">Kanaalkeuze</p>
+            <p>Kies e-mail voor externe verzending via SMTP of SendGrid. Kies intern bericht voor een portaalnotificatie zonder externe mailprovider.</p>
+            <p>Voor groepen worden actieve groepsplaatsingen uitgeklapt naar gekoppelde ouders/verzorgers. Stage of abonnement wordt hierbij niet aangepast.</p>
+            <div className="grid gap-2">
+              <a className={secondaryButtonClassName} href="/admin/mailtemplates">
+                Mailtemplates beheren
+              </a>
+              <a className={secondaryButtonClassName} href="/admin/mail-instellingen">
+                Mailinstellingen
+              </a>
+            </div>
+          </div>
+        </div>
+      </Card>
 
       <Card>
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -100,38 +120,6 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
           </form>
         </div>
       </Card>
-
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <SectionHeader title="E-mail instellingen" count={data.providerConfigs.length} />
-          <div className="grid gap-3">
-            <ProviderConfigCard provider={smtpProvider} title="SMTP via SendGrid" />
-            <ProviderConfigCard provider={sendgridProvider} title="SendGrid API live-ready" />
-          </div>
-        </Card>
-
-        <Card>
-          <SectionHeader title="Nieuw template" count={data.messageTemplates.length} />
-          <MessageTemplateForm mode="create" />
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <SectionHeader title="Templates" count={data.messageTemplates.length} />
-          <div className="grid gap-3">
-            {data.messageTemplates.length === 0 ? <EmptyState>Nog geen templates.</EmptyState> : null}
-            {data.messageTemplates.map((template) => (
-              <TemplateCard key={template.id} template={template} />
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <SectionHeader title="Bericht klaarzetten" count={data.participants.length} />
-          <QueueMessageForm data={data} />
-        </Card>
-      </div>
 
       <Card>
         <SectionHeader title="Retry dashboard" count={failedMessages.length} />
@@ -149,6 +137,94 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
           {data.messageOutbox.length === 0 ? <EmptyState>Nog geen berichten in de outbox.</EmptyState> : null}
           {data.messageOutbox.map((message) => (
             <MessageOutboxCard key={message.id} lookups={lookups} message={message} />
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+export function AdminMailSettingsPage({ snapshot }: Phase12PageProps) {
+  if (snapshot.status !== "ready") {
+    return <Phase12StatusPanel snapshot={snapshot} title="Mailinstellingen niet beschikbaar" />;
+  }
+
+  const smtpProvider = snapshot.data.providerConfigs.find((provider) => provider.provider === "smtp");
+  const sendgridProvider = snapshot.data.providerConfigs.find((provider) => provider.provider === "sendgrid");
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader
+        action={<StatusPill tone="info">SMTP first</StatusPill>}
+        kicker="Backoffice - mailinstellingen"
+        subtitle="Beheer SMTP als primaire route en houd SendGrid API live-ready naast dezelfde outbox."
+        title="Mailinstellingen"
+      />
+      <div className="grid gap-4 xl:grid-cols-2">
+        <Card>
+          <SectionHeader title="SMTP" count={smtpProvider ? 1 : 0} />
+          <div className="mt-4">
+            <ProviderConfigCard provider={smtpProvider} title="SMTP provider" />
+          </div>
+        </Card>
+        <Card>
+          <SectionHeader title="SendGrid" count={sendgridProvider ? 1 : 0} />
+          <div className="mt-4">
+            <ProviderConfigCard provider={sendgridProvider} title="SendGrid API provider" />
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export function AdminMailTemplatesPage({ snapshot }: Phase12PageProps) {
+  return <TemplateManagementPage audience="mail" snapshot={snapshot} subtitle="Bouw e-mailtemplates met shortcodechips, previewvalidatie en een TipTap-ready block builder." title="Mailtemplates" />;
+}
+
+export function AdminNotificationTemplatesPage({ snapshot }: Phase12PageProps) {
+  return <TemplateManagementPage audience="notification" snapshot={snapshot} subtitle="Beheer in-app notificatietemplates voor portaalmeldingen en automatische events." title="Notificatietemplates" />;
+}
+
+export function AdminNewsletterPage({ snapshot }: Phase12PageProps) {
+  if (snapshot.status !== "ready") {
+    return <Phase12StatusPanel snapshot={snapshot} title="Nieuwsbrief niet beschikbaar" />;
+  }
+
+  const newsletterTemplates = snapshot.data.messageTemplates.filter((template) => template.tags.includes("newsletter") || template.code.includes("newsletter"));
+  const scheduledNewsletters = snapshot.data.messageOutbox.filter((message) => message.event_key === "newsletter" || message.source_table === "newsletter").length;
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader
+        action={<StatusPill tone="warning">Concept en planning</StatusPill>}
+        kicker="Backoffice - nieuwsbrief"
+        subtitle="Maak nieuwsbriefconcepten, plan verzending en stuur naar alle ouders via dezelfde outbox en mailproviders."
+        title="Nieuwsbrief"
+      />
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<Megaphone className="h-5 w-5" />} label="Templates" value={newsletterTemplates.length.toString()} detail="tag newsletter" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Ontvangers" value={snapshot.data.guardians.length.toString()} detail="actieve ouders/verzorgers" />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Gepland" value={scheduledNewsletters.toString()} detail="outbox basis" />
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card>
+          <SectionHeader title="Nieuwsbrief opstellen" count={snapshot.data.guardians.length} />
+          <div className="mt-4">
+            <QueueMessageForm data={snapshot.data} newsletter />
+          </div>
+        </Card>
+        <Card>
+          <SectionHeader title="Block builder" count={newsletterTemplates.length} />
+          <TipTapBlockBuilder defaultBody="Beste {{parent_name}},\n\nDit is de nieuwsbrief van {{tenant_name}}.\n\n{{cta_url}}" />
+        </Card>
+      </div>
+      <Card>
+        <SectionHeader title="Nieuwsbrief templates" count={newsletterTemplates.length} />
+        <div className="grid gap-3">
+          {newsletterTemplates.length === 0 ? <EmptyState>Nog geen nieuwsbrief template. Maak een mailtemplate met tag newsletter.</EmptyState> : null}
+          {newsletterTemplates.map((template) => (
+            <TemplateCard key={template.id} template={template} />
           ))}
         </div>
       </Card>
@@ -302,23 +378,31 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
         <ReportFilterForm reporting={reporting} />
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <SectionHeader title="Export aanvragen" count={phase12.data.reportExports.length} />
-          <ReportExportForm mode="create" reporting={reporting} />
-        </Card>
-
-        <Card>
-          <SectionHeader title="Rapportrechten" count={reporting.permissions.length} />
-          <div className="grid gap-3">
-            <ReportPermissionForm />
-            {reporting.permissions.length === 0 ? <EmptyState>Nog geen expliciete rapportrechten. Tenant owners/admins houden standaard beheerrechten.</EmptyState> : null}
-            {reporting.permissions.map((grant) => (
-              <ReportPermissionCard key={grant.id} grant={grant} />
-            ))}
+      <Card>
+        <details>
+          <summary className="cursor-pointer">
+            <SectionHeader title="Export en rechten" count={phase12.data.reportExports.length + reporting.permissions.length} />
+          </summary>
+          <div className="mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+            <div className="rounded-2xl border border-border bg-muted/35 p-4">
+              <h3 className="font-bold">Export aanvragen</h3>
+              <div className="mt-3">
+                <ReportExportForm mode="create" reporting={reporting} />
+              </div>
+            </div>
+            <div className="rounded-2xl border border-border bg-muted/35 p-4">
+              <h3 className="font-bold">Rapportrechten</h3>
+              <div className="mt-3 grid gap-3">
+                <ReportPermissionForm />
+                {reporting.permissions.length === 0 ? <EmptyState>Nog geen expliciete rapportrechten. Tenant owners/admins houden standaard beheerrechten.</EmptyState> : null}
+                {reporting.permissions.map((grant) => (
+                  <ReportPermissionCard key={grant.id} grant={grant} />
+                ))}
+              </div>
+            </div>
           </div>
-        </Card>
-      </div>
+        </details>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
         <ReportDashboardCard section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
@@ -330,13 +414,17 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
       </div>
 
       <Card>
-        <SectionHeader title="Exportaanvragen" count={phase12.data.reportExports.length} />
-        <div className="grid gap-3">
-          {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
-          {phase12.data.reportExports.map((request) => (
-            <ReportExportCard key={request.id} reporting={reporting} request={request} />
-          ))}
-        </div>
+        <details>
+          <summary className="cursor-pointer">
+            <SectionHeader title="Exportaanvragen" count={phase12.data.reportExports.length} />
+          </summary>
+          <div className="mt-4 grid gap-3">
+            {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
+            {phase12.data.reportExports.map((request) => (
+              <ReportExportCard key={request.id} reporting={reporting} request={request} />
+            ))}
+          </div>
+        </details>
       </Card>
 
       <Card>
@@ -404,13 +492,56 @@ function MessageTemplateForm({ mode, template }: { mode: "create" | "update"; te
         <TextField defaultValue={template?.sort_order ?? 0} label="Sortering" name="sort_order" type="number" />
       </div>
       <TextField defaultValue={template?.subject_template} label="Onderwerp template" name="subject_template" />
-      <TextAreaField defaultValue={template?.body_template} label="Body template" name="body_template" required />
+      <TipTapBlockBuilder defaultBody={template?.body_template} fieldName="body_template" />
       <TextField defaultValue={template?.required_variables.join(", ")} label="Verplichte variabelen" name="required_variables" />
       <TextField defaultValue={template?.tags.join(", ")} label="Tags" name="tags" />
       <button className={primaryButtonClassName} type="submit">
         {mode === "create" ? "Template maken" : "Template opslaan"}
       </button>
     </form>
+  );
+}
+
+function TemplateManagementPage({ audience, snapshot, subtitle, title }: Phase12PageProps & { audience: "mail" | "notification"; subtitle: string; title: string }) {
+  if (snapshot.status !== "ready") {
+    return <Phase12StatusPanel snapshot={snapshot} title={`${title} niet beschikbaar`} />;
+  }
+
+  const templates =
+    audience === "mail"
+      ? snapshot.data.messageTemplates.filter((template) => template.channel === "email")
+      : snapshot.data.messageTemplates.filter((template) => template.channel === "in_app" || template.tags.includes("notification") || template.tags.includes("portal"));
+
+  return (
+    <div className="grid gap-6">
+      <PageHeader action={<StatusPill tone="info">Templates</StatusPill>} kicker={`Backoffice - ${title.toLowerCase()}`} subtitle={subtitle} title={title} />
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<FileText className="h-5 w-5" />} label="Templates" value={templates.length.toString()} detail={`${snapshot.data.messageTemplates.length} totaal`} />
+        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Variabelen" value={templateVariableCount(templates).toString()} detail="shortcodes gevalideerd" />
+        <MetricCard icon={<Mail className="h-5 w-5" />} label="Actief" value={templates.filter((template) => template.status === "active").length.toString()} detail="beschikbaar voor outbox" />
+      </div>
+      <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <Card>
+          <SectionHeader title="Nieuw template" count={templates.length} />
+          <div className="mt-4">
+            <MessageTemplateForm mode="create" />
+          </div>
+        </Card>
+        <Card>
+          <SectionHeader title="Shortcodes" count={templateShortcodes.length} />
+          <ShortcodePalette />
+        </Card>
+      </div>
+      <Card>
+        <SectionHeader title={title} count={templates.length} />
+        <div className="grid gap-3">
+          {templates.length === 0 ? <EmptyState>Nog geen templates voor deze categorie.</EmptyState> : null}
+          {templates.map((template) => (
+            <TemplateCard key={template.id} template={template} />
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }
 
@@ -457,25 +588,28 @@ function TemplateCard({ template }: { template: MessageTemplateRow }) {
   );
 }
 
-function QueueMessageForm({ data }: { data: AdminPhase12Data }) {
+function QueueMessageForm({ data, newsletter }: { data: AdminPhase12Data; newsletter?: boolean }) {
   return (
     <form action={queueMessageAction} className="grid gap-3">
       <div className="grid gap-3 md:grid-cols-2">
+        <SelectField defaultValue={newsletter ? "all_parents" : "direct"} label="Doelgroep" name="target_kind" options={targetKindOptions} />
         <SelectField includeEmpty label="Template" name="template_id" options={data.messageTemplates.map(optionFromTemplate)} />
         <SelectField defaultValue="email" label="Kanaal" name="channel" options={channelOptions} />
         <SelectField defaultValue="smtp" label="Provider" name="provider" options={messageProviderOptions} />
-        <SelectField defaultValue="draft" label="Status" name="status" options={messageDraftStatusOptions} />
+        <SelectField defaultValue={newsletter ? "draft" : "queued"} label="Status" name="status" options={messageDraftStatusOptions} />
         <SelectField includeEmpty label="Profiel" name="recipient_profile_id" options={data.profiles.map(optionFromProfile)} />
         <TextField label="E-mail" name="recipient_email" type="email" />
         <SelectField includeEmpty label="Leerling" name="participant_id" options={data.participants.map(optionFromParticipant)} />
         <SelectField includeEmpty label="Inschrijving" name="enrollment_id" options={data.enrollments.map((enrollment) => optionFromEnrollment(enrollment, data))} />
+        <SelectField includeEmpty label="Groep" name="group_id" options={data.groups.map(optionFromGroup)} />
+        <SelectField includeEmpty label="Instructeur" name="instructor_id" options={data.instructors.map(optionFromInstructor)} />
         <TextField label="Gepland om" name="scheduled_at" type="datetime-local" />
       </div>
       <TextField label="Onderwerp" name="subject" />
-      <TextAreaField label="Berichttekst" name="body" />
-      <TextAreaField defaultValue='{ "leerling": "Demo leerling", "tenant": "AquaSwim" }' label="Render context JSON" name="render_context" />
+      <TipTapBlockBuilder defaultBody={newsletter ? "Beste {{parent_name}},\n\nNieuws vanuit {{tenant_name}}.\n\n{{cta_url}}" : ""} fieldName="body" />
+      <TextAreaField defaultValue='{ "learner_name": "Demo leerling", "parent_name": "Ouder", "tenant_name": "AquaSwim", "cta_url": "https://nxttrack.nl" }' label="Render context JSON" name="render_context" />
       <button className={primaryButtonClassName} type="submit">
-        Bericht klaarzetten
+        {newsletter ? "Nieuwsbrief als concept opslaan" : "Bericht klaarzetten"}
       </button>
     </form>
   );
@@ -799,9 +933,48 @@ function ReportPermissionCard({ grant }: { grant: ReportPermissionGrantRow }) {
   );
 }
 
+function TipTapBlockBuilder({ defaultBody, fieldName = "body_template" }: { defaultBody?: string | null; fieldName?: string }) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase text-muted-foreground">TipTap block builder</p>
+          <p className="text-sm font-bold text-foreground">Contentblokken en shortcodes</p>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {["Kop", "Tekst", "Knop", "Divider"].map((block) => (
+            <span key={block} className="rounded-full border border-border bg-card px-2 py-1 text-xs font-semibold">
+              {block}
+            </span>
+          ))}
+        </div>
+      </div>
+      <ShortcodePalette compact />
+      <TextAreaField defaultValue={defaultBody} label="Body" name={fieldName} required />
+    </div>
+  );
+}
+
+function ShortcodePalette({ compact }: { compact?: boolean }) {
+  return (
+    <div className={compact ? "flex flex-wrap gap-2" : "grid gap-2 sm:grid-cols-2 lg:grid-cols-3"}>
+      {templateShortcodes.map((shortcode) => (
+        <code key={shortcode.value} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-primary">
+          {shortcode.value}
+        </code>
+      ))}
+    </div>
+  );
+}
+
 function ReportDashboardCard({ section, title, value }: { section: ReportSection; title: string; value: string }) {
   const rows = section.rows.slice(0, 8);
   const headers = Object.keys(rows[0] ?? {}).slice(0, 5);
+  const chartRows = rows.slice(0, 6).map((row, index) => ({
+    label: reportRowLabel(row, index),
+    value: reportRowMetric(row)
+  }));
+  const maxValue = Math.max(1, ...chartRows.map((row) => row.value));
 
   return (
     <Card>
@@ -814,29 +987,47 @@ function ReportDashboardCard({ section, title, value }: { section: ReportSection
       </div>
       {rows.length === 0 ? <EmptyState>Geen data voor deze filterset.</EmptyState> : null}
       {rows.length > 0 ? (
-        <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
-          <table className="w-max min-w-full text-left text-sm">
-            <thead className="text-xs uppercase text-muted-foreground">
-              <tr>
-                {headers.map((header) => (
-                  <th key={header} className="border-b border-border px-2 py-2">
-                    {header.replaceAll("_", " ")}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row, index) => (
-                <tr key={`${title}-${index}`}>
-                  {headers.map((header) => (
-                    <td key={header} className="border-b border-border/70 px-2 py-2">
-                      {formatReportCell(row[header])}
-                    </td>
+        <div className="grid gap-4">
+          <div className="grid gap-2 rounded-2xl border border-border bg-muted/35 p-3">
+            {chartRows.map((row) => (
+              <div key={`${title}-${row.label}`} className="grid gap-1">
+                <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                  <span className="truncate text-muted-foreground">{row.label}</span>
+                  <span>{row.value}</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-border">
+                  <div className="h-full rounded-full bg-primary" style={{ width: `${Math.max(6, Math.round((row.value / maxValue) * 100))}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <details>
+            <summary className="w-fit cursor-pointer rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted">Tabel bekijken</summary>
+            <div className="mt-3 min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+              <table className="w-max min-w-full text-left text-sm">
+                <thead className="text-xs uppercase text-muted-foreground">
+                  <tr>
+                    {headers.map((header) => (
+                      <th key={header} className="border-b border-border px-2 py-2">
+                        {header.replaceAll("_", " ")}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, index) => (
+                    <tr key={`${title}-${index}`}>
+                      {headers.map((header) => (
+                        <td key={header} className="border-b border-border/70 px-2 py-2">
+                          {formatReportCell(row[header])}
+                        </td>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </div>
+          </details>
         </div>
       ) : null}
     </Card>
@@ -1028,6 +1219,14 @@ function optionFromParticipant(participant: OperationsParticipantRow) {
   return { label: `${participant.display_name} - ${participant.status}`, value: participant.id };
 }
 
+function optionFromGroup(group: OperationsGroupRow) {
+  return { label: `${group.name} - ${group.status}`, value: group.id };
+}
+
+function optionFromInstructor(instructor: OperationsInstructorRow) {
+  return { label: `${instructor.display_name} - ${instructor.status}`, value: instructor.id };
+}
+
 function optionFromEnrollment(enrollment: OperationsEnrollmentRow, data: AdminPhase12Data) {
   const participant = data.participants.find((entry) => entry.id === enrollment.participant_id);
   const program = data.programs.find((entry) => entry.id === enrollment.program_id);
@@ -1111,9 +1310,64 @@ function defaultPreviewContext(template: MessageTemplateRow) {
   return context;
 }
 
+function templateVariableCount(templates: MessageTemplateRow[]) {
+  return new Set(templates.flatMap((template) => template.required_variables)).size;
+}
+
+function reportRowMetric(row: Record<string, unknown>) {
+  const preferredKeys = ["occupied", "capacity", "total", "updates", "records", "open_amount_cents", "net_cents", "amount_cents", "count"];
+
+  for (const key of preferredKeys) {
+    const value = row[key];
+
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return Math.abs(value);
+    }
+  }
+
+  const numericValue = Object.values(row).find((value) => typeof value === "number" && Number.isFinite(value));
+  return typeof numericValue === "number" ? Math.abs(numericValue) : 1;
+}
+
+function reportRowLabel(row: Record<string, unknown>, index: number) {
+  const preferredKeys = ["group_name", "program_name", "stage_name", "instructor_name", "status", "period", "name"];
+
+  for (const key of preferredKeys) {
+    const value = row[key];
+
+    if (typeof value === "string" && value.trim()) {
+      return value;
+    }
+  }
+
+  return `Rij ${index + 1}`;
+}
+
 const fieldClassName = "min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";
 const primaryButtonClassName = "w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90";
 const secondaryButtonClassName = "inline-flex w-fit items-center justify-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted";
+
+const templateShortcodes = [
+  { label: "Tenant", value: "{{tenant_name}}" },
+  { label: "Ouder", value: "{{parent_name}}" },
+  { label: "Leerling", value: "{{learner_name}}" },
+  { label: "Programma", value: "{{program_name}}" },
+  { label: "Groep", value: "{{group_name}}" },
+  { label: "Lesdatum", value: "{{session_date}}" },
+  { label: "Lesplek", value: "{{slot_offer_url}}" },
+  { label: "Factuur", value: "{{invoice_number}}" },
+  { label: "Bedrag", value: "{{amount_due}}" },
+  { label: "CTA", value: "{{cta_url}}" }
+];
+
+const targetKindOptions = [
+  { label: "Losse ontvanger", value: "direct" },
+  { label: "Ouders van leerling", value: "participant_guardians" },
+  { label: "Ouders van groep", value: "group_guardians" },
+  { label: "Instructeur", value: "instructor" },
+  { label: "Alle instructeurs", value: "all_instructors" },
+  { label: "Alle ouders/verzorgers", value: "all_parents" }
+];
 
 const providerStatusOptions = [
   { label: "Uitgeschakeld", value: "disabled" },

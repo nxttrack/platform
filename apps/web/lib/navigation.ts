@@ -10,8 +10,11 @@ import {
   Home,
   Inbox,
   ListChecks,
+  Mail,
   MapPin,
+  Megaphone,
   MessageSquare,
+  Newspaper,
   Send,
   Settings,
   TrendingUp,
@@ -67,6 +70,10 @@ export const adminNav: NavItem[] = [
   { href: "/admin/instructors", label: "Instructeurs", icon: User, section: "Mensen" },
 
   { href: "/admin/berichten", label: "Berichten", icon: MessageSquare, section: "Communicatie" },
+  { href: "/admin/nieuwsbrief", label: "Nieuwsbrief", icon: Megaphone, section: "Communicatie" },
+  { href: "/admin/nieuws", label: "Nieuws", icon: Newspaper, section: "Communicatie" },
+  { href: "/admin/mailtemplates", label: "Mailtemplates", icon: Mail, section: "Communicatie" },
+  { href: "/admin/notificatietemplates", label: "Notificaties", icon: Bell, section: "Communicatie" },
   { href: "/admin/taken", label: "Taken", icon: ListChecks, section: "Communicatie" },
   { href: "/admin/documenten", label: "Documenten", icon: FileText, section: "Communicatie" },
 
@@ -74,6 +81,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3, section: "Financieel & inzicht" },
 
   { href: "/admin/imports", label: "Imports", icon: Upload, section: "Beheer" },
+  { href: "/admin/mail-instellingen", label: "Mailinstellingen", icon: Mail, section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
 ];
 
