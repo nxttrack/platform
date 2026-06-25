@@ -476,41 +476,6 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
         />
       </Card>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <SectionHeader title="Leerlingen" count={snapshot.data.participants.length} />
-          <CreateParticipantForm />
-          <DomainTable
-            columns={[
-              { header: "Naam", render: (participant) => <DetailLink href={`/admin/leerlingen/${participant.id}`}>{participant.display_name}</DetailLink> },
-              { header: "Geboortedatum", render: (participant) => nullableText(participant.birthdate ? formatDate(participant.birthdate) : null) },
-              { header: "Referentie", render: (participant) => nullableText(participant.external_reference) },
-              { header: "Status", render: (participant) => <StatusPill tone={statusTone(participant.status)}>{participant.status}</StatusPill> },
-              { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (participant) => <ActionStack><StatusTransitionButtons action={transitionParticipantStatusAction} id={participant.id} statuses={["active", "inactive", "archived"]} /><ParticipantForm mode="update" participant={participant} /></ActionStack> }
-            ]}
-            emptyLabel="Nog geen leerlingen gevonden."
-            rows={snapshot.data.participants}
-            rowKey={(participant) => participant.id}
-          />
-        </Card>
-
-        <Card>
-          <SectionHeader title="Groepsplaatsingen" count={snapshot.data.groupMemberships.length} />
-          <CreateGroupMembershipForm data={snapshot.data} />
-          <DomainTable
-            columns={[
-              { header: "Leerling", render: (membership) => enrollmentParticipantName(lookups, membership.enrollment_id) },
-              { header: "Groep", render: (membership) => lookups.groups.get(membership.group_id)?.name ?? "Onbekend" },
-              { header: "Vanaf", render: (membership) => formatDate(membership.starts_on) },
-              { header: "Status", render: (membership) => <StatusPill tone={statusTone(membership.status)}>{membership.status}</StatusPill> },
-              { header: "Actie", className: "min-w-[340px] whitespace-normal", render: (membership) => <ActionStack><StatusTransitionButtons action={transitionGroupMembershipStatusAction} id={membership.id} statuses={["planned", "active", "ended", "cancelled"]} /><GroupMembershipForm data={snapshot.data} membership={membership} mode="update" /></ActionStack> }
-            ]}
-            emptyLabel="Nog geen groepsplaatsingen gevonden."
-            rows={snapshot.data.groupMemberships}
-            rowKey={(membership) => membership.id}
-          />
-        </Card>
-      </div>
     </DomainFrame>
   );
 }
