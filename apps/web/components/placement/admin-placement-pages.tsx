@@ -335,7 +335,7 @@ function SlotOfferActionPanel({ offer }: { offer: SlotOfferRow }) {
   return (
     <form action={cancelSlotOfferAction}>
       <input name="slot_offer_id" type="hidden" value={offer.id} />
-      <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" type="submit">
+      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30" type="submit">
         Annuleren
       </button>
     </form>
