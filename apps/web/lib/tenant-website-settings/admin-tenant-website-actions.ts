@@ -136,10 +136,15 @@ export async function upsertIntakeFormConfigAction(formData: FormData) {
       {
         tenant_id: tenantId,
         program_id: programId,
+        config_version: intValue(formData, "config_version", 0) + 1,
+        schema_version: "s1",
         status: enumValue(formData, "status", ["draft", "active", "archived"], "active"),
         intro: optionalString(formData, "intro"),
         allowed_intake_options: allowedOptions,
-        custom_questions: jsonArrayValue(formData, "custom_questions_json")
+        custom_questions: jsonArrayValue(formData, "custom_questions_json"),
+        conditional_rules: jsonArrayValue(formData, "conditional_rules_json"),
+        stage_recommendation_rules: jsonArrayValue(formData, "stage_recommendation_rules_json"),
+        published_at: enumValue(formData, "status", ["draft", "active", "archived"], "active") === "active" ? new Date().toISOString() : null
       },
       { onConflict: "program_id" }
     )

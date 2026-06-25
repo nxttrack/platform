@@ -36,9 +36,59 @@ const defaultAgendaItems = [
 const defaultQuestions = [
   {
     name: "zwemervaring",
-    label: "Heeft je kind al zwemervaring?",
-    type: "textarea",
-    required: false
+    label: "Hoeveel zwemervaring heeft je kind?",
+    type: "swim_experience_scale",
+    required: true,
+    helpText: "Dit helpt ons om een startniveau te adviseren."
+  },
+  {
+    name: "watervrij",
+    label: "Is je kind watervrij?",
+    type: "yes_no",
+    required: true
+  },
+  {
+    name: "zonder_bandjes",
+    label: "Kan je kind al kort zonder bandjes drijven of bewegen?",
+    type: "yes_no",
+    required: false,
+    condition: { question: "watervrij", operator: "equals", value: "yes" }
+  },
+  {
+    name: "toestemming_contact",
+    label: "Ik geef toestemming dat de zwemschool contact opneemt over deze intake.",
+    type: "consent",
+    required: true
+  }
+];
+
+const defaultConditionalRules = [
+  {
+    target: "zonder_bandjes",
+    question: "watervrij",
+    operator: "equals",
+    value: "yes"
+  }
+];
+
+const defaultStageRules = [
+  {
+    stage_code: "badje-1",
+    label: "Start in Badje 1",
+    base_score: 55,
+    conditions: [
+      { question: "zwemervaring", operator: "equals", value: "none", points: 20, reason: "Geen zwemervaring ingevuld." },
+      { question: "watervrij", operator: "equals", value: "no", points: 15, reason: "Watervrijheid vraagt begeleiding vanaf de basis." }
+    ]
+  },
+  {
+    stage_code: "badje-2",
+    label: "Mogelijk Badje 2",
+    base_score: 50,
+    conditions: [
+      { question: "zwemervaring", operator: "in", value: ["some", "longer"], points: 20, reason: "Er is al zwemervaring." },
+      { question: "watervrij", operator: "equals", value: "yes", points: 15, reason: "Watervrijheid is positief voor instroom." }
+    ]
   }
 ];
 
@@ -418,8 +468,10 @@ function ProgramWebsiteSettingsCard({ program, setting, config }: { program: Ten
 
         <form action={upsertIntakeFormConfigAction} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
           <input name="program_id" type="hidden" value={program.id} />
+          <input name="config_version" type="hidden" value={config?.config_version ?? 0} />
           <div className="grid gap-3 md:grid-cols-2">
             <SelectField defaultValue={config?.status ?? "active"} label="Intakestatus" name="status" options={["draft", "active", "archived"]} />
+            <ReadOnlyInfo label="Versie" value={`v${config?.config_version ?? 0} -> v${(config?.config_version ?? 0) + 1}`} />
             <div className="grid gap-2">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Opties</span>
               <div className="grid gap-2 sm:grid-cols-3">
@@ -430,7 +482,9 @@ function ProgramWebsiteSettingsCard({ program, setting, config }: { program: Ten
             </div>
           </div>
           <TextAreaField defaultValue={config?.intro ?? ""} label="Intro bij intakeformulier" name="intro" />
-          <JsonField defaultValue={jsonText(config?.custom_questions, defaultQuestions)} label="Custom vragen JSON" name="custom_questions_json" />
+          <JsonField defaultValue={jsonText(config?.custom_questions, defaultQuestions)} label="Vragen JSON" name="custom_questions_json" />
+          <JsonField defaultValue={jsonText(config?.conditional_rules, defaultConditionalRules)} label="Conditional rules JSON" name="conditional_rules_json" />
+          <JsonField defaultValue={jsonText(config?.stage_recommendation_rules, defaultStageRules)} label="Stage recommendation rules JSON" name="stage_recommendation_rules_json" />
           <SubmitButton>Intakeconfig opslaan</SubmitButton>
         </form>
       </div>
@@ -512,6 +566,15 @@ function JsonField({ label, name, defaultValue }: { label: string; name: string;
       <span>{label}</span>
       <textarea className="min-h-40 rounded-xl border border-border bg-slate-950 px-3 py-2 font-mono text-xs leading-5 text-slate-50 outline-none ring-primary/20 focus:ring-4" defaultValue={defaultValue} name={name} spellCheck={false} />
     </label>
+  );
+}
+
+function ReadOnlyInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-border bg-background px-3 py-2">
+      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold">{value}</p>
+    </div>
   );
 }
 

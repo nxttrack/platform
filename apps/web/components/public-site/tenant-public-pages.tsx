@@ -2,8 +2,9 @@ import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, M
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
+import { IntakeConditionalField } from "@/components/public-site/intake-conditional-field";
 import { submitIntakeAction } from "@/lib/public-site/intake-actions";
-import type { PublicProgram, PublicTenantProfile, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
+import type { IntakeQuestion, IntakeQuestionOption, PublicProgram, PublicTenantProfile, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
 
 type PublicPageProps = {
   snapshot: PublicTenantSiteSnapshot;
@@ -846,9 +847,11 @@ function IntakeForm({ program }: { program: PublicProgram }) {
 
           {config.questions.length > 0 ? (
             <FormGrid title="Aanvullende vragen">
-              {config.questions.map((question) =>
-                question.type === "textarea" ? <TextAreaField key={question.name} label={question.label} name={`answer_${question.name}`} required={question.required} /> : <TextField key={question.name} label={question.label} name={`answer_${question.name}`} required={question.required} />
-              )}
+              {config.questions.map((question) => (
+                <IntakeConditionalField condition={question.condition} key={question.name}>
+                  <QuestionField question={question} />
+                </IntakeConditionalField>
+              ))}
             </FormGrid>
           ) : null}
 
@@ -971,6 +974,100 @@ function TextAreaField({ label, name, required }: { label: string; name: string;
       <span>{label}</span>
       <textarea className="min-h-24 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium outline-none ring-primary/20 focus:ring-4" name={name} required={required} />
     </label>
+  );
+}
+
+function QuestionField({ question }: { question: IntakeQuestion }) {
+  const name = `answer_${question.name}`;
+
+  if (question.type === "textarea" || question.type === "free_text") {
+    return <TextAreaField label={question.label} name={name} required={question.required} />;
+  }
+
+  if (question.type === "single_select") {
+    return <SelectQuestionField label={question.label} name={name} options={question.options ?? []} required={question.required} />;
+  }
+
+  if (question.type === "multi_select") {
+    return <MultiOptionField label={question.label} name={name} options={question.options ?? []} required={question.required} />;
+  }
+
+  if (question.type === "yes_no") {
+    return (
+      <MultiOptionField
+        label={question.label}
+        name={name}
+        options={[
+          { label: "Ja", value: "yes" },
+          { label: "Nee", value: "no" }
+        ]}
+        radio
+        required={question.required}
+      />
+    );
+  }
+
+  if (question.type === "consent") {
+    return (
+      <label className="flex min-h-12 items-start gap-3 rounded-xl border border-border bg-background px-3 py-3 text-sm font-semibold md:col-span-2">
+        <input className="mt-0.5 h-4 w-4 accent-primary" name={name} required={question.required} type="checkbox" value="accepted" />
+        <span>
+          {question.label}
+          {question.helpText ? <span className="mt-1 block text-xs font-normal text-muted-foreground">{question.helpText}</span> : null}
+        </span>
+      </label>
+    );
+  }
+
+  if (question.type === "swim_experience_scale") {
+    return (
+      <MultiOptionField
+        label={question.label}
+        name={name}
+        options={[
+          { label: "Geen ervaring", value: "none" },
+          { label: "Watervrij oefenen", value: "water_familiar" },
+          { label: "Enkele lessen gehad", value: "some" },
+          { label: "Langere periode zwemles", value: "longer" }
+        ]}
+        radio
+        required={question.required}
+      />
+    );
+  }
+
+  return <TextField label={question.label} name={name} required={question.required} type={question.type === "number" ? "number" : question.type === "date" ? "date" : "text"} />;
+}
+
+function SelectQuestionField({ label, name, options, required }: { label: string; name: string; options: IntakeQuestionOption[]; required?: boolean }) {
+  return (
+    <label className="grid gap-1 text-sm font-semibold">
+      <span>{label}</span>
+      <select className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-medium outline-none ring-primary/20 focus:ring-4" name={name} required={required}>
+        <option value="">Selecteer</option>
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function MultiOptionField({ label, name, options, radio, required }: { label: string; name: string; options: IntakeQuestionOption[]; radio?: boolean; required?: boolean }) {
+  return (
+    <fieldset className="rounded-xl border border-border bg-background p-3 md:col-span-2">
+      <legend className="px-1 text-sm font-semibold">{label}</legend>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        {options.map((option, index) => (
+          <label className="flex min-h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-semibold" key={option.value}>
+            <input className="h-4 w-4 accent-primary" name={name} required={required && radio && index === 0} type={radio ? "radio" : "checkbox"} value={option.value} />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }
 

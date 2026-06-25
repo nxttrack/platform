@@ -58,10 +58,15 @@ export type ProgramPublicSettingsRow = {
 export type IntakeFormConfigSettingsRow = {
   id: string;
   program_id: string;
+  config_version: number;
+  schema_version: string;
   status: string;
   intro: string | null;
   allowed_intake_options: string[];
   custom_questions: unknown;
+  conditional_rules: unknown;
+  stage_recommendation_rules: unknown;
+  published_at: string | null;
 };
 
 export type TenantDomainStatusRow = {
@@ -140,7 +145,7 @@ export async function getAdminTenantWebsiteSettingsSnapshot(): Promise<AdminTena
       .select("id, program_id, public_slug, status, summary, detail, age_label, duration_label, price_label, capacity_label, trial_enabled, registration_enabled, waitlist_enabled, sort_order")
       .eq("tenant_id", tenantId)
       .order("sort_order", { ascending: true }),
-    supabase.from("intake_form_configs").select("id, program_id, status, intro, allowed_intake_options, custom_questions").eq("tenant_id", tenantId),
+    supabase.from("intake_form_configs").select("id, program_id, config_version, schema_version, status, intro, allowed_intake_options, custom_questions, conditional_rules, stage_recommendation_rules, published_at").eq("tenant_id", tenantId),
     supabase.from("tenant_domains").select("id, hostname, kind, status, is_primary, created_at, updated_at").eq("tenant_id", tenantId).order("is_primary", { ascending: false }).order("hostname", { ascending: true })
   ]);
 

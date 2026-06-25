@@ -13,6 +13,7 @@ import {
 import type {
   CapacitySnapshot,
   GroupLookupRow,
+  IntakeDuplicateMatchRow,
   IntakeSubmissionRow,
   PlacementSuggestionRow,
   PlacementWorkflowData,
@@ -39,6 +40,7 @@ type LookupMaps = {
   suggestionsByWaitlist: Map<string, PlacementSuggestionRow[]>;
   offersBySuggestion: Map<string, SlotOfferRow>;
   capacitiesByGroup: Map<string, CapacitySnapshot>;
+  duplicateMatchesByIntake: Map<string, IntakeDuplicateMatchRow[]>;
   smartDecisionsBySubject: Map<string, SmartDecisionSummaryRow>;
 };
 
@@ -81,6 +83,11 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
               header: "Smart advies",
               className: "min-w-[260px] whitespace-normal",
               render: (intake) => <SmartDecisionPanel decision={smartDecisionFor(lookups, "intake_recommendation", "intake_submission", intake.id)} />
+            },
+            {
+              header: "Duplicaten",
+              className: "min-w-[220px] whitespace-normal",
+              render: (intake) => <DuplicateWarningPanel matches={lookups.duplicateMatchesByIntake.get(intake.id) ?? []} />
             },
             { header: "Type", render: (intake) => <StatusPill tone="info">{intakeOptionLabel(intake.intake_type)}</StatusPill> },
             { header: "Status", render: (intake) => <StatusPill tone={workflowTone(intake.status)}>{intake.status}</StatusPill> },
@@ -274,11 +281,14 @@ function PlacementStatusPanel({ snapshot }: PlacementPageProps) {
 }
 
 function WaitlistFromIntakeForm({ intake, stages }: { intake: IntakeSubmissionRow; stages: StageLookupRow[] }) {
+  const recommendedStageId = typeof intake.recommendation_snapshot.recommended_stage_id === "string" ? intake.recommendation_snapshot.recommended_stage_id : null;
+
   return (
     <WorkflowForm action={createWaitlistEntryFromIntakeAction} submitLabel="Naar wachtlijst">
       <input name="intake_submission_id" type="hidden" value={intake.id} />
-      <SelectField includeEmpty label="Aanbevolen niveau" name="recommended_stage_id" options={stages.map(optionFromName)} />
+      <SelectField defaultValue={recommendedStageId ?? ""} includeEmpty label="Aanbevolen niveau" name="recommended_stage_id" options={stages.map(optionFromName)} />
       <TextField defaultValue={todayInput()} label="Prioriteit vanaf" name="priority_date" type="date" />
+      <TextAreaField label="Override-reden bij afwijking" name="override_reason" />
       <TextAreaField defaultValue={intake.notes} label="Interne notitie" name="notes" />
     </WorkflowForm>
   );
@@ -529,6 +539,7 @@ function buildLookups(data: PlacementWorkflowData): LookupMaps {
     suggestionsByWaitlist: groupBy(data.placementSuggestions, (suggestion) => suggestion.waitlist_entry_id),
     offersBySuggestion: new Map(data.slotOffers.map((offer) => [offer.placement_suggestion_id, offer])),
     capacitiesByGroup: new Map(data.capacities.map((capacity) => [capacity.groupId, capacity])),
+    duplicateMatchesByIntake: groupBy(data.intakeDuplicateMatches, (match) => match.intake_submission_id),
     smartDecisionsBySubject: new Map(data.smartDecisions.map((decision) => [smartDecisionKey(decision.engine_key, decision.subject_type, decision.subject_id), decision]))
   };
 }
@@ -560,6 +571,29 @@ function SmartDecisionPanel({ compact, decision }: { compact?: boolean; decision
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function DuplicateWarningPanel({ matches }: { matches: IntakeDuplicateMatchRow[] }) {
+  if (matches.length === 0) {
+    return <StatusPill tone="success">Geen match</StatusPill>;
+  }
+
+  const blocking = matches.filter((match) => match.severity === "blocking").length;
+
+  return (
+    <div className="grid gap-2">
+      <StatusPill tone={blocking > 0 ? "danger" : "warning"}>
+        {matches.length} waarschuwing{matches.length === 1 ? "" : "en"}
+      </StatusPill>
+      <div className="grid gap-1 text-xs text-muted-foreground">
+        {matches.slice(0, 2).map((match) => (
+          <p key={match.id}>
+            <span className="font-semibold text-foreground">{match.label}</span> - {match.score}/100
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

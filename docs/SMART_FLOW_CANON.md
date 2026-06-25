@@ -324,3 +324,35 @@ input snapshot -> rule version -> score/confidence -> reasons/blockers -> recomm
 The default automation mode remains `semi_automatic`.
 
 Rule versioning is documented in `docs/SMART_FLOW_RULE_VERSIONING.md`.
+
+## 13. Phase S1 Intake Decision Policy
+
+Phase S1 turns intake into the first real smart flow entrypoint.
+
+The platform now supports:
+
+- Intake config versioning through `intake_form_configs.config_version`.
+- Rich question types: text, textarea, single select, multi select, yes/no, number, date, free text, consent, and swim-experience scale.
+- Conditional question rules for public intake.
+- Program-level `stage_recommendation_rules`.
+- Recommendation snapshots on `intake_submissions`.
+- Duplicate snapshots on `intake_submissions`.
+- Open duplicate matches in `intake_duplicate_matches`.
+- Admin override when moving intake to waitlist.
+
+The recommendation remains semi-automatic:
+
+```txt
+intake answers -> rule evaluation -> recommended stage -> admin review -> waitlist stage selection
+```
+
+If the admin chooses a different stage than the smart recommendation, an override reason is required. This keeps stage recommendation explainable without forcing automatic placement.
+
+Duplicate detection currently checks:
+
+- same child name plus birthdate
+- same guardian email
+- similar child name
+- active enrollment on a matched participant
+
+Duplicate detection is advisory. It warns the admin before conversion to waitlist or enrollment. It does not automatically block the parent submission.

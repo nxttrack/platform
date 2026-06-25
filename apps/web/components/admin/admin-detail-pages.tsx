@@ -14,6 +14,7 @@ import {
 import type { AdminDomainData, AdminDomainSnapshot, EnrollmentRow, GroupMembershipRow, ParticipantGuardianRow, ParticipantRow, TenantAccountInvitationRow } from "@/lib/domain/admin-domain-read-model";
 import type { AdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import type { PlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
+import { refreshIntakeDuplicateMatchesAction } from "@/lib/placement/admin-placement-actions";
 
 type DetailProps = {
   id: string;
@@ -464,6 +465,11 @@ export function IntakeDetailPage({ id, placement }: { id: string; placement: Pla
 
   const waitlist = placement.data.waitlistEntries.find((entry) => entry.intake_submission_id === intake.id);
   const offers = placement.data.slotOffers.filter((entry) => entry.intake_submission_id === intake.id);
+  const duplicateMatches = placement.data.intakeDuplicateMatches.filter((entry) => entry.intake_submission_id === intake.id);
+  const events = placement.data.intakeEvents.filter((entry) => entry.submission_id === intake.id);
+  const decision = placement.data.smartDecisions.find((entry) => entry.engine_key === "intake_recommendation" && entry.subject_id === intake.id);
+  const recommendedStage = typeof intake.recommendation_snapshot.recommended_stage_label === "string" ? intake.recommendation_snapshot.recommended_stage_label : "-";
+  const recommendationScore = typeof intake.recommendation_snapshot.score === "number" ? `${intake.recommendation_snapshot.score}/100` : "-";
 
   return (
     <DetailFrame backHref="/admin/intake" kicker="Intake" title={intake.participant_name} status={intake.status}>
@@ -475,8 +481,48 @@ export function IntakeDetailPage({ id, placement }: { id: string; placement: Pla
           ["Voorkeuren", [...intake.preferred_days, ...intake.preferred_time_windows].join(", ") || "-"]
         ]}
       />
+      <RelationshipCard title="Smart intake advies">
+        <div className="rounded-2xl border border-border bg-muted/35 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="font-semibold">Aanbevolen niveau: {recommendedStage}</p>
+              <p className="mt-1 text-sm text-muted-foreground">Score: {recommendationScore} | Confidence: {decision?.confidence ?? "-"}</p>
+              {intake.missing_information.length > 0 ? <p className="mt-2 text-sm font-semibold text-amber-700">Ontbrekend: {intake.missing_information.join(" ")}</p> : null}
+            </div>
+            <StatusPill tone={decision?.confidence === "high" ? "success" : decision?.confidence === "medium" ? "info" : "warning"}>{decision?.decision_status ?? "geen decision"}</StatusPill>
+          </div>
+          {decision?.reasons_json.length ? (
+            <div className="mt-3 grid gap-1 text-sm text-muted-foreground">
+              {decision.reasons_json.slice(0, 4).map((reason) => (
+                <p key={`${reason.code ?? reason.label}`}>
+                  <span className="font-semibold text-foreground">{reason.label ?? reason.code}</span>
+                  {reason.detail ? ` - ${reason.detail}` : ""}
+                </p>
+              ))}
+            </div>
+          ) : null}
+          {decision?.override_reason ? <p className="mt-3 rounded-xl bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-800">Override: {decision.override_reason}</p> : null}
+        </div>
+      </RelationshipCard>
+      <RelationshipCard title="Duplicaatcontrole">
+        <div className="grid gap-3">
+          <form action={refreshIntakeDuplicateMatchesAction}>
+            <input name="intake_submission_id" type="hidden" value={intake.id} />
+            <button className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-semibold hover:bg-muted" type="submit">
+              Duplicaten opnieuw checken
+            </button>
+          </form>
+          {duplicateMatches.length === 0 ? <EmptyState>Geen open duplicaatwaarschuwingen.</EmptyState> : null}
+          {duplicateMatches.map((match) => (
+            <PlainLine detail={`${match.severity} - ${match.score}/100${match.detail ? ` - ${match.detail}` : ""}`} key={match.id} label={match.label} />
+          ))}
+        </div>
+      </RelationshipCard>
       <RelationshipCard title="Wachtlijst">{waitlist ? <PlainLine detail={waitlist.status} label="Wachtlijstregel" /> : null}</RelationshipCard>
       <RelationshipCard title="Slot offers">{offers.map((offer) => <PlainLine detail={offer.status} href={`/admin/slot-offers/${offer.id}`} key={offer.id} label={offer.offer_token.slice(0, 8)} />)}</RelationshipCard>
+      <RelationshipCard title="Intake timeline">
+        {events.map((event) => <PlainLine detail={`${event.status} - ${formatDateTime(event.created_at)}`} key={event.id} label={event.note ?? "Statuswijziging"} />)}
+      </RelationshipCard>
     </DetailFrame>
   );
 }

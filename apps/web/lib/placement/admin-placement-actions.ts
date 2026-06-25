@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
+import { detectAndStoreIntakeDuplicates } from "@/lib/smart-flow/intake-duplicates";
 import { updateSmartDecisionLifecycle } from "@/lib/smart-flow/decision";
 import { createPlacementSmartDecision } from "@/lib/smart-flow/placement-decision";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
@@ -13,22 +14,34 @@ import { createClient } from "@/lib/supabase/server";
 const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
 
 export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
-  const { supabase, tenantId } = await requireTenantWriter();
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const intakeId = requiredString(formData, "intake_submission_id");
+  const selectedStageId = optionalString(formData, "recommended_stage_id");
   const intake = await singleRow<{
     id: string;
     program_id: string;
+    parent_email: string;
+    participant_name: string;
+    participant_birthdate: string | null;
     preferred_days: string[];
     preferred_time_windows: string[];
     notes: string | null;
+    recommendation_snapshot: Record<string, unknown>;
+    stage_recommendation_decision_id: string | null;
   }>(
     supabase
       .from("intake_submissions")
-      .select("id, program_id, preferred_days, preferred_time_windows, notes")
+      .select("id, program_id, parent_email, participant_name, participant_birthdate, preferred_days, preferred_time_windows, notes, recommendation_snapshot, stage_recommendation_decision_id")
       .eq("id", intakeId)
       .eq("tenant_id", tenantId)
       .single()
   );
+  const recommendedStageId = typeof intake.recommendation_snapshot.recommended_stage_id === "string" ? intake.recommendation_snapshot.recommended_stage_id : null;
+  const overrideReason = optionalString(formData, "override_reason");
+
+  if (selectedStageId && recommendedStageId && selectedStageId !== recommendedStageId && !overrideReason) {
+    throw new Error("Geef een override-reden wanneer je afwijkt van het smart advies.");
+  }
 
   await throwOnError(
     supabase.from("waitlist_entries").upsert(
@@ -36,7 +49,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
         tenant_id: tenantId,
         intake_submission_id: intake.id,
         program_id: intake.program_id,
-        recommended_stage_id: optionalString(formData, "recommended_stage_id"),
+        recommended_stage_id: selectedStageId,
         status: "queued",
         priority_date: optionalString(formData, "priority_date") ?? todayInput(),
         preferred_days: intake.preferred_days ?? [],
@@ -48,7 +61,70 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     )
   );
 
-  await throwOnError(supabase.from("intake_submissions").update({ status: "reviewing" }).eq("id", intake.id).eq("tenant_id", tenantId));
+  await throwOnError(
+    supabase
+      .from("intake_submissions")
+      .update({
+        status: "reviewing",
+        reviewed_at: new Date().toISOString(),
+        reviewed_by_profile_id: actorProfileId,
+        review_note: optionalString(formData, "notes") ?? null
+      })
+      .eq("id", intake.id)
+      .eq("tenant_id", tenantId)
+  );
+  await throwOnError(
+    supabase.from("intake_submission_events").insert({
+      tenant_id: tenantId,
+      submission_id: intake.id,
+      status: "reviewing",
+      note: selectedStageId && selectedStageId !== recommendedStageId ? `Naar wachtlijst met override: ${overrideReason}` : "Naar wachtlijst gezet op basis van smart advies."
+    })
+  );
+
+  if (intake.stage_recommendation_decision_id) {
+    await updateSmartDecisionLifecycle(supabase, {
+      tenantId,
+      engineKey: "intake_recommendation",
+      subjectType: "intake_submission",
+      subjectId: intake.id,
+      decisionStatus: selectedStageId && selectedStageId !== recommendedStageId ? "overridden" : "applied",
+      humanDecision: selectedStageId && selectedStageId !== recommendedStageId ? "overridden" : "applied",
+      overrideReason,
+      result: {
+        waitlist_status: "queued",
+        selected_stage_id: selectedStageId,
+        recommended_stage_id: recommendedStageId
+      },
+      decidedByProfileId: actorProfileId
+    });
+  }
+
+  revalidatePlacementWorkflow();
+}
+
+export async function refreshIntakeDuplicateMatchesAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const intakeId = requiredString(formData, "intake_submission_id");
+  const intake = await singleRow<{ id: string; parent_email: string; participant_name: string; participant_birthdate: string | null }>(
+    supabase.from("intake_submissions").select("id, parent_email, participant_name, participant_birthdate").eq("id", intakeId).eq("tenant_id", tenantId).single()
+  );
+
+  await detectAndStoreIntakeDuplicates(supabase, {
+    tenantId,
+    intakeSubmissionId: intake.id,
+    participantName: intake.participant_name,
+    participantBirthdate: intake.participant_birthdate,
+    parentEmail: intake.parent_email
+  });
+  await throwOnError(
+    supabase.from("intake_submission_events").insert({
+      tenant_id: tenantId,
+      submission_id: intake.id,
+      status: "reviewing",
+      note: "Duplicaatcontrole opnieuw uitgevoerd door admin."
+    })
+  );
   revalidatePlacementWorkflow();
 }
 

@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 export type IntakeSubmissionRow = {
   id: string;
   program_id: string;
+  intake_form_config_id: string | null;
+  intake_config_version: number | null;
   intake_type: string;
   parent_name: string;
   parent_email: string;
@@ -14,7 +16,37 @@ export type IntakeSubmissionRow = {
   participant_birthdate: string | null;
   preferred_days: string[];
   preferred_time_windows: string[];
+  answers: Record<string, unknown>;
   notes: string | null;
+  recommendation_snapshot: Record<string, unknown>;
+  duplicate_snapshot: Record<string, unknown>;
+  missing_information: string[];
+  stage_recommendation_decision_id: string | null;
+  reviewed_at: string | null;
+  review_note: string | null;
+  status: string;
+  created_at: string;
+};
+
+export type IntakeSubmissionEventRow = {
+  id: string;
+  submission_id: string;
+  status: string;
+  note: string | null;
+  created_at: string;
+};
+
+export type IntakeDuplicateMatchRow = {
+  id: string;
+  intake_submission_id: string;
+  matched_record_type: string;
+  matched_record_id: string | null;
+  match_type: string;
+  severity: string;
+  score: number;
+  label: string;
+  detail: string | null;
+  metadata: Record<string, unknown>;
   status: string;
   created_at: string;
 };
@@ -150,6 +182,8 @@ export type CapacitySnapshot = {
 
 export type PlacementWorkflowData = {
   intakes: IntakeSubmissionRow[];
+  intakeEvents: IntakeSubmissionEventRow[];
+  intakeDuplicateMatches: IntakeDuplicateMatchRow[];
   waitlistEntries: WaitlistEntryRow[];
   placementSuggestions: PlacementSuggestionRow[];
   slotOffers: SlotOfferRow[];
@@ -207,13 +241,15 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
   const supabase = await createClient();
   const tenantId = tenant.id;
 
-  const [intakesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, smartDecisionsResult] = await Promise.all([
+  const [intakesResult, intakeEventsResult, duplicateMatchesResult, waitlistResult, suggestionsResult, offersResult, programsResult, stagesResult, groupsResult, resourcesResult, membershipsResult, smartDecisionsResult] = await Promise.all([
     supabase
       .from("intake_submissions")
-      .select("id, program_id, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, notes, status, created_at")
+      .select("id, program_id, intake_form_config_id, intake_config_version, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, answers, notes, recommendation_snapshot, duplicate_snapshot, missing_information, stage_recommendation_decision_id, reviewed_at, review_note, status, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(50),
+    supabase.from("intake_submission_events").select("id, submission_id, status, note, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false }).limit(150),
+    supabase.from("intake_duplicate_matches").select("id, intake_submission_id, matched_record_type, matched_record_id, match_type, severity, score, label, detail, metadata, status, created_at").eq("tenant_id", tenantId).eq("status", "open").order("severity", { ascending: true }).order("score", { ascending: false }),
     supabase
       .from("waitlist_entries")
       .select("id, intake_submission_id, program_id, recommended_stage_id, status, priority_date, preferred_days, preferred_time_windows, source, notes, created_at")
@@ -250,6 +286,8 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
 
   const errors = collectErrors({
     intake_submissions: intakesResult.error,
+    intake_submission_events: intakeEventsResult.error,
+    intake_duplicate_matches: duplicateMatchesResult.error,
     waitlist_entries: waitlistResult.error,
     placement_suggestions: suggestionsResult.error,
     slot_offers: offersResult.error,
@@ -271,6 +309,8 @@ export async function getPlacementWorkflowSnapshot(): Promise<PlacementWorkflowS
     errors,
     data: {
       intakes: asRows<IntakeSubmissionRow>(intakesResult.data),
+      intakeEvents: asRows<IntakeSubmissionEventRow>(intakeEventsResult.data),
+      intakeDuplicateMatches: asRows<IntakeDuplicateMatchRow>(duplicateMatchesResult.data),
       waitlistEntries: asRows<WaitlistEntryRow>(waitlistResult.data),
       placementSuggestions: asRows<PlacementSuggestionRow>(suggestionsResult.data),
       slotOffers: asRows<SlotOfferRow>(offersResult.data),
@@ -308,6 +348,8 @@ export function computeCapacities(groups: GroupLookupRow[], resources: ResourceL
 function createEmptyData(): PlacementWorkflowData {
   return {
     intakes: [],
+    intakeEvents: [],
+    intakeDuplicateMatches: [],
     waitlistEntries: [],
     placementSuggestions: [],
     slotOffers: [],

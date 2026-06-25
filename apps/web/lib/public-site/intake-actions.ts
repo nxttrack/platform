@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
+import type { IntakeQuestion } from "@/lib/public-site/tenant-site";
+import { detectAndStoreIntakeDuplicates } from "@/lib/smart-flow/intake-duplicates";
 import { createIntakeRecommendationDecision } from "@/lib/smart-flow/intake-recommendation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
@@ -26,6 +28,8 @@ export async function submitIntakeAction(formData: FormData) {
   const program = selectedProgram;
   const config = selectedProgram.intakeConfig;
   const intakeType = enumValue(formData, "intake_type", config.allowedOptions, "registration");
+  const answers = collectAnswers(formData);
+  validateConfiguredAnswers(config.questions, answers);
 
   if (!config.allowedOptions.includes(intakeType)) {
     throw new Error("Deze intake-optie is niet beschikbaar voor dit programma.");
@@ -47,7 +51,8 @@ export async function submitIntakeAction(formData: FormData) {
     preferred_days: stringArray(formData, "preferred_days"),
     preferred_time_windows: stringArray(formData, "preferred_time_windows"),
     notes: optionalString(formData, "notes"),
-    answers: collectAnswers(formData),
+    answers,
+    intake_config_version: config.configVersion,
     status: "new"
   };
 
@@ -69,7 +74,7 @@ export async function submitIntakeAction(formData: FormData) {
   }
 
   const decisionClient = createAdminClient();
-  const stageRecommendationDecisionId = await createIntakeRecommendationDecision(decisionClient, {
+  const recommendation = await createIntakeRecommendationDecision(decisionClient, {
     id: submissionId,
     tenantId: snapshot.tenant.id,
     program,
@@ -78,9 +83,35 @@ export async function submitIntakeAction(formData: FormData) {
     preferredDays: submission.preferred_days,
     preferredTimeWindows: submission.preferred_time_windows,
     answers: submission.answers,
-    intakeFormConfigId: config.id
+    intakeFormConfigId: config.id,
+    intakeConfigVersion: config.configVersion,
+    questions: config.questions,
+    stageRecommendationRules: config.stageRecommendationRules
   });
-  await throwOnError(decisionClient.from("intake_submissions").update({ stage_recommendation_decision_id: stageRecommendationDecisionId }).eq("id", submissionId).eq("tenant_id", snapshot.tenant.id));
+  const duplicateSummary = await detectAndStoreIntakeDuplicates(decisionClient, {
+    tenantId: snapshot.tenant.id,
+    intakeSubmissionId: submissionId,
+    participantName: submission.participant_name,
+    participantBirthdate: submission.participant_birthdate,
+    parentEmail: submission.parent_email
+  });
+  await throwOnError(
+    decisionClient
+      .from("intake_submissions")
+      .update({
+        stage_recommendation_decision_id: recommendation.decisionId,
+        recommendation_snapshot: recommendation.recommendationSnapshot,
+        missing_information: recommendation.missingInformation,
+        duplicate_snapshot: {
+          total: duplicateSummary.total,
+          blocking: duplicateSummary.blocking,
+          warning: duplicateSummary.warning,
+          checked_at: new Date().toISOString()
+        }
+      })
+      .eq("id", submissionId)
+      .eq("tenant_id", snapshot.tenant.id)
+  );
 
   await queueDirectEventMessage(supabase, {
     tenantId: snapshot.tenant.id,
@@ -99,6 +130,15 @@ export async function submitIntakeAction(formData: FormData) {
     fallbackSubject: `Intake ontvangen voor ${submission.participant_name}`,
     fallbackBody: `Hallo ${submission.parent_name},\n\nWe hebben de intake voor ${submission.participant_name} ontvangen.\n\nNXTTRACK`
   });
+
+  await throwOnError(
+    supabase.from("intake_submission_events").insert({
+      tenant_id: snapshot.tenant.id,
+      submission_id: submissionId,
+      status: "new",
+      note: "Intakebevestiging is klaargezet voor verzending."
+    })
+  );
 
   redirect(`/intake?program=${encodeURIComponent(program.slug)}&submitted=1`);
 }
@@ -156,12 +196,19 @@ function stringArray(formData: FormData, key: string) {
 }
 
 function collectAnswers(formData: FormData) {
-  const answers: Record<string, string> = {};
+  const grouped = new Map<string, string[]>();
 
   for (const [key, value] of formData.entries()) {
     if (key.startsWith("answer_") && typeof value === "string" && value.trim()) {
-      answers[key.slice("answer_".length)] = value.trim();
+      const answerKey = key.slice("answer_".length);
+      grouped.set(answerKey, [...(grouped.get(answerKey) ?? []), value.trim()]);
     }
+  }
+
+  const answers: Record<string, string | string[]> = {};
+
+  for (const [key, values] of grouped.entries()) {
+    answers[key] = values.length === 1 ? values[0] ?? "" : values;
   }
 
   return answers;
@@ -179,4 +226,57 @@ async function throwOnError(builder: PromiseLike<{ error: { message: string } | 
   if (error) {
     throw new Error(error.message);
   }
+}
+
+function validateConfiguredAnswers(questions: IntakeQuestion[], answers: Record<string, string | string[]>) {
+  for (const question of questions) {
+    if (!question.required || !isQuestionActive(question, answers)) {
+      continue;
+    }
+
+    const values = answerValues(answers[question.name]);
+
+    if (values.length === 0) {
+      throw new Error(`${question.label} is verplicht.`);
+    }
+
+    if (question.type === "consent" && !values.includes("accepted")) {
+      throw new Error(`${question.label} moet worden bevestigd.`);
+    }
+  }
+}
+
+function isQuestionActive(question: IntakeQuestion, answers: Record<string, string | string[]>) {
+  if (!question.condition) {
+    return true;
+  }
+
+  const values = answerValues(answers[question.condition.question]);
+  const expected = Array.isArray(question.condition.value) ? question.condition.value : question.condition.value ? [question.condition.value] : [];
+
+  if (question.condition.operator === "exists") {
+    return values.length > 0;
+  }
+
+  if (question.condition.operator === "equals") {
+    return values.some((value) => expected.includes(value));
+  }
+
+  if (question.condition.operator === "not_equals") {
+    return values.every((value) => !expected.includes(value));
+  }
+
+  if (question.condition.operator === "in") {
+    return values.some((value) => expected.includes(value));
+  }
+
+  return true;
+}
+
+function answerValues(value: string | string[] | undefined) {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+
+  return value ? [value] : [];
 }

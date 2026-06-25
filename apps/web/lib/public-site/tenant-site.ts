@@ -6,7 +6,38 @@ import { createClient } from "@/lib/supabase/server";
 export type IntakeQuestion = {
   name: string;
   label: string;
-  type: "text" | "textarea";
+  type: "text" | "textarea" | "single_select" | "multi_select" | "yes_no" | "number" | "date" | "free_text" | "consent" | "swim_experience_scale";
+  required?: boolean;
+  helpText?: string | null;
+  options?: IntakeQuestionOption[];
+  condition?: IntakeCondition | null;
+};
+
+export type IntakeQuestionOption = {
+  label: string;
+  value: string;
+};
+
+export type IntakeCondition = {
+  question: string;
+  operator: "equals" | "not_equals" | "in" | "exists";
+  value?: string | string[];
+};
+
+export type StageRecommendationRule = {
+  stageId?: string | null;
+  stageCode?: string | null;
+  label?: string | null;
+  baseScore?: number | null;
+  conditions?: StageRecommendationCondition[];
+};
+
+export type StageRecommendationCondition = {
+  question: string;
+  operator: "equals" | "not_equals" | "in" | "contains" | "exists" | "gte" | "lte";
+  value?: string | string[] | number | boolean | null;
+  points?: number;
+  reason?: string;
   required?: boolean;
 };
 
@@ -71,9 +102,13 @@ export type PublicProgram = {
   stages: { id: string; name: string; code: string; sortOrder: number }[];
   intakeConfig: {
     id: string;
+    configVersion: number;
+    schemaVersion: string;
     intro: string | null;
     allowedOptions: string[];
     questions: IntakeQuestion[];
+    conditionalRules: IntakeCondition[];
+    stageRecommendationRules: StageRecommendationRule[];
   } | null;
 };
 
@@ -151,9 +186,13 @@ type StageRow = {
 type IntakeConfigRow = {
   id: string;
   program_id: string;
+  config_version: number | null;
+  schema_version: string | null;
   intro: string | null;
   allowed_intake_options: string[] | null;
   custom_questions: unknown;
+  conditional_rules: unknown;
+  stage_recommendation_rules: unknown;
 };
 
 export async function getPublicTenantSiteSnapshot(programSlug?: string | null): Promise<PublicTenantSiteSnapshot> {
@@ -202,7 +241,7 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
       .order("sort_order", { ascending: true }),
     supabase.from("programs").select("id, code, name, description, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order", { ascending: true }),
     supabase.from("stages").select("id, program_id, code, name, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order", { ascending: true }),
-    supabase.from("intake_form_configs").select("id, program_id, intro, allowed_intake_options, custom_questions").eq("tenant_id", tenant.id).eq("status", "active")
+    supabase.from("intake_form_configs").select("id, program_id, config_version, schema_version, intro, allowed_intake_options, custom_questions, conditional_rules, stage_recommendation_rules").eq("tenant_id", tenant.id).eq("status", "active")
   ]);
 
   const errors = collectErrors({
@@ -251,9 +290,13 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
         intakeConfig: config
           ? {
               id: config.id,
+              configVersion: config.config_version ?? 1,
+              schemaVersion: config.schema_version ?? "s1",
               intro: config.intro,
               allowedOptions: config.allowed_intake_options ?? [],
-              questions: parseQuestions(config.custom_questions)
+              questions: parseQuestions(config.custom_questions),
+              conditionalRules: parseConditions(config.conditional_rules),
+              stageRecommendationRules: parseStageRecommendationRules(config.stage_recommendation_rules)
             }
           : null
       }
@@ -409,8 +452,158 @@ function parseQuestions(value: unknown): IntakeQuestion[] {
     const question = item as Record<string, unknown>;
     const name = typeof question.name === "string" ? question.name : "";
     const label = typeof question.label === "string" ? question.label : "";
-    const type = question.type === "textarea" ? "textarea" : "text";
+    const type = parseQuestionType(question.type);
 
-    return name && label ? [{ name, label, type, required: question.required === true }] : [];
+    return name && label
+      ? [
+          {
+            name,
+            label,
+            type,
+            required: question.required === true,
+            helpText: typeof question.helpText === "string" ? question.helpText : null,
+            options: parseQuestionOptions(question.options),
+            condition: parseCondition(question.condition)
+          }
+        ]
+      : [];
   });
+}
+
+function parseQuestionType(value: unknown): IntakeQuestion["type"] {
+  const types: IntakeQuestion["type"][] = ["text", "textarea", "single_select", "multi_select", "yes_no", "number", "date", "free_text", "consent", "swim_experience_scale"];
+
+  return types.includes(value as IntakeQuestion["type"]) ? (value as IntakeQuestion["type"]) : value === "textarea" ? "textarea" : "text";
+}
+
+function parseQuestionOptions(value: unknown): IntakeQuestionOption[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const option = item as Record<string, unknown>;
+    const label = typeof option.label === "string" ? option.label : "";
+    const optionValue = typeof option.value === "string" ? option.value : "";
+
+    return label && optionValue ? [{ label, value: optionValue }] : [];
+  });
+}
+
+function parseCondition(value: unknown): IntakeCondition | null {
+  if (!value || typeof value !== "object") {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  const question = typeof row.question === "string" ? row.question : "";
+  const operator = parseConditionOperator(row.operator);
+
+  if (!question || !operator) {
+    return null;
+  }
+
+  const conditionValue = typeof row.value === "string" || Array.isArray(row.value) ? (row.value as string | string[]) : undefined;
+
+  return {
+    question,
+    operator,
+    value: conditionValue
+  };
+}
+
+function parseConditions(value: unknown): IntakeCondition[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    const parsed = parseCondition(item);
+    return parsed ? [parsed] : [];
+  });
+}
+
+function parseConditionOperator(value: unknown): IntakeCondition["operator"] | null {
+  const operators: IntakeCondition["operator"][] = ["equals", "not_equals", "in", "exists"];
+
+  return operators.includes(value as IntakeCondition["operator"]) ? (value as IntakeCondition["operator"]) : null;
+}
+
+function parseStageRecommendationRules(value: unknown): StageRecommendationRule[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    const stageId = typeof row.stage_id === "string" ? row.stage_id : typeof row.stageId === "string" ? row.stageId : null;
+    const stageCode = typeof row.stage_code === "string" ? row.stage_code : typeof row.stageCode === "string" ? row.stageCode : null;
+
+    if (!stageId && !stageCode) {
+      return [];
+    }
+
+    return [
+      {
+        stageId,
+        stageCode,
+        label: typeof row.label === "string" ? row.label : null,
+        baseScore: typeof row.base_score === "number" ? row.base_score : typeof row.baseScore === "number" ? row.baseScore : null,
+        conditions: parseStageRecommendationConditions(row.conditions)
+      }
+    ];
+  });
+}
+
+function parseStageRecommendationConditions(value: unknown): StageRecommendationCondition[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    const question = typeof row.question === "string" ? row.question : "";
+    const operator = parseStageRuleOperator(row.operator);
+
+    if (!question || !operator) {
+      return [];
+    }
+
+    return [
+      {
+        question,
+        operator,
+        value: parseRuleValue(row.value),
+        points: typeof row.points === "number" ? row.points : undefined,
+        reason: typeof row.reason === "string" ? row.reason : undefined,
+        required: row.required === true
+      }
+    ];
+  });
+}
+
+function parseStageRuleOperator(value: unknown): StageRecommendationCondition["operator"] | null {
+  const operators: StageRecommendationCondition["operator"][] = ["equals", "not_equals", "in", "contains", "exists", "gte", "lte"];
+
+  return operators.includes(value as StageRecommendationCondition["operator"]) ? (value as StageRecommendationCondition["operator"]) : null;
+}
+
+function parseRuleValue(value: unknown): StageRecommendationCondition["value"] {
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || Array.isArray(value)) {
+    return value as StageRecommendationCondition["value"];
+  }
+
+  return null;
 }
