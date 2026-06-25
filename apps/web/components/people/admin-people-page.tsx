@@ -1,8 +1,9 @@
-import { AlertTriangle, CheckCircle2, ClipboardList, Link2, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ClipboardList, Eye, Link2, Mail, ShieldCheck, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
+import { CreateLearnerModalFrame } from "@/components/people/create-learner-modal";
 import type {
   AdminDomainData,
   AdminDomainSnapshot,
@@ -76,40 +77,154 @@ export function AdminPeopleOperationsPage({ snapshot }: Props) {
         <MetricCard icon={<Mail className="h-5 w-5" />} label="Uitnodigingen" value={pendingInvites.toString()} detail="open of recent" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <SectionHeader count={1} icon={<UserPlus className="h-5 w-5" />} title="Nieuwe leerlingflow" />
-          <CreateLearnerFlowForm data={snapshot.data} />
-        </Card>
-
-        <Card>
-          <SectionHeader count={duplicates.length} icon={<AlertTriangle className="h-5 w-5" />} title="Duplicaatcontrole" />
-          <DuplicateSignals signals={duplicates} />
-        </Card>
-      </div>
-
       <Card>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <SectionHeader count={snapshot.data.participants.length} icon={<Users className="h-5 w-5" />} title="Leerlingdossiers" />
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <DuplicateIndicator data={snapshot.data} signals={duplicates} />
+            <CreateLearnerModal data={snapshot.data} duplicateCount={duplicates.length} />
             <ExportLink href="/api/admin-exports/participants/download">Leerlingen CSV</ExportLink>
             <ExportLink href="/api/admin-exports/guardians/download">Ouders CSV</ExportLink>
           </div>
         </div>
-        <div className="grid gap-4">
-          {snapshot.data.participants.length === 0 ? <EmptyState>Geen leerlingen gevonden.</EmptyState> : null}
-          {snapshot.data.participants.map((participant) => (
-            <LearnerDossierCard key={participant.id} data={snapshot.data} lookups={lookups} participant={participant} />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader count={snapshot.data.peopleAuditEvents.length} icon={<ShieldCheck className="h-5 w-5" />} title="Audit trail" />
-        <AuditTrail events={snapshot.data.peopleAuditEvents} lookups={lookups} />
+        <LearnerRowsTable data={snapshot.data} lookups={lookups} />
       </Card>
     </div>
   );
+}
+
+function LearnerRowsTable({ data, lookups }: { data: AdminDomainData; lookups: LookupMaps }) {
+  if (data.participants.length === 0) {
+    return <EmptyState>Geen leerlingen gevonden.</EmptyState>;
+  }
+
+  return (
+    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+      <table className="w-max min-w-full text-left text-sm">
+        <thead>
+          <tr className="border-b border-border text-xs uppercase text-muted-foreground">
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Leerling</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Ouders</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Accountstatus</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Inschrijving</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Groepsplaatsing</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Audit</th>
+            <th className="whitespace-nowrap px-3 py-3 font-semibold">Actie</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {data.participants.map((participant) => {
+            const guardians = lookups.guardiansByParticipant.get(participant.id) ?? [];
+            const enrollments = lookups.enrollmentsByParticipant.get(participant.id) ?? [];
+            const activeEnrollment = enrollments.find((enrollment) => enrollment.status === "active") ?? enrollments[0] ?? null;
+            const memberships = enrollments.flatMap((enrollment) => lookups.membershipsByEnrollment.get(enrollment.id) ?? []);
+            const activeMembership = memberships.find((membership) => ["planned", "active"].includes(membership.status)) ?? memberships[0] ?? null;
+            const group = activeMembership ? lookups.groups.get(activeMembership.group_id) : null;
+            const program = activeEnrollment ? data.programs.find((entry) => entry.id === activeEnrollment.program_id) : null;
+            const stage = activeEnrollment?.current_stage_id ? data.stages.find((entry) => entry.id === activeEnrollment.current_stage_id) : null;
+            const invitations = lookups.invitationsByParticipant.get(participant.id) ?? [];
+            const auditEvents = lookups.auditByParticipant.get(participant.id) ?? [];
+            const hasFailedInvite = invitations.some((invite) => invite.status === "email_failed");
+            const activeGuardians = guardians.filter((guardian) => guardian.status === "active");
+
+            return (
+              <tr key={participant.id} className="align-top">
+                <td className="whitespace-nowrap px-3 py-4">
+                  <div className="min-w-[220px]">
+                    <Link className="font-bold text-primary hover:underline" href={`/admin/leerlingen/${participant.id}`}>
+                      {participant.display_name}
+                    </Link>
+                    <p className="mt-1 text-xs text-muted-foreground">{participant.birthdate ? formatDate(participant.birthdate) : "Geboortedatum onbekend"}</p>
+                    <p className="text-xs text-muted-foreground">{participant.external_reference ?? "geen referentie"}</p>
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <StatusPill tone={activeGuardians.length > 0 ? "success" : "warning"}>{activeGuardians.length} actief</StatusPill>
+                  <p className="mt-1 text-xs text-muted-foreground">{guardians.length} koppeling(en)</p>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <StatusPill tone={hasFailedInvite ? "danger" : invitations.length > 0 ? "warning" : "neutral"}>{hasFailedInvite ? "mailfout" : invitations.length > 0 ? "uitnodiging" : "geen uitnodiging"}</StatusPill>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <p className="font-semibold">{program?.name ?? "Geen inschrijving"}</p>
+                  <p className="text-xs text-muted-foreground">{stage?.name ?? "geen niveau"} - {activeEnrollment?.status ?? "-"}</p>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <p className="font-semibold">{group?.name ?? "Geen groep"}</p>
+                  <p className="text-xs text-muted-foreground">{activeMembership?.status ?? "-"}</p>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <StatusPill tone="neutral">{auditEvents.length}</StatusPill>
+                </td>
+                <td className="whitespace-nowrap px-3 py-4">
+                  <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" href={`/admin/leerlingen/${participant.id}`}>
+                    <Eye className="h-4 w-4" />
+                    Details / acties
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function CreateLearnerModal({ data, duplicateCount }: { data: AdminDomainData; duplicateCount: number }) {
+  return (
+    <CreateLearnerModalFrame duplicateCount={duplicateCount}>
+      <CreateLearnerFlowForm data={data} />
+    </CreateLearnerModalFrame>
+  );
+}
+
+function DuplicateIndicator({ data, signals }: { data: AdminDomainData; signals: DuplicateSignal[] }) {
+  const tone = signals.some((signal) => signal.tone === "danger") ? "danger" : signals.length > 0 ? "warning" : "success";
+
+  return (
+    <details className="group relative">
+      <summary className={`inline-flex cursor-pointer list-none items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold shadow-soft focus-visible:outline-none focus-visible:ring-2 [&::-webkit-details-marker]:hidden ${tone === "danger" ? "border-red-200 bg-red-50 text-red-700 focus-visible:ring-red-500/30" : tone === "warning" ? "border-amber-200 bg-amber-50 text-amber-800 focus-visible:ring-amber-500/30" : "border-emerald-200 bg-emerald-50 text-emerald-700 focus-visible:ring-emerald-500/30"}`}>
+        <AlertTriangle className="h-4 w-4" />
+        Duplicaatcheck {signals.length}
+      </summary>
+      <div className="absolute right-0 z-40 mt-2 w-[min(28rem,calc(100vw-2rem))] rounded-3xl border border-border bg-card p-4 shadow-card">
+        <p className="text-sm font-bold">Duplicaatcontrole</p>
+        <div className="mt-3 grid gap-2">
+          {signals.length === 0 ? <p className="rounded-2xl bg-emerald-500/10 p-3 text-sm text-emerald-800">Geen mogelijke duplicaten gevonden.</p> : null}
+          {signals.map((signal) => {
+            const match = findDuplicateTarget(data, signal);
+            return (
+              <Link key={signal.key} className="block rounded-2xl border border-border bg-muted/35 p-3 hover:bg-muted" href={match ? `/admin/leerlingen/${match.id}` : "/admin/leerlingen"}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold">{signal.title}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{signal.body}</p>
+                  </div>
+                  <StatusPill tone={signal.tone}>{signal.tone}</StatusPill>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function findDuplicateTarget(data: AdminDomainData, signal: DuplicateSignal) {
+  if (signal.key.startsWith("participant-")) {
+    const [, identity] = signal.key.split("participant-");
+    return data.participants.find((participant) => `${normalizeText(participant.display_name)}|${participant.birthdate ?? ""}` === identity) ?? null;
+  }
+
+  if (signal.key.startsWith("guardian-")) {
+    const email = signal.key.replace("guardian-", "");
+    const guardian = data.participantGuardians.find((entry) => entry.email?.toLowerCase() === email);
+    return guardian ? data.participants.find((participant) => participant.id === guardian.participant_id) ?? null : null;
+  }
+
+  return null;
 }
 
 function CreateLearnerFlowForm({ data }: { data: AdminDomainData }) {
