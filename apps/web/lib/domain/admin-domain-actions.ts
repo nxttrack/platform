@@ -85,6 +85,126 @@ export async function updateStageAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function createStageModuleAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const name = requiredString(formData, "name");
+
+  await throwOnError(
+    supabase.from("stage_modules").insert({
+      tenant_id: tenantId,
+      program_id: requiredString(formData, "program_id"),
+      stage_id: requiredString(formData, "stage_id"),
+      code: optionalCode(formData, "code", name),
+      name,
+      description: optionalString(formData, "description"),
+      rubric: jsonObjectValue(formData, "rubric"),
+      assessment_scale: enumValue(formData, "assessment_scale", ["four_step", "percentage", "binary", "custom"], "four_step"),
+      parent_copy: optionalString(formData, "parent_copy"),
+      evidence_required: checkboxValue(formData, "evidence_required"),
+      sort_order: intValue(formData, "sort_order", 0),
+      status: enumValue(formData, "status", ["draft", "active", "archived"], "active")
+    })
+  );
+  revalidateAdminDomain();
+}
+
+export async function updateStageModuleAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const name = requiredString(formData, "name");
+
+  await throwOnError(
+    supabase
+      .from("stage_modules")
+      .update({
+        program_id: requiredString(formData, "program_id"),
+        stage_id: requiredString(formData, "stage_id"),
+        code: optionalCode(formData, "code", name),
+        name,
+        description: optionalString(formData, "description"),
+        rubric: jsonObjectValue(formData, "rubric"),
+        assessment_scale: enumValue(formData, "assessment_scale", ["four_step", "percentage", "binary", "custom"], "four_step"),
+        parent_copy: optionalString(formData, "parent_copy"),
+        evidence_required: checkboxValue(formData, "evidence_required"),
+        sort_order: intValue(formData, "sort_order", 0),
+        status: enumValue(formData, "status", ["draft", "active", "archived"], "active")
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+  revalidateAdminDomain();
+}
+
+export async function createStageProgressCriteriaAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const name = requiredString(formData, "name");
+
+  await throwOnError(
+    supabase.from("stage_progress_criteria").insert({
+      tenant_id: tenantId,
+      program_id: requiredString(formData, "program_id"),
+      stage_id: requiredString(formData, "stage_id"),
+      code: optionalCode(formData, "code", name),
+      name,
+      description: optionalString(formData, "description"),
+      required_modules: intValue(formData, "required_modules", 0, 0),
+      required_score: nullableDecimalValue(formData, "required_score", 0, 100),
+      required_statuses: multiTextValue(formData, "required_statuses", ["passed"]),
+      evidence_required: checkboxValue(formData, "evidence_required"),
+      parent_copy: optionalString(formData, "parent_copy"),
+      status: enumValue(formData, "status", ["draft", "active", "archived"], "active")
+    })
+  );
+  revalidateAdminDomain();
+}
+
+export async function createQuickAssessmentTemplateAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const name = requiredString(formData, "name");
+
+  await throwOnError(
+    supabase.from("quick_assessment_templates").insert({
+      tenant_id: tenantId,
+      program_id: requiredString(formData, "program_id"),
+      stage_id: optionalString(formData, "stage_id"),
+      stage_module_id: optionalString(formData, "stage_module_id"),
+      code: optionalCode(formData, "code", name),
+      name,
+      description: optionalString(formData, "description"),
+      default_status: enumValue(formData, "default_status", ["observed", "in_progress", "passed", "needs_attention"], "in_progress"),
+      default_score: nullableDecimalValue(formData, "default_score", 0, 100),
+      instructor_prompt: optionalString(formData, "instructor_prompt"),
+      parent_friendly_copy: optionalString(formData, "parent_friendly_copy"),
+      sort_order: intValue(formData, "sort_order", 0),
+      status: enumValue(formData, "status", ["draft", "active", "archived"], "active")
+    })
+  );
+  revalidateAdminDomain();
+}
+
+export async function createBadgeRuleAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const name = requiredString(formData, "name");
+
+  await throwOnError(
+    supabase.from("badge_rules").insert({
+      tenant_id: tenantId,
+      badge_id: requiredString(formData, "badge_id"),
+      program_id: optionalString(formData, "program_id"),
+      stage_id: optionalString(formData, "stage_id"),
+      code: optionalCode(formData, "code", name),
+      name,
+      trigger_type: enumValue(formData, "trigger_type", ["manual", "progress_recommendation"], "progress_recommendation"),
+      min_score: nullableDecimalValue(formData, "min_score", 0, 100),
+      required_module_ids: multiTextValue(formData, "required_module_ids", []),
+      required_status: enumValue(formData, "required_status", ["observed", "in_progress", "passed", "needs_attention"], "passed"),
+      approval_role: enumValue(formData, "approval_role", ["instructor", "tenant_admin", "either"], "either"),
+      recommendation_copy: optionalString(formData, "recommendation_copy"),
+      status: enumValue(formData, "status", ["draft", "active", "archived"], "active")
+    })
+  );
+  revalidateAdminDomain();
+}
+
 export async function createSubscriptionPlanAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
   const name = requiredString(formData, "name");
@@ -714,8 +834,58 @@ function decimalValue(formData: FormData, key: string, fallback: number, min = 0
   return parsed;
 }
 
+function nullableDecimalValue(formData: FormData, key: string, min = 0, max = Number.MAX_SAFE_INTEGER) {
+  const value = optionalString(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value.replace(",", "."));
+
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${key} heeft geen geldige waarde.`);
+  }
+
+  return parsed;
+}
+
 function priceCents(formData: FormData, key: string) {
   return Math.round(decimalValue(formData, key, 0, 0) * 100);
+}
+
+function checkboxValue(formData: FormData, key: string) {
+  return formData.get(key) === "on" || formData.get(key) === "true";
+}
+
+function multiTextValue(formData: FormData, key: string, fallback: string[]) {
+  const values = formData
+    .getAll(key)
+    .flatMap((value) => (typeof value === "string" ? value.split(",") : []))
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  return values.length > 0 ? [...new Set(values)] : fallback;
+}
+
+function jsonObjectValue(formData: FormData, key: string) {
+  const raw = optionalString(formData, key);
+
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+
+    if (!parsed || Array.isArray(parsed) || typeof parsed !== "object") {
+      throw new Error(`${key} moet een JSON-object zijn.`);
+    }
+
+    return parsed as Record<string, unknown>;
+  } catch {
+    throw new Error(`${key} bevat geen geldige JSON.`);
+  }
 }
 
 function capacityPolicyJson(formData: FormData) {

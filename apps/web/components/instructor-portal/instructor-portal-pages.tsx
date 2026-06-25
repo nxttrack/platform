@@ -5,20 +5,25 @@ import { AlertTriangle, Award, CalendarDays, CheckCircle2, ClipboardCheck, Messa
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   awardBadgeAction,
+  createBulkStageModuleProgressAction,
   createProgressUpdateAction,
   createStageModuleProgressAction,
   createStudentNoteAction,
   proposeStageTransitionAction,
   recordAttendanceAction,
-  recordBulkAttendanceAction
+  recordBulkAttendanceAction,
+  reviewBadgeRecommendationAction
 } from "@/lib/instructor-portal/instructor-portal-actions";
 import type {
   InstructorAttendanceRow,
   InstructorBadgeAwardRow,
+  InstructorBadgeRecommendationRow,
   InstructorBadgeRow,
   InstructorEnrollmentRow,
+  InstructorProgressEvidenceEventRow,
   InstructorGroupMembershipRow,
   InstructorGroupRow,
+  InstructorQuickAssessmentTemplateRow,
   InstructorRow,
   InstructorParticipantRow,
   InstructorPortalData,
@@ -27,6 +32,7 @@ import type {
   InstructorProgressRow,
   InstructorResourceRow,
   InstructorSessionRow,
+  InstructorStageProgressCriteriaRow,
   InstructorStageModuleProgressRow,
   InstructorStageModuleRow,
   InstructorStageTransitionProposalRow,
@@ -44,6 +50,9 @@ type LookupMaps = {
   stages: Map<string, InstructorStageRow>;
   stageModules: Map<string, InstructorStageModuleRow>;
   stageModulesByStage: Map<string, InstructorStageModuleRow[]>;
+  criteriaByStage: Map<string, InstructorStageProgressCriteriaRow[]>;
+  quickTemplatesByStage: Map<string, InstructorQuickAssessmentTemplateRow[]>;
+  quickTemplatesByModule: Map<string, InstructorQuickAssessmentTemplateRow[]>;
   resources: Map<string, InstructorResourceRow>;
   groups: Map<string, InstructorGroupRow>;
   participants: Map<string, InstructorParticipantRow>;
@@ -55,7 +64,9 @@ type LookupMaps = {
   moduleProgressByEnrollment: Map<string, InstructorStageModuleProgressRow[]>;
   badges: Map<string, InstructorBadgeRow>;
   badgeAwardsByParticipant: Map<string, InstructorBadgeAwardRow[]>;
+  badgeRecommendationsByParticipant: Map<string, InstructorBadgeRecommendationRow[]>;
   transitionProposalsByEnrollment: Map<string, InstructorStageTransitionProposalRow[]>;
+  evidenceByParticipant: Map<string, InstructorProgressEvidenceEventRow[]>;
   attendanceBySessionEnrollment: Map<string, InstructorAttendanceRow>;
   notesByParticipant: Map<string, InstructorStudentNoteRow[]>;
 };
@@ -78,7 +89,9 @@ type StudentRow = {
   progress: InstructorProgressRow[];
   moduleProgress: InstructorStageModuleProgressRow[];
   badgeAwards: InstructorBadgeAwardRow[];
+  badgeRecommendations: InstructorBadgeRecommendationRow[];
   transitionProposals: InstructorStageTransitionProposalRow[];
+  evidenceEvents: InstructorProgressEvidenceEventRow[];
   notes: InstructorStudentNoteRow[];
 };
 
@@ -317,8 +330,9 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
           </Card>
 
           <Card>
-            <SectionHeader title="Badges en doorstroom" count={student.badgeAwards.length + student.transitionProposals.length} />
+            <SectionHeader title="Badges en doorstroom" count={student.badgeAwards.length + student.badgeRecommendations.length + student.transitionProposals.length} />
             <div className="grid gap-5">
+              <BadgeRecommendationsPanel enrollment={primaryEnrollment} group={primaryGroup} lookups={lookups} participant={student.participant} recommendations={student.badgeRecommendations} />
               <BadgeAwardForm badges={snapshot.data.badges} enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} />
               <StageTransitionForm enrollment={primaryEnrollment} participant={student.participant} group={primaryGroup} stages={snapshot.data.stages} />
             </div>
@@ -330,8 +344,11 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
           </Card>
 
           <Card>
-            <SectionHeader title="Historie" count={student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.notes.length} />
+            <SectionHeader title="Historie" count={student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.evidenceEvents.length + student.notes.length} />
             <div className="grid gap-3">
+              {student.evidenceEvents.map((event) => (
+                <EvidenceHistoryRow key={event.id} event={event} lookups={lookups} />
+              ))}
               {student.progress.map((progress) => (
                 <ProgressHistoryRow key={progress.id} progress={progress} lookups={lookups} />
               ))}
@@ -347,7 +364,7 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
               {student.notes.map((note) => (
                 <NoteHistoryRow key={note.id} note={note} />
               ))}
-              {student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.notes.length === 0 ? <EmptyState>Nog geen voortgang of notities gevonden.</EmptyState> : null}
+              {student.progress.length + student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length + student.evidenceEvents.length + student.notes.length === 0 ? <EmptyState>Nog geen voortgang of notities gevonden.</EmptyState> : null}
             </div>
           </Card>
         </div>
@@ -399,6 +416,7 @@ function SessionAttendanceCard({ session, group, rows, lookups }: { session: Ins
       <div className="grid gap-3">
         {rows.length === 0 ? <EmptyState>Geen leerlingen in deze sessie gevonden.</EmptyState> : null}
         {rows.length > 0 ? <BulkAttendanceForm group={group} rows={rows} session={session} /> : null}
+        {rows.length > 0 ? <BulkProgressForm group={group} lookups={lookups} rows={rows} /> : null}
         {rows.map((row) => (
           <AttendanceRow key={`${row.session.id}-${row.enrollment.id}`} row={row} lookups={lookups} />
         ))}
@@ -439,6 +457,56 @@ function BulkAttendanceForm({ group, rows, session }: { group: InstructorGroupRo
       </div>
       <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
         Aanwezigheid bulk opslaan
+      </button>
+    </form>
+  );
+}
+
+function BulkProgressForm({ group, rows, lookups }: { group: InstructorGroupRow; rows: SessionRosterRow[]; lookups: LookupMaps }) {
+  const modules = lookups.stageModulesByStage.get(group.stage_id) ?? [];
+
+  return (
+    <form action={createBulkStageModuleProgressAction} className="grid gap-3 rounded-2xl border border-border bg-emerald-50/70 p-4">
+      <input name="group_id" type="hidden" value={group.id} />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-bold">Bulk voortgang</p>
+          <p className="text-sm text-muted-foreground">Kies een module en beoordeel de groep in dezelfde lesflow.</p>
+        </div>
+        <StatusPill tone="success">{modules.length} modules</StatusPill>
+      </div>
+      <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        Module
+        <select className={fieldClassName} name="stage_module_id" required>
+          <option value="">Selecteer module</option>
+          {modules.map((module) => (
+            <option key={module.id} value={module.id}>
+              {module.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="grid gap-3">
+        {rows.map((row) => (
+          <div key={`${row.session.id}-${row.enrollment.id}-bulk-progress`} className="grid gap-2 rounded-xl border border-border bg-card p-3 md:grid-cols-[1fr_160px_120px_1fr]">
+            <input name="progress_row" type="hidden" value={`${row.enrollment.id}|${row.participant.id}|${row.enrollment.current_stage_id ?? row.group.stage_id}`} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{row.participant.display_name}</p>
+              <p className="text-xs text-muted-foreground">{row.group.name}</p>
+            </div>
+            <select className={fieldClassName} defaultValue="in_progress" name={`progress_status_${row.enrollment.id}`}>
+              <option value="observed">Geobserveerd</option>
+              <option value="in_progress">In ontwikkeling</option>
+              <option value="passed">Behaald</option>
+              <option value="needs_attention">Aandacht nodig</option>
+            </select>
+            <input className={fieldClassName} max="100" min="0" name={`progress_score_${row.enrollment.id}`} placeholder="0-100" type="number" />
+            <input className={fieldClassName} name={`progress_note_${row.enrollment.id}`} placeholder="Korte notitie" />
+          </div>
+        ))}
+      </div>
+      <button className="w-fit rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-soft hover:bg-emerald-700" type="submit">
+        Voortgang bulk opslaan
       </button>
     </form>
   );
@@ -570,6 +638,7 @@ function NoteForm({ enrollment, participant, group }: { enrollment: InstructorEn
 function ModuleProgressForm({ enrollment, participant, group, lookups }: { enrollment: InstructorEnrollmentRow; participant: InstructorParticipantRow; group: InstructorGroupRow | null; lookups: LookupMaps }) {
   const currentStageId = enrollment.current_stage_id ?? group?.stage_id ?? "";
   const modules = currentStageId ? (lookups.stageModulesByStage.get(currentStageId) ?? []) : [];
+  const templates = currentStageId ? (lookups.quickTemplatesByStage.get(currentStageId) ?? []) : [];
 
   return (
     <form action={createStageModuleProgressAction} className="grid gap-3">
@@ -590,6 +659,17 @@ function ModuleProgressForm({ enrollment, participant, group, lookups }: { enrol
           </select>
         </label>
         <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+          Template
+          <select className={fieldClassName} name="template_id">
+            <option value="">Vrije beoordeling</option>
+            {templates.map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
           Status
           <select className={fieldClassName} defaultValue="in_progress" name="status">
             <option value="observed">Geobserveerd</option>
@@ -598,7 +678,7 @@ function ModuleProgressForm({ enrollment, participant, group, lookups }: { enrol
             <option value="needs_attention">Aandacht nodig</option>
           </select>
         </label>
-        <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+        <label className="grid gap-1 text-xs font-semibold text-muted-foreground md:col-span-1">
           Score
           <input className={fieldClassName} max="100" min="0" name="score" placeholder="0-100" type="number" />
         </label>
@@ -641,6 +721,86 @@ function BadgeAwardForm({ badges, enrollment, participant, group }: { badges: In
         Badge toekennen
       </button>
     </form>
+  );
+}
+
+function BadgeRecommendationsPanel({
+  enrollment,
+  participant,
+  group,
+  recommendations,
+  lookups
+}: {
+  enrollment: InstructorEnrollmentRow;
+  participant: InstructorParticipantRow;
+  group: InstructorGroupRow | null;
+  recommendations: InstructorBadgeRecommendationRow[];
+  lookups: LookupMaps;
+}) {
+  const openRecommendations = recommendations.filter((recommendation) => recommendation.enrollment_id === enrollment.id && recommendation.status === "recommended");
+
+  return (
+    <div className="grid gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-bold">Badge-aanbevelingen</p>
+          <p className="text-sm text-muted-foreground">Progress-triggered aanbevelingen met uitlegbaarheid. Toekenning blijft menselijk.</p>
+        </div>
+        <StatusPill tone={openRecommendations.length > 0 ? "success" : "neutral"}>{openRecommendations.length}</StatusPill>
+      </div>
+      {openRecommendations.length === 0 ? <EmptyState>Geen open badge-aanbevelingen voor deze leerling.</EmptyState> : null}
+      {openRecommendations.map((recommendation) => {
+        const badge = lookups.badges.get(recommendation.badge_id);
+
+        return (
+          <div key={recommendation.id} className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-semibold">{badge?.name ?? "Badge"}</p>
+                <p className="text-sm text-muted-foreground">{recommendation.review_note ?? badge?.description ?? "Aanbevolen op basis van voortgang."}</p>
+              </div>
+              <StatusPill tone={recommendation.confidence === "high" ? "success" : recommendation.confidence === "medium" ? "info" : "warning"}>
+                {recommendation.score ?? "-"}% - {recommendation.confidence}
+              </StatusPill>
+            </div>
+            <div className="grid gap-2 md:grid-cols-2">
+              <ReasonList label="Redenen" rows={recommendation.reasons} tone="success" />
+              <ReasonList label="Aandachtspunten" rows={recommendation.blockers} tone="warning" />
+            </div>
+            <form action={reviewBadgeRecommendationAction} className="grid gap-2 md:grid-cols-[1fr_auto_auto]">
+              <input name="badge_recommendation_id" type="hidden" value={recommendation.id} />
+              <input name="participant_id" type="hidden" value={participant.id} />
+              <input name="enrollment_id" type="hidden" value={enrollment.id} />
+              {group ? <input name="group_id" type="hidden" value={group.id} /> : null}
+              <input className={fieldClassName} name="review_note" placeholder="Reden of oudervriendelijke tekst" />
+              <button className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" name="decision" type="submit" value="awarded">
+                Toekennen
+              </button>
+              <button className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100" name="decision" type="submit" value="rejected">
+                Afwijzen
+              </button>
+            </form>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ReasonList({ label, rows, tone }: { label: string; rows: Array<Record<string, unknown>>; tone: "success" | "warning" }) {
+  return (
+    <div className="rounded-xl border border-border bg-muted/30 p-3">
+      <p className="mb-2 text-xs font-bold uppercase text-muted-foreground">{label}</p>
+      <div className="grid gap-2">
+        {rows.length === 0 ? <p className="text-xs text-muted-foreground">Geen items.</p> : null}
+        {rows.map((row, index) => (
+          <div key={`${label}-${index}`} className="flex items-start gap-2 text-xs text-muted-foreground">
+            <span className={`mt-1 h-2 w-2 rounded-full ${tone === "success" ? "bg-emerald-500" : "bg-amber-500"}`} />
+            <span>{String(row.label ?? row.code ?? "Uitleg")}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -708,16 +868,32 @@ function StudentListRow({ student, lookups }: { student: StudentRow; lookups: Lo
 function StudentLearningSummary({ enrollment, lookups, student }: { enrollment: InstructorEnrollmentRow; lookups: LookupMaps; student: StudentRow }) {
   const stage = enrollment.current_stage_id ? lookups.stages.get(enrollment.current_stage_id) : null;
   const modules = stage ? (lookups.stageModulesByStage.get(stage.id) ?? []) : [];
+  const criteria = stage ? (lookups.criteriaByStage.get(stage.id) ?? []) : [];
   const moduleProgress = student.moduleProgress.filter((progress) => progress.enrollment_id === enrollment.id);
   const passedModules = moduleProgress.filter((progress) => progress.status === "passed").length;
+  const averageScore = moduleProgress.length === 0 ? null : Math.round(moduleProgress.reduce((sum, progress) => sum + (progress.score ?? 0), 0) / moduleProgress.length);
   const latestProposal = student.transitionProposals[0] ?? null;
 
   return (
     <div className="grid gap-4">
       <div className="grid gap-3 md:grid-cols-3">
         <InfoTile label="Modulegereedheid" value={modules.length > 0 ? `${passedModules}/${modules.length} behaald` : "Geen modules"} />
+        <InfoTile label="Gem. score" value={averageScore === null ? "Nog geen" : `${averageScore}%`} />
         <InfoTile label="Badges" value={student.badgeAwards.length.toString()} />
         <InfoTile label="Doorstroom" value={latestProposal ? `${lookups.stages.get(latestProposal.to_stage_id)?.name ?? "Nieuwe stage"} (${latestProposal.status})` : "Nog geen voorstel"} />
+      </div>
+      <div className="grid gap-2">
+        {criteria.map((criterion) => (
+          <div key={criterion.id} className="rounded-xl border border-border bg-card p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold">{criterion.name}</p>
+              <StatusPill tone={passedModules >= criterion.required_modules && (criterion.required_score === null || (averageScore ?? 0) >= criterion.required_score) ? "success" : "warning"}>
+                {passedModules}/{criterion.required_modules} modules {criterion.required_score === null ? "" : `- ${averageScore ?? 0}/${criterion.required_score}%`}
+              </StatusPill>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">{criterion.parent_copy ?? criterion.description ?? "Criteria voor doorstroom en begeleiding."}</p>
+          </div>
+        ))}
       </div>
       <div className="grid gap-2">
         {modules.length === 0 ? <EmptyState>Geen modules voor de huidige stage gevonden.</EmptyState> : null}
@@ -818,6 +994,28 @@ function TransitionMiniRow({ proposal, lookups }: { proposal: InstructorStageTra
   );
 }
 
+function EvidenceHistoryRow({ event, lookups }: { event: InstructorProgressEvidenceEventRow; lookups: LookupMaps }) {
+  const module = event.stage_module_id ? lookups.stageModules.get(event.stage_module_id) : null;
+  const stage = event.stage_id ? lookups.stages.get(event.stage_id) : null;
+
+  return (
+    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{event.title}</p>
+          <p className="text-sm text-muted-foreground">{module?.name ?? stage?.name ?? evidenceTypeLabel(event.event_type)}</p>
+          {event.parent_summary ?? event.summary ? <p className="mt-1 text-sm text-muted-foreground">{event.parent_summary ?? event.summary}</p> : null}
+          <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(event.created_at)}</p>
+        </div>
+        <StatusPill tone={event.event_type === "badge_award" ? "success" : event.event_type === "stage_transition_proposal" ? "warning" : "info"}>
+          {evidenceTypeLabel(event.event_type)}
+          {event.score === null ? "" : ` ${event.score}%`}
+        </StatusPill>
+      </div>
+    </div>
+  );
+}
+
 function ProgressHistoryRow({ progress, lookups }: { progress: InstructorProgressRow; lookups: LookupMaps }) {
   const stage = progress.stage_id ? lookups.stages.get(progress.stage_id) : null;
 
@@ -826,7 +1024,7 @@ function ProgressHistoryRow({ progress, lookups }: { progress: InstructorProgres
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{stage?.name ?? "Algemene voortgang"}</p>
-          {progress.note ? <p className="mt-1 text-sm text-muted-foreground">{progress.note}</p> : null}
+          {progress.parent_summary ?? progress.note ? <p className="mt-1 text-sm text-muted-foreground">{progress.parent_summary ?? progress.note}</p> : null}
           <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(progress.assessed_at)}</p>
         </div>
         <StatusPill tone={progress.status === "passed" ? "success" : progress.status === "needs_attention" ? "warning" : "info"}>
@@ -846,7 +1044,7 @@ function ModuleProgressHistoryRow({ progress, lookups }: { progress: InstructorS
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{module?.name ?? "Module"}</p>
-          {progress.note ? <p className="mt-1 text-sm text-muted-foreground">{progress.note}</p> : null}
+          {progress.parent_summary ?? progress.note ? <p className="mt-1 text-sm text-muted-foreground">{progress.parent_summary ?? progress.note}</p> : null}
           <p className="mt-2 text-xs text-muted-foreground">{formatDateTime(progress.assessed_at)}</p>
         </div>
         <StatusPill tone={progress.status === "passed" ? "success" : progress.status === "needs_attention" ? "warning" : "info"}>
@@ -951,6 +1149,9 @@ function buildLookups(data: InstructorPortalData): LookupMaps {
     stages: byId(data.stages),
     stageModules: byId(data.stageModules),
     stageModulesByStage: groupBy(data.stageModules, (module) => module.stage_id),
+    criteriaByStage: groupBy(data.stageProgressCriteria, (criteria) => criteria.stage_id),
+    quickTemplatesByStage: groupBy(data.quickAssessmentTemplates.filter((template) => template.stage_id), (template) => template.stage_id ?? ""),
+    quickTemplatesByModule: groupBy(data.quickAssessmentTemplates.filter((template) => template.stage_module_id), (template) => template.stage_module_id ?? ""),
     resources: byId(data.resources),
     groups: byId(data.groups),
     participants: byId(data.participants),
@@ -962,7 +1163,9 @@ function buildLookups(data: InstructorPortalData): LookupMaps {
     moduleProgressByEnrollment: groupBy(data.stageModuleProgress, (progress) => progress.enrollment_id),
     badges: byId(data.badges),
     badgeAwardsByParticipant: groupBy(data.badgeAwards, (award) => award.participant_id),
+    badgeRecommendationsByParticipant: groupBy(data.badgeRecommendations, (recommendation) => recommendation.participant_id),
     transitionProposalsByEnrollment: groupBy(data.stageTransitionProposals, (proposal) => proposal.enrollment_id),
+    evidenceByParticipant: groupBy(data.progressEvidenceEvents, (event) => event.participant_id),
     attendanceBySessionEnrollment: new Map(data.attendance.map((attendance) => [`${attendance.session_id}:${attendance.enrollment_id}`, attendance])),
     notesByParticipant: groupBy(data.notes, (note) => note.participant_id)
   };
@@ -1015,7 +1218,9 @@ function buildStudentRows(data: InstructorPortalData, lookups: LookupMaps): Stud
         progress: enrollmentIds.flatMap((enrollmentId) => lookups.progressByEnrollment.get(enrollmentId) ?? []),
         moduleProgress: enrollmentIds.flatMap((enrollmentId) => lookups.moduleProgressByEnrollment.get(enrollmentId) ?? []),
         badgeAwards: lookups.badgeAwardsByParticipant.get(participant.id) ?? [],
+        badgeRecommendations: lookups.badgeRecommendationsByParticipant.get(participant.id) ?? [],
         transitionProposals: enrollmentIds.flatMap((enrollmentId) => lookups.transitionProposalsByEnrollment.get(enrollmentId) ?? []),
+        evidenceEvents: lookups.evidenceByParticipant.get(participant.id) ?? [],
         notes: lookups.notesByParticipant.get(participant.id) ?? []
       };
     })
@@ -1057,6 +1262,19 @@ function attendanceTone(status?: string | null) {
   }
 
   return "neutral";
+}
+
+function evidenceTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    progress_observation: "observatie",
+    module_assessment: "module",
+    badge_recommendation: "badge advies",
+    badge_award: "badge",
+    stage_transition_proposal: "doorstroom",
+    compliment: "compliment"
+  };
+
+  return labels[type] ?? type;
 }
 
 function weekdayName(value: number) {

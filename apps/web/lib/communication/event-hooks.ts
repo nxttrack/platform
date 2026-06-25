@@ -24,7 +24,7 @@ export type QueueParentEventInput = {
   tenantId: string;
   participantId: string;
   enrollmentId?: string | null;
-  eventKey: "intake_submitted" | "slot_offer_sent" | "payment_reminder" | "badge_awarded" | "afzwem_invited" | "diploma_issued";
+  eventKey: "intake_submitted" | "slot_offer_sent" | "payment_reminder" | "progress_update" | "badge_awarded" | "afzwem_invited" | "diploma_issued";
   templateCode: string;
   context: Record<string, unknown>;
   sourceTable: string;

@@ -252,6 +252,7 @@ export type ProgressRow = {
   status: string;
   score: number | null;
   note: string | null;
+  parent_summary: string | null;
   assessed_at: string;
 };
 
@@ -272,6 +273,41 @@ export type StageModuleRow = {
   code: string;
   name: string;
   description: string | null;
+  rubric: Record<string, unknown>;
+  assessment_scale: string;
+  parent_copy: string | null;
+  evidence_required: boolean;
+  sort_order: number;
+  status: string;
+};
+
+export type StageProgressCriteriaRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  required_modules: number;
+  required_score: number | null;
+  required_statuses: string[];
+  evidence_required: boolean;
+  parent_copy: string | null;
+  status: string;
+};
+
+export type QuickAssessmentTemplateRow = {
+  id: string;
+  program_id: string;
+  stage_id: string | null;
+  stage_module_id: string | null;
+  code: string;
+  name: string;
+  description: string | null;
+  default_status: string;
+  default_score: number | null;
+  instructor_prompt: string | null;
+  parent_friendly_copy: string | null;
   sort_order: number;
   status: string;
 };
@@ -285,6 +321,7 @@ export type StageModuleProgressRow = {
   status: string;
   score: number | null;
   note: string | null;
+  parent_summary: string | null;
   assessed_at: string;
 };
 
@@ -297,6 +334,35 @@ export type BadgeAwardRow = {
   note: string | null;
   status: string;
   awarded_at: string;
+};
+
+export type BadgeRuleRow = {
+  id: string;
+  badge_id: string;
+  program_id: string | null;
+  stage_id: string | null;
+  code: string;
+  name: string;
+  trigger_type: string;
+  min_score: number | null;
+  approval_role: string;
+  recommendation_copy: string | null;
+  status: string;
+};
+
+export type BadgeRecommendationRow = {
+  id: string;
+  badge_rule_id: string | null;
+  badge_id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  score: number | null;
+  confidence: string;
+  reasons: Array<Record<string, unknown>>;
+  blockers: Array<Record<string, unknown>>;
+  status: string;
+  recommended_at: string;
+  review_note: string | null;
 };
 
 export type AchievementCardRow = {
@@ -361,8 +427,12 @@ export type AdminDomainData = {
   capacityHolds: CapacityHoldRow[];
   progress: ProgressRow[];
   stageModules: StageModuleRow[];
+  stageProgressCriteria: StageProgressCriteriaRow[];
+  quickAssessmentTemplates: QuickAssessmentTemplateRow[];
   stageModuleProgress: StageModuleProgressRow[];
   badges: BadgeRow[];
+  badgeRules: BadgeRuleRow[];
+  badgeRecommendations: BadgeRecommendationRow[];
   badgeAwards: BadgeAwardRow[];
   achievementCards: AchievementCardRow[];
   stageTransitionProposals: StageTransitionProposalRow[];
@@ -437,8 +507,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     capacityHoldsResult,
     progressResult,
     stageModulesResult,
+    stageProgressCriteriaResult,
+    quickAssessmentTemplatesResult,
     stageModuleProgressResult,
     badgesResult,
+    badgeRulesResult,
+    badgeRecommendationsResult,
     badgeAwardsResult,
     achievementCardsResult,
     stageTransitionProposalsResult,
@@ -517,15 +591,41 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .order("created_at", { ascending: false })
       .limit(120),
     supabase.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("tenant_id", tenantId).order("expires_at", { ascending: true }),
-    supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
-    supabase.from("stage_modules").select("id, program_id, stage_id, code, name, description, sort_order, status").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
+    supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, parent_summary, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
+    supabase
+      .from("stage_modules")
+      .select("id, program_id, stage_id, code, name, description, rubric, assessment_scale, parent_copy, evidence_required, sort_order, status")
+      .eq("tenant_id", tenantId)
+      .order("sort_order", { ascending: true })
+      .order("name", { ascending: true }),
+    supabase
+      .from("stage_progress_criteria")
+      .select("id, program_id, stage_id, code, name, description, required_modules, required_score, required_statuses, evidence_required, parent_copy, status")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("quick_assessment_templates")
+      .select("id, program_id, stage_id, stage_module_id, code, name, description, default_status, default_score, instructor_prompt, parent_friendly_copy, sort_order, status")
+      .eq("tenant_id", tenantId)
+      .order("sort_order", { ascending: true }),
     supabase
       .from("stage_module_progress")
-      .select("id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, assessed_at")
+      .select("id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, parent_summary, assessed_at")
       .eq("tenant_id", tenantId)
       .order("assessed_at", { ascending: false })
       .limit(160),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    supabase
+      .from("badge_rules")
+      .select("id, badge_id, program_id, stage_id, code, name, trigger_type, min_score, approval_role, recommendation_copy, status")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("badge_recommendations")
+      .select("id, badge_rule_id, badge_id, participant_id, enrollment_id, score, confidence, reasons, blockers, status, recommended_at, review_note")
+      .eq("tenant_id", tenantId)
+      .order("recommended_at", { ascending: false })
+      .limit(160),
     supabase
       .from("badge_awards")
       .select("id, badge_id, participant_id, enrollment_id, source, note, status, awarded_at")
@@ -586,8 +686,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     profiles: profilesResult.error,
     progress: progressResult.error,
     stage_modules: stageModulesResult.error,
+    stage_progress_criteria: stageProgressCriteriaResult.error,
+    quick_assessment_templates: quickAssessmentTemplatesResult.error,
     stage_module_progress: stageModuleProgressResult.error,
     badges: badgesResult.error,
+    badge_rules: badgeRulesResult.error,
+    badge_recommendations: badgeRecommendationsResult.error,
     badge_awards: badgeAwardsResult.error,
     achievement_cards: achievementCardsResult.error,
     stage_transition_proposals: stageTransitionProposalsResult.error,
@@ -622,8 +726,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       capacityHolds: asRows<CapacityHoldRow>(capacityHoldsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
       stageModules: asRows<StageModuleRow>(stageModulesResult.data),
+      stageProgressCriteria: asRows<StageProgressCriteriaRow>(stageProgressCriteriaResult.data),
+      quickAssessmentTemplates: asRows<QuickAssessmentTemplateRow>(quickAssessmentTemplatesResult.data),
       stageModuleProgress: asRows<StageModuleProgressRow>(stageModuleProgressResult.data),
       badges: asRows<BadgeRow>(badgesResult.data),
+      badgeRules: asRows<BadgeRuleRow>(badgeRulesResult.data),
+      badgeRecommendations: asRows<BadgeRecommendationRow>(badgeRecommendationsResult.data),
       badgeAwards: asRows<BadgeAwardRow>(badgeAwardsResult.data),
       achievementCards: asRows<AchievementCardRow>(achievementCardsResult.data),
       stageTransitionProposals: asRows<StageTransitionProposalRow>(stageTransitionProposalsResult.data),
@@ -657,8 +765,12 @@ export function createEmptyData(): AdminDomainData {
     capacityHolds: [],
     progress: [],
     stageModules: [],
+    stageProgressCriteria: [],
+    quickAssessmentTemplates: [],
     stageModuleProgress: [],
     badges: [],
+    badgeRules: [],
+    badgeRecommendations: [],
     badgeAwards: [],
     achievementCards: [],
     stageTransitionProposals: [],

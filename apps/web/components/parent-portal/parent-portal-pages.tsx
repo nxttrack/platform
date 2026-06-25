@@ -24,6 +24,7 @@ import type {
   ParentParticipantRow,
   ParentPortalData,
   ParentPortalSnapshot,
+  ParentProgressEvidenceEventRow,
   ParentProgramRow,
   ParentProgressRow,
   ParentResourceRow,
@@ -58,6 +59,7 @@ type LookupMaps = {
   badgeAwardsByParticipant: Map<string, ParentBadgeAwardRow[]>;
   achievementCardsByParticipant: Map<string, ParentAchievementCardRow[]>;
   transitionProposalsByEnrollment: Map<string, ParentStageTransitionProposalRow[]>;
+  evidenceByParticipant: Map<string, ParentProgressEvidenceEventRow[]>;
   milestoneEvents: Map<string, ParentMilestoneEventRow>;
   milestoneEventParticipantsByParticipant: Map<string, ParentMilestoneEventParticipantRow[]>;
   milestoneResultsByParticipant: Map<string, ParentMilestoneResultRow[]>;
@@ -499,6 +501,16 @@ export function ParentProgressPage({ snapshot }: ParentPageProps) {
           ))}
         </div>
       </Card>
+
+      <Card>
+        <SectionHeader title="Leerreis tijdlijn" count={snapshot.data.progressEvidenceEvents.length} />
+        <div className="grid gap-3">
+          {snapshot.data.progressEvidenceEvents.length === 0 ? <EmptyState>Nog geen leerreis-events gevonden.</EmptyState> : null}
+          {snapshot.data.progressEvidenceEvents.map((event) => (
+            <ParentEvidenceTimelineRow key={event.id} event={event} lookups={lookups} />
+          ))}
+        </div>
+      </Card>
     </ParentFrame>
   );
 }
@@ -887,11 +899,12 @@ function ProgressChildCard({ participant, lookups }: { participant: ParentPartic
                     <div key={module.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2">
                       <div>
                         <p className="text-sm font-semibold">{module.name}</p>
-                        <p className="text-xs text-muted-foreground">{module.description ?? "Module"}</p>
+                        <p className="text-xs text-muted-foreground">{module.parent_copy ?? module.description ?? "Module"}</p>
                       </div>
                       <StatusPill tone={progress?.status === "passed" ? "success" : progress?.status === "needs_attention" ? "warning" : "neutral"}>
-                        {progress ? `${progress.status}${progress.score === null ? "" : ` ${progress.score}%`}` : "open"}
+                        {progress ? `${parentStatusLabel(progress.status)}${progress.score === null ? "" : ` ${progress.score}%`}` : "open"}
                       </StatusPill>
+                      {progress?.parent_summary ? <p className="basis-full text-xs leading-5 text-muted-foreground">{progress.parent_summary}</p> : null}
                     </div>
                   );
                 })}
@@ -914,14 +927,35 @@ function ProgressTimelineRow({ progress, lookups }: { progress: ParentProgressRo
         <div>
           <p className="font-semibold">{enrollment ? participantName(lookups, enrollment.participant_id) : "Leerling"}</p>
           <p className="text-sm text-muted-foreground">{stage?.name ?? "Algemene voortgang"}</p>
-          {progress.note ? <p className="mt-2 text-sm text-muted-foreground">{progress.note}</p> : null}
+          {progress.parent_summary ?? progress.note ? <p className="mt-2 text-sm text-muted-foreground">{progress.parent_summary ?? progress.note}</p> : null}
         </div>
         <StatusPill tone={progress.status === "passed" ? "success" : progress.status === "needs_attention" ? "warning" : "info"}>
-          {progress.status}
+          {parentStatusLabel(progress.status)}
           {progress.score === null ? "" : ` ${progress.score}%`}
         </StatusPill>
       </div>
       <p className="mt-3 text-xs text-muted-foreground">{formatDateTime(progress.assessed_at)}</p>
+    </div>
+  );
+}
+
+function ParentEvidenceTimelineRow({ event, lookups }: { event: ParentProgressEvidenceEventRow; lookups: LookupMaps }) {
+  const module = event.stage_module_id ? lookups.stageModules.get(event.stage_module_id) : null;
+  const stage = event.stage_id ? lookups.stages.get(event.stage_id) : null;
+
+  return (
+    <div className="rounded-2xl border border-border bg-muted/35 p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{event.title}</p>
+          <p className="text-sm text-muted-foreground">{participantName(lookups, event.participant_id)} - {module?.name ?? stage?.name ?? parentEvidenceLabel(event.event_type)}</p>
+          {event.parent_summary ?? event.summary ? <p className="mt-2 text-sm text-muted-foreground">{event.parent_summary ?? event.summary}</p> : null}
+        </div>
+        <StatusPill tone={event.event_type === "badge_award" ? "success" : event.event_type === "stage_transition_proposal" ? "info" : "neutral"}>
+          {parentEvidenceLabel(event.event_type)}
+        </StatusPill>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">{formatDateTime(event.created_at)}</p>
     </div>
   );
 }
@@ -995,6 +1029,7 @@ function buildLookups(data: ParentPortalData): LookupMaps {
     badgeAwardsByParticipant: groupBy(data.badgeAwards, (award) => award.participant_id),
     achievementCardsByParticipant: groupBy(data.achievementCards, (card) => card.participant_id),
     transitionProposalsByEnrollment: groupBy(data.stageTransitionProposals, (proposal) => proposal.enrollment_id),
+    evidenceByParticipant: groupBy(data.progressEvidenceEvents, (event) => event.participant_id),
     milestoneEvents: byId(data.milestoneEvents),
     milestoneEventParticipantsByParticipant: groupBy(data.milestoneEventParticipants, (eventParticipant) => eventParticipant.participant_id),
     milestoneResultsByParticipant: groupBy(data.milestoneResults, (result) => result.participant_id),
@@ -1073,6 +1108,30 @@ function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
 
 function participantName(lookups: LookupMaps, participantId: string) {
   return lookups.participants.get(participantId)?.display_name ?? "Onbekend kind";
+}
+
+function parentStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    observed: "Gezien",
+    in_progress: "In ontwikkeling",
+    passed: "Afgerond",
+    needs_attention: "Extra oefenen"
+  };
+
+  return labels[status] ?? status;
+}
+
+function parentEvidenceLabel(type: string) {
+  const labels: Record<string, string> = {
+    progress_observation: "Observatie",
+    module_assessment: "Module-update",
+    badge_recommendation: "Badge-advies",
+    badge_award: "Badge",
+    stage_transition_proposal: "Niveauvoorstel",
+    compliment: "Compliment"
+  };
+
+  return labels[type] ?? type;
 }
 
 function snapshotEnrollmentByProgress(lookups: LookupMaps, enrollmentId: string) {

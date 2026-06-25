@@ -10,6 +10,8 @@ import type {
   AdminDomainSnapshot,
   AchievementCardRow,
   BadgeAwardRow,
+  BadgeRecommendationRow,
+  BadgeRuleRow,
   BadgeRow,
   EnrollmentRow,
   GroupMembershipRow,
@@ -19,6 +21,8 @@ import type {
   ProgramRow,
   ResourceRow,
   SessionRow,
+  QuickAssessmentTemplateRow,
+  StageProgressCriteriaRow,
   StageModuleProgressRow,
   StageModuleRow,
   StageTransitionProposalRow,
@@ -32,9 +36,13 @@ import {
   createInstructorAction,
   createParticipantAction,
   createProgramAction,
+  createQuickAssessmentTemplateAction,
   createResourceAction,
   createSessionAction,
+  createStageModuleAction,
+  createStageProgressCriteriaAction,
   createStageAction,
+  createBadgeRuleAction,
   createSubscriptionPlanAction,
   reviewStageTransitionProposalAction,
   transitionEnrollmentStatusAction,
@@ -52,6 +60,7 @@ import {
   updateResourceAction,
   updateSessionAction,
   updateStageAction,
+  updateStageModuleAction,
   updateSubscriptionPlanAction
 } from "@/lib/domain/admin-domain-actions";
 
@@ -248,9 +257,98 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard icon={<Database className="h-5 w-5" />} label="Modules" value={snapshot.data.stageModules.length.toString()} detail={`${completedModules} behaald`} />
         <MetricCard icon={<Waves className="h-5 w-5" />} label="Badges" value={snapshot.data.badgeAwards.length.toString()} detail={`${snapshot.data.badges.length} definities`} />
-        <MetricCard icon={<Users className="h-5 w-5" />} label="Achievement cards" value={snapshot.data.achievementCards.length.toString()} detail="ouder/kind zichtbaar" />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Aanbevelingen" value={snapshot.data.badgeRecommendations.length.toString()} detail="smart badge advies" />
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Doorstroom" value={openTransitions.length.toString()} detail="open voorstellen" />
       </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+        <Card>
+          <SectionHeader title="Modules en rubrics" count={snapshot.data.stageModules.length} />
+          <CreateStageModuleForm data={snapshot.data} />
+          <DomainTable<StageModuleRow>
+            columns={[
+              { header: "Module", render: (module) => <StrongText>{module.name}</StrongText> },
+              { header: "Niveau", render: (module) => lookups.stages.get(module.stage_id)?.name ?? "-" },
+              { header: "Schaal", render: (module) => module.assessment_scale },
+              { header: "Evidence", render: (module) => <StatusPill tone={module.evidence_required ? "warning" : "neutral"}>{module.evidence_required ? "verplicht" : "optioneel"}</StatusPill> },
+              { header: "Actie", className: "min-w-[340px] whitespace-normal", render: (module) => <StageModuleForm data={snapshot.data} mode="update" module={module} /> }
+            ]}
+            emptyLabel="Nog geen stage modules gevonden."
+            rows={snapshot.data.stageModules}
+            rowKey={(module) => module.id}
+          />
+        </Card>
+
+        <Card>
+          <SectionHeader title="Doorstroomcriteria" count={snapshot.data.stageProgressCriteria.length} />
+          <CreateStageProgressCriteriaForm data={snapshot.data} />
+          <DomainTable<StageProgressCriteriaRow>
+            columns={[
+              { header: "Criteria", render: (criteria) => <StrongText>{criteria.name}</StrongText> },
+              { header: "Niveau", render: (criteria) => lookups.stages.get(criteria.stage_id)?.name ?? "-" },
+              { header: "Modules", render: (criteria) => criteria.required_modules },
+              { header: "Score", render: (criteria) => (criteria.required_score === null ? "-" : `${criteria.required_score}%`) },
+              { header: "Status", render: (criteria) => <StatusPill tone={statusTone(criteria.status)}>{criteria.status}</StatusPill> }
+            ]}
+            emptyLabel="Nog geen criteria gevonden."
+            rows={snapshot.data.stageProgressCriteria}
+            rowKey={(criteria) => criteria.id}
+          />
+        </Card>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
+        <Card>
+          <SectionHeader title="Quick assessment templates" count={snapshot.data.quickAssessmentTemplates.length} />
+          <CreateQuickAssessmentTemplateForm data={snapshot.data} />
+          <DomainTable<QuickAssessmentTemplateRow>
+            columns={[
+              { header: "Template", render: (template) => <StrongText>{template.name}</StrongText> },
+              { header: "Module", render: (template) => (template.stage_module_id ? (lookups.stageModules.get(template.stage_module_id)?.name ?? "-") : "-") },
+              { header: "Default", render: (template) => `${template.default_status}${template.default_score === null ? "" : ` ${template.default_score}%`}` },
+              { header: "Prompt", className: "min-w-[240px] whitespace-normal", render: (template) => nullableText(template.instructor_prompt) }
+            ]}
+            emptyLabel="Nog geen quick templates gevonden."
+            rows={snapshot.data.quickAssessmentTemplates}
+            rowKey={(template) => template.id}
+          />
+        </Card>
+
+        <Card>
+          <SectionHeader title="Badge rules" count={snapshot.data.badgeRules.length} />
+          <CreateBadgeRuleForm data={snapshot.data} />
+          <DomainTable<BadgeRuleRow>
+            columns={[
+              { header: "Rule", render: (rule) => <StrongText>{rule.name}</StrongText> },
+              { header: "Badge", render: (rule) => lookups.badges.get(rule.badge_id)?.name ?? "-" },
+              { header: "Trigger", render: (rule) => rule.trigger_type },
+              { header: "Drempel", render: (rule) => (rule.min_score === null ? "-" : `${rule.min_score}%`) },
+              { header: "Approval", render: (rule) => rule.approval_role },
+              { header: "Status", render: (rule) => <StatusPill tone={statusTone(rule.status)}>{rule.status}</StatusPill> }
+            ]}
+            emptyLabel="Nog geen badge rules gevonden."
+            rows={snapshot.data.badgeRules}
+            rowKey={(rule) => rule.id}
+          />
+        </Card>
+      </div>
+
+      <Card>
+        <SectionHeader title="Badge-aanbevelingen" count={snapshot.data.badgeRecommendations.length} />
+        <DomainTable<BadgeRecommendationRow>
+          columns={[
+            { header: "Leerling", render: (recommendation) => lookups.participants.get(recommendation.participant_id)?.display_name ?? "Onbekend" },
+            { header: "Badge", render: (recommendation) => lookups.badges.get(recommendation.badge_id)?.name ?? "Badge" },
+            { header: "Score", render: (recommendation) => (recommendation.score === null ? "-" : `${recommendation.score}%`) },
+            { header: "Confidence", render: (recommendation) => recommendation.confidence },
+            { header: "Redenen", className: "min-w-[260px] whitespace-normal", render: (recommendation) => recommendation.reasons.map((reason) => String(reason.label ?? reason.code ?? "reden")).join(", ") || "-" },
+            { header: "Status", render: (recommendation) => <StatusPill tone={statusTone(recommendation.status)}>{recommendation.status}</StatusPill> }
+          ]}
+          emptyLabel="Nog geen smart badge-aanbevelingen gevonden."
+          rows={snapshot.data.badgeRecommendations}
+          rowKey={(recommendation) => recommendation.id}
+        />
+      </Card>
 
       <Card>
         <SectionHeader title="Doorstroomvoorstellen" count={snapshot.data.stageTransitionProposals.length} />
@@ -632,6 +730,103 @@ function StageForm({ mode, programs, stage }: { mode: "create"; programs: Progra
   return mode === "update" ? <EditPanel>{form}</EditPanel> : form;
 }
 
+function CreateStageModuleForm({ data }: { data: AdminDomainData }) {
+  return (
+    <CreatePanel title="Nieuwe module/rubric">
+      <StageModuleForm data={data} mode="create" />
+    </CreatePanel>
+  );
+}
+
+function StageModuleForm({ mode, data, module }: { mode: "create"; data: AdminDomainData; module?: never } | { mode: "update"; data: AdminDomainData; module: StageModuleRow }) {
+  const form = (
+    <DomainForm action={mode === "create" ? createStageModuleAction : updateStageModuleAction} submitLabel={mode === "create" ? "Module opslaan" : "Wijzigingen opslaan"}>
+      {module ? <input name="id" type="hidden" value={module.id} /> : null}
+      <SelectField defaultValue={module?.program_id} label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
+      <SelectField defaultValue={module?.stage_id} label="Niveau" name="stage_id" options={data.stages.map(optionFromName)} required />
+      <TextField defaultValue={module?.name} label="Naam" name="name" required />
+      <TextField defaultValue={module?.code} label="Code" name="code" />
+      <TextAreaField defaultValue={module?.description} label="Beschrijving" name="description" />
+      <SelectField defaultValue={module?.assessment_scale ?? "four_step"} label="Beoordelingsschaal" name="assessment_scale" options={assessmentScaleOptions} />
+      <TextAreaField defaultValue={JSON.stringify(module?.rubric ?? {}, null, 2)} label="Rubric JSON" name="rubric" />
+      <TextAreaField defaultValue={module?.parent_copy} label="Oudertekst" name="parent_copy" />
+      <label className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground">
+        <input defaultChecked={module?.evidence_required ?? false} name="evidence_required" type="checkbox" />
+        Evidence verplicht
+      </label>
+      <TextField defaultValue={module?.sort_order ?? 0} label="Volgorde" name="sort_order" type="number" />
+      <SelectField defaultValue={module?.status ?? "active"} label="Status" name="status" options={programStatusOptions} />
+    </DomainForm>
+  );
+
+  return mode === "update" ? <EditPanel>{form}</EditPanel> : form;
+}
+
+function CreateStageProgressCriteriaForm({ data }: { data: AdminDomainData }) {
+  return (
+    <CreatePanel title="Nieuwe criteria">
+      <DomainForm action={createStageProgressCriteriaAction} submitLabel="Criteria opslaan">
+        <SelectField label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
+        <SelectField label="Niveau" name="stage_id" options={data.stages.map(optionFromName)} required />
+        <TextField label="Naam" name="name" required />
+        <TextField label="Code" name="code" />
+        <TextAreaField label="Beschrijving" name="description" />
+        <TextField defaultValue={1} label="Vereiste modules" min={0} name="required_modules" type="number" />
+        <TextField defaultValue={80} label="Vereiste score" max={100} min={0} name="required_score" type="number" />
+        <TextField defaultValue="passed" label="Vereiste statussen" name="required_statuses" />
+        <TextAreaField label="Oudertekst" name="parent_copy" />
+        <label className="flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-muted-foreground">
+          <input name="evidence_required" type="checkbox" />
+          Evidence verplicht
+        </label>
+        <SelectField defaultValue="active" label="Status" name="status" options={programStatusOptions} />
+      </DomainForm>
+    </CreatePanel>
+  );
+}
+
+function CreateQuickAssessmentTemplateForm({ data }: { data: AdminDomainData }) {
+  return (
+    <CreatePanel title="Nieuwe quick template">
+      <DomainForm action={createQuickAssessmentTemplateAction} submitLabel="Template opslaan">
+        <SelectField label="Programma" name="program_id" options={data.programs.map(optionFromName)} required />
+        <SelectField includeEmpty label="Niveau" name="stage_id" options={data.stages.map(optionFromName)} />
+        <SelectField includeEmpty label="Module" name="stage_module_id" options={data.stageModules.map(optionFromName)} />
+        <TextField label="Naam" name="name" required />
+        <TextField label="Code" name="code" />
+        <TextAreaField label="Beschrijving" name="description" />
+        <SelectField defaultValue="in_progress" label="Default status" name="default_status" options={progressStatusOptions} />
+        <TextField defaultValue={60} label="Default score" max={100} min={0} name="default_score" type="number" />
+        <TextAreaField label="Prompt voor instructeur" name="instructor_prompt" />
+        <TextAreaField label="Oudertekst" name="parent_friendly_copy" />
+        <TextField defaultValue={0} label="Volgorde" name="sort_order" type="number" />
+        <SelectField defaultValue="active" label="Status" name="status" options={programStatusOptions} />
+      </DomainForm>
+    </CreatePanel>
+  );
+}
+
+function CreateBadgeRuleForm({ data }: { data: AdminDomainData }) {
+  return (
+    <CreatePanel title="Nieuwe badge rule">
+      <DomainForm action={createBadgeRuleAction} submitLabel="Rule opslaan">
+        <SelectField label="Badge" name="badge_id" options={data.badges.map(optionFromName)} required />
+        <SelectField includeEmpty label="Programma" name="program_id" options={data.programs.map(optionFromName)} />
+        <SelectField includeEmpty label="Niveau" name="stage_id" options={data.stages.map(optionFromName)} />
+        <TextField label="Naam" name="name" required />
+        <TextField label="Code" name="code" />
+        <SelectField defaultValue="progress_recommendation" label="Trigger" name="trigger_type" options={badgeRuleTriggerOptions} />
+        <TextField defaultValue={80} label="Min score" max={100} min={0} name="min_score" type="number" />
+        <TextField label="Vereiste module IDs" name="required_module_ids" placeholder="uuid, uuid" />
+        <SelectField defaultValue="passed" label="Vereiste status" name="required_status" options={progressStatusOptions} />
+        <SelectField defaultValue="either" label="Approval" name="approval_role" options={approvalRoleOptions} />
+        <TextAreaField label="Aanbevelingstekst" name="recommendation_copy" />
+        <SelectField defaultValue="active" label="Status" name="status" options={programStatusOptions} />
+      </DomainForm>
+    </CreatePanel>
+  );
+}
+
 function CreateResourceForm() {
   return (
     <CreatePanel title="Nieuwe locatie of baan">
@@ -862,16 +1057,20 @@ function DomainForm({ action, submitLabel, children }: { action: (formData: Form
 function TextField({
   defaultValue,
   label,
+  max,
   min,
   name,
+  placeholder,
   required,
   step,
   type = "text"
 }: {
   defaultValue?: string | number | null;
   label: string;
+  max?: number;
   min?: number;
   name: string;
+  placeholder?: string;
   required?: boolean;
   step?: string;
   type?: string;
@@ -882,8 +1081,10 @@ function TextField({
       <input
         className="min-h-10 rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2"
         defaultValue={defaultValue ?? ""}
+        max={max}
         min={min}
         name={name}
+        placeholder={placeholder}
         required={required}
         step={step}
         type={type}
@@ -1073,15 +1274,15 @@ function nullableText(value: string | null | undefined) {
 }
 
 function statusTone(status: string): "success" | "warning" | "danger" | "info" | "neutral" {
-  if (["active", "scheduled", "issued", "passed", "completed"].includes(status)) {
+  if (["active", "scheduled", "issued", "passed", "completed", "awarded"].includes(status)) {
     return "success";
   }
 
-  if (["draft", "pending", "planned", "paused", "maintenance", "in_progress", "needs_attention"].includes(status)) {
+  if (["draft", "pending", "planned", "paused", "maintenance", "in_progress", "needs_attention", "recommended"].includes(status)) {
     return "warning";
   }
 
-  if (["cancelled", "revoked", "inactive", "suspended"].includes(status)) {
+  if (["cancelled", "revoked", "inactive", "suspended", "rejected", "expired"].includes(status)) {
     return "danger";
   }
 
@@ -1157,6 +1358,31 @@ const programStatusOptions = [
   { label: "Concept", value: "draft" },
   { label: "Actief", value: "active" },
   { label: "Gearchiveerd", value: "archived" }
+];
+
+const assessmentScaleOptions = [
+  { label: "Vier stappen", value: "four_step" },
+  { label: "Percentage", value: "percentage" },
+  { label: "Ja/Nee", value: "binary" },
+  { label: "Custom rubric", value: "custom" }
+];
+
+const progressStatusOptions = [
+  { label: "Geobserveerd", value: "observed" },
+  { label: "In ontwikkeling", value: "in_progress" },
+  { label: "Behaald", value: "passed" },
+  { label: "Aandacht nodig", value: "needs_attention" }
+];
+
+const badgeRuleTriggerOptions = [
+  { label: "Handmatig", value: "manual" },
+  { label: "Progress-aanbeveling", value: "progress_recommendation" }
+];
+
+const approvalRoleOptions = [
+  { label: "Instructeur", value: "instructor" },
+  { label: "Tenant admin", value: "tenant_admin" },
+  { label: "Beide", value: "either" }
 ];
 
 const billingIntervalOptions = [

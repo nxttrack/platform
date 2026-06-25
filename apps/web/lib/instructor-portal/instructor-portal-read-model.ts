@@ -32,6 +32,41 @@ export type InstructorStageModuleRow = {
   code: string;
   name: string;
   description: string | null;
+  rubric: Record<string, unknown>;
+  assessment_scale: string;
+  parent_copy: string | null;
+  evidence_required: boolean;
+  sort_order: number;
+  status: string;
+};
+
+export type InstructorStageProgressCriteriaRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  required_modules: number;
+  required_score: number | null;
+  required_statuses: string[];
+  evidence_required: boolean;
+  parent_copy: string | null;
+  status: string;
+};
+
+export type InstructorQuickAssessmentTemplateRow = {
+  id: string;
+  program_id: string;
+  stage_id: string | null;
+  stage_module_id: string | null;
+  code: string;
+  name: string;
+  description: string | null;
+  default_status: string;
+  default_score: number | null;
+  instructor_prompt: string | null;
+  parent_friendly_copy: string | null;
   sort_order: number;
   status: string;
 };
@@ -103,6 +138,7 @@ export type InstructorProgressRow = {
   status: string;
   score: number | null;
   note: string | null;
+  parent_summary: string | null;
   assessed_at: string;
 };
 
@@ -115,6 +151,7 @@ export type InstructorStageModuleProgressRow = {
   status: string;
   score: number | null;
   note: string | null;
+  parent_summary: string | null;
   assessed_at: string;
 };
 
@@ -139,6 +176,22 @@ export type InstructorBadgeAwardRow = {
   awarded_at: string;
 };
 
+export type InstructorBadgeRecommendationRow = {
+  id: string;
+  badge_rule_id: string | null;
+  badge_id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  score: number | null;
+  confidence: string;
+  reasons: Array<Record<string, unknown>>;
+  blockers: Array<Record<string, unknown>>;
+  evidence_snapshot: Record<string, unknown>;
+  status: string;
+  recommended_at: string;
+  review_note: string | null;
+};
+
 export type InstructorStageTransitionProposalRow = {
   id: string;
   enrollment_id: string;
@@ -146,9 +199,29 @@ export type InstructorStageTransitionProposalRow = {
   from_stage_id: string | null;
   to_stage_id: string;
   reason: string | null;
+  evidence_snapshot: Record<string, unknown>;
   status: string;
   proposed_at: string;
   reviewed_at: string | null;
+};
+
+export type InstructorProgressEvidenceEventRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  stage_id: string | null;
+  stage_module_id: string | null;
+  progress_id: string | null;
+  stage_module_progress_id: string | null;
+  badge_award_id: string | null;
+  stage_transition_proposal_id: string | null;
+  event_type: string;
+  title: string;
+  summary: string | null;
+  parent_summary: string | null;
+  evidence_source: string;
+  score: number | null;
+  created_at: string;
 };
 
 export type InstructorAttendanceRow = {
@@ -179,6 +252,8 @@ export type InstructorPortalData = {
   programs: InstructorProgramRow[];
   stages: InstructorStageRow[];
   stageModules: InstructorStageModuleRow[];
+  stageProgressCriteria: InstructorStageProgressCriteriaRow[];
+  quickAssessmentTemplates: InstructorQuickAssessmentTemplateRow[];
   resources: InstructorResourceRow[];
   groups: InstructorGroupRow[];
   sessions: InstructorSessionRow[];
@@ -189,7 +264,9 @@ export type InstructorPortalData = {
   stageModuleProgress: InstructorStageModuleProgressRow[];
   badges: InstructorBadgeRow[];
   badgeAwards: InstructorBadgeAwardRow[];
+  badgeRecommendations: InstructorBadgeRecommendationRow[];
   stageTransitionProposals: InstructorStageTransitionProposalRow[];
+  progressEvidenceEvents: InstructorProgressEvidenceEventRow[];
   attendance: InstructorAttendanceRow[];
   notes: InstructorStudentNoteRow[];
 };
@@ -311,13 +388,27 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
   const stages = asRows<InstructorStageRow>(stagesResult.data);
   const stageIds = unique(stages.map((stage) => stage.id));
 
-  const [participantsResult, progressResult, moduleProgressResult, badgesResult, badgeAwardsResult, transitionProposalsResult, attendanceResult, notesResult, stageModulesResult] = await Promise.all([
+  const [
+    participantsResult,
+    progressResult,
+    moduleProgressResult,
+    badgesResult,
+    badgeAwardsResult,
+    badgeRecommendationsResult,
+    transitionProposalsResult,
+    evidenceEventsResult,
+    attendanceResult,
+    notesResult,
+    stageModulesResult,
+    stageProgressCriteriaResult,
+    quickAssessmentTemplatesResult
+  ] = await Promise.all([
     rowsByIds<InstructorParticipantRow>(supabase, "participants", "id, external_reference, display_name, birthdate, status", tenantId, "id", participantIds, "display_name"),
-    rowsByIds<InstructorProgressRow>(supabase, "progress", "id, enrollment_id, stage_id, status, score, note, assessed_at", tenantId, "enrollment_id", enrollmentIds, "assessed_at", false, 80),
+    rowsByIds<InstructorProgressRow>(supabase, "progress", "id, enrollment_id, stage_id, status, score, note, parent_summary, assessed_at", tenantId, "enrollment_id", enrollmentIds, "assessed_at", false, 80),
     rowsByIds<InstructorStageModuleProgressRow>(
       supabase,
       "stage_module_progress",
-      "id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, assessed_at",
+      "id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, parent_summary, assessed_at",
       tenantId,
       "enrollment_id",
       enrollmentIds,
@@ -327,15 +418,37 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
     ),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
     rowsByIds<InstructorBadgeAwardRow>(supabase, "badge_awards", "id, badge_id, participant_id, enrollment_id, source, note, status, awarded_at", tenantId, "participant_id", participantIds, "awarded_at", false),
+    rowsByIds<InstructorBadgeRecommendationRow>(
+      supabase,
+      "badge_recommendations",
+      "id, badge_rule_id, badge_id, participant_id, enrollment_id, score, confidence, reasons, blockers, evidence_snapshot, status, recommended_at, review_note",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "recommended_at",
+      false,
+      120
+    ),
     rowsByIds<InstructorStageTransitionProposalRow>(
       supabase,
       "stage_transition_proposals",
-      "id, enrollment_id, participant_id, from_stage_id, to_stage_id, reason, status, proposed_at, reviewed_at",
+      "id, enrollment_id, participant_id, from_stage_id, to_stage_id, reason, evidence_snapshot, status, proposed_at, reviewed_at",
       tenantId,
       "enrollment_id",
       enrollmentIds,
       "proposed_at",
       false
+    ),
+    rowsByIds<InstructorProgressEvidenceEventRow>(
+      supabase,
+      "progress_evidence_events",
+      "id, participant_id, enrollment_id, stage_id, stage_module_id, progress_id, stage_module_progress_id, badge_award_id, stage_transition_proposal_id, event_type, title, summary, parent_summary, evidence_source, score, created_at",
+      tenantId,
+      "participant_id",
+      participantIds,
+      "created_at",
+      false,
+      160
     ),
     rowsByIds<InstructorAttendanceRow>(
       supabase,
@@ -358,7 +471,33 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       false,
       80
     ),
-    rowsByIds<InstructorStageModuleRow>(supabase, "stage_modules", "id, program_id, stage_id, code, name, description, sort_order, status", tenantId, "stage_id", stageIds, "sort_order")
+    rowsByIds<InstructorStageModuleRow>(
+      supabase,
+      "stage_modules",
+      "id, program_id, stage_id, code, name, description, rubric, assessment_scale, parent_copy, evidence_required, sort_order, status",
+      tenantId,
+      "stage_id",
+      stageIds,
+      "sort_order"
+    ),
+    rowsByIds<InstructorStageProgressCriteriaRow>(
+      supabase,
+      "stage_progress_criteria",
+      "id, program_id, stage_id, code, name, description, required_modules, required_score, required_statuses, evidence_required, parent_copy, status",
+      tenantId,
+      "stage_id",
+      stageIds,
+      "created_at"
+    ),
+    rowsByIds<InstructorQuickAssessmentTemplateRow>(
+      supabase,
+      "quick_assessment_templates",
+      "id, program_id, stage_id, stage_module_id, code, name, description, default_status, default_score, instructor_prompt, parent_friendly_copy, sort_order, status",
+      tenantId,
+      "program_id",
+      unique(asRows<InstructorProgramRow>(programsResult.data).map((program) => program.id)),
+      "sort_order"
+    )
   ]);
 
   const errors = collectErrors({
@@ -375,10 +514,14 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
     stage_module_progress: moduleProgressResult.error,
     badges: badgesResult.error,
     badge_awards: badgeAwardsResult.error,
+    badge_recommendations: badgeRecommendationsResult.error,
     stage_transition_proposals: transitionProposalsResult.error,
+    progress_evidence_events: evidenceEventsResult.error,
     session_attendance: attendanceResult.error,
     instructor_student_notes: notesResult.error,
-    stage_modules: stageModulesResult.error
+    stage_modules: stageModulesResult.error,
+    stage_progress_criteria: stageProgressCriteriaResult.error,
+    quick_assessment_templates: quickAssessmentTemplatesResult.error
   });
 
   return {
@@ -392,6 +535,8 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       programs: asRows<InstructorProgramRow>(programsResult.data),
       stages,
       stageModules: stageModulesResult.rows,
+      stageProgressCriteria: stageProgressCriteriaResult.rows,
+      quickAssessmentTemplates: quickAssessmentTemplatesResult.rows,
       resources: asRows<InstructorResourceRow>(resourcesResult.data),
       groups,
       sessions,
@@ -402,7 +547,9 @@ export async function getInstructorPortalSnapshot(): Promise<InstructorPortalSna
       stageModuleProgress: moduleProgressResult.rows,
       badges: asRows<InstructorBadgeRow>(badgesResult.data),
       badgeAwards: badgeAwardsResult.rows,
+      badgeRecommendations: badgeRecommendationsResult.rows,
       stageTransitionProposals: transitionProposalsResult.rows,
+      progressEvidenceEvents: evidenceEventsResult.rows,
       attendance: attendanceResult.rows,
       notes: notesResult.rows
     }
@@ -449,6 +596,8 @@ function createEmptyData(): InstructorPortalData {
     programs: [],
     stages: [],
     stageModules: [],
+    stageProgressCriteria: [],
+    quickAssessmentTemplates: [],
     resources: [],
     groups: [],
     sessions: [],
@@ -459,7 +608,9 @@ function createEmptyData(): InstructorPortalData {
     stageModuleProgress: [],
     badges: [],
     badgeAwards: [],
+    badgeRecommendations: [],
     stageTransitionProposals: [],
+    progressEvidenceEvents: [],
     attendance: [],
     notes: []
   };
