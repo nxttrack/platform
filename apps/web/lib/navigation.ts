@@ -15,6 +15,7 @@ import {
   Send,
   Settings,
   TrendingUp,
+  Upload,
   User,
   Users,
   Waves
@@ -72,6 +73,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/payments", label: "Betalingen", icon: CircleDollarSign, section: "Financieel & inzicht" },
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3, section: "Financieel & inzicht" },
 
+  { href: "/admin/imports", label: "Imports", icon: Upload, section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
 ];
 
