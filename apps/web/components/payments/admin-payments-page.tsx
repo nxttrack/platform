@@ -1,19 +1,23 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Banknote, CircleDollarSign, CreditCard, FileText, Landmark, Repeat2, ShieldCheck } from "lucide-react";
+import { Banknote, CircleDollarSign, CreditCard, FileText, Landmark, Layers3, Repeat2, ShieldCheck } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   calculateOverdueInvoicesAction,
   createFinanceExportRequestAction,
   createManualInvoiceAction,
+  createPaymentBatchAction,
   generateFinanceExportAction,
+  approvePaymentBatchAction,
   queueInvoiceReminderAction,
   recordManualPaymentAction,
   recordManualRefundAction,
   recordSepaCollectionItemOutcomeAction,
   cancelSepaCollectionRunAction,
   createSepaCollectionRunAction,
+  skipPaymentBatchItemAction,
+  stubProcessPaymentBatchAction,
   submitSepaCollectionRunAction,
   updateInvoiceCorrectionAction,
   updateInvoiceNumberingRuleAction,
@@ -29,6 +33,8 @@ import type {
   InvoiceRow,
   PaymentEnrollmentRow,
   PaymentEventRow,
+  PaymentBatchItemRow,
+  PaymentBatchRow,
   PaymentParticipantRow,
   PaymentProgramRow,
   PaymentProviderConfigRow,
@@ -53,6 +59,7 @@ type LookupMaps = {
   subscriptionPlans: Map<string, PaymentSubscriptionPlanRow>;
   paymentRecordsByInvoice: Map<string, PaymentRecordRow[]>;
   paymentRefundsByInvoice: Map<string, PaymentRefundRow[]>;
+  paymentBatchItemsByBatch: Map<string, PaymentBatchItemRow[]>;
   sepaItemsByRun: Map<string, SepaCollectionItemRow[]>;
   sepaMandatesByEnrollment: Map<string, SepaMandateRow[]>;
 };
@@ -63,6 +70,7 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
   const paidAmount = snapshot.data.paymentRecords.filter((payment) => ["recorded", "paid"].includes(payment.status)).reduce((sum, payment) => sum + payment.amount_cents, 0);
   const refundedAmount = snapshot.data.paymentRefunds.filter((refund) => ["recorded", "processed"].includes(refund.status)).reduce((sum, refund) => sum + refund.amount_cents, 0);
   const activeSepaMandates = snapshot.data.sepaMandates.filter((mandate) => mandate.status === "valid").length;
+  const readyBatchTotal = snapshot.data.paymentBatches.reduce((sum, batch) => sum + (["draft", "ready", "approved", "processing"].includes(batch.status) ? batch.total_amount_cents : 0), 0);
   const manualProvider = snapshot.data.providerConfigs.find((provider) => provider.provider === "manual");
   const mollieProvider = snapshot.data.providerConfigs.find((provider) => provider.provider === "mollie");
   const activeRule = snapshot.data.invoiceNumberingRules.find((rule) => rule.status === "active");
@@ -77,11 +85,12 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
       />
       {snapshot.status === "ready" ? (
         <>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
             <MetricCard icon={<FileText className="h-5 w-5" />} label="Facturen" value={snapshot.data.invoices.length.toString()} detail="handmatig eerst" />
             <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Openstaand" value={formatMoney(openAmount, "EUR")} detail="nog te betalen" />
             <MetricCard icon={<Banknote className="h-5 w-5" />} label="Geregistreerd" value={formatMoney(paidAmount, "EUR")} detail={`${formatMoney(refundedAmount, "EUR")} retour`} />
             <MetricCard icon={<CreditCard className="h-5 w-5" />} label="Mollie" value={mollieProvider?.status ?? "disabled"} detail={`${activeSepaMandates} SEPA mandaten`} />
+            <MetricCard icon={<Layers3 className="h-5 w-5" />} label="Payment batches" value={snapshot.data.paymentBatches.length.toString()} detail={formatMoney(readyBatchTotal, "EUR")} />
           </div>
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
@@ -99,6 +108,8 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
               </div>
             </Card>
           </div>
+
+          <PaymentBatchesPanel data={snapshot.data} lookups={lookups} />
 
           <SepaIncassoPanel data={snapshot.data} lookups={lookups} mollieProvider={mollieProvider} />
 
@@ -240,6 +251,170 @@ function ProviderCard({ provider, fallback }: { provider: PaymentProviderConfigR
         </form>
       ) : null}
     </div>
+  );
+}
+
+function PaymentBatchesPanel({ data, lookups }: { data: AdminPaymentsData; lookups: LookupMaps }) {
+  const openItems = data.paymentBatchItems.filter((item) => ["pending", "ready", "processing"].includes(item.status));
+  const exceptionItems = data.paymentBatchItems.filter((item) => item.warning_codes.length > 0 || item.blocker_codes.length > 0 || ["skipped", "failed"].includes(item.status));
+
+  return (
+    <Card>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold">Payment batches</h2>
+          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+            Bereid periodieke of gegroepeerde betalingen voor. Preview, uitzonderingen en goedkeuring staan los van niveau, groep en voortgang.
+          </p>
+        </div>
+        <StatusPill tone="info">provider execution stubbed</StatusPill>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <MetricCard icon={<Layers3 className="h-5 w-5" />} label="Batches" value={data.paymentBatches.length.toString()} detail="concept tot verwerking" />
+        <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Preview totaal" value={formatMoney(data.paymentBatches.reduce((sum, batch) => sum + batch.total_amount_cents, 0), "EUR")} detail={`${openItems.length} open regels`} />
+        <MetricCard icon={<ShieldCheck className="h-5 w-5" />} label="Uitzonderingen" value={exceptionItems.length.toString()} detail="warnings en blockers" />
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <details className="rounded-2xl border border-border bg-muted/35 p-4" open>
+          <summary className="cursor-pointer text-sm font-bold text-primary">Nieuwe conceptbatch</summary>
+          <PaymentBatchForm data={data} />
+        </details>
+
+        <div className="grid gap-3">
+          <SectionHeader title="Batch overzicht" count={data.paymentBatches.length} />
+          {data.paymentBatches.length === 0 ? <EmptyState>Nog geen payment batches. Maak eerst een conceptbatch om de preview te zien.</EmptyState> : null}
+          {data.paymentBatches.map((batch) => (
+            <PaymentBatchCard key={batch.id} batch={batch} items={lookups.paymentBatchItemsByBatch.get(batch.id) ?? []} lookups={lookups} />
+          ))}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function PaymentBatchForm({ data }: { data: AdminPaymentsData }) {
+  return (
+    <form action={createPaymentBatchAction} className="mt-4 grid gap-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <SelectField defaultValue="monthly_tuition" label="Batchtype" name="batch_type" options={paymentBatchTypeOptions} />
+        <SelectField defaultValue="manual" label="Betaalmethode" name="payment_method" options={paymentBatchMethodOptions} />
+        <TextField defaultValue={`Betaalbatch ${todayInput()}`} label="Titel" name="title" required />
+        <TextField label="Batchnummer override" name="batch_number" />
+        <SelectField includeEmpty label="Programmafilter" name="program_id" options={data.programs.map(optionFromName)} />
+        <TextField defaultValue="EUR" label="Valuta" maxLength={3} name="currency" required />
+        <TextField defaultValue={todayInput()} label="Periode start" name="period_start" type="date" />
+        <TextField defaultValue={todayInput()} label="Periode einde" name="period_end" type="date" />
+        <TextField label="Vervaldatum" name="due_on" type="date" />
+        <TextField label="Bedrag voor eenmalige types" name="amount" type="number" />
+      </div>
+      <TextAreaField label="Omschrijving" name="description" />
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Conceptbatch maken
+      </button>
+      <p className="text-xs leading-5 text-muted-foreground">
+        Maand- en kwartaalbatches gebruiken het abonnementbedrag. Eenmalige types gebruiken het ingevulde bedrag. Mollie/SEPA uitvoering blijft veilig voorbereid totdat de provider expliciet live staat.
+      </p>
+    </form>
+  );
+}
+
+function PaymentBatchCard({ batch, items, lookups }: { batch: PaymentBatchRow; items: PaymentBatchItemRow[]; lookups: LookupMaps }) {
+  const canApprove = ["draft", "ready"].includes(batch.status) && batch.ready_item_count > 0;
+  const canProcess = batch.status === "approved";
+
+  return (
+    <details className="rounded-2xl border border-border bg-card p-4" open={dataShouldOpenBatch(batch)}>
+      <summary className="cursor-pointer">
+        <div className="inline-flex w-full flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-semibold">{batch.batch_number} - {batch.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {paymentBatchTypeLabel(batch.batch_type)} - {paymentBatchMethodLabel(batch.payment_method)} - {batch.period_start ?? "geen start"} t/m {batch.period_end ?? "geen einde"}
+            </p>
+          </div>
+          <StatusPill tone={paymentBatchStatusTone(batch.status)}>{batch.status}</StatusPill>
+        </div>
+      </summary>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
+        <InfoTile label="Regels" value={batch.item_count.toString()} />
+        <InfoTile label="Klaar" value={batch.ready_item_count.toString()} />
+        <InfoTile label="Exceptions" value={batch.exception_item_count.toString()} />
+        <InfoTile label="Totaal" value={formatMoney(batch.total_amount_cents, batch.currency)} />
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {canApprove ? (
+          <form action={approvePaymentBatchAction}>
+            <input name="batch_id" type="hidden" value={batch.id} />
+            <button className="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+              Batch goedkeuren
+            </button>
+          </form>
+        ) : null}
+        {canProcess ? (
+          <form action={stubProcessPaymentBatchAction}>
+            <input name="batch_id" type="hidden" value={batch.id} />
+            <button className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+              Verwerking voorbereiden
+            </button>
+          </form>
+        ) : null}
+      </div>
+
+      <div className="mt-4 grid gap-2">
+        {items.length === 0 ? <EmptyState>Deze batch heeft nog geen previewregels.</EmptyState> : null}
+        {items.map((item) => (
+          <PaymentBatchItemCard key={item.id} item={item} lookups={lookups} />
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function PaymentBatchItemCard({ item, lookups }: { item: PaymentBatchItemRow; lookups: LookupMaps }) {
+  const participant = item.participant_id ? lookups.participants.get(item.participant_id) : null;
+  const enrollment = item.enrollment_id ? lookups.enrollments.get(item.enrollment_id) : null;
+  const program = enrollment ? lookups.programs.get(enrollment.program_id) : null;
+  const plan = item.subscription_plan_id ? lookups.subscriptionPlans.get(item.subscription_plan_id) : null;
+  const hasException = item.warning_codes.length > 0 || item.blocker_codes.length > 0 || Boolean(item.exception_message);
+  const canSkip = !["paid", "cancelled", "skipped"].includes(item.status);
+
+  return (
+    <details className="rounded-2xl border border-border bg-muted/35 p-3" open={hasException}>
+      <summary className="cursor-pointer">
+        <div className="inline-flex w-full flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="font-semibold">{item.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "geen abonnement"}
+            </p>
+            {item.exception_message ? <p className="mt-1 text-sm text-destructive">{item.exception_message}</p> : null}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusPill tone={item.blocker_codes.length > 0 || item.status === "failed" ? "danger" : item.warning_codes.length > 0 || item.status === "skipped" ? "warning" : item.status === "paid" ? "success" : "info"}>{item.status}</StatusPill>
+            <span className="text-sm font-bold">{formatMoney(item.amount_cents, item.currency)}</span>
+          </div>
+        </div>
+      </summary>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <InfoTile label="Warnings" value={item.warning_codes.length > 0 ? item.warning_codes.join(", ") : "-"} />
+        <InfoTile label="Blockers" value={item.blocker_codes.length > 0 ? item.blocker_codes.join(", ") : "-"} />
+        <InfoTile label="Bron" value={item.source_type} />
+      </div>
+      {canSkip ? (
+        <form action={skipPaymentBatchItemAction} className="mt-3 flex flex-wrap gap-2">
+          <input name="item_id" type="hidden" value={item.id} />
+          <input className={fieldClassName} name="reason" placeholder="Reden overslaan" required />
+          <button className="rounded-xl border border-border bg-background px-4 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+            Regel overslaan
+          </button>
+        </form>
+      ) : null}
+    </details>
   );
 }
 
@@ -862,6 +1037,7 @@ function buildLookups(data: AdminPaymentsData): LookupMaps {
     subscriptionPlans: byId(data.subscriptionPlans),
     paymentRecordsByInvoice: groupBy(data.paymentRecords, (payment) => payment.invoice_id),
     paymentRefundsByInvoice: groupBy(data.paymentRefunds, (refund) => refund.invoice_id),
+    paymentBatchItemsByBatch: groupBy(data.paymentBatchItems, (item) => item.payment_batch_id),
     sepaItemsByRun: groupBy(data.sepaCollectionItems, (item) => item.collection_run_id),
     sepaMandatesByEnrollment: groupBy(data.sepaMandates, (mandate) => mandate.enrollment_id)
   };
@@ -910,7 +1086,52 @@ function paymentProviderStatusLabel(status: string | null | undefined) {
   return "ontbreekt";
 }
 
+function dataShouldOpenBatch(batch: PaymentBatchRow) {
+  return ["draft", "ready", "approved", "processing", "partially_failed", "failed"].includes(batch.status);
+}
+
+function paymentBatchStatusTone(status: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (["completed", "approved"].includes(status)) {
+    return "success";
+  }
+
+  if (["partially_failed", "failed", "cancelled"].includes(status)) {
+    return "danger";
+  }
+
+  if (["draft", "ready"].includes(status)) {
+    return "warning";
+  }
+
+  return "info";
+}
+
+function paymentBatchTypeLabel(type: string) {
+  return paymentBatchTypeOptions.find((option) => option.value === type)?.label ?? type;
+}
+
+function paymentBatchMethodLabel(method: string) {
+  return paymentBatchMethodOptions.find((option) => option.value === method)?.label ?? method;
+}
+
 const fieldClassName = "min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";
+
+const paymentBatchTypeOptions = [
+  { label: "Maandelijkse lesgelden", value: "monthly_tuition" },
+  { label: "Kwartaalbetalingen", value: "quarterly_tuition" },
+  { label: "Inschrijfgeld", value: "registration_fee" },
+  { label: "Extra activiteit", value: "extra_activity" },
+  { label: "Diploma-eventkosten", value: "diploma_event_fee" },
+  { label: "Vakantiecursus", value: "holiday_course" },
+  { label: "Handmatige correctie", value: "manual_correction" }
+];
+
+const paymentBatchMethodOptions = [
+  { label: "Handmatig", value: "manual" },
+  { label: "SEPA incasso", value: "sepa_direct_debit" },
+  { label: "Mollie/iDEAL", value: "mollie" },
+  { label: "Extern", value: "external" }
+];
 
 const invoiceStatusOptions = [
   { label: "Draft", value: "draft" },

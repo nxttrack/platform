@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/server";
 
 const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
 const financeExportBucket = "tenant-documents";
+const paymentBatchTypeValues = ["monthly_tuition", "quarterly_tuition", "registration_fee", "extra_activity", "diploma_event_fee", "holiday_course", "manual_correction"] as const;
+const paymentBatchMethodValues = ["manual", "sepa_direct_debit", "mollie", "external"] as const;
 
 type TenantSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -85,6 +87,75 @@ type MolliePaymentResponse = {
       href?: string;
     };
   };
+};
+
+type PaymentBatchType = "monthly_tuition" | "quarterly_tuition" | "registration_fee" | "extra_activity" | "diploma_event_fee" | "holiday_course" | "manual_correction";
+type PaymentBatchMethod = "manual" | "sepa_direct_debit" | "mollie" | "external";
+
+type BatchEnrollmentRow = {
+  id: string;
+  participant_id: string;
+  program_id: string;
+  subscription_plan_id: string | null;
+  status: string;
+  started_on: string;
+};
+
+type BatchParticipantRow = {
+  id: string;
+  display_name: string;
+  status: string;
+};
+
+type BatchSubscriptionPlanRow = {
+  id: string;
+  name: string;
+  billing_interval: string;
+  price_cents: number;
+  currency: string;
+  status: string;
+};
+
+type BatchGuardianRow = {
+  participant_id: string;
+  profile_id: string;
+  email: string | null;
+  status: string;
+};
+
+type BatchSepaMandateRow = {
+  enrollment_id: string;
+  provider_customer_id: string | null;
+  provider_mandate_id: string | null;
+  status: string;
+};
+
+type BatchExistingInvoiceRow = {
+  enrollment_id: string;
+  period_start: string | null;
+  period_end: string | null;
+  status: string;
+};
+
+type PaymentBatchItemInsert = {
+  tenant_id: string;
+  payment_batch_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  subscription_plan_id: string | null;
+  guardian_profile_id: string | null;
+  source_type: string;
+  source_id: string;
+  title: string;
+  description: string | null;
+  amount_cents: number;
+  currency: string;
+  status: "ready" | "skipped";
+  warning_codes: string[];
+  blocker_codes: string[];
+  exception_message: string | null;
+  source_snapshot: Record<string, unknown>;
+  execution_snapshot: Record<string, unknown>;
 };
 
 type FinanceRow = Record<string, string | number | boolean | null>;
@@ -415,6 +486,195 @@ export async function updatePaymentProviderConfigAction(formData: FormData) {
       })
       .eq("tenant_id", tenantId)
       .eq("provider", provider)
+  );
+
+  revalidatePayments();
+}
+
+export async function createPaymentBatchAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const batchId = crypto.randomUUID();
+  const batchType = enumValue(formData, "batch_type", paymentBatchTypeValues, "monthly_tuition");
+  const paymentMethod = enumValue(formData, "payment_method", paymentBatchMethodValues, "manual");
+  const periodStart = optionalDate(formData, "period_start");
+  const periodEnd = optionalDate(formData, "period_end");
+  const dueOn = optionalDate(formData, "due_on") ?? addDays(todayInput(), 14);
+  const currency = requiredString(formData, "currency").toUpperCase();
+  const manualAmountCents = optionalPriceCents(formData, "amount");
+  const programId = optionalString(formData, "program_id");
+  const title = requiredString(formData, "title");
+  const batchNumber = optionalString(formData, "batch_number") ?? `PB-${todayInput().replaceAll("-", "")}-${batchId.slice(0, 6).toUpperCase()}`;
+  const previewItems = await buildPaymentBatchPreviewItems(supabase, {
+    tenantId,
+    batchId,
+    batchType,
+    paymentMethod,
+    periodStart,
+    periodEnd,
+    currency,
+    manualAmountCents,
+    programId,
+    title
+  });
+
+  if (previewItems.length === 0) {
+    throw new Error("Geen deelnemers gevonden voor deze batchselectie.");
+  }
+
+  await throwOnError(
+    supabase.from("payment_batches").insert({
+      id: batchId,
+      tenant_id: tenantId,
+      batch_number: batchNumber,
+      batch_type: batchType,
+      title,
+      description: optionalString(formData, "description"),
+      status: "draft",
+      payment_method: paymentMethod,
+      period_start: periodStart,
+      period_end: periodEnd,
+      due_on: dueOn,
+      currency,
+      created_by_profile_id: profileId,
+      metadata: {
+        source: "admin_payment_batch_preview",
+        program_id: programId,
+        execution: "stubbed_until_provider_ready",
+        preview_generated_at: new Date().toISOString()
+      }
+    })
+  );
+
+  await throwOnError(supabase.from("payment_batch_items").insert(previewItems));
+
+  revalidatePayments();
+}
+
+export async function approvePaymentBatchAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const batchId = requiredString(formData, "batch_id");
+  const batchResult = await supabase
+    .from("payment_batches")
+    .select("id, status, ready_item_count, item_count")
+    .eq("tenant_id", tenantId)
+    .eq("id", batchId)
+    .single();
+
+  if (batchResult.error || !batchResult.data) {
+    throw new Error(batchResult.error?.message ?? "Payment batch niet gevonden.");
+  }
+
+  const batch = batchResult.data as { id: string; status: string; ready_item_count: number; item_count: number };
+
+  if (!["draft", "ready"].includes(batch.status)) {
+    throw new Error("Alleen concept- of ready-batches kunnen worden goedgekeurd.");
+  }
+
+  if (batch.ready_item_count <= 0) {
+    throw new Error("Deze batch heeft geen goedkeuringsklare regels.");
+  }
+
+  const blockingResult = await supabase
+    .from("payment_batch_items")
+    .select("id, blocker_codes, status")
+    .eq("tenant_id", tenantId)
+    .eq("payment_batch_id", batchId)
+    .not("status", "in", "(skipped,cancelled)")
+    .limit(200);
+
+  if (blockingResult.error) {
+    throw new Error(blockingResult.error.message);
+  }
+
+  const blockingItems = ((blockingResult.data ?? []) as Array<{ blocker_codes: string[]; status: string }>).filter((item) => (item.blocker_codes ?? []).length > 0);
+
+  if (blockingItems.length > 0) {
+    throw new Error("Los eerst blokkerende uitzonderingen op of sla die regels over.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("payment_batches")
+      .update({
+        status: "approved",
+        approved_at: new Date().toISOString(),
+        approved_by_profile_id: profileId,
+        metadata: { source: "admin_payment_batch_approval", execution: "provider_stubbed" }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", batchId)
+  );
+
+  revalidatePayments();
+}
+
+export async function skipPaymentBatchItemAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const itemId = requiredString(formData, "item_id");
+  const reason = requiredString(formData, "reason");
+
+  await throwOnError(
+    supabase
+      .from("payment_batch_items")
+      .update({
+        status: "skipped",
+        exception_message: reason,
+        execution_snapshot: { source: "admin_skip_payment_batch_item", reason }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", itemId)
+  );
+
+  revalidatePayments();
+}
+
+export async function stubProcessPaymentBatchAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const batchId = requiredString(formData, "batch_id");
+  const reason = optionalString(formData, "reason") ?? "Uitvoering gestubd: provider of incasso nog niet geactiveerd.";
+  const batchResult = await supabase.from("payment_batches").select("id, status").eq("tenant_id", tenantId).eq("id", batchId).single();
+
+  if (batchResult.error || !batchResult.data) {
+    throw new Error(batchResult.error?.message ?? "Payment batch niet gevonden.");
+  }
+
+  const batch = batchResult.data as { status: string };
+
+  if (batch.status !== "approved") {
+    throw new Error("Alleen goedgekeurde batches kunnen naar stub-verwerking.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("payment_batch_items")
+      .update({
+        status: "processing",
+        execution_snapshot: {
+          source: "admin_payment_batch_execution_stub",
+          reason,
+          no_external_provider_call: true
+        }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("payment_batch_id", batchId)
+      .eq("status", "ready")
+  );
+
+  await throwOnError(
+    supabase
+      .from("payment_batches")
+      .update({
+        status: "processing",
+        processed_at: new Date().toISOString(),
+        metadata: {
+          source: "admin_payment_batch_execution_stub",
+          reason,
+          no_external_provider_call: true,
+          processed_by_profile_id: profileId
+        }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", batchId)
   );
 
   revalidatePayments();
@@ -1127,6 +1387,22 @@ function optionalDateTime(formData: FormData, key: string) {
   return value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null;
 }
 
+function optionalPriceCents(formData: FormData, key: string) {
+  const value = optionalString(formData, key);
+
+  if (!value) {
+    return null;
+  }
+
+  const parsed = Number.parseFloat(value.replace(",", "."));
+
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${key} heeft geen geldig bedrag.`);
+  }
+
+  return Math.round(parsed * 100);
+}
+
 function priceCents(formData: FormData, key: string) {
   const value = requiredString(formData, key);
   const parsed = Number.parseFloat(value.replace(",", "."));
@@ -1170,6 +1446,157 @@ async function getInvoiceForPayment(supabase: TenantSupabaseClient, tenantId: st
   }
 
   return result.data as InvoiceForPayment;
+}
+
+async function buildPaymentBatchPreviewItems(
+  supabase: TenantSupabaseClient,
+  options: {
+    tenantId: string;
+    batchId: string;
+    batchType: PaymentBatchType;
+    paymentMethod: PaymentBatchMethod;
+    periodStart: string | null;
+    periodEnd: string | null;
+    currency: string;
+    manualAmountCents: number | null;
+    programId: string | null;
+    title: string;
+  }
+): Promise<PaymentBatchItemInsert[]> {
+  let enrollmentsQuery = supabase
+    .from("enrollments")
+    .select("id, participant_id, program_id, subscription_plan_id, status, started_on")
+    .eq("tenant_id", options.tenantId)
+    .in("status", ["pending", "active"])
+    .order("started_on", { ascending: true });
+
+  if (options.programId) {
+    enrollmentsQuery = enrollmentsQuery.eq("program_id", options.programId);
+  }
+
+  const enrollmentsResult = await enrollmentsQuery;
+  throwResultError(enrollmentsResult.error);
+
+  const enrollments = (enrollmentsResult.data ?? []) as BatchEnrollmentRow[];
+  const participantIds = [...new Set(enrollments.map((enrollment) => enrollment.participant_id))];
+  const planIds = [...new Set(enrollments.map((enrollment) => enrollment.subscription_plan_id).filter((id): id is string => Boolean(id)))];
+  const enrollmentIds = enrollments.map((enrollment) => enrollment.id);
+
+  if (enrollments.length === 0) {
+    return [];
+  }
+
+  const [participantsResult, plansResult, guardiansResult, mandatesResult, invoicesResult, providersResult] = await Promise.all([
+    supabase.from("participants").select("id, display_name, status").eq("tenant_id", options.tenantId).in("id", participantIds),
+    planIds.length > 0
+      ? supabase.from("subscription_plans").select("id, name, billing_interval, price_cents, currency, status").eq("tenant_id", options.tenantId).in("id", planIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase.from("participant_guardians").select("participant_id, profile_id, email, status").eq("tenant_id", options.tenantId).in("participant_id", participantIds),
+    supabase
+      .from("sepa_mandates")
+      .select("enrollment_id, provider_customer_id, provider_mandate_id, status")
+      .eq("tenant_id", options.tenantId)
+      .eq("status", "valid")
+      .in("enrollment_id", enrollmentIds),
+    supabase
+      .from("invoices")
+      .select("enrollment_id, period_start, period_end, status")
+      .eq("tenant_id", options.tenantId)
+      .in("enrollment_id", enrollmentIds)
+      .in("status", ["draft", "open", "partially_paid", "overdue"]),
+    supabase.from("payment_provider_configs").select("provider, status").eq("tenant_id", options.tenantId)
+  ]);
+
+  throwResultError(participantsResult.error);
+  throwResultError(plansResult.error);
+  throwResultError(guardiansResult.error);
+  throwResultError(mandatesResult.error);
+  throwResultError(invoicesResult.error);
+  throwResultError(providersResult.error);
+
+  const participants = new Map(((participantsResult.data ?? []) as BatchParticipantRow[]).map((participant) => [participant.id, participant]));
+  const plans = new Map(((plansResult.data ?? []) as BatchSubscriptionPlanRow[]).map((plan) => [plan.id, plan]));
+  const guardiansByParticipant = groupRows((guardiansResult.data ?? []) as BatchGuardianRow[], (guardian) => guardian.participant_id);
+  const mandatesByEnrollment = new Map(((mandatesResult.data ?? []) as BatchSepaMandateRow[]).map((mandate) => [mandate.enrollment_id, mandate]));
+  const invoicesByEnrollment = groupRows((invoicesResult.data ?? []) as BatchExistingInvoiceRow[], (invoice) => invoice.enrollment_id);
+  const providerStatus = new Map(((providersResult.data ?? []) as Array<{ provider: string; status: string }>).map((provider) => [provider.provider, provider.status]));
+
+  return enrollments.flatMap((enrollment) => {
+    const participant = participants.get(enrollment.participant_id);
+
+    if (!participant || participant.status !== "active") {
+      return [];
+    }
+
+    const plan = enrollment.subscription_plan_id ? (plans.get(enrollment.subscription_plan_id) ?? null) : null;
+    const amount = resolvePaymentBatchAmount(options.batchType, plan, options.manualAmountCents);
+    const guardians = guardiansByParticipant.get(enrollment.participant_id) ?? [];
+    const activeGuardian = guardians.find((guardian) => guardian.status === "active" && guardian.email) ?? guardians.find((guardian) => guardian.status === "active") ?? null;
+    const validSepaMandate = mandatesByEnrollment.get(enrollment.id);
+    const warnings: string[] = [];
+    const blockers = [...amount.blockers];
+
+    if (amount.warning) {
+      warnings.push(amount.warning);
+    }
+
+    if (amount.currency && amount.currency !== options.currency) {
+      blockers.push("currency_mismatch");
+    }
+
+    if (!activeGuardian?.email) {
+      warnings.push("missing_guardian_email");
+    }
+
+    if (options.paymentMethod === "sepa_direct_debit" && (!validSepaMandate?.provider_customer_id || !validSepaMandate.provider_mandate_id)) {
+      blockers.push("missing_sepa_mandate");
+    }
+
+    if (options.paymentMethod === "mollie" && providerStatus.get("mollie") !== "active") {
+      warnings.push("mollie_provider_not_active");
+    }
+
+    if (hasExistingInvoiceForPeriod(invoicesByEnrollment.get(enrollment.id) ?? [], options.periodStart, options.periodEnd)) {
+      warnings.push("existing_open_invoice_for_period");
+    }
+
+    const status = blockers.length > 0 ? "skipped" : "ready";
+    const itemTitle = buildPaymentBatchItemTitle(options.batchType, participant.display_name, plan?.name);
+
+    return [
+      {
+        tenant_id: options.tenantId,
+        payment_batch_id: options.batchId,
+        enrollment_id: enrollment.id,
+        participant_id: enrollment.participant_id,
+        subscription_plan_id: enrollment.subscription_plan_id,
+        guardian_profile_id: activeGuardian?.profile_id ?? null,
+        source_type: paymentBatchSourceType(options.batchType),
+        source_id: enrollment.id,
+        title: itemTitle,
+        description: options.title,
+        amount_cents: amount.amountCents,
+        currency: options.currency,
+        status,
+        warning_codes: [...new Set(warnings)],
+        blocker_codes: [...new Set(blockers)],
+        exception_message: buildPaymentBatchExceptionText(warnings, blockers),
+        source_snapshot: {
+          participant_name: participant.display_name,
+          enrollment_status: enrollment.status,
+          subscription_plan_name: plan?.name ?? null,
+          subscription_billing_interval: plan?.billing_interval ?? null,
+          payment_method: options.paymentMethod,
+          has_guardian_email: Boolean(activeGuardian?.email),
+          has_valid_sepa_mandate: Boolean(validSepaMandate?.provider_customer_id && validSepaMandate.provider_mandate_id)
+        },
+        execution_snapshot: {
+          provider_execution: "stubbed_until_approved",
+          preview_generated_at: new Date().toISOString()
+        }
+      }
+    ];
+  });
 }
 
 async function getSepaCollectionRun(supabase: TenantSupabaseClient, tenantId: string, runId: string) {
@@ -1344,6 +1771,118 @@ function listValue(formData: FormData, key: string) {
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+function resolvePaymentBatchAmount(batchType: PaymentBatchType, plan: BatchSubscriptionPlanRow | null, manualAmountCents: number | null) {
+  const blockers: string[] = [];
+  let warning: string | null = null;
+
+  if (batchType === "monthly_tuition" || batchType === "quarterly_tuition") {
+    if (!plan) {
+      return { amountCents: 0, currency: null, blockers: ["missing_subscription_plan"], warning };
+    }
+
+    if (plan.status !== "active") {
+      blockers.push("subscription_plan_inactive");
+    }
+
+    if (plan.price_cents <= 0) {
+      blockers.push("zero_subscription_amount");
+    }
+
+    if (batchType === "monthly_tuition" && plan.billing_interval !== "monthly") {
+      warning = "subscription_interval_mismatch";
+    }
+
+    if (batchType === "quarterly_tuition" && !["monthly", "quarterly"].includes(plan.billing_interval)) {
+      warning = "subscription_interval_mismatch";
+    }
+
+    return {
+      amountCents: batchType === "quarterly_tuition" && plan.billing_interval === "monthly" ? plan.price_cents * 3 : plan.price_cents,
+      currency: plan.currency,
+      blockers,
+      warning
+    };
+  }
+
+  if (manualAmountCents === null) {
+    return { amountCents: 0, currency: null, blockers: ["missing_manual_amount"], warning };
+  }
+
+  if (manualAmountCents <= 0) {
+    blockers.push("zero_manual_amount");
+  }
+
+  return { amountCents: manualAmountCents, currency: null, blockers, warning };
+}
+
+function hasExistingInvoiceForPeriod(invoices: BatchExistingInvoiceRow[], periodStart: string | null, periodEnd: string | null) {
+  return invoices.some((invoice) => {
+    if (!periodStart && !periodEnd) {
+      return true;
+    }
+
+    return invoice.period_start === periodStart && invoice.period_end === periodEnd;
+  });
+}
+
+function paymentBatchSourceType(batchType: PaymentBatchType) {
+  const sourceTypes: Record<PaymentBatchType, string> = {
+    monthly_tuition: "enrollment",
+    quarterly_tuition: "enrollment",
+    registration_fee: "registration_fee",
+    extra_activity: "activity",
+    diploma_event_fee: "milestone_event",
+    holiday_course: "holiday_course",
+    manual_correction: "manual_correction"
+  };
+
+  return sourceTypes[batchType];
+}
+
+function buildPaymentBatchItemTitle(batchType: PaymentBatchType, participantName: string, planName: string | undefined) {
+  const labels: Record<PaymentBatchType, string> = {
+    monthly_tuition: "Maandelijkse lesgelden",
+    quarterly_tuition: "Kwartaalbetaling",
+    registration_fee: "Inschrijfgeld",
+    extra_activity: "Extra activiteit",
+    diploma_event_fee: "Diploma-eventkosten",
+    holiday_course: "Vakantiecursus",
+    manual_correction: "Handmatige correctie"
+  };
+
+  return `${labels[batchType]} - ${participantName}${planName ? ` - ${planName}` : ""}`;
+}
+
+function buildPaymentBatchExceptionText(warnings: string[], blockers: string[]) {
+  const labels: Record<string, string> = {
+    missing_subscription_plan: "Geen abonnement gekoppeld.",
+    subscription_plan_inactive: "Abonnement is niet actief.",
+    zero_subscription_amount: "Abonnement heeft geen bedrag.",
+    subscription_interval_mismatch: "Abonnementsperiode wijkt af van batchtype.",
+    missing_manual_amount: "Geen handmatig bedrag ingesteld.",
+    zero_manual_amount: "Bedrag is nul.",
+    missing_guardian_email: "Geen actief ouder/verzorger e-mailadres gevonden.",
+    missing_sepa_mandate: "Geen geldig SEPA mandaat voor deze inschrijving.",
+    mollie_provider_not_active: "Mollie provider is nog niet actief.",
+    existing_open_invoice_for_period: "Er bestaat al een open factuur voor deze periode.",
+    currency_mismatch: "Valuta van abonnement wijkt af van batchvaluta."
+  };
+  const messages = [...blockers, ...warnings].map((code) => labels[code] ?? code);
+
+  return messages.length > 0 ? messages.join(" ") : null;
+}
+
+function groupRows<Row>(rows: Row[], getKey: (row: Row) => string) {
+  const grouped = new Map<string, Row[]>();
+
+  for (const row of rows) {
+    const key = getKey(row);
+    grouped.set(key, [...(grouped.get(key) ?? []), row]);
+  }
+
+  return grouped;
 }
 
 async function buildFinanceRows(
