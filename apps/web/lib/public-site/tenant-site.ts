@@ -36,6 +36,7 @@ export type PublicTenantProfile = {
   addressLines: string[];
   seoTitle: string | null;
   seoDescription: string | null;
+  socialImageUrl: string | null;
   newsItems: PublicNewsItem[];
   agendaItems: PublicAgendaItem[];
 };
@@ -111,6 +112,7 @@ type ProfileRow = {
   address_lines: string[] | null;
   seo_title: string | null;
   seo_description: string | null;
+  social_image_url: string | null;
   news_items: unknown;
   agenda_items: unknown;
 };
@@ -187,7 +189,7 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
     supabase
       .from("tenant_public_profiles")
       .select(
-        "hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body, logo_url, hero_image_url, hero_image_alt, brand_primary_hex, brand_accent_hex, location_label, footer_tagline, contact_email, contact_phone, address_lines, seo_title, seo_description, news_items, agenda_items"
+        "hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body, logo_url, hero_image_url, hero_image_alt, brand_primary_hex, brand_accent_hex, location_label, footer_tagline, contact_email, contact_phone, address_lines, seo_title, seo_description, social_image_url, news_items, agenda_items"
       )
       .eq("tenant_id", tenant.id)
       .eq("status", "published")
@@ -279,6 +281,7 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
         addressLines: profileRow.address_lines ?? [],
         seoTitle: profileRow.seo_title,
         seoDescription: profileRow.seo_description,
+        socialImageUrl: profileRow.social_image_url,
         newsItems: parseNewsItems(profileRow.news_items),
         agendaItems: parseAgendaItems(profileRow.agenda_items)
       }

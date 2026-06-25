@@ -24,6 +24,7 @@ export type TenantPublicProfileSettingsRow = {
   address_lines: string[];
   seo_title: string | null;
   seo_description: string | null;
+  social_image_url: string | null;
   news_items: unknown;
   agenda_items: unknown;
 };
@@ -63,11 +64,22 @@ export type IntakeFormConfigSettingsRow = {
   custom_questions: unknown;
 };
 
+export type TenantDomainStatusRow = {
+  id: string;
+  hostname: string;
+  kind: string;
+  status: string;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
 export type AdminTenantWebsiteSettingsData = {
   profile: TenantPublicProfileSettingsRow | null;
   programs: TenantWebsiteProgramRow[];
   programSettings: ProgramPublicSettingsRow[];
   intakeConfigs: IntakeFormConfigSettingsRow[];
+  domains: TenantDomainStatusRow[];
 };
 
 export type AdminTenantWebsiteSettingsSnapshot = {
@@ -114,11 +126,11 @@ export async function getAdminTenantWebsiteSettingsSnapshot(): Promise<AdminTena
 
   const supabase = await createClient();
   const tenantId = tenant.id;
-  const [profileResult, programsResult, programSettingsResult, intakeConfigsResult] = await Promise.all([
+  const [profileResult, programsResult, programSettingsResult, intakeConfigsResult, domainsResult] = await Promise.all([
     supabase
       .from("tenant_public_profiles")
       .select(
-        "tenant_id, status, hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body, logo_url, hero_image_url, hero_image_alt, brand_primary_hex, brand_accent_hex, location_label, footer_tagline, contact_email, contact_phone, address_lines, seo_title, seo_description, news_items, agenda_items"
+        "tenant_id, status, hero_title, hero_subtitle, primary_cta_label, secondary_cta_label, intro_title, intro_body, logo_url, hero_image_url, hero_image_alt, brand_primary_hex, brand_accent_hex, location_label, footer_tagline, contact_email, contact_phone, address_lines, seo_title, seo_description, social_image_url, news_items, agenda_items"
       )
       .eq("tenant_id", tenantId)
       .maybeSingle(),
@@ -128,14 +140,16 @@ export async function getAdminTenantWebsiteSettingsSnapshot(): Promise<AdminTena
       .select("id, program_id, public_slug, status, summary, detail, age_label, duration_label, price_label, capacity_label, trial_enabled, registration_enabled, waitlist_enabled, sort_order")
       .eq("tenant_id", tenantId)
       .order("sort_order", { ascending: true }),
-    supabase.from("intake_form_configs").select("id, program_id, status, intro, allowed_intake_options, custom_questions").eq("tenant_id", tenantId)
+    supabase.from("intake_form_configs").select("id, program_id, status, intro, allowed_intake_options, custom_questions").eq("tenant_id", tenantId),
+    supabase.from("tenant_domains").select("id, hostname, kind, status, is_primary, created_at, updated_at").eq("tenant_id", tenantId).order("is_primary", { ascending: false }).order("hostname", { ascending: true })
   ]);
 
   const errors = collectErrors({
     tenant_public_profiles: profileResult.error,
     programs: programsResult.error,
     program_public_settings: programSettingsResult.error,
-    intake_form_configs: intakeConfigsResult.error
+    intake_form_configs: intakeConfigsResult.error,
+    tenant_domains: domainsResult.error
   });
 
   return {
@@ -146,7 +160,8 @@ export async function getAdminTenantWebsiteSettingsSnapshot(): Promise<AdminTena
       profile: profileResult.data ? (profileResult.data as TenantPublicProfileSettingsRow) : null,
       programs: asRows<TenantWebsiteProgramRow>(programsResult.data),
       programSettings: asRows<ProgramPublicSettingsRow>(programSettingsResult.data),
-      intakeConfigs: asRows<IntakeFormConfigSettingsRow>(intakeConfigsResult.data)
+      intakeConfigs: asRows<IntakeFormConfigSettingsRow>(intakeConfigsResult.data),
+      domains: asRows<TenantDomainStatusRow>(domainsResult.data)
     }
   };
 }
@@ -156,7 +171,8 @@ function createEmptyData(): AdminTenantWebsiteSettingsData {
     profile: null,
     programs: [],
     programSettings: [],
-    intakeConfigs: []
+    intakeConfigs: [],
+    domains: []
   };
 }
 

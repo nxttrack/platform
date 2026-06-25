@@ -91,6 +91,24 @@ const workflowContracts = [
         snippets: ["createSignedUrl", "tenant_document_records", "parent_documents", "getTrustedAuthContext"]
       }
     ]
+  },
+  {
+    label: "Tenant website CMS",
+    route: "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+    files: [
+      {
+        path: "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+        snippets: ["AssetUploadPanel", "DomainStatusPanel", "Nieuws", "Agenda", "Social image URL", "Publicatiestatus"]
+      },
+      {
+        path: "apps/web/lib/tenant-website-settings/admin-tenant-website-actions.ts",
+        snippets: ["uploadTenantWebsiteAssetAction", "tenant-assets", "newsItemsValue", "agendaItemsValue", "social_image_url"]
+      },
+      {
+        path: "apps/web/lib/public-site/metadata.ts",
+        snippets: ["openGraph", "twitter", "socialImageUrl"]
+      }
+    ]
   }
 ];
 

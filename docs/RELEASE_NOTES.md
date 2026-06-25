@@ -10,6 +10,7 @@ Scope:
 - Added responsive, accessibility, and Lovable visual comparison gates.
 - Added structured health and readiness responses with release metadata.
 - Added structured logging and server error reporting helpers.
+- Added tenant website CMS maturity: manageable news, agenda, SEO/social settings, domain status, and tenant asset uploads.
 
 Verification:
 

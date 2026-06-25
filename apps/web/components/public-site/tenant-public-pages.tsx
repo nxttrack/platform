@@ -1056,6 +1056,7 @@ function fallbackProfile(tenantName: string): PublicTenantProfile {
     addressLines: [],
     seoTitle: null,
     seoDescription: null,
+    socialImageUrl: null,
     newsItems: fallbackNewsItems,
     agendaItems: fallbackAgendaItems
   };

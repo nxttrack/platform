@@ -4,11 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
 const intakeOptions = ["trial", "registration", "waitlist"] as const;
+const assetBucket = "tenant-assets";
+const assetKinds = ["logo", "hero", "social"] as const;
 
 export async function updateTenantPublicProfileAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
@@ -37,13 +40,53 @@ export async function updateTenantPublicProfileAction(formData: FormData) {
         address_lines: linesValue(formData, "address_lines"),
         seo_title: optionalString(formData, "seo_title"),
         seo_description: optionalString(formData, "seo_description"),
-        news_items: jsonArrayValue(formData, "news_items_json"),
-        agenda_items: jsonArrayValue(formData, "agenda_items_json")
+        social_image_url: optionalString(formData, "social_image_url"),
+        news_items: newsItemsValue(formData),
+        agenda_items: agendaItemsValue(formData)
       },
       { onConflict: "tenant_id" }
     )
   );
 
+  revalidateTenantWebsite();
+}
+
+export async function uploadTenantWebsiteAssetAction(formData: FormData) {
+  const { tenantId } = await requireTenantWriter();
+  const kind = enumValue(formData, "asset_kind", assetKinds, "hero");
+  const file = formData.get("asset_file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Kies eerst een afbeelding om te uploaden.");
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error("Afbeeldingen mogen maximaal 5MB zijn.");
+  }
+
+  const allowedTypes = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
+
+  if (!allowedTypes.has(file.type)) {
+    throw new Error("Gebruik PNG, JPG, WebP of SVG.");
+  }
+
+  const extension = extensionForMimeType(file.type);
+  const filePath = `${tenantId}/website/${kind}-${Date.now()}-${crypto.randomUUID()}.${extension}`;
+  const admin = createAdminClient();
+  const uploadResult = await admin.storage.from(assetBucket).upload(filePath, file, {
+    cacheControl: "31536000",
+    contentType: file.type,
+    upsert: false
+  });
+
+  if (uploadResult.error) {
+    throw new Error(uploadResult.error.message);
+  }
+
+  const publicUrl = admin.storage.from(assetBucket).getPublicUrl(filePath).data.publicUrl;
+  const column = kind === "logo" ? "logo_url" : kind === "hero" ? "hero_image_url" : "social_image_url";
+
+  await throwOnError(admin.from("tenant_public_profiles").update({ [column]: publicUrl }).eq("tenant_id", tenantId));
   revalidateTenantWebsite();
 }
 
@@ -245,4 +288,57 @@ function jsonArrayValue(formData: FormData, key: string) {
   }
 
   return parsed;
+}
+
+function newsItemsValue(formData: FormData) {
+  return [0, 1, 2]
+    .map((index) => ({
+      title: optionalString(formData, `news_${index}_title`),
+      body: optionalString(formData, `news_${index}_body`),
+      date: optionalString(formData, `news_${index}_date`)
+    }))
+    .filter((item) => item.title || item.body)
+    .map((item) => {
+      if (!item.title || !item.body) {
+        throw new Error("Nieuwsitems hebben minimaal een titel en tekst nodig.");
+      }
+
+      return {
+        title: item.title,
+        body: item.body,
+        date: item.date ?? ""
+      };
+    });
+}
+
+function agendaItemsValue(formData: FormData) {
+  return [0, 1, 2]
+    .map((index) => ({
+      title: optionalString(formData, `agenda_${index}_title`),
+      time: optionalString(formData, `agenda_${index}_time`),
+      location: optionalString(formData, `agenda_${index}_location`)
+    }))
+    .filter((item) => item.title || item.time || item.location)
+    .map((item) => {
+      if (!item.title || !item.time) {
+        throw new Error("Agendamomenten hebben minimaal een titel en tijd nodig.");
+      }
+
+      return {
+        title: item.title,
+        time: item.time,
+        location: item.location ?? ""
+      };
+    });
+}
+
+function extensionForMimeType(mimeType: string) {
+  const extensions: Record<string, string> = {
+    "image/png": "png",
+    "image/jpeg": "jpg",
+    "image/webp": "webp",
+    "image/svg+xml": "svg"
+  };
+
+  return extensions[mimeType] ?? "bin";
 }

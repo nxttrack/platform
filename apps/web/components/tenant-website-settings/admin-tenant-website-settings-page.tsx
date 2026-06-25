@@ -1,13 +1,14 @@
-import { ExternalLink, FileText, Globe2, Image, Palette, Settings, SlidersHorizontal } from "lucide-react";
+import { CalendarDays, ExternalLink, FileText, Globe2, Image, Newspaper, Palette, Settings, SlidersHorizontal, UploadCloud } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { updateTenantPublicProfileAction, upsertIntakeFormConfigAction, upsertProgramPublicSettingsAction } from "@/lib/tenant-website-settings/admin-tenant-website-actions";
+import { updateTenantPublicProfileAction, uploadTenantWebsiteAssetAction, upsertIntakeFormConfigAction, upsertProgramPublicSettingsAction } from "@/lib/tenant-website-settings/admin-tenant-website-actions";
 import type {
   AdminTenantWebsiteSettingsSnapshot,
   IntakeFormConfigSettingsRow,
   ProgramPublicSettingsRow,
+  TenantDomainStatusRow,
   TenantPublicProfileSettingsRow,
   TenantWebsiteProgramRow
 } from "@/lib/tenant-website-settings/admin-tenant-website-read-model";
@@ -51,6 +52,7 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
   const intakeByProgram = new Map(snapshot.data.intakeConfigs.map((config) => [config.program_id, config]));
   const publishedPrograms = snapshot.data.programSettings.filter((setting) => setting.status === "published").length;
   const activeIntakes = snapshot.data.intakeConfigs.filter((config) => config.status === "active").length;
+  const verifiedDomains = snapshot.data.domains.filter((domain) => domain.status === "verified").length;
 
   return (
     <div className="grid gap-6">
@@ -64,7 +66,7 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
           </div>
         }
         kicker="Backoffice - instellingen"
-        subtitle="Beheer tenantbranding, publieke websitecopy, programma-publicatie en intakeconfiguratie zonder codewijziging."
+        subtitle="Beheer branding, assets, SEO, domeinen, nieuws, agenda, programma-publicatie en intakeconfiguratie zonder codewijziging."
         title="Tenantwebsite instellingen"
       />
 
@@ -72,7 +74,7 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
         <MetricCard icon={<Globe2 className="h-5 w-5" />} label="Website status" value={profile.status} detail={snapshot.tenant.slug} />
         <MetricCard icon={<Palette className="h-5 w-5" />} label="Primaire kleur" value={profile.brand_primary_hex} detail={profile.brand_accent_hex} />
         <MetricCard icon={<SlidersHorizontal className="h-5 w-5" />} label="Programma's live" value={`${publishedPrograms}/${snapshot.data.programs.length}`} detail="publieke cards" />
-        <MetricCard icon={<FileText className="h-5 w-5" />} label="Intakes actief" value={`${activeIntakes}/${snapshot.data.programs.length}`} detail="per programma" />
+        <MetricCard icon={<Globe2 className="h-5 w-5" />} label="Domeinen verified" value={`${verifiedDomains}/${snapshot.data.domains.length}`} detail="custom domain status" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -87,8 +89,20 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
         </Card>
       </div>
 
+      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card>
+          <SectionHeader icon={<UploadCloud className="h-5 w-5" />} title="Hero, logo en social assets" />
+          <AssetUploadPanel profile={profile} />
+        </Card>
+
+        <Card>
+          <SectionHeader icon={<Globe2 className="h-5 w-5" />} title="Custom domain status" />
+          <DomainStatusPanel domains={snapshot.data.domains} tenantSlug={snapshot.tenant.slug} />
+        </Card>
+      </div>
+
       <Card>
-        <SectionHeader icon={<Globe2 className="h-5 w-5" />} title="Programma-overzicht & intake" />
+        <SectionHeader icon={<Globe2 className="h-5 w-5" />} title={`Programma-overzicht & intake (${activeIntakes}/${snapshot.data.programs.length} actief)`} />
         <div className="mt-4 grid gap-4">
           {snapshot.data.programs.length === 0 ? <EmptyState>Maak eerst programma's aan voordat je de publieke website publiceert.</EmptyState> : null}
           {snapshot.data.programs.map((program) => (
@@ -101,6 +115,9 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
 }
 
 function TenantPublicProfileForm({ profile, tenantName }: { profile: TenantPublicProfileSettingsRow; tenantName: string }) {
+  const newsItems = normalizedNewsItems(profile.news_items);
+  const agendaItems = normalizedAgendaItems(profile.agenda_items);
+
   return (
     <form action={updateTenantPublicProfileAction} className="mt-4 grid gap-5">
       <div className="grid gap-3 md:grid-cols-3">
@@ -110,8 +127,8 @@ function TenantPublicProfileForm({ profile, tenantName }: { profile: TenantPubli
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <TextField defaultValue={profile.logo_url ?? ""} label="Logo URL/pad" name="logo_url" placeholder="/lovable/zwemdemo-logo.png" />
-        <TextField defaultValue={profile.hero_image_url ?? ""} label="Hero afbeelding URL/pad" name="hero_image_url" placeholder="/lovable/hero-swim.png" />
+        <ReadOnlyAssetField label="Logo URL" name="logo_url" value={profile.logo_url ?? ""} />
+        <ReadOnlyAssetField label="Hero afbeelding URL" name="hero_image_url" value={profile.hero_image_url ?? ""} />
         <TextField defaultValue={profile.hero_image_alt ?? ""} label="Hero alt-tekst" name="hero_image_alt" placeholder="Kind in zwembad" />
         <TextField defaultValue={profile.location_label ?? ""} label="Locatie label" name="location_label" placeholder="Den Haag" />
       </div>
@@ -135,17 +152,90 @@ function TenantPublicProfileForm({ profile, tenantName }: { profile: TenantPubli
       <div className="grid gap-3 md:grid-cols-2">
         <TextField defaultValue={profile.seo_title ?? ""} label="SEO titel" name="seo_title" />
         <TextAreaField defaultValue={profile.seo_description ?? ""} label="SEO omschrijving" name="seo_description" />
+        <ReadOnlyAssetField label="Social image URL" name="social_image_url" value={profile.social_image_url ?? ""} />
       </div>
 
-      <div className="grid gap-3 lg:grid-cols-2">
-        <JsonField defaultValue={jsonText(profile.news_items, defaultNewsItems)} label="Nieuwsitems JSON" name="news_items_json" />
-        <JsonField defaultValue={jsonText(profile.agenda_items, defaultAgendaItems)} label="Agendamomenten JSON" name="agenda_items_json" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EditableList title="Nieuws" icon={<Newspaper className="h-4 w-4" />}>
+          {[0, 1, 2].map((index) => {
+            const item = newsItems[index];
+
+            return (
+              <div key={`news-${index}`} className="grid gap-2 rounded-2xl border border-border bg-muted/35 p-3">
+                <TextField defaultValue={item?.title ?? ""} label={`Nieuws ${index + 1} titel`} name={`news_${index}_title`} />
+                <TextField defaultValue={item?.date ?? ""} label="Datumlabel" name={`news_${index}_date`} placeholder="Vandaag" />
+                <TextAreaField defaultValue={item?.body ?? ""} label="Tekst" name={`news_${index}_body`} />
+              </div>
+            );
+          })}
+        </EditableList>
+        <EditableList title="Agenda" icon={<CalendarDays className="h-4 w-4" />}>
+          {[0, 1, 2].map((index) => {
+            const item = agendaItems[index];
+
+            return (
+              <div key={`agenda-${index}`} className="grid gap-2 rounded-2xl border border-border bg-muted/35 p-3">
+                <TextField defaultValue={item?.title ?? ""} label={`Moment ${index + 1} titel`} name={`agenda_${index}_title`} />
+                <TextField defaultValue={item?.time ?? ""} label="Tijd" name={`agenda_${index}_time`} placeholder="Zaterdag 11:00" />
+                <TextField defaultValue={item?.location ?? ""} label="Locatie" name={`agenda_${index}_location`} placeholder="Instructiebad" />
+              </div>
+            );
+          })}
+        </EditableList>
       </div>
 
       <div>
         <SubmitButton>Websiteprofiel opslaan</SubmitButton>
       </div>
     </form>
+  );
+}
+
+function AssetUploadPanel({ profile }: { profile: TenantPublicProfileSettingsRow }) {
+  return (
+    <div className="mt-4 grid gap-3">
+      <AssetUploadForm currentUrl={profile.logo_url} kind="logo" label="Logo uploaden" />
+      <AssetUploadForm currentUrl={profile.hero_image_url} kind="hero" label="Hero afbeelding uploaden" />
+      <AssetUploadForm currentUrl={profile.social_image_url} kind="social" label="Social share afbeelding uploaden" />
+    </div>
+  );
+}
+
+function AssetUploadForm({ currentUrl, kind, label }: { currentUrl: string | null; kind: "logo" | "hero" | "social"; label: string }) {
+  return (
+    <form action={uploadTenantWebsiteAssetAction} className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4 md:grid-cols-[1fr_auto] md:items-end">
+      <input name="asset_kind" type="hidden" value={kind} />
+      <label className="grid gap-1.5 text-sm font-semibold">
+        <span>{label}</span>
+        <input accept="image/png,image/jpeg,image/webp,image/svg+xml" className="min-h-11 rounded-xl border border-border bg-background px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-xs file:font-bold file:text-primary-foreground" name="asset_file" type="file" required />
+        <span className="break-all text-xs font-normal text-muted-foreground">{currentUrl ? `Huidig: ${currentUrl}` : "Nog geen asset gekoppeld."}</span>
+      </label>
+      <button className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-glow hover:bg-primary/90" type="submit">
+        Uploaden
+      </button>
+    </form>
+  );
+}
+
+function DomainStatusPanel({ domains, tenantSlug }: { domains: TenantDomainStatusRow[]; tenantSlug: string }) {
+  if (domains.length === 0) {
+    return <EmptyState>Er zijn nog geen domeinen gekoppeld. De tenant is bereikbaar via de standaard subdomain resolver voor {tenantSlug}.</EmptyState>;
+  }
+
+  return (
+    <div className="mt-4 grid gap-3">
+      {domains.map((domain) => (
+        <div key={domain.id} className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+          <div>
+            <p className="font-bold">{domain.hostname}</p>
+            <p className="text-sm text-muted-foreground">
+              {domain.kind} {domain.is_primary ? "- primair" : ""} - bijgewerkt {formatDate(domain.updated_at)}
+            </p>
+          </div>
+          <StatusPill tone={domain.status === "verified" ? "success" : domain.status === "pending" ? "warning" : "neutral"}>{domain.status}</StatusPill>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -292,6 +382,15 @@ function TextField({ label, name, defaultValue, placeholder, required, type = "t
   );
 }
 
+function ReadOnlyAssetField({ label, name, value }: { label: string; name: string; value: string }) {
+  return (
+    <label className="grid gap-1.5 text-sm font-semibold">
+      <span>{label}</span>
+      <input className="h-11 rounded-xl border border-border bg-muted px-3 text-sm text-muted-foreground outline-none" name={name} readOnly value={value} />
+    </label>
+  );
+}
+
 function TextAreaField({ label, name, defaultValue }: { label: string; name: string; defaultValue?: string }) {
   return (
     <label className="grid gap-1.5 text-sm font-semibold">
@@ -307,6 +406,18 @@ function JsonField({ label, name, defaultValue }: { label: string; name: string;
       <span>{label}</span>
       <textarea className="min-h-40 rounded-xl border border-border bg-slate-950 px-3 py-2 font-mono text-xs leading-5 text-slate-50 outline-none ring-primary/20 focus:ring-4" defaultValue={defaultValue} name={name} spellCheck={false} />
     </label>
+  );
+}
+
+function EditableList({ children, icon, title }: { children: ReactNode; icon: ReactNode; title: string }) {
+  return (
+    <section className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex items-center gap-2 text-sm font-bold">
+        <span className="text-primary">{icon}</span>
+        {title}
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -368,6 +479,7 @@ function createFallbackProfile(tenantName: string): TenantPublicProfileSettingsR
     address_lines: [],
     seo_title: null,
     seo_description: null,
+    social_image_url: null,
     news_items: defaultNewsItems,
     agenda_items: defaultAgendaItems
   };
@@ -377,4 +489,46 @@ function jsonText(value: unknown, fallback: unknown[]) {
   const parsed = Array.isArray(value) ? value : fallback;
 
   return JSON.stringify(parsed, null, 2);
+}
+
+function normalizedNewsItems(value: unknown) {
+  const items = Array.isArray(value) ? value : defaultNewsItems;
+
+  return items.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    return [
+      {
+        title: typeof row.title === "string" ? row.title : "",
+        body: typeof row.body === "string" ? row.body : "",
+        date: typeof row.date === "string" ? row.date : ""
+      }
+    ];
+  });
+}
+
+function normalizedAgendaItems(value: unknown) {
+  const items = Array.isArray(value) ? value : defaultAgendaItems;
+
+  return items.flatMap((item) => {
+    if (!item || typeof item !== "object") {
+      return [];
+    }
+
+    const row = item as Record<string, unknown>;
+    return [
+      {
+        title: typeof row.title === "string" ? row.title : "",
+        time: typeof row.time === "string" ? row.time : "",
+        location: typeof row.location === "string" ? row.location : ""
+      }
+    ];
+  });
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
 }
