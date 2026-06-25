@@ -1,8 +1,5 @@
-import { AdminProgramsPage } from "@/components/domain/admin-domain-pages";
-import { getAdminDomainSnapshot } from "@/lib/domain/admin-domain-read-model";
+import { redirect } from "next/navigation";
 
 export default async function AdminProgramPage() {
-  const snapshot = await getAdminDomainSnapshot();
-
-  return <AdminProgramsPage snapshot={snapshot} />;
+  redirect("/admin/programs");
 }

@@ -29,7 +29,7 @@ export function AdminImportsPage({ snapshot }: { snapshot: AdminImportsSnapshot 
   if (snapshot.status !== "ready") {
     return (
       <div>
-        <PageHeader kicker="Admin imports" title="Imports" subtitle="CSV-preview, mapping, validatie, duplicate detection en rollback per importbatch." />
+        <PageHeader kicker="Backoffice - imports" title="Imports" subtitle="CSV-preview, mapping, validatie, duplicate detection en rollback per importbatch." />
         <Card>
           <StatusPill tone="warning">{snapshot.status}</StatusPill>
           <p className="mt-3 text-sm text-muted-foreground">{snapshot.error}</p>
@@ -52,7 +52,7 @@ export function AdminImportsPage({ snapshot }: { snapshot: AdminImportsSnapshot 
   return (
     <div>
       <PageHeader
-        kicker="Admin imports"
+        kicker="Backoffice - imports"
         title="Importcentrum"
         subtitle={`Beheer gecontroleerde imports voor ${snapshot.tenantName}. Eerst previewen, daarna pas toepassen of terugdraaien.`}
       />

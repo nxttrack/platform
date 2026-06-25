@@ -115,9 +115,9 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
             <StatusPill tone="success">Beheerbaar</StatusPill>
           </div>
         }
-        kicker="Backoffice - instellingen"
+        kicker="Backoffice - website & branding"
         subtitle="Beheer branding, assets, SEO, domeinen, nieuws, agenda, programma-publicatie en intakeconfiguratie zonder codewijziging."
-        title="Tenantwebsite instellingen"
+        title="Website & branding"
       />
 
       <div className="grid gap-4 md:grid-cols-4">

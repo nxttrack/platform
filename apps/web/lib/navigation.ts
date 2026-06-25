@@ -8,6 +8,7 @@ import {
   CircleDollarSign,
   FileText,
   GraduationCap,
+  Globe2,
   Home,
   Inbox,
   ListChecks,
@@ -52,43 +53,46 @@ export const instructorNav: NavItem[] = [
 
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: Home, section: "Overzicht" },
-  { href: "/admin/agenda", label: "Planning", icon: Calendar, section: "Overzicht" },
 
-  { href: "/admin/intake", label: "Intake", icon: Inbox, section: "Instroom" },
-  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks, section: "Instroom" },
-  { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingen", icon: CheckCircle2, section: "Instroom" },
-  { href: "/admin/slot-offers", label: "Lesplek-aanbod", icon: Send, section: "Instroom" },
+  { href: "/admin/intake", label: "Intake", icon: Inbox, section: "Instroom & plaatsing" },
+  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks, section: "Instroom & plaatsing" },
+  { href: "/admin/plaatsingsvoorstellen", label: "Plaatsingsvoorstellen", icon: CheckCircle2, section: "Instroom & plaatsing" },
+  { href: "/admin/slot-offers", label: "Lesplek-aanbod", icon: Send, section: "Instroom & plaatsing" },
 
-  { href: "/admin/programs", label: "Programma's", icon: Waves, section: "Aanbod" },
-  { href: "/admin/stages", label: "Niveaus", icon: TrendingUp, section: "Aanbod" },
-  { href: "/admin/badges", label: "Badges", icon: Award, section: "Aanbod" },
+  { href: "/admin/programs", label: "Programma's", icon: Waves, section: "Aanbod & voortgang" },
+  { href: "/admin/stages", label: "Niveaus", icon: TrendingUp, section: "Aanbod & voortgang" },
+  { href: "/admin/badges", label: "Badges & doorstroom", icon: Award, section: "Aanbod & voortgang" },
 
-  { href: "/admin/groups", label: "Groepen", icon: Users, section: "Planning" },
-  { href: "/admin/sessions", label: "Zwemlessen", icon: Calendar, section: "Planning" },
-  { href: "/admin/resources", label: "Locaties", icon: MapPin, section: "Planning" },
-  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: GraduationCap, section: "Planning" },
+  { href: "/admin/agenda", label: "Planning", icon: Calendar, section: "Planning & lessen" },
+  { href: "/admin/groups", label: "Groepen", icon: Users, section: "Planning & lessen" },
+  { href: "/admin/sessions", label: "Zwemlessen", icon: Calendar, section: "Planning & lessen" },
+  { href: "/admin/resources", label: "Locaties & banen", icon: MapPin, section: "Planning & lessen" },
+  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: GraduationCap, section: "Planning & lessen" },
 
   { href: "/admin/leerlingen", label: "Leerlingen & ouders", icon: Users, section: "Mensen" },
   { href: "/admin/enrollments", label: "Inschrijvingen", icon: ListChecks, section: "Mensen" },
   { href: "/admin/instructors", label: "Instructeurs", icon: User, section: "Mensen" },
 
-  { href: "/admin/berichten", label: "Berichten", icon: MessageSquare, section: "Communicatie" },
   { href: "/admin/helpdesk", label: "Helpdesk", icon: Inbox, section: "Communicatie" },
+  { href: "/admin/berichten", label: "Berichten", icon: MessageSquare, section: "Communicatie" },
   { href: "/admin/nieuwsbrief", label: "Nieuwsbrief", icon: Megaphone, section: "Communicatie" },
-  { href: "/admin/nieuws", label: "Nieuws", icon: Newspaper, section: "Communicatie" },
   { href: "/admin/mailtemplates", label: "Mailtemplates", icon: Mail, section: "Communicatie" },
-  { href: "/admin/notificatietemplates", label: "Notificaties", icon: Bell, section: "Communicatie" },
-  { href: "/admin/taken", label: "Taken", icon: ListChecks, section: "Communicatie" },
-  { href: "/admin/documenten", label: "Documenten", icon: FileText, section: "Communicatie" },
+  { href: "/admin/notificatietemplates", label: "Notificatietemplates", icon: Bell, section: "Communicatie" },
+
+  { href: "/admin/instellingen", label: "Website & branding", icon: Globe2, section: "Content & documenten" },
+  { href: "/admin/nieuws", label: "Nieuws", icon: Newspaper, section: "Content & documenten" },
+  { href: "/admin/documenten", label: "Documenten", icon: FileText, section: "Content & documenten" },
 
   { href: "/admin/payments", label: "Betalingen", icon: CircleDollarSign, section: "Financieel & inzicht" },
   { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3, section: "Financieel & inzicht" },
 
-  { href: "/admin/imports", label: "Imports", icon: Upload, section: "Beheer" },
-  { href: "/admin/automatisering", label: "Automatisering", icon: Bot, section: "Beheer" },
-  { href: "/admin/ai-assistent", label: "AI-assistent", icon: Sparkles, section: "Beheer" },
-  { href: "/admin/mail-instellingen", label: "Mailinstellingen", icon: Mail, section: "Beheer" },
-  { href: "/admin/instellingen", label: "Instellingen", icon: Settings, section: "Beheer" }
+  { href: "/admin/taken", label: "Taken", icon: ListChecks, section: "Operatie" },
+  { href: "/admin/imports", label: "Imports", icon: Upload, section: "Operatie" },
+
+  { href: "/admin/automatisering", label: "Automatisering", icon: Bot, section: "Slimme functies" },
+  { href: "/admin/ai-assistent", label: "AI-assistent", icon: Sparkles, section: "Slimme functies" },
+
+  { href: "/admin/mail-instellingen", label: "Mailinstellingen", icon: Settings, section: "Technisch beheer" }
 ];
 
 export const platformNav: NavItem[] = [
