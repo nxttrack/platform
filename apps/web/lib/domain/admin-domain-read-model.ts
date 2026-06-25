@@ -198,6 +198,67 @@ export type BadgeRow = {
   status: string;
 };
 
+export type StageModuleRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  code: string;
+  name: string;
+  description: string | null;
+  sort_order: number;
+  status: string;
+};
+
+export type StageModuleProgressRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  stage_id: string;
+  stage_module_id: string;
+  status: string;
+  score: number | null;
+  note: string | null;
+  assessed_at: string;
+};
+
+export type BadgeAwardRow = {
+  id: string;
+  badge_id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  source: string;
+  note: string | null;
+  status: string;
+  awarded_at: string;
+};
+
+export type AchievementCardRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string | null;
+  badge_award_id: string | null;
+  progress_id: string | null;
+  stage_module_progress_id: string | null;
+  card_type: string;
+  title: string;
+  body: string | null;
+  status: string;
+  visibility: string;
+  published_at: string;
+};
+
+export type StageTransitionProposalRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  from_stage_id: string | null;
+  to_stage_id: string;
+  reason: string | null;
+  status: string;
+  proposed_at: string;
+  reviewed_at: string | null;
+};
+
 export type CertificateRow = {
   id: string;
   enrollment_id: string | null;
@@ -228,7 +289,12 @@ export type AdminDomainData = {
   peopleAuditEvents: PeopleAuditEventRow[];
   catchUpRequests: LessonCatchUpRequestRow[];
   progress: ProgressRow[];
+  stageModules: StageModuleRow[];
+  stageModuleProgress: StageModuleProgressRow[];
   badges: BadgeRow[];
+  badgeAwards: BadgeAwardRow[];
+  achievementCards: AchievementCardRow[];
+  stageTransitionProposals: StageTransitionProposalRow[];
   certificates: CertificateRow[];
 };
 
@@ -295,7 +361,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     peopleAuditEventsResult,
     catchUpRequestsResult,
     progressResult,
+    stageModulesResult,
+    stageModuleProgressResult,
     badgesResult,
+    badgeAwardsResult,
+    achievementCardsResult,
+    stageTransitionProposalsResult,
     certificatesResult
   ] = await Promise.all([
     supabase.from("programs").select("id, code, name, description, status, sort_order").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
@@ -353,7 +424,32 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .order("requested_at", { ascending: false })
       .limit(120),
     supabase.from("progress").select("id, enrollment_id, stage_id, status, score, note, assessed_at").eq("tenant_id", tenantId).order("assessed_at", { ascending: false }).limit(25),
+    supabase.from("stage_modules").select("id, program_id, stage_id, code, name, description, sort_order, status").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
+    supabase
+      .from("stage_module_progress")
+      .select("id, enrollment_id, participant_id, stage_id, stage_module_id, status, score, note, assessed_at")
+      .eq("tenant_id", tenantId)
+      .order("assessed_at", { ascending: false })
+      .limit(160),
     supabase.from("badges").select("id, program_id, stage_id, code, name, description, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+    supabase
+      .from("badge_awards")
+      .select("id, badge_id, participant_id, enrollment_id, source, note, status, awarded_at")
+      .eq("tenant_id", tenantId)
+      .order("awarded_at", { ascending: false })
+      .limit(120),
+    supabase
+      .from("achievement_cards")
+      .select("id, participant_id, enrollment_id, badge_award_id, progress_id, stage_module_progress_id, card_type, title, body, status, visibility, published_at")
+      .eq("tenant_id", tenantId)
+      .order("published_at", { ascending: false })
+      .limit(120),
+    supabase
+      .from("stage_transition_proposals")
+      .select("id, enrollment_id, participant_id, from_stage_id, to_stage_id, reason, status, proposed_at, reviewed_at")
+      .eq("tenant_id", tenantId)
+      .order("proposed_at", { ascending: false })
+      .limit(120),
     supabase
       .from("certificates")
       .select("id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on")
@@ -391,7 +487,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     lesson_catch_up_requests: catchUpRequestsResult.error,
     profiles: profilesResult.error,
     progress: progressResult.error,
+    stage_modules: stageModulesResult.error,
+    stage_module_progress: stageModuleProgressResult.error,
     badges: badgesResult.error,
+    badge_awards: badgeAwardsResult.error,
+    achievement_cards: achievementCardsResult.error,
+    stage_transition_proposals: stageTransitionProposalsResult.error,
     certificates: certificatesResult.error
   });
 
@@ -418,7 +519,12 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       peopleAuditEvents: asRows<PeopleAuditEventRow>(peopleAuditEventsResult.data),
       catchUpRequests: asRows<LessonCatchUpRequestRow>(catchUpRequestsResult.data),
       progress: asRows<ProgressRow>(progressResult.data),
+      stageModules: asRows<StageModuleRow>(stageModulesResult.data),
+      stageModuleProgress: asRows<StageModuleProgressRow>(stageModuleProgressResult.data),
       badges: asRows<BadgeRow>(badgesResult.data),
+      badgeAwards: asRows<BadgeAwardRow>(badgeAwardsResult.data),
+      achievementCards: asRows<AchievementCardRow>(achievementCardsResult.data),
+      stageTransitionProposals: asRows<StageTransitionProposalRow>(stageTransitionProposalsResult.data),
       certificates: asRows<CertificateRow>(certificatesResult.data)
     }
   };
@@ -444,7 +550,12 @@ export function createEmptyData(): AdminDomainData {
     peopleAuditEvents: [],
     catchUpRequests: [],
     progress: [],
+    stageModules: [],
+    stageModuleProgress: [],
     badges: [],
+    badgeAwards: [],
+    achievementCards: [],
+    stageTransitionProposals: [],
     certificates: []
   };
 }

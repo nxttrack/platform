@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Award, Banknote, Bell, CalendarDays, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
+import { AlertTriangle, Award, Banknote, Bell, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, Sparkles, UserRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { markNotificationReadAction, requestCatchUpLessonAction } from "@/lib/parent-portal/parent-portal-actions";
@@ -80,14 +80,18 @@ export function ParentDashboardPage({ snapshot }: ParentPageProps) {
   const lessons = buildLessonRows(snapshot.data, lookups);
   const nextLesson = lessons[0] ?? null;
   const unread = snapshot.data.notifications.filter((notification) => notification.status === "unread").length;
+  const openInvoices = snapshot.data.invoices.filter((invoice) => ["open", "partially_paid", "overdue"].includes(invoice.status));
+  const openCatchUps = snapshot.data.catchUpRequests.filter((request) => ["requested", "approved"].includes(request.status));
+  const pendingTransitions = snapshot.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status));
+  const actionCount = unread + openInvoices.length + openCatchUps.length + pendingTransitions.length;
 
   return (
-    <ParentFrame snapshot={snapshot} kicker="Ouderportaal" title="Dashboard" subtitle="Een overzicht van kinderen, lessen, notificaties en documenten.">
+    <ParentFrame snapshot={snapshot} kicker="Ouderportaal" title="Dashboard" subtitle="Actueel overzicht van lessen, voortgang, berichten, documenten en betalingen.">
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<UserRound className="h-5 w-5" />} label="Kinderen" value={snapshot.data.participants.length.toString()} detail="gekoppelde profielen" />
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Lessen" value={lessons.length.toString()} detail="aankomende sessies" />
-        <MetricCard icon={<Bell className="h-5 w-5" />} label="Ongelezen" value={unread.toString()} detail="notificaties" />
-        <MetricCard icon={<Award className="h-5 w-5" />} label="Achievements" value={snapshot.data.achievementCards.length.toString()} detail="badges en mijlpalen" />
+        <MetricCard icon={<AlertTriangle className="h-5 w-5" />} label="Actie nodig" value={actionCount.toString()} detail="berichten, betalingen, inhalen" />
+        <MetricCard icon={<Award className="h-5 w-5" />} label="Achievements" value={snapshot.data.achievementCards.length.toString()} detail={`${snapshot.data.badgeAwards.length} badges`} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
@@ -100,6 +104,33 @@ export function ParentDashboardPage({ snapshot }: ParentPageProps) {
           <SectionHeader title="Volgende les" count={nextLesson ? 1 : 0} />
           {nextLesson ? <LessonSummary lesson={nextLesson} lookups={lookups} /> : <EmptyState>Geen aankomende lessen gevonden.</EmptyState>}
         </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <ParentActionCard
+          icon={<Bell className="h-5 w-5" />}
+          label="Berichten"
+          tone={unread > 0 ? "warning" : "success"}
+          value={unread > 0 ? `${unread} ongelezen` : "Bij"}
+        />
+        <ParentActionCard
+          icon={<CircleDollarSign className="h-5 w-5" />}
+          label="Betalingen"
+          tone={openInvoices.some((invoice) => invoice.status === "overdue") ? "danger" : openInvoices.length > 0 ? "warning" : "success"}
+          value={openInvoices.length > 0 ? `${openInvoices.length} open` : "Geen openstaand"}
+        />
+        <ParentActionCard
+          icon={<CalendarDays className="h-5 w-5" />}
+          label="Inhaallessen"
+          tone={openCatchUps.length > 0 ? "info" : "success"}
+          value={openCatchUps.length > 0 ? `${openCatchUps.length} in behandeling` : "Geen open aanvraag"}
+        />
+        <ParentActionCard
+          icon={<CheckCircle2 className="h-5 w-5" />}
+          label="Doorstroom"
+          tone={pendingTransitions.length > 0 ? "info" : "success"}
+          value={pendingTransitions.length > 0 ? `${pendingTransitions.length} voorstel(len)` : "Geen open voorstel"}
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -570,6 +601,11 @@ function ChildCards({ data, lookups, expanded = false }: { data: ParentPortalDat
         const program = primaryEnrollment ? lookups.programs.get(primaryEnrollment.program_id) : null;
         const plan = primaryEnrollment?.subscription_plan_id ? lookups.subscriptionPlans.get(primaryEnrollment.subscription_plan_id) : null;
         const latestProgress = primaryEnrollment ? (lookups.progressByEnrollment.get(primaryEnrollment.id) ?? [])[0] : null;
+        const modules = primaryEnrollment?.current_stage_id ? (lookups.stageModulesByStage.get(primaryEnrollment.current_stage_id) ?? []) : [];
+        const moduleProgress = primaryEnrollment ? (lookups.moduleProgressByEnrollment.get(primaryEnrollment.id) ?? []) : [];
+        const passedModules = moduleProgress.filter((progress) => progress.status === "passed").length;
+        const badges = lookups.badgeAwardsByParticipant.get(participant.id) ?? [];
+        const transition = primaryEnrollment ? (lookups.transitionProposalsByEnrollment.get(primaryEnrollment.id) ?? [])[0] : null;
 
         return (
           <div key={participant.id} className="rounded-2xl border border-border bg-muted/35 p-4">
@@ -584,6 +620,11 @@ function ChildCards({ data, lookups, expanded = false }: { data: ParentPortalDat
               <InfoTile label="Programma" value={program?.name ?? "-"} />
               <InfoTile label="Niveau" value={stage?.name ?? "-"} />
               <InfoTile label="Abonnement" value={plan ? `${plan.name} (${formatMoney(plan.price_cents, plan.currency)})` : "-"} />
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <InfoTile label="Modules" value={modules.length > 0 ? `${passedModules}/${modules.length} behaald` : "Nog geen modules"} />
+              <InfoTile label="Badges" value={badges.length.toString()} />
+              <InfoTile label="Doorstroom" value={transition ? `${lookups.stages.get(transition.to_stage_id)?.name ?? "Nieuwe stage"} (${transition.status})` : "Geen voorstel"} />
             </div>
             {expanded ? (
               <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -806,6 +847,18 @@ function MetricCard({ icon, label, value, detail }: { icon: ReactNode; label: st
         </div>
       </div>
     </Card>
+  );
+}
+
+function ParentActionCard({ icon, label, value, tone }: { icon: ReactNode; label: string; value: string; tone: "success" | "warning" | "danger" | "info" | "neutral" }) {
+  return (
+    <div className="rounded-3xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">{icon}</div>
+        <StatusPill tone={tone}>{value}</StatusPill>
+      </div>
+      <p className="mt-3 text-sm font-bold">{label}</p>
+    </div>
   );
 }
 

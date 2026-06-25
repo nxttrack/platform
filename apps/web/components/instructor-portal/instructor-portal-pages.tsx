@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CalendarDays, ClipboardCheck, MessageSquareText, UsersRound } from "lucide-react";
+import { AlertTriangle, Award, CalendarDays, CheckCircle2, ClipboardCheck, MessageSquareText, UsersRound } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
@@ -88,6 +88,8 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
   const upcomingSessions = snapshot.data.sessions.slice(0, 4);
   const students = buildStudentRows(snapshot.data, lookups);
   const recorded = rosterRows.filter((row) => row.attendance).length;
+  const attentionStudents = students.filter((student) => student.progress.some((progress) => progress.status === "needs_attention") || student.moduleProgress.some((progress) => progress.status === "needs_attention"));
+  const openTransitions = snapshot.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status));
 
   return (
     <InstructorFrame
@@ -100,7 +102,7 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Sessies" value={snapshot.data.sessions.length.toString()} detail="in de komende planning" />
         <MetricCard icon={<UsersRound className="h-5 w-5" />} label="Leerlingen" value={students.length.toString()} detail="in toegewezen groepen" />
         <MetricCard icon={<ClipboardCheck className="h-5 w-5" />} label="Aanwezigheid" value={`${recorded}/${rosterRows.length}`} detail="vastgelegd" />
-        <MetricCard icon={<MessageSquareText className="h-5 w-5" />} label="Badges" value={snapshot.data.badgeAwards.length.toString()} detail="toegekend" />
+        <MetricCard icon={<AlertTriangle className="h-5 w-5" />} label="Aandacht" value={attentionStudents.length.toString()} detail={`${openTransitions.length} doorstroomvoorstellen`} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -117,12 +119,15 @@ export function InstructorDashboardPage({ snapshot }: InstructorPageProps) {
         </Card>
 
         <Card>
-          <SectionHeader title="Aandacht vandaag" count={rosterRows.length} />
+          <SectionHeader title="Aandacht vandaag" count={attentionStudents.length + openTransitions.length} />
           <div className="grid gap-3">
-            {rosterRows.slice(0, 5).map((row) => (
-              <RosterMiniRow key={`${row.session.id}-${row.enrollment.id}`} row={row} />
+            {attentionStudents.slice(0, 4).map((student) => (
+              <StudentAttentionRow key={student.participant.id} student={student} lookups={lookups} />
             ))}
-            {rosterRows.length === 0 ? <EmptyState>Geen rosters beschikbaar.</EmptyState> : null}
+            {openTransitions.slice(0, 3).map((proposal) => (
+              <TransitionMiniRow key={proposal.id} proposal={proposal} lookups={lookups} />
+            ))}
+            {attentionStudents.length + openTransitions.length === 0 ? <EmptyState>Geen aandachtspunten. Alles staat rustig.</EmptyState> : null}
           </div>
         </Card>
       </div>
@@ -294,6 +299,11 @@ export function InstructorStudentDetailPage({ snapshot, participantId }: Instruc
               <InfoTile label="Niveau" value={primaryEnrollment.current_stage_id ? (lookups.stages.get(primaryEnrollment.current_stage_id)?.name ?? "-") : "-"} />
               <InfoTile label="Groep" value={primaryGroup?.name ?? "-"} />
             </div>
+          </Card>
+
+          <Card>
+            <SectionHeader title="Leerreis samenvatting" count={student.moduleProgress.length + student.badgeAwards.length + student.transitionProposals.length} />
+            <StudentLearningSummary enrollment={primaryEnrollment} lookups={lookups} student={student} />
           </Card>
 
           <Card>
@@ -671,6 +681,9 @@ function StudentListRow({ student, lookups }: { student: StudentRow; lookups: Lo
   const stage = enrollment?.current_stage_id ? lookups.stages.get(enrollment.current_stage_id) : null;
   const group = enrollment ? findGroupForEnrollment(lookups, enrollment.id) : null;
   const latestProgress = student.progress[0] ?? null;
+  const modules = stage ? (lookups.stageModulesByStage.get(stage.id) ?? []) : [];
+  const passedModules = student.moduleProgress.filter((progress) => progress.status === "passed").length;
+  const needsAttention = student.progress.some((progress) => progress.status === "needs_attention") || student.moduleProgress.some((progress) => progress.status === "needs_attention");
 
   return (
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
@@ -681,12 +694,48 @@ function StudentListRow({ student, lookups }: { student: StudentRow; lookups: Lo
           </Link>
           <p className="text-sm text-muted-foreground">{program?.name ?? "Programma"} - {stage?.name ?? "Niveau"} - {group?.name ?? "Geen groep"}</p>
         </div>
-        <StatusPill tone={student.participant.status === "active" ? "success" : "neutral"}>{student.participant.status}</StatusPill>
+        <StatusPill tone={needsAttention ? "warning" : student.participant.status === "active" ? "success" : "neutral"}>{needsAttention ? "aandacht" : student.participant.status}</StatusPill>
       </div>
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <InfoTile label="Laatste voortgang" value={latestProgress ? `${latestProgress.status} ${latestProgress.score ?? "-"}%` : "Nog geen"} />
+        <InfoTile label="Modules" value={modules.length > 0 ? `${passedModules}/${modules.length}` : "Geen modules"} />
+        <InfoTile label="Badges / doorstroom" value={`${student.badgeAwards.length} / ${student.transitionProposals.length}`} />
+      </div>
+    </div>
+  );
+}
+
+function StudentLearningSummary({ enrollment, lookups, student }: { enrollment: InstructorEnrollmentRow; lookups: LookupMaps; student: StudentRow }) {
+  const stage = enrollment.current_stage_id ? lookups.stages.get(enrollment.current_stage_id) : null;
+  const modules = stage ? (lookups.stageModulesByStage.get(stage.id) ?? []) : [];
+  const moduleProgress = student.moduleProgress.filter((progress) => progress.enrollment_id === enrollment.id);
+  const passedModules = moduleProgress.filter((progress) => progress.status === "passed").length;
+  const latestProposal = student.transitionProposals[0] ?? null;
+
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-3 md:grid-cols-3">
+        <InfoTile label="Modulegereedheid" value={modules.length > 0 ? `${passedModules}/${modules.length} behaald` : "Geen modules"} />
         <InfoTile label="Badges" value={student.badgeAwards.length.toString()} />
-        <InfoTile label="Start" value={enrollment ? formatDate(enrollment.started_on) : "-"} />
+        <InfoTile label="Doorstroom" value={latestProposal ? `${lookups.stages.get(latestProposal.to_stage_id)?.name ?? "Nieuwe stage"} (${latestProposal.status})` : "Nog geen voorstel"} />
+      </div>
+      <div className="grid gap-2">
+        {modules.length === 0 ? <EmptyState>Geen modules voor de huidige stage gevonden.</EmptyState> : null}
+        {modules.map((module) => {
+          const progress = moduleProgress.find((entry) => entry.stage_module_id === module.id) ?? null;
+
+          return (
+            <div key={module.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/35 px-3 py-2">
+              <div>
+                <p className="text-sm font-semibold">{module.name}</p>
+                <p className="text-xs text-muted-foreground">{module.description ?? "Module"}</p>
+              </div>
+              <StatusPill tone={progress?.status === "passed" ? "success" : progress?.status === "needs_attention" ? "warning" : "neutral"}>
+                {progress ? `${progress.status}${progress.score === null ? "" : ` ${progress.score}%`}` : "open"}
+              </StatusPill>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -721,6 +770,51 @@ function RosterMiniRow({ row }: { row: SessionRosterRow }) {
         <StatusPill tone={attendanceTone(row.attendance?.status)}>{row.attendance?.status ?? "open"}</StatusPill>
       </div>
     </div>
+  );
+}
+
+function StudentAttentionRow({ student, lookups }: { student: StudentRow; lookups: LookupMaps }) {
+  const enrollment = student.enrollments[0] ?? null;
+  const group = enrollment ? findGroupForEnrollment(lookups, enrollment.id) : null;
+  const attentionProgress =
+    student.moduleProgress.find((progress) => progress.status === "needs_attention") ??
+    student.progress.find((progress) => progress.status === "needs_attention") ??
+    null;
+
+  return (
+    <Link className="rounded-2xl border border-border bg-muted/35 p-4 hover:bg-muted" href={`/instructor/student/${student.participant.id}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{student.participant.display_name}</p>
+          <p className="text-xs text-muted-foreground">{group?.name ?? "Geen groep"} - {attentionProgress?.note ?? "Aandacht nodig in voortgang"}</p>
+        </div>
+        <StatusPill tone="warning">
+          <AlertTriangle className="h-3 w-3" />
+          aandacht
+        </StatusPill>
+      </div>
+    </Link>
+  );
+}
+
+function TransitionMiniRow({ proposal, lookups }: { proposal: InstructorStageTransitionProposalRow; lookups: LookupMaps }) {
+  const participant = lookups.participants.get(proposal.participant_id);
+
+  return (
+    <Link className="rounded-2xl border border-border bg-muted/35 p-4 hover:bg-muted" href={`/instructor/student/${proposal.participant_id}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{participant?.display_name ?? "Leerling"}</p>
+          <p className="text-xs text-muted-foreground">
+            {proposal.from_stage_id ? (lookups.stages.get(proposal.from_stage_id)?.name ?? "Huidige stage") : "Geen stage"} naar {lookups.stages.get(proposal.to_stage_id)?.name ?? "Nieuwe stage"}
+          </p>
+        </div>
+        <StatusPill tone={proposal.status === "approved" ? "success" : "info"}>
+          <CheckCircle2 className="h-3 w-3" />
+          {proposal.status}
+        </StatusPill>
+      </div>
+    </Link>
   );
 }
 

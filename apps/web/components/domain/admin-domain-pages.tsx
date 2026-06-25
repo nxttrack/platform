@@ -5,6 +5,8 @@ import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import type {
   AdminDomainData,
   AdminDomainSnapshot,
+  AchievementCardRow,
+  BadgeAwardRow,
   BadgeRow,
   EnrollmentRow,
   GroupMembershipRow,
@@ -14,6 +16,9 @@ import type {
   ProgramRow,
   ResourceRow,
   SessionRow,
+  StageModuleProgressRow,
+  StageModuleRow,
+  StageTransitionProposalRow,
   StageRow,
   SubscriptionPlanRow
 } from "@/lib/domain/admin-domain-read-model";
@@ -28,6 +33,7 @@ import {
   createSessionAction,
   createStageAction,
   createSubscriptionPlanAction,
+  reviewStageTransitionProposalAction,
   updateEnrollmentAction,
   updateGroupAction,
   updateGroupMembershipAction,
@@ -53,6 +59,8 @@ type LookupMaps = {
   groups: Map<string, GroupRow>;
   participants: Map<string, ParticipantRow>;
   enrollments: Map<string, EnrollmentRow>;
+  stageModules: Map<string, StageModuleRow>;
+  badges: Map<string, BadgeRow>;
 };
 
 type Column<Row> = {
@@ -218,9 +226,102 @@ export function AdminStagesPage({ snapshot }: DomainPageProps) {
 
 export function AdminBadgesPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
+  const openTransitions = snapshot.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status));
+  const completedModules = snapshot.data.stageModuleProgress.filter((progress) => progress.status === "passed").length;
 
   return (
-    <DomainFrame snapshot={snapshot} kicker="Backoffice - prestaties" title="Badges" subtitle="Badge-definities per programma en niveau. Toekenningen en achievement cards komen vanuit de instructeurworkflow.">
+    <DomainFrame
+      snapshot={snapshot}
+      kicker="Backoffice - prestaties"
+      title="Prestaties en doorstroom"
+      subtitle="Badge-definities, module-progress, achievement cards en stage-overgangen. Doorstroom wijzigt alleen het niveau, niet het abonnement of betaalplan."
+    >
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard icon={<Database className="h-5 w-5" />} label="Modules" value={snapshot.data.stageModules.length.toString()} detail={`${completedModules} behaald`} />
+        <MetricCard icon={<Waves className="h-5 w-5" />} label="Badges" value={snapshot.data.badgeAwards.length.toString()} detail={`${snapshot.data.badges.length} definities`} />
+        <MetricCard icon={<Users className="h-5 w-5" />} label="Achievement cards" value={snapshot.data.achievementCards.length.toString()} detail="ouder/kind zichtbaar" />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Doorstroom" value={openTransitions.length.toString()} detail="open voorstellen" />
+      </div>
+
+      <Card>
+        <SectionHeader title="Doorstroomvoorstellen" count={snapshot.data.stageTransitionProposals.length} />
+        <DomainTable<StageTransitionProposalRow>
+          columns={[
+            { header: "Leerling", render: (proposal) => lookups.participants.get(proposal.participant_id)?.display_name ?? "Onbekend" },
+            {
+              header: "Van naar",
+              className: "min-w-[240px] whitespace-normal",
+              render: (proposal) =>
+                `${proposal.from_stage_id ? (lookups.stages.get(proposal.from_stage_id)?.name ?? "Huidige stage") : "Geen stage"} -> ${lookups.stages.get(proposal.to_stage_id)?.name ?? "Nieuwe stage"}`
+            },
+            { header: "Reden", className: "min-w-[280px] whitespace-normal", render: (proposal) => nullableText(proposal.reason) },
+            { header: "Status", render: (proposal) => <StatusPill tone={statusTone(proposal.status)}>{proposal.status}</StatusPill> },
+            { header: "Voorgesteld", render: (proposal) => formatDateTime(proposal.proposed_at) },
+            { header: "Besluit", className: "min-w-[360px] whitespace-normal", render: (proposal) => <StageTransitionReviewForm proposal={proposal} /> }
+          ]}
+          emptyLabel="Geen doorstroomvoorstellen gevonden."
+          rows={snapshot.data.stageTransitionProposals}
+          rowKey={(proposal) => proposal.id}
+        />
+        <div className="mt-4 rounded-2xl border border-border bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
+          Toepassen zet alleen de huidige stage op de enrollment om. Subscription plan, facturatie en betaalstatus blijven bewust los van badje/niveau.
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader title="Module-progress" count={snapshot.data.stageModuleProgress.length} />
+        <DomainTable<StageModuleProgressRow>
+          columns={[
+            { header: "Leerling", render: (progress) => lookups.participants.get(progress.participant_id)?.display_name ?? "Onbekend" },
+            { header: "Module", render: (progress) => lookups.stageModules.get(progress.stage_module_id)?.name ?? "Module" },
+            { header: "Niveau", render: (progress) => lookups.stages.get(progress.stage_id)?.name ?? "-" },
+            { header: "Score", render: (progress) => (progress.score === null ? "-" : `${progress.score}%`) },
+            { header: "Status", render: (progress) => <StatusPill tone={statusTone(progress.status)}>{progress.status}</StatusPill> },
+            { header: "Notitie", className: "min-w-[260px] whitespace-normal", render: (progress) => nullableText(progress.note) },
+            { header: "Datum", render: (progress) => formatDateTime(progress.assessed_at) }
+          ]}
+          emptyLabel="Nog geen module-progress geregistreerd."
+          rows={snapshot.data.stageModuleProgress}
+          rowKey={(progress) => progress.id}
+        />
+      </Card>
+
+      <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
+        <Card>
+          <SectionHeader title="Achievement cards" count={snapshot.data.achievementCards.length} />
+          <DomainTable<AchievementCardRow>
+            columns={[
+              { header: "Titel", className: "min-w-[220px] whitespace-normal", render: (card) => <StrongText>{card.title}</StrongText> },
+              { header: "Leerling", render: (card) => lookups.participants.get(card.participant_id)?.display_name ?? "Onbekend" },
+              { header: "Type", render: (card) => <StatusPill tone={card.card_type === "badge" ? "success" : "info"}>{card.card_type}</StatusPill> },
+              { header: "Zichtbaarheid", render: (card) => card.visibility },
+              { header: "Status", render: (card) => <StatusPill tone={statusTone(card.status)}>{card.status}</StatusPill> },
+              { header: "Gepubliceerd", render: (card) => formatDateTime(card.published_at) }
+            ]}
+            emptyLabel="Nog geen achievement cards gepubliceerd."
+            rows={snapshot.data.achievementCards}
+            rowKey={(card) => card.id}
+          />
+        </Card>
+
+        <Card>
+          <SectionHeader title="Badge-toekenningen" count={snapshot.data.badgeAwards.length} />
+          <DomainTable<BadgeAwardRow>
+            columns={[
+              { header: "Badge", render: (award) => lookups.badges.get(award.badge_id)?.name ?? "Badge" },
+              { header: "Leerling", render: (award) => lookups.participants.get(award.participant_id)?.display_name ?? "Onbekend" },
+              { header: "Bron", render: (award) => award.source },
+              { header: "Notitie", className: "min-w-[220px] whitespace-normal", render: (award) => nullableText(award.note) },
+              { header: "Status", render: (award) => <StatusPill tone={statusTone(award.status)}>{award.status}</StatusPill> },
+              { header: "Datum", render: (award) => formatDateTime(award.awarded_at) }
+            ]}
+            emptyLabel="Nog geen badges toegekend."
+            rows={snapshot.data.badgeAwards}
+            rowKey={(award) => award.id}
+          />
+        </Card>
+      </div>
+
       <Card>
         <SectionHeader title="Badge-definities" count={snapshot.data.badges.length} />
         <DomainTable<BadgeRow>
@@ -238,6 +339,23 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
         />
       </Card>
     </DomainFrame>
+  );
+}
+
+function StageTransitionReviewForm({ proposal }: { proposal: StageTransitionProposalRow }) {
+  return (
+    <form action={reviewStageTransitionProposalAction} className="flex flex-wrap gap-2">
+      <input name="id" type="hidden" value={proposal.id} />
+      <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" name="decision" type="submit" value="approved">
+        Goedkeuren
+      </button>
+      <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" name="decision" type="submit" value="applied">
+        Toepassen
+      </button>
+      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100" name="decision" type="submit" value="rejected">
+        Afwijzen
+      </button>
+    </form>
   );
 }
 
@@ -882,7 +1000,9 @@ function buildLookups(data: AdminDomainData): LookupMaps {
     instructors: byId(data.instructors),
     groups: byId(data.groups),
     participants: byId(data.participants),
-    enrollments: byId(data.enrollments)
+    enrollments: byId(data.enrollments),
+    stageModules: byId(data.stageModules),
+    badges: byId(data.badges)
   };
 }
 

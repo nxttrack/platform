@@ -393,6 +393,51 @@ export async function updateGroupMembershipAction(formData: FormData) {
   revalidateAdminDomain();
 }
 
+export async function reviewStageTransitionProposalAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const proposalId = requiredString(formData, "id");
+  const decision = enumValue(formData, "decision", ["approved", "rejected", "applied", "cancelled"], "approved");
+  const { data: proposal, error } = await supabase
+    .from("stage_transition_proposals")
+    .select("id, enrollment_id, participant_id, from_stage_id, to_stage_id, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", proposalId)
+    .single();
+
+  if (error || !proposal) {
+    throw new Error(error?.message ?? "Doorstroomvoorstel niet gevonden.");
+  }
+
+  if (decision === "applied") {
+    await throwOnError(
+      supabase
+        .from("enrollments")
+        .update({
+          current_stage_id: proposal.to_stage_id
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", proposal.enrollment_id)
+    );
+  }
+
+  await throwOnError(
+    supabase
+      .from("stage_transition_proposals")
+      .update({
+        status: decision,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq("id", proposalId)
+      .eq("tenant_id", tenantId)
+  );
+
+  await notifyGuardiansForStageTransition(supabase, tenantId, proposal.participant_id, proposal.enrollment_id, decision);
+  revalidateAdminDomain();
+  revalidatePath("/parent/voortgang");
+  revalidatePath("/instructor/leerlingen");
+  revalidatePath(`/instructor/student/${proposal.participant_id}`);
+}
+
 export async function createParticipantGuardianAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
@@ -454,6 +499,51 @@ async function requireTenantWriter() {
   };
 }
 
+async function notifyGuardiansForStageTransition(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  participantId: string,
+  enrollmentId: string,
+  decision: string
+) {
+  const { data, error } = await supabase
+    .from("participant_guardians")
+    .select("profile_id")
+    .eq("tenant_id", tenantId)
+    .eq("participant_id", participantId)
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const guardians = Array.isArray(data) ? (data as { profile_id: string }[]) : [];
+
+  if (guardians.length === 0) {
+    return;
+  }
+
+  await throwOnError(
+    supabase.from("parent_notifications").insert(
+      guardians.map((guardian) => ({
+        tenant_id: tenantId,
+        recipient_profile_id: guardian.profile_id,
+        participant_id: participantId,
+        enrollment_id: enrollmentId,
+        title: decision === "applied" ? "Nieuw niveau actief" : decision === "approved" ? "Niveau-overgang goedgekeurd" : "Niveau-overgang bijgewerkt",
+        body:
+          decision === "applied"
+            ? "De zwemschool heeft het nieuwe niveau actief gezet. Het abonnement blijft ongewijzigd."
+            : decision === "approved"
+              ? "De zwemschool heeft de niveau-overgang goedgekeurd. Plaatsing en lessen volgen apart."
+              : "De status van het niveauvoorstel is bijgewerkt.",
+        notification_type: "progress",
+        status: "unread"
+      }))
+    )
+  );
+}
+
 function revalidateAdminDomain() {
   for (const path of [
     "/admin",
@@ -468,6 +558,7 @@ function revalidateAdminDomain() {
     "/admin/groepen",
     "/admin/agenda",
     "/admin/leerlingen",
+    "/admin/badges",
     "/admin/rapportages",
     "/admin/taken"
   ]) {
