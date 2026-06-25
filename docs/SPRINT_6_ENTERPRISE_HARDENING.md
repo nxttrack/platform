@@ -12,6 +12,7 @@ pnpm run auth:audit
 pnpm run db:audit
 pnpm run rls:test
 pnpm run e2e:critical
+pnpm run e2e:browser
 pnpm run ui:audit
 pnpm run security:audit
 pnpm run build
@@ -26,6 +27,7 @@ pnpm run build
 - Role isolation contracts for tenant staff, parents, instructors and platform staff.
 - Generic audit events for sensitive tenant/platform changes.
 - Critical workflow contracts for intake, slot offers, instructor attendance/progress, parent catch-up, messaging, document downloads, reports and payments.
+- Browser smoke coverage for public intake, slot offers, admin placement, parent portal, instructor attendance, manual payments and document downloads.
 - Accessibility and responsive source checks.
 - Lovable traceability docs and stale scaffold copy checks.
 
@@ -51,6 +53,7 @@ Tenant staff can read audit events for their tenant. Platform staff can read all
 Before onboarding a real tenant on staging:
 
 - Deployment workflow is green on the `staging` branch.
+- CI has `E2E_BASE_URL` configured and the Playwright browser smoke suite is green.
 - Database migrations applied without manual SQL edits.
 - `/api/health` returns `ok=true` and reports Supabase Auth configured.
 - Public tenant website loads homepage, program overview, program detail and intake.
@@ -68,4 +71,5 @@ Before onboarding a real tenant on staging:
 ## Known Limits
 
 - The `e2e:critical` script runs source-level contracts by default. Set `E2E_BASE_URL=https://aquaswim-demo.staging.nxttrack.nl` to also perform HTTP route checks against staging.
-- Visual QA is enforced through Lovable baseline traceability and responsive/static checks. Pixel-level screenshot comparison still requires a future Playwright baseline job once browser automation is added to CI.
+- Browser E2E has route and boundary coverage by default. Real mutation coverage depends on CI fixture secrets for admin, parent, instructor, slot offer and document records.
+- Visual QA is enforced through Lovable baseline traceability and responsive/static checks. Pixel-level screenshot comparison still requires a future screenshot-baseline job.

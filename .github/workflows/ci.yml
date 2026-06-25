@@ -43,6 +43,25 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Install Playwright browser
+        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser E2E staging smoke
+        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
+        env:
+          E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+          E2E_REQUIRE_BASE_URL: "true"
+          E2E_SLOT_OFFER_TOKEN: ${{ secrets.E2E_SLOT_OFFER_TOKEN }}
+          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
+          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
+          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
+          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+          E2E_DOCUMENT_ID: ${{ vars.E2E_DOCUMENT_ID }}
+        run: pnpm run e2e:browser
+
       - name: Audit migrations
         run: pnpm run db:audit
 

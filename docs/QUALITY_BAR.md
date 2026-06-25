@@ -15,6 +15,20 @@ This document defines the release quality checks for staging acceptance and prod
 
 When `E2E_BASE_URL` is configured, the smoke test also requests `/api/health`, `/api/health/ready`, public pages, login, parent, instructor, and admin boundaries. HTTP 5xx responses fail the check.
 
+## Browser E2E Coverage
+
+`pnpm run e2e:browser` runs the Playwright browser smoke suite for:
+
+- public intake submission
+- slot offer accept route
+- admin placement workflow boundary
+- parent portal boundary
+- instructor attendance boundary on mobile width
+- manual payment admin boundary
+- private document download route
+
+CI requires `E2E_BASE_URL` for every push to `staging` or `production`. Optional fixture secrets (`E2E_ADMIN_EMAIL`, `E2E_PARENT_EMAIL`, `E2E_INSTRUCTOR_EMAIL`, `E2E_SLOT_OFFER_TOKEN`, `E2E_DOCUMENT_ID`) promote the smoke suite from auth-boundary checks to real workflow checks.
+
 ## Responsive And Accessibility QA
 
 `pnpm run ui:audit` checks:
