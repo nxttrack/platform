@@ -153,14 +153,23 @@ export function AppShell({ brand, nav, user, children, accent = "parent", curren
 }
 
 function isActivePath(currentPath: string, href: string) {
-  const normalizedCurrent = currentPath.split("?")[0] || "/";
+  const pathOnly = currentPath.split("?")[0] || "/";
+  const normalizedCurrent = pathOnly === "/" ? "/" : pathOnly.replace(/\/+$/, "");
   const normalizedHref = href === "/" ? "/" : href.replace(/\/+$/, "");
 
   if (normalizedHref === "/") {
     return normalizedCurrent === "/";
   }
 
+  if (isShellRootPath(normalizedHref)) {
+    return normalizedCurrent === normalizedHref;
+  }
+
   return normalizedCurrent === normalizedHref || normalizedCurrent.startsWith(`${normalizedHref}/`);
+}
+
+function isShellRootPath(pathname: string) {
+  return pathname.split("/").filter(Boolean).length === 1;
 }
 
 function groupNavItems(nav: NavItem[]) {
