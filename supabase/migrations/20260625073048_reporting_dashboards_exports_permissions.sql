@@ -115,7 +115,7 @@ create trigger report_permission_grants_audit_events
 do $$
 declare
   demo_tenant_id uuid;
-  report_key text;
+  seed_report_key text;
   grant_role text;
 begin
   select id into demo_tenant_id
@@ -126,7 +126,7 @@ begin
     return;
   end if;
 
-  foreach report_key in array array['occupancy', 'waitlist', 'progress', 'attendance', 'payments', 'revenue', 'exports']
+  foreach seed_report_key in array array['occupancy', 'waitlist', 'progress', 'attendance', 'payments', 'revenue', 'exports']
   loop
     foreach grant_role in array array['tenant_owner', 'tenant_admin', 'tenant_staff']
     loop
@@ -140,7 +140,7 @@ begin
       )
       values (
         demo_tenant_id,
-        report_key,
+        seed_report_key,
         grant_role,
         true,
         true,
@@ -153,7 +153,7 @@ begin
     end loop;
   end loop;
 
-  foreach report_key in array array['occupancy', 'waitlist', 'progress', 'attendance']
+  foreach seed_report_key in array array['occupancy', 'waitlist', 'progress', 'attendance']
   loop
     insert into public.report_permission_grants (
       tenant_id,
@@ -165,7 +165,7 @@ begin
     )
     values (
       demo_tenant_id,
-      report_key,
+      seed_report_key,
       'instructor',
       true,
       false,
