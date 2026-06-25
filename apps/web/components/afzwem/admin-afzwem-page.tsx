@@ -1,18 +1,24 @@
 import type { ReactNode } from "react";
-import { Award, CalendarDays, FileCheck2, GraduationCap, UsersRound } from "lucide-react";
+import { CalendarDays, FileCheck2, GraduationCap, Radar } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   createAfzwemEventAction,
+  evaluateDiplomaReadinessRadarAction,
+  inviteReadinessCandidateAction,
   inviteAfzwemParticipantAction,
   registerAfzwemResultAction,
+  reviewDiplomaReadinessAction,
   updateCertificateVaultAction
 } from "@/lib/afzwem/admin-afzwem-actions";
 import type {
   AdminAfzwemData,
   AdminAfzwemSnapshot,
+  AfzwemEventCandidateSuggestionRow,
   AfzwemCertificateRow,
   AfzwemEnrollmentRow,
+  DiplomaReadinessEventRow,
+  DiplomaReadinessRadarRow,
   AfzwemEventParticipantRow,
   AfzwemEventRow,
   AfzwemParticipantRow,
@@ -38,6 +44,9 @@ type LookupMaps = {
   eventParticipantsByEvent: Map<string, AfzwemEventParticipantRow[]>;
   resultsByEventParticipant: Map<string, AfzwemResultRow>;
   certificatesByResult: Map<string, AfzwemCertificateRow>;
+  readinessByEnrollment: Map<string, DiplomaReadinessRadarRow>;
+  suggestionsByRadar: Map<string, AfzwemEventCandidateSuggestionRow[]>;
+  readinessEventsByRadar: Map<string, DiplomaReadinessEventRow[]>;
 };
 
 export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
@@ -45,6 +54,8 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
   const scheduledEvents = snapshot.data.events.filter((event) => event.status === "scheduled").length;
   const passedResults = snapshot.data.results.filter((result) => result.result_status === "passed").length;
   const issuedCertificates = snapshot.data.certificates.filter((certificate) => certificate.status === "issued").length;
+  const readyForReview = snapshot.data.readinessRadar.filter((row) => row.readiness_status === "ready_for_review").length;
+  const almostReady = snapshot.data.readinessRadar.filter((row) => row.readiness_status === "almost_ready").length;
 
   return (
     <div className="grid gap-6">
@@ -59,9 +70,11 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
           <div className="grid gap-4 md:grid-cols-4">
             <MetricCard icon={<FileCheck2 className="h-5 w-5" />} label="Criteria" value={snapshot.data.readinessCriteria.length.toString()} detail="afzwem-ready regels" />
             <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Momenten" value={scheduledEvents.toString()} detail="gepland" />
-            <MetricCard icon={<UsersRound className="h-5 w-5" />} label="Deelnemers" value={snapshot.data.eventParticipants.length.toString()} detail="uitgenodigd/bevestigd" />
+            <MetricCard icon={<Radar className="h-5 w-5" />} label="Radar" value={readyForReview.toString()} detail={`${almostReady} bijna klaar`} />
             <MetricCard icon={<GraduationCap className="h-5 w-5" />} label="Diploma's" value={issuedCertificates.toString()} detail={`${passedResults} geslaagd`} />
           </div>
+
+          <AfzwemRadarPanel data={snapshot.data} lookups={lookups} />
 
           <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
             <Card>
@@ -116,6 +129,178 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
         <AfzwemStatusPanel snapshot={snapshot} />
       )}
     </div>
+  );
+}
+
+function AfzwemRadarPanel({ data, lookups }: { data: AdminAfzwemData; lookups: LookupMaps }) {
+  return (
+    <Card>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold">Afzwem radar</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ziet wie bijna klaar is, waarom, wat nog mist en welk afzwemmoment logisch is. De radar wijzigt geen diploma of betaling zonder adminactie.
+          </p>
+        </div>
+        <form action={evaluateDiplomaReadinessRadarAction}>
+          <button className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+            Radar verversen
+          </button>
+        </form>
+      </div>
+
+      <div className="grid gap-4">
+        {data.readinessRadar.length === 0 ? (
+          <div className="grid gap-3 rounded-2xl border border-dashed border-border bg-muted/40 p-5 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="font-semibold">Nog geen radarrecords.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Ververs de radar om actieve inschrijvingen te beoordelen op voortgang, aanwezigheid, akkoord en minimale opbouwperiode.</p>
+            </div>
+            <form action={evaluateDiplomaReadinessRadarAction}>
+              <button className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted" type="submit">
+                Eerste scan draaien
+              </button>
+            </form>
+          </div>
+        ) : null}
+        {data.readinessRadar.map((radarRow) => (
+          <AfzwemRadarCard
+            key={radarRow.id}
+            events={lookups.readinessEventsByRadar.get(radarRow.id) ?? []}
+            lookups={lookups}
+            radarRow={radarRow}
+            suggestions={lookups.suggestionsByRadar.get(radarRow.id) ?? []}
+          />
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function AfzwemRadarCard({
+  events,
+  lookups,
+  radarRow,
+  suggestions
+}: {
+  events: DiplomaReadinessEventRow[];
+  lookups: LookupMaps;
+  radarRow: DiplomaReadinessRadarRow;
+  suggestions: AfzwemEventCandidateSuggestionRow[];
+}) {
+  const participant = lookups.participants.get(radarRow.participant_id);
+  const program = lookups.programs.get(radarRow.program_id);
+  const stage = radarRow.stage_id ? lookups.stages.get(radarRow.stage_id) : null;
+  const progress = radarRow.progress_snapshot;
+  const attendance = radarRow.attendance_snapshot;
+  const period = radarRow.period_snapshot;
+  const candidateSuggestions = suggestions.filter((suggestion) => suggestion.suggested_status === "candidate").slice(0, 3);
+
+  return (
+    <div className="grid gap-4 rounded-2xl border border-border bg-muted/30 p-4 xl:grid-cols-[1fr_0.9fr]">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-lg font-bold">{participant?.display_name ?? "Leerling"}</p>
+            <p className="text-sm text-muted-foreground">
+              {program?.name ?? "Programma"} - {stage?.name ?? "Niveau onbekend"} - laatst berekend {formatDateTime(radarRow.last_evaluated_at)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <StatusPill tone={readinessTone(radarRow.readiness_status)}>{readinessLabel(radarRow.readiness_status)}</StatusPill>
+            <StatusPill tone={radarRow.confidence === "high" ? "success" : radarRow.confidence === "medium" ? "info" : "warning"}>
+              {radarRow.score === null ? "-" : `${formatNumber(radarRow.score)}%`} · {radarRow.confidence}
+            </StatusPill>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-2 md:grid-cols-3">
+          <InfoTile label="Voortgang" value={`${valueFrom(progress, "completed_modules")}/${valueFrom(progress, "required_modules")} modules`} />
+          <InfoTile label="Aanwezigheid" value={`${valueFrom(attendance, "attendance_percentage")}%`} />
+          <InfoTile label="Opbouw" value={`${valueFrom(period, "session_count")} lessen`} />
+        </div>
+
+        <div className="mt-4 grid gap-3 lg:grid-cols-2">
+          <ReasonBlock label="Waarom" rows={radarRow.reasons} tone="success" />
+          <ReasonBlock label="Mist nog" rows={radarRow.missing_criteria.length > 0 ? radarRow.missing_criteria : radarRow.blockers} tone={radarRow.blockers.length > 0 ? "warning" : "success"} />
+        </div>
+
+        {events.length > 0 ? (
+          <details className="mt-4 rounded-2xl border border-border bg-card p-3">
+            <summary className="cursor-pointer text-sm font-semibold text-primary">Radar timeline</summary>
+            <div className="mt-3 grid gap-2">
+              {events.slice(0, 5).map((event) => (
+                <div key={event.id} className="rounded-xl bg-muted/50 p-3 text-sm">
+                  <p className="font-semibold">{event.event_type}</p>
+                  <p className="text-muted-foreground">{event.note ?? "Geen notitie"} - {formatDateTime(event.created_at)}</p>
+                </div>
+              ))}
+            </div>
+          </details>
+        ) : null}
+      </div>
+
+      <div className="grid gap-3">
+        <form action={evaluateDiplomaReadinessRadarAction} className="rounded-2xl border border-border bg-card p-3">
+          <input name="enrollment_id" type="hidden" value={radarRow.enrollment_id} />
+          <button className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted" type="submit">
+            Alleen deze leerling herberekenen
+          </button>
+        </form>
+
+        <form action={reviewDiplomaReadinessAction} className="grid gap-3 rounded-2xl border border-border bg-card p-3">
+          <input name="readiness_radar_id" type="hidden" value={radarRow.id} />
+          <SelectField defaultValue={radarRow.readiness_status} label="Admin review" name="readiness_status" options={readinessStatusOptions} />
+          <TextAreaField defaultValue={radarRow.review_note} label="Reviewreden / override" name="review_note" />
+          <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+            Review opslaan
+          </button>
+        </form>
+
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <p className="mb-3 text-sm font-bold">Afzwemmoment suggesties</p>
+          <div className="grid gap-3">
+            {candidateSuggestions.length === 0 ? <EmptyState>Geen passend gepland afzwemmoment gevonden.</EmptyState> : null}
+            {candidateSuggestions.map((suggestion) => (
+              <AfzwemCandidateSuggestionForm key={suggestion.id} lookups={lookups} radarRow={radarRow} suggestion={suggestion} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AfzwemCandidateSuggestionForm({
+  lookups,
+  radarRow,
+  suggestion
+}: {
+  lookups: LookupMaps;
+  radarRow: DiplomaReadinessRadarRow;
+  suggestion: AfzwemEventCandidateSuggestionRow;
+}) {
+  const event = lookups.events.get(suggestion.milestone_event_id);
+
+  return (
+    <form action={inviteReadinessCandidateAction} className="grid gap-3 rounded-xl border border-border bg-muted/35 p-3">
+      <input name="readiness_radar_id" type="hidden" value={radarRow.id} />
+      <input name="candidate_suggestion_id" type="hidden" value={suggestion.id} />
+      <input name="milestone_event_id" type="hidden" value={suggestion.milestone_event_id} />
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <p className="font-semibold">{event?.title ?? "Afzwemmoment"}</p>
+          <p className="text-sm text-muted-foreground">{event ? formatDateTime(event.starts_at) : "Datum onbekend"}</p>
+        </div>
+        <StatusPill tone={suggestion.confidence === "high" ? "success" : "info"}>{suggestion.score === null ? "-" : `${formatNumber(suggestion.score)}%`}</StatusPill>
+      </div>
+      <ReasonBlock label="Match" rows={suggestion.reasons} tone="success" />
+      {suggestion.blockers.length > 0 ? <ReasonBlock label="Aandacht" rows={suggestion.blockers} tone="warning" /> : null}
+      <TextAreaField label="Uitnodigingsnotitie / override reden" name="note" />
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Uitnodigen
+      </button>
+    </form>
   );
 }
 
@@ -259,6 +444,7 @@ function ResultForm({ eventParticipant, result }: { eventParticipant: AfzwemEven
           <TextField defaultValue={result?.score ?? ""} label="Score" max={100} min={0} name="score" type="number" />
         </div>
         <TextAreaField defaultValue={result?.note} label="Resultaatnotitie" name="note" />
+        <TextAreaField label="Guardrail override reden" name="guardrail_override_reason" />
         <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
           Resultaat opslaan
         </button>
@@ -380,6 +566,23 @@ function EmptyState({ children }: { children: ReactNode }) {
   return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{children}</div>;
 }
 
+function ReasonBlock({ label, rows, tone }: { label: string; rows: Array<Record<string, unknown>>; tone: "success" | "warning" }) {
+  return (
+    <div className={`rounded-2xl border p-3 ${tone === "success" ? "border-emerald-200 bg-emerald-50/70" : "border-amber-200 bg-amber-50/70"}`}>
+      <p className={`text-xs font-bold uppercase ${tone === "success" ? "text-emerald-700" : "text-amber-700"}`}>{label}</p>
+      <div className="mt-2 grid gap-2">
+        {rows.length === 0 ? <p className="text-sm text-muted-foreground">Geen bijzonderheden.</p> : null}
+        {rows.slice(0, 4).map((row, index) => (
+          <div key={`${String(row.code ?? row.label ?? label)}-${index}`} className="rounded-xl bg-background/75 p-2 text-sm">
+            <p className="font-semibold">{String(row.label ?? row.code ?? "Signaal")}</p>
+            {typeof row.detail === "string" ? <p className="mt-1 text-xs text-muted-foreground">{row.detail}</p> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function TextField({
   defaultValue,
   label,
@@ -455,7 +658,10 @@ function buildLookups(data: AdminAfzwemData): LookupMaps {
     events: byId(data.events),
     eventParticipantsByEvent: groupBy(data.eventParticipants, (eventParticipant) => eventParticipant.milestone_event_id),
     resultsByEventParticipant: new Map(data.results.map((result) => [result.milestone_event_participant_id, result])),
-    certificatesByResult: new Map(data.certificates.flatMap((certificate) => (certificate.source_result_id ? [[certificate.source_result_id, certificate] as const] : [])))
+    certificatesByResult: new Map(data.certificates.flatMap((certificate) => (certificate.source_result_id ? [[certificate.source_result_id, certificate] as const] : []))),
+    readinessByEnrollment: new Map(data.readinessRadar.map((radarRow) => [radarRow.enrollment_id, radarRow])),
+    suggestionsByRadar: groupBy(data.candidateSuggestions, (suggestion) => suggestion.readiness_radar_id),
+    readinessEventsByRadar: groupBy(data.readinessEvents, (event) => event.readiness_radar_id)
   };
 }
 
@@ -485,6 +691,10 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("nl-NL", { maximumFractionDigits: 0 }).format(value);
+}
+
 function formatDateTimeInput(value: string) {
   const date = new Date(value);
 
@@ -493,6 +703,48 @@ function formatDateTimeInput(value: string) {
   }
 
   return date.toISOString().slice(0, 16);
+}
+
+function valueFrom(source: Record<string, unknown>, key: string) {
+  const value = source[key];
+
+  if (typeof value === "number") {
+    return formatNumber(value);
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return "-";
+}
+
+function readinessTone(status: string): "success" | "warning" | "danger" | "info" | "neutral" {
+  if (status === "completed" || status === "invited") {
+    return "success";
+  }
+
+  if (status === "ready_for_review") {
+    return "info";
+  }
+
+  if (status === "almost_ready") {
+    return "warning";
+  }
+
+  return status === "not_ready" ? "danger" : "neutral";
+}
+
+function readinessLabel(status: string) {
+  return (
+    {
+      not_ready: "niet klaar",
+      almost_ready: "bijna klaar",
+      ready_for_review: "klaar voor review",
+      invited: "uitgenodigd",
+      completed: "afgerond"
+    }[status] ?? status
+  );
 }
 
 const fieldClassName = "min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";
@@ -519,6 +771,12 @@ const resultStatusOptions = [
   { label: "Afwezig", value: "absent" },
   { label: "Herkansing nodig", value: "needs_retry" },
   { label: "In afwachting", value: "pending" }
+];
+
+const readinessStatusOptions = [
+  { label: "Niet klaar", value: "not_ready" },
+  { label: "Bijna klaar", value: "almost_ready" },
+  { label: "Klaar voor review", value: "ready_for_review" }
 ];
 
 const downloadStatusOptions = [
