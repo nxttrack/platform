@@ -66,6 +66,7 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
   const lookups = buildLookups(data);
   const activeTemplates = data.messageTemplates.filter((template) => template.status === "active").length;
   const queuedMessages = data.messageOutbox.filter((message) => message.status === "queued").length;
+  const failedMessages = data.messageOutbox.filter((message) => ["failed", "retrying"].includes(message.status));
   const smtpProvider = data.providerConfigs.find((provider) => provider.provider === "smtp");
   const sendgridProvider = data.providerConfigs.find((provider) => provider.provider === "sendgrid");
 
@@ -82,7 +83,7 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<Settings className="h-5 w-5" />} label="Providers" value={data.providerConfigs.length.toString()} detail="SMTP + SendGrid" />
         <MetricCard icon={<Mail className="h-5 w-5" />} label="Templates actief" value={activeTemplates.toString()} detail={`${data.messageTemplates.length} totaal`} />
         <MetricCard icon={<Send className="h-5 w-5" />} label="Outbox queued" value={queuedMessages.toString()} detail="klaar voor worker" />
-        <MetricCard icon={<Inbox className="h-5 w-5" />} label="SendGrid API" value={sendgridProvider?.status ?? "missing"} detail="adapter voorbereid" />
+        <MetricCard icon={<Inbox className="h-5 w-5" />} label="Retry dashboard" value={failedMessages.length.toString()} detail="failed/retrying" />
       </div>
 
       <Card>
@@ -105,7 +106,7 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
           <SectionHeader title="E-mail instellingen" count={data.providerConfigs.length} />
           <div className="grid gap-3">
             <ProviderConfigCard provider={smtpProvider} title="SMTP via SendGrid" />
-            <ProviderConfigCard provider={sendgridProvider} title="SendGrid API voorbereiding" />
+            <ProviderConfigCard provider={sendgridProvider} title="SendGrid API live-ready" />
           </div>
         </Card>
 
@@ -131,6 +132,16 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
           <QueueMessageForm data={data} />
         </Card>
       </div>
+
+      <Card>
+        <SectionHeader title="Retry dashboard" count={failedMessages.length} />
+        <div className="grid gap-3">
+          {failedMessages.length === 0 ? <EmptyState>Geen gefaalde berichten. De outbox is schoon.</EmptyState> : null}
+          {failedMessages.map((message) => (
+            <MessageOutboxCard key={message.id} lookups={lookups} message={message} showResetRetry />
+          ))}
+        </div>
+      </Card>
 
       <Card>
         <SectionHeader title="Outbox" count={data.messageOutbox.length} />
@@ -425,6 +436,15 @@ function TemplateCard({ template }: { template: MessageTemplateRow }) {
           <button className={secondaryButtonClassName} type="submit">
             Preview valideren
           </button>
+          <div className="grid gap-3 md:grid-cols-2">
+            <InfoTile label="Variabelen" value={template.required_variables.length > 0 ? template.required_variables.join(", ") : "geen"} />
+            <InfoTile label="Laatste validatie" value={template.last_preview_errors.length === 0 ? "ok" : `${template.last_preview_errors.length} mist`} />
+          </div>
+          {template.last_preview_errors.length > 0 ? (
+            <p className="rounded-2xl bg-destructive/10 p-3 text-sm font-semibold text-destructive">
+              Ontbrekend in preview context: {template.last_preview_errors.join(", ")}
+            </p>
+          ) : null}
           {template.last_previewed_at ? (
             <div className="rounded-2xl border border-border bg-card p-3 text-sm">
               <p className="font-semibold">{template.last_preview_subject ?? "Geen onderwerp"}</p>
@@ -461,7 +481,7 @@ function QueueMessageForm({ data }: { data: AdminPhase12Data }) {
   );
 }
 
-function MessageOutboxCard({ lookups, message }: { lookups: Phase12Lookups; message: MessageOutboxRow }) {
+function MessageOutboxCard({ lookups, message, showResetRetry }: { lookups: Phase12Lookups; message: MessageOutboxRow; showResetRetry?: boolean }) {
   const participant = message.participant_id ? lookups.participants.get(message.participant_id) : null;
   const profile = message.recipient_profile_id ? lookups.profiles.get(message.recipient_profile_id) : null;
   const template = message.template_id ? lookups.templates.get(message.template_id) : null;
@@ -486,14 +506,17 @@ function MessageOutboxCard({ lookups, message }: { lookups: Phase12Lookups; mess
         <InfoTile label="Provider ID" value={message.provider_message_id ?? "-"} />
         <InfoTile label="Volgende poging" value={message.next_retry_at ? formatDateTime(message.next_retry_at) : "-"} />
         <InfoTile label="Verzonden" value={message.sent_at ? formatDateTime(message.sent_at) : "-"} />
+        <InfoTile label="Event" value={message.event_key ?? "handmatig"} />
+        <InfoTile label="Bron" value={message.source_table ?? "-"} />
       </div>
       {message.failure_reason || message.error_message ? <p className="mt-3 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{message.failure_reason ?? message.error_message}</p> : null}
       <div className="mt-3 flex flex-wrap gap-2">
         {["failed", "retrying"].includes(message.status) ? (
           <form action={retryMessageAction}>
             <input name="id" type="hidden" value={message.id} />
+            {showResetRetry ? <input name="reset_attempts" type="hidden" value="true" /> : null}
             <button className={secondaryButtonClassName} type="submit">
-              Opnieuw proberen
+              {showResetRetry ? "Retry teller resetten" : "Opnieuw proberen"}
             </button>
           </form>
         ) : null}

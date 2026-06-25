@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { queueParentEventMessages } from "@/lib/communication/event-hooks";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -140,14 +141,16 @@ export async function awardBadgeAction(formData: FormData) {
   const { supabase, tenantId, profileId } = await requireInstructorContext();
   const groupId = optionalString(formData, "group_id");
   const participantId = requiredString(formData, "participant_id");
+  const enrollmentId = requiredString(formData, "enrollment_id");
+  const badgeId = requiredString(formData, "badge_id");
 
   await throwOnError(
     supabase.from("badge_awards").upsert(
       {
         tenant_id: tenantId,
-        badge_id: requiredString(formData, "badge_id"),
+        badge_id: badgeId,
         participant_id: participantId,
-        enrollment_id: requiredString(formData, "enrollment_id"),
+        enrollment_id: enrollmentId,
         awarded_by_profile_id: profileId,
         source: "instructor",
         note: optionalString(formData, "note"),
@@ -157,6 +160,7 @@ export async function awardBadgeAction(formData: FormData) {
       { onConflict: "tenant_id,badge_id,participant_id,enrollment_id", ignoreDuplicates: true }
     )
   );
+  await maybeQueueBadgeAwardMessage(supabase, tenantId, participantId, enrollmentId, badgeId, profileId);
 
   revalidateInstructorPortal({ groupId, participantId });
 }
@@ -248,6 +252,41 @@ async function notifyAttendanceGuardians(
   if (notifications.length > 0) {
     await throwOnError(supabase.from("parent_notifications").insert(notifications));
   }
+}
+
+async function maybeQueueBadgeAwardMessage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  participantId: string,
+  enrollmentId: string,
+  badgeId: string,
+  profileId: string
+) {
+  const [participantResult, badgeResult] = await Promise.all([
+    supabase.from("participants").select("display_name").eq("tenant_id", tenantId).eq("id", participantId).maybeSingle(),
+    supabase.from("badges").select("name").eq("tenant_id", tenantId).eq("id", badgeId).maybeSingle()
+  ]);
+
+  if (participantResult.error || badgeResult.error) {
+    throw new Error(participantResult.error?.message ?? badgeResult.error?.message ?? "Badgebericht kon niet worden voorbereid.");
+  }
+
+  await queueParentEventMessages(supabase, {
+    tenantId,
+    participantId,
+    enrollmentId,
+    eventKey: "badge_awarded",
+    templateCode: "badge-awarded",
+    context: {
+      participant_name: (participantResult.data as { display_name?: string } | null)?.display_name ?? "De leerling",
+      badge_name: (badgeResult.data as { name?: string } | null)?.name ?? "Nieuwe badge"
+    },
+    sourceTable: "badges",
+    sourceRecordId: badgeId,
+    createdByProfileId: profileId,
+    fallbackSubject: "Nieuwe badge behaald",
+    fallbackBody: "Er is een nieuwe badge behaald. Bekijk de voortgang in het ouderportaal."
+  });
 }
 
 function revalidateInstructorPortal({ groupId, participantId }: { groupId?: string | null; participantId?: string | null } = {}) {

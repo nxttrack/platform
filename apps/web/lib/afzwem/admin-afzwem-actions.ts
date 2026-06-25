@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { queueParentEventMessages } from "@/lib/communication/event-hooks";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,6 +35,7 @@ export async function createAfzwemEventAction(formData: FormData) {
 export async function inviteAfzwemParticipantAction(formData: FormData) {
   const { supabase, tenantId, profileId } = await requireTenantWriter();
   const enrollmentId = requiredString(formData, "enrollment_id");
+  const eventId = requiredString(formData, "milestone_event_id");
   const enrollmentResult = await supabase.from("enrollments").select("participant_id").eq("tenant_id", tenantId).eq("id", enrollmentId).single();
 
   if (enrollmentResult.error || !enrollmentResult.data) {
@@ -44,7 +46,7 @@ export async function inviteAfzwemParticipantAction(formData: FormData) {
     supabase.from("milestone_event_participants").upsert(
       {
         tenant_id: tenantId,
-        milestone_event_id: requiredString(formData, "milestone_event_id"),
+        milestone_event_id: eventId,
         enrollment_id: enrollmentId,
         participant_id: enrollmentResult.data.participant_id,
         readiness_criteria_id: optionalString(formData, "readiness_criteria_id"),
@@ -56,6 +58,7 @@ export async function inviteAfzwemParticipantAction(formData: FormData) {
       { onConflict: "tenant_id,milestone_event_id,enrollment_id" }
     )
   );
+  await maybeQueueAfzwemInvitationMessage(supabase, tenantId, eventId, enrollmentId, enrollmentResult.data.participant_id, profileId);
 
   revalidateAfzwem();
 }
@@ -116,20 +119,27 @@ export async function registerAfzwemResultAction(formData: FormData) {
 
 export async function updateCertificateVaultAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
+  const certificateId = requiredString(formData, "certificate_id");
+  const downloadStatus = enumValue(formData, "download_status", ["pending", "ready", "blocked"], "pending");
+  const vaultStatus = enumValue(formData, "vault_status", ["draft", "available", "archived"], "draft");
 
   await throwOnError(
     supabase
       .from("certificates")
       .update({
         file_path: optionalString(formData, "file_path"),
-        download_status: enumValue(formData, "download_status", ["pending", "ready", "blocked"], "pending"),
+        download_status: downloadStatus,
         share_enabled: formData.get("share_enabled") === "on",
         share_expires_at: optionalDateTime(formData, "share_expires_at"),
-        vault_status: enumValue(formData, "vault_status", ["draft", "available", "archived"], "draft")
+        vault_status: vaultStatus
       })
       .eq("tenant_id", tenantId)
-      .eq("id", requiredString(formData, "certificate_id"))
+      .eq("id", certificateId)
   );
+
+  if (downloadStatus === "ready" && vaultStatus === "available") {
+    await maybeQueueDiplomaIssuedMessage(supabase, tenantId, certificateId);
+  }
 
   revalidateAfzwem();
 }
@@ -159,10 +169,93 @@ async function requireTenantWriter() {
   };
 }
 
+async function maybeQueueAfzwemInvitationMessage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  eventId: string,
+  enrollmentId: string,
+  participantId: string,
+  profileId: string
+) {
+  const [eventResult, participantResult] = await Promise.all([
+    supabase.from("milestone_events").select("title, starts_at").eq("tenant_id", tenantId).eq("id", eventId).maybeSingle(),
+    supabase.from("participants").select("display_name").eq("tenant_id", tenantId).eq("id", participantId).maybeSingle()
+  ]);
+
+  if (eventResult.error || participantResult.error) {
+    throw new Error(eventResult.error?.message ?? participantResult.error?.message ?? "Afzwembericht kon niet worden voorbereid.");
+  }
+
+  const event = eventResult.data as { title?: string; starts_at?: string } | null;
+  const participant = participantResult.data as { display_name?: string } | null;
+
+  await queueParentEventMessages(supabase, {
+    tenantId,
+    participantId,
+    enrollmentId,
+    eventKey: "afzwem_invited",
+    templateCode: "afzwem-invited",
+    context: {
+      participant_name: participant?.display_name ?? "De leerling",
+      event_title: event?.title ?? "Afzwemmen",
+      event_date: event?.starts_at ? formatDateTime(event.starts_at) : "datum volgt"
+    },
+    sourceTable: "milestone_events",
+    sourceRecordId: eventId,
+    createdByProfileId: profileId,
+    fallbackSubject: "Uitnodiging afzwemmen",
+    fallbackBody: "Er staat een afzwemuitnodiging klaar in het ouderportaal."
+  });
+}
+
+async function maybeQueueDiplomaIssuedMessage(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, certificateId: string) {
+  const certificateResult = await supabase
+    .from("certificates")
+    .select("id, enrollment_id, participant_id, title")
+    .eq("tenant_id", tenantId)
+    .eq("id", certificateId)
+    .maybeSingle();
+
+  if (certificateResult.error) {
+    throw new Error(certificateResult.error.message);
+  }
+
+  if (!certificateResult.data) {
+    return;
+  }
+
+  const certificate = certificateResult.data as { id: string; enrollment_id: string | null; participant_id: string; title: string };
+  const participantResult = await supabase.from("participants").select("display_name").eq("tenant_id", tenantId).eq("id", certificate.participant_id).maybeSingle();
+
+  if (participantResult.error) {
+    throw new Error(participantResult.error.message);
+  }
+
+  await queueParentEventMessages(supabase, {
+    tenantId,
+    participantId: certificate.participant_id,
+    enrollmentId: certificate.enrollment_id,
+    eventKey: "diploma_issued",
+    templateCode: "diploma-issued",
+    context: {
+      participant_name: (participantResult.data as { display_name?: string } | null)?.display_name ?? "De leerling",
+      certificate_title: certificate.title
+    },
+    sourceTable: "certificates",
+    sourceRecordId: certificate.id,
+    fallbackSubject: `Diploma beschikbaar: ${certificate.title}`,
+    fallbackBody: "Er staat een diploma klaar in de digitale diploma kluis."
+  });
+}
+
 function revalidateAfzwem() {
   for (const path of ["/admin", "/admin/afzwemmen", "/parent", "/parent/diplomas", "/parent/documenten", "/parent/notificaties"]) {
     revalidatePath(path);
   }
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short", timeZone: "Europe/Amsterdam" }).format(new Date(value));
 }
 
 async function throwOnError(builder: PromiseLike<{ error: { message: string } | null }>) {

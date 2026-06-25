@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { queueParentEventMessages } from "@/lib/communication/event-hooks";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -288,56 +289,30 @@ export async function queueInvoiceReminderAction(formData: FormData) {
     throw new Error(invoiceResult.error?.message ?? "Factuur niet gevonden.");
   }
 
-  const guardiansResult = await supabase
-    .from("participant_guardians")
-    .select("profile_id, email, display_name")
-    .eq("tenant_id", tenantId)
-    .eq("participant_id", invoiceResult.data.participant_id)
-    .eq("status", "active");
-
-  if (guardiansResult.error) {
-    throw new Error(guardiansResult.error.message);
-  }
-
   const remainingCents = Math.max(0, invoiceResult.data.amount_due_cents - invoiceResult.data.amount_paid_cents);
-  const guardians = (guardiansResult.data ?? []).filter((guardian) => Boolean(guardian.email));
+  const queued = await queueParentEventMessages(supabase, {
+    tenantId,
+    participantId: invoiceResult.data.participant_id,
+    enrollmentId: invoiceResult.data.enrollment_id,
+    eventKey: "payment_reminder",
+    templateCode: "payment-reminder",
+    context: {
+      invoice: invoiceResult.data,
+      invoice_number: invoiceResult.data.invoice_number,
+      invoice_title: invoiceResult.data.title,
+      remaining_amount: formatMoneyText(remainingCents, invoiceResult.data.currency),
+      due_on: invoiceResult.data.due_on
+    },
+    sourceTable: "invoices",
+    sourceRecordId: invoiceId,
+    createdByProfileId: profileId,
+    fallbackSubject: `Betalingsherinnering ${invoiceResult.data.invoice_number}`,
+    fallbackBody: `Er staat nog ${formatMoneyText(remainingCents, invoiceResult.data.currency)} open voor ${invoiceResult.data.title}.`
+  });
 
-  if (guardians.length === 0) {
-    throw new Error("Geen ouder/verzorger met e-mailadres gevonden voor deze factuur.");
+  if (queued.queued === 0) {
+    throw new Error("Geen ouder/verzorger met e-mailadres gevonden of template mist verplichte variabelen.");
   }
-
-  await throwOnError(
-    supabase.from("message_outbox").insert(
-      guardians.map((guardian) => ({
-        tenant_id: tenantId,
-        channel: "email",
-        provider: "smtp",
-        recipient_profile_id: guardian.profile_id,
-        recipient_email: guardian.email,
-        participant_id: invoiceResult.data.participant_id,
-        enrollment_id: invoiceResult.data.enrollment_id,
-        subject: `Betalingsherinnering ${invoiceResult.data.invoice_number}`,
-        body: [
-          `Hallo ${guardian.display_name ?? ""}`.trim() + ",",
-          "",
-          `Er staat nog ${formatMoneyText(remainingCents, invoiceResult.data.currency)} open voor ${invoiceResult.data.title}.`,
-          invoiceResult.data.due_on ? `Vervaldatum: ${invoiceResult.data.due_on}.` : null,
-          "",
-          "Log in op het ouderportaal voor de actuele betaalstatus.",
-          "",
-          "NXTTRACK"
-        ].filter(Boolean).join("\n"),
-        status: "queued",
-        delivery_status: "pending",
-        render_context: {
-          invoice: invoiceResult.data,
-          remaining_cents: remainingCents
-        },
-        metadata: { source: "payment_reminder", invoice_id: invoiceId },
-        created_by_profile_id: profileId
-      }))
-    )
-  );
 
   await throwOnError(
     supabase.from("payment_events").insert({
@@ -345,7 +320,7 @@ export async function queueInvoiceReminderAction(formData: FormData) {
       invoice_id: invoiceId,
       provider: "manual",
       event_type: "invoice_reminder_queued",
-      payload: { recipients: guardians.length },
+      payload: { recipients: queued.queued },
       created_by_profile_id: profileId
     })
   );

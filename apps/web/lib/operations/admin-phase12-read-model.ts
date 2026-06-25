@@ -18,6 +18,9 @@ export type CommunicationProviderConfigRow = {
   username_secret_reference: string | null;
   password_secret_reference: string | null;
   api_key_secret_reference: string | null;
+  last_tested_at: string | null;
+  last_test_status: string | null;
+  last_test_error: string | null;
 };
 
 export type MessageTemplateRow = {
@@ -32,6 +35,7 @@ export type MessageTemplateRow = {
   required_variables: string[];
   last_preview_subject: string | null;
   last_preview_body: string | null;
+  last_preview_errors: string[];
   last_previewed_at: string | null;
   tags: string[];
   sort_order: number;
@@ -56,6 +60,9 @@ export type MessageOutboxRow = {
   last_attempt_at: string | null;
   failure_reason: string | null;
   provider_message_id: string | null;
+  event_key: string | null;
+  source_table: string | null;
+  source_record_id: string | null;
   scheduled_at: string | null;
   sent_at: string | null;
   delivered_at: string | null;
@@ -241,18 +248,18 @@ export async function getAdminPhase12Snapshot(options: { reportFilters?: ReportF
   ] = await Promise.all([
     supabase
       .from("communication_provider_configs")
-      .select("id, provider, mode, status, display_name, host, port, from_email, from_name, username_secret_reference, password_secret_reference, api_key_secret_reference")
+      .select("id, provider, mode, status, display_name, host, port, from_email, from_name, username_secret_reference, password_secret_reference, api_key_secret_reference, last_tested_at, last_test_status, last_test_error")
       .eq("tenant_id", tenantId)
       .order("provider", { ascending: true }),
     supabase
       .from("message_templates")
-      .select("id, code, name, channel, audience, subject_template, body_template, status, required_variables, last_preview_subject, last_preview_body, last_previewed_at, tags, sort_order")
+      .select("id, code, name, channel, audience, subject_template, body_template, status, required_variables, last_preview_subject, last_preview_body, last_preview_errors, last_previewed_at, tags, sort_order")
       .eq("tenant_id", tenantId)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
     supabase
       .from("message_outbox")
-      .select("id, template_id, channel, provider, recipient_profile_id, recipient_email, participant_id, enrollment_id, subject, body, status, delivery_status, retry_count, max_attempts, next_retry_at, last_attempt_at, failure_reason, provider_message_id, scheduled_at, sent_at, delivered_at, error_message, created_at")
+      .select("id, template_id, channel, provider, recipient_profile_id, recipient_email, participant_id, enrollment_id, subject, body, status, delivery_status, retry_count, max_attempts, next_retry_at, last_attempt_at, failure_reason, provider_message_id, event_key, source_table, source_record_id, scheduled_at, sent_at, delivered_at, error_message, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(100),

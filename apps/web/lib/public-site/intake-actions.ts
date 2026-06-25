@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 
+import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 import { getPublicTenantSiteSnapshot } from "./tenant-site";
@@ -64,6 +65,24 @@ export async function submitIntakeAction(formData: FormData) {
   if (eventResult.error) {
     throw new Error(eventResult.error.message);
   }
+
+  await queueDirectEventMessage(supabase, {
+    tenantId: snapshot.tenant.id,
+    recipientEmail: submission.parent_email,
+    recipientName: submission.parent_name,
+    eventKey: "intake_submitted",
+    templateCode: "intake-submitted",
+    context: {
+      parent_name: submission.parent_name,
+      participant_name: submission.participant_name,
+      intake_type: intakeType,
+      program_name: program.name
+    },
+    sourceTable: "intake_submissions",
+    sourceRecordId: submissionId,
+    fallbackSubject: `Intake ontvangen voor ${submission.participant_name}`,
+    fallbackBody: `Hallo ${submission.parent_name},\n\nWe hebben de intake voor ${submission.participant_name} ontvangen.\n\nNXTTRACK`
+  });
 
   redirect(`/intake?program=${encodeURIComponent(program.slug)}&submitted=1`);
 }

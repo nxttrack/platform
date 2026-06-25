@@ -6,6 +6,7 @@ export type LiveEmailProvider = "smtp" | "sendgrid";
 
 export type LiveSmtpSettings = {
   status: string;
+  provider?: LiveEmailProvider;
   host: string | null;
   port: number | null;
   secure: boolean | null;
@@ -14,6 +15,7 @@ export type LiveSmtpSettings = {
   reply_to_email: string | null;
   username_secret_reference: string | null;
   password_secret_reference: string | null;
+  api_key_secret_reference?: string | null;
 };
 
 export type TemporaryPasswordEmailInput = {
@@ -41,6 +43,7 @@ export type LiveEmailMessage = {
 
 export type LiveEmailOptions = {
   smtpSettings?: LiveSmtpSettings | null;
+  provider?: LiveEmailProvider;
 };
 
 export function assertLiveEmailConfigured(options: LiveEmailOptions = {}) {
@@ -59,6 +62,10 @@ export function assertLiveEmailConfigured(options: LiveEmailOptions = {}) {
 
 export async function sendLiveEmail(input: LiveEmailMessage, options: LiveEmailOptions = {}): Promise<LiveEmailResult> {
   assertLiveEmailConfigured(options);
+
+  if ((options.provider ?? options.smtpSettings?.provider) === "sendgrid") {
+    return sendViaSendGridApi(input, options.smtpSettings);
+  }
 
   if (hasSmtpConfig(options.smtpSettings)) {
     return sendViaSmtp(input, options.smtpSettings);
@@ -108,10 +115,11 @@ async function sendViaSmtp(input: LiveEmailMessage, settings: LiveSmtpSettings |
 async function sendViaSendGridApi(input: LiveEmailMessage, settings: LiveSmtpSettings | null | undefined): Promise<LiveEmailResult> {
   const fromEmail = settings?.from_email ?? requiredEnv("SMTP_FROM_EMAIL");
   const fromName = settings?.from_name ?? process.env.SMTP_FROM_NAME ?? "NXTTRACK";
+  const apiKey = resolveSendGridApiKey(settings);
   const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${requiredEnv("SENDGRID_API_KEY")}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -204,7 +212,26 @@ function getSmtpConfigError(settings: LiveSmtpSettings | null | undefined) {
 }
 
 function hasSendGridApiConfig(settings: LiveSmtpSettings | null | undefined) {
-  return Boolean(process.env.SENDGRID_API_KEY && (settings?.from_email ?? process.env.SMTP_FROM_EMAIL));
+  try {
+    return Boolean(resolveSendGridApiKey(settings) && (settings?.from_email ?? process.env.SMTP_FROM_EMAIL));
+  } catch {
+    return false;
+  }
+}
+
+function resolveSendGridApiKey(settings: LiveSmtpSettings | null | undefined) {
+  const reference = settings?.api_key_secret_reference || "SENDGRID_API_KEY";
+  const value = process.env[reference] ?? process.env.SENDGRID_API_KEY;
+
+  if (value) {
+    return value;
+  }
+
+  if (settings?.status === "active" || settings?.status === "configured") {
+    return reference === "SENDGRID_API_KEY" ? requiredEnv("SENDGRID_API_KEY") : reference;
+  }
+
+  return requiredEnv("SENDGRID_API_KEY");
 }
 
 function resolveSmtpConfig(settings: LiveSmtpSettings | null | undefined) {

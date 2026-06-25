@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { queueDirectEventMessage } from "@/lib/communication/event-hooks";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -169,6 +170,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
   );
   const token = crypto.randomUUID().replaceAll("-", "");
   const existingOffer = await maybeRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestion.id).eq("tenant_id", tenantId).maybeSingle());
+  let offerId = existingOffer?.id ?? null;
 
   if (existingOffer) {
     await throwOnError(
@@ -186,8 +188,9 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
         .eq("tenant_id", tenantId)
     );
   } else {
-    await throwOnError(
-      supabase.from("slot_offers").insert({
+    const offerResult = await supabase
+      .from("slot_offers")
+      .insert({
         tenant_id: tenantId,
         placement_suggestion_id: suggestion.id,
         waitlist_entry_id: suggestion.waitlist_entry_id,
@@ -199,7 +202,19 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
         status: "sent",
         expires_at: expiresAt(14)
       })
-    );
+      .select("id")
+      .single();
+
+    if (offerResult.error || !offerResult.data) {
+      throw new Error(offerResult.error?.message ?? "Slot offer kon niet worden aangemaakt.");
+    }
+
+    offerId = offerResult.data.id as string;
+  }
+
+  if (!offerId) {
+    const offer = await singleRow<{ id: string }>(supabase.from("slot_offers").select("id").eq("placement_suggestion_id", suggestion.id).eq("tenant_id", tenantId).single());
+    offerId = offer.id;
   }
 
   await throwOnError(supabase.from("placement_suggestions").update({ status: "offered", reviewed_at: new Date().toISOString() }).eq("id", suggestion.id).eq("tenant_id", tenantId));
@@ -210,6 +225,7 @@ export async function approvePlacementSuggestionAction(formData: FormData) {
   }
 
   await maybeInsertEvent(supabase, tenantId, suggestion.id, "sent", "Slot offer sent from admin approval.");
+  await maybeQueueSlotOfferMessage(supabase, tenantId, offerId, token, suggestion.intake_submission_id);
   revalidatePlacementWorkflow();
 }
 
@@ -251,6 +267,43 @@ async function maybeInsertEvent(supabase: Awaited<ReturnType<typeof createClient
   if (offer) {
     await throwOnError(supabase.from("slot_offer_events").insert({ tenant_id: tenantId, slot_offer_id: offer.id, event_type: eventType, note }));
   }
+}
+
+async function maybeQueueSlotOfferMessage(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, offerId: string, offerToken: string, intakeSubmissionId: string | null) {
+  if (!intakeSubmissionId) {
+    return;
+  }
+
+  const intake = await maybeRow<{ parent_name: string; parent_email: string; participant_name: string }>(
+    supabase
+      .from("intake_submissions")
+      .select("parent_name, parent_email, participant_name")
+      .eq("tenant_id", tenantId)
+      .eq("id", intakeSubmissionId)
+      .maybeSingle()
+  );
+
+  if (!intake?.parent_email) {
+    return;
+  }
+
+  const slotOfferUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://staging.nxttrack.nl"}/slot-offers/${offerToken}`;
+  await queueDirectEventMessage(supabase, {
+    tenantId,
+    recipientEmail: intake.parent_email,
+    recipientName: intake.parent_name,
+    eventKey: "slot_offer_sent",
+    templateCode: "slot-offer-sent",
+    context: {
+      parent_name: intake.parent_name,
+      participant_name: intake.participant_name,
+      slot_offer_url: slotOfferUrl
+    },
+    sourceTable: "slot_offers",
+    sourceRecordId: offerId,
+    fallbackSubject: `Er is een plek beschikbaar voor ${intake.participant_name}`,
+    fallbackBody: `Hallo ${intake.parent_name},\n\nEr is een plek beschikbaar. Bevestig via ${slotOfferUrl}.\n\nNXTTRACK`
+  });
 }
 
 function revalidatePlacementWorkflow() {

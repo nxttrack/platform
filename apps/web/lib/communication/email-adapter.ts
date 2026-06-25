@@ -2,7 +2,7 @@ export type EmailProvider = "smtp" | "sendgrid" | "internal";
 
 export type PreparedEmailEnvelope = {
   provider: EmailProvider;
-  liveSendEnabled: false;
+  liveSendEnabled: boolean;
   dispatchStatus: "draft" | "queued";
   note: string;
 };
@@ -11,16 +11,16 @@ export function prepareEmailEnvelope(provider: EmailProvider, requestedStatus: "
   if (provider === "sendgrid") {
     return {
       provider,
-      liveSendEnabled: false,
-      dispatchStatus: "draft",
-      note: "SendGrid API adapter is voorbereid, maar live verzending blijft uit totdat SMTP-first klopt."
+      liveSendEnabled: true,
+      dispatchStatus: requestedStatus,
+      note: "SendGrid API adapter is live-ready naast SMTP en wordt door dezelfde outbox worker verwerkt."
     };
   }
 
   if (provider === "smtp") {
     return {
       provider,
-      liveSendEnabled: false,
+      liveSendEnabled: true,
       dispatchStatus: requestedStatus,
       note: "SMTP via SendGrid is voorbereid als eerste verzendpad; een worker verstuurt later vanuit de outbox."
     };

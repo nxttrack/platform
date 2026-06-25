@@ -36,6 +36,7 @@ type MessageOutboxForDispatch = {
 
 type CommunicationProviderConfigForDispatch = {
   provider: string;
+  mode: string;
   status: string;
   host: string | null;
   port: number | null;
@@ -43,6 +44,7 @@ type CommunicationProviderConfigForDispatch = {
   from_name: string | null;
   username_secret_reference: string | null;
   password_secret_reference: string | null;
+  api_key_secret_reference: string | null;
 };
 
 type TenantDocumentForSync = {
@@ -109,7 +111,7 @@ export async function runMessageDispatchWorkerAction(formData: FormData) {
   const messages = (outboxResult.data ?? []) as MessageOutboxForDispatch[];
   const providerConfigsResult = await supabase
     .from("communication_provider_configs")
-    .select("provider, status, host, port, from_email, from_name, username_secret_reference, password_secret_reference")
+    .select("provider, mode, status, host, port, from_email, from_name, username_secret_reference, password_secret_reference, api_key_secret_reference")
     .eq("tenant_id", tenantId);
 
   if (providerConfigsResult.error) {
@@ -117,10 +119,9 @@ export async function runMessageDispatchWorkerAction(formData: FormData) {
   }
 
   const providerConfigs = (providerConfigsResult.data ?? []) as CommunicationProviderConfigForDispatch[];
-  const smtpSettings = toLiveSmtpSettings(providerConfigs.find((config) => config.provider === "smtp"));
 
   for (const message of messages) {
-    await dispatchMessage(supabase, tenantId, message, smtpSettings);
+    await dispatchMessage(supabase, tenantId, message, providerConfigs);
   }
 
   revalidatePhase12();
@@ -128,6 +129,7 @@ export async function runMessageDispatchWorkerAction(formData: FormData) {
 
 export async function retryMessageAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
+  const resetAttempts = boolValue(formData, "reset_attempts");
 
   await throwOnError(
     supabase
@@ -135,6 +137,7 @@ export async function retryMessageAction(formData: FormData) {
       .update({
         status: "queued",
         delivery_status: "pending",
+        ...(resetAttempts ? { retry_count: 0 } : {}),
         next_retry_at: null,
         failure_reason: null,
         error_message: null
@@ -167,6 +170,9 @@ export async function cancelMessageAction(formData: FormData) {
 export async function createMessageTemplateAction(formData: FormData) {
   const { supabase, tenantId, profileId } = await requireTenantWriter();
   const name = requiredString(formData, "name");
+  const subjectTemplate = optionalString(formData, "subject_template");
+  const bodyTemplate = requiredString(formData, "body_template");
+  const requiredVariables = uniqueStrings([...listValue(formData, "required_variables"), ...extractTemplateVariables(subjectTemplate, bodyTemplate)]);
 
   await throwOnError(
     supabase.from("message_templates").insert({
@@ -175,10 +181,10 @@ export async function createMessageTemplateAction(formData: FormData) {
       name,
       channel: enumValue(formData, "channel", ["email", "in_app"], "email"),
       audience: enumValue(formData, "audience", ["parent", "instructor", "tenant_admin", "all"], "parent"),
-      subject_template: optionalString(formData, "subject_template"),
-      body_template: requiredString(formData, "body_template"),
+      subject_template: subjectTemplate,
+      body_template: bodyTemplate,
       status: enumValue(formData, "status", ["draft", "active", "archived"], "draft"),
-      required_variables: listValue(formData, "required_variables"),
+      required_variables: requiredVariables,
       tags: listValue(formData, "tags"),
       sort_order: intValue(formData, "sort_order", 0),
       created_by_profile_id: profileId,
@@ -192,6 +198,9 @@ export async function createMessageTemplateAction(formData: FormData) {
 export async function updateMessageTemplateAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
   const name = requiredString(formData, "name");
+  const subjectTemplate = optionalString(formData, "subject_template");
+  const bodyTemplate = requiredString(formData, "body_template");
+  const requiredVariables = uniqueStrings([...listValue(formData, "required_variables"), ...extractTemplateVariables(subjectTemplate, bodyTemplate)]);
 
   await throwOnError(
     supabase
@@ -201,10 +210,10 @@ export async function updateMessageTemplateAction(formData: FormData) {
         name,
         channel: enumValue(formData, "channel", ["email", "in_app"], "email"),
         audience: enumValue(formData, "audience", ["parent", "instructor", "tenant_admin", "all"], "parent"),
-        subject_template: optionalString(formData, "subject_template"),
-        body_template: requiredString(formData, "body_template"),
+        subject_template: subjectTemplate,
+        body_template: bodyTemplate,
         status: enumValue(formData, "status", ["draft", "active", "archived"], "draft"),
-        required_variables: listValue(formData, "required_variables"),
+        required_variables: requiredVariables,
         tags: listValue(formData, "tags"),
         sort_order: intValue(formData, "sort_order", 0)
       })
@@ -235,18 +244,15 @@ export async function previewMessageTemplateAction(formData: FormData) {
   const variables = uniqueStrings([...(template.required_variables ?? []), ...extractTemplateVariables(template.subject_template, template.body_template)]);
   const validationErrors = validateTemplateVariables(variables, context);
 
-  if (validationErrors.length > 0) {
-    throw new Error(`Ontbrekende templatevariabelen: ${validationErrors.join(", ")}.`);
-  }
-
   await throwOnError(
     supabase
       .from("message_templates")
       .update({
         required_variables: variables,
         last_preview_context: context,
-        last_preview_subject: renderTemplate(template.subject_template, context),
-        last_preview_body: renderTemplate(template.body_template, context),
+        last_preview_subject: validationErrors.length === 0 ? renderTemplate(template.subject_template, context) : null,
+        last_preview_body: validationErrors.length === 0 ? renderTemplate(template.body_template, context) : null,
+        last_preview_errors: validationErrors,
         last_previewed_at: new Date().toISOString()
       })
       .eq("id", templateId)
@@ -695,7 +701,7 @@ export async function upsertReportPermissionGrantAction(formData: FormData) {
   revalidatePhase12();
 }
 
-async function dispatchMessage(supabase: TenantSupabaseClient, tenantId: string, message: MessageOutboxForDispatch, smtpSettings: LiveSmtpSettings | null) {
+async function dispatchMessage(supabase: TenantSupabaseClient, tenantId: string, message: MessageOutboxForDispatch, providerConfigs: CommunicationProviderConfigForDispatch[]) {
   if (message.channel !== "email") {
     await throwOnError(
       supabase
@@ -718,6 +724,9 @@ async function dispatchMessage(supabase: TenantSupabaseClient, tenantId: string,
     return;
   }
 
+  const provider = message.provider === "sendgrid" ? "sendgrid" : "smtp";
+  const settings = toLiveSmtpSettings(selectProviderConfig(providerConfigs, provider));
+
   await supabase
     .from("message_outbox")
     .update({ status: "sending", delivery_status: "sending", last_attempt_at: new Date().toISOString() })
@@ -731,7 +740,7 @@ async function dispatchMessage(supabase: TenantSupabaseClient, tenantId: string,
         subject: message.subject ?? "NXTTRACK bericht",
         text: message.body
       },
-      { smtpSettings }
+      { provider, smtpSettings: settings }
     );
 
     await throwOnError(
@@ -785,6 +794,7 @@ function toLiveSmtpSettings(provider: CommunicationProviderConfigForDispatch | u
 
   return {
     status: provider.status,
+    provider: provider.provider === "sendgrid" ? "sendgrid" : "smtp",
     host: provider.host,
     port: provider.port,
     secure: provider.port === 465,
@@ -792,8 +802,17 @@ function toLiveSmtpSettings(provider: CommunicationProviderConfigForDispatch | u
     from_name: provider.from_name,
     reply_to_email: provider.from_email,
     username_secret_reference: provider.username_secret_reference,
-    password_secret_reference: provider.password_secret_reference
+    password_secret_reference: provider.password_secret_reference,
+    api_key_secret_reference: provider.api_key_secret_reference
   };
+}
+
+function selectProviderConfig(providerConfigs: CommunicationProviderConfigForDispatch[], provider: "smtp" | "sendgrid") {
+  return (
+    providerConfigs.find((config) => config.provider === provider && config.mode === "live" && config.status !== "disabled") ??
+    providerConfigs.find((config) => config.provider === provider && config.status !== "disabled") ??
+    providerConfigs.find((config) => config.provider === provider)
+  );
 }
 
 async function syncParentDocumentVisibility(supabase: TenantSupabaseClient, document: TenantDocumentForSync) {
