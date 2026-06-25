@@ -23,6 +23,8 @@ placeholder_add_later
 
 | Secret name | What it is for | Required now or later | Where to obtain it | Module | Safe placeholder |
 | --- | --- | --- | --- | --- | --- |
+| `APP_URL` | Public server-side base URL for webhooks and release metadata | Required now | Deployment target URL | Runtime/deployment | `http://localhost:3000` in `.env.example` |
+| `NEXT_PUBLIC_APP_URL` | Public browser-visible base URL for public links and webhooks | Required now | Deployment target URL | Runtime/deployment | `http://localhost:3000` in `.env.example` |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL exposed to browser | Required now | Supabase project settings | Supabase client | empty in `.env.example` until configured |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable browser key | Required now | Supabase API settings | Supabase client | empty in `.env.example` until configured |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Legacy Supabase anon browser key fallback | Later/legacy | Supabase API settings | Supabase client | empty in `.env.example` until configured |
@@ -41,8 +43,8 @@ placeholder_add_later
 
 | Secret name | What it is for | Required now or later | Where to obtain it | Module | Safe placeholder |
 | --- | --- | --- | --- | --- | --- |
-| `MOLLIE_API_KEY` | Mollie/iDEAL/SEPA API calls | Later | Mollie dashboard | Billing & Incasso Engine | `placeholder_add_later` |
-| `MOLLIE_WEBHOOK_SECRET` | Verify Mollie webhook calls | Later | Generated during webhook setup | Billing & Incasso Engine | `placeholder_add_later` |
+| `MOLLIE_API_KEY` | Mollie/iDEAL/SEPA API calls | Later; required before `submit_to_mollie` live mode | Mollie dashboard | Billing & Incasso Engine | `placeholder_add_later` |
+| `MOLLIE_WEBHOOK_SECRET` | Verify Mollie webhook calls | Later; required before live webhook activation | Generated during webhook setup | Billing & Incasso Engine | `placeholder_add_later` |
 | `MOLLIE_PROFILE_ID` | Select Mollie profile/account | Later | Mollie dashboard | Billing & Incasso Engine | `placeholder_add_later` |
 | `SEPA_CREDITOR_ID` | Conditional creditor metadata only if Mollie/provider setup later requires it | Later/conditional | Mollie contract, bank, or payment provider if required | Billing & Incasso Engine | `placeholder_add_later` |
 

@@ -135,6 +135,87 @@ export type PaymentEventRow = {
   created_at: string;
 };
 
+export type SepaCollectionSettingsRow = {
+  id: string;
+  provider_config_id: string | null;
+  status: string;
+  mode: string;
+  creditor_name: string | null;
+  creditor_reference: string | null;
+  default_collection_day: number;
+  min_notice_days: number;
+  mandate_intro: string | null;
+  parent_consent_text: string | null;
+};
+
+export type SepaMandateRow = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  guardian_profile_id: string | null;
+  provider: string;
+  provider_customer_id: string | null;
+  provider_mandate_id: string | null;
+  mandate_reference: string;
+  account_holder_name: string | null;
+  iban_last4: string | null;
+  iban_country: string | null;
+  status: string;
+  consent_given_at: string | null;
+  signed_at: string | null;
+  valid_from: string | null;
+  revoked_at: string | null;
+  revoked_reason: string | null;
+  created_at: string;
+};
+
+export type SepaCollectionRunRow = {
+  id: string;
+  provider: string;
+  mode: string;
+  run_number: string;
+  title: string;
+  period_start: string | null;
+  period_end: string | null;
+  requested_collection_date: string;
+  status: string;
+  invoice_count: number;
+  total_amount_cents: number;
+  currency: string;
+  provider_batch_id: string | null;
+  submitted_at: string | null;
+  completed_at: string | null;
+  created_at: string;
+};
+
+export type SepaCollectionItemRow = {
+  id: string;
+  collection_run_id: string;
+  invoice_id: string;
+  payment_record_id: string | null;
+  mandate_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  amount_cents: number;
+  currency: string;
+  sequence_type: string;
+  status: string;
+  provider_payment_id: string | null;
+  scheduled_collection_date: string | null;
+  processed_at: string | null;
+  failure_reason: string | null;
+  created_at: string;
+};
+
+export type SepaIncassoEventRow = {
+  id: string;
+  mandate_id: string | null;
+  collection_run_id: string | null;
+  collection_item_id: string | null;
+  event_type: string;
+  created_at: string;
+};
+
 export type AdminPaymentsData = {
   programs: PaymentProgramRow[];
   participants: PaymentParticipantRow[];
@@ -147,6 +228,11 @@ export type AdminPaymentsData = {
   providerConfigs: PaymentProviderConfigRow[];
   paymentEvents: PaymentEventRow[];
   financeExports: FinanceExportRequestRow[];
+  sepaSettings: SepaCollectionSettingsRow | null;
+  sepaMandates: SepaMandateRow[];
+  sepaCollectionRuns: SepaCollectionRunRow[];
+  sepaCollectionItems: SepaCollectionItemRow[];
+  sepaIncassoEvents: SepaIncassoEventRow[];
 };
 
 export type AdminPaymentsSnapshot = {
@@ -204,7 +290,12 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
     paymentRefundsResult,
     providerConfigsResult,
     paymentEventsResult,
-    financeExportsResult
+    financeExportsResult,
+    sepaSettingsResult,
+    sepaMandatesResult,
+    sepaCollectionRunsResult,
+    sepaCollectionItemsResult,
+    sepaIncassoEventsResult
   ] = await Promise.all([
     supabase.from("programs").select("id, name, code").eq("tenant_id", tenantId).order("name", { ascending: true }),
     supabase.from("participants").select("id, display_name, status").eq("tenant_id", tenantId).order("display_name", { ascending: true }),
@@ -236,7 +327,36 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
       .select("id, export_type, export_format, period_start, period_end, status, file_path, row_count, completed_at, error_message, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
-      .limit(25)
+      .limit(25),
+    supabase
+      .from("sepa_collection_settings")
+      .select("id, provider_config_id, status, mode, creditor_name, creditor_reference, default_collection_day, min_notice_days, mandate_intro, parent_consent_text")
+      .eq("tenant_id", tenantId)
+      .maybeSingle(),
+    supabase
+      .from("sepa_mandates")
+      .select("id, enrollment_id, participant_id, guardian_profile_id, provider, provider_customer_id, provider_mandate_id, mandate_reference, account_holder_name, iban_last4, iban_country, status, consent_given_at, signed_at, valid_from, revoked_at, revoked_reason, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("sepa_collection_runs")
+      .select("id, provider, mode, run_number, title, period_start, period_end, requested_collection_date, status, invoice_count, total_amount_cents, currency, provider_batch_id, submitted_at, completed_at, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    supabase
+      .from("sepa_collection_items")
+      .select("id, collection_run_id, invoice_id, payment_record_id, mandate_id, enrollment_id, participant_id, amount_cents, currency, sequence_type, status, provider_payment_id, scheduled_collection_date, processed_at, failure_reason, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(200),
+    supabase
+      .from("sepa_incasso_events")
+      .select("id, mandate_id, collection_run_id, collection_item_id, event_type, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(50)
   ]);
 
   const errors = collectErrors({
@@ -250,7 +370,12 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
     payment_refunds: paymentRefundsResult.error,
     payment_provider_configs: providerConfigsResult.error,
     payment_events: paymentEventsResult.error,
-    finance_export_requests: financeExportsResult.error
+    finance_export_requests: financeExportsResult.error,
+    sepa_collection_settings: sepaSettingsResult.error,
+    sepa_mandates: sepaMandatesResult.error,
+    sepa_collection_runs: sepaCollectionRunsResult.error,
+    sepa_collection_items: sepaCollectionItemsResult.error,
+    sepa_incasso_events: sepaIncassoEventsResult.error
   });
 
   return {
@@ -268,7 +393,12 @@ export async function getAdminPaymentsSnapshot(): Promise<AdminPaymentsSnapshot>
       paymentRefunds: asRows<PaymentRefundRow>(paymentRefundsResult.data),
       providerConfigs: asRows<PaymentProviderConfigRow>(providerConfigsResult.data),
       paymentEvents: asRows<PaymentEventRow>(paymentEventsResult.data),
-      financeExports: asRows<FinanceExportRequestRow>(financeExportsResult.data)
+      financeExports: asRows<FinanceExportRequestRow>(financeExportsResult.data),
+      sepaSettings: (sepaSettingsResult.data as SepaCollectionSettingsRow | null) ?? null,
+      sepaMandates: asRows<SepaMandateRow>(sepaMandatesResult.data),
+      sepaCollectionRuns: asRows<SepaCollectionRunRow>(sepaCollectionRunsResult.data),
+      sepaCollectionItems: asRows<SepaCollectionItemRow>(sepaCollectionItemsResult.data),
+      sepaIncassoEvents: asRows<SepaIncassoEventRow>(sepaIncassoEventsResult.data)
     }
   };
 }
@@ -285,7 +415,12 @@ function createEmptyData(): AdminPaymentsData {
     paymentRefunds: [],
     providerConfigs: [],
     paymentEvents: [],
-    financeExports: []
+    financeExports: [],
+    sepaSettings: null,
+    sepaMandates: [],
+    sepaCollectionRuns: [],
+    sepaCollectionItems: [],
+    sepaIncassoEvents: []
   };
 }
 

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
 import { queueParentEventMessages } from "@/lib/communication/event-hooks";
+import { buildMollieSepaDebitPayload, type MollieSepaDebitPayload } from "@/lib/payments/payment-adapter";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +32,59 @@ type InvoiceForPayment = {
   amount_due_cents: number;
   amount_paid_cents: number;
   refunded_amount_cents?: number | null;
+};
+
+type InvoiceForSepa = InvoiceForPayment & {
+  invoice_number: string;
+  title: string;
+  status: string;
+  due_on: string | null;
+  collection_method: string;
+};
+
+type SepaMandateForRun = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  provider_customer_id: string | null;
+  provider_mandate_id: string | null;
+  mandate_reference: string;
+  status: string;
+};
+
+type SepaCollectionRunForSubmit = {
+  id: string;
+  provider: "mollie" | "external";
+  mode: "test" | "live";
+  run_number: string;
+  title: string;
+  requested_collection_date: string;
+  status: string;
+  currency: string;
+};
+
+type SepaCollectionItemForSubmit = {
+  id: string;
+  collection_run_id: string;
+  invoice_id: string;
+  payment_record_id: string | null;
+  mandate_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  amount_cents: number;
+  currency: string;
+  sequence_type: "first" | "recurring";
+  status: string;
+};
+
+type MolliePaymentResponse = {
+  id: string;
+  status?: string;
+  _links?: {
+    checkout?: {
+      href?: string;
+    };
+  };
 };
 
 type FinanceRow = Record<string, string | number | boolean | null>;
@@ -137,7 +191,7 @@ export async function recordManualPaymentAction(formData: FormData) {
       enrollment_id: invoiceResult.data.enrollment_id,
       participant_id: invoiceResult.data.participant_id,
       provider: "manual",
-      payment_method: enumValue(formData, "payment_method", ["manual_bank_transfer", "cash", "card_terminal", "ideal", "mollie", "external"], "manual_bank_transfer"),
+      payment_method: enumValue(formData, "payment_method", ["manual_bank_transfer", "cash", "card_terminal", "ideal", "mollie", "direct_debit", "external"], "manual_bank_transfer"),
       amount_cents: priceCents(formData, "amount"),
       currency: invoiceResult.data.currency,
       status: enumValue(formData, "status", ["recorded", "pending", "paid", "failed", "refunded", "cancelled"], "recorded"),
@@ -344,10 +398,6 @@ export async function updatePaymentProviderConfigAction(formData: FormData) {
   const provider = enumValue(formData, "provider", ["manual", "mollie"], "manual");
   const status = enumValue(formData, "status", ["disabled", "configured", "active"], "disabled");
 
-  if (provider === "mollie" && status === "active") {
-    throw new Error("Mollie/iDEAL blijft voorbereid maar wordt pas geactiveerd nadat de handmatige flow betrouwbaar is goedgekeurd.");
-  }
-
   await throwOnError(
     supabase
       .from("payment_provider_configs")
@@ -357,10 +407,533 @@ export async function updatePaymentProviderConfigAction(formData: FormData) {
         display_name: requiredString(formData, "display_name"),
         external_profile_id: optionalString(formData, "external_profile_id"),
         capabilities: listValue(formData, "capabilities"),
-        metadata: { source: "admin_provider_config", mollie_activation_guard: provider === "mollie" }
+        metadata: {
+          source: "admin_provider_config",
+          mollie_live_ready: provider === "mollie",
+          secret_policy: provider === "mollie" ? "env_only_no_database_secret_storage" : "not_applicable"
+        }
       })
       .eq("tenant_id", tenantId)
       .eq("provider", provider)
+  );
+
+  revalidatePayments();
+}
+
+export async function updateSepaCollectionSettingsAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const mollieConfigResult = await supabase
+    .from("payment_provider_configs")
+    .select("id")
+    .eq("tenant_id", tenantId)
+    .eq("provider", "mollie")
+    .eq("mode", enumValue(formData, "provider_mode", ["test", "live"], "test"))
+    .maybeSingle();
+
+  if (mollieConfigResult.error) {
+    throw new Error(mollieConfigResult.error.message);
+  }
+
+  const payload = {
+    tenant_id: tenantId,
+    provider_config_id: (mollieConfigResult.data as { id: string } | null)?.id ?? null,
+    status: enumValue(formData, "status", ["draft", "configured", "active", "paused", "disabled"], "configured"),
+    mode: enumValue(formData, "mode", ["manual_review", "prepare_only", "submit_to_mollie"], "prepare_only"),
+    creditor_name: optionalString(formData, "creditor_name"),
+    creditor_reference: optionalString(formData, "creditor_reference"),
+    default_collection_day: intValue(formData, "default_collection_day", 1, 1, 28),
+    min_notice_days: intValue(formData, "min_notice_days", 5, 0, 30),
+    mandate_intro: optionalString(formData, "mandate_intro"),
+    parent_consent_text: optionalString(formData, "parent_consent_text"),
+    metadata: {
+      source: "admin_sepa_settings",
+      provider: "mollie",
+      secret_policy: "MOLLIE_API_KEY and MOLLIE_WEBHOOK_SECRET stay in environment"
+    }
+  };
+
+  await throwOnError(supabase.from("sepa_collection_settings").upsert(payload, { onConflict: "tenant_id" }));
+
+  revalidatePayments();
+}
+
+export async function upsertSepaMandateAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const enrollmentId = requiredString(formData, "enrollment_id");
+  const status = enumValue(formData, "status", ["draft", "pending_first_payment", "pending", "valid", "invalid", "revoked", "expired", "failed"], "draft");
+  const revokedReason = optionalString(formData, "revoked_reason");
+
+  if (["invalid", "revoked", "failed"].includes(status) && !revokedReason) {
+    throw new Error("Een reden is verplicht bij ongeldig, ingetrokken of mislukt mandaat.");
+  }
+
+  const enrollmentResult = await supabase
+    .from("enrollments")
+    .select("id, participant_id")
+    .eq("tenant_id", tenantId)
+    .eq("id", enrollmentId)
+    .single();
+
+  if (enrollmentResult.error || !enrollmentResult.data) {
+    throw new Error(enrollmentResult.error?.message ?? "Inschrijving niet gevonden.");
+  }
+
+  const id = optionalString(formData, "id");
+  const nowIso = new Date().toISOString();
+  const payload = {
+    tenant_id: tenantId,
+    enrollment_id: enrollmentId,
+    participant_id: enrollmentResult.data.participant_id,
+    guardian_profile_id: optionalString(formData, "guardian_profile_id"),
+    provider: "mollie",
+    provider_customer_id: optionalString(formData, "provider_customer_id"),
+    provider_mandate_id: optionalString(formData, "provider_mandate_id"),
+    mandate_reference: requiredString(formData, "mandate_reference").toUpperCase(),
+    account_holder_name: optionalString(formData, "account_holder_name"),
+    iban_last4: optionalString(formData, "iban_last4")?.toUpperCase() ?? null,
+    iban_country: optionalString(formData, "iban_country")?.toUpperCase() ?? null,
+    status,
+    consent_given_at: optionalDateTime(formData, "consent_given_on") ?? (status === "valid" ? nowIso : null),
+    signed_at: optionalDateTime(formData, "signed_on") ?? (status === "valid" ? nowIso : null),
+    valid_from: optionalDate(formData, "valid_from") ?? (status === "valid" ? todayInput() : null),
+    revoked_at: status === "revoked" ? nowIso : null,
+    revoked_reason: revokedReason,
+    created_by_profile_id: profileId,
+    metadata: {
+      source: "admin_sepa_mandate",
+      provider_path: "mollie_customer_mandate"
+    }
+  };
+
+  let mandateId = id;
+
+  if (id) {
+    await throwOnError(supabase.from("sepa_mandates").update(payload).eq("tenant_id", tenantId).eq("id", id));
+  } else {
+    const insertResult = await supabase.from("sepa_mandates").insert(payload).select("id").single();
+
+    if (insertResult.error || !insertResult.data) {
+      throw new Error(insertResult.error?.message ?? "Mandaat aanmaken mislukt.");
+    }
+
+    mandateId = (insertResult.data as { id: string }).id;
+  }
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      mandate_id: mandateId,
+      event_type: id ? "mandate_updated" : "mandate_created",
+      payload: { status, mandate_reference: payload.mandate_reference },
+      created_by_profile_id: profileId
+    })
+  );
+
+  revalidatePayments();
+}
+
+export async function createSepaCollectionRunAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const requestedCollectionDate = requiredDate(formData, "requested_collection_date");
+  const periodStart = optionalDate(formData, "period_start");
+  const periodEnd = optionalDate(formData, "period_end");
+  const currency = requiredString(formData, "currency").toUpperCase();
+  const mode = enumValue(formData, "mode", ["test", "live"], "test");
+  const title = requiredString(formData, "title");
+
+  const [invoicesResult, mandatesResult, pendingItemsResult] = await Promise.all([
+    supabase
+      .from("invoices")
+      .select("id, enrollment_id, participant_id, invoice_number, title, status, due_on, amount_due_cents, amount_paid_cents, refunded_amount_cents, currency, collection_method")
+      .eq("tenant_id", tenantId)
+      .in("status", ["open", "partially_paid", "overdue"])
+      .eq("currency", currency)
+      .order("due_on", { ascending: true }),
+    supabase
+      .from("sepa_mandates")
+      .select("id, enrollment_id, participant_id, provider_customer_id, provider_mandate_id, mandate_reference, status")
+      .eq("tenant_id", tenantId)
+      .eq("status", "valid"),
+    supabase
+      .from("sepa_collection_items")
+      .select("invoice_id")
+      .eq("tenant_id", tenantId)
+      .in("status", ["queued", "pending", "submitted"])
+  ]);
+
+  throwResultError(invoicesResult.error);
+  throwResultError(mandatesResult.error);
+  throwResultError(pendingItemsResult.error);
+
+  const pendingInvoiceIds = new Set(((pendingItemsResult.data ?? []) as Array<{ invoice_id: string }>).map((item) => item.invoice_id));
+  const mandatesByEnrollment = new Map(((mandatesResult.data ?? []) as SepaMandateForRun[]).map((mandate) => [mandate.enrollment_id, mandate]));
+  const candidates = ((invoicesResult.data ?? []) as InvoiceForSepa[])
+    .filter((invoice) => !pendingInvoiceIds.has(invoice.id))
+    .flatMap((invoice) => {
+      const remaining = Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents - (invoice.refunded_amount_cents ?? 0));
+      const mandate = mandatesByEnrollment.get(invoice.enrollment_id);
+
+      return remaining > 0 && mandate?.provider_customer_id && mandate.provider_mandate_id ? [{ invoice, mandate, remaining }] : [];
+    });
+
+  if (candidates.length === 0) {
+    throw new Error("Geen open facturen met geldig Mollie SEPA-mandaat gevonden.");
+  }
+
+  const runId = crypto.randomUUID();
+  const runNumber = optionalString(formData, "run_number") ?? `SEPA-${requestedCollectionDate.replaceAll("-", "")}-${runId.slice(0, 6).toUpperCase()}`;
+
+  await throwOnError(
+    supabase.from("sepa_collection_runs").insert({
+      id: runId,
+      tenant_id: tenantId,
+      provider: "mollie",
+      mode,
+      run_number: runNumber,
+      title,
+      period_start: periodStart,
+      period_end: periodEnd,
+      requested_collection_date: requestedCollectionDate,
+      status: "ready",
+      currency,
+      created_by_profile_id: profileId,
+      metadata: {
+        source: "admin_sepa_run",
+        selection: "open_partially_paid_overdue_with_valid_mandate",
+        provider_path: "mollie_directdebit"
+      }
+    })
+  );
+
+  await throwOnError(
+    supabase.from("sepa_collection_items").insert(
+      candidates.map(({ invoice, mandate, remaining }) => ({
+        tenant_id: tenantId,
+        collection_run_id: runId,
+        invoice_id: invoice.id,
+        mandate_id: mandate.id,
+        enrollment_id: invoice.enrollment_id,
+        participant_id: invoice.participant_id,
+        amount_cents: remaining,
+        currency: invoice.currency,
+        sequence_type: "recurring",
+        status: "queued",
+        scheduled_collection_date: requestedCollectionDate,
+        metadata: {
+          invoice_number: invoice.invoice_number,
+          mandate_reference: mandate.mandate_reference
+        }
+      }))
+    )
+  );
+
+  await throwOnError(
+    supabase
+      .from("invoices")
+      .update({ collection_method: "sepa_direct_debit" })
+      .eq("tenant_id", tenantId)
+      .in("id", candidates.map(({ invoice }) => invoice.id))
+  );
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      collection_run_id: runId,
+      event_type: "collection_run_created",
+      payload: { run_number: runNumber, invoice_count: candidates.length },
+      created_by_profile_id: profileId
+    })
+  );
+
+  revalidatePayments();
+}
+
+export async function submitSepaCollectionRunAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const runId = requiredString(formData, "run_id");
+  const run = await getSepaCollectionRun(supabase, tenantId, runId);
+
+  if (!["ready", "draft"].includes(run.status)) {
+    throw new Error("Alleen concept- of ready-incassobatches kunnen worden ingediend.");
+  }
+
+  const items = await getSepaCollectionItemsForSubmit(supabase, tenantId, runId);
+  const queuedItems = items.filter((item) => item.status === "queued");
+
+  if (queuedItems.length === 0) {
+    throw new Error("Geen queued incassoregels gevonden.");
+  }
+
+  const mandateIds = [...new Set(queuedItems.map((item) => item.mandate_id))];
+  const invoiceIds = [...new Set(queuedItems.map((item) => item.invoice_id))];
+  const [mandatesResult, invoicesResult, settingsResult] = await Promise.all([
+    supabase.from("sepa_mandates").select("id, enrollment_id, participant_id, provider_customer_id, provider_mandate_id, mandate_reference, status").eq("tenant_id", tenantId).in("id", mandateIds),
+    supabase.from("invoices").select("id, invoice_number, title").eq("tenant_id", tenantId).in("id", invoiceIds),
+    supabase.from("sepa_collection_settings").select("mode").eq("tenant_id", tenantId).maybeSingle()
+  ]);
+
+  throwResultError(mandatesResult.error);
+  throwResultError(invoicesResult.error);
+  throwResultError(settingsResult.error);
+
+  const settingsMode = ((settingsResult.data as { mode?: string } | null)?.mode ?? "prepare_only") as "manual_review" | "prepare_only" | "submit_to_mollie";
+  const mandates = new Map(((mandatesResult.data ?? []) as SepaMandateForRun[]).map((mandate) => [mandate.id, mandate]));
+  const invoices = new Map(((invoicesResult.data ?? []) as Array<{ id: string; invoice_number: string; title: string }>).map((invoice) => [invoice.id, invoice]));
+  const failures: string[] = [];
+
+  for (const item of queuedItems) {
+    const mandate = mandates.get(item.mandate_id);
+    const invoice = invoices.get(item.invoice_id);
+
+    if (!mandate?.provider_customer_id || !mandate.provider_mandate_id || mandate.status !== "valid") {
+      failures.push(`Mandaat ontbreekt of is niet geldig voor item ${item.id}.`);
+      await markSepaItemFailed(supabase, tenantId, item, "Mandaat ontbreekt of is niet geldig.", profileId);
+      continue;
+    }
+
+    const payload = buildMollieSepaDebitPayload({
+      tenantId,
+      invoiceId: item.invoice_id,
+      amountCents: item.amount_cents,
+      currency: item.currency,
+      description: invoice ? `${invoice.invoice_number} - ${invoice.title}` : `SEPA incasso ${run.run_number}`,
+      customerId: mandate.provider_customer_id,
+      mandateId: mandate.provider_mandate_id,
+      sequenceType: item.sequence_type,
+      webhookUrl: buildMollieWebhookUrl(),
+      metadata: {
+        tenant_id: tenantId,
+        sepa_run_id: run.id,
+        sepa_item_id: item.id,
+        invoice_id: item.invoice_id,
+        mandate_id: mandate.id
+      }
+    });
+
+    try {
+      const result = await createMolliePaymentOrPrepared(settingsMode, payload);
+      const paymentRecordId = crypto.randomUUID();
+
+      await throwOnError(
+        supabase.from("payment_records").insert({
+          id: paymentRecordId,
+          tenant_id: tenantId,
+          invoice_id: item.invoice_id,
+          enrollment_id: item.enrollment_id,
+          participant_id: item.participant_id,
+          provider: "mollie",
+          provider_payment_id: result.providerPaymentId,
+          provider_checkout_url: result.checkoutUrl,
+          payment_method: "direct_debit",
+          amount_cents: item.amount_cents,
+          currency: item.currency,
+          status: "pending",
+          recorded_by_profile_id: profileId,
+          note: result.preparedOnly ? "SEPA incasso voorbereid; wacht op Mollie live-configuratie of handmatige uitkomst." : "SEPA incasso ingediend bij Mollie.",
+          metadata: {
+            source: "sepa_collection_run",
+            prepared_only: result.preparedOnly,
+            run_id: run.id,
+            item_id: item.id,
+            mollie_payload: payload
+          }
+        })
+      );
+
+      await throwOnError(
+        supabase
+          .from("sepa_collection_items")
+          .update({
+            payment_record_id: paymentRecordId,
+            status: result.preparedOnly ? "pending" : "submitted",
+            provider_payment_id: result.providerPaymentId,
+            failure_reason: null,
+            metadata: {
+              source: "sepa_submit",
+              prepared_only: result.preparedOnly,
+              provider_status: result.providerStatus,
+              provider_payment_id: result.providerPaymentId
+            }
+          })
+          .eq("tenant_id", tenantId)
+          .eq("id", item.id)
+      );
+
+      await throwOnError(
+        supabase.from("sepa_incasso_events").insert({
+          tenant_id: tenantId,
+          mandate_id: mandate.id,
+          collection_run_id: run.id,
+          collection_item_id: item.id,
+          event_type: result.preparedOnly ? "collection_item_prepared" : "collection_item_submitted",
+          payload: { payment_record_id: paymentRecordId, provider_payment_id: result.providerPaymentId, prepared_only: result.preparedOnly },
+          created_by_profile_id: profileId
+        })
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "SEPA item indienen mislukt.";
+      failures.push(message);
+      await markSepaItemFailed(supabase, tenantId, item, message, profileId);
+    }
+  }
+
+  await throwOnError(
+    supabase
+      .from("sepa_collection_runs")
+      .update({
+        status: failures.length === queuedItems.length ? "failed" : failures.length > 0 ? "partially_failed" : "submitted",
+        submitted_at: new Date().toISOString(),
+        submitted_by_profile_id: profileId,
+        metadata: {
+          source: "sepa_submit",
+          settings_mode: settingsMode,
+          failure_count: failures.length,
+          failures: failures.slice(0, 5)
+        }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", run.id)
+  );
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      collection_run_id: run.id,
+      event_type: "collection_run_submitted",
+      payload: { submitted_items: queuedItems.length, failures: failures.length, settings_mode: settingsMode },
+      created_by_profile_id: profileId
+    })
+  );
+
+  revalidatePayments();
+}
+
+export async function recordSepaCollectionItemOutcomeAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const itemId = requiredString(formData, "item_id");
+  const status = enumValue(formData, "status", ["paid", "failed", "cancelled"], "paid");
+  const failureReason = optionalString(formData, "failure_reason");
+
+  if (status !== "paid" && !failureReason) {
+    throw new Error("Een reden is verplicht bij mislukt of geannuleerd.");
+  }
+
+  const itemResult = await supabase
+    .from("sepa_collection_items")
+    .select("id, collection_run_id, invoice_id, payment_record_id, mandate_id, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", itemId)
+    .single();
+
+  if (itemResult.error || !itemResult.data) {
+    throw new Error(itemResult.error?.message ?? "Incassoregel niet gevonden.");
+  }
+
+  const item = itemResult.data as { id: string; collection_run_id: string; invoice_id: string; payment_record_id: string | null; mandate_id: string; status: string };
+  const providerPaymentId = optionalString(formData, "provider_payment_id");
+
+  await throwOnError(
+    supabase
+      .from("sepa_collection_items")
+      .update({
+        status,
+        provider_payment_id: providerPaymentId,
+        processed_at: new Date().toISOString(),
+        failure_reason: status === "paid" ? null : failureReason,
+        metadata: { source: "admin_sepa_outcome", outcome: status }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", item.id)
+  );
+
+  if (item.payment_record_id) {
+    await throwOnError(
+      supabase
+        .from("payment_records")
+        .update({
+          status,
+          provider_payment_id: providerPaymentId,
+          received_on: status === "paid" ? optionalDate(formData, "received_on") ?? todayInput() : null,
+          note: status === "paid" ? "SEPA incasso betaald." : failureReason,
+          metadata: { source: "admin_sepa_outcome", outcome: status }
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", item.payment_record_id)
+    );
+  }
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      mandate_id: item.mandate_id,
+      collection_run_id: item.collection_run_id,
+      collection_item_id: item.id,
+      event_type: `collection_item_${status}`,
+      payload: { provider_payment_id: providerPaymentId, failure_reason: failureReason },
+      created_by_profile_id: profileId
+    })
+  );
+
+  await refreshSepaRunStatus(supabase, tenantId, item.collection_run_id);
+  revalidatePayments();
+}
+
+export async function cancelSepaCollectionRunAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const runId = requiredString(formData, "run_id");
+  const reason = requiredString(formData, "reason");
+  const items = await getSepaCollectionItemsForSubmit(supabase, tenantId, runId);
+
+  if (items.some((item) => item.status === "paid")) {
+    throw new Error("Een incassobatch met betaalde regels kan niet volledig geannuleerd worden.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("sepa_collection_items")
+      .update({
+        status: "cancelled",
+        failure_reason: reason,
+        processed_at: new Date().toISOString(),
+        metadata: { source: "admin_sepa_cancel", reason }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("collection_run_id", runId)
+      .in("status", ["queued", "pending", "submitted", "failed"])
+  );
+
+  const paymentRecordIds = items.map((item) => item.payment_record_id).filter((id): id is string => Boolean(id));
+
+  if (paymentRecordIds.length > 0) {
+    await throwOnError(
+      supabase
+        .from("payment_records")
+        .update({ status: "cancelled", note: reason, metadata: { source: "admin_sepa_cancel" } })
+        .eq("tenant_id", tenantId)
+        .in("id", paymentRecordIds)
+    );
+  }
+
+  await throwOnError(
+    supabase
+      .from("sepa_collection_runs")
+      .update({
+        status: "cancelled",
+        completed_at: new Date().toISOString(),
+        metadata: { source: "admin_sepa_cancel", reason }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", runId)
+  );
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      collection_run_id: runId,
+      event_type: "collection_run_cancelled",
+      payload: { reason },
+      created_by_profile_id: profileId
+    })
   );
 
   revalidatePayments();
@@ -372,7 +945,7 @@ export async function createFinanceExportRequestAction(formData: FormData) {
   await throwOnError(
     supabase.from("finance_export_requests").insert({
       tenant_id: tenantId,
-      export_type: enumValue(formData, "export_type", ["invoices", "payments", "refunds", "ledger"], "ledger"),
+      export_type: enumValue(formData, "export_type", ["invoices", "payments", "refunds", "ledger", "sepa_collections"], "ledger"),
       export_format: enumValue(formData, "export_format", ["csv", "json"], "csv"),
       period_start: optionalDate(formData, "period_start"),
       period_end: optionalDate(formData, "period_end"),
@@ -548,6 +1121,12 @@ function optionalDate(formData: FormData, key: string) {
   return value;
 }
 
+function optionalDateTime(formData: FormData, key: string) {
+  const value = optionalDate(formData, key);
+
+  return value ? new Date(`${value}T00:00:00.000Z`).toISOString() : null;
+}
+
 function priceCents(formData: FormData, key: string) {
   const value = requiredString(formData, key);
   const parsed = Number.parseFloat(value.replace(",", "."));
@@ -591,6 +1170,135 @@ async function getInvoiceForPayment(supabase: TenantSupabaseClient, tenantId: st
   }
 
   return result.data as InvoiceForPayment;
+}
+
+async function getSepaCollectionRun(supabase: TenantSupabaseClient, tenantId: string, runId: string) {
+  const result = await supabase
+    .from("sepa_collection_runs")
+    .select("id, provider, mode, run_number, title, requested_collection_date, status, currency")
+    .eq("tenant_id", tenantId)
+    .eq("id", runId)
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "SEPA incassobatch niet gevonden.");
+  }
+
+  return result.data as SepaCollectionRunForSubmit;
+}
+
+async function getSepaCollectionItemsForSubmit(supabase: TenantSupabaseClient, tenantId: string, runId: string) {
+  const result = await supabase
+    .from("sepa_collection_items")
+    .select("id, collection_run_id, invoice_id, payment_record_id, mandate_id, enrollment_id, participant_id, amount_cents, currency, sequence_type, status")
+    .eq("tenant_id", tenantId)
+    .eq("collection_run_id", runId)
+    .order("created_at", { ascending: true });
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  return (result.data ?? []) as SepaCollectionItemForSubmit[];
+}
+
+async function createMolliePaymentOrPrepared(settingsMode: "manual_review" | "prepare_only" | "submit_to_mollie", payload: MollieSepaDebitPayload) {
+  const apiKey = process.env.MOLLIE_API_KEY;
+  const hasRealApiKey = Boolean(apiKey && !apiKey.startsWith("placeholder") && apiKey !== "placeholder_add_later");
+
+  if (settingsMode !== "submit_to_mollie" || !hasRealApiKey) {
+    return {
+      providerPaymentId: `prepared_${crypto.randomUUID()}`,
+      checkoutUrl: null,
+      providerStatus: "prepared",
+      preparedOnly: true
+    };
+  }
+
+  const response = await fetch("https://api.mollie.com/v2/payments", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Mollie SEPA betaling aanmaken mislukt (${response.status}): ${body.slice(0, 500)}`);
+  }
+
+  const payment = (await response.json()) as MolliePaymentResponse;
+
+  return {
+    providerPaymentId: payment.id,
+    checkoutUrl: payment._links?.checkout?.href ?? null,
+    providerStatus: payment.status ?? "pending",
+    preparedOnly: false
+  };
+}
+
+async function markSepaItemFailed(supabase: TenantSupabaseClient, tenantId: string, item: SepaCollectionItemForSubmit, failureReason: string, profileId: string) {
+  await throwOnError(
+    supabase
+      .from("sepa_collection_items")
+      .update({
+        status: "failed",
+        failure_reason: failureReason,
+        processed_at: new Date().toISOString(),
+        metadata: { source: "sepa_submit_failure", failure_reason: failureReason }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", item.id)
+  );
+
+  await throwOnError(
+    supabase.from("sepa_incasso_events").insert({
+      tenant_id: tenantId,
+      collection_item_id: item.id,
+      collection_run_id: item.collection_run_id,
+      mandate_id: item.mandate_id,
+      event_type: "collection_item_failed",
+      payload: { failure_reason: failureReason },
+      created_by_profile_id: profileId
+    })
+  );
+}
+
+async function refreshSepaRunStatus(supabase: TenantSupabaseClient, tenantId: string, runId: string) {
+  const result = await supabase.from("sepa_collection_items").select("status").eq("tenant_id", tenantId).eq("collection_run_id", runId);
+
+  if (result.error) {
+    throw new Error(result.error.message);
+  }
+
+  const statuses = ((result.data ?? []) as Array<{ status: string }>).map((row) => row.status);
+  const terminal = statuses.filter((status) => ["paid", "failed", "cancelled", "skipped"].includes(status));
+  const hasPaid = statuses.includes("paid");
+  const hasFailed = statuses.some((status) => ["failed", "cancelled"].includes(status));
+  const status = terminal.length === statuses.length ? (hasFailed ? (hasPaid ? "partially_failed" : "failed") : "processed") : "processing";
+
+  await throwOnError(
+    supabase
+      .from("sepa_collection_runs")
+      .update({
+        status,
+        completed_at: terminal.length === statuses.length ? new Date().toISOString() : null
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", runId)
+  );
+}
+
+function buildMollieWebhookUrl() {
+  const explicitUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL ?? process.env.E2E_BASE_URL;
+
+  if (!explicitUrl) {
+    return undefined;
+  }
+
+  return `${explicitUrl.replace(/\/$/, "")}/api/mollie/payments/webhook`;
 }
 
 function generateInvoiceNumber(rule: InvoiceNumberingRuleRow | null, issuedOn: string) {
@@ -683,6 +1391,56 @@ async function buildFinanceRows(
     const result = await query;
     throwResultError(result.error);
     return (result.data ?? []) as FinanceRow[];
+  }
+
+  if (request.export_type === "sepa_collections") {
+    let runsQuery = supabase
+      .from("sepa_collection_runs")
+      .select("id, run_number, title, status, requested_collection_date, invoice_count, total_amount_cents, currency, provider_batch_id, submitted_at, completed_at, created_at")
+      .eq("tenant_id", tenantId)
+      .order("requested_collection_date", { ascending: true });
+
+    runsQuery = applyDateRange(runsQuery, "requested_collection_date", request.period_start, request.period_end);
+    const runsResult = await runsQuery;
+    throwResultError(runsResult.error);
+
+    const runs = (runsResult.data ?? []) as Array<Record<string, string | number | null>>;
+    const runIds = runs.map((run) => String(run.id));
+
+    if (runIds.length === 0) {
+      return [];
+    }
+
+    const itemsResult = await supabase
+      .from("sepa_collection_items")
+      .select("collection_run_id, invoice_id, amount_cents, currency, sequence_type, status, provider_payment_id, scheduled_collection_date, processed_at, failure_reason")
+      .eq("tenant_id", tenantId)
+      .in("collection_run_id", runIds)
+      .order("created_at", { ascending: true });
+
+    throwResultError(itemsResult.error);
+
+    const runById = new Map(runs.map((run) => [String(run.id), run]));
+
+    return ((itemsResult.data ?? []) as Array<Record<string, string | number | null>>).map((item) => {
+      const run = runById.get(String(item.collection_run_id));
+
+      return {
+        run_number: run?.run_number ?? null,
+        run_title: run?.title ?? null,
+        run_status: run?.status ?? null,
+        requested_collection_date: run?.requested_collection_date ?? null,
+        invoice_id: item.invoice_id ?? null,
+        amount_cents: item.amount_cents ?? 0,
+        currency: item.currency ?? "EUR",
+        sequence_type: item.sequence_type ?? null,
+        item_status: item.status ?? null,
+        provider_payment_id: item.provider_payment_id ?? null,
+        scheduled_collection_date: item.scheduled_collection_date ?? null,
+        processed_at: item.processed_at ?? null,
+        failure_reason: item.failure_reason ?? null
+      };
+    });
   }
 
   const [invoices, payments, refunds]: [FinanceRow[], FinanceRow[], FinanceRow[]] = await Promise.all([

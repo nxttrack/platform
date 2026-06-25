@@ -218,13 +218,13 @@ export function ParentPaymentsPage({ snapshot }: ParentPageProps) {
       snapshot={snapshot}
       kicker="Ouderportaal - betalingen"
       title="Betalingen"
-      subtitle="Manual payment status voor ouders. Mollie/iDEAL is voorbereid in de architectuur, maar nog niet actief zolang de handmatige flow leidend is."
+      subtitle="Betaalstatus voor ouders. Handmatig blijft beschikbaar; SEPA incasso via Mollie wordt zichtbaar zodra een tenant dit activeert."
     >
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Facturen" value={snapshot.data.invoices.length.toString()} detail="gekoppeld aan deelname" />
         <MetricCard icon={<Banknote className="h-5 w-5" />} label="Openstaand" value={formatMoney(totalOpen, "EUR")} detail="handmatig te voldoen" />
         <MetricCard icon={<Award className="h-5 w-5" />} label="Betaald" value={formatMoney(totalPaid, "EUR")} detail="geregistreerd door admin" />
-        <MetricCard icon={<CreditCard className="h-5 w-5" />} label="Online betalen" value="Voorbereid" detail="Mollie/iDEAL later" />
+        <MetricCard icon={<CreditCard className="h-5 w-5" />} label="Online betalen" value="Voorbereid" detail="Mollie/iDEAL/SEPA" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -259,12 +259,12 @@ export function ParentPaymentsPage({ snapshot }: ParentPageProps) {
       <Card>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold">Manual-first betaalflow</h2>
+            <h2 className="text-lg font-bold">Betaalflow</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Betalingen worden nu handmatig door de tenant admin geregistreerd. De ouder ziet status en historie, zonder checkout of Mollie-call.
+              Ouders zien factuurstatus, historie en betaalmethode. SEPA-incasso kan door de tenant admin via Mollie worden voorbereid en verwerkt.
             </p>
           </div>
-          <StatusPill tone="warning">Mollie later</StatusPill>
+          <StatusPill tone="info">Mollie ready</StatusPill>
         </div>
       </Card>
     </ParentFrame>
@@ -280,7 +280,7 @@ function ParentInvoiceCard({ invoice, lookups }: { invoice: ParentInvoiceRow; lo
       {invoice.description ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{invoice.description}</p> : null}
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <InfoTile label="Periode" value={invoice.period_start && invoice.period_end ? `${formatDate(invoice.period_start)} - ${formatDate(invoice.period_end)}` : "Niet ingesteld"} />
-        <InfoTile label="Betaalmethode" value={invoice.collection_method === "manual" ? "Handmatig" : invoice.collection_method} />
+        <InfoTile label="Betaalmethode" value={paymentCollectionMethodLabel(invoice.collection_method)} />
         <InfoTile label="Vervaldatum" value={invoice.due_on ? formatDate(invoice.due_on) : "Nog niet bekend"} />
       </div>
       {payments.length > 0 ? (
@@ -1158,6 +1158,17 @@ function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
 
 function participantName(lookups: LookupMaps, participantId: string) {
   return lookups.participants.get(participantId)?.display_name ?? "Onbekend kind";
+}
+
+function paymentCollectionMethodLabel(method: string) {
+  const labels: Record<string, string> = {
+    manual: "Handmatig",
+    mollie: "Mollie",
+    sepa_direct_debit: "SEPA incasso",
+    external: "Extern"
+  };
+
+  return labels[method] ?? method;
 }
 
 function parentStatusLabel(status: string) {

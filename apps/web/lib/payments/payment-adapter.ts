@@ -17,6 +17,35 @@ export type PreparedPaymentResult = {
   status: "recorded" | "pending";
 };
 
+export type MollieSepaDebitRequest = {
+  tenantId: string;
+  invoiceId: string;
+  amountCents: number;
+  currency: string;
+  description: string;
+  customerId: string;
+  mandateId: string;
+  sequenceType: "first" | "recurring";
+  webhookUrl?: string;
+  redirectUrl?: string;
+  metadata?: Record<string, string>;
+};
+
+export type MollieSepaDebitPayload = {
+  amount: {
+    currency: string;
+    value: string;
+  };
+  description: string;
+  method: "directdebit";
+  customerId: string;
+  mandateId: string;
+  sequenceType: "first" | "recurring";
+  webhookUrl?: string;
+  redirectUrl?: string;
+  metadata: Record<string, string>;
+};
+
 export interface PaymentAdapter {
   provider: PaymentProvider;
   preparePayment(request: PreparedPaymentRequest): Promise<PreparedPaymentResult>;
@@ -37,6 +66,27 @@ export const manualPaymentAdapter: PaymentAdapter = {
 export const molliePreparedAdapter: PaymentAdapter = {
   provider: "mollie",
   async preparePayment(_request) {
-    throw new Error("Mollie/iDEAL is voorbereid, maar nog niet actief. Rond eerst de manual payment flow af.");
+    throw new Error("Mollie checkout wordt per flow geactiveerd. Gebruik de SEPA/checkout helpers zodat webhook, mandaat en providerstatus expliciet vastliggen.");
   }
 };
+
+export function buildMollieSepaDebitPayload(request: MollieSepaDebitRequest): MollieSepaDebitPayload {
+  return {
+    amount: {
+      currency: request.currency,
+      value: (request.amountCents / 100).toFixed(2)
+    },
+    description: request.description.slice(0, 255),
+    method: "directdebit",
+    customerId: request.customerId,
+    mandateId: request.mandateId,
+    sequenceType: request.sequenceType,
+    webhookUrl: request.webhookUrl,
+    redirectUrl: request.redirectUrl,
+    metadata: {
+      tenant_id: request.tenantId,
+      invoice_id: request.invoiceId,
+      ...(request.metadata ?? {})
+    }
+  };
+}
