@@ -36,7 +36,7 @@ import type {
   ReportExportRequestRow,
   TenantDocumentRecordRow
 } from "@/lib/operations/admin-phase12-read-model";
-import type { ReportPermissionGrantRow, ReportingDashboardData, ReportSection } from "@/lib/operations/reporting";
+import type { ReportPermissionGrantRow, ReportingDashboardData, ReportSection, ReportType } from "@/lib/operations/reporting";
 import type { AdminDomainData, AdminDomainSnapshot, GroupRow } from "@/lib/domain/admin-domain-read-model";
 import type { AdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import type { PlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
@@ -405,12 +405,12 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
       </Card>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <ReportDashboardCard section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
-        <ReportDashboardCard section={reporting.waitlist} title="Wachtlijst" value={numberValue(reporting.waitlist.summary.total).toString()} />
-        <ReportDashboardCard section={reporting.progress} title="Voortgang" value={numberValue(reporting.progress.summary.updates).toString()} />
-        <ReportDashboardCard section={reporting.attendance} title="Aanwezigheid" value={`${numberValue(reporting.attendance.summary.attendance_rate)}%`} />
-        <ReportDashboardCard section={reporting.payments} title="Betalingen" value={formatMoney(numberValue(reporting.payments.summary.open_amount_cents), "EUR")} />
-        <ReportDashboardCard section={reporting.revenue} title="Omzet" value={formatMoney(numberValue(reporting.revenue.summary.net_cents), "EUR")} />
+        <ReportDashboardCard reportType="occupancy" reporting={reporting} section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
+        <ReportDashboardCard reportType="waitlist" reporting={reporting} section={reporting.waitlist} title="Wachtlijst" value={numberValue(reporting.waitlist.summary.total).toString()} />
+        <ReportDashboardCard reportType="progress" reporting={reporting} section={reporting.progress} title="Voortgang" value={numberValue(reporting.progress.summary.updates).toString()} />
+        <ReportDashboardCard reportType="attendance" reporting={reporting} section={reporting.attendance} title="Aanwezigheid" value={`${numberValue(reporting.attendance.summary.attendance_rate)}%`} />
+        <ReportDashboardCard reportType="payments" reporting={reporting} section={reporting.payments} title="Betalingen" value={formatMoney(numberValue(reporting.payments.summary.open_amount_cents), "EUR")} />
+        <ReportDashboardCard reportType="revenue" reporting={reporting} section={reporting.revenue} title="Omzet" value={formatMoney(numberValue(reporting.revenue.summary.net_cents), "EUR")} />
       </div>
 
       <Card>
@@ -860,6 +860,20 @@ function ReportExportForm({ mode, reporting, request }: { mode: "create" | "upda
   );
 }
 
+function HiddenReportFilterInputs({ filters }: { filters: ReportingDashboardData["filters"] }) {
+  return (
+    <>
+      <input name="program_id" type="hidden" value={filters.programId ?? ""} />
+      <input name="stage_id" type="hidden" value={filters.stageId ?? ""} />
+      <input name="group_id" type="hidden" value={filters.groupId ?? ""} />
+      <input name="instructor_id" type="hidden" value={filters.instructorId ?? ""} />
+      <input name="status_filter" type="hidden" value={filters.status ?? ""} />
+      <input name="date_from" type="hidden" value={filters.dateFrom ?? ""} />
+      <input name="date_to" type="hidden" value={filters.dateTo ?? ""} />
+    </>
+  );
+}
+
 function ReportExportCard({ reporting, request }: { reporting: ReportingDashboardData; request: ReportExportRequestRow }) {
   return (
     <details className="rounded-2xl border border-border bg-muted/35 p-4">
@@ -967,7 +981,7 @@ function ShortcodePalette({ compact }: { compact?: boolean }) {
   );
 }
 
-function ReportDashboardCard({ section, title, value }: { section: ReportSection; title: string; value: string }) {
+function ReportDashboardCard({ reportType, reporting, section, title, value }: { reportType: ReportType; reporting: ReportingDashboardData; section: ReportSection; title: string; value: string }) {
   const rows = section.rows.slice(0, 8);
   const headers = Object.keys(rows[0] ?? {}).slice(0, 5);
   const chartRows = rows.slice(0, 6).map((row, index) => ({
@@ -985,6 +999,23 @@ function ReportDashboardCard({ section, title, value }: { section: ReportSection
         </div>
         <p className="text-2xl font-bold">{value}</p>
       </div>
+      <details className="mb-4 rounded-2xl border border-border bg-muted/35 p-3">
+        <summary className="cursor-pointer text-sm font-bold text-foreground">Export aanvragen</summary>
+        <div className="mt-3 flex flex-wrap gap-2">
+          {exportFormatOptions.map((format) => (
+            <form key={`${reportType}-${format.value}`} action={createReportExportRequestAction}>
+              <input name="report_type" type="hidden" value={reportType} />
+              <input name="export_format" type="hidden" value={format.value} />
+              <input name="status" type="hidden" value="requested" />
+              <input name="filters" type="hidden" value="{ }" />
+              <HiddenReportFilterInputs filters={reporting.filters} />
+              <button className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+                {format.label}
+              </button>
+            </form>
+          ))}
+        </div>
+      </details>
       {rows.length === 0 ? <EmptyState>Geen data voor deze filterset.</EmptyState> : null}
       {rows.length > 0 ? (
         <div className="grid gap-4">

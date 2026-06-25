@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   const supabase = await createClient();
   const exportResult = await supabase
     .from("report_export_requests")
-    .select("file_path")
+    .select("id, file_path, metadata")
     .eq("tenant_id", tenantId)
     .eq("id", id)
     .eq("status", "ready")
@@ -47,6 +47,20 @@ export async function GET(_request: NextRequest, context: RouteContext) {
   if (signedResult.error || !signedResult.data?.signedUrl) {
     return NextResponse.json({ error: signedResult.error?.message ?? "Downloadlink kon niet worden gemaakt." }, { status: 500 });
   }
+
+  const metadata = exportResult.data.metadata && typeof exportResult.data.metadata === "object" && !Array.isArray(exportResult.data.metadata) ? exportResult.data.metadata : {};
+  await supabase
+    .from("report_export_requests")
+    .update({
+      metadata: {
+        ...metadata,
+        last_downloaded_at: new Date().toISOString(),
+        last_downloaded_by_profile_id: authContext.user.id,
+        last_download_channel: "admin_report_download"
+      }
+    })
+    .eq("tenant_id", tenantId)
+    .eq("id", id);
 
   return NextResponse.redirect(signedResult.data.signedUrl);
 }

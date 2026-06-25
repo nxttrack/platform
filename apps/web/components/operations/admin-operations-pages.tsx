@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { AlertTriangle, CalendarDays, CircleDollarSign, Clock, MapPin, TrendingUp, UserRound, Users, Waves } from "lucide-react";
+import { AlertTriangle, BadgeCheck, CalendarDays, CircleDollarSign, Clock, FileWarning, Inbox, LifeBuoy, MailWarning, MapPin, Route, TrendingUp, UserCheck, UserRound, Users, Waves } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
+import type { AdminAfzwemSnapshot } from "@/lib/afzwem/admin-afzwem-read-model";
 import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { createParticipantGuardianAction, updateParticipantGuardianAction } from "@/lib/domain/admin-domain-actions";
 import type {
@@ -15,6 +16,8 @@ import type {
   ParticipantRow,
   ProfileRow
 } from "@/lib/domain/admin-domain-read-model";
+import type { AdminPhase12Snapshot } from "@/lib/operations/admin-phase12-read-model";
+import type { ReportingDashboardData } from "@/lib/operations/reporting";
 import type { AdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import type { PlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
 
@@ -23,7 +26,9 @@ type DomainProps = {
 };
 
 type OperationsProps = {
+  afzwem?: AdminAfzwemSnapshot;
   domain: AdminDomainSnapshot;
+  phase12?: AdminPhase12Snapshot;
   placement: PlacementWorkflowSnapshot;
   payments: AdminPaymentsSnapshot;
 };
@@ -54,13 +59,37 @@ type AlertItem = {
   tone: "success" | "warning" | "danger" | "info" | "neutral";
 };
 
-export function AdminOperationsDashboardPage({ domain, placement, payments }: OperationsProps) {
+type SmartDashboardSignal = AlertItem & {
+  key: string;
+  value: string;
+  icon: ReactNode;
+  urgency: "nu" | "vandaag" | "monitor";
+};
+
+type TrendRow = {
+  label: string;
+  value: number;
+  detail: string;
+  tone?: "success" | "warning" | "danger" | "info" | "neutral";
+};
+
+type TrendCardData = {
+  title: string;
+  value: string;
+  detail: string;
+  href: string;
+  rows: TrendRow[];
+};
+
+export function AdminOperationsDashboardPage({ afzwem, domain, phase12, placement, payments }: OperationsProps) {
   if (domain.status !== "ready") {
     return <OperationsStatusPanel snapshot={domain} title="Tenant dashboard niet beschikbaar" />;
   }
 
   const capacityRows = buildCapacityRows(domain.data);
   const alerts = buildOperationalAlerts(domain, placement, payments, capacityRows);
+  const smartSignals = buildSmartDashboardSignals({ afzwem, domain, phase12, placement, payments, capacityRows });
+  const trendCards = buildTrendCards({ afzwem, domain, phase12, placement, payments, capacityRows });
   const activeEnrollments = domain.data.enrollments.filter((enrollment) => enrollment.status === "active").length;
   const scheduledSessions = domain.data.sessions.filter((session) => session.status === "scheduled").length;
   const totalCapacity = capacityRows.reduce((sum, row) => sum + row.capacityLimit, 0);
@@ -71,9 +100,9 @@ export function AdminOperationsDashboardPage({ domain, placement, payments }: Op
   return (
     <div className="grid gap-6">
       <PageHeader
-        action={<StatusPill tone="info">Live overzicht</StatusPill>}
+        action={<StatusPill tone="info">Smart command center</StatusPill>}
         kicker="Backoffice - operatie"
-        subtitle="Operationeel overzicht op basis van programma's, niveaus, groepen, lessen, locaties, inschrijvingen, wachtlijst en betalingen."
+        subtitle="Een operationeel command center dat laat zien wat vandaag aandacht vraagt en direct doorklikt naar de juiste workflow."
         title="Dashboard"
       />
 
@@ -83,6 +112,24 @@ export function AdminOperationsDashboardPage({ domain, placement, payments }: Op
         <MetricCard icon={<TrendingUp className="h-5 w-5" />} label="Bezetting" value={`${utilization}%`} detail={`${totalOccupied}/${totalCapacity} plekken`} />
         <MetricCard icon={<CircleDollarSign className="h-5 w-5" />} label="Open betalingen" value={openInvoices.toString()} detail="handmatige status" />
       </div>
+
+      <Card>
+        <SectionHeader title="Actie vandaag" count={smartSignals.filter((signal) => Number(signal.value) > 0).length} />
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {smartSignals.map((signal) => (
+            <SmartSignalCard key={signal.key} signal={signal} />
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <SectionHeader title="Trends en gezondheid" count={trendCards.length} />
+        <div className="grid gap-4 xl:grid-cols-3">
+          {trendCards.map((trend) => (
+            <TrendCard key={trend.title} trend={trend} />
+          ))}
+        </div>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
@@ -182,7 +229,7 @@ export function AdminCapacityReportsPage({ domain, placement, payments }: Operat
   const totalCapacity = capacityRows.reduce((sum, row) => sum + row.capacityLimit, 0);
   const totalOccupied = capacityRows.reduce((sum, row) => sum + row.activeMemberships, 0);
   const openAmount = payments.status === "ready" ? payments.data.invoices.filter((invoice) => ["open", "partially_paid", "overdue"].includes(invoice.status)).reduce((sum, invoice) => sum + Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents), 0) : 0;
-  const waiting = placement.status === "ready" ? placement.data.waitlistEntries.filter((entry) => ["waiting", "matched"].includes(entry.status)).length : 0;
+  const waiting = placement.status === "ready" ? placement.data.waitlistEntries.filter((entry) => ["queued", "matched"].includes(entry.status)).length : 0;
 
   return (
     <div className="grid gap-6">
@@ -424,6 +471,54 @@ function AlertList({ alerts }: { alerts: AlertItem[] }) {
   );
 }
 
+function SmartSignalCard({ signal }: { signal: SmartDashboardSignal }) {
+  const hasWork = Number.parseInt(signal.value, 10) > 0;
+
+  return (
+    <Link className={`rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-soft ${hasWork ? "border-border bg-card hover:bg-muted" : "border-border/70 bg-muted/30"}`} href={signal.href}>
+      <div className="flex items-start justify-between gap-3">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${hasWork ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>{signal.icon}</div>
+        <StatusPill tone={hasWork ? signal.tone : "neutral"}>{signal.urgency}</StatusPill>
+      </div>
+      <div className="mt-4">
+        <p className="text-2xl font-bold tracking-tight">{signal.value}</p>
+        <p className="mt-1 font-semibold">{signal.title}</p>
+        <p className="mt-1 text-sm leading-5 text-muted-foreground">{signal.body}</p>
+      </div>
+    </Link>
+  );
+}
+
+function TrendCard({ trend }: { trend: TrendCardData }) {
+  const maxValue = Math.max(1, ...trend.rows.map((row) => row.value));
+
+  return (
+    <Link className="rounded-2xl border border-border bg-muted/35 p-4 transition hover:-translate-y-0.5 hover:bg-muted hover:shadow-soft" href={trend.href}>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-semibold">{trend.title}</p>
+          <p className="text-sm text-muted-foreground">{trend.detail}</p>
+        </div>
+        <p className="text-xl font-bold">{trend.value}</p>
+      </div>
+      <div className="grid gap-2">
+        {trend.rows.length === 0 ? <EmptyState>Geen trenddata.</EmptyState> : null}
+        {trend.rows.map((row) => (
+          <div key={`${trend.title}-${row.label}`} className="grid gap-1">
+            <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+              <span className="truncate text-muted-foreground">{row.label}</span>
+              <span>{row.detail}</span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-border">
+              <div className={`h-full rounded-full ${trendBarClassName(row.tone)}`} style={{ width: `${Math.max(5, Math.round((row.value / maxValue) * 100))}%` }} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </Link>
+  );
+}
+
 function OperationsStatusPanel({ snapshot, title }: DomainProps & { title: string }) {
   return (
     <Card>
@@ -475,7 +570,7 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
   }
 
   if (placement.status === "ready") {
-    const waiting = placement.data.waitlistEntries.filter((entry) => ["waiting", "matched"].includes(entry.status)).length;
+    const waiting = placement.data.waitlistEntries.filter((entry) => ["queued", "matched"].includes(entry.status)).length;
     const pendingSuggestions = placement.data.placementSuggestions.filter((suggestion) => suggestion.status === "suggested").length;
     const availableSpots = capacityRows.reduce((sum, row) => sum + row.availableSpots, 0);
 
@@ -500,6 +595,304 @@ function buildOperationalAlerts(domain: AdminDomainSnapshot, placement: Placemen
   }
 
   return alerts;
+}
+
+function buildSmartDashboardSignals({
+  afzwem,
+  domain,
+  phase12,
+  placement,
+  payments,
+  capacityRows
+}: {
+  afzwem?: AdminAfzwemSnapshot;
+  domain: AdminDomainSnapshot;
+  phase12?: AdminPhase12Snapshot;
+  placement: PlacementWorkflowSnapshot;
+  payments: AdminPaymentsSnapshot;
+  capacityRows: CapacityRow[];
+}): SmartDashboardSignal[] {
+  const intakesNeedingReview = placement.status === "ready" ? placement.data.intakes.filter((intake) => ["new", "reviewing"].includes(intake.status) || !intake.reviewed_at).length : 0;
+  const duplicateRisks =
+    placement.status === "ready"
+      ? placement.data.intakeDuplicateMatches.filter((match) => match.status === "open").length + placement.data.waitlistEntries.filter((entry) => entry.duplicate_risk && entry.duplicate_risk !== "none").length
+      : 0;
+  const availableGroups = capacityRows.filter((row) => row.group.status === "active" && row.snapshot.openSpots > 0 && row.snapshot.status !== "blocked").length;
+  const blockedGroups = capacityRows.filter((row) => row.snapshot.status === "blocked" || row.snapshot.status === "overbooked" || row.snapshot.blockedSpots > 0).length;
+  const placementOpportunities = placement.status === "ready" ? placement.data.placementSuggestions.filter((suggestion) => ["suggested", "approved"].includes(suggestion.status)).length : 0;
+  const slotOffersExpiring = placement.status === "ready" ? placement.data.slotOffers.filter((offer) => offer.status === "sent" && daysUntil(offer.expires_at) <= 2).length : 0;
+  const failedMessages = phase12?.status === "ready" ? phase12.data.messageOutbox.filter((message) => ["failed", "retrying"].includes(message.status) || message.delivery_status === "failed").length : 0;
+  const overduePayments = payments.status === "ready" ? payments.data.invoices.filter((invoice) => invoice.status === "overdue").length : 0;
+  const makeupBacklog = domain.data.catchUpRequests.filter((request) => ["requested", "approved"].includes(request.status)).length + domain.data.makeupCredits.filter((credit) => credit.status === "available").length;
+  const stageTransitions = domain.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status)).length + domain.data.flowThroughRecommendations.filter((recommendation) => recommendation.status === "recommended").length;
+  const afzwemReady =
+    afzwem?.status === "ready"
+      ? afzwem.data.readinessRadar.filter((row) => ["ready_for_review", "almost_ready"].includes(row.readiness_status)).length + afzwem.data.candidateSuggestions.filter((suggestion) => suggestion.suggested_status === "candidate").length
+      : 0;
+
+  return [
+    {
+      key: "intake-review",
+      title: "Nieuwe intakes",
+      body: "Review stageadvies, intakegegevens en vervolgstap.",
+      value: intakesNeedingReview.toString(),
+      href: "/admin/intake",
+      tone: intakesNeedingReview > 0 ? "warning" : "success",
+      urgency: intakesNeedingReview > 0 ? "vandaag" : "monitor",
+      icon: <Inbox className="h-5 w-5" />
+    },
+    {
+      key: "duplicate-risk",
+      title: "Duplicaatrisico's",
+      body: "Controleer mogelijke dubbele leerlingen of ouderaccounts.",
+      value: duplicateRisks.toString(),
+      href: "/admin/intake",
+      tone: duplicateRisks > 0 ? "danger" : "success",
+      urgency: duplicateRisks > 0 ? "nu" : "monitor",
+      icon: <FileWarning className="h-5 w-5" />
+    },
+    {
+      key: "available-spots",
+      title: "Groepen met plek",
+      body: "Beschikbare capaciteit voor plaatsing of doorstroom.",
+      value: availableGroups.toString(),
+      href: "/admin/groups",
+      tone: availableGroups > 0 ? "success" : "neutral",
+      urgency: "monitor",
+      icon: <Waves className="h-5 w-5" />
+    },
+    {
+      key: "blocked-capacity",
+      title: "Capaciteit geblokkeerd",
+      body: "Overboeking, holds of resourceblokkades vragen controle.",
+      value: blockedGroups.toString(),
+      href: "/admin/agenda",
+      tone: blockedGroups > 0 ? "danger" : "success",
+      urgency: blockedGroups > 0 ? "nu" : "monitor",
+      icon: <AlertTriangle className="h-5 w-5" />
+    },
+    {
+      key: "placement-opportunities",
+      title: "Plaatsingskansen",
+      body: "Slimme voorstellen die naar lesplek-aanbod kunnen.",
+      value: placementOpportunities.toString(),
+      href: "/admin/plaatsingsvoorstellen",
+      tone: placementOpportunities > 0 ? "info" : "neutral",
+      urgency: placementOpportunities > 0 ? "vandaag" : "monitor",
+      icon: <Route className="h-5 w-5" />
+    },
+    {
+      key: "slot-offer-expiring",
+      title: "Aanbod verloopt",
+      body: "Open slot offers die binnen 48 uur aflopen.",
+      value: slotOffersExpiring.toString(),
+      href: "/admin/slot-offers",
+      tone: slotOffersExpiring > 0 ? "warning" : "success",
+      urgency: slotOffersExpiring > 0 ? "vandaag" : "monitor",
+      icon: <Clock className="h-5 w-5" />
+    },
+    {
+      key: "failed-messages",
+      title: "Berichtfouten",
+      body: "SMTP/SendGrid outbox retry of foutmelding nodig.",
+      value: failedMessages.toString(),
+      href: "/admin/berichten",
+      tone: failedMessages > 0 ? "danger" : "success",
+      urgency: failedMessages > 0 ? "nu" : "monitor",
+      icon: <MailWarning className="h-5 w-5" />
+    },
+    {
+      key: "overdue-payments",
+      title: "Overdue betalingen",
+      body: "Facturen met achterstallige handmatige status.",
+      value: overduePayments.toString(),
+      href: "/admin/payments",
+      tone: overduePayments > 0 ? "danger" : "success",
+      urgency: overduePayments > 0 ? "vandaag" : "monitor",
+      icon: <CircleDollarSign className="h-5 w-5" />
+    },
+    {
+      key: "makeup-backlog",
+      title: "Inhaalachterstand",
+      body: "Open inhaalverzoeken of beschikbare makeup credits.",
+      value: makeupBacklog.toString(),
+      href: "/admin/agenda",
+      tone: makeupBacklog > 0 ? "warning" : "success",
+      urgency: makeupBacklog > 0 ? "vandaag" : "monitor",
+      icon: <LifeBuoy className="h-5 w-5" />
+    },
+    {
+      key: "stage-transitions",
+      title: "Doorstroom wacht",
+      body: "Stage-overgangen en flow-through adviezen ter goedkeuring.",
+      value: stageTransitions.toString(),
+      href: "/admin/badges",
+      tone: stageTransitions > 0 ? "info" : "success",
+      urgency: stageTransitions > 0 ? "vandaag" : "monitor",
+      icon: <UserCheck className="h-5 w-5" />
+    },
+    {
+      key: "afzwem-ready",
+      title: "Afzwem radar",
+      body: "Leerlingen bijna klaar of klaar voor afzwemreview.",
+      value: afzwemReady.toString(),
+      href: "/admin/afzwemmen",
+      tone: afzwemReady > 0 ? "info" : "success",
+      urgency: afzwemReady > 0 ? "vandaag" : "monitor",
+      icon: <BadgeCheck className="h-5 w-5" />
+    }
+  ];
+}
+
+function buildTrendCards({
+  afzwem,
+  domain,
+  phase12,
+  placement,
+  payments,
+  capacityRows
+}: {
+  afzwem?: AdminAfzwemSnapshot;
+  domain: AdminDomainSnapshot;
+  phase12?: AdminPhase12Snapshot;
+  placement: PlacementWorkflowSnapshot;
+  payments: AdminPaymentsSnapshot;
+  capacityRows: CapacityRow[];
+}): TrendCardData[] {
+  const reporting = phase12?.status === "ready" ? phase12.data.reporting : null;
+
+  return [
+    buildIntakeFunnelTrend(placement),
+    buildWaitlistAgeTrend(reporting, placement),
+    buildOccupancyTrend(reporting, capacityRows),
+    buildAttendanceTrend(reporting, domain),
+    buildProgressReadinessTrend(reporting, domain, afzwem),
+    buildRevenuePaymentTrend(reporting, payments)
+  ];
+}
+
+function buildIntakeFunnelTrend(placement: PlacementWorkflowSnapshot): TrendCardData {
+  const intakes = placement.status === "ready" ? placement.data.intakes : [];
+  const rows = [
+    trendRow("Nieuw", countByStatus(intakes, "new"), "nieuw", "warning"),
+    trendRow("Review", countByStatus(intakes, "reviewing"), "review", "info"),
+    trendRow("Gematcht", countByStatus(intakes, "matched"), "match", "success"),
+    trendRow("Aanbod", countByStatus(intakes, "slot_offered"), "aanbod", "warning"),
+    trendRow("Geaccepteerd", countByStatus(intakes, "accepted"), "accept", "success")
+  ];
+
+  return {
+    title: "Intake funnel",
+    value: intakes.length.toString(),
+    detail: "van aanvraag naar lesplek",
+    href: "/admin/intake",
+    rows
+  };
+}
+
+function buildWaitlistAgeTrend(reporting: ReportingDashboardData | null, placement: PlacementWorkflowSnapshot): TrendCardData {
+  const sourceRows = reporting?.waitlist.rows ?? [];
+  const ages =
+    sourceRows.length > 0
+      ? sourceRows.map((row) => (typeof row.age_days === "number" ? row.age_days : 0))
+      : placement.status === "ready"
+        ? placement.data.waitlistEntries.map((entry) => daysSince(entry.priority_date))
+        : [];
+  const rows = [
+    trendRow("0-7 dagen", ages.filter((age) => age <= 7).length, "kort", "success"),
+    trendRow("8-30 dagen", ages.filter((age) => age > 7 && age <= 30).length, "normaal", "info"),
+    trendRow("31-60 dagen", ages.filter((age) => age > 30 && age <= 60).length, "lang", "warning"),
+    trendRow("60+ dagen", ages.filter((age) => age > 60).length, "kritisch", "danger")
+  ];
+
+  return {
+    title: "Wachtlijstleeftijd",
+    value: ages.length.toString(),
+    detail: "leeftijd per kandidaat",
+    href: "/admin/wachtlijst",
+    rows
+  };
+}
+
+function buildOccupancyTrend(reporting: ReportingDashboardData | null, capacityRows: CapacityRow[]): TrendCardData {
+  const rows =
+    reporting?.occupancy.rows.slice(0, 5).map((row) => trendRow(String(row.group ?? row.group_id ?? "Groep"), numberFrom(row.occupancy_rate), `${numberFrom(row.occupied)}/${numberFrom(row.capacity)}`, occupancyTone(numberFrom(row.occupancy_rate)))) ??
+    capacityRows.slice(0, 5).map((row) => trendRow(row.group.name, Math.round(row.utilization), `${row.activeMemberships}/${row.capacityLimit}`, occupancyTone(Math.round(row.utilization))));
+  const average = rows.length > 0 ? Math.round(rows.reduce((sum, row) => sum + row.value, 0) / rows.length) : 0;
+
+  return {
+    title: "Bezetting",
+    value: `${average}%`,
+    detail: "top groepen op capaciteit",
+    href: "/admin/rapportages",
+    rows
+  };
+}
+
+function buildAttendanceTrend(reporting: ReportingDashboardData | null, domain: AdminDomainSnapshot): TrendCardData {
+  const summary = reporting?.attendance.summary;
+  const rows = summary
+    ? [
+        trendRow("Aanwezig", numberFrom(summary.present), "present", "success"),
+        trendRow("Afwezig", numberFrom(summary.absent), "absent", "warning"),
+        trendRow("Te laat", numberFrom(summary.late), "late", "info"),
+        trendRow("Inhaal", numberFrom(summary.makeup_requests), "requests", "warning")
+      ]
+    : [
+        trendRow("Aanwezig", domain.data.attendance.filter((entry) => entry.status === "present").length, "present", "success"),
+        trendRow("Afwezig", domain.data.attendance.filter((entry) => entry.status === "absent").length, "absent", "warning"),
+        trendRow("Te laat", domain.data.attendance.filter((entry) => entry.status === "late").length, "late", "info")
+      ];
+
+  return {
+    title: "Aanwezigheid",
+    value: `${numberFrom(summary?.attendance_rate)}%`,
+    detail: "lesregistraties en inhaalimpact",
+    href: "/admin/rapportages",
+    rows
+  };
+}
+
+function buildProgressReadinessTrend(reporting: ReportingDashboardData | null, domain: AdminDomainSnapshot, afzwem?: AdminAfzwemSnapshot): TrendCardData {
+  const summary = reporting?.progress.summary;
+  const ready = afzwem?.status === "ready" ? afzwem.data.readinessRadar.filter((row) => row.readiness_status === "ready_for_review").length : 0;
+  const almostReady = afzwem?.status === "ready" ? afzwem.data.readinessRadar.filter((row) => row.readiness_status === "almost_ready").length : 0;
+  const rows = [
+    trendRow("Behaald", numberFrom(summary?.passed) + numberFrom(summary?.completed), "progress", "success"),
+    trendRow("Aandacht", numberFrom(summary?.needs_attention), "needs attention", "warning"),
+    trendRow("Doorstroom", domain.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status)).length, "voorstellen", "info"),
+    trendRow("Afzwem ready", ready + almostReady, "radar", ready > 0 ? "success" : "info")
+  ];
+
+  return {
+    title: "Voortgang readiness",
+    value: numberFrom(summary?.updates).toString(),
+    detail: "progress, badges en afzwemsignaal",
+    href: "/admin/badges",
+    rows
+  };
+}
+
+function buildRevenuePaymentTrend(reporting: ReportingDashboardData | null, payments: AdminPaymentsSnapshot): TrendCardData {
+  const paymentSummary = reporting?.payments.summary;
+  const revenueSummary = reporting?.revenue.summary;
+  const openInvoices = payments.status === "ready" ? payments.data.invoices.filter((invoice) => ["open", "partially_paid"].includes(invoice.status)).length : numberFrom(paymentSummary?.open);
+  const overdueInvoices = payments.status === "ready" ? payments.data.invoices.filter((invoice) => invoice.status === "overdue").length : numberFrom(paymentSummary?.overdue);
+  const paidInvoices = payments.status === "ready" ? payments.data.invoices.filter((invoice) => invoice.status === "paid").length : numberFrom(paymentSummary?.paid);
+  const netCents = numberFrom(revenueSummary?.net_cents);
+
+  return {
+    title: "Betaling en omzet",
+    value: formatMoney(netCents, "EUR"),
+    detail: "manual finance status",
+    href: "/admin/payments",
+    rows: [
+      trendRow("Betaald", paidInvoices, "paid", "success"),
+      trendRow("Open", openInvoices, "open", "warning"),
+      trendRow("Overdue", overdueInvoices, "overdue", overdueInvoices > 0 ? "danger" : "success"),
+      trendRow("Geincasseerd", numberFrom(revenueSummary?.collected_cents), formatMoney(numberFrom(revenueSummary?.collected_cents), "EUR"), "info")
+    ]
+  };
 }
 
 function buildCapacityRows(data: AdminDomainData): CapacityRow[] {
@@ -691,6 +1084,69 @@ function groupBy<Row>(rows: Row[], getKey: (row: Row) => string) {
   }
 
   return grouped;
+}
+
+function countByStatus<Row extends { status: string }>(rows: Row[], status: string) {
+  return rows.filter((row) => row.status === status).length;
+}
+
+function trendRow(label: string, value: number, detail: string, tone: TrendRow["tone"] = "neutral"): TrendRow {
+  return {
+    label,
+    value: Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0,
+    detail,
+    tone
+  };
+}
+
+function numberFrom(value: unknown) {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function occupancyTone(value: number): TrendRow["tone"] {
+  if (value >= 100) {
+    return "danger";
+  }
+
+  if (value >= 90) {
+    return "warning";
+  }
+
+  if (value >= 70) {
+    return "success";
+  }
+
+  return "info";
+}
+
+function trendBarClassName(tone: TrendRow["tone"]) {
+  if (tone === "danger") {
+    return "bg-red-500";
+  }
+
+  if (tone === "warning") {
+    return "bg-amber-500";
+  }
+
+  if (tone === "success") {
+    return "bg-emerald-500";
+  }
+
+  if (tone === "info") {
+    return "bg-sky-500";
+  }
+
+  return "bg-primary";
+}
+
+function daysUntil(value: string) {
+  const end = new Date(value).getTime();
+  return Number.isFinite(end) ? Math.ceil((end - Date.now()) / 86_400_000) : Number.POSITIVE_INFINITY;
+}
+
+function daysSince(value: string) {
+  const start = new Date(value).getTime();
+  return Number.isFinite(start) ? Math.max(0, Math.floor((Date.now() - start) / 86_400_000)) : 0;
 }
 
 function statusTone(status: string): "success" | "warning" | "danger" | "info" | "neutral" {
