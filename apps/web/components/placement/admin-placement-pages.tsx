@@ -116,7 +116,7 @@ export function AdminWaitlistWorkflowPage({ snapshot }: PlacementPageProps) {
         <MetricCard icon={<Send className="h-5 w-5" />} label="Aangeboden" value={offered.toString()} detail="lesplek verstuurd" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card>
           <SectionHeader title="Wachtlijstregels" count={snapshot.data.waitlistEntries.length} />
           <WorkflowTable
@@ -231,7 +231,7 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
 
 function PlacementFrame({ snapshot, kicker, title, subtitle, children }: PlacementPageProps & { kicker: string; title: string; subtitle: string; children: ReactNode }) {
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 max-w-full gap-6">
       <PageHeader kicker={kicker} title={title} subtitle={subtitle} action={<StatusPill tone="info">Plaatsingsflow</StatusPill>} />
       {snapshot.status === "ready" ? children : <PlacementStatusPanel snapshot={snapshot} />}
     </div>
@@ -404,8 +404,8 @@ function WorkflowTable<Row>({ columns, rows, rowKey, emptyLabel }: { columns: Co
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full text-left text-sm">
+    <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+      <table className="w-max min-w-full text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs uppercase text-muted-foreground">
             {columns.map((column) => (

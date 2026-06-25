@@ -36,7 +36,7 @@ export function AppShell({ brand, nav, user, children, accent = "parent", curren
   const navGroups = groupNavItems(nav);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen max-w-full overflow-x-hidden">
       <aside className="hidden w-[260px] shrink-0 border-r border-border bg-card/80 backdrop-blur md:block">
         <div className="flex h-full flex-col">
           <div className="flex items-center gap-3 px-5 py-6">
@@ -87,8 +87,8 @@ export function AppShell({ brand, nav, user, children, accent = "parent", curren
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-card/70 px-4 backdrop-blur md:px-8">
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-hidden">
+        <header className="sticky top-0 z-40 flex h-16 min-w-0 items-center gap-3 border-b border-border bg-card/70 px-4 backdrop-blur md:px-8">
           <details className="group relative md:hidden">
             <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-border bg-background text-foreground shadow-soft transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 [&::-webkit-details-marker]:hidden">
               <Menu className="h-5 w-5" />
@@ -124,9 +124,9 @@ export function AppShell({ brand, nav, user, children, accent = "parent", curren
               </nav>
             </div>
           </details>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{brand.title}</p>
-            <p className="text-sm font-semibold">{brand.subtitle}</p>
+            <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="hidden h-9 w-64 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm text-muted-foreground lg:flex">
@@ -146,7 +146,7 @@ export function AppShell({ brand, nav, user, children, accent = "parent", curren
             <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-xs font-semibold text-white ${accentStyles[accent]}`}>{initials}</div>
           </div>
         </header>
-        <main className="min-w-0 flex-1 p-4 sm:p-5 md:p-8">{children}</main>
+        <main className="min-w-0 max-w-full flex-1 overflow-x-hidden p-4 sm:p-5 md:p-8">{children}</main>
       </div>
     </div>
   );

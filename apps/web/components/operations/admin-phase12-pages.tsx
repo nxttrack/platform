@@ -814,8 +814,8 @@ function ReportDashboardCard({ section, title, value }: { section: ReportSection
       </div>
       {rows.length === 0 ? <EmptyState>Geen data voor deze filterset.</EmptyState> : null}
       {rows.length > 0 ? (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[560px] text-left text-sm">
+        <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+          <table className="w-max min-w-full text-left text-sm">
             <thead className="text-xs uppercase text-muted-foreground">
               <tr>
                 {headers.map((header) => (

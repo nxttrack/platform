@@ -65,7 +65,7 @@ export function AdminTableEnhancer({ children, rowCount }: AdminTableEnhancerPro
   }, [query, sort, status]);
 
   return (
-    <div className="grid gap-3" ref={rootRef}>
+    <div className="grid min-w-0 max-w-full gap-3" ref={rootRef}>
       <div className="flex flex-wrap items-end gap-3 rounded-2xl border border-border bg-muted/35 p-3">
         <label className="grid min-w-[220px] flex-1 gap-1 text-xs font-semibold text-muted-foreground">
           <span>Zoeken</span>

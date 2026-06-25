@@ -986,8 +986,8 @@ function DomainTable<Row>({ columns, rows, rowKey, emptyLabel }: { columns: Colu
 
   return (
     <AdminTableEnhancer rowCount={rows.length}>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+      <div className="min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+        <table className="w-max min-w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border text-xs uppercase text-muted-foreground">
               {columns.map((column) => (
