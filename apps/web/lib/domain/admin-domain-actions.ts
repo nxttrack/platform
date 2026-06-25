@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
+import { buildFlowThroughRecommendation, upsertFlowThroughCapacityHold } from "@/lib/flow-through/flow-through-engine";
+import { updateSmartDecisionLifecycle } from "@/lib/smart-flow/decision";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -630,6 +632,314 @@ export async function reviewStageTransitionProposalAction(formData: FormData) {
   revalidatePath(`/instructor/student/${proposal.participant_id}`);
 }
 
+export async function createFlowThroughRecommendationAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const proposalId = requiredString(formData, "stage_transition_proposal_id");
+  const draft = await buildFlowThroughRecommendation(supabase, { tenantId, proposalId });
+  const targetOption = draft.options.find((option) => option.status === "candidate") ?? draft.options[0] ?? null;
+  const { data, error } = await supabase
+    .from("flow_through_recommendations")
+    .upsert(
+      {
+        tenant_id: tenantId,
+        stage_transition_proposal_id: draft.proposal.id,
+        enrollment_id: draft.enrollment.id,
+        participant_id: draft.proposal.participant_id,
+        program_id: draft.enrollment.program_id,
+        from_stage_id: draft.proposal.from_stage_id,
+        to_stage_id: draft.proposal.to_stage_id,
+        current_group_membership_id: draft.currentMembership?.id ?? null,
+        current_group_id: draft.currentGroup?.id ?? null,
+        target_group_id: targetOption?.groupId ?? draft.targetGroupId,
+        smart_decision_id: draft.smartDecisionId,
+        score: draft.score,
+        confidence: draft.confidence,
+        reasons: draft.reasons,
+        blockers: draft.blockers,
+        completion_snapshot: draft.completionSnapshot,
+        capacity_result: targetOption?.capacitySnapshot ?? draft.capacityResult,
+        preferred_fit: targetOption?.preferredFit ?? draft.preferredFit,
+        constraints_snapshot: targetOption?.constraintsSnapshot ?? draft.constraintsSnapshot,
+        old_spot_release_on: draft.oldSpotReleaseOn,
+        target_start_on: draft.targetStartOn,
+        status: "recommended",
+        decision_note: null,
+        reviewed_by_profile_id: null,
+        reviewed_at: null,
+        created_by_profile_id: profileId
+      },
+      { onConflict: "tenant_id,stage_transition_proposal_id" }
+    )
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Doorstroomadvies kon niet worden opgeslagen.");
+  }
+
+  const recommendationId = (data as { id: string }).id;
+
+  await throwOnError(
+    supabase
+      .from("flow_through_target_options")
+      .update({ status: "expired" })
+      .eq("tenant_id", tenantId)
+      .eq("recommendation_id", recommendationId)
+      .neq("status", "selected")
+  );
+
+  if (draft.options.length > 0) {
+    await throwOnError(
+      supabase.from("flow_through_target_options").upsert(
+        draft.options.map((option) => ({
+          tenant_id: tenantId,
+          recommendation_id: recommendationId,
+          group_id: option.groupId,
+          resource_id: option.resourceId,
+          instructor_id: option.instructorId,
+          score: option.score,
+          confidence: option.confidence,
+          capacity_snapshot: option.capacitySnapshot,
+          preferred_fit: option.preferredFit,
+          constraints_snapshot: option.constraintsSnapshot,
+          reasons: option.reasons,
+          blockers: option.blockers,
+          suggested_start_on: option.suggestedStartOn,
+          status: option.status
+        })),
+        { onConflict: "tenant_id,recommendation_id,group_id" }
+      )
+    );
+  }
+
+  await insertFlowThroughEvent(supabase, tenantId, recommendationId, "created", "Doorstroomadvies aangemaakt vanuit stage transition proposal.", profileId, {
+    stage_transition_proposal_id: draft.proposal.id,
+    target_group_id: targetOption?.groupId ?? null,
+    score: draft.score
+  });
+  await insertFlowThroughEvent(supabase, tenantId, recommendationId, "billing_guard", "Doorstroom wijzigt geen abonnement of betaalplan.", profileId, {
+    subscription_plan_id: draft.enrollment.subscription_plan_id,
+    billing_change: false
+  });
+
+  if (targetOption?.status === "candidate") {
+    const holdId = await upsertFlowThroughCapacityHold(supabase, {
+      tenantId,
+      recommendationId,
+      enrollmentId: draft.enrollment.id,
+      groupId: targetOption.groupId,
+      resourceId: targetOption.resourceId,
+      startsOn: targetOption.suggestedStartOn,
+      actorProfileId: profileId,
+      capacitySnapshot: targetOption.capacitySnapshot
+    });
+
+    await throwOnError(
+      supabase
+        .from("flow_through_recommendations")
+        .update({
+          capacity_hold_id: holdId,
+          target_group_id: targetOption.groupId,
+          capacity_result: targetOption.capacitySnapshot,
+          preferred_fit: targetOption.preferredFit,
+          constraints_snapshot: targetOption.constraintsSnapshot
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", recommendationId)
+    );
+    await insertFlowThroughEvent(supabase, tenantId, recommendationId, "hold_created", "Capaciteit tijdelijk vastgehouden voor doorstroom.", profileId, {
+      capacity_hold_id: holdId,
+      group_id: targetOption.groupId
+    });
+  }
+
+  revalidateAdminDomain();
+}
+
+export async function reviewFlowThroughRecommendationAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const recommendationId = requiredString(formData, "id");
+  const decision = enumValue(formData, "decision", ["approve_transition", "approve_with_group", "postpone", "reject"], "approve_transition");
+  const decisionNote = optionalString(formData, "decision_note");
+  const targetGroupId = optionalString(formData, "target_group_id");
+  const oldSpotReleaseOn = optionalDate(formData, "old_spot_release_on") ?? todayInput();
+  const targetStartOn = optionalDate(formData, "target_start_on") ?? oldSpotReleaseOn;
+  const recommendation = await singleRow<{
+    id: string;
+    stage_transition_proposal_id: string;
+    enrollment_id: string;
+    participant_id: string;
+    program_id: string;
+    from_stage_id: string | null;
+    to_stage_id: string;
+    current_group_membership_id: string | null;
+    current_group_id: string | null;
+    target_group_id: string | null;
+    capacity_hold_id: string | null;
+    status: string;
+  }>(
+    supabase
+      .from("flow_through_recommendations")
+      .select("id, stage_transition_proposal_id, enrollment_id, participant_id, program_id, from_stage_id, to_stage_id, current_group_membership_id, current_group_id, target_group_id, capacity_hold_id, status")
+      .eq("tenant_id", tenantId)
+      .eq("id", recommendationId)
+      .single()
+  );
+  const finalTargetGroupId = targetGroupId ?? recommendation.target_group_id;
+  const targetOverride = Boolean(targetGroupId && recommendation.target_group_id && targetGroupId !== recommendation.target_group_id);
+
+  if ((decision === "postpone" || decision === "reject" || targetOverride) && !decisionNote) {
+    throw new Error("Een afwijzing, uitstel of afwijkende doelgroep heeft verplicht een reden nodig.");
+  }
+
+  if (decision === "approve_with_group" && !finalTargetGroupId) {
+    throw new Error("Kies een doelgroep om stage en groepsplaatsing samen toe te passen.");
+  }
+
+  if (decision === "postpone" || decision === "reject") {
+    const nextStatus = decision === "postpone" ? "postponed" : "rejected";
+    await throwOnError(
+      supabase
+        .from("flow_through_recommendations")
+        .update({
+          status: nextStatus,
+          decision_note: decisionNote,
+          reviewed_by_profile_id: profileId,
+          reviewed_at: new Date().toISOString()
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", recommendation.id)
+    );
+    await releaseFlowThroughHold(supabase, tenantId, recommendation.id, recommendation.capacity_hold_id, decision === "postpone" ? "released" : "cancelled", decisionNote ?? nextStatus);
+    await updateSmartDecisionLifecycle(supabase, {
+      tenantId,
+      engineKey: "flow_through",
+      subjectType: "stage_transition_proposal",
+      subjectId: recommendation.stage_transition_proposal_id,
+      decisionStatus: decision === "reject" ? "rejected" : "cancelled",
+      humanDecision: decision === "reject" ? "rejected" : "cancelled",
+      overrideReason: decisionNote,
+      decidedByProfileId: profileId,
+      result: { status: nextStatus, billing_change: false }
+    });
+    await insertFlowThroughEvent(supabase, tenantId, recommendation.id, decision === "postpone" ? "postponed" : "rejected", decisionNote ?? "Doorstroomadvies bijgewerkt.", profileId);
+    revalidateAdminDomain();
+    return;
+  }
+
+  await throwOnError(
+    supabase
+      .from("enrollments")
+      .update({
+        current_stage_id: recommendation.to_stage_id
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", recommendation.enrollment_id)
+  );
+
+  if (decision === "approve_with_group" && finalTargetGroupId) {
+    if (recommendation.current_group_membership_id) {
+      await throwOnError(
+        supabase
+          .from("group_memberships")
+          .update({
+            ends_on: oldSpotReleaseOn,
+            status: oldSpotReleaseOn <= todayInput() ? "ended" : "active"
+          })
+          .eq("tenant_id", tenantId)
+          .eq("id", recommendation.current_group_membership_id)
+      );
+    }
+
+    await throwOnError(
+      supabase.from("group_memberships").upsert(
+        {
+          tenant_id: tenantId,
+          enrollment_id: recommendation.enrollment_id,
+          group_id: finalTargetGroupId,
+          status: targetStartOn <= todayInput() ? "active" : "planned",
+          starts_on: targetStartOn,
+          ends_on: null
+        },
+        { onConflict: "enrollment_id,group_id,starts_on" }
+      )
+    );
+    await throwOnError(
+      supabase
+        .from("flow_through_target_options")
+        .update({ status: "selected" })
+        .eq("tenant_id", tenantId)
+        .eq("recommendation_id", recommendation.id)
+        .eq("group_id", finalTargetGroupId)
+    );
+    await releaseFlowThroughHold(supabase, tenantId, recommendation.id, recommendation.capacity_hold_id, "converted", "Doorstroom toegepast met nieuwe groep.");
+    await triggerWaitlistRematchForReleasedSpot(supabase, tenantId, recommendation, oldSpotReleaseOn, profileId);
+  } else {
+    await releaseFlowThroughHold(supabase, tenantId, recommendation.id, recommendation.capacity_hold_id, "released", "Doorstroom toegepast zonder groepswijziging.");
+  }
+
+  await throwOnError(
+    supabase
+      .from("stage_transition_proposals")
+      .update({
+        status: "applied",
+        reviewed_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", recommendation.stage_transition_proposal_id)
+  );
+  await throwOnError(
+    supabase
+      .from("flow_through_recommendations")
+      .update({
+        target_group_id: finalTargetGroupId,
+        old_spot_release_on: oldSpotReleaseOn,
+        target_start_on: targetStartOn,
+        status: decision === "approve_with_group" ? "applied" : "approved_transition",
+        decision_note: decisionNote,
+        reviewed_by_profile_id: profileId,
+        reviewed_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", recommendation.id)
+  );
+  await updateSmartDecisionLifecycle(supabase, {
+    tenantId,
+    engineKey: "flow_through",
+    subjectType: "stage_transition_proposal",
+    subjectId: recommendation.stage_transition_proposal_id,
+    decisionStatus: "applied",
+    humanDecision: targetOverride ? "overridden" : "approved",
+    overrideReason: targetOverride ? decisionNote : null,
+    decidedByProfileId: profileId,
+    result: {
+      stage_updated: true,
+      group_changed: decision === "approve_with_group",
+      target_group_id: finalTargetGroupId,
+      billing_change: false
+    }
+  });
+  await insertFlowThroughEvent(supabase, tenantId, recommendation.id, decision === "approve_with_group" ? "approved_with_group" : "approved_transition", decisionNote ?? "Doorstroom goedgekeurd door admin.", profileId, {
+    target_group_id: finalTargetGroupId,
+    old_spot_release_on: oldSpotReleaseOn,
+    target_start_on: targetStartOn,
+    billing_change: false
+  });
+  await insertFlowThroughEvent(supabase, tenantId, recommendation.id, "billing_guard", "Doorstroom toegepast zonder subscription/payment wijziging.", profileId, {
+    billing_change: false
+  });
+  await notifyGuardiansForStageTransition(supabase, tenantId, recommendation.participant_id, recommendation.enrollment_id, "applied");
+  await insertFlowThroughEvent(supabase, tenantId, recommendation.id, "parent_notified", "Ouder/verzorger notificatie aangemaakt.", profileId);
+
+  revalidateAdminDomain();
+  revalidatePath("/parent/dashboard");
+  revalidatePath("/parent/lessen");
+  revalidatePath("/parent/voortgang");
+  revalidatePath("/instructor/agenda");
+  revalidatePath("/instructor/leerlingen");
+  revalidatePath(`/instructor/student/${recommendation.participant_id}`);
+}
+
 export async function createParticipantGuardianAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
@@ -687,8 +997,121 @@ async function requireTenantWriter() {
 
   return {
     supabase: await createClient(),
-    tenantId: context.activeTenant.tenantId
+    tenantId: context.activeTenant.tenantId,
+    profileId: context.user.id
   };
+}
+
+async function insertFlowThroughEvent(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  recommendationId: string,
+  eventType: string,
+  note: string,
+  profileId: string | null,
+  metadata: Record<string, unknown> = {}
+) {
+  await throwOnError(
+    supabase.from("flow_through_events").insert({
+      tenant_id: tenantId,
+      recommendation_id: recommendationId,
+      event_type: eventType,
+      note,
+      metadata,
+      created_by_profile_id: profileId
+    })
+  );
+}
+
+async function releaseFlowThroughHold(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  recommendationId: string,
+  capacityHoldId: string | null,
+  status: "released" | "cancelled" | "converted",
+  reason: string
+) {
+  if (!capacityHoldId) {
+    return;
+  }
+
+  await throwOnError(
+    supabase
+      .from("capacity_holds")
+      .update({
+        status,
+        released_at: new Date().toISOString(),
+        release_reason: reason
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", capacityHoldId)
+      .eq("flow_through_recommendation_id", recommendationId)
+      .eq("status", "active")
+  );
+  await insertFlowThroughEvent(supabase, tenantId, recommendationId, "hold_released", reason, null, {
+    capacity_hold_id: capacityHoldId,
+    status
+  });
+}
+
+async function triggerWaitlistRematchForReleasedSpot(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  tenantId: string,
+  recommendation: {
+    id: string;
+    program_id: string;
+    from_stage_id: string | null;
+    current_group_id: string | null;
+  },
+  releaseOn: string,
+  profileId: string
+) {
+  const now = new Date().toISOString();
+  let query = supabase
+    .from("waitlist_entries")
+    .update({ reevaluation_requested_at: now })
+    .eq("tenant_id", tenantId)
+    .eq("program_id", recommendation.program_id)
+    .in("status", ["queued", "matched"]);
+
+  query = recommendation.from_stage_id ? query.or(`recommended_stage_id.eq.${recommendation.from_stage_id},recommended_stage_id.is.null`) : query.is("recommended_stage_id", null);
+
+  const { data, error } = await query.select("id");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const waitlistEntries = Array.isArray(data) ? (data as { id: string }[]) : [];
+
+  if (waitlistEntries.length === 0) {
+    await insertFlowThroughEvent(supabase, tenantId, recommendation.id, "waitlist_rematch_triggered", "Geen wachtlijstkandidaten gevonden voor de vrijgekomen plek.", profileId, {
+      release_on: releaseOn,
+      current_group_id: recommendation.current_group_id
+    });
+    return;
+  }
+
+  await throwOnError(
+    supabase.from("waitlist_entry_events").insert(
+      waitlistEntries.map((entry) => ({
+        tenant_id: tenantId,
+        waitlist_entry_id: entry.id,
+        event_type: "reevaluation_requested",
+        note: "Plek vrijgekomen door doorstroom; kandidaat opnieuw evalueren.",
+        created_by_profile_id: profileId,
+        metadata: {
+          flow_through_recommendation_id: recommendation.id,
+          release_on: releaseOn,
+          current_group_id: recommendation.current_group_id
+        }
+      }))
+    )
+  );
+  await insertFlowThroughEvent(supabase, tenantId, recommendation.id, "waitlist_rematch_triggered", `${waitlistEntries.length} wachtlijstkandidaat(en) opnieuw gemarkeerd.`, profileId, {
+    release_on: releaseOn,
+    waitlist_entry_ids: waitlistEntries.map((entry) => entry.id)
+  });
 }
 
 async function notifyGuardiansForStageTransition(
@@ -766,8 +1189,26 @@ async function throwOnError(builder: PromiseLike<{ error: { message: string } | 
   }
 }
 
+async function singleRow<Row>(builder: PromiseLike<{ data: unknown; error: { message: string } | null }>): Promise<Row> {
+  const { data, error } = await builder;
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Record niet gevonden.");
+  }
+
+  return data as Row;
+}
+
 async function transitionRowStatus(supabase: Awaited<ReturnType<typeof createClient>>, tenantId: string, table: string, id: string, status: string) {
   await throwOnError(supabase.from(table).update({ status }).eq("id", id).eq("tenant_id", tenantId));
+}
+
+function todayInput() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function requiredString(formData: FormData, key: string) {

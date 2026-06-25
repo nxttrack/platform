@@ -14,6 +14,9 @@ import type {
   BadgeRuleRow,
   BadgeRow,
   EnrollmentRow,
+  FlowThroughEventRow,
+  FlowThroughRecommendationRow,
+  FlowThroughTargetOptionRow,
   GroupMembershipRow,
   GroupRow,
   InstructorRow,
@@ -30,6 +33,7 @@ import type {
   SubscriptionPlanRow
 } from "@/lib/domain/admin-domain-read-model";
 import {
+  createFlowThroughRecommendationAction,
   createEnrollmentAction,
   createGroupAction,
   createGroupMembershipAction,
@@ -44,6 +48,7 @@ import {
   createStageAction,
   createBadgeRuleAction,
   createSubscriptionPlanAction,
+  reviewFlowThroughRecommendationAction,
   reviewStageTransitionProposalAction,
   transitionEnrollmentStatusAction,
   transitionGroupMembershipStatusAction,
@@ -244,6 +249,9 @@ export function AdminStagesPage({ snapshot }: DomainPageProps) {
 
 export function AdminBadgesPage({ snapshot }: DomainPageProps) {
   const lookups = buildLookups(snapshot.data);
+  const flowByProposal = new Map(snapshot.data.flowThroughRecommendations.map((recommendation) => [recommendation.stage_transition_proposal_id, recommendation]));
+  const flowOptionsByRecommendation = groupBy(snapshot.data.flowThroughTargetOptions, "recommendation_id");
+  const flowEventsByRecommendation = groupBy(snapshot.data.flowThroughEvents, "recommendation_id");
   const openTransitions = snapshot.data.stageTransitionProposals.filter((proposal) => ["proposed", "approved"].includes(proposal.status));
   const completedModules = snapshot.data.stageModuleProgress.filter((progress) => progress.status === "passed").length;
 
@@ -258,7 +266,7 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
         <MetricCard icon={<Database className="h-5 w-5" />} label="Modules" value={snapshot.data.stageModules.length.toString()} detail={`${completedModules} behaald`} />
         <MetricCard icon={<Waves className="h-5 w-5" />} label="Badges" value={snapshot.data.badgeAwards.length.toString()} detail={`${snapshot.data.badges.length} definities`} />
         <MetricCard icon={<Users className="h-5 w-5" />} label="Aanbevelingen" value={snapshot.data.badgeRecommendations.length.toString()} detail="smart badge advies" />
-        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Doorstroom" value={openTransitions.length.toString()} detail="open voorstellen" />
+        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Doorstroom" value={openTransitions.length.toString()} detail={`${snapshot.data.flowThroughRecommendations.length} smart adviezen`} />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
@@ -364,7 +372,11 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
             { header: "Reden", className: "min-w-[280px] whitespace-normal", render: (proposal) => nullableText(proposal.reason) },
             { header: "Status", render: (proposal) => <StatusPill tone={statusTone(proposal.status)}>{proposal.status}</StatusPill> },
             { header: "Voorgesteld", render: (proposal) => formatDateTime(proposal.proposed_at) },
-            { header: "Besluit", className: "min-w-[360px] whitespace-normal", render: (proposal) => <StageTransitionReviewForm proposal={proposal} /> }
+            {
+              header: "Besluit",
+              className: "min-w-[420px] whitespace-normal",
+              render: (proposal) => <StageTransitionReviewForm proposal={proposal} recommendation={flowByProposal.get(proposal.id) ?? null} />
+            }
           ]}
           emptyLabel="Geen doorstroomvoorstellen gevonden."
           rows={snapshot.data.stageTransitionProposals}
@@ -373,6 +385,30 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
         <div className="mt-4 rounded-2xl border border-border bg-muted/35 p-4 text-sm leading-6 text-muted-foreground">
           Toepassen zet alleen de huidige stage op de enrollment om. Subscription plan, facturatie en betaalstatus blijven bewust los van badje/niveau.
         </div>
+      </Card>
+
+      <Card>
+        <SectionHeader title="Flow-through engine" count={snapshot.data.flowThroughRecommendations.length} />
+        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
+          Doorstroomadvies kan een targetgroep vasthouden, de oude plek vrijgeven en de wachtlijst opnieuw laten matchen. Het abonnement blijft hier altijd ongewijzigd.
+        </div>
+        {snapshot.data.flowThroughRecommendations.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">
+            Nog geen flow-through adviezen. Maak er een vanuit een doorstroomvoorstel hierboven.
+          </div>
+        ) : (
+          <div className="grid gap-4">
+            {snapshot.data.flowThroughRecommendations.map((recommendation) => (
+              <FlowThroughRecommendationPanel
+                key={recommendation.id}
+                events={flowEventsByRecommendation.get(recommendation.id) ?? []}
+                lookups={lookups}
+                options={flowOptionsByRecommendation.get(recommendation.id) ?? []}
+                recommendation={recommendation}
+              />
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card>
@@ -449,20 +485,157 @@ export function AdminBadgesPage({ snapshot }: DomainPageProps) {
   );
 }
 
-function StageTransitionReviewForm({ proposal }: { proposal: StageTransitionProposalRow }) {
+function StageTransitionReviewForm({ proposal, recommendation }: { proposal: StageTransitionProposalRow; recommendation: FlowThroughRecommendationRow | null }) {
   return (
-    <AdminActionForm action={reviewStageTransitionProposalAction} className="flex flex-wrap gap-2" successMessage="Doorstroomstatus bijgewerkt.">
-      <input name="id" type="hidden" value={proposal.id} />
-      <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-60" name="decision" type="submit" value="approved">
-        Goedkeuren
-      </button>
-      <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60" name="decision" type="submit" value="applied">
-        Toepassen
-      </button>
-      <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-60" name="decision" type="submit" value="rejected">
-        Afwijzen
-      </button>
-    </AdminActionForm>
+    <div className="grid gap-2">
+      {recommendation ? (
+        <div className="rounded-xl border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-semibold text-primary">
+          Smart advies: {recommendation.score === null ? "-" : `${formatNumber(recommendation.score)}%`} · {recommendation.confidence} · {recommendation.status}
+        </div>
+      ) : (
+        <AdminActionForm action={createFlowThroughRecommendationAction} className="grid gap-2" successMessage="Slim doorstroomadvies aangemaakt.">
+          <input name="stage_transition_proposal_id" type="hidden" value={proposal.id} />
+          <AdminSubmitButton className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90">
+            Maak slim advies
+          </AdminSubmitButton>
+        </AdminActionForm>
+      )}
+      <AdminActionForm action={reviewStageTransitionProposalAction} className="flex flex-wrap gap-2" successMessage="Doorstroomstatus bijgewerkt.">
+        <input name="id" type="hidden" value={proposal.id} />
+        <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted disabled:opacity-60" name="decision" type="submit" value="approved">
+          Alleen voorstel goedkeuren
+        </button>
+        <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-60" name="decision" type="submit" value="rejected">
+          Afwijzen
+        </button>
+      </AdminActionForm>
+    </div>
+  );
+}
+
+function FlowThroughRecommendationPanel({
+  events,
+  lookups,
+  options,
+  recommendation
+}: {
+  events: FlowThroughEventRow[];
+  lookups: LookupMaps;
+  options: FlowThroughTargetOptionRow[];
+  recommendation: FlowThroughRecommendationRow;
+}) {
+  const participant = lookups.participants.get(recommendation.participant_id);
+  const fromStage = recommendation.from_stage_id ? lookups.stages.get(recommendation.from_stage_id) : null;
+  const toStage = lookups.stages.get(recommendation.to_stage_id);
+  const targetGroup = recommendation.target_group_id ? lookups.groups.get(recommendation.target_group_id) : null;
+  const targetOptions = options.map((option) => {
+    const group = lookups.groups.get(option.group_id);
+    const label = `${group?.name ?? "Groep"} · ${option.score === null ? "-" : `${formatNumber(option.score)}%`} · ${capacityValue(option.capacity_snapshot, "open_spots")}/${capacityValue(option.capacity_snapshot, "capacity_limit")} vrij`;
+
+    return { label, value: option.group_id };
+  });
+
+  return (
+    <div className="rounded-3xl border border-border bg-muted/20 p-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h3 className="text-base font-bold">{participant?.display_name ?? "Onbekende leerling"}</h3>
+          <p className="text-sm text-muted-foreground">
+            {fromStage?.name ?? "Huidige stage"} → {toStage?.name ?? "Volgende stage"}
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={statusTone(recommendation.status)}>{recommendation.status}</StatusPill>
+          <StatusPill tone={recommendation.confidence === "high" ? "success" : recommendation.confidence === "medium" ? "info" : "warning"}>
+            {recommendation.score === null ? "-" : `${formatNumber(recommendation.score)}%`} · {recommendation.confidence}
+          </StatusPill>
+        </div>
+      </div>
+
+      <div className="grid gap-3 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="grid gap-3">
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Advies</p>
+            <p className="mt-2 text-sm font-semibold">{targetGroup ? targetGroup.name : "Nog geen doelgroep gekozen"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start {recommendation.target_start_on ? formatDate(recommendation.target_start_on) : "-"} · oude plek vrij {recommendation.old_spot_release_on ? formatDate(recommendation.old_spot_release_on) : "-"}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-emerald-700">Abonnement/betaling blijft ongewijzigd.</p>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-3">
+            <p className="text-xs font-bold uppercase text-muted-foreground">Waarom</p>
+            <JsonList items={recommendation.reasons} />
+            {recommendation.blockers.length > 0 ? (
+              <div className="mt-3">
+                <p className="text-xs font-bold uppercase text-red-600">Blokkades</p>
+                <JsonList items={recommendation.blockers} tone="danger" />
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          <div className="grid gap-2">
+            {options.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border bg-card p-4 text-sm text-muted-foreground">Geen doelgroepopties gevonden.</div>
+            ) : (
+              options.map((option) => {
+                const group = lookups.groups.get(option.group_id);
+
+                return (
+                  <div key={option.id} className="rounded-2xl border border-border bg-card p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-semibold">{group?.name ?? "Groep"}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {group ? `${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}` : "Moment onbekend"} · {capacityValue(option.capacity_snapshot, "open_spots")}/{capacityValue(option.capacity_snapshot, "capacity_limit")} vrij
+                        </p>
+                      </div>
+                      <StatusPill tone={option.status === "candidate" ? "success" : "warning"}>{option.status}</StatusPill>
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">{jsonSummary(option.reasons)}</p>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <AdminActionForm action={reviewFlowThroughRecommendationAction} className="grid gap-3 rounded-2xl border border-border bg-card p-3" successMessage="Doorstroombesluit verwerkt.">
+            <input name="id" type="hidden" value={recommendation.id} />
+            <div className="grid gap-3 md:grid-cols-2">
+              <SelectField defaultValue={recommendation.target_group_id} includeEmpty label="Targetgroep" name="target_group_id" options={targetOptions} />
+              <TextField defaultValue={recommendation.old_spot_release_on ?? todayInput()} label="Oude plek vrij op" name="old_spot_release_on" type="date" />
+              <TextField defaultValue={recommendation.target_start_on ?? todayInput()} label="Nieuwe startdatum" name="target_start_on" type="date" />
+              <TextField label="Reden / override" name="decision_note" placeholder="Verplicht bij afwijzen, uitstellen of andere doelgroep" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-foreground hover:bg-muted disabled:opacity-60" name="decision" type="submit" value="approve_transition">
+                Alleen niveau toepassen
+              </button>
+              <button className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:opacity-60" name="decision" type="submit" value="approve_with_group">
+                Niveau + groep toepassen
+              </button>
+              <button className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 disabled:opacity-60" name="decision" type="submit" value="postpone">
+                Uitstellen
+              </button>
+              <button className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 disabled:opacity-60" name="decision" type="submit" value="reject">
+                Afwijzen
+              </button>
+            </div>
+          </AdminActionForm>
+        </div>
+      </div>
+
+      {events.length > 0 ? (
+        <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted-foreground">
+          {events.slice(0, 6).map((event) => (
+            <span key={event.id} className="rounded-full border border-border bg-card px-3 py-1">
+              {event.event_type} · {formatDateTime(event.created_at)}
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -1267,6 +1440,44 @@ function enrollmentParticipantName(lookups: LookupMaps, enrollmentId: string) {
 
 function countBy<Row>(rows: Row[], key: keyof Row, value: string) {
   return rows.filter((row) => row[key] === value).length;
+}
+
+function groupBy<Row extends Record<Key, string>, Key extends keyof Row>(rows: Row[], key: Key) {
+  const grouped = new Map<string, Row[]>();
+
+  for (const row of rows) {
+    const value = row[key];
+    grouped.set(value, [...(grouped.get(value) ?? []), row]);
+  }
+
+  return grouped;
+}
+
+function JsonList({ items, tone = "neutral" }: { items: Array<Record<string, unknown>>; tone?: "neutral" | "danger" }) {
+  if (items.length === 0) {
+    return <p className="mt-2 text-sm text-muted-foreground">Geen redenen vastgelegd.</p>;
+  }
+
+  return (
+    <ul className={`mt-2 grid gap-1 text-sm ${tone === "danger" ? "text-red-700" : "text-muted-foreground"}`}>
+      {items.slice(0, 5).map((item, index) => (
+        <li key={`${String(item.code ?? item.label ?? index)}-${index}`}>• {String(item.label ?? item.code ?? "Reden")}</li>
+      ))}
+    </ul>
+  );
+}
+
+function jsonSummary(items: Array<Record<string, unknown>>) {
+  return items
+    .slice(0, 3)
+    .map((item) => String(item.label ?? item.code ?? "reden"))
+    .join(" · ");
+}
+
+function capacityValue(snapshot: Record<string, unknown>, key: string) {
+  const value = snapshot[key];
+
+  return typeof value === "number" || typeof value === "string" ? value : "-";
 }
 
 function nullableText(value: string | null | undefined) {

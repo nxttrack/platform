@@ -392,6 +392,62 @@ export type StageTransitionProposalRow = {
   reviewed_at: string | null;
 };
 
+export type FlowThroughRecommendationRow = {
+  id: string;
+  stage_transition_proposal_id: string;
+  enrollment_id: string;
+  participant_id: string;
+  program_id: string;
+  from_stage_id: string | null;
+  to_stage_id: string;
+  current_group_membership_id: string | null;
+  current_group_id: string | null;
+  target_group_id: string | null;
+  capacity_hold_id: string | null;
+  smart_decision_id: string | null;
+  score: number | null;
+  confidence: string;
+  reasons: Array<Record<string, unknown>>;
+  blockers: Array<Record<string, unknown>>;
+  completion_snapshot: Record<string, unknown>;
+  capacity_result: Record<string, unknown>;
+  preferred_fit: Record<string, unknown>;
+  constraints_snapshot: Record<string, unknown>;
+  old_spot_release_on: string | null;
+  target_start_on: string | null;
+  status: string;
+  decision_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
+
+export type FlowThroughTargetOptionRow = {
+  id: string;
+  recommendation_id: string;
+  group_id: string;
+  resource_id: string | null;
+  instructor_id: string | null;
+  score: number | null;
+  confidence: string;
+  capacity_snapshot: Record<string, unknown>;
+  preferred_fit: Record<string, unknown>;
+  constraints_snapshot: Record<string, unknown>;
+  reasons: Array<Record<string, unknown>>;
+  blockers: Array<Record<string, unknown>>;
+  suggested_start_on: string | null;
+  status: string;
+};
+
+export type FlowThroughEventRow = {
+  id: string;
+  recommendation_id: string;
+  event_type: string;
+  note: string | null;
+  metadata: Record<string, unknown>;
+  created_by_profile_id: string | null;
+  created_at: string;
+};
+
 export type CertificateRow = {
   id: string;
   enrollment_id: string | null;
@@ -436,6 +492,9 @@ export type AdminDomainData = {
   badgeAwards: BadgeAwardRow[];
   achievementCards: AchievementCardRow[];
   stageTransitionProposals: StageTransitionProposalRow[];
+  flowThroughRecommendations: FlowThroughRecommendationRow[];
+  flowThroughTargetOptions: FlowThroughTargetOptionRow[];
+  flowThroughEvents: FlowThroughEventRow[];
   certificates: CertificateRow[];
 };
 
@@ -516,6 +575,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     badgeAwardsResult,
     achievementCardsResult,
     stageTransitionProposalsResult,
+    flowThroughRecommendationsResult,
+    flowThroughTargetOptionsResult,
+    flowThroughEventsResult,
     certificatesResult
   ] = await Promise.all([
     supabase.from("programs").select("id, code, name, description, status, sort_order").eq("tenant_id", tenantId).order("sort_order", { ascending: true }).order("name", { ascending: true }),
@@ -645,6 +707,24 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       .order("proposed_at", { ascending: false })
       .limit(120),
     supabase
+      .from("flow_through_recommendations")
+      .select("id, stage_transition_proposal_id, enrollment_id, participant_id, program_id, from_stage_id, to_stage_id, current_group_membership_id, current_group_id, target_group_id, capacity_hold_id, smart_decision_id, score, confidence, reasons, blockers, completion_snapshot, capacity_result, preferred_fit, constraints_snapshot, old_spot_release_on, target_start_on, status, decision_note, reviewed_at, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(120),
+    supabase
+      .from("flow_through_target_options")
+      .select("id, recommendation_id, group_id, resource_id, instructor_id, score, confidence, capacity_snapshot, preferred_fit, constraints_snapshot, reasons, blockers, suggested_start_on, status")
+      .eq("tenant_id", tenantId)
+      .order("score", { ascending: false })
+      .limit(240),
+    supabase
+      .from("flow_through_events")
+      .select("id, recommendation_id, event_type, note, metadata, created_by_profile_id, created_at")
+      .eq("tenant_id", tenantId)
+      .order("created_at", { ascending: false })
+      .limit(240),
+    supabase
       .from("certificates")
       .select("id, enrollment_id, participant_id, program_id, certificate_number, title, status, issued_on")
       .eq("tenant_id", tenantId)
@@ -695,6 +775,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
     badge_awards: badgeAwardsResult.error,
     achievement_cards: achievementCardsResult.error,
     stage_transition_proposals: stageTransitionProposalsResult.error,
+    flow_through_recommendations: flowThroughRecommendationsResult.error,
+    flow_through_target_options: flowThroughTargetOptionsResult.error,
+    flow_through_events: flowThroughEventsResult.error,
     certificates: certificatesResult.error
   });
 
@@ -735,6 +818,9 @@ export async function getAdminDomainSnapshot(): Promise<AdminDomainSnapshot> {
       badgeAwards: asRows<BadgeAwardRow>(badgeAwardsResult.data),
       achievementCards: asRows<AchievementCardRow>(achievementCardsResult.data),
       stageTransitionProposals: asRows<StageTransitionProposalRow>(stageTransitionProposalsResult.data),
+      flowThroughRecommendations: asRows<FlowThroughRecommendationRow>(flowThroughRecommendationsResult.data),
+      flowThroughTargetOptions: asRows<FlowThroughTargetOptionRow>(flowThroughTargetOptionsResult.data),
+      flowThroughEvents: asRows<FlowThroughEventRow>(flowThroughEventsResult.data),
       certificates: asRows<CertificateRow>(certificatesResult.data)
     }
   };
@@ -774,6 +860,9 @@ export function createEmptyData(): AdminDomainData {
     badgeAwards: [],
     achievementCards: [],
     stageTransitionProposals: [],
+    flowThroughRecommendations: [],
+    flowThroughTargetOptions: [],
+    flowThroughEvents: [],
     certificates: []
   };
 }
