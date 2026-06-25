@@ -41,6 +41,7 @@ function createTenantAwareResponse(request: NextRequest, resolution: TenantHostR
 
   requestHeaders.set("x-nxttrack-host-kind", resolution.kind);
   requestHeaders.set("x-nxttrack-hostname", resolution.hostname);
+  requestHeaders.set("x-nxttrack-pathname", request.nextUrl.pathname);
 
   if (resolution.kind === "tenant_subdomain") {
     requestHeaders.set("x-nxttrack-tenant-slug", resolution.slug);

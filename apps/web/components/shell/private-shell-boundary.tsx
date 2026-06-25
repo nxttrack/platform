@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
 import { AppShell, type NavItem } from "@/components/shell/app-shell";
@@ -38,8 +39,9 @@ type PrivateShellBoundaryProps = {
 
 export async function PrivateShellBoundary({ shell, nav, accent, children }: PrivateShellBoundaryProps) {
   const access = privateShellAccess[shell];
-  const selection = await getActiveTenantSelection();
+  const [selection, headerStore] = await Promise.all([getActiveTenantSelection(), headers()]);
   const context = await getTrustedAuthContext(shell === "platform_admin" ? {} : selection);
+  const currentPath = headerStore.get("x-nxttrack-pathname") ?? access.pathPrefix;
 
   if (context.status === "anonymous") {
     redirect(buildLoginPath(access.pathPrefix));
@@ -65,7 +67,7 @@ export async function PrivateShellBoundary({ shell, nav, accent, children }: Pri
   const user = getShellUser(context);
 
   return (
-    <AppShell brand={brand} nav={nav} user={user} accent={accent} tenantSwitcherHref={context.tenants.length > 1 ? buildTenantSwitchPath(access.pathPrefix) : null}>
+    <AppShell brand={brand} nav={nav} user={user} accent={accent} currentPath={currentPath} tenantSwitcherHref={context.tenants.length > 1 ? buildTenantSwitchPath(access.pathPrefix) : null}>
       {children}
     </AppShell>
   );

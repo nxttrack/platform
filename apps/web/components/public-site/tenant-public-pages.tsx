@@ -584,6 +584,8 @@ function PublicShell({ snapshot, children }: PublicPageProps & { children: React
   const visiblePrograms = snapshot.programs.slice(0, 4);
   const style = {
     "--primary": profile.brandPrimaryHex,
+    "--primary-foreground": readableForegroundFor(profile.brandPrimaryHex),
+    "--ring": profile.brandPrimaryHex,
     "--accent": profile.brandAccentHex
   } as CSSProperties;
   const nav = [
@@ -1034,6 +1036,44 @@ function statusCopy(snapshot: PublicTenantSiteSnapshot) {
   }
 
   return "De tenantdata kon niet worden gelezen.";
+}
+
+function readableForegroundFor(hexColor: string) {
+  const normalized = normalizeHexColor(hexColor);
+
+  if (!normalized) {
+    return "#ffffff";
+  }
+
+  const red = Number.parseInt(normalized.slice(1, 3), 16);
+  const green = Number.parseInt(normalized.slice(3, 5), 16);
+  const blue = Number.parseInt(normalized.slice(5, 7), 16);
+  const luminance = [red, green, blue]
+    .map((channel) => {
+      const value = channel / 255;
+      return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    })
+    .reduce((total, value, index) => total + value * [0.2126, 0.7152, 0.0722][index], 0);
+
+  return luminance > 0.55 ? "#0f172a" : "#ffffff";
+}
+
+function normalizeHexColor(value: string) {
+  const trimmed = value.trim();
+
+  if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+    return `#${trimmed
+      .slice(1)
+      .split("")
+      .map((part) => `${part}${part}`)
+      .join("")}`;
+  }
+
+  return null;
 }
 
 function fallbackProfile(tenantName: string): PublicTenantProfile {
