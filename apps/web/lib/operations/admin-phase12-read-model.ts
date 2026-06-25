@@ -27,6 +27,10 @@ export type MessageTemplateRow = {
   subject_template: string | null;
   body_template: string;
   status: string;
+  required_variables: string[];
+  last_preview_subject: string | null;
+  last_preview_body: string | null;
+  last_previewed_at: string | null;
   tags: string[];
   sort_order: number;
 };
@@ -43,8 +47,16 @@ export type MessageOutboxRow = {
   subject: string | null;
   body: string;
   status: string;
+  delivery_status: string;
+  retry_count: number;
+  max_attempts: number;
+  next_retry_at: string | null;
+  last_attempt_at: string | null;
+  failure_reason: string | null;
+  provider_message_id: string | null;
   scheduled_at: string | null;
   sent_at: string | null;
+  delivered_at: string | null;
   error_message: string | null;
   created_at: string;
 };
@@ -75,6 +87,14 @@ export type TenantDocumentRecordRow = {
   status: string;
   storage_bucket: string;
   file_path: string | null;
+  parent_document_id: string | null;
+  version_number: number;
+  upload_status: string;
+  mime_type: string | null;
+  file_size_bytes: number | null;
+  original_filename: string | null;
+  retention_until: string | null;
+  last_downloaded_at: string | null;
   available_on: string | null;
   created_at: string;
 };
@@ -202,13 +222,13 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
       .order("provider", { ascending: true }),
     supabase
       .from("message_templates")
-      .select("id, code, name, channel, audience, subject_template, body_template, status, tags, sort_order")
+      .select("id, code, name, channel, audience, subject_template, body_template, status, required_variables, last_preview_subject, last_preview_body, last_previewed_at, tags, sort_order")
       .eq("tenant_id", tenantId)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true }),
     supabase
       .from("message_outbox")
-      .select("id, template_id, channel, provider, recipient_profile_id, recipient_email, participant_id, enrollment_id, subject, body, status, scheduled_at, sent_at, error_message, created_at")
+      .select("id, template_id, channel, provider, recipient_profile_id, recipient_email, participant_id, enrollment_id, subject, body, status, delivery_status, retry_count, max_attempts, next_retry_at, last_attempt_at, failure_reason, provider_message_id, scheduled_at, sent_at, delivered_at, error_message, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false })
       .limit(100),
@@ -220,7 +240,7 @@ export async function getAdminPhase12Snapshot(): Promise<AdminPhase12Snapshot> {
       .order("created_at", { ascending: false }),
     supabase
       .from("tenant_document_records")
-      .select("id, participant_id, enrollment_id, certificate_id, title, document_type, visibility, status, storage_bucket, file_path, available_on, created_at")
+      .select("id, participant_id, enrollment_id, certificate_id, title, document_type, visibility, status, storage_bucket, file_path, parent_document_id, version_number, upload_status, mime_type, file_size_bytes, original_filename, retention_until, last_downloaded_at, available_on, created_at")
       .eq("tenant_id", tenantId)
       .order("created_at", { ascending: false }),
     supabase

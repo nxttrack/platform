@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { Banknote, CircleDollarSign, CreditCard, FileText } from "lucide-react";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
-import { createManualInvoiceAction, recordManualPaymentAction } from "@/lib/payments/admin-payments-actions";
+import { createManualInvoiceAction, queueInvoiceReminderAction, recordManualPaymentAction, updateInvoiceCorrectionAction } from "@/lib/payments/admin-payments-actions";
 import type {
   AdminPaymentsData,
   AdminPaymentsSnapshot,
@@ -188,6 +188,16 @@ function InvoiceCard({ invoice, lookups }: { invoice: InvoiceRow; lookups: Looku
         <summary className="cursor-pointer text-sm font-semibold text-primary">Handmatige betaling registreren</summary>
         <ManualPaymentForm invoice={invoice} remaining={remaining} />
       </details>
+      <details className="mt-3 rounded-2xl border border-border bg-card p-3">
+        <summary className="cursor-pointer text-sm font-semibold text-primary">Factuur corrigeren</summary>
+        <InvoiceCorrectionForm invoice={invoice} />
+      </details>
+      <form action={queueInvoiceReminderAction} className="mt-3">
+        <input name="invoice_id" type="hidden" value={invoice.id} />
+        <button className="w-fit rounded-xl border border-border bg-background px-4 py-2 text-xs font-bold text-foreground hover:bg-muted" type="submit">
+          Betalingsherinnering klaarzetten
+        </button>
+      </form>
       {records.length > 0 ? (
         <div className="mt-4 grid gap-2">
           {records.map((payment) => (
@@ -196,6 +206,25 @@ function InvoiceCard({ invoice, lookups }: { invoice: InvoiceRow; lookups: Looku
         </div>
       ) : null}
     </div>
+  );
+}
+
+function InvoiceCorrectionForm({ invoice }: { invoice: InvoiceRow }) {
+  return (
+    <form action={updateInvoiceCorrectionAction} className="mt-4 grid gap-3">
+      <input name="invoice_id" type="hidden" value={invoice.id} />
+      <div className="grid gap-3 md:grid-cols-2">
+        <TextField defaultValue={invoice.title} label="Titel" name="title" required />
+        <TextField defaultValue={(invoice.amount_due_cents / 100).toFixed(2)} label="Bedrag" name="amount_due" required type="number" />
+        <TextField defaultValue={invoice.due_on} label="Vervaldatum" name="due_on" type="date" />
+        <SelectField defaultValue={invoice.status} label="Status" name="status" options={invoiceStatusOptions} />
+      </div>
+      <TextAreaField defaultValue={invoice.description} label="Omschrijving" name="description" />
+      <TextAreaField label="Correctienotitie" name="correction_note" />
+      <button className="w-fit rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+        Correctie opslaan
+      </button>
+    </form>
   );
 }
 
@@ -314,11 +343,11 @@ function TextField({ defaultValue, label, min, name, required, type = "text" }: 
   );
 }
 
-function TextAreaField({ label, name }: { label: string; name: string }) {
+function TextAreaField({ defaultValue, label, name }: { defaultValue?: string | null; label: string; name: string }) {
   return (
     <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
       <span>{label}</span>
-      <textarea className={`${fieldClassName} min-h-20`} name={name} />
+      <textarea className={`${fieldClassName} min-h-20`} defaultValue={defaultValue ?? ""} name={name} />
     </label>
   );
 }

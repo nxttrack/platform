@@ -750,9 +750,13 @@ function DocumentList({ documents, lookups, title }: { documents: ParentDocument
               </div>
               <StatusPill tone={document.status === "available" ? "success" : "neutral"}>{document.status}</StatusPill>
             </div>
-            <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
-              {document.file_path ? `Bestand: ${document.file_path}` : "Bestand/download wordt in een latere fase gekoppeld."}
-            </div>
+            {document.file_path ? (
+              <a className="mt-3 inline-flex w-fit rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" href={`/api/documents/${document.id}/download`}>
+                Download document
+              </a>
+            ) : (
+              <div className="mt-3 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">Bestand is nog niet gekoppeld.</div>
+            )}
           </div>
         ))}
       </div>

@@ -4,11 +4,61 @@ import { revalidatePath } from "next/cache";
 
 import { getActiveTenantSelection } from "@/lib/auth/tenant-selection";
 import { getTrustedAuthContext } from "@/lib/auth/server-context";
-import { prepareEmailEnvelope, type EmailProvider } from "@/lib/communication/email-adapter";
+import { extractTemplateVariables, prepareEmailEnvelope, renderTemplate, validateTemplateVariables, type EmailProvider } from "@/lib/communication/email-adapter";
+import { sendLiveEmail, type LiveSmtpSettings } from "@/lib/communication/live-email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
 const tenantWriteRoles = ["tenant_owner", "tenant_admin", "tenant_staff"] as const;
+const documentBucket = "tenant-documents";
+
+type MessageTemplateForSend = {
+  id: string;
+  subject_template: string | null;
+  body_template: string;
+  required_variables: string[] | null;
+};
+
+type MessageOutboxForDispatch = {
+  id: string;
+  channel: string;
+  provider: EmailProvider;
+  recipient_email: string | null;
+  subject: string | null;
+  body: string;
+  retry_count: number | null;
+  max_attempts: number | null;
+};
+
+type CommunicationProviderConfigForDispatch = {
+  provider: string;
+  status: string;
+  host: string | null;
+  port: number | null;
+  from_email: string | null;
+  from_name: string | null;
+  username_secret_reference: string | null;
+  password_secret_reference: string | null;
+};
+
+type TenantDocumentForSync = {
+  id: string;
+  tenant_id: string;
+  participant_id: string | null;
+  enrollment_id: string | null;
+  certificate_id: string | null;
+  parent_document_id: string | null;
+  title: string;
+  document_type: string;
+  visibility: string;
+  status: string;
+  storage_bucket: string;
+  file_path: string | null;
+  available_on: string | null;
+};
+
+type TenantSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 export async function updateCommunicationProviderConfigAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
@@ -35,6 +85,82 @@ export async function updateCommunicationProviderConfigAction(formData: FormData
   revalidatePhase12();
 }
 
+export async function runMessageDispatchWorkerAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const limit = intValue(formData, "limit", 10, 1, 50);
+  const dueNow = new Date().toISOString();
+  const outboxResult = await supabase
+    .from("message_outbox")
+    .select("id, channel, provider, recipient_email, subject, body, retry_count, max_attempts")
+    .eq("tenant_id", tenantId)
+    .in("status", ["queued", "retrying"])
+    .or(`scheduled_at.is.null,scheduled_at.lte.${dueNow}`)
+    .or(`next_retry_at.is.null,next_retry_at.lte.${dueNow}`)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  if (outboxResult.error) {
+    throw new Error(outboxResult.error.message);
+  }
+
+  const messages = (outboxResult.data ?? []) as MessageOutboxForDispatch[];
+  const providerConfigsResult = await supabase
+    .from("communication_provider_configs")
+    .select("provider, status, host, port, from_email, from_name, username_secret_reference, password_secret_reference")
+    .eq("tenant_id", tenantId);
+
+  if (providerConfigsResult.error) {
+    throw new Error(providerConfigsResult.error.message);
+  }
+
+  const providerConfigs = (providerConfigsResult.data ?? []) as CommunicationProviderConfigForDispatch[];
+  const smtpSettings = toLiveSmtpSettings(providerConfigs.find((config) => config.provider === "smtp"));
+
+  for (const message of messages) {
+    await dispatchMessage(supabase, tenantId, message, smtpSettings);
+  }
+
+  revalidatePhase12();
+}
+
+export async function retryMessageAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await throwOnError(
+    supabase
+      .from("message_outbox")
+      .update({
+        status: "queued",
+        delivery_status: "pending",
+        next_retry_at: null,
+        failure_reason: null,
+        error_message: null
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+
+  revalidatePhase12();
+}
+
+export async function cancelMessageAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+
+  await throwOnError(
+    supabase
+      .from("message_outbox")
+      .update({
+        status: "cancelled",
+        delivery_status: "cancelled",
+        failure_reason: optionalString(formData, "reason") ?? "Handmatig geannuleerd."
+      })
+      .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+
+  revalidatePhase12();
+}
+
 export async function createMessageTemplateAction(formData: FormData) {
   const { supabase, tenantId, profileId } = await requireTenantWriter();
   const name = requiredString(formData, "name");
@@ -49,6 +175,7 @@ export async function createMessageTemplateAction(formData: FormData) {
       subject_template: optionalString(formData, "subject_template"),
       body_template: requiredString(formData, "body_template"),
       status: enumValue(formData, "status", ["draft", "active", "archived"], "draft"),
+      required_variables: listValue(formData, "required_variables"),
       tags: listValue(formData, "tags"),
       sort_order: intValue(formData, "sort_order", 0),
       created_by_profile_id: profileId,
@@ -74,10 +201,52 @@ export async function updateMessageTemplateAction(formData: FormData) {
         subject_template: optionalString(formData, "subject_template"),
         body_template: requiredString(formData, "body_template"),
         status: enumValue(formData, "status", ["draft", "active", "archived"], "draft"),
+        required_variables: listValue(formData, "required_variables"),
         tags: listValue(formData, "tags"),
         sort_order: intValue(formData, "sort_order", 0)
       })
       .eq("id", requiredString(formData, "id"))
+      .eq("tenant_id", tenantId)
+  );
+
+  revalidatePhase12();
+}
+
+export async function previewMessageTemplateAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const templateId = requiredString(formData, "id");
+  const context = jsonObjectValue(formData, "preview_context");
+
+  const templateResult = await supabase
+    .from("message_templates")
+    .select("id, subject_template, body_template, required_variables")
+    .eq("tenant_id", tenantId)
+    .eq("id", templateId)
+    .single();
+
+  if (templateResult.error || !templateResult.data) {
+    throw new Error(templateResult.error?.message ?? "Template niet gevonden.");
+  }
+
+  const template = templateResult.data as MessageTemplateForSend;
+  const variables = uniqueStrings([...(template.required_variables ?? []), ...extractTemplateVariables(template.subject_template, template.body_template)]);
+  const validationErrors = validateTemplateVariables(variables, context);
+
+  if (validationErrors.length > 0) {
+    throw new Error(`Ontbrekende templatevariabelen: ${validationErrors.join(", ")}.`);
+  }
+
+  await throwOnError(
+    supabase
+      .from("message_templates")
+      .update({
+        required_variables: variables,
+        last_preview_context: context,
+        last_preview_subject: renderTemplate(template.subject_template, context),
+        last_preview_body: renderTemplate(template.body_template, context),
+        last_previewed_at: new Date().toISOString()
+      })
+      .eq("id", templateId)
       .eq("tenant_id", tenantId)
   );
 
@@ -92,13 +261,16 @@ export async function queueMessageAction(formData: FormData) {
   const requestedStatus = enumValue(formData, "status", ["draft", "queued"], "draft");
   const recipientProfileId = optionalString(formData, "recipient_profile_id");
   const recipientEmail = optionalString(formData, "recipient_email");
+  const renderContext = jsonObjectValue(formData, "render_context");
   let subject = optionalString(formData, "subject");
   let body = optionalString(formData, "body");
+  let templateVariables: string[] = [];
+  let validationErrors: string[] = [];
 
   if (templateId && (!subject || !body)) {
     const templateResult = await supabase
       .from("message_templates")
-      .select("subject_template, body_template")
+      .select("subject_template, body_template, required_variables")
       .eq("tenant_id", tenantId)
       .eq("id", templateId)
       .single();
@@ -107,12 +279,19 @@ export async function queueMessageAction(formData: FormData) {
       throw new Error(templateResult.error?.message ?? "Template niet gevonden.");
     }
 
-    subject = subject ?? templateResult.data.subject_template;
-    body = body ?? templateResult.data.body_template;
+    const template = templateResult.data as MessageTemplateForSend;
+    templateVariables = uniqueStrings([...(template.required_variables ?? []), ...extractTemplateVariables(template.subject_template, template.body_template)]);
+    validationErrors = validateTemplateVariables(templateVariables, renderContext);
+    subject = subject ?? renderTemplate(template.subject_template, renderContext);
+    body = body ?? renderTemplate(template.body_template, renderContext);
   }
 
   if (!body) {
     throw new Error("Berichttekst is verplicht.");
+  }
+
+  if (validationErrors.length > 0) {
+    throw new Error(`Ontbrekende templatevariabelen: ${validationErrors.join(", ")}.`);
   }
 
   if (channel === "email" && !recipientEmail && !recipientProfileId) {
@@ -134,7 +313,11 @@ export async function queueMessageAction(formData: FormData) {
       subject,
       body,
       status: prepared.dispatchStatus,
+      delivery_status: prepared.dispatchStatus === "queued" ? "pending" : "prepared",
       scheduled_at: optionalDateTime(formData, "scheduled_at"),
+      render_context: renderContext,
+      template_variables: templateVariables,
+      validation_errors: validationErrors,
       created_by_profile_id: profileId,
       metadata: { phase: "phase12", email_foundation: prepared }
     })
@@ -208,6 +391,7 @@ export async function createTenantDocumentRecordAction(formData: FormData) {
       storage_bucket: optionalString(formData, "storage_bucket") ?? "tenant-documents",
       file_path: optionalString(formData, "file_path"),
       available_on: optionalDate(formData, "available_on"),
+      retention_until: optionalDate(formData, "retention_until"),
       created_by_profile_id: profileId,
       metadata: { phase: "phase12", storage: "prepared" }
     })
@@ -216,27 +400,99 @@ export async function createTenantDocumentRecordAction(formData: FormData) {
   revalidatePhase12();
 }
 
+export async function uploadTenantDocumentAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const documentId = requiredString(formData, "id");
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Kies een bestand om te uploaden.");
+  }
+
+  const documentResult = await supabase
+    .from("tenant_document_records")
+    .select("id, tenant_id, participant_id, enrollment_id, certificate_id, parent_document_id, title, document_type, visibility, status, storage_bucket, file_path, available_on, version_number")
+    .eq("tenant_id", tenantId)
+    .eq("id", documentId)
+    .single();
+
+  if (documentResult.error || !documentResult.data) {
+    throw new Error(documentResult.error?.message ?? "Documentrecord niet gevonden.");
+  }
+
+  const current = documentResult.data as TenantDocumentForSync & { version_number: number | null };
+  const nextVersion = current.file_path ? (current.version_number ?? 1) + 1 : Math.max(1, current.version_number ?? 1);
+  const filename = safeFileName(file.name);
+  const filePath = `${tenantId}/${documentId}/v${nextVersion}/${filename}`;
+  const admin = createAdminClient();
+  const uploadResult = await admin.storage.from(documentBucket).upload(filePath, file, {
+    contentType: file.type || "application/octet-stream",
+    upsert: true
+  });
+
+  if (uploadResult.error) {
+    await supabase
+      .from("tenant_document_records")
+      .update({ upload_status: "failed", metadata: { phase: "sprint5", upload_error: uploadResult.error.message } })
+      .eq("tenant_id", tenantId)
+      .eq("id", documentId);
+    throw new Error(uploadResult.error.message);
+  }
+
+  const updatedResult = await supabase
+    .from("tenant_document_records")
+    .update({
+      storage_bucket: documentBucket,
+      file_path: filePath,
+      original_filename: filename,
+      mime_type: file.type || "application/octet-stream",
+      file_size_bytes: file.size,
+      version_number: nextVersion,
+      upload_status: "uploaded",
+      status: current.status === "draft" ? "available" : current.status,
+      metadata: { phase: "sprint5", storage: "uploaded" }
+    })
+    .eq("tenant_id", tenantId)
+    .eq("id", documentId)
+    .select("id, tenant_id, participant_id, enrollment_id, certificate_id, parent_document_id, title, document_type, visibility, status, storage_bucket, file_path, available_on")
+    .single();
+
+  if (updatedResult.error || !updatedResult.data) {
+    throw new Error(updatedResult.error?.message ?? "Documentrecord kon niet worden bijgewerkt.");
+  }
+
+  await syncParentDocumentVisibility(supabase, updatedResult.data as TenantDocumentForSync);
+  revalidatePhase12();
+}
+
 export async function updateTenantDocumentRecordAction(formData: FormData) {
   const { supabase, tenantId } = await requireTenantWriter();
 
-  await throwOnError(
-    supabase
-      .from("tenant_document_records")
-      .update({
-        participant_id: optionalString(formData, "participant_id"),
-        enrollment_id: optionalString(formData, "enrollment_id"),
-        certificate_id: optionalString(formData, "certificate_id"),
-        title: requiredString(formData, "title"),
-        document_type: enumValue(formData, "document_type", ["document", "policy", "invoice_notice", "certificate", "diploma", "internal_note"], "document"),
-        visibility: enumValue(formData, "visibility", ["staff", "parent", "instructor", "all"], "staff"),
-        status: enumValue(formData, "status", ["draft", "available", "archived"], "draft"),
-        storage_bucket: optionalString(formData, "storage_bucket") ?? "tenant-documents",
-        file_path: optionalString(formData, "file_path"),
-        available_on: optionalDate(formData, "available_on")
-      })
-      .eq("id", requiredString(formData, "id"))
-      .eq("tenant_id", tenantId)
-  );
+  const result = await supabase
+    .from("tenant_document_records")
+    .update({
+      participant_id: optionalString(formData, "participant_id"),
+      enrollment_id: optionalString(formData, "enrollment_id"),
+      certificate_id: optionalString(formData, "certificate_id"),
+      title: requiredString(formData, "title"),
+      document_type: enumValue(formData, "document_type", ["document", "policy", "invoice_notice", "certificate", "diploma", "internal_note"], "document"),
+      visibility: enumValue(formData, "visibility", ["staff", "parent", "instructor", "all"], "staff"),
+      status: enumValue(formData, "status", ["draft", "available", "archived"], "draft"),
+      storage_bucket: optionalString(formData, "storage_bucket") ?? "tenant-documents",
+      file_path: optionalString(formData, "file_path"),
+      available_on: optionalDate(formData, "available_on"),
+      retention_until: optionalDate(formData, "retention_until")
+    })
+    .eq("id", requiredString(formData, "id"))
+    .eq("tenant_id", tenantId)
+    .select("id, tenant_id, participant_id, enrollment_id, certificate_id, parent_document_id, title, document_type, visibility, status, storage_bucket, file_path, available_on")
+    .single();
+
+  if (result.error || !result.data) {
+    throw new Error(result.error?.message ?? "Documentrecord kon niet worden bijgewerkt.");
+  }
+
+  await syncParentDocumentVisibility(supabase, result.data as TenantDocumentForSync);
 
   revalidatePhase12();
 }
@@ -282,6 +538,327 @@ export async function updateReportExportRequestAction(formData: FormData) {
   );
 
   revalidatePhase12();
+}
+
+export async function generateReportExportAction(formData: FormData) {
+  const { supabase, tenantId } = await requireTenantWriter();
+  const requestId = requiredString(formData, "id");
+  const requestResult = await supabase
+    .from("report_export_requests")
+    .select("id, report_type, export_format, filters")
+    .eq("tenant_id", tenantId)
+    .eq("id", requestId)
+    .single();
+
+  if (requestResult.error || !requestResult.data) {
+    throw new Error(requestResult.error?.message ?? "Exportaanvraag niet gevonden.");
+  }
+
+  await supabase.from("report_export_requests").update({ status: "processing", error_message: null }).eq("tenant_id", tenantId).eq("id", requestId);
+
+  try {
+    const request = requestResult.data as { id: string; report_type: string; export_format: string; filters: Record<string, unknown> };
+    const rows = await buildReportRows(supabase, tenantId, request.report_type);
+    const generatedFormat = request.export_format === "json" ? "json" : "csv";
+    const body = generatedFormat === "json" ? JSON.stringify(rows, null, 2) : toCsv(rows);
+    const contentType = generatedFormat === "json" ? "application/json" : "text/csv";
+    const filePath = `${tenantId}/reports/${request.report_type}-${request.id}.${generatedFormat}`;
+    const admin = createAdminClient();
+    const uploadResult = await admin.storage.from(documentBucket).upload(filePath, new Blob([body], { type: contentType }), {
+      contentType,
+      upsert: true
+    });
+
+    if (uploadResult.error) {
+      throw new Error(uploadResult.error.message);
+    }
+
+    await throwOnError(
+      supabase
+        .from("report_export_requests")
+        .update({
+          status: "ready",
+          file_path: filePath,
+          completed_at: new Date().toISOString(),
+          error_message: null,
+          metadata: {
+            phase: "sprint5",
+            row_count: rows.length,
+            requested_format: request.export_format,
+            generated_format: generatedFormat,
+            filters: request.filters ?? {}
+          }
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", requestId)
+    );
+  } catch (error) {
+    await supabase
+      .from("report_export_requests")
+      .update({
+        status: "failed",
+        error_message: error instanceof Error ? error.message : "Export genereren mislukt.",
+        metadata: { phase: "sprint5", failure: "export_generation" }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", requestId);
+    throw error;
+  }
+
+  revalidatePhase12();
+}
+
+async function dispatchMessage(supabase: TenantSupabaseClient, tenantId: string, message: MessageOutboxForDispatch, smtpSettings: LiveSmtpSettings | null) {
+  if (message.channel !== "email") {
+    await throwOnError(
+      supabase
+        .from("message_outbox")
+        .update({
+          status: "sent",
+          delivery_status: "skipped",
+          sent_at: new Date().toISOString(),
+          delivered_at: new Date().toISOString(),
+          failure_reason: "In-app bericht is zonder externe provider gemarkeerd als verwerkt."
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", message.id)
+    );
+    return;
+  }
+
+  if (!message.recipient_email) {
+    await markDispatchFailed(supabase, tenantId, message, "Geen ontvanger e-mailadres gevonden.");
+    return;
+  }
+
+  await supabase
+    .from("message_outbox")
+    .update({ status: "sending", delivery_status: "sending", last_attempt_at: new Date().toISOString() })
+    .eq("tenant_id", tenantId)
+    .eq("id", message.id);
+
+  try {
+    const delivery = await sendLiveEmail(
+      {
+        to: message.recipient_email,
+        subject: message.subject ?? "NXTTRACK bericht",
+        text: message.body
+      },
+      { smtpSettings }
+    );
+
+    await throwOnError(
+      supabase
+        .from("message_outbox")
+        .update({
+          status: "sent",
+          delivery_status: "sent",
+          sent_at: new Date().toISOString(),
+          delivered_at: new Date().toISOString(),
+          provider: delivery.provider,
+          provider_message_id: delivery.messageId,
+          failure_reason: null,
+          error_message: null,
+          next_retry_at: null
+        })
+        .eq("tenant_id", tenantId)
+        .eq("id", message.id)
+    );
+  } catch (error) {
+    await markDispatchFailed(supabase, tenantId, message, error instanceof Error ? error.message : "Verzending mislukt.");
+  }
+}
+
+async function markDispatchFailed(supabase: TenantSupabaseClient, tenantId: string, message: MessageOutboxForDispatch, reason: string) {
+  const nextRetryCount = (message.retry_count ?? 0) + 1;
+  const maxAttempts = message.max_attempts ?? 3;
+  const retryable = nextRetryCount < maxAttempts;
+
+  await throwOnError(
+    supabase
+      .from("message_outbox")
+      .update({
+        status: retryable ? "retrying" : "failed",
+        delivery_status: "failed",
+        retry_count: nextRetryCount,
+        next_retry_at: retryable ? new Date(Date.now() + nextRetryCount * 15 * 60 * 1000).toISOString() : null,
+        failure_reason: reason,
+        error_message: reason,
+        last_attempt_at: new Date().toISOString()
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", message.id)
+  );
+}
+
+function toLiveSmtpSettings(provider: CommunicationProviderConfigForDispatch | undefined): LiveSmtpSettings | null {
+  if (!provider || provider.status === "disabled") {
+    return null;
+  }
+
+  return {
+    status: provider.status,
+    host: provider.host,
+    port: provider.port,
+    secure: provider.port === 465,
+    from_email: provider.from_email,
+    from_name: provider.from_name,
+    reply_to_email: provider.from_email,
+    username_secret_reference: provider.username_secret_reference,
+    password_secret_reference: provider.password_secret_reference
+  };
+}
+
+async function syncParentDocumentVisibility(supabase: TenantSupabaseClient, document: TenantDocumentForSync) {
+  const parentVisible = ["parent", "all"].includes(document.visibility) && document.participant_id && document.status === "available";
+
+  if (!parentVisible) {
+    if (document.parent_document_id) {
+      await supabase.from("parent_documents").update({ status: "archived" }).eq("tenant_id", document.tenant_id).eq("id", document.parent_document_id);
+    }
+
+    return;
+  }
+
+  const payload = {
+    tenant_id: document.tenant_id,
+    participant_id: document.participant_id,
+    enrollment_id: document.enrollment_id,
+    certificate_id: document.certificate_id,
+    title: document.title,
+    document_type: normalizeParentDocumentType(document.document_type),
+    status: "available",
+    file_path: document.file_path,
+    available_on: document.available_on
+  };
+
+  let parentDocumentId = document.parent_document_id;
+
+  if (parentDocumentId) {
+    await throwOnError(supabase.from("parent_documents").update(payload).eq("tenant_id", document.tenant_id).eq("id", parentDocumentId));
+  } else {
+    const insertResult = await supabase.from("parent_documents").insert(payload).select("id").single();
+
+    if (insertResult.error || !insertResult.data) {
+      throw new Error(insertResult.error?.message ?? "Ouderdocument kon niet worden aangemaakt.");
+    }
+
+    parentDocumentId = insertResult.data.id as string;
+    await throwOnError(supabase.from("tenant_document_records").update({ parent_document_id: parentDocumentId }).eq("tenant_id", document.tenant_id).eq("id", document.id));
+  }
+
+  const guardiansResult = await supabase
+    .from("participant_guardians")
+    .select("profile_id")
+    .eq("tenant_id", document.tenant_id)
+    .eq("participant_id", document.participant_id)
+    .eq("status", "active");
+
+  if (guardiansResult.error) {
+    throw new Error(guardiansResult.error.message);
+  }
+
+  const notifications = (guardiansResult.data ?? []).map((guardian) => ({
+    tenant_id: document.tenant_id,
+    recipient_profile_id: guardian.profile_id,
+    participant_id: document.participant_id,
+    enrollment_id: document.enrollment_id,
+    title: "Nieuw document beschikbaar",
+    body: document.title,
+    notification_type: "document",
+    status: "unread"
+  }));
+
+  if (notifications.length > 0) {
+    await throwOnError(supabase.from("parent_notifications").insert(notifications));
+  }
+}
+
+async function buildReportRows(supabase: TenantSupabaseClient, tenantId: string, reportType: string) {
+  if (reportType === "occupancy") {
+    const [groupsResult, membershipsResult] = await Promise.all([
+      supabase.from("groups").select("id, name, capacity, status").eq("tenant_id", tenantId).order("name", { ascending: true }),
+      supabase.from("group_memberships").select("group_id, status").eq("tenant_id", tenantId).in("status", ["planned", "active"])
+    ]);
+    throwResultError(groupsResult.error);
+    throwResultError(membershipsResult.error);
+
+    return (groupsResult.data ?? []).map((group) => {
+      const active = (membershipsResult.data ?? []).filter((membership) => membership.group_id === group.id).length;
+
+      return {
+        group: group.name,
+        status: group.status,
+        capacity: group.capacity,
+        active_memberships: active,
+        available_spots: Math.max(0, group.capacity - active)
+      };
+    });
+  }
+
+  if (reportType === "waitlist") {
+    const result = await supabase.from("waitlist_entries").select("status, priority, requested_option, created_at").eq("tenant_id", tenantId).order("created_at", { ascending: false });
+    throwResultError(result.error);
+    return result.data ?? [];
+  }
+
+  if (reportType === "progress") {
+    const result = await supabase.from("progress").select("participant_id, enrollment_id, stage_id, status, score, assessed_at, updated_at").eq("tenant_id", tenantId).order("updated_at", { ascending: false });
+    throwResultError(result.error);
+    return result.data ?? [];
+  }
+
+  const result = await supabase.from("invoices").select("invoice_number, title, status, amount_due_cents, amount_paid_cents, currency, issued_on, due_on").eq("tenant_id", tenantId).order("issued_on", { ascending: false });
+  throwResultError(result.error);
+  return (result.data ?? []).map((invoice) => ({
+    ...invoice,
+    open_amount_cents: Math.max(0, invoice.amount_due_cents - invoice.amount_paid_cents)
+  }));
+}
+
+function throwResultError(error: { message: string } | null) {
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+function toCsv(rows: Array<Record<string, unknown>>) {
+  if (rows.length === 0) {
+    return "";
+  }
+
+  const headers = Object.keys(rows[0] ?? {});
+
+  return [
+    headers.join(","),
+    ...rows.map((row) => headers.map((header) => csvCell(row[header])).join(","))
+  ].join("\n");
+}
+
+function csvCell(value: unknown) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  const stringValue = typeof value === "string" ? value : JSON.stringify(value);
+
+  return /[",\n]/.test(stringValue) ? `"${stringValue.replaceAll('"', '""')}"` : stringValue;
+}
+
+function normalizeParentDocumentType(type: string) {
+  return type === "internal_note" ? "document" : type;
+}
+
+function safeFileName(filename: string) {
+  return filename
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 120) || "document";
+}
+
+function uniqueStrings(values: string[]) {
+  return [...new Set(values.filter(Boolean))].sort();
 }
 
 async function requireTenantWriter() {

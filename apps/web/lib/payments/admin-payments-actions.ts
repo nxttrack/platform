@@ -83,6 +83,121 @@ export async function recordManualPaymentAction(formData: FormData) {
   revalidatePayments();
 }
 
+export async function updateInvoiceCorrectionAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const invoiceId = requiredString(formData, "invoice_id");
+  const amountDueCents = priceCents(formData, "amount_due");
+  const status = enumValue(formData, "status", ["draft", "open", "partially_paid", "paid", "overdue", "void"], "open");
+  const note = optionalString(formData, "correction_note") ?? "Handmatige factuurcorrectie.";
+
+  await throwOnError(
+    supabase
+      .from("invoices")
+      .update({
+        title: requiredString(formData, "title"),
+        description: optionalString(formData, "description"),
+        due_on: optionalDate(formData, "due_on"),
+        amount_due_cents: amountDueCents,
+        status,
+        metadata: { source: "admin_manual_correction", correction_note: note }
+      })
+      .eq("tenant_id", tenantId)
+      .eq("id", invoiceId)
+  );
+
+  await throwOnError(
+    supabase.from("payment_events").insert({
+      tenant_id: tenantId,
+      invoice_id: invoiceId,
+      provider: "manual",
+      event_type: "invoice_manual_correction",
+      payload: { amount_due_cents: amountDueCents, status, note },
+      created_by_profile_id: profileId
+    })
+  );
+
+  revalidatePayments();
+}
+
+export async function queueInvoiceReminderAction(formData: FormData) {
+  const { supabase, tenantId, profileId } = await requireTenantWriter();
+  const invoiceId = requiredString(formData, "invoice_id");
+  const invoiceResult = await supabase
+    .from("invoices")
+    .select("id, enrollment_id, participant_id, invoice_number, title, amount_due_cents, amount_paid_cents, currency, due_on, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", invoiceId)
+    .single();
+
+  if (invoiceResult.error || !invoiceResult.data) {
+    throw new Error(invoiceResult.error?.message ?? "Factuur niet gevonden.");
+  }
+
+  const guardiansResult = await supabase
+    .from("participant_guardians")
+    .select("profile_id, email, display_name")
+    .eq("tenant_id", tenantId)
+    .eq("participant_id", invoiceResult.data.participant_id)
+    .eq("status", "active");
+
+  if (guardiansResult.error) {
+    throw new Error(guardiansResult.error.message);
+  }
+
+  const remainingCents = Math.max(0, invoiceResult.data.amount_due_cents - invoiceResult.data.amount_paid_cents);
+  const guardians = (guardiansResult.data ?? []).filter((guardian) => Boolean(guardian.email));
+
+  if (guardians.length === 0) {
+    throw new Error("Geen ouder/verzorger met e-mailadres gevonden voor deze factuur.");
+  }
+
+  await throwOnError(
+    supabase.from("message_outbox").insert(
+      guardians.map((guardian) => ({
+        tenant_id: tenantId,
+        channel: "email",
+        provider: "smtp",
+        recipient_profile_id: guardian.profile_id,
+        recipient_email: guardian.email,
+        participant_id: invoiceResult.data.participant_id,
+        enrollment_id: invoiceResult.data.enrollment_id,
+        subject: `Betalingsherinnering ${invoiceResult.data.invoice_number}`,
+        body: [
+          `Hallo ${guardian.display_name ?? ""}`.trim() + ",",
+          "",
+          `Er staat nog ${formatMoneyText(remainingCents, invoiceResult.data.currency)} open voor ${invoiceResult.data.title}.`,
+          invoiceResult.data.due_on ? `Vervaldatum: ${invoiceResult.data.due_on}.` : null,
+          "",
+          "Log in op het ouderportaal voor de actuele betaalstatus.",
+          "",
+          "NXTTRACK"
+        ].filter(Boolean).join("\n"),
+        status: "queued",
+        delivery_status: "pending",
+        render_context: {
+          invoice: invoiceResult.data,
+          remaining_cents: remainingCents
+        },
+        metadata: { source: "payment_reminder", invoice_id: invoiceId },
+        created_by_profile_id: profileId
+      }))
+    )
+  );
+
+  await throwOnError(
+    supabase.from("payment_events").insert({
+      tenant_id: tenantId,
+      invoice_id: invoiceId,
+      provider: "manual",
+      event_type: "invoice_reminder_queued",
+      payload: { recipients: guardians.length },
+      created_by_profile_id: profileId
+    })
+  );
+
+  revalidatePayments();
+}
+
 async function requireTenantWriter() {
   const selection = await getActiveTenantSelection();
   const context = await getTrustedAuthContext(selection);
@@ -109,7 +224,7 @@ async function requireTenantWriter() {
 }
 
 function revalidatePayments() {
-  for (const path of ["/admin", "/admin/payments", "/parent", "/parent/betalingen", "/parent/notificaties", "/parent/documenten"]) {
+  for (const path of ["/admin", "/admin/payments", "/admin/berichten", "/parent", "/parent/betalingen", "/parent/notificaties", "/parent/documenten"]) {
     revalidatePath(path);
   }
 }
@@ -183,4 +298,8 @@ function priceCents(formData: FormData, key: string) {
   }
 
   return Math.round(parsed * 100);
+}
+
+function formatMoneyText(priceCents: number, currency: string) {
+  return new Intl.NumberFormat("nl-NL", { style: "currency", currency }).format(priceCents / 100);
 }

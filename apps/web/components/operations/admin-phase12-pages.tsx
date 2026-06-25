@@ -3,16 +3,22 @@ import { BarChart3, ClipboardList, Download, FileText, Inbox, Mail, Send, Settin
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
+  cancelMessageAction,
   createMessageTemplateAction,
   createOperationalTaskAction,
   createReportExportRequestAction,
   createTenantDocumentRecordAction,
+  generateReportExportAction,
+  previewMessageTemplateAction,
   queueMessageAction,
+  retryMessageAction,
+  runMessageDispatchWorkerAction,
   updateCommunicationProviderConfigAction,
   updateMessageTemplateAction,
   updateOperationalTaskAction,
   updateReportExportRequestAction,
-  updateTenantDocumentRecordAction
+  updateTenantDocumentRecordAction,
+  uploadTenantDocumentAction
 } from "@/lib/operations/admin-phase12-actions";
 import type {
   AdminPhase12Data,
@@ -66,16 +72,31 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
       <PageHeader
         action={<StatusPill tone="info">Communicatie</StatusPill>}
         kicker="Backoffice - berichten"
-        subtitle="SMTP-first met SendGrid als provider. Berichten worden klaargezet in de outbox; er is nog geen live worker."
+        subtitle="SMTP-first met SendGrid-ready fallback. Berichten worden vanuit de outbox verzonden, gevolgd en opnieuw geprobeerd bij fouten."
         title="Berichten"
       />
 
       <div className="grid gap-4 md:grid-cols-4">
         <MetricCard icon={<Settings className="h-5 w-5" />} label="Providers" value={data.providerConfigs.length.toString()} detail="SMTP + SendGrid" />
         <MetricCard icon={<Mail className="h-5 w-5" />} label="Templates actief" value={activeTemplates.toString()} detail={`${data.messageTemplates.length} totaal`} />
-        <MetricCard icon={<Send className="h-5 w-5" />} label="Outbox queued" value={queuedMessages.toString()} detail="nog niet live verstuurd" />
+        <MetricCard icon={<Send className="h-5 w-5" />} label="Outbox queued" value={queuedMessages.toString()} detail="klaar voor worker" />
         <MetricCard icon={<Inbox className="h-5 w-5" />} label="SendGrid API" value={sendgridProvider?.status ?? "missing"} detail="adapter voorbereid" />
       </div>
+
+      <Card>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold">Dispatch worker</h2>
+            <p className="text-sm text-muted-foreground">Verzend maximaal 10 geplande of opnieuw te proberen berichten via SMTP/SendGrid-ready mailconfiguratie.</p>
+          </div>
+          <form action={runMessageDispatchWorkerAction} className="flex items-center gap-2">
+            <input name="limit" type="hidden" value="10" />
+            <button className={primaryButtonClassName} type="submit">
+              Worker starten
+            </button>
+          </form>
+        </div>
+      </Card>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
         <Card>
@@ -184,7 +205,7 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
       <PageHeader
         action={<StatusPill tone="info">Documenten</StatusPill>}
         kicker="Backoffice - documenten"
-        subtitle="Documenten en rechten staan klaar; echte upload en opslagkoppeling blijft voorbereid."
+        subtitle="Private documentopslag met versiebeheer, ouderzichtbaarheid, signed downloads en retentievoorbereiding."
         title="Documenten"
       />
 
@@ -192,7 +213,7 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<FileText className="h-5 w-5" />} label="Documenten" value={data.documentRecords.length.toString()} detail="tenantdocumenten" />
         <MetricCard icon={<Download className="h-5 w-5" />} label="Beschikbaar" value={availableDocuments.toString()} detail="zichtbaar volgens rechten" />
         <MetricCard icon={<Inbox className="h-5 w-5" />} label="Ouderzichtbaar" value={parentVisible.toString()} detail="ouder/iedereen" />
-        <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value="voorbereid" detail="tenant-documents" />
+        <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value="private" detail="tenant-documents" />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
@@ -329,6 +350,7 @@ function MessageTemplateForm({ mode, template }: { mode: "create" | "update"; te
       </div>
       <TextField defaultValue={template?.subject_template} label="Onderwerp template" name="subject_template" />
       <TextAreaField defaultValue={template?.body_template} label="Body template" name="body_template" required />
+      <TextField defaultValue={template?.required_variables.join(", ")} label="Verplichte variabelen" name="required_variables" />
       <TextField defaultValue={template?.tags.join(", ")} label="Tags" name="tags" />
       <button className={primaryButtonClassName} type="submit">
         {mode === "create" ? "Template maken" : "Template opslaan"}
@@ -353,6 +375,19 @@ function TemplateCard({ template }: { template: MessageTemplateRow }) {
       </summary>
       <div className="mt-4">
         <MessageTemplateForm mode="update" template={template} />
+        <form action={previewMessageTemplateAction} className="mt-4 grid gap-3 border-t border-border pt-4">
+          <input name="id" type="hidden" value={template.id} />
+          <TextAreaField defaultValue={formatJson(defaultPreviewContext(template))} label="Preview context JSON" name="preview_context" />
+          <button className={secondaryButtonClassName} type="submit">
+            Preview valideren
+          </button>
+          {template.last_previewed_at ? (
+            <div className="rounded-2xl border border-border bg-card p-3 text-sm">
+              <p className="font-semibold">{template.last_preview_subject ?? "Geen onderwerp"}</p>
+              <p className="mt-2 whitespace-pre-line text-muted-foreground">{template.last_preview_body}</p>
+            </div>
+          ) : null}
+        </form>
       </div>
     </details>
   );
@@ -374,6 +409,7 @@ function QueueMessageForm({ data }: { data: AdminPhase12Data }) {
       </div>
       <TextField label="Onderwerp" name="subject" />
       <TextAreaField label="Berichttekst" name="body" />
+      <TextAreaField defaultValue='{ "leerling": "Demo leerling", "tenant": "AquaSwim" }' label="Render context JSON" name="render_context" />
       <button className={primaryButtonClassName} type="submit">
         Bericht klaarzetten
       </button>
@@ -395,9 +431,38 @@ function MessageOutboxCard({ lookups, message }: { lookups: Phase12Lookups; mess
             {profile?.full_name ?? message.recipient_email ?? "ontvanger onbekend"} - {participant?.display_name ?? "geen leerling"} - {message.provider}
           </p>
         </div>
-        <StatusPill tone={statusTone(message.status)}>{message.status}</StatusPill>
+        <div className="flex flex-wrap gap-2">
+          <StatusPill tone={statusTone(message.status)}>{message.status}</StatusPill>
+          <StatusPill tone={statusTone(message.delivery_status)}>{message.delivery_status}</StatusPill>
+        </div>
       </div>
       <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{message.body}</p>
+      <div className="mt-3 grid gap-3 md:grid-cols-4">
+        <InfoTile label="Pogingen" value={`${message.retry_count}/${message.max_attempts}`} />
+        <InfoTile label="Provider ID" value={message.provider_message_id ?? "-"} />
+        <InfoTile label="Volgende poging" value={message.next_retry_at ? formatDateTime(message.next_retry_at) : "-"} />
+        <InfoTile label="Verzonden" value={message.sent_at ? formatDateTime(message.sent_at) : "-"} />
+      </div>
+      {message.failure_reason || message.error_message ? <p className="mt-3 rounded-2xl bg-destructive/10 p-3 text-sm text-destructive">{message.failure_reason ?? message.error_message}</p> : null}
+      <div className="mt-3 flex flex-wrap gap-2">
+        {["failed", "retrying"].includes(message.status) ? (
+          <form action={retryMessageAction}>
+            <input name="id" type="hidden" value={message.id} />
+            <button className={secondaryButtonClassName} type="submit">
+              Opnieuw proberen
+            </button>
+          </form>
+        ) : null}
+        {["draft", "queued", "retrying"].includes(message.status) ? (
+          <form action={cancelMessageAction}>
+            <input name="id" type="hidden" value={message.id} />
+            <input name="reason" type="hidden" value="Geannuleerd via backoffice." />
+            <button className={secondaryButtonClassName} type="submit">
+              Annuleren
+            </button>
+          </form>
+        ) : null}
+      </div>
       <p className="mt-2 text-xs text-muted-foreground">{message.scheduled_at ? `Gepland ${formatDateTime(message.scheduled_at)}` : `Aangemaakt ${formatDateTime(message.created_at)}`}</p>
     </div>
   );
@@ -468,6 +533,7 @@ function DocumentRecordForm({ data, document, mode }: { data: AdminPhase12Data; 
         <TextField defaultValue={document?.available_on} label="Beschikbaar vanaf" name="available_on" type="date" />
         <TextField defaultValue={document?.storage_bucket ?? "tenant-documents"} label="Opslagbucket" name="storage_bucket" />
         <TextField defaultValue={document?.file_path} label="Bestandspad" name="file_path" />
+        <TextField defaultValue={document?.retention_until} label="Bewaren tot" name="retention_until" type="date" />
       </div>
       <button className={primaryButtonClassName} type="submit">
         {mode === "create" ? "Documentrecord maken" : "Documentrecord opslaan"}
@@ -496,6 +562,26 @@ function DocumentRecordCard({ data, document, lookups }: { data: AdminPhase12Dat
         <InfoTile label="Opslag" value={document.storage_bucket} />
         <InfoTile label="Pad" value={document.file_path ?? "nog geen bestand"} />
         <InfoTile label="Beschikbaar" value={document.available_on ? formatDate(document.available_on) : "-"} />
+        <InfoTile label="Versie" value={`v${document.version_number}`} />
+        <InfoTile label="Upload" value={document.upload_status} />
+        <InfoTile label="Bestand" value={document.original_filename ?? document.mime_type ?? "-"} />
+      </div>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <form action={uploadTenantDocumentAction} className="flex flex-wrap items-end gap-2">
+          <input name="id" type="hidden" value={document.id} />
+          <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+            <span>Bestand uploaden</span>
+            <input className={fieldClassName} name="file" required type="file" />
+          </label>
+          <button className={primaryButtonClassName} type="submit">
+            Uploaden
+          </button>
+        </form>
+        {document.file_path ? (
+          <a className={secondaryButtonClassName} href={`/api/documents/${document.id}/download`}>
+            Download
+          </a>
+        ) : null}
       </div>
       <div className="mt-4">
         <DocumentRecordForm data={data} document={document} mode="update" />
@@ -539,6 +625,19 @@ function ReportExportCard({ request }: { request: ReportExportRequestRow }) {
       </summary>
       <div className="mt-4">
         <ReportExportForm mode="update" request={request} />
+        <div className="mt-4 flex flex-wrap gap-2">
+          <form action={generateReportExportAction}>
+            <input name="id" type="hidden" value={request.id} />
+            <button className={primaryButtonClassName} type="submit">
+              Export genereren
+            </button>
+          </form>
+          {request.file_path ? (
+            <a className={secondaryButtonClassName} href={`/api/reports/${request.id}/download`}>
+              Download
+            </a>
+          ) : null}
+        </div>
       </div>
     </details>
   );
@@ -762,8 +861,22 @@ function formatJson(value: Record<string, unknown>) {
   return JSON.stringify(value, null, 2);
 }
 
+function defaultPreviewContext(template: MessageTemplateRow) {
+  const context: Record<string, string> = {
+    leerling: "Demo leerling",
+    tenant: "AquaSwim"
+  };
+
+  for (const variable of template.required_variables) {
+    context[variable] = `Voorbeeld ${variable}`;
+  }
+
+  return context;
+}
+
 const fieldClassName = "min-h-10 rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground outline-none ring-primary/20 focus:ring-2";
 const primaryButtonClassName = "w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90";
+const secondaryButtonClassName = "inline-flex w-fit items-center justify-center rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted";
 
 const providerStatusOptions = [
   { label: "Uitgeschakeld", value: "disabled" },
