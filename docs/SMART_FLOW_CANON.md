@@ -1,0 +1,302 @@
+# NXTTRACK Smart Flow Canon
+
+Reviewed on: 2026-06-25
+
+Status: definitive planning canon for the smart, modern, interactive NXTTRACK flow layer. This document extends the main product canon. It does not replace `docs/NXTTRACK_CANON.md`.
+
+## 1. Purpose
+
+NXTTRACK must become more than a digital administration system. The platform should actively connect registration, learner level, group planning, instructor capacity, lesson attendance, progress, flow-through, afzwem readiness, diploma records, messages, tasks, payments, and reports.
+
+The showpiece of the platform is the Smart Flow Engine:
+
+> The right learner, at the right level, in the right group, at the right moment, with the right instructor, inside the right capacity.
+
+The Smart Flow Engine is not one hidden algorithm. It is a set of explainable engines, workflows, dashboards, decisions, and audit trails that help swim schools make better daily decisions without losing control.
+
+## 2. Source Material
+
+This canon is based on:
+
+- The attached document `NXTTRACK - Canon & Faseplan voor de Slimme Functies`.
+- The current `nxttrack/platform` codebase on `staging`.
+- The existing NXTTRACK canon, architecture plan, roadmap, and Swim Start enterprise gap analysis.
+- The current Supabase migrations, App Router pages, server actions, shell structure, and staging deployment flow.
+
+## 3. Non-Negotiable Domain Rules
+
+These rules are locked for the smart layer:
+
+- Program is the offered product or learning track.
+- Stage is the learner's current level inside a program.
+- Group is a recurring class with a fixed schedule, resource, instructor, and capacity.
+- Session is one concrete lesson date and time.
+- Resource is a pool, lane, field, room, location, or other scarce planning asset.
+- Instructor is the person teaching a group or session.
+- Enrollment means a learner follows a program.
+- Group membership means a learner is placed in a specific group.
+- Subscription or payment plan is the billing contract and must stay separate from stage and group.
+- Progress is development inside modules, stages, or program outcomes.
+- Badge is a positive achievement or milestone.
+- Certificate or diploma is the official result.
+
+The most important separation:
+
+```txt
+Stage movement is learning movement.
+Group movement is planning movement.
+Subscription movement is billing movement.
+```
+
+A child moving from Badje 1 to Badje 2 usually keeps the same subscription. Billing changes only when the paid product, frequency, contract, or payment plan changes.
+
+## 4. Automation Policy
+
+NXTTRACK must support three automation levels:
+
+- Manual: the system shows data and an admin decides.
+- Semi-automatic: the system recommends, scores, explains, and prepares actions; an admin approves.
+- Automatic: the system executes configured actions within tenant-approved rules.
+
+MVP and the next product stage must default to semi-automatic.
+
+Fully automatic placement, flow-through, slot offers, and AI-assisted decisions come later. They may only be enabled when:
+
+- Tenant settings explicitly allow them.
+- Rules are explainable.
+- Decisions are logged.
+- Admin override is possible.
+- Parent-facing communication is clear.
+- RLS and role isolation are verified.
+
+## 5. AI Policy
+
+AI may become an assistant layer later, not the first decision-maker.
+
+Allowed later:
+
+- Intake summaries.
+- Suggested stage recommendation explanation.
+- Suggested parent-friendly progress text.
+- Admin insight summaries.
+- Risk or attention signals.
+- Message draft suggestions.
+
+Not allowed in the current smart MVP:
+
+- Fully automatic placement without admin approval.
+- AI-only stage assignment.
+- AI-only afzwem readiness.
+- Unexplained scoring.
+- Decisions that cannot be audited or overridden.
+
+## 6. Smart Engine Map
+
+The smart layer is composed of the following engines.
+
+| Engine | Purpose | Current codebase status | Enterprise target |
+| --- | --- | --- | --- |
+| Intake Engine | Capture registration, trial, waitlist, preferences, consent, and custom program answers. | Public intake creates `intake_submissions`, stores intake type, participant/guardian data, preferred days and time windows, answers, and events. | Versioned configurable forms, conditional questions, duplicate detection, consent, spam protection, confirmation messages, and admin triage. |
+| Stage Recommendation Engine | Recommend a starting stage from intake answers, age, experience, and tenant rules. | Mostly manual. Admin can select or store a recommended stage when converting intake to waitlist. | Rule-based scoring with explainable reasons, confidence level, override, versioned rules, and audit. |
+| Capacity Engine | Understand open spots by group, resource, instructor, stage, trial spots, makeup spots, and reserved capacity. | Placement checks active group memberships against group capacity; sessions check resource and instructor conflicts. | Capacity ledger, reservations, waitlist holds, trial/makeup capacity, conflict snapshots, overbooking policy, and release triggers. |
+| Waitlist Engine | Rank and manage candidates waiting for a suitable spot. | Waitlist entries exist with statuses, preferred days/time windows, recommended stage, and placement actions. | Scored queues, fairness rules, priority reasons, stale-entry detection, family/sibling flags, and automatic rematch suggestions. |
+| Placement Engine | Match waitlist candidates to suitable groups. | Admin creates suggestions for a selected group; score uses simple preferred-day, stage, and capacity signals. | Ranked candidate/group matching, explainable blockers, score weights, batch suggestions, admin compare view, and audit trail. |
+| Slot Offer Engine | Send a time-limited offer to parent and process accept/decline. | Slot offers exist with token, status, expiry, public accept/decline, and message queue hooks. | Reminder schedule, expiry release, admin resend/cancel, parent UX polish, delivery tracking, and offer analytics. |
+| Lesson Engine | Turn group planning into concrete sessions and daily lesson operations. | Admin can generate sessions from recurring groups; conflicts are checked; instructor attendance exists. | Reliable recurrence rules, cancellation/reschedule, makeup capacity, lesson mode, parent-visible changes, and calendar feeds. |
+| Progress Engine | Track learning development per program, stage, module, and lesson context. | Module progress, progress updates, notes, stage proposals, parent progress pages, and instructor actions exist. | Rubrics, stage/module definitions, evidence history, bulk assessment, approval gates, and reporting. |
+| Badge Engine | Award positive milestones and show achievement cards. | Badge definitions, badge awards, achievement cards, and parent notifications exist. | Badge rules, templates, parent/child cards, sharing/download preparation, and achievement timeline. |
+| Flow-Through Engine | Move learners to next stage/group while releasing old capacity. | Stage transition proposals can be approved and can update enrollment stage. | Transfer planning, new group reservation, old spot release, waitlist rematch, parent notification, and billing separation enforcement. |
+| Diploma Readiness Engine | Detect learners who are close to official milestone readiness. | Afzwem readiness criteria tables and pages exist, but readiness is mostly manual. | Readiness radar using progress, attendance, instructor approval, and program criteria with explainable status. |
+| Milestone Event Engine | Plan afzwem moments and invite ready learners. | Afzwem events, participants, invitation/result actions, and notifications exist. | Capacity-aware event planning, invitation workflow, reminders, result states, and waitlist for milestone events. |
+| Certificate Engine | Generate and store official certificates/diplomas. | Certificate/diploma records and parent vault pages exist; download/share preparation exists. | File generation, signed downloads, share links, versioning, retention, and audit per access. |
+| Notification Engine | Send parent/admin/instructor updates through internal messages and email. | Message templates, outbox, SMTP/SendGrid-ready adapter, event hooks, retry dashboard, and template previews exist. | Complete event map, delivery SLAs, preferences, tenant sender governance, retries, and audit. |
+| Task Engine | Create admin tasks from operational events. | Task records and pages exist. | Event-driven task creation, ownership, due dates, severity, snooze/resolve, and smart dashboard integration. |
+| Reporting Engine | Show operational health and explain the effect of smart decisions. | Query-backed dashboards, filters, export jobs, permissions, and audit foundations exist. | Live smart dashboards, bottleneck/risk signals, funnel reporting, forecast views, and enterprise exports. |
+
+## 7. Current Codebase Assessment
+
+The current platform is no longer a pure skeleton. It already contains a broad Swim Start foundation.
+
+Already present:
+
+- Multi-tenant route structure and role shells for public, admin, parent, instructor, and platform admin.
+- Tenant domain and slug resolution.
+- Supabase migrations for identity, domain models, intake, waitlist, placement, slot offers, parent portal, instructor portal, progress, badges, afzwem, certificates, manual payments, messages, tasks, documents, reports, imports, platform admin, and observability.
+- Public tenant pages for homepage, programs, program detail, intake, news, agenda, and slot offers.
+- Tenant admin pages for intake, waitlist, placement suggestions, slot offers, programs, stages, groups, sessions, resources, learners, guardians, instructors, messages, documents, payments, reports, imports, settings, news, templates, newsletters, and mail settings.
+- Parent portal pages for dashboard, lessons, profile, notifications, documents, progress, diplomas, badges, and payments.
+- Instructor portal pages for agenda, groups, rosters, attendance, student assessment, notes, compliments, progress, messages, tasks, and documents.
+- Manual payment flow with invoice/payment records, corrections, refunds, reminders, and finance export preparation.
+- Communication foundation with SMTP first and SendGrid-ready adapter.
+- Document vault foundation with records, visibility, upload/download preparation, versioning and retention concepts.
+- E2E and QA foundations including Playwright, visual QA, release notes, and observability documentation.
+
+The foundation is valuable, but the smart system is not yet enterprise-grade. Many smart flows are still page-level workflows instead of a cohesive, explainable engine layer.
+
+## 8. Main Enterprise Gaps
+
+### 8.1 Smart Decisions Are Not Yet First-Class Records
+
+Current smart decisions are partly stored as placement suggestions, stage transition proposals, events, message logs, and audit logs. The system needs a more consistent smart-decision pattern:
+
+- Input snapshot.
+- Rule version.
+- Score.
+- Reasons.
+- Blockers.
+- Recommendation.
+- Human decision.
+- Override reason.
+- Resulting actions.
+- Audit event.
+
+This should apply to stage recommendations, waitlist ranking, placement suggestions, flow-through, afzwem readiness, and eventually AI suggestions.
+
+### 8.2 Intake Needs More Intelligence
+
+Current intake stores answers and preferences. It should become the start of the smart flow:
+
+- Dynamic question versioning.
+- Program-specific stage signals.
+- Duplicate detection before and after submit.
+- Consent and legal capture.
+- Suggested starting stage.
+- Suggested intake route: trial, registration, waitlist.
+- Admin review queue with confidence and reasons.
+
+### 8.3 Capacity Is Still Too Simple
+
+Current placement capacity mainly counts active group memberships. Enterprise capacity must understand:
+
+- Fixed capacity.
+- Reserved capacity.
+- Trial capacity.
+- Makeup capacity.
+- Temporary holds from slot offers.
+- Resource and instructor conflicts.
+- Group lifecycle.
+- Session-level changes.
+- Future capacity after flow-through.
+
+### 8.4 Placement Is Semi-Smart But Not Yet a Showpiece
+
+Current placement works as a useful admin action. The showpiece needs:
+
+- Ranking candidates for a group.
+- Ranking groups for a candidate.
+- Reasons and blockers per match.
+- Fairness and priority rules.
+- Admin compare view.
+- Batch suggestions.
+- Slot-offer readiness checks.
+- Automatic rematch when a spot becomes available.
+
+### 8.5 Flow-Through Is Not Complete
+
+Stage transition approval can update enrollment stage, but smart flow-through requires:
+
+- Proposed next stage.
+- Candidate target groups.
+- Capacity hold in target group.
+- End date for old group membership.
+- Start date for new group membership.
+- Old spot release.
+- Waitlist rematch trigger.
+- Parent notification.
+- No automatic billing change unless billing plan changes.
+
+### 8.6 Diploma Readiness Is Too Manual
+
+The afzwem and certificate surfaces exist. The next level is a readiness radar:
+
+- Completed progress criteria.
+- Attendance threshold.
+- Instructor approval.
+- Required badges or modules.
+- Minimum period or session count.
+- Readiness score.
+- Missing items.
+- Invitation recommendation.
+
+### 8.7 Parent And Instructor UX Must Feel Active
+
+The portals should not be data mirrors. They should guide the next action:
+
+- Parent sees what is next, what changed, and what requires action.
+- Instructor sees today's lesson, attention points, progress prompts, and quick actions.
+- Admin sees bottlenecks, expiring offers, full groups, available spots, waiting candidates, overdue payments, failed messages, and readiness signals.
+
+### 8.8 Automation Needs Tenant Settings
+
+Every smart engine needs tenant-specific configuration:
+
+- Manual, semi-automatic, or automatic mode.
+- Rule weights.
+- Offer expiry.
+- Capacity hold duration.
+- Priority policies.
+- Makeup eligibility.
+- Flow-through approval policy.
+- Afzwem readiness criteria.
+- Message templates.
+
+Defaults should be Swim Start-ready, but editable later.
+
+## 9. Smart Flow MVP Definition
+
+The first showpiece version should prove the full intake-to-placement loop:
+
+1. Parent selects Zwemdiploma A.
+2. Parent completes dynamic intake.
+3. System stores preferences and intake answers.
+4. System recommends a stage with explanation.
+5. System places candidate in smart waitlist queue.
+6. Admin opens Placement Assistant.
+7. System suggests best group options and explains fit.
+8. Admin approves a slot offer.
+9. Parent accepts or declines the offer.
+10. On accept, enrollment and group membership are created.
+11. Parent sees lessons.
+12. Instructor sees learner in roster.
+13. Attendance and progress can be recorded.
+14. Badge or progress notification reaches parent.
+
+The extended showpiece adds:
+
+15. Cancellation creates makeup eligibility.
+16. Parent can request or choose suitable makeup moment.
+17. Progress triggers stage transition proposal.
+18. Approved flow-through releases old spot.
+19. Waitlist rematch is triggered.
+20. Afzwem readiness radar identifies candidates.
+21. Afzwem event invitation is sent.
+22. Result creates a digital diploma record.
+
+## 10. Enterprise Definition Of Done
+
+For a smart engine to be enterprise-worthy, it must have:
+
+- A documented rule contract.
+- Tenant-configurable settings or locked defaults.
+- Input validation.
+- Explainable output.
+- Manual override with reason.
+- Audit log.
+- RLS-safe data access.
+- Empty, pending, success, error, and conflict states.
+- Mobile and desktop UX.
+- E2E or integration test coverage for the critical path.
+- Clear separation between stage, group, and subscription.
+- Communication hooks where parents or admins need to know.
+
+## 11. Implementation Principle
+
+Do not replace the current foundation. Consolidate it into a coherent smart layer.
+
+The next work should focus on:
+
+- Turning existing workflows into reusable engine contracts.
+- Adding explainable recommendations.
+- Adding decision snapshots and audit.
+- Improving admin, parent, and instructor UX around next-best-actions.
+- Keeping automation semi-automatic until confidence is earned.
