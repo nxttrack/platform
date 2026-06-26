@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
 import { IntakeConditionalField } from "@/components/public-site/intake-conditional-field";
+import { IntakeWizard, type IntakeWizardCopy } from "@/components/public-site/intake-wizard";
 import { defaultLanguage, normalizeSupportedLanguage, publicHref, type PublicRouteKey, type PublicRouteParams, type SupportedLanguage } from "@/lib/i18n";
 import { submitIntakeAction } from "@/lib/public-site/intake-actions";
 import type { IntakeQuestion, IntakeQuestionOption, PublicProgram, PublicTenantProfile, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
@@ -97,6 +98,23 @@ type TenantPublicCopy = {
     preferredTimes: string;
     extraQuestions: string;
     notes: string;
+    missingInformation: string;
+    nextStep: string;
+    previousStep: string;
+    recommendedLessonTimes: string;
+    recommendedLessonTimesSub: string;
+    recommendedStage: string;
+    requiredStepError: string;
+    reviewAndSubmit: string;
+    smartScore: string;
+    availableSpots: string;
+    whyThisTime: string;
+    noLessonTimes: string;
+    wizardStepAdvice: string;
+    wizardStepContact: string;
+    wizardStepPreferences: string;
+    wizardStepProgram: string;
+    wizardStepQuestions: string;
     submitIntake: string;
     intakeReceived: string;
     noIntake: string;
@@ -279,11 +297,11 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
     fallbackAgendaItems,
     fallbackProfile: {
       heroTitle: "{{tenantName}} zwemschool",
-      heroSubtitle: "Bekijk programma's en start een intake voor proefles, inschrijving of wachtlijst.",
+      heroSubtitle: "Bekijk programma's en start het inschrijfformulier voor proefles, inschrijving of wachtlijst.",
       primaryCtaLabel: "Bekijk programma's",
-      secondaryCtaLabel: "Start intake",
-      introTitle: "Van intake naar de juiste groep",
-      introBody: "Programma's, niveaus en intake-opties worden uit de tenantdata gelezen.",
+      secondaryCtaLabel: "Inschrijfformulier",
+      introTitle: "Van inschrijfformulier naar de juiste groep",
+      introBody: "Programma's, niveaus en aanvraagopties worden uit de tenantdata gelezen.",
       logoUrl: "/lovable/zwemdemo-logo.png",
       heroImageUrl: "/lovable/hero-swim.png",
       heroImageAlt: "Kind in zwembad",
@@ -303,7 +321,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       news: "Nieuws",
       agenda: "Agenda",
       programs: "Programma's",
-      intake: "Intake",
+      intake: "Inschrijfformulier",
       trial: "Proefles",
       register: "Inschrijven",
       login: "Inloggen",
@@ -333,24 +351,24 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       childJourneyTitle: "Van eerste druppel tot diploma C",
       platformBy: "Platform by",
       programsTitle: "Programma's",
-      programsSub: "Kies het programma dat past bij de zwemroute. De intake bepaalt daarna instroomtype, voorkeuren en eerste status.",
+      programsSub: "Kies het programma dat past bij de zwemroute. Het inschrijfformulier bepaalt daarna instroomtype, voorkeuren en eerste status.",
       programNotFound: "Programma niet gevonden",
       programNotFoundSub: "Dit programma is niet gepubliceerd of bestaat niet voor deze tenant.",
       viewProgramOverview: "Bekijk het actuele programma-overzicht.",
       toPrograms: "Naar programma's",
       program: "Programma",
       programFallback: "Programmadetails vanuit de tenantdata.",
-      intakeOptions: "Intake-opties",
+      intakeOptions: "Aanvraagopties",
       levels: "Niveaus",
       noStages: "Nog geen gepubliceerde stages gekoppeld.",
-      intakeSub: "Start met een programma, kies proefles/inschrijving/wachtlijst en geef voorkeursmomenten door.",
+      intakeSub: "Start met een programma, kies proefles/inschrijving/wachtlijst en krijg direct drie passende lestijden voorgesteld.",
       chosenProgram: "Gekozen programma",
-      intakeIntroFallback: "Vul de intake in zodat de zwemschool de juiste vervolgstap kan bepalen.",
+      intakeIntroFallback: "Vul het inschrijfformulier in zodat de zwemschool de juiste vervolgstap kan bepalen.",
       age: "Leeftijd",
       duration: "Duur",
       price: "Prijs",
       capacity: "Capaciteit",
-      intakeOption: "Intake-optie",
+      intakeOption: "Type aanvraag",
       guardian: "Ouder/verzorger",
       guardianName: "Naam ouder/verzorger",
       email: "E-mail",
@@ -362,10 +380,27 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       preferredTimes: "Voorkeurstijden",
       extraQuestions: "Aanvullende vragen",
       notes: "Opmerkingen",
-      submitIntake: "Intake versturen",
-      intakeReceived: "Intake ontvangen. De status staat op nieuw en is klaar voor beoordeling in de volgende fase.",
-      noIntake: "Geen intake beschikbaar",
-      noIntakeSub: "Kies een gepubliceerd programma met een actieve intakeconfiguratie.",
+      missingInformation: "Ontbrekende informatie",
+      nextStep: "Volgende",
+      previousStep: "Vorige",
+      recommendedLessonTimes: "Voorgestelde lestijden",
+      recommendedLessonTimesSub: "Top 3 op basis van niveau, voorkeuren en beschikbare capaciteit.",
+      recommendedStage: "Slimme niveau-inschatting",
+      requiredStepError: "Vul de verplichte velden in voordat je doorgaat.",
+      reviewAndSubmit: "Controleer en verstuur",
+      smartScore: "Slimme score",
+      availableSpots: "Vrije plekken",
+      whyThisTime: "Waarom",
+      noLessonTimes: "Nog geen passende lestijden gevonden. De zwemschool beoordeelt de aanvraag handmatig.",
+      wizardStepAdvice: "Advies & lestijden",
+      wizardStepContact: "Ouder & kind",
+      wizardStepPreferences: "Voorkeuren",
+      wizardStepProgram: "Programma",
+      wizardStepQuestions: "Vragen",
+      submitIntake: "Inschrijfformulier versturen",
+      intakeReceived: "Inschrijfformulier ontvangen. De status staat op nieuw en is klaar voor beoordeling.",
+      noIntake: "Geen inschrijfformulier beschikbaar",
+      noIntakeSub: "Kies een gepubliceerd programma met een actieve formulierconfiguratie.",
       noPrograms: "Er zijn nog geen gepubliceerde programma's.",
       publishedProgram: "Gepubliceerd programma.",
       publishedSwimProgram: "Gepubliceerd zwemprogramma vanuit tenantdata.",
@@ -513,11 +548,11 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
     ],
     fallbackProfile: {
       heroTitle: "{{tenantName}} swim school",
-      heroSubtitle: "View programs and start an intake for a trial lesson, registration or waitlist.",
+      heroSubtitle: "View programs and start the registration form for a trial lesson, registration or waitlist.",
       primaryCtaLabel: "View programs",
-      secondaryCtaLabel: "Start intake",
-      introTitle: "From intake to the right group",
-      introBody: "Programs, stages and intake options are read from tenant data.",
+      secondaryCtaLabel: "Registration form",
+      introTitle: "From registration form to the right group",
+      introBody: "Programs, stages and request options are read from tenant data.",
       logoUrl: "/lovable/zwemdemo-logo.png",
       heroImageUrl: "/lovable/hero-swim.png",
       heroImageAlt: "Child in swimming pool",
@@ -537,7 +572,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       news: "News",
       agenda: "Agenda",
       programs: "Programs",
-      intake: "Intake",
+      intake: "Registration form",
       trial: "Trial lesson",
       register: "Register",
       login: "Log in",
@@ -567,24 +602,24 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       childJourneyTitle: "From first splash to Diploma C",
       platformBy: "Platform by",
       programsTitle: "Programs",
-      programsSub: "Choose the program that fits the swim route. Intake then determines entry type, preferences and first status.",
+      programsSub: "Choose the program that fits the swim route. The registration form then determines entry type, preferences and first status.",
       programNotFound: "Program not found",
       programNotFoundSub: "This program is not published or does not exist for this tenant.",
       viewProgramOverview: "View the current program overview.",
       toPrograms: "To programs",
       program: "Program",
       programFallback: "Program details from tenant data.",
-      intakeOptions: "Intake options",
+      intakeOptions: "Request options",
       levels: "Stages",
       noStages: "No published stages linked yet.",
-      intakeSub: "Start with a program, choose trial/registration/waitlist and share preferred times.",
+      intakeSub: "Start with a program, choose trial/registration/waitlist and get three suitable lesson times suggested.",
       chosenProgram: "Selected program",
-      intakeIntroFallback: "Fill in the intake so the swim school can determine the right next step.",
+      intakeIntroFallback: "Fill in the registration form so the swim school can determine the right next step.",
       age: "Age",
       duration: "Duration",
       price: "Price",
       capacity: "Capacity",
-      intakeOption: "Intake option",
+      intakeOption: "Request type",
       guardian: "Parent/guardian",
       guardianName: "Parent/guardian name",
       email: "Email",
@@ -596,10 +631,27 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       preferredTimes: "Preferred times",
       extraQuestions: "Additional questions",
       notes: "Notes",
-      submitIntake: "Submit intake",
-      intakeReceived: "Intake received. The status is new and ready for review in the next step.",
-      noIntake: "No intake available",
-      noIntakeSub: "Choose a published program with an active intake configuration.",
+      missingInformation: "Missing information",
+      nextStep: "Next",
+      previousStep: "Previous",
+      recommendedLessonTimes: "Suggested lesson times",
+      recommendedLessonTimesSub: "Top 3 based on stage, preferences and available capacity.",
+      recommendedStage: "Smart stage estimate",
+      requiredStepError: "Complete the required fields before continuing.",
+      reviewAndSubmit: "Review and submit",
+      smartScore: "Smart score",
+      availableSpots: "Open spots",
+      whyThisTime: "Why",
+      noLessonTimes: "No suitable lesson times found yet. The swim school will review the request manually.",
+      wizardStepAdvice: "Advice & lesson times",
+      wizardStepContact: "Guardian & child",
+      wizardStepPreferences: "Preferences",
+      wizardStepProgram: "Program",
+      wizardStepQuestions: "Questions",
+      submitIntake: "Submit registration form",
+      intakeReceived: "Registration form received. The status is new and ready for review.",
+      noIntake: "No registration form available",
+      noIntakeSub: "Choose a published program with an active form configuration.",
       noPrograms: "There are no published programs yet.",
       publishedProgram: "Published program.",
       publishedSwimProgram: "Published swim program from tenant data.",
@@ -1067,11 +1119,63 @@ export function IntakePage({ snapshot, submitted, language }: IntakePageProps) {
         <CompactHero kicker={snapshot.tenant.name} sub={copy.labels.intakeSub} title={copy.labels.intake} />
         <Section>
           {submitted ? <SuccessNotice copy={copy} /> : null}
-          {program && program.intakeConfig ? <IntakeForm copy={copy} language={publicLanguage} program={program} /> : <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />}
+          {program && program.intakeConfig ? <IntakeWizard action={submitIntakeAction} copy={toIntakeWizardCopy(copy)} language={publicLanguage} program={program} /> : <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />}
         </Section>
       </main>
     </PublicShell>
   );
+}
+
+function toIntakeWizardCopy(copy: TenantPublicCopy): IntakeWizardCopy {
+  return {
+    intakeOptionLabels: copy.intakeOptionLabels,
+    preferredDays: copy.preferredDays,
+    preferredTimes: copy.preferredTimes,
+    labels: {
+      age: copy.labels.age,
+      birthdate: copy.labels.birthdate,
+      child: copy.labels.child,
+      childName: copy.labels.childName,
+      chosenProgram: copy.labels.chosenProgram,
+      duration: copy.labels.duration,
+      email: copy.labels.email,
+      extraQuestions: copy.labels.extraQuestions,
+      guardian: copy.labels.guardian,
+      guardianName: copy.labels.guardianName,
+      intakeIntroFallback: copy.labels.intakeIntroFallback,
+      intakeOption: copy.labels.intakeOption,
+      missingInformation: copy.labels.missingInformation,
+      nextStep: copy.labels.nextStep,
+      notes: copy.labels.notes,
+      phone: copy.labels.phone,
+      previousStep: copy.labels.previousStep,
+      preferredDays: copy.labels.preferredDays,
+      preferredTimes: copy.labels.preferredTimes,
+      price: copy.labels.price,
+      recommendedLessonTimes: copy.labels.recommendedLessonTimes,
+      recommendedLessonTimesSub: copy.labels.recommendedLessonTimesSub,
+      recommendedStage: copy.labels.recommendedStage,
+      requiredStepError: copy.labels.requiredStepError,
+      reviewAndSubmit: copy.labels.reviewAndSubmit,
+      select: copy.labels.select,
+      smartScore: copy.labels.smartScore,
+      submitIntake: copy.labels.submitIntake,
+      availableSpots: copy.labels.availableSpots,
+      whyThisTime: copy.labels.whyThisTime,
+      noLessonTimes: copy.labels.noLessonTimes,
+      wizardStepAdvice: copy.labels.wizardStepAdvice,
+      wizardStepContact: copy.labels.wizardStepContact,
+      wizardStepPreferences: copy.labels.wizardStepPreferences,
+      wizardStepProgram: copy.labels.wizardStepProgram,
+      wizardStepQuestions: copy.labels.wizardStepQuestions,
+      yes: copy.labels.yes,
+      no: copy.labels.no,
+      experienceNone: copy.labels.experienceNone,
+      experienceWaterFamiliar: copy.labels.experienceWaterFamiliar,
+      experienceSome: copy.labels.experienceSome,
+      experienceLonger: copy.labels.experienceLonger
+    }
+  };
 }
 
 function PublicShell({

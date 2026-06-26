@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 
+import { buildCapacitySnapshots, type CapacityHoldInput } from "@/lib/capacity/capacity-engine";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { createClient } from "@/lib/supabase/server";
 
@@ -100,6 +102,7 @@ export type PublicProgram = {
   registrationEnabled: boolean;
   waitlistEnabled: boolean;
   stages: { id: string; name: string; code: string; sortOrder: number }[];
+  lessonTimeSuggestions: PublicLessonTimeSuggestion[];
   intakeConfig: {
     id: string;
     configVersion: number;
@@ -110,6 +113,22 @@ export type PublicProgram = {
     conditionalRules: IntakeCondition[];
     stageRecommendationRules: StageRecommendationRule[];
   } | null;
+};
+
+export type PublicLessonTimeSuggestion = {
+  id: string;
+  groupId: string;
+  groupName: string;
+  stageId: string;
+  stageName: string;
+  weekday: number;
+  startsAt: string;
+  endsAt: string;
+  timeBucket: "morning" | "afternoon" | "evening" | "weekend";
+  openSpots: number;
+  capacityLimit: number;
+  locationName: string | null;
+  instructorName: string | null;
 };
 
 export type PublicTenantSiteSnapshot = {
@@ -195,6 +214,53 @@ type IntakeConfigRow = {
   stage_recommendation_rules: unknown;
 };
 
+type PublicGroupRow = {
+  id: string;
+  program_id: string;
+  stage_id: string;
+  resource_id: string | null;
+  instructor_id: string | null;
+  name: string;
+  weekday: number;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  reserved_spots: number | null;
+  trial_spots: number | null;
+  makeup_spots: number | null;
+  overbooking_policy: string | null;
+  status: string;
+};
+
+type PublicResourceRow = {
+  id: string;
+  name: string;
+  location_name: string | null;
+  capacity: number;
+  status: string;
+};
+
+type PublicInstructorRow = {
+  id: string;
+  display_name: string;
+  status: string;
+};
+
+type PublicMembershipRow = {
+  id: string;
+  group_id: string;
+  status: string;
+  starts_on: string | null;
+  ends_on: string | null;
+};
+
+type PublicSlotOfferRow = {
+  id: string;
+  group_id: string;
+  status: string;
+  expires_at: string;
+};
+
 export async function getPublicTenantSiteSnapshot(programSlug?: string | null): Promise<PublicTenantSiteSnapshot> {
   if (!getSupabasePublicConfig()) {
     return emptySnapshot("not_configured", ["Supabase is nog niet geconfigureerd."]);
@@ -256,6 +322,7 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
   const programsById = new Map(asRows<ProgramRow>(programsResult.data).map((program) => [program.id, program]));
   const stagesByProgram = groupBy(asRows<StageRow>(stagesResult.data), (stage) => stage.program_id);
   const configsByProgram = new Map(asRows<IntakeConfigRow>(intakeConfigsResult.data).map((config) => [config.program_id, config]));
+  const lessonTimeSuggestionsByProgram = await getPublicLessonTimeSuggestionsByProgram(tenant.id, asRows<StageRow>(stagesResult.data));
   const programs = settings.flatMap((setting) => {
     const program = programsById.get(setting.program_id);
 
@@ -287,6 +354,7 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
           code: stage.code,
           sortOrder: stage.sort_order
         })),
+        lessonTimeSuggestions: lessonTimeSuggestionsByProgram.get(program.id) ?? [],
         intakeConfig: config
           ? {
               id: config.id,
@@ -350,6 +418,86 @@ export async function getPublicTenantSiteSnapshot(programSlug?: string | null): 
     }
 
     return supabase.from("tenants").select("id, slug, name, sector").eq("id", (domainResult.data as { tenant_id: string }).tenant_id).eq("status", "active").maybeSingle();
+  }
+}
+
+async function getPublicLessonTimeSuggestionsByProgram(tenantId: string, stages: StageRow[]) {
+  const empty = new Map<string, PublicLessonTimeSuggestion[]>();
+
+  try {
+    const admin = createAdminClient();
+    const [groupsResult, resourcesResult, instructorsResult, membershipsResult, holdsResult, offersResult] = await Promise.all([
+      admin
+        .from("groups")
+        .select("id, program_id, stage_id, resource_id, instructor_id, name, weekday, starts_at, ends_at, capacity, reserved_spots, trial_spots, makeup_spots, overbooking_policy, status")
+        .eq("tenant_id", tenantId)
+        .eq("status", "active")
+        .order("weekday", { ascending: true })
+        .order("starts_at", { ascending: true }),
+      admin.from("resources").select("id, name, location_name, capacity, status").eq("tenant_id", tenantId),
+      admin.from("instructors").select("id, display_name, status").eq("tenant_id", tenantId),
+      admin.from("group_memberships").select("id, group_id, status, starts_on, ends_on").eq("tenant_id", tenantId),
+      admin.from("capacity_holds").select("id, group_id, hold_type, status, quantity, starts_on, ends_on, expires_at, slot_offer_id, release_reason").eq("tenant_id", tenantId),
+      admin.from("slot_offers").select("id, group_id, status, expires_at").eq("tenant_id", tenantId)
+    ]);
+
+    if (groupsResult.error || resourcesResult.error || instructorsResult.error || membershipsResult.error || holdsResult.error || offersResult.error) {
+      return empty;
+    }
+
+    const groups = asRows<PublicGroupRow>(groupsResult.data);
+    const resources = asRows<PublicResourceRow>(resourcesResult.data);
+    const resourcesById = new Map(resources.map((resource) => [resource.id, resource]));
+    const instructorsById = new Map(asRows<PublicInstructorRow>(instructorsResult.data).map((instructor) => [instructor.id, instructor]));
+    const stagesById = new Map(stages.map((stage) => [stage.id, stage]));
+    const capacities = buildCapacitySnapshots({
+      groups,
+      resources,
+      memberships: asRows<PublicMembershipRow>(membershipsResult.data).map((membership) => ({
+        id: membership.id,
+        group_id: membership.group_id,
+        status: membership.status,
+        starts_on: membership.starts_on,
+        ends_on: membership.ends_on
+      })),
+      holds: asRows<CapacityHoldInput>(holdsResult.data),
+      slotOffers: asRows<PublicSlotOfferRow>(offersResult.data)
+    });
+    const capacitiesByGroup = new Map(capacities.map((capacity) => [capacity.groupId, capacity]));
+    const grouped = new Map<string, PublicLessonTimeSuggestion[]>();
+
+    for (const group of groups) {
+      const capacity = capacitiesByGroup.get(group.id);
+      const stage = stagesById.get(group.stage_id);
+
+      if (!stage || !capacity?.isAvailable || capacity.openSpots <= 0) {
+        continue;
+      }
+
+      const resource = group.resource_id ? (resourcesById.get(group.resource_id) ?? null) : null;
+      const instructor = group.instructor_id ? (instructorsById.get(group.instructor_id) ?? null) : null;
+      const suggestion = {
+        id: group.id,
+        groupId: group.id,
+        groupName: group.name,
+        stageId: group.stage_id,
+        stageName: stage.name,
+        weekday: group.weekday,
+        startsAt: formatTime(group.starts_at),
+        endsAt: formatTime(group.ends_at),
+        timeBucket: timeBucketForGroup(group.weekday, group.starts_at),
+        openSpots: capacity.openSpots,
+        capacityLimit: capacity.capacityLimit,
+        locationName: resource?.location_name ?? resource?.name ?? null,
+        instructorName: instructor?.display_name ?? null
+      } satisfies PublicLessonTimeSuggestion;
+
+      grouped.set(group.program_id, [...(grouped.get(group.program_id) ?? []), suggestion]);
+    }
+
+    return new Map([...grouped.entries()].map(([programId, suggestions]) => [programId, suggestions.slice(0, 24)]));
+  } catch {
+    return empty;
   }
 }
 
@@ -606,4 +754,30 @@ function parseRuleValue(value: unknown): StageRecommendationCondition["value"] {
   }
 
   return null;
+}
+
+function formatTime(value: string) {
+  return value.slice(0, 5);
+}
+
+function timeBucketForGroup(weekday: number, startsAt: string): PublicLessonTimeSuggestion["timeBucket"] {
+  if (weekday >= 6) {
+    return "weekend";
+  }
+
+  const hour = Number(startsAt.slice(0, 2));
+
+  if (!Number.isFinite(hour)) {
+    return "afternoon";
+  }
+
+  if (hour < 12) {
+    return "morning";
+  }
+
+  if (hour < 18) {
+    return "afternoon";
+  }
+
+  return "evening";
 }

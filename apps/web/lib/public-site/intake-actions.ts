@@ -68,7 +68,7 @@ export async function submitIntakeAction(formData: FormData) {
     tenant_id: snapshot.tenant.id,
     submission_id: submissionId,
     status: "new",
-    note: `Public intake submitted as ${intakeType}.`
+    note: `Public registration form submitted as ${intakeType}.`
   });
 
   if (eventResult.error) {
@@ -129,8 +129,8 @@ export async function submitIntakeAction(formData: FormData) {
     },
     sourceTable: "intake_submissions",
     sourceRecordId: submissionId,
-    fallbackSubject: `Intake ontvangen voor ${submission.participant_name}`,
-    fallbackBody: `Hallo ${submission.parent_name},\n\nWe hebben de intake voor ${submission.participant_name} ontvangen.\n\nNXTTRACK`
+    fallbackSubject: `Inschrijfformulier ontvangen voor ${submission.participant_name}`,
+    fallbackBody: `Hallo ${submission.parent_name},\n\nWe hebben het inschrijfformulier voor ${submission.participant_name} ontvangen.\n\nNXTTRACK`
   });
 
   await throwOnError(
@@ -138,7 +138,7 @@ export async function submitIntakeAction(formData: FormData) {
       tenant_id: snapshot.tenant.id,
       submission_id: submissionId,
       status: "new",
-      note: "Intakebevestiging is klaargezet voor verzending."
+      note: "Bevestiging van het inschrijfformulier is klaargezet voor verzending."
     })
   );
 
