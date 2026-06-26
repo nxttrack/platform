@@ -14,6 +14,7 @@ export default async function AdminWaitlistPage({ searchParams }: AdminWaitlistP
 
 function normalizeFilters(params: Record<string, string | string[] | undefined>) {
   return {
+    tab: stringParam(params.tab),
     program: stringParam(params.program),
     stage: stringParam(params.stage),
     preferred_day: stringParam(params.preferred_day),

@@ -36,6 +36,7 @@ import type {
 import { scorePlacementMatch, type PlacementMatchResult } from "@/lib/smart-flow/placement-assistant";
 
 type WaitlistFilters = {
+  tab?: string;
   program?: string;
   stage?: string;
   preferred_day?: string;
@@ -143,6 +144,7 @@ export function AdminIntakeWorkflowPage({ snapshot }: PlacementPageProps) {
 
 export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementPageProps) {
   const lookups = buildLookups(snapshot.data);
+  const activeTab = normalizeWaitlistTab(filters.tab);
   const waitlistEntries = applyWaitlistFilters(snapshot.data.waitlistEntries, filters);
   const rankByEntry = new Map(waitlistEntries.map((entry, index) => [entry.id, index + 1]));
   const queued = waitlistEntries.filter((entry) => entry.status === "queued").length;
@@ -157,12 +159,14 @@ export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementP
         <MetricCard icon={<RotateCcw className="h-5 w-5" />} label="Hercheck" value={reevaluation.toString()} detail="capaciteit gewijzigd" />
       </div>
 
-      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <WaitlistTabs activeTab={activeTab} filters={filters} groupsCount={snapshot.data.groups.length} logCount={snapshot.data.waitlistEvents.length} waitlistCount={waitlistEntries.length} />
+
+      {activeTab === "wachtlijst" ? (
         <Card>
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <SectionHeader title="Wachtlijstregels" count={waitlistEntries.length} />
             {hasActiveWaitlistFilters(filters) ? (
-              <Link className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" href="/admin/wachtlijst">
+              <Link className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted" href="/admin/wachtlijst?tab=wachtlijst">
                 Filters wissen
               </Link>
             ) : null}
@@ -176,13 +180,11 @@ export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementP
             rows={waitlistEntries}
           />
         </Card>
+      ) : null}
 
-        <div className="grid gap-4">
-          <CapacityPanel data={snapshot.data} lookups={lookups} />
-          <BestLearnersForGroupsPanel data={snapshot.data} lookups={lookups} />
-          <WaitlistTimelinePanel events={snapshot.data.waitlistEvents} lookups={lookups} />
-        </div>
-      </div>
+      {activeTab === "groepen" ? <BestLearnersForGroupsPanel data={snapshot.data} lookups={lookups} /> : null}
+      {activeTab === "capaciteit" ? <CapacityPanel data={snapshot.data} lookups={lookups} /> : null}
+      {activeTab === "logboek" ? <WaitlistTimelinePanel events={snapshot.data.waitlistEvents} lookups={lookups} /> : null}
     </PlacementFrame>
   );
 }
@@ -275,6 +277,7 @@ function WaitlistFromIntakeForm({ intake, stages }: { intake: IntakeSubmissionRo
 function WaitlistFilterBar({ data, filters }: { data: PlacementWorkflowData; filters: WaitlistFilters }) {
   return (
     <form action="/admin/wachtlijst" className="mb-4 grid gap-3 rounded-2xl border border-border bg-muted/30 p-3 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
+      <input name="tab" type="hidden" value="wachtlijst" />
       <div className="flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground lg:col-span-1">
         <Filter className="h-4 w-4" />
         Filters
@@ -346,6 +349,52 @@ function WaitlistFilterBar({ data, filters }: { data: PlacementWorkflowData; fil
       </div>
     </form>
   );
+}
+
+type WaitlistTab = "wachtlijst" | "groepen" | "capaciteit" | "logboek";
+
+function WaitlistTabs({ activeTab, filters, groupsCount, logCount, waitlistCount }: { activeTab: WaitlistTab; filters: WaitlistFilters; groupsCount: number; logCount: number; waitlistCount: number }) {
+  const tabs: Array<{ label: string; tab: WaitlistTab; count: number }> = [
+    { label: "Wachtlijst", tab: "wachtlijst", count: waitlistCount },
+    { label: "Groepen", tab: "groepen", count: groupsCount },
+    { label: "Capaciteit", tab: "capaciteit", count: groupsCount },
+    { label: "Logboek", tab: "logboek", count: logCount }
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-card p-2 shadow-sm">
+      {tabs.map((item) => {
+        const active = item.tab === activeTab;
+
+        return (
+          <Link key={item.tab} className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition ${active ? "bg-primary text-primary-foreground shadow-soft" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`} href={waitlistTabHref(item.tab, filters)}>
+            <span>{item.label}</span>
+            <span className={`rounded-full px-2 py-0.5 text-[11px] ${active ? "bg-white/20 text-primary-foreground" : "bg-muted text-muted-foreground"}`}>{item.count}</span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function waitlistTabHref(tab: WaitlistTab, filters: WaitlistFilters) {
+  const params = new URLSearchParams();
+  params.set("tab", tab);
+
+  if (tab === "wachtlijst") {
+    for (const key of ["program", "stage", "preferred_day", "status", "priority", "duplicate", "contact"] as const) {
+      const value = filters[key];
+      if (value) {
+        params.set(key, value);
+      }
+    }
+  }
+
+  return `/admin/wachtlijst?${params.toString()}`;
+}
+
+function normalizeWaitlistTab(value: string | undefined): WaitlistTab {
+  return value === "groepen" || value === "capaciteit" || value === "logboek" ? value : "wachtlijst";
 }
 
 function WaitlistCompactList({ data, emptyLabel, lookups, rankByEntry, rows }: { data: PlacementWorkflowData; emptyLabel: string; lookups: LookupMaps; rankByEntry: Map<string, number>; rows: WaitlistEntryRow[] }) {
@@ -1385,7 +1434,10 @@ function matchesContactFilter(entry: WaitlistEntryRow, filter: string) {
 }
 
 function hasActiveWaitlistFilters(filters: WaitlistFilters) {
-  return Object.values(filters).some((value) => typeof value === "string" && value.trim() !== "");
+  return (["program", "stage", "preferred_day", "status", "priority", "duplicate", "contact"] as const).some((key) => {
+    const value = filters[key];
+    return typeof value === "string" && value.trim() !== "";
+  });
 }
 
 function findWaitlistEntryByEvent(lookups: LookupMaps, event: WaitlistEntryEventRow) {
