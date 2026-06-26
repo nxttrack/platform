@@ -1405,7 +1405,7 @@ function ProgramGrid({ programs, language }: { programs: PublicProgram[]; langua
             <Link className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3.5 py-2 text-sm font-semibold hover:bg-muted" href={publicHref(language, "programDetail", { slug: program.slug })}>
               {copy.labels.details}
             </Link>
-            <Link className={`${tenantPrimaryButtonClassName} rounded-lg px-3.5 py-2 shadow-soft`} href={publicHref(language, "intake", { program: program.slug })}>
+            <Link className={`${tenantPrimaryButtonClassName} rounded-lg px-3.5 py-2 !text-white shadow-soft`} href={publicHref(language, "intake", { program: program.slug })}>
               {copy.labels.intake} <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
