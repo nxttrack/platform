@@ -194,29 +194,10 @@ export function AdminPlacementSuggestionsPage({ snapshot }: PlacementPageProps) 
     <PlacementFrame snapshot={snapshot} kicker="Backoffice - plaatsingsvoorstellen" title="Plaatsingsvoorstellen" subtitle="Goedkeuren maakt lesplek-aanbod aan zonder abonnement of betaling te wijzigen.">
       <Card>
         <SectionHeader title="Plaatsingsvoorstellen" count={snapshot.data.placementSuggestions.length} />
-        <WorkflowTable
-          columns={[
-            { header: "Leerling", render: (suggestion) => suggestionName(lookups, suggestion) },
-            { header: "Programma", render: (suggestion) => lookups.programs.get(suggestion.program_id)?.name ?? "Onbekend" },
-            { header: "Groep", render: (suggestion) => groupSummary(lookups, suggestion.group_id) },
-            { header: "Score", render: (suggestion) => <ScorePill score={suggestion.score} /> },
-            { header: "Advies", render: (suggestion) => <StatusPill tone={suggestedActionTone(suggestion.suggested_action)}>{suggestedActionLabel(suggestion.suggested_action)}</StatusPill> },
-            { header: "Status", render: (suggestion) => <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill> },
-            { header: "Capaciteit", className: "min-w-[240px] whitespace-normal", render: (suggestion) => <CapacityMini capacity={lookups.capacitiesByGroup.get(suggestion.group_id)} /> },
-            {
-              header: "Onderbouwing",
-              className: "min-w-[320px] whitespace-normal",
-              render: (suggestion) => <PlacementSuggestionExplanation suggestion={suggestion} events={lookups.placementEventsBySuggestion.get(suggestion.id) ?? []} smartDecision={smartDecisionFor(lookups, "placement", "placement_suggestion", suggestion.id)} />
-            },
-            {
-              header: "Actie",
-              className: "min-w-[320px] whitespace-normal",
-              render: (suggestion) => <SuggestionActionPanel offer={lookups.offersBySuggestion.get(suggestion.id) ?? null} suggestion={suggestion} />
-            }
-          ]}
+        <PlacementSuggestionCompactList
           emptyLabel="Nog geen plaatsingsvoorstellen. Maak eerst een voorstel vanuit de wachtlijst."
+          lookups={lookups}
           rows={snapshot.data.placementSuggestions}
-          rowKey={(suggestion) => suggestion.id}
         />
       </Card>
     </PlacementFrame>
@@ -239,32 +220,10 @@ export function AdminSlotOffersPage({ snapshot }: PlacementPageProps) {
 
       <Card>
         <SectionHeader title="Lesplek-aanbod" count={snapshot.data.slotOffers.length} />
-        <WorkflowTable
-          columns={[
-            { header: "Leerling", render: (offer) => offerName(lookups, offer) },
-            { header: "Groep", render: (offer) => groupSummary(lookups, offer.group_id) },
-            { header: "Status", className: "min-w-[190px] whitespace-normal", render: (offer) => <SlotOfferStatusPanel offer={offer} /> },
-            { header: "Verloopt", className: "min-w-[190px] whitespace-normal", render: (offer) => <SlotOfferTimingPanel offer={offer} /> },
-            {
-              header: "Aanbodlink",
-              className: "min-w-[260px] whitespace-normal",
-              render: (offer) => (
-                <Link className="font-mono text-xs font-semibold text-primary underline-offset-4 hover:underline" href={`/slot-offers/${offer.offer_token}`}>
-                  /slot-offers/{shortToken(offer.offer_token)}
-                </Link>
-              )
-            },
-            {
-              header: "Resultaat",
-              className: "min-w-[260px] whitespace-normal",
-              render: (offer) =>
-                <SlotOfferResultPanel events={lookups.slotOfferEventsByOffer.get(offer.id) ?? []} offer={offer} />
-            },
-            { header: "Actie", className: "min-w-[280px] whitespace-normal", render: (offer) => <SlotOfferActionPanel offer={offer} /> }
-          ]}
+        <SlotOfferCompactList
           emptyLabel="Nog geen lesplek-aanbod. Keur eerst een plaatsingsvoorstel goed."
+          lookups={lookups}
           rows={snapshot.data.slotOffers}
-          rowKey={(offer) => offer.id}
         />
       </Card>
     </PlacementFrame>
@@ -466,6 +425,131 @@ function WaitlistCompactRow({ data, entry, lookups, rank }: { data: PlacementWor
         <div className="rounded-2xl border border-border bg-card p-3">
           <h3 className="mb-3 text-sm font-bold">Plaatsingsvoorstel</h3>
           <PlacementAssistantForEntry data={data} entry={entry} lookups={lookups} suggestions={suggestions} />
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function PlacementSuggestionCompactList({ emptyLabel, lookups, rows }: { emptyLabel: string; lookups: LookupMaps; rows: PlacementSuggestionRow[] }) {
+  if (rows.length === 0) {
+    return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{emptyLabel}</div>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      <div className="hidden rounded-xl bg-muted/40 px-4 py-2 text-[11px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[minmax(170px,1.1fr)_minmax(210px,1.2fr)_150px_170px_52px]">
+        <span>Leerling</span>
+        <span>Groep</span>
+        <span>Score</span>
+        <span>Status</span>
+        <span />
+      </div>
+      {rows.map((suggestion) => (
+        <PlacementSuggestionCompactRow key={suggestion.id} lookups={lookups} suggestion={suggestion} />
+      ))}
+    </div>
+  );
+}
+
+function PlacementSuggestionCompactRow({ lookups, suggestion }: { lookups: LookupMaps; suggestion: PlacementSuggestionRow }) {
+  const offer = lookups.offersBySuggestion.get(suggestion.id) ?? null;
+  const events = lookups.placementEventsBySuggestion.get(suggestion.id) ?? [];
+  const smartDecision = smartDecisionFor(lookups, "placement", "placement_suggestion", suggestion.id);
+  const program = lookups.programs.get(suggestion.program_id)?.name ?? "Onbekend programma";
+
+  return (
+    <details className="group rounded-2xl border border-border bg-card shadow-sm transition open:border-primary/25 open:bg-white">
+      <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 text-sm outline-none ring-primary/20 hover:bg-muted/30 focus-visible:ring-2 lg:grid-cols-[minmax(170px,1.1fr)_minmax(210px,1.2fr)_150px_170px_52px] [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          {suggestionName(lookups, suggestion)}
+          <p className="mt-1 truncate text-[11px] text-muted-foreground">{program}</p>
+        </div>
+        <div className="min-w-0">{groupSummary(lookups, suggestion.group_id)}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ScorePill score={suggestion.score} />
+          <StatusPill tone={suggestedActionTone(suggestion.suggested_action)}>{suggestedActionLabel(suggestion.suggested_action)}</StatusPill>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone={workflowTone(suggestion.status)}>{suggestion.status}</StatusPill>
+          {offer ? <StatusPill tone={workflowTone(offer.status)}>aanbod {offer.status}</StatusPill> : null}
+        </div>
+        <div className="flex items-center justify-end">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition group-open:rotate-180 group-open:bg-primary group-open:text-primary-foreground">
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </div>
+      </summary>
+
+      <div className="grid gap-4 border-t border-border bg-muted/20 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)_minmax(0,0.8fr)]">
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Onderbouwing</h3>
+          <PlacementSuggestionExplanation events={events} smartDecision={smartDecision} suggestion={suggestion} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Capaciteit</h3>
+          <CapacityMini capacity={lookups.capacitiesByGroup.get(suggestion.group_id)} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Actie</h3>
+          <SuggestionActionPanel offer={offer} suggestion={suggestion} />
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function SlotOfferCompactList({ emptyLabel, lookups, rows }: { emptyLabel: string; lookups: LookupMaps; rows: SlotOfferRow[] }) {
+  if (rows.length === 0) {
+    return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{emptyLabel}</div>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      <div className="hidden rounded-xl bg-muted/40 px-4 py-2 text-[11px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[minmax(170px,1.1fr)_minmax(210px,1.2fr)_170px_170px_52px]">
+        <span>Leerling</span>
+        <span>Groep</span>
+        <span>Status</span>
+        <span>Verloopt</span>
+        <span />
+      </div>
+      {rows.map((offer) => (
+        <SlotOfferCompactRow key={offer.id} lookups={lookups} offer={offer} />
+      ))}
+    </div>
+  );
+}
+
+function SlotOfferCompactRow({ lookups, offer }: { lookups: LookupMaps; offer: SlotOfferRow }) {
+  const events = lookups.slotOfferEventsByOffer.get(offer.id) ?? [];
+
+  return (
+    <details className="group rounded-2xl border border-border bg-card shadow-sm transition open:border-primary/25 open:bg-white">
+      <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 text-sm outline-none ring-primary/20 hover:bg-muted/30 focus-visible:ring-2 lg:grid-cols-[minmax(170px,1.1fr)_minmax(210px,1.2fr)_170px_170px_52px] [&::-webkit-details-marker]:hidden">
+        <div className="min-w-0">
+          {offerName(lookups, offer)}
+          <Link className="mt-1 block truncate font-mono text-[11px] font-semibold text-primary underline-offset-4 hover:underline" href={`/slot-offers/${offer.offer_token}`}>
+            /slot-offers/{shortToken(offer.offer_token)}
+          </Link>
+        </div>
+        <div className="min-w-0">{groupSummary(lookups, offer.group_id)}</div>
+        <SlotOfferStatusPanel offer={offer} />
+        <SlotOfferTimingPanel offer={offer} />
+        <div className="flex items-center justify-end">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition group-open:rotate-180 group-open:bg-primary group-open:text-primary-foreground">
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </div>
+      </summary>
+
+      <div className="grid gap-4 border-t border-border bg-muted/20 p-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)]">
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Resultaat</h3>
+          <SlotOfferResultPanel events={events} offer={offer} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Actie</h3>
+          <SlotOfferActionPanel offer={offer} />
         </div>
       </div>
     </details>

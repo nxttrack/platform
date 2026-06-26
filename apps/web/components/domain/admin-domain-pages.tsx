@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { CalendarDays, CircleDollarSign, Database, MapPin, Users, Waves } from "lucide-react";
+import { CalendarDays, ChevronDown, CircleDollarSign, Database, MapPin, Users, Waves } from "lucide-react";
 
 import { AdminActionForm, AdminSubmitButton } from "@/components/admin/action-form";
 import { AdminTableEnhancer } from "@/components/admin/table-enhancer";
@@ -650,32 +650,36 @@ export function AdminGroupsPage({ snapshot }: DomainPageProps) {
           <ExportLink href="/api/admin-exports/groups/download">Groepen CSV</ExportLink>
         </div>
         <CreateGroupForm data={snapshot.data} />
-        <DomainTable
-          columns={[
-            { header: "Groep", render: (group) => <DetailLink href={`/admin/groups/${group.id}`}>{group.name}</DetailLink> },
-            { header: "Programma", render: (group) => lookups.programs.get(group.program_id)?.name ?? "Onbekend" },
-            { header: "Niveau", render: (group) => lookups.stages.get(group.stage_id)?.name ?? "Onbekend" },
-            { header: "Moment", render: (group) => `${weekdayLabel(group.weekday)} ${formatTime(group.starts_at)}-${formatTime(group.ends_at)}` },
-            { header: "Locatie", render: (group) => nullableText(lookups.resources.get(group.resource_id ?? "")?.name) },
-            { header: "Instructeur", render: (group) => nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name) },
-            {
-              header: "Cap.",
-              className: "min-w-[160px] whitespace-normal",
-              render: (group) => (
-                <div>
-                  <StrongText>{group.capacity}</StrongText>
-                  <p className="text-xs text-muted-foreground">
-                    {group.reserved_spots} reserve / {group.trial_spots} proef / {group.makeup_spots} inhaal
-                  </p>
-                </div>
-              )
-            },
-            { header: "Status", render: (group) => <StatusPill tone={statusTone(group.status)}>{group.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (group) => <ActionStack><StatusTransitionButtons action={transitionGroupStatusAction} id={group.id} statuses={["draft", "active", "paused", "archived"]} /><GroupForm data={snapshot.data} group={group} mode="update" /></ActionStack> }
-          ]}
+        <DomainCompactList
+          details={(group) => (
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <ActionPanel title="Status wijzigen">
+                <StatusTransitionButtons action={transitionGroupStatusAction} id={group.id} statuses={["draft", "active", "paused", "archived"]} />
+              </ActionPanel>
+              <ActionPanel title="Groep bewerken">
+                <GroupForm data={snapshot.data} group={group} mode="update" />
+              </ActionPanel>
+            </div>
+          )}
           emptyLabel="Nog geen groepen gevonden voor deze tenant."
+          headers={["Groep", "Planning", "Bezetting", "Status"]}
           rows={snapshot.data.groups}
           rowKey={(group) => group.id}
+          summary={(group) => [
+            <div key="group">
+              <DetailLink href={`/admin/groups/${group.id}`}>{group.name}</DetailLink>
+              <p className="text-xs text-muted-foreground">{lookups.programs.get(group.program_id)?.name ?? "Onbekend"} · {lookups.stages.get(group.stage_id)?.name ?? "Onbekend"}</p>
+            </div>,
+            <div key="planning">
+              <StrongText>{weekdayLabel(group.weekday)} {formatTime(group.starts_at)}-{formatTime(group.ends_at)}</StrongText>
+              <p className="text-xs text-muted-foreground">{nullableText(lookups.resources.get(group.resource_id ?? "")?.name)} · {nullableText(lookups.instructors.get(group.instructor_id ?? "")?.display_name)}</p>
+            </div>,
+            <div key="capacity">
+              <StrongText>{group.capacity}</StrongText>
+              <p className="text-xs text-muted-foreground">{group.reserved_spots} reserve / {group.trial_spots} proef / {group.makeup_spots} inhaal</p>
+            </div>,
+            <StatusPill key="status" tone={statusTone(group.status)}>{group.status}</StatusPill>
+          ]}
         />
       </Card>
     </DomainFrame>
@@ -690,19 +694,33 @@ export function AdminSessionsPage({ snapshot }: DomainPageProps) {
       <Card>
         <SectionHeader title="Lessen" count={snapshot.data.sessions.length} />
         <CreateSessionForm data={snapshot.data} />
-        <DomainTable
-          columns={[
-            { header: "Datum", render: (session) => <DetailLink href={`/admin/sessions/${session.id}`}>{formatDateTime(session.starts_at)}</DetailLink> },
-            { header: "Tijd", render: (session) => `${formatDateTimeTime(session.starts_at)}-${formatDateTimeTime(session.ends_at)}` },
-            { header: "Groep", render: (session) => lookups.groups.get(session.group_id)?.name ?? "Onbekende groep" },
-            { header: "Locatie", render: (session) => nullableText(lookups.resources.get(session.resource_id ?? "")?.name) },
-            { header: "Instructeur", render: (session) => nullableText(lookups.instructors.get(session.instructor_id ?? "")?.display_name) },
-            { header: "Status", render: (session) => <StatusPill tone={statusTone(session.status)}>{session.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (session) => <ActionStack><StatusTransitionButtons action={transitionSessionStatusAction} id={session.id} statuses={["scheduled", "completed", "cancelled"]} /><SessionForm data={snapshot.data} mode="update" session={session} /></ActionStack> }
-          ]}
+        <DomainCompactList
+          details={(session) => (
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <ActionPanel title="Status wijzigen">
+                <StatusTransitionButtons action={transitionSessionStatusAction} id={session.id} statuses={["scheduled", "completed", "cancelled"]} />
+              </ActionPanel>
+              <ActionPanel title="Les bewerken">
+                <SessionForm data={snapshot.data} mode="update" session={session} />
+              </ActionPanel>
+            </div>
+          )}
           emptyLabel="Nog geen lessen gevonden voor deze tenant."
+          headers={["Datum", "Groep", "Locatie", "Status"]}
           rows={snapshot.data.sessions}
           rowKey={(session) => session.id}
+          summary={(session) => [
+            <div key="date">
+              <DetailLink href={`/admin/sessions/${session.id}`}>{formatDateTime(session.starts_at)}</DetailLink>
+              <p className="text-xs text-muted-foreground">{formatDateTimeTime(session.starts_at)}-{formatDateTimeTime(session.ends_at)}</p>
+            </div>,
+            <StrongText key="group">{lookups.groups.get(session.group_id)?.name ?? "Onbekende groep"}</StrongText>,
+            <div key="location">
+              <StrongText>{nullableText(lookups.resources.get(session.resource_id ?? "")?.name)}</StrongText>
+              <p className="text-xs text-muted-foreground">{nullableText(lookups.instructors.get(session.instructor_id ?? "")?.display_name)}</p>
+            </div>,
+            <StatusPill key="status" tone={statusTone(session.status)}>{session.status}</StatusPill>
+          ]}
         />
       </Card>
     </DomainFrame>
@@ -715,19 +733,25 @@ export function AdminResourcesPage({ snapshot }: DomainPageProps) {
       <Card>
         <SectionHeader title="Locaties en banen" count={snapshot.data.resources.length} />
         <CreateResourceForm />
-        <DomainTable
-          columns={[
-            { header: "Locatie", render: (resource) => <StrongText>{resource.name}</StrongText> },
-            { header: "Type", render: (resource) => resource.resource_type },
-            { header: "Locatie", render: (resource) => nullableText(resource.location_name) },
-            { header: "Capaciteit", render: (resource) => resource.capacity },
-            { header: "Code", render: (resource) => <CodeText>{resource.code}</CodeText> },
-            { header: "Status", render: (resource) => <StatusPill tone={statusTone(resource.status)}>{resource.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (resource) => <ResourceForm mode="update" resource={resource} /> }
-          ]}
+        <DomainCompactList
+          details={(resource) => (
+            <ActionPanel title="Locatie bewerken">
+              <ResourceForm mode="update" resource={resource} />
+            </ActionPanel>
+          )}
           emptyLabel="Nog geen locaties of banen gevonden voor deze tenant."
+          headers={["Locatie", "Type", "Capaciteit", "Status"]}
           rows={snapshot.data.resources}
           rowKey={(resource) => resource.id}
+          summary={(resource) => [
+            <div key="resource">
+              <StrongText>{resource.name}</StrongText>
+              <p className="text-xs text-muted-foreground">{nullableText(resource.location_name)} · <CodeText>{resource.code}</CodeText></p>
+            </div>,
+            <span key="type">{resource.resource_type}</span>,
+            <StrongText key="capacity">{resource.capacity}</StrongText>,
+            <StatusPill key="status" tone={statusTone(resource.status)}>{resource.status}</StatusPill>
+          ]}
         />
       </Card>
     </DomainFrame>
@@ -742,19 +766,30 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
       <Card>
         <SectionHeader title="Inschrijvingen" count={snapshot.data.enrollments.length} />
         <CreateEnrollmentForm data={snapshot.data} />
-        <DomainTable
-          columns={[
-            { header: "Leerling", render: (enrollment) => lookups.participants.get(enrollment.participant_id)?.display_name ?? "Onbekende participant" },
-            { header: "Programma", render: (enrollment) => lookups.programs.get(enrollment.program_id)?.name ?? "Onbekend" },
-            { header: "Huidig niveau", render: (enrollment) => nullableText(lookups.stages.get(enrollment.current_stage_id ?? "")?.name) },
-            { header: "Abonnement", render: (enrollment) => nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name) },
-            { header: "Start", render: (enrollment) => formatDate(enrollment.started_on) },
-            { header: "Status", render: (enrollment) => <StatusPill tone={statusTone(enrollment.status)}>{enrollment.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[360px] whitespace-normal", render: (enrollment) => <ActionStack><StatusTransitionButtons action={transitionEnrollmentStatusAction} id={enrollment.id} statuses={["pending", "active", "paused", "completed", "cancelled"]} /><EnrollmentForm data={snapshot.data} enrollment={enrollment} mode="update" /></ActionStack> }
-          ]}
+        <DomainCompactList
+          details={(enrollment) => (
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <ActionPanel title="Status wijzigen">
+                <StatusTransitionButtons action={transitionEnrollmentStatusAction} id={enrollment.id} statuses={["pending", "active", "paused", "completed", "cancelled"]} />
+              </ActionPanel>
+              <ActionPanel title="Inschrijving bewerken">
+                <EnrollmentForm data={snapshot.data} enrollment={enrollment} mode="update" />
+              </ActionPanel>
+            </div>
+          )}
           emptyLabel="Nog geen inschrijvingen gevonden voor deze tenant."
+          headers={["Leerling", "Programma", "Start", "Status"]}
           rows={snapshot.data.enrollments}
           rowKey={(enrollment) => enrollment.id}
+          summary={(enrollment) => [
+            <StrongText key="learner">{lookups.participants.get(enrollment.participant_id)?.display_name ?? "Onbekende participant"}</StrongText>,
+            <div key="program">
+              <StrongText>{lookups.programs.get(enrollment.program_id)?.name ?? "Onbekend"}</StrongText>
+              <p className="text-xs text-muted-foreground">{nullableText(lookups.stages.get(enrollment.current_stage_id ?? "")?.name)} · {nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name)}</p>
+            </div>,
+            <span key="start">{formatDate(enrollment.started_on)}</span>,
+            <StatusPill key="status" tone={statusTone(enrollment.status)}>{enrollment.status}</StatusPill>
+          ]}
         />
       </Card>
 
@@ -768,18 +803,27 @@ export function AdminInstructorsPage({ snapshot }: DomainPageProps) {
       <Card>
         <SectionHeader title="Instructeurs" count={snapshot.data.instructors.length} />
         <CreateInstructorForm />
-        <DomainTable
-          columns={[
-            { header: "Naam", render: (instructor) => <DetailLink href={`/admin/instructors/${instructor.id}`}>{instructor.display_name}</DetailLink> },
-            { header: "E-mail", render: (instructor) => nullableText(instructor.email) },
-            { header: "Groepen", render: (instructor) => countBy(snapshot.data.groups, "instructor_id", instructor.id) },
-            { header: "Lessen", render: (instructor) => countBy(snapshot.data.sessions, "instructor_id", instructor.id) },
-            { header: "Status", render: (instructor) => <StatusPill tone={statusTone(instructor.status)}>{instructor.status}</StatusPill> },
-            { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (instructor) => <ActionStack><StatusTransitionButtons action={transitionInstructorStatusAction} id={instructor.id} statuses={["active", "inactive"]} /><InstructorForm instructor={instructor} mode="update" /></ActionStack> }
-          ]}
+        <DomainCompactList
+          details={(instructor) => (
+            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
+              <ActionPanel title="Status wijzigen">
+                <StatusTransitionButtons action={transitionInstructorStatusAction} id={instructor.id} statuses={["active", "inactive"]} />
+              </ActionPanel>
+              <ActionPanel title="Instructeur bewerken">
+                <InstructorForm instructor={instructor} mode="update" />
+              </ActionPanel>
+            </div>
+          )}
           emptyLabel="Nog geen instructeurs gevonden voor deze tenant."
+          headers={["Naam", "E-mail", "Planning", "Status"]}
           rows={snapshot.data.instructors}
           rowKey={(instructor) => instructor.id}
+          summary={(instructor) => [
+            <DetailLink key="name" href={`/admin/instructors/${instructor.id}`}>{instructor.display_name}</DetailLink>,
+            <span key="email">{nullableText(instructor.email)}</span>,
+            <span key="planning">{countBy(snapshot.data.groups, "instructor_id", instructor.id)} groepen / {countBy(snapshot.data.sessions, "instructor_id", instructor.id)} lessen</span>,
+            <StatusPill key="status" tone={statusTone(instructor.status)}>{instructor.status}</StatusPill>
+          ]}
         />
       </Card>
     </DomainFrame>
@@ -1366,6 +1410,51 @@ function DomainTable<Row>({ columns, rows, rowKey, emptyLabel }: { columns: Colu
         </table>
       </div>
     </AdminTableEnhancer>
+  );
+}
+
+function DomainCompactList<Row>({ details, emptyLabel, headers, rows, rowKey, summary }: { details: (row: Row) => ReactNode; emptyLabel: string; headers: string[]; rows: Row[]; rowKey: (row: Row) => string; summary: (row: Row) => ReactNode[] }) {
+  if (rows.length === 0) {
+    return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{emptyLabel}</div>;
+  }
+
+  return (
+    <AdminTableEnhancer rowCount={rows.length}>
+      <div className="grid gap-2">
+        <div className="hidden rounded-xl bg-muted/40 px-4 py-2 text-[11px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[repeat(4,minmax(0,1fr))_52px]">
+          {headers.map((header) => (
+            <span key={header}>{header}</span>
+          ))}
+          <span />
+        </div>
+        {rows.map((row) => (
+          <details key={rowKey(row)} className="group rounded-2xl border border-border bg-card shadow-sm transition open:border-primary/25 open:bg-white" data-admin-row data-search-text={rowSearchText(row)} data-sort-text={rowSortText(row)} data-status={rowStatus(row)}>
+            <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 text-sm outline-none ring-primary/20 hover:bg-muted/30 focus-visible:ring-2 lg:grid-cols-[repeat(4,minmax(0,1fr))_52px] [&::-webkit-details-marker]:hidden">
+              {summary(row).slice(0, 4).map((cell, index) => (
+                <div key={`${rowKey(row)}-${headers[index] ?? index}`} className="min-w-0">
+                  {cell}
+                </div>
+              ))}
+              <div className="flex items-center justify-end">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition group-open:rotate-180 group-open:bg-primary group-open:text-primary-foreground">
+                  <ChevronDown className="h-4 w-4" />
+                </span>
+              </div>
+            </summary>
+            <div className="border-t border-border bg-muted/20 p-4">{details(row)}</div>
+          </details>
+        ))}
+      </div>
+    </AdminTableEnhancer>
+  );
+}
+
+function ActionPanel({ children, title }: { children: ReactNode; title: string }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-3">
+      <h3 className="mb-3 text-sm font-bold">{title}</h3>
+      {children}
+    </div>
   );
 }
 
