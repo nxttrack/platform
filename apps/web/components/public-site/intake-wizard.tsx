@@ -64,25 +64,33 @@ export type IntakeWizardCopy = {
 type IntakeWizardProps = {
   action: (formData: FormData) => void | Promise<void>;
   copy: IntakeWizardCopy;
+  initialProgramSlug?: string | null;
   language: string;
-  program: PublicProgram;
+  programs: PublicProgram[];
 };
 
 type FormValue = string | string[];
 
 const stepKeys = ["program", "contact", "preferences", "questions", "advice"] as const;
 
-export function IntakeWizard({ action, copy, language, program }: IntakeWizardProps) {
+export function IntakeWizard({ action, copy, initialProgramSlug, language, programs }: IntakeWizardProps) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, FormValue>>({});
+  const intakePrograms = useMemo(() => programs.filter((candidate) => Boolean(candidate.intakeConfig)), [programs]);
+  const initialProgram = useMemo(
+    () => (initialProgramSlug ? (intakePrograms.find((candidate) => candidate.slug === initialProgramSlug) ?? null) : null),
+    [initialProgramSlug, intakePrograms]
+  );
+  const [selectedProgramSlug, setSelectedProgramSlug] = useState<string | null>(initialProgram?.slug ?? null);
   const [selectedIntakeType, setSelectedIntakeType] = useState<string | null>(null);
   const [selectedLessonPreferences, setSelectedLessonPreferences] = useState<string[]>([]);
-  const config = program.intakeConfig;
+  const program = useMemo(() => (selectedProgramSlug ? (intakePrograms.find((candidate) => candidate.slug === selectedProgramSlug) ?? null) : null), [intakePrograms, selectedProgramSlug]);
+  const config = program?.intakeConfig ?? null;
   const activeQuestions = useMemo(() => config?.questions.filter((question) => questionIsActive(question, answerMap(values))) ?? [], [config?.questions, values]);
   const recommendation = useMemo(() => buildStageRecommendation({ program, questions: config?.questions ?? [], rules: config?.stageRecommendationRules ?? [], values }), [config?.questions, config?.stageRecommendationRules, program, values]);
-  const lessonTimes = useMemo(() => rankLessonTimes({ program, recommendedStageId: recommendation.stageId, values }).slice(0, 5), [program, recommendation.stageId, values]);
+  const lessonTimes = useMemo(() => (program ? rankLessonTimes({ program, recommendedStageId: recommendation.stageId, values }).slice(0, 5) : []), [program, recommendation.stageId, values]);
   const selectedLessonPreferenceDetails = useMemo(
     () =>
       selectedLessonPreferences.flatMap((slotId) => {
@@ -118,7 +126,7 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
     copy.labels.wizardStepAdvice
   ];
 
-  if (!config) {
+  if (intakePrograms.length === 0) {
     return null;
   }
 
@@ -134,8 +142,22 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
 
   const goToStep = (nextStep: number) => {
     updateValues();
+
+    if (nextStep > 0 && (!program || !config)) {
+      setError(copy.labels.requiredStepError);
+      setStep(0);
+      return;
+    }
+
     setError(null);
     setStep(Math.max(0, Math.min(stepKeys.length - 1, nextStep)));
+  };
+
+  const chooseProgram = (slug: string) => {
+    setSelectedProgramSlug(slug);
+    setSelectedIntakeType(null);
+    setSelectedLessonPreferences([]);
+    setError(null);
   };
 
   const toggleLessonPreference = (slotId: string) => {
@@ -166,6 +188,13 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
 
     const nextValues = valuesFromForm(new FormData(form));
     setValues(nextValues);
+
+    if (!program || !config) {
+      setStep(0);
+      setError(copy.labels.requiredStepError);
+      return;
+    }
+
     const validation = validateStep(step, nextValues, config.questions.filter((question) => questionIsActive(question, answerMap(nextValues))));
 
     if (validation) {
@@ -186,6 +215,14 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
 
     const form = formRef.current;
     const nextValues = form ? valuesFromForm(new FormData(form)) : values;
+
+    if (!program || !config) {
+      event.preventDefault();
+      setStep(0);
+      setError(copy.labels.requiredStepError);
+      return;
+    }
+
     const validation = validateStep(step, nextValues, activeQuestions, selectedLessonPreferenceDetails, lessonTimes.length);
 
     if (validation) {
@@ -199,7 +236,7 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
 
   return (
     <form action={action} className="mx-auto max-w-6xl rounded-3xl border border-border bg-card p-4 shadow-card md:p-7" onChange={updateValues} onSubmit={handleSubmit} ref={formRef}>
-      <input name="program_slug" type="hidden" value={program.slug} />
+      <input name="program_slug" type="hidden" value={program?.slug ?? ""} />
       <input name="public_language" type="hidden" value={language} />
       {selectedLessonPreferenceDetails.map((value) => (
         <input key={value} name="answer_lesson_time_preferences" type="hidden" value={value} />
@@ -210,13 +247,13 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-start">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">{copy.labels.chosenProgram}</p>
-              <h2 className="mt-2 text-2xl font-bold">{program.name}</h2>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{config.intro ?? program.summary ?? copy.labels.intakeIntroFallback}</p>
+              <h2 className="mt-2 text-2xl font-bold">{program?.name ?? copy.labels.wizardStepProgram}</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{config?.intro ?? program?.summary ?? copy.labels.intakeIntroFallback}</p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
-              <DetailPill label={copy.labels.age} value={program.ageLabel} />
-              <DetailPill label={copy.labels.duration} value={program.durationLabel} />
-              <DetailPill label={copy.labels.price} value={program.priceLabel} />
+              <DetailPill label={copy.labels.age} value={program?.ageLabel ?? null} />
+              <DetailPill label={copy.labels.duration} value={program?.durationLabel ?? null} />
+              <DetailPill label={copy.labels.price} value={program?.priceLabel ?? null} />
             </div>
           </div>
           <nav aria-label="Inschrijfformulier stappen" className="mt-5 overflow-x-auto pb-1">
@@ -243,6 +280,25 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
           <section className={step === 0 ? "grid gap-5" : "hidden"}>
             <PanelTitle eyebrow={`Stap 1 / ${steps.length}`} title={copy.labels.wizardStepProgram} />
             <div className="grid gap-3">
+              <p className="text-sm font-semibold">{copy.labels.chosenProgram}</p>
+              <div className="grid gap-2 md:grid-cols-2">
+                {intakePrograms.map((candidate) => (
+                  <label className={`cursor-pointer rounded-2xl border p-4 transition ${program?.slug === candidate.slug ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-border bg-background hover:border-primary/40"}`} key={candidate.id}>
+                    <input checked={program?.slug === candidate.slug} className="sr-only" name="program_choice" onChange={() => chooseProgram(candidate.slug)} type="radio" value={candidate.slug} />
+                    <p className="font-bold">{candidate.name}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{candidate.summary ?? candidate.description ?? copy.labels.intakeIntroFallback}</p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                      <DetailPill label={copy.labels.age} value={candidate.ageLabel} />
+                      <DetailPill label={copy.labels.duration} value={candidate.durationLabel} />
+                      <DetailPill label={copy.labels.price} value={candidate.priceLabel} />
+                    </div>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {program && config ? (
+            <div className="grid gap-3">
               <p className="text-sm font-semibold">{copy.labels.intakeOption}</p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {publicIntakeOptions.map((option, index) => (
@@ -254,6 +310,7 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
                 ))}
               </div>
             </div>
+            ) : null}
           </section>
 
           <section className={step === 1 ? "grid gap-5" : "hidden"}>
@@ -605,7 +662,17 @@ function answerMap(values: Record<string, FormValue>) {
   return answers;
 }
 
-function buildStageRecommendation(input: { program: PublicProgram; questions: IntakeQuestion[]; rules: StageRecommendationRule[]; values: Record<string, FormValue> }) {
+function buildStageRecommendation(input: { program: PublicProgram | null; questions: IntakeQuestion[]; rules: StageRecommendationRule[]; values: Record<string, FormValue> }) {
+  if (!input.program) {
+    return {
+      stageId: null,
+      stageLabel: null,
+      score: 0,
+      reasons: [],
+      missingInformation: []
+    };
+  }
+
   const answers = answerMap(input.values);
   const stages = [...input.program.stages].sort((left, right) => left.sortOrder - right.sortOrder);
   const evaluated = input.rules
@@ -703,7 +770,7 @@ function rankLessonTimes(input: { program: PublicProgram; recommendedStageId: st
       const weekday = weekdayValue(slot.weekday);
       const stageMatch = input.recommendedStageId ? slot.stageId === input.recommendedStageId : false;
       const dayMatch = preferredDays.includes(weekday);
-      const timeMatch = preferredTimes.includes(slot.timeBucket) || (slot.weekday >= 6 && preferredTimes.includes("weekend"));
+      const timeMatch = preferredTimes.includes(slot.timeBucket);
       const score = Math.max(
         0,
         Math.min(

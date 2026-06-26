@@ -165,8 +165,7 @@ const preferredDays = [
 const preferredTimes = [
   { label: "Ochtend", value: "morning" },
   { label: "Middag", value: "afternoon" },
-  { label: "Avond", value: "evening" },
-  { label: "Weekend", value: "weekend" }
+  { label: "Avond", value: "evening" }
 ];
 
 const trustItems = [
@@ -457,8 +456,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
     preferredTimes: [
       { label: "Morning", value: "morning" },
       { label: "Afternoon", value: "afternoon" },
-      { label: "Evening", value: "evening" },
-      { label: "Weekend", value: "weekend" }
+      { label: "Evening", value: "evening" }
     ],
     trustItems: [
       {
@@ -1128,15 +1126,16 @@ export function IntakePage({ snapshot, submitted, language }: IntakePageProps) {
     return <PublicStatusPage language={publicLanguage} snapshot={snapshot} />;
   }
 
-  const program = snapshot.selectedProgram ?? snapshot.programs[0] ?? null;
+  const selectedProgram = snapshot.selectedProgram;
+  const intakePrograms = snapshot.programs.filter((program) => Boolean(program.intakeConfig));
 
   return (
-    <PublicShell currentRoute="intake" currentRouteParams={{ program: program?.slug ?? null }} language={publicLanguage} snapshot={snapshot}>
+    <PublicShell currentRoute="intake" currentRouteParams={{ program: selectedProgram?.slug ?? null }} language={publicLanguage} snapshot={snapshot}>
       <main>
         <CompactHero kicker={snapshot.tenant.name} sub={copy.labels.intakeSub} title={copy.labels.intake} />
         <Section>
           {submitted ? <SuccessNotice copy={copy} /> : null}
-          {program && program.intakeConfig ? <IntakeWizard action={submitIntakeAction} copy={toIntakeWizardCopy(copy)} language={publicLanguage} program={program} /> : <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />}
+          {intakePrograms.length > 0 ? <IntakeWizard action={submitIntakeAction} copy={toIntakeWizardCopy(copy)} initialProgramSlug={selectedProgram?.slug ?? null} language={publicLanguage} programs={intakePrograms} /> : <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />}
         </Section>
       </main>
     </PublicShell>
