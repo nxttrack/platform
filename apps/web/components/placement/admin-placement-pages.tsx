@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { AlertTriangle, CalendarClock, CheckCircle2, ClipboardList, Filter, PhoneCall, RotateCcw, Send, Users } from "lucide-react";
+import { AlertTriangle, CalendarClock, CheckCircle2, ChevronDown, ClipboardList, Filter, PhoneCall, RotateCcw, Send, Users } from "lucide-react";
 import Link from "next/link";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -168,33 +168,12 @@ export function AdminWaitlistWorkflowPage({ filters = {}, snapshot }: PlacementP
             ) : null}
           </div>
           <WaitlistFilterBar data={snapshot.data} filters={filters} />
-          <WorkflowTable
-            columns={[
-              { header: "Rang", render: (entry) => <span className="text-lg font-bold">#{rankByEntry.get(entry.id) ?? "-"}</span> },
-              { header: "Leerling", className: "min-w-[180px] whitespace-normal", render: (entry) => intakeName(lookups, entry) },
-              {
-                header: "Score",
-                className: "min-w-[300px] whitespace-normal",
-                render: (entry) => <WaitlistScorePanel decision={smartDecisionFor(lookups, "waitlist", "waitlist_entry", entry.id)} entry={entry} />
-              },
-              { header: "Programma", render: (entry) => lookups.programs.get(entry.program_id)?.name ?? "Onbekend" },
-              { header: "Niveau", render: (entry) => nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name) },
-              { header: "Status", render: (entry) => <StatusPill tone={workflowTone(entry.status)}>{entry.status}</StatusPill> },
-              { header: "Voorkeur", className: "min-w-[220px] whitespace-normal", render: (entry) => preferenceText(entry.preferred_days, entry.preferred_time_windows) },
-              {
-                header: "Prioriteit / contact",
-                className: "min-w-[320px] whitespace-normal",
-                render: (entry) => <WaitlistPriorityPanel entry={entry} events={lookups.waitlistEventsByEntry.get(entry.id) ?? []} />
-              },
-              {
-                header: "Voorstel",
-                className: "min-w-[520px] whitespace-normal",
-                render: (entry) => <PlacementAssistantForEntry data={snapshot.data} entry={entry} lookups={lookups} suggestions={lookups.suggestionsByWaitlist.get(entry.id) ?? []} />
-              }
-            ]}
+          <WaitlistCompactList
+            data={snapshot.data}
             emptyLabel="Nog geen wachtlijstregels. Zet een intake eerst om naar de wachtlijst."
+            lookups={lookups}
+            rankByEntry={rankByEntry}
             rows={waitlistEntries}
-            rowKey={(entry) => entry.id}
           />
         </Card>
 
@@ -407,6 +386,89 @@ function WaitlistFilterBar({ data, filters }: { data: PlacementWorkflowData; fil
         </button>
       </div>
     </form>
+  );
+}
+
+function WaitlistCompactList({ data, emptyLabel, lookups, rankByEntry, rows }: { data: PlacementWorkflowData; emptyLabel: string; lookups: LookupMaps; rankByEntry: Map<string, number>; rows: WaitlistEntryRow[] }) {
+  if (rows.length === 0) {
+    return <div className="rounded-2xl border border-dashed border-border bg-muted/40 p-6 text-sm text-muted-foreground">{emptyLabel}</div>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      <div className="hidden rounded-xl bg-muted/40 px-4 py-2 text-[11px] font-bold uppercase text-muted-foreground lg:grid lg:grid-cols-[72px_minmax(170px,1.2fr)_minmax(150px,0.8fr)_minmax(180px,1fr)_minmax(170px,1fr)_minmax(150px,0.8fr)_52px]">
+        <span>Rang</span>
+        <span>Leerling</span>
+        <span>Score</span>
+        <span>Programma</span>
+        <span>Voorkeur</span>
+        <span>Status</span>
+        <span />
+      </div>
+      {rows.map((entry) => (
+        <WaitlistCompactRow key={entry.id} data={data} entry={entry} lookups={lookups} rank={rankByEntry.get(entry.id) ?? null} />
+      ))}
+    </div>
+  );
+}
+
+function WaitlistCompactRow({ data, entry, lookups, rank }: { data: PlacementWorkflowData; entry: WaitlistEntryRow; lookups: LookupMaps; rank: number | null }) {
+  const decision = smartDecisionFor(lookups, "waitlist", "waitlist_entry", entry.id);
+  const events = lookups.waitlistEventsByEntry.get(entry.id) ?? [];
+  const suggestions = lookups.suggestionsByWaitlist.get(entry.id) ?? [];
+  const program = lookups.programs.get(entry.program_id)?.name ?? "Onbekend programma";
+  const stage = nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name);
+  const lastEvent = events[0] ?? null;
+
+  return (
+    <details className="group rounded-2xl border border-border bg-card shadow-sm transition open:border-primary/25 open:bg-white">
+      <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 text-sm outline-none ring-primary/20 hover:bg-muted/30 focus-visible:ring-2 lg:grid-cols-[72px_minmax(170px,1.2fr)_minmax(150px,0.8fr)_minmax(180px,1fr)_minmax(170px,1fr)_minmax(150px,0.8fr)_52px] [&::-webkit-details-marker]:hidden">
+        <div className="flex items-center gap-2">
+          <span className="rounded-xl bg-muted px-2.5 py-1 text-sm font-black text-foreground">#{rank ?? "-"}</span>
+        </div>
+        <div className="min-w-0">
+          {intakeName(lookups, entry)}
+          {lastEvent ? <p className="mt-1 truncate text-[11px] text-muted-foreground">Laatste event: {waitlistEventLabel(lastEvent.event_type)}</p> : null}
+        </div>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {typeof entry.waitlist_score === "number" ? <ScorePill score={entry.waitlist_score} /> : <StatusPill tone="warning">Geen score</StatusPill>}
+          <StatusPill tone={duplicateTone(entry.duplicate_risk)}>{duplicateRiskLabel(entry.duplicate_risk)}</StatusPill>
+          {entry.reevaluation_requested_at ? <StatusPill tone="warning">Hercheck</StatusPill> : null}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-foreground">{program}</p>
+          <p className="truncate text-xs text-muted-foreground">{stage}</p>
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-semibold text-foreground">{preferencePlainText(entry.preferred_days, entry.preferred_time_windows)}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{entry.last_contacted_at ? `Contact: ${formatDate(entry.last_contacted_at)}` : "Nog niet benaderd"}</p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <StatusPill tone={workflowTone(entry.status)}>{entry.status}</StatusPill>
+          <StatusPill tone={priorityTone(entry.admin_priority)}>{priorityLabel(entry.admin_priority)}</StatusPill>
+        </div>
+        <div className="flex items-center justify-end">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-muted/40 text-muted-foreground transition group-open:rotate-180 group-open:bg-primary group-open:text-primary-foreground">
+            <ChevronDown className="h-4 w-4" />
+          </span>
+        </div>
+      </summary>
+
+      <div className="grid gap-4 border-t border-border bg-muted/20 p-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Score en onderbouwing</h3>
+          <WaitlistScorePanel decision={decision} entry={entry} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Prioriteit en contact</h3>
+          <WaitlistPriorityPanel entry={entry} events={events} />
+        </div>
+        <div className="rounded-2xl border border-border bg-card p-3">
+          <h3 className="mb-3 text-sm font-bold">Plaatsingsvoorstel</h3>
+          <PlacementAssistantForEntry data={data} entry={entry} lookups={lookups} suggestions={suggestions} />
+        </div>
+      </div>
+    </details>
   );
 }
 
