@@ -1,36 +1,36 @@
 do $$
 declare
-  demo_tenant_id uuid;
-  diploma_a_program_id uuid;
-  plan_once_id uuid;
+  v_demo_tenant_id uuid;
+  v_diploma_a_program_id uuid;
+  v_plan_once_id uuid;
   learner record;
   intake record;
-  target_group record;
-  target_stage_id uuid;
-  intake_config_id uuid;
-  participant_id uuid;
-  enrollment_id uuid;
-  waitlist_id uuid;
+  v_target_group record;
+  v_target_stage_id uuid;
+  v_intake_config_id uuid;
+  v_participant_id uuid;
+  v_enrollment_id uuid;
+  v_waitlist_id uuid;
 begin
-  select id into demo_tenant_id
+  select id into v_demo_tenant_id
   from public.tenants
   where slug = 'aquaswim-demo';
 
-  if demo_tenant_id is null then
+  if v_demo_tenant_id is null then
     return;
   end if;
 
-  select id into diploma_a_program_id
+  select id into v_diploma_a_program_id
   from public.programs
-  where tenant_id = demo_tenant_id
+  where tenant_id = v_demo_tenant_id
     and code = 'zwemdiploma-a';
 
-  select id into plan_once_id
+  select id into v_plan_once_id
   from public.subscription_plans
-  where tenant_id = demo_tenant_id
+  where tenant_id = v_demo_tenant_id
     and code = 'zwemles-1x-week';
 
-  if diploma_a_program_id is null then
+  if v_diploma_a_program_id is null then
     return;
   end if;
 
@@ -73,22 +73,22 @@ begin
     ) as seed(external_reference, display_name, birthdate, group_code, starts_on)
   loop
     select id, program_id, stage_id
-      into target_group
+      into v_target_group
     from public.groups
-    where tenant_id = demo_tenant_id
+    where tenant_id = v_demo_tenant_id
       and code = learner.group_code;
 
-    if target_group.id is null then
+    if v_target_group.id is null then
       continue;
     end if;
 
     insert into public.participants (tenant_id, external_reference, display_name, birthdate, status)
-    values (demo_tenant_id, learner.external_reference, learner.display_name, learner.birthdate, 'active')
+    values (v_demo_tenant_id, learner.external_reference, learner.display_name, learner.birthdate, 'active')
     on conflict (tenant_id, external_reference) do update
       set display_name = excluded.display_name,
           birthdate = excluded.birthdate,
           status = excluded.status
-    returning id into participant_id;
+    returning id into v_participant_id;
 
     insert into public.enrollments (
       tenant_id,
@@ -102,12 +102,12 @@ begin
       ended_on
     )
     values (
-      demo_tenant_id,
+      v_demo_tenant_id,
       replace(learner.external_reference, 'demo-seed-child-', 'demo-seed-enrollment-'),
-      participant_id,
-      target_group.program_id,
-      target_group.stage_id,
-      plan_once_id,
+      v_participant_id,
+      v_target_group.program_id,
+      v_target_group.stage_id,
+      v_plan_once_id,
       'active',
       learner.starts_on,
       null
@@ -120,10 +120,10 @@ begin
           status = excluded.status,
           started_on = excluded.started_on,
           ended_on = excluded.ended_on
-    returning id into enrollment_id;
+    returning id into v_enrollment_id;
 
     insert into public.group_memberships (tenant_id, enrollment_id, group_id, status, starts_on, ends_on)
-    values (demo_tenant_id, enrollment_id, target_group.id, 'active', learner.starts_on, null)
+    values (v_demo_tenant_id, v_enrollment_id, v_target_group.id, 'active', learner.starts_on, null)
     on conflict (enrollment_id, group_id, starts_on) do update
       set status = excluded.status,
           ends_on = excluded.ends_on;
@@ -133,7 +133,7 @@ begin
     select *
     from (
       values
-        ('00000000-0000-4000-8000-000000010001'::uuid, '00000000-0000-4000-8000-000000020001'::uuid, 'Sanne van Loon', 'sanne.vanloon@example.test', '+31 6 11223301', 'Jip van Loon', '2020-04-18'::date, 'registration', 'badje-1', array['monday','wednesday']::text[], array['morning','afternoon']::text[], 'new', 76.0, 'none', 'normal', null, 'Eerste zwemles, watervrij oefenen.', '{"swim_experience":"Nog geen zwemles gehad, wel watervrij in peuterbad.","medical_notes":"Geen bijzonderheden."}'::jsonb),
+        ('00000000-0000-4000-8000-000000010001'::uuid, '00000000-0000-4000-8000-000000020001'::uuid, 'Sanne van Loon', 'sanne.vanloon@example.test', '+31 6 11223301', 'Jip van Loon', '2020-04-18'::date, 'registration', 'badje-1', array['monday','wednesday']::text[], array['morning','afternoon']::text[], 'new', 76.0, 'none', 'normal', null, '{"swim_experience":"Nog geen zwemles gehad, wel watervrij in peuterbad.","medical_notes":"Geen bijzonderheden."}'::jsonb),
         ('00000000-0000-4000-8000-000000010002'::uuid, '00000000-0000-4000-8000-000000020002'::uuid, 'Mark Hendriks', 'mark.hendriks@example.test', '+31 6 11223302', 'Roos Hendriks', '2019-09-03'::date, 'waitlist', 'badje-1', array['saturday']::text[], array['morning','weekend']::text[], 'reviewing', 82.0, 'none', 'high', 'Alleen zaterdag mogelijk door co-ouderschap.', '{"swim_experience":"Watervrij, nog geen techniek.","medical_notes":"Bril tijdens sporten."}'::jsonb),
         ('00000000-0000-4000-8000-000000010003'::uuid, '00000000-0000-4000-8000-000000020003'::uuid, 'Nadia El Amrani', 'nadia.elamrani@example.test', '+31 6 11223303', 'Adam El Amrani', '2018-01-29'::date, 'registration', 'badje-2', array['monday','thursday']::text[], array['evening']::text[], 'matched', 88.0, 'none', 'normal', null, '{"swim_experience":"Kan drijven en korte stukjes zwemmen.","medical_notes":"Geen."}'::jsonb),
         ('00000000-0000-4000-8000-000000010004'::uuid, '00000000-0000-4000-8000-000000020004'::uuid, 'Thomas de Wit', 'thomas.dewit@example.test', '+31 6 11223304', 'Puck de Wit', '2017-07-15'::date, 'waitlist', 'badje-3', array['wednesday','sunday']::text[], array['afternoon','weekend']::text[], 'new', 73.0, 'warning', 'normal', null, '{"swim_experience":"Heeft eerder zwemles gehad bij andere aanbieder.","medical_notes":"Ouder twijfelt over niveau."}'::jsonb),
@@ -165,16 +165,16 @@ begin
       answers
     )
   loop
-    select id into target_stage_id
+    select id into v_target_stage_id
     from public.stages
-    where tenant_id = demo_tenant_id
-      and program_id = diploma_a_program_id
+    where tenant_id = v_demo_tenant_id
+      and program_id = v_diploma_a_program_id
       and code = intake.stage_code;
 
-    select id into intake_config_id
+    select id into v_intake_config_id
     from public.intake_form_configs
-    where tenant_id = demo_tenant_id
-      and program_id = diploma_a_program_id
+    where tenant_id = v_demo_tenant_id
+      and program_id = v_diploma_a_program_id
       and status = 'active'
     order by config_version desc
     limit 1;
@@ -202,9 +202,9 @@ begin
     )
     values (
       intake.intake_id,
-      demo_tenant_id,
-      diploma_a_program_id,
-      intake_config_id,
+      v_demo_tenant_id,
+      v_diploma_a_program_id,
+      v_intake_config_id,
       intake.intake_type,
       intake.parent_name,
       intake.parent_email,
@@ -218,8 +218,8 @@ begin
       1,
       jsonb_build_object(
         'action', 'recommend_start_stage',
-        'recommended_stage_id', target_stage_id,
-        'recommended_stage_label', coalesce((select name from public.stages where id = target_stage_id), intake.stage_code),
+        'recommended_stage_id', v_target_stage_id,
+        'recommended_stage_label', coalesce((select name from public.stages where id = v_target_stage_id), intake.stage_code),
         'score', intake.score,
         'confidence', case when intake.score >= 85 then 'high' when intake.score >= 70 then 'medium' else 'low' end,
         'rule_version', 'demo-seed-v1',
@@ -253,13 +253,13 @@ begin
           status = excluded.status;
 
     delete from public.intake_submission_events
-    where tenant_id = demo_tenant_id
+    where tenant_id = v_demo_tenant_id
       and submission_id = intake.intake_id
       and note like 'Demo seed:%';
 
     insert into public.intake_submission_events (tenant_id, submission_id, status, note)
     values (
-      demo_tenant_id,
+      v_demo_tenant_id,
       intake.intake_id,
       intake.intake_status,
       'Demo seed: inschrijfformulier klaar voor testflow.'
@@ -287,10 +287,10 @@ begin
     )
     values (
       intake.waitlist_id,
-      demo_tenant_id,
+      v_demo_tenant_id,
       intake.intake_id,
-      diploma_a_program_id,
-      target_stage_id,
+      v_diploma_a_program_id,
+      v_target_stage_id,
       case when intake.intake_status = 'matched' then 'matched' else 'queued' end,
       current_date - ((right(intake.waitlist_id::text, 1))::integer * 2),
       intake.preferred_days,
@@ -327,17 +327,17 @@ begin
           priority_reason = excluded.priority_reason,
           duplicate_risk = excluded.duplicate_risk,
           evaluated_at = excluded.evaluated_at
-    returning id into waitlist_id;
+    returning id into v_waitlist_id;
 
     delete from public.waitlist_entry_events
-    where tenant_id = demo_tenant_id
-      and waitlist_entry_id = waitlist_id
+    where tenant_id = v_demo_tenant_id
+      and waitlist_entry_id = v_waitlist_id
       and note like 'Demo seed:%';
 
     insert into public.waitlist_entry_events (tenant_id, waitlist_entry_id, event_type, note, metadata)
     values (
-      demo_tenant_id,
-      waitlist_id,
+      v_demo_tenant_id,
+      v_waitlist_id,
       'scored',
       'Demo seed: wachtlijstscore en voorkeuren toegevoegd.',
       jsonb_build_object('score', intake.score, 'duplicate_risk', intake.duplicate_risk)
