@@ -22,9 +22,10 @@ export default async function LocalizedIntakePage({ params, searchParams }: Loca
   const query = (await searchParams) ?? {};
   const program = getParam(query.program);
   const submitted = getParam(query.submitted) === "1";
+  const submissionId = getParam(query.submission);
   const snapshot = await getPublicTenantSiteSnapshot(program);
 
-  return <PublicIntakePage language={language} snapshot={snapshot} submitted={submitted} />;
+  return <PublicIntakePage language={language} snapshot={snapshot} submitted={submitted} submissionId={submissionId} />;
 }
 
 function getParam(value: string | string[] | undefined) {

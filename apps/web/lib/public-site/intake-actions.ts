@@ -115,6 +115,16 @@ export async function submitIntakeAction(formData: FormData) {
       .eq("tenant_id", snapshot.tenant.id)
   );
 
+  const confirmationSummary = buildConfirmationSummary({
+    answers,
+    language: publicLanguage,
+    participantName: submission.participant_name,
+    preferredDays: submission.preferred_days,
+    preferredTimeWindows: submission.preferred_time_windows,
+    programName: program.name,
+    tenantName: snapshot.tenant.name
+  });
+
   await queueDirectEventMessage(supabase, {
     tenantId: snapshot.tenant.id,
     recipientEmail: submission.parent_email,
@@ -125,12 +135,17 @@ export async function submitIntakeAction(formData: FormData) {
       parent_name: submission.parent_name,
       participant_name: submission.participant_name,
       intake_type: intakeType,
-      program_name: program.name
+      program_name: program.name,
+      tenant_name: snapshot.tenant.name,
+      preferred_days: confirmationSummary.preferredDays,
+      preferred_time_windows: confirmationSummary.preferredTimeWindows,
+      lesson_preferences: confirmationSummary.lessonPreferences,
+      summary: confirmationSummary.text
     },
     sourceTable: "intake_submissions",
     sourceRecordId: submissionId,
     fallbackSubject: `Inschrijfformulier ontvangen voor ${submission.participant_name}`,
-    fallbackBody: `Hallo ${submission.parent_name},\n\nWe hebben het inschrijfformulier voor ${submission.participant_name} ontvangen.\n\nNXTTRACK`
+    fallbackBody: confirmationSummary.emailBody.replace("{{parent_name}}", submission.parent_name)
   });
 
   await throwOnError(
@@ -142,7 +157,7 @@ export async function submitIntakeAction(formData: FormData) {
     })
   );
 
-  redirect(publicHref(publicLanguage, "intake", { program: program.slug, submitted: true }));
+  redirect(publicHref(publicLanguage, "intake", { program: program.slug, submitted: true, submission: submissionId }));
 }
 
 function requiredString(formData: FormData, key: string) {
@@ -228,6 +243,91 @@ async function throwOnError(builder: PromiseLike<{ error: { message: string } | 
   if (error) {
     throw new Error(error.message);
   }
+}
+
+function buildConfirmationSummary(input: {
+  answers: Record<string, string | string[]>;
+  language: string;
+  participantName: string;
+  preferredDays: string[];
+  preferredTimeWindows: string[];
+  programName: string;
+  tenantName: string;
+}) {
+  const preferredDays = input.preferredDays.map((day) => dayLabel(day, input.language)).join(", ") || "-";
+  const preferredTimeWindows = input.preferredTimeWindows.map((time) => timeLabel(time, input.language)).join(", ") || "-";
+  const lessonPreferences = lessonPreferencesFromAnswers(input.answers)
+    .map((preference, index) => `${index + 1}. ${preference.groupName} - ${dayLabel(preference.weekday, input.language)} ${preference.startsAt}-${preference.endsAt} (${preference.stageName})`)
+    .join("\n");
+  const text = [
+    `Programma: ${input.programName}`,
+    `Kind: ${input.participantName}`,
+    `Voorkeursdagen: ${preferredDays}`,
+    `Voorkeurstijden: ${preferredTimeWindows}`,
+    lessonPreferences ? `Gekozen voorkeursmomenten:\n${lessonPreferences}` : null
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const emailBody =
+    input.language === "en"
+      ? `Hi {{parent_name}},\n\nGreat news: your registration for ${input.tenantName} has been received.\n\nBelow is a summary of the submitted form:\n\n${text}\n\n${input.tenantName} will contact you by e-mail about the next step.\n\nNXTTRACK`
+      : `Hallo {{parent_name}},\n\nGelukt! Jouw inschrijving voor ${input.tenantName} is ontvangen.\n\nOnderstaand vind je een samenvatting van het ingevulde formulier:\n\n${text}\n\n${input.tenantName} neemt per e-mail contact met je op over de vervolgstap.\n\nNXTTRACK`;
+
+  return {
+    emailBody,
+    lessonPreferences: lessonPreferences || "-",
+    preferredDays,
+    preferredTimeWindows,
+    text
+  };
+}
+
+function lessonPreferencesFromAnswers(answers: Record<string, string | string[]>) {
+  return answerValues(answers.lesson_time_preferences).flatMap((value) => {
+    try {
+      const parsed = JSON.parse(value) as Record<string, unknown>;
+
+      return [
+        {
+          endsAt: stringFromUnknown(parsed.ends_at),
+          groupName: stringFromUnknown(parsed.group_name),
+          stageName: stringFromUnknown(parsed.stage_name),
+          startsAt: stringFromUnknown(parsed.starts_at),
+          weekday: stringFromUnknown(parsed.weekday)
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+}
+
+function stringFromUnknown(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : "-";
+}
+
+function dayLabel(value: string, language: string) {
+  const labels: Record<string, { nl: string; en: string }> = {
+    monday: { nl: "Maandag", en: "Monday" },
+    tuesday: { nl: "Dinsdag", en: "Tuesday" },
+    wednesday: { nl: "Woensdag", en: "Wednesday" },
+    thursday: { nl: "Donderdag", en: "Thursday" },
+    friday: { nl: "Vrijdag", en: "Friday" },
+    saturday: { nl: "Zaterdag", en: "Saturday" },
+    sunday: { nl: "Zondag", en: "Sunday" }
+  };
+
+  return labels[value]?.[language === "en" ? "en" : "nl"] ?? value;
+}
+
+function timeLabel(value: string, language: string) {
+  const labels: Record<string, { nl: string; en: string }> = {
+    morning: { nl: "Ochtend", en: "Morning" },
+    afternoon: { nl: "Middag", en: "Afternoon" },
+    evening: { nl: "Avond", en: "Evening" }
+  };
+
+  return labels[value]?.[language === "en" ? "en" : "nl"] ?? value;
 }
 
 function validateConfiguredAnswers(questions: IntakeQuestion[], answers: Record<string, string | string[]>) {

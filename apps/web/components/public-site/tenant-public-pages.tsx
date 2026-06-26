@@ -1,4 +1,4 @@
-import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, MapPin, Menu, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
+import { ArrowRight, Award, CalendarCheck, CheckCircle2, Clock, GraduationCap, Mail, MapPin, Menu, MessageSquare, Newspaper, ShieldCheck, Sparkles, UserCheck, Users, Waves } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 
@@ -7,6 +7,7 @@ import { IntakeWizard, type IntakeWizardCopy } from "@/components/public-site/in
 import { defaultLanguage, normalizeSupportedLanguage, publicHref, type PublicRouteKey, type PublicRouteParams, type SupportedLanguage } from "@/lib/i18n";
 import { submitIntakeAction } from "@/lib/public-site/intake-actions";
 import type { IntakeQuestion, IntakeQuestionOption, PublicProgram, PublicTenantProfile, PublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 type PublicPageProps = {
   snapshot: PublicTenantSiteSnapshot;
@@ -15,6 +16,7 @@ type PublicPageProps = {
 
 type IntakePageProps = PublicPageProps & {
   submitted?: boolean;
+  submissionId?: string | null;
 };
 
 const intakeOptionLabels: Record<string, string> = {
@@ -1118,7 +1120,7 @@ export function ProgramDetailPage({ snapshot, language }: PublicPageProps) {
   );
 }
 
-export function IntakePage({ snapshot, submitted, language }: IntakePageProps) {
+export async function IntakePage({ snapshot, submitted, submissionId, language }: IntakePageProps) {
   const publicLanguage = resolvePublicLanguage(language);
   const copy = getPublicCopy(publicLanguage);
 
@@ -1128,14 +1130,20 @@ export function IntakePage({ snapshot, submitted, language }: IntakePageProps) {
 
   const selectedProgram = snapshot.selectedProgram;
   const intakePrograms = snapshot.programs.filter((program) => Boolean(program.intakeConfig));
+  const confirmation = submitted ? await getIntakeSubmissionConfirmation(snapshot, submissionId ?? null) : null;
 
   return (
     <PublicShell currentRoute="intake" currentRouteParams={{ program: selectedProgram?.slug ?? null }} language={publicLanguage} snapshot={snapshot}>
       <main>
         <CompactHero kicker={snapshot.tenant.name} sub={copy.labels.intakeSub} title={copy.labels.intake} />
         <Section>
-          {submitted ? <SuccessNotice copy={copy} /> : null}
-          {intakePrograms.length > 0 ? <IntakeWizard action={submitIntakeAction} copy={toIntakeWizardCopy(copy)} initialProgramSlug={selectedProgram?.slug ?? null} language={publicLanguage} programs={intakePrograms} /> : <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />}
+          {submitted ? (
+            <IntakeConfirmation copy={copy} language={publicLanguage} snapshot={snapshot} submission={confirmation} />
+          ) : intakePrograms.length > 0 ? (
+            <IntakeWizard action={submitIntakeAction} copy={toIntakeWizardCopy(copy)} initialProgramSlug={selectedProgram?.slug ?? null} language={publicLanguage} programs={intakePrograms} />
+          ) : (
+            <IntakeUnavailable copy={copy} language={publicLanguage} programs={snapshot.programs} />
+          )}
         </Section>
       </main>
     </PublicShell>
@@ -1592,12 +1600,257 @@ function Section({ title, sub, tinted, children }: { title?: string; sub?: strin
   );
 }
 
-function SuccessNotice({ copy }: { copy: TenantPublicCopy }) {
+type IntakeSubmissionConfirmation = {
+  id: string;
+  answers: Record<string, unknown>;
+  birthdate: string | null;
+  createdAt: string | null;
+  intakeType: string;
+  notes: string | null;
+  parentEmail: string;
+  parentName: string;
+  parentPhone: string | null;
+  participantName: string;
+  preferredDays: string[];
+  preferredTimeWindows: string[];
+  program: PublicProgram | null;
+};
+
+async function getIntakeSubmissionConfirmation(snapshot: PublicTenantSiteSnapshot, submissionId: string | null) {
+  if (!snapshot.tenant || !submissionId) {
+    return null;
+  }
+
+  const supabase = createAdminClient();
+  const result = await supabase
+    .from("intake_submissions")
+    .select("id, program_id, intake_type, parent_name, parent_email, parent_phone, participant_name, participant_birthdate, preferred_days, preferred_time_windows, notes, answers, created_at")
+    .eq("tenant_id", snapshot.tenant.id)
+    .eq("id", submissionId)
+    .maybeSingle();
+
+  if (result.error || !result.data) {
+    return null;
+  }
+
+  const row = result.data as {
+    id: string;
+    program_id: string | null;
+    intake_type: string | null;
+    parent_name: string | null;
+    parent_email: string | null;
+    parent_phone: string | null;
+    participant_name: string | null;
+    participant_birthdate: string | null;
+    preferred_days: string[] | null;
+    preferred_time_windows: string[] | null;
+    notes: string | null;
+    answers: unknown;
+    created_at: string | null;
+  };
+
+  return {
+    id: row.id,
+    answers: normalizeAnswers(row.answers),
+    birthdate: row.participant_birthdate,
+    createdAt: row.created_at,
+    intakeType: row.intake_type ?? "registration",
+    notes: row.notes,
+    parentEmail: row.parent_email ?? "-",
+    parentName: row.parent_name ?? "-",
+    parentPhone: row.parent_phone,
+    participantName: row.participant_name ?? "-",
+    preferredDays: row.preferred_days ?? [],
+    preferredTimeWindows: row.preferred_time_windows ?? [],
+    program: snapshot.programs.find((program) => program.id === row.program_id) ?? snapshot.selectedProgram ?? null
+  } satisfies IntakeSubmissionConfirmation;
+}
+
+function IntakeConfirmation({ copy, language, snapshot, submission }: { copy: TenantPublicCopy; language: SupportedLanguage; snapshot: PublicTenantSiteSnapshot; submission: IntakeSubmissionConfirmation | null }) {
+  const tenantName = snapshot.tenant?.name ?? "de zwemschool";
+  const lessonPreferences = submission ? extractLessonPreferences(submission.answers) : [];
+  const submittedAt = submission?.createdAt ? formatDateTime(submission.createdAt, language) : null;
+
   return (
-    <div className="mx-auto mb-6 max-w-5xl rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-800">
-      {copy.labels.intakeReceived}
+    <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-emerald-200 bg-card shadow-card">
+      <div className="bg-gradient-to-br from-emerald-50 via-sky-50 to-white p-6 md:p-8">
+        <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-white px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 shadow-soft">
+              <CheckCircle2 className="h-4 w-4" />
+              {language === "en" ? "Registration received" : "Inschrijving ontvangen"}
+            </div>
+            <h2 className="mt-5 max-w-3xl text-3xl font-bold leading-tight text-slate-950 md:text-4xl">
+              {language === "en" ? `Success! Your registration for ${tenantName} has been received.` : `Gelukt! Jouw inschrijving voor ${tenantName} is ontvangen.`}
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600 md:text-base">
+              {language === "en"
+                ? "Below is a summary of your submitted form. You will also receive this confirmation by e-mail, and the swim school will contact you by e-mail about the next step."
+                : "Onderstaand vind je een samenvatting van jouw ingevulde formulier. Je ontvangt deze bevestiging ook per e-mail en de zwemschool neemt per e-mail contact met je op over de vervolgstap."}
+            </p>
+          </div>
+          <div className="grid gap-2 rounded-3xl border border-white/70 bg-white/75 p-4 shadow-soft md:min-w-56">
+            <SummaryMeta icon={<Mail className="h-4 w-4" />} label={language === "en" ? "Confirmation sent to" : "Bevestiging naar"} value={submission?.parentEmail ?? "-"} />
+            {submittedAt ? <SummaryMeta icon={<CalendarCheck className="h-4 w-4" />} label={language === "en" ? "Submitted" : "Ingediend"} value={submittedAt} /> : null}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 p-5 md:p-8">
+        {submission ? (
+          <>
+            <div className="grid gap-4 md:grid-cols-3">
+              <ConfirmationCard title={copy.labels.program}>
+                <SummaryLine label={copy.labels.chosenProgram} value={submission.program?.name ?? "-"} />
+                <SummaryLine label={copy.labels.intakeOption} value={copy.intakeOptionLabels[submission.intakeType] ?? submission.intakeType} />
+              </ConfirmationCard>
+              <ConfirmationCard title={copy.labels.child}>
+                <SummaryLine label={copy.labels.childName} value={submission.participantName} />
+                <SummaryLine label={copy.labels.birthdate} value={submission.birthdate ? formatDate(submission.birthdate, language) : "-"} />
+              </ConfirmationCard>
+              <ConfirmationCard title={copy.labels.guardian}>
+                <SummaryLine label={copy.labels.guardianName} value={submission.parentName} />
+                <SummaryLine label={copy.labels.email} value={submission.parentEmail} />
+                {submission.parentPhone ? <SummaryLine label={copy.labels.phone} value={submission.parentPhone} /> : null}
+              </ConfirmationCard>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
+              <ConfirmationCard title={language === "en" ? "Your preferences" : "Jouw voorkeuren"}>
+                <SummaryLine label={copy.labels.preferredDays} value={formatChoiceList(submission.preferredDays, copy.preferredDays)} />
+                <SummaryLine label={copy.labels.preferredTimes} value={formatChoiceList(submission.preferredTimeWindows, copy.preferredTimes)} />
+                {submission.notes ? <SummaryLine label={copy.labels.notes} value={submission.notes} /> : null}
+              </ConfirmationCard>
+
+              <ConfirmationCard title={language === "en" ? "Preferred lesson moments" : "Gekozen voorkeursmomenten"}>
+                {lessonPreferences.length > 0 ? (
+                  <div className="grid gap-3">
+                    {lessonPreferences.map((preference, index) => (
+                      <div key={`${preference.groupName}-${index}`} className="rounded-2xl border border-border bg-sky-50/60 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <p className="font-bold">{preference.groupName}</p>
+                          <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">{language === "en" ? `Choice ${index + 1}` : `Voorkeur ${index + 1}`}</span>
+                        </div>
+                        <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                          <Clock className="h-4 w-4" />
+                          {formatDayValue(preference.weekday, language)} {preference.startsAt}-{preference.endsAt}
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">{preference.stageName}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-muted-foreground">
+                    {language === "en" ? "No specific lesson moments were selected. The swim school will assess the form manually." : "Er zijn geen specifieke voorkeursmomenten gekozen. De zwemschool beoordeelt het formulier handmatig."}
+                  </p>
+                )}
+              </ConfirmationCard>
+            </div>
+          </>
+        ) : (
+          <div className="rounded-3xl border border-border bg-muted/40 p-6 text-sm leading-6 text-muted-foreground">
+            {language === "en"
+              ? "Your registration has been received. The full summary could not be loaded here, but the swim school will contact you by e-mail."
+              : "Jouw inschrijving is ontvangen. De volledige samenvatting kon hier niet worden geladen, maar de zwemschool neemt per e-mail contact met je op."}
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+function ConfirmationCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="rounded-3xl border border-border bg-background p-5 shadow-soft">
+      <p className="text-xs font-bold uppercase tracking-wider text-primary">{title}</p>
+      <div className="mt-4 grid gap-3">{children}</div>
+    </div>
+  );
+}
+
+function SummaryLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function SummaryMeta({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-center gap-3 text-sm">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-sky-50 text-primary">{icon}</span>
+      <span>
+        <span className="block text-xs font-semibold uppercase text-muted-foreground">{label}</span>
+        <span className="font-bold text-foreground">{value}</span>
+      </span>
+    </div>
+  );
+}
+
+function normalizeAnswers(value: unknown) {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function extractLessonPreferences(answers: Record<string, unknown>) {
+  return arrayFromAnswer(answers.lesson_time_preferences).flatMap((value) => {
+    try {
+      const parsed = JSON.parse(value) as Record<string, unknown>;
+
+      return [
+        {
+          endsAt: stringValue(parsed.ends_at),
+          groupName: stringValue(parsed.group_name),
+          stageName: stringValue(parsed.stage_name),
+          startsAt: stringValue(parsed.starts_at),
+          weekday: stringValue(parsed.weekday)
+        }
+      ];
+    } catch {
+      return [];
+    }
+  });
+}
+
+function arrayFromAnswer(value: unknown) {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => (typeof item === "string" && item.trim() ? [item.trim()] : []));
+  }
+
+  return typeof value === "string" && value.trim() ? [value.trim()] : [];
+}
+
+function stringValue(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : "-";
+}
+
+function formatChoiceList(values: string[], options: { label: string; value: string }[]) {
+  const labels = values.map((value) => options.find((option) => option.value === value)?.label ?? value);
+
+  return labels.length > 0 ? labels.join(", ") : "-";
+}
+
+function formatDayValue(value: string, language: SupportedLanguage) {
+  const labels: Record<string, { nl: string; en: string }> = {
+    monday: { nl: "Maandag", en: "Monday" },
+    tuesday: { nl: "Dinsdag", en: "Tuesday" },
+    wednesday: { nl: "Woensdag", en: "Wednesday" },
+    thursday: { nl: "Donderdag", en: "Thursday" },
+    friday: { nl: "Vrijdag", en: "Friday" },
+    saturday: { nl: "Zaterdag", en: "Saturday" },
+    sunday: { nl: "Zondag", en: "Sunday" }
+  };
+
+  return labels[value]?.[language] ?? value;
+}
+
+function formatDate(value: string, language: SupportedLanguage) {
+  return new Intl.DateTimeFormat(language === "en" ? "en-GB" : "nl-NL", { dateStyle: "long" }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatDateTime(value: string, language: SupportedLanguage) {
+  return new Intl.DateTimeFormat(language === "en" ? "en-GB" : "nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 function IntakeUnavailable({ copy, language, programs }: { copy: TenantPublicCopy; language: SupportedLanguage; programs: PublicProgram[] }) {

@@ -6,6 +6,7 @@ export type PublicRouteParams = {
   slug?: string | null;
   program?: string | null;
   submitted?: boolean;
+  submission?: string | null;
 };
 
 export function publicLanguageFromSegment(segment: string | null | undefined): SupportedLanguage | null {
@@ -17,7 +18,8 @@ export function publicHref(language: SupportedLanguage, route: PublicRouteKey, p
 
   return withQuery(path, {
     program: params.program ?? undefined,
-    submitted: params.submitted ? "1" : undefined
+    submitted: params.submitted ? "1" : undefined,
+    submission: params.submission ?? undefined
   });
 }
 

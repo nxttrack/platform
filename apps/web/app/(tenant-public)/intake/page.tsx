@@ -11,9 +11,10 @@ export default async function IntakeRoutePage({ searchParams }: IntakeRoutePageP
   const params = (await searchParams) ?? {};
   const program = getParam(params.program);
   const submitted = getParam(params.submitted) === "1";
+  const submissionId = getParam(params.submission);
   const snapshot = await getPublicTenantSiteSnapshot(program);
 
-  return <PublicIntakePage snapshot={snapshot} submitted={submitted} />;
+  return <PublicIntakePage snapshot={snapshot} submitted={submitted} submissionId={submissionId} />;
 }
 
 function getParam(value: string | string[] | undefined) {
