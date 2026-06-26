@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowLeft, ArrowRight, CheckCircle2, Clock, Sparkles } from "lucide-react";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 
 import type { IntakeQuestion, IntakeQuestionOption, PublicLessonTimeSuggestion, PublicProgram, StageRecommendationCondition, StageRecommendationRule } from "@/lib/public-site/tenant-site";
 
@@ -30,6 +30,9 @@ export type IntakeWizardCopy = {
     preferredDays: string;
     preferredTimes: string;
     price: string;
+    chooseLessonPreferences: string;
+    lessonPreferenceHelp: string;
+    lessonPreferenceLimit: string;
     recommendedLessonTimes: string;
     recommendedLessonTimesSub: string;
     recommendedStage: string;
@@ -37,6 +40,9 @@ export type IntakeWizardCopy = {
     reviewAndSubmit: string;
     select: string;
     smartScore: string;
+    waitTimeNone: string;
+    waitTimeShort: string;
+    waitTimeLong: string;
     submitIntake: string;
     availableSpots: string;
     whyThisTime: string;
@@ -71,10 +77,39 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<Record<string, FormValue>>({});
+  const [selectedIntakeType, setSelectedIntakeType] = useState<string | null>(null);
+  const [selectedLessonPreferences, setSelectedLessonPreferences] = useState<string[]>([]);
   const config = program.intakeConfig;
   const activeQuestions = useMemo(() => config?.questions.filter((question) => questionIsActive(question, answerMap(values))) ?? [], [config?.questions, values]);
   const recommendation = useMemo(() => buildStageRecommendation({ program, questions: config?.questions ?? [], rules: config?.stageRecommendationRules ?? [], values }), [config?.questions, config?.stageRecommendationRules, program, values]);
-  const lessonTimes = useMemo(() => rankLessonTimes({ copy, program, recommendedStageId: recommendation.stageId, values }).slice(0, 3), [copy, program, recommendation.stageId, values]);
+  const lessonTimes = useMemo(() => rankLessonTimes({ program, recommendedStageId: recommendation.stageId, values }).slice(0, 5), [program, recommendation.stageId, values]);
+  const selectedLessonPreferenceDetails = useMemo(
+    () =>
+      selectedLessonPreferences.flatMap((slotId) => {
+        const item = lessonTimes.find((candidate) => candidate.slot.groupId === slotId);
+
+        return item
+          ? [
+              JSON.stringify({
+                group_id: item.slot.groupId,
+                group_name: item.slot.groupName,
+                weekday: weekdayValue(item.slot.weekday),
+                starts_at: item.slot.startsAt,
+                ends_at: item.slot.endsAt,
+                stage_name: item.slot.stageName,
+                wait_time: item.waitTime
+              })
+            ]
+          : [];
+      }),
+    [lessonTimes, selectedLessonPreferences]
+  );
+  const publicIntakeOptions = useMemo(() => {
+    const options = config?.allowedOptions.filter((option) => option !== "waitlist") ?? [];
+
+    return options.length > 0 ? options : ["registration"];
+  }, [config?.allowedOptions]);
+  const intakeType = selectedIntakeType && publicIntakeOptions.includes(selectedIntakeType) ? selectedIntakeType : (publicIntakeOptions[0] ?? "registration");
   const steps = [
     copy.labels.wizardStepProgram,
     copy.labels.wizardStepContact,
@@ -103,6 +138,25 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
     setStep(Math.max(0, Math.min(stepKeys.length - 1, nextStep)));
   };
 
+  const toggleLessonPreference = (slotId: string) => {
+    setError(null);
+    setSelectedLessonPreferences((current) => {
+      const visibleSlotIds = new Set(lessonTimes.map((item) => item.slot.groupId));
+      const visibleCurrent = current.filter((id) => visibleSlotIds.has(id));
+
+      if (visibleCurrent.includes(slotId)) {
+        return visibleCurrent.filter((id) => id !== slotId);
+      }
+
+      if (visibleCurrent.length >= 2) {
+        setError(copy.labels.lessonPreferenceLimit);
+        return visibleCurrent;
+      }
+
+      return [...visibleCurrent, slotId];
+    });
+  };
+
   const next = () => {
     const form = formRef.current;
 
@@ -123,51 +177,83 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
     setStep((current) => Math.min(stepKeys.length - 1, current + 1));
   };
 
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    if (step !== stepKeys.length - 1) {
+      event.preventDefault();
+      next();
+      return;
+    }
+
+    const form = formRef.current;
+    const nextValues = form ? valuesFromForm(new FormData(form)) : values;
+    const validation = validateStep(step, nextValues, activeQuestions, selectedLessonPreferenceDetails, lessonTimes.length);
+
+    if (validation) {
+      event.preventDefault();
+      setError(validation);
+      return;
+    }
+
+    setError(null);
+  };
+
   return (
-    <form action={action} className="mx-auto max-w-6xl rounded-3xl border border-border bg-card p-4 shadow-card md:p-7" onChange={updateValues} ref={formRef}>
+    <form action={action} className="mx-auto max-w-6xl rounded-3xl border border-border bg-card p-4 shadow-card md:p-7" onChange={updateValues} onSubmit={handleSubmit} ref={formRef}>
       <input name="program_slug" type="hidden" value={program.slug} />
       <input name="public_language" type="hidden" value={language} />
+      {selectedLessonPreferenceDetails.map((value) => (
+        <input key={value} name="answer_lesson_time_preferences" type="hidden" value={value} />
+      ))}
 
-      <div className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
-        <aside className="rounded-3xl bg-muted/55 p-5">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">{copy.labels.chosenProgram}</p>
-          <h2 className="mt-2 text-2xl font-bold">{program.name}</h2>
-          <p className="mt-2 text-sm leading-6 text-muted-foreground">{config.intro ?? program.summary ?? copy.labels.intakeIntroFallback}</p>
-          <div className="mt-5 grid gap-2">
-            <DetailPill label={copy.labels.age} value={program.ageLabel} />
-            <DetailPill label={copy.labels.duration} value={program.durationLabel} />
-            <DetailPill label={copy.labels.price} value={program.priceLabel} />
+      <div className="grid gap-6">
+        <header className="rounded-3xl bg-muted/55 p-5">
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,28rem)] lg:items-start">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">{copy.labels.chosenProgram}</p>
+              <h2 className="mt-2 text-2xl font-bold">{program.name}</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{config.intro ?? program.summary ?? copy.labels.intakeIntroFallback}</p>
+            </div>
+            <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1">
+              <DetailPill label={copy.labels.age} value={program.ageLabel} />
+              <DetailPill label={copy.labels.duration} value={program.durationLabel} />
+              <DetailPill label={copy.labels.price} value={program.priceLabel} />
+            </div>
           </div>
-          <div className="mt-6 grid gap-2">
-            {steps.map((label, index) => (
-              <button
-                className={`flex items-center gap-3 rounded-2xl px-3 py-3 text-left text-sm font-bold transition ${index === step ? "bg-primary text-[var(--primary-foreground)] shadow-glow" : "bg-background text-muted-foreground hover:bg-card hover:text-foreground"}`}
-                key={label}
-                onClick={() => goToStep(index)}
-                type="button"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/20 text-xs">{index + 1}</span>
-                {label}
-              </button>
-            ))}
-          </div>
-        </aside>
+          <nav aria-label="Inschrijfformulier stappen" className="mt-5 overflow-x-auto pb-1">
+            <div className="grid min-w-[42rem] grid-cols-5 gap-2">
+              {steps.map((label, index) => (
+                <button
+                  aria-current={index === step ? "step" : undefined}
+                  className={`flex min-h-14 items-center gap-3 rounded-2xl px-3 py-2 text-left text-sm font-bold transition ${index === step ? "bg-primary text-[var(--primary-foreground)] shadow-glow" : "bg-background text-muted-foreground hover:bg-card hover:text-foreground"}`}
+                  key={label}
+                  onClick={() => goToStep(index)}
+                  type="button"
+                >
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs ${index === step ? "bg-white/20 text-[var(--primary-foreground)]" : "bg-primary/10 text-primary"}`}>{index + 1}</span>
+                  <span className="min-w-0 leading-tight">{label}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        </header>
 
         <div className="min-w-0">
           {error ? <div className="mb-4 rounded-2xl border border-amber-500/20 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">{error}</div> : null}
 
           <section className={step === 0 ? "grid gap-5" : "hidden"}>
             <PanelTitle eyebrow={`Stap 1 / ${steps.length}`} title={copy.labels.wizardStepProgram} />
-            <label className="grid gap-2 text-sm font-semibold">
-              {copy.labels.intakeOption}
-              <select className="h-12 rounded-xl border border-border bg-card px-3 text-sm outline-none ring-primary/20 focus:ring-4" name="intake_type">
-                {config.allowedOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {copy.intakeOptionLabels[option] ?? option}
-                  </option>
+            <div className="grid gap-3">
+              <p className="text-sm font-semibold">{copy.labels.intakeOption}</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {publicIntakeOptions.map((option, index) => (
+                  <label className={`cursor-pointer rounded-2xl border p-4 transition ${intakeType === option ? "border-primary bg-primary/5 ring-4 ring-primary/10" : "border-border bg-background hover:border-primary/40"}`} key={option}>
+                    <input checked={intakeType === option} className="sr-only" name="intake_type" onChange={() => setSelectedIntakeType(option)} type="radio" value={option} />
+                    <p className="font-bold">{copy.intakeOptionLabels[option] ?? option}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{index === 0 ? copy.labels.intakeIntroFallback : copy.labels.reviewAndSubmit}</p>
+                  </label>
                 ))}
-              </select>
-            </label>
+              </div>
+            </div>
           </section>
 
           <section className={step === 1 ? "grid gap-5" : "hidden"}>
@@ -225,7 +311,6 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
                   <p className="text-xs font-bold uppercase tracking-wider text-primary">{copy.labels.recommendedStage}</p>
                   <h3 className="mt-1 text-2xl font-bold">{recommendation.stageLabel ?? "-"}</h3>
                 </div>
-                <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold text-[var(--primary-foreground)]">{copy.labels.smartScore}: {recommendation.score}/100</span>
               </div>
               {recommendation.missingInformation.length > 0 ? <p className="text-sm font-semibold text-amber-700">{copy.labels.missingInformation}: {recommendation.missingInformation.join(" ")}</p> : null}
               <ul className="grid gap-2 text-sm text-muted-foreground">
@@ -244,15 +329,24 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
                 <div>
                   <h3 className="font-bold">{copy.labels.recommendedLessonTimes}</h3>
                   <p className="text-sm text-muted-foreground">{copy.labels.recommendedLessonTimesSub}</p>
+                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{copy.labels.lessonPreferenceHelp}</p>
                 </div>
               </div>
               {lessonTimes.length > 0 ? (
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                   {lessonTimes.map((item, index) => (
-                    <article className="rounded-2xl border border-border bg-background p-4 shadow-soft" key={item.slot.groupId}>
+                    <label className={`cursor-pointer rounded-2xl border bg-background p-4 shadow-soft transition ${selectedLessonPreferences.includes(item.slot.groupId) ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40"}`} key={item.slot.groupId}>
+                      <input
+                        checked={selectedLessonPreferences.includes(item.slot.groupId)}
+                        className="sr-only"
+                        name="lesson_time_preference_marker"
+                        onChange={() => toggleLessonPreference(item.slot.groupId)}
+                        type="checkbox"
+                        value={item.slot.groupId}
+                      />
                       <div className="flex items-center justify-between gap-3">
-                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">#{index + 1}</span>
-                        <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">{item.score}/100</span>
+                        <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">Optie {index + 1}</span>
+                        <WaitTimePill copy={copy} waitTime={item.waitTime} />
                       </div>
                       <h4 className="mt-4 font-bold">{weekdayLabel(copy, item.slot.weekday)}</h4>
                       <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
@@ -261,9 +355,9 @@ export function IntakeWizard({ action, copy, language, program }: IntakeWizardPr
                       </p>
                       <p className="mt-2 text-sm font-semibold">{item.slot.groupName}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{item.slot.stageName}{item.slot.locationName ? ` - ${item.slot.locationName}` : ""}</p>
-                      <p className="mt-3 text-xs font-bold text-primary">{copy.labels.availableSpots}: {item.slot.openSpots}/{item.slot.capacityLimit}</p>
+                      <p className="mt-3 text-xs font-bold text-primary">{selectedLessonPreferences.includes(item.slot.groupId) ? copy.labels.chooseLessonPreferences : copy.labels.availableSpots}</p>
                       <p className="mt-3 text-xs text-muted-foreground">{copy.labels.whyThisTime}: {item.reasons.join(" ")}</p>
-                    </article>
+                    </label>
                   ))}
                 </div>
               ) : (
@@ -460,7 +554,7 @@ function valuesFromForm(formData: FormData) {
   return values;
 }
 
-function validateStep(step: number, values: Record<string, FormValue>, questions: IntakeQuestion[]) {
+function validateStep(step: number, values: Record<string, FormValue>, questions: IntakeQuestion[], selectedLessonPreferences: string[] = [], availableLessonTimeCount = 0) {
   if (step === 1) {
     if (!stringValue(values.parent_name) || !stringValue(values.parent_email) || !stringValue(values.participant_name)) {
       return "Vul minimaal naam ouder/verzorger, e-mail en naam kind in.";
@@ -490,6 +584,10 @@ function validateStep(step: number, values: Record<string, FormValue>, questions
         return `${question.label} is verplicht.`;
       }
     }
+  }
+
+  if (step === 4 && availableLessonTimeCount > 0 && selectedLessonPreferences.length === 0) {
+    return "Kies minimaal een voorgestelde lestijd als voorkeur.";
   }
 
   return null;
@@ -596,7 +694,7 @@ function matchesStageCondition(condition: StageRecommendationCondition, answers:
   return false;
 }
 
-function rankLessonTimes(input: { copy: IntakeWizardCopy; program: PublicProgram; recommendedStageId: string | null; values: Record<string, FormValue> }) {
+function rankLessonTimes(input: { program: PublicProgram; recommendedStageId: string | null; values: Record<string, FormValue> }) {
   const preferredDays = arrayValue(input.values.preferred_days);
   const preferredTimes = arrayValue(input.values.preferred_time_windows);
 
@@ -619,10 +717,35 @@ function rankLessonTimes(input: { copy: IntakeWizardCopy; program: PublicProgram
         timeMatch ? "tijdvak matcht" : "ander tijdvak",
         `${slot.openSpots} vrije plek${slot.openSpots === 1 ? "" : "ken"}`
       ];
+      const waitTime = waitTimeForSlot({ dayMatch, openSpots: slot.openSpots, score, stageMatch, timeMatch });
 
-      return { slot, score, reasons };
+      return { slot, score, reasons, waitTime };
     })
     .sort((left, right) => right.score - left.score || right.slot.openSpots - left.slot.openSpots);
+}
+
+function waitTimeForSlot(input: { dayMatch: boolean; openSpots: number; score: number; stageMatch: boolean; timeMatch: boolean }): "none" | "short" | "long" {
+  if (input.openSpots >= 2 && input.stageMatch && input.dayMatch && input.timeMatch && input.score >= 80) {
+    return "none";
+  }
+
+  if (input.openSpots > 0 && input.score >= 58) {
+    return "short";
+  }
+
+  return "long";
+}
+
+function WaitTimePill({ copy, waitTime }: { copy: IntakeWizardCopy; waitTime: "none" | "short" | "long" }) {
+  const label = waitTime === "none" ? copy.labels.waitTimeNone : waitTime === "short" ? copy.labels.waitTimeShort : copy.labels.waitTimeLong;
+  const className =
+    waitTime === "none"
+      ? "bg-emerald-50 text-emerald-700"
+      : waitTime === "short"
+        ? "bg-amber-50 text-amber-700"
+        : "bg-rose-50 text-rose-700";
+
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${className}`}>{label}</span>;
 }
 
 function questionIsActive(question: IntakeQuestion, answers: Record<string, FormValue>) {

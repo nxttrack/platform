@@ -107,6 +107,12 @@ type TenantPublicCopy = {
     requiredStepError: string;
     reviewAndSubmit: string;
     smartScore: string;
+    chooseLessonPreferences: string;
+    lessonPreferenceHelp: string;
+    lessonPreferenceLimit: string;
+    waitTimeNone: string;
+    waitTimeShort: string;
+    waitTimeLong: string;
     availableSpots: string;
     whyThisTime: string;
     noLessonTimes: string;
@@ -297,7 +303,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
     fallbackAgendaItems,
     fallbackProfile: {
       heroTitle: "{{tenantName}} zwemschool",
-      heroSubtitle: "Bekijk programma's en start het inschrijfformulier voor proefles, inschrijving of wachtlijst.",
+      heroSubtitle: "Bekijk programma's en start het inschrijfformulier voor proefles of inschrijving.",
       primaryCtaLabel: "Bekijk programma's",
       secondaryCtaLabel: "Inschrijfformulier",
       introTitle: "Van inschrijfformulier naar de juiste groep",
@@ -361,7 +367,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       intakeOptions: "Aanvraagopties",
       levels: "Niveaus",
       noStages: "Nog geen gepubliceerde stages gekoppeld.",
-      intakeSub: "Start met een programma, kies proefles/inschrijving/wachtlijst en krijg direct drie passende lestijden voorgesteld.",
+      intakeSub: "Start met een programma, kies proefles of inschrijving en geef je favoriete lestijden door.",
       chosenProgram: "Gekozen programma",
       intakeIntroFallback: "Vul het inschrijfformulier in zodat de zwemschool de juiste vervolgstap kan bepalen.",
       age: "Leeftijd",
@@ -384,11 +390,17 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       nextStep: "Volgende",
       previousStep: "Vorige",
       recommendedLessonTimes: "Voorgestelde lestijden",
-      recommendedLessonTimesSub: "Top 3 op basis van niveau, voorkeuren en beschikbare capaciteit.",
+      recommendedLessonTimesSub: "Maximaal vijf passende opties op basis van niveau, voorkeuren en beschikbare capaciteit.",
       recommendedStage: "Slimme niveau-inschatting",
       requiredStepError: "Vul de verplichte velden in voordat je doorgaat.",
       reviewAndSubmit: "Controleer en verstuur",
       smartScore: "Slimme score",
+      chooseLessonPreferences: "Gekozen voorkeur",
+      lessonPreferenceHelp: "Kies maximaal twee lestijden als voorkeur. De zwemschool bevestigt daarna de definitieve plek.",
+      lessonPreferenceLimit: "Je kunt maximaal twee lestijden als voorkeur kiezen.",
+      waitTimeNone: "Geen wachttijd",
+      waitTimeShort: "Korte wachttijd",
+      waitTimeLong: "Lange wachttijd",
       availableSpots: "Vrije plekken",
       whyThisTime: "Waarom",
       noLessonTimes: "Nog geen passende lestijden gevonden. De zwemschool beoordeelt de aanvraag handmatig.",
@@ -548,7 +560,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
     ],
     fallbackProfile: {
       heroTitle: "{{tenantName}} swim school",
-      heroSubtitle: "View programs and start the registration form for a trial lesson, registration or waitlist.",
+      heroSubtitle: "View programs and start the registration form for a trial lesson or registration.",
       primaryCtaLabel: "View programs",
       secondaryCtaLabel: "Registration form",
       introTitle: "From registration form to the right group",
@@ -612,7 +624,7 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       intakeOptions: "Request options",
       levels: "Stages",
       noStages: "No published stages linked yet.",
-      intakeSub: "Start with a program, choose trial/registration/waitlist and get three suitable lesson times suggested.",
+      intakeSub: "Start with a program, choose a trial lesson or registration and share your preferred lesson times.",
       chosenProgram: "Selected program",
       intakeIntroFallback: "Fill in the registration form so the swim school can determine the right next step.",
       age: "Age",
@@ -635,11 +647,17 @@ const publicCopies: Record<SupportedLanguage, TenantPublicCopy> = {
       nextStep: "Next",
       previousStep: "Previous",
       recommendedLessonTimes: "Suggested lesson times",
-      recommendedLessonTimesSub: "Top 3 based on stage, preferences and available capacity.",
+      recommendedLessonTimesSub: "Up to five suitable options based on stage, preferences and available capacity.",
       recommendedStage: "Smart stage estimate",
       requiredStepError: "Complete the required fields before continuing.",
       reviewAndSubmit: "Review and submit",
       smartScore: "Smart score",
+      chooseLessonPreferences: "Selected preference",
+      lessonPreferenceHelp: "Choose up to two lesson times as preferred options. The swim school confirms the final spot afterwards.",
+      lessonPreferenceLimit: "You can choose up to two preferred lesson times.",
+      waitTimeNone: "No wait",
+      waitTimeShort: "Short wait",
+      waitTimeLong: "Long wait",
       availableSpots: "Open spots",
       whyThisTime: "Why",
       noLessonTimes: "No suitable lesson times found yet. The swim school will review the request manually.",
@@ -1074,7 +1092,6 @@ export function ProgramDetailPage({ snapshot, language }: PublicPageProps) {
               <div className="mt-5 grid gap-3">
                 <OptionStatus copy={copy} enabled={program.trialEnabled} label={copy.labels.trial} />
                 <OptionStatus copy={copy} enabled={program.registrationEnabled} label={copy.labels.register} />
-                <OptionStatus copy={copy} enabled={program.waitlistEnabled} label={copy.intakeOptionLabels.waitlist} />
               </div>
               <div className="mt-6">
                 <PrimaryLink href={publicHref(publicLanguage, "intake", { program: program.slug })}>{copy.labels.startJourney}</PrimaryLink>
@@ -1152,6 +1169,9 @@ function toIntakeWizardCopy(copy: TenantPublicCopy): IntakeWizardCopy {
       preferredDays: copy.labels.preferredDays,
       preferredTimes: copy.labels.preferredTimes,
       price: copy.labels.price,
+      chooseLessonPreferences: copy.labels.chooseLessonPreferences,
+      lessonPreferenceHelp: copy.labels.lessonPreferenceHelp,
+      lessonPreferenceLimit: copy.labels.lessonPreferenceLimit,
       recommendedLessonTimes: copy.labels.recommendedLessonTimes,
       recommendedLessonTimesSub: copy.labels.recommendedLessonTimesSub,
       recommendedStage: copy.labels.recommendedStage,
@@ -1159,6 +1179,9 @@ function toIntakeWizardCopy(copy: TenantPublicCopy): IntakeWizardCopy {
       reviewAndSubmit: copy.labels.reviewAndSubmit,
       select: copy.labels.select,
       smartScore: copy.labels.smartScore,
+      waitTimeNone: copy.labels.waitTimeNone,
+      waitTimeShort: copy.labels.waitTimeShort,
+      waitTimeLong: copy.labels.waitTimeLong,
       submitIntake: copy.labels.submitIntake,
       availableSpots: copy.labels.availableSpots,
       whyThisTime: copy.labels.whyThisTime,
@@ -1373,7 +1396,6 @@ function ProgramGrid({ programs, language }: { programs: PublicProgram[]; langua
           <div className="mt-5 flex flex-wrap gap-2">
             {program.trialEnabled ? <SmallPill>{copy.labels.trial}</SmallPill> : null}
             {program.registrationEnabled ? <SmallPill>{copy.labels.register}</SmallPill> : null}
-            {program.waitlistEnabled ? <SmallPill>{copy.intakeOptionLabels.waitlist}</SmallPill> : null}
           </div>
           <div className="mt-auto flex flex-wrap gap-2 pt-6">
             <Link className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3.5 py-2 text-sm font-semibold hover:bg-muted" href={publicHref(language, "programDetail", { slug: program.slug })}>
@@ -1425,6 +1447,7 @@ function waitlistTone(waitlist: MarketingProgram["waitlist"]) {
 
 function IntakeForm({ copy, language, program }: { copy: TenantPublicCopy; language: SupportedLanguage; program: PublicProgram }) {
   const config = program.intakeConfig;
+  const publicIntakeOptions = config?.allowedOptions.filter((option) => option !== "waitlist") ?? [];
 
   if (!config) {
     return null;
@@ -1448,7 +1471,7 @@ function IntakeForm({ copy, language, program }: { copy: TenantPublicCopy; langu
             <label className="grid gap-2 text-sm font-semibold">
               {copy.labels.intakeOption}
               <select className="h-11 rounded-xl border border-border bg-card px-3 text-sm outline-none ring-primary/20 focus:ring-4" name="intake_type" required>
-                {config.allowedOptions.map((option) => (
+                {(publicIntakeOptions.length > 0 ? publicIntakeOptions : ["registration"]).map((option) => (
                   <option key={option} value={option}>
                     {copy.intakeOptionLabels[option] ?? option}
                   </option>
