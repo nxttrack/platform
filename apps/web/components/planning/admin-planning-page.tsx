@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, CalendarClock, CalendarDays, ClipboardCheck, RotateCcw, UsersRound } from "lucide-react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { buildCapacitySnapshots, type CapacitySnapshot } from "@/lib/capacity/capacity-engine";
 import { createConflictCheckedSessionAction, generateGroupSessionsAction, refreshCatchUpCandidatesAction, updateCatchUpRequestAction } from "@/lib/planning/admin-planning-actions";
@@ -88,65 +89,94 @@ export function AdminPlanningOperationsPage({ snapshot }: PlanningProps) {
         <MetricCard icon={<RotateCcw className="h-5 w-5" />} label="Inhaallessen" value={openCatchUps.length.toString()} detail="open of goedgekeurd" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <SectionHeader title="Groepsplanning" count={groupRows.length} />
-          <div className="grid gap-4">
-            {weekdayOptions.map((day) => {
-              const rows = groupRows.filter((row) => row.group.weekday === day.value);
+      <AdminTabs
+        tabs={[
+          {
+            id: "planning",
+            label: "Groepsplanning",
+            count: groupRows.length,
+            children: (
+              <Card>
+                <SectionHeader title="Groepsplanning" count={groupRows.length} />
+                <div className="grid gap-4">
+                  {weekdayOptions.map((day) => {
+                    const rows = groupRows.filter((row) => row.group.weekday === day.value);
 
-              return rows.length > 0 ? (
-                <div key={day.value} className="grid gap-3">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-base font-bold">{day.label}</h2>
-                    <StatusPill tone="neutral">{rows.length}</StatusPill>
-                  </div>
-                  <div className="grid gap-3 lg:grid-cols-2">
-                    {rows.map((row) => (
-                      <GroupPlanningCard key={row.group.id} row={row} />
-                    ))}
-                  </div>
+                    return rows.length > 0 ? (
+                      <div key={day.value} className="grid gap-3">
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-bold">{day.label}</h2>
+                          <StatusPill tone="neutral">{rows.length}</StatusPill>
+                        </div>
+                        <div className="grid gap-3 lg:grid-cols-2">
+                          {rows.map((row) => (
+                            <GroupPlanningCard key={row.group.id} row={row} />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null;
+                  })}
+                  {groupRows.length === 0 ? <EmptyState>Geen groepen gevonden om lessen voor te plannen.</EmptyState> : null}
                 </div>
-              ) : null;
-            })}
-            {groupRows.length === 0 ? <EmptyState>Geen groepen gevonden om lessen voor te plannen.</EmptyState> : null}
-          </div>
-        </Card>
-
-        <div className="grid gap-4">
-          <Card>
-            <SectionHeader title="Losse les aanmaken" count={snapshot.data.groups.length} />
-            <SessionCreateForm data={snapshot.data} />
-          </Card>
-
-          <Card>
-            <SectionHeader title="Conflictchecks" count={recurringConflicts.length + sessionConflicts.length} />
-            <ConflictList conflicts={[...recurringConflicts, ...sessionConflicts]} />
-          </Card>
-        </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
-        <Card>
-          <SectionHeader title="Aanwezigheidsrapportage" count={attendanceStats.length} />
-          <div className="grid gap-3">
-            {attendanceStats.length === 0 ? <EmptyState>Er zijn nog geen sessies om aanwezigheid op te rapporteren.</EmptyState> : null}
-            {attendanceStats.slice(0, 12).map((row) => (
-              <AttendanceReportCard key={row.session.id} row={row} />
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <SectionHeader title="Inhaalles lifecycle" count={snapshot.data.catchUpRequests.length} />
-          <div className="grid gap-3">
-            {snapshot.data.catchUpRequests.length === 0 ? <EmptyState>Geen inhaallesaanvragen gevonden.</EmptyState> : null}
-            {snapshot.data.catchUpRequests.map((request) => (
-              <CatchUpRequestCard key={request.id} lookups={lookups} request={request} />
-            ))}
-          </div>
-        </Card>
-      </div>
+              </Card>
+            )
+          },
+          {
+            id: "les",
+            label: "Losse les",
+            count: snapshot.data.groups.length,
+            children: (
+              <Card>
+                <SectionHeader title="Losse les aanmaken" count={snapshot.data.groups.length} />
+                <SessionCreateForm data={snapshot.data} />
+              </Card>
+            )
+          },
+          {
+            id: "conflicten",
+            label: "Conflicten",
+            count: recurringConflicts.length + sessionConflicts.length,
+            children: (
+              <Card>
+                <SectionHeader title="Conflictchecks" count={recurringConflicts.length + sessionConflicts.length} />
+                <ConflictList conflicts={[...recurringConflicts, ...sessionConflicts]} />
+              </Card>
+            )
+          },
+          {
+            id: "aanwezigheid",
+            label: "Aanwezigheid",
+            count: attendanceStats.length,
+            children: (
+              <Card>
+                <SectionHeader title="Aanwezigheidsrapportage" count={attendanceStats.length} />
+                <div className="grid gap-3">
+                  {attendanceStats.length === 0 ? <EmptyState>Er zijn nog geen sessies om aanwezigheid op te rapporteren.</EmptyState> : null}
+                  {attendanceStats.slice(0, 12).map((row) => (
+                    <AttendanceReportCard key={row.session.id} row={row} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "inhaallessen",
+            label: "Inhaallessen",
+            count: snapshot.data.catchUpRequests.length,
+            children: (
+              <Card>
+                <SectionHeader title="Inhaalles lifecycle" count={snapshot.data.catchUpRequests.length} />
+                <div className="grid gap-3">
+                  {snapshot.data.catchUpRequests.length === 0 ? <EmptyState>Geen inhaallesaanvragen gevonden.</EmptyState> : null}
+                  {snapshot.data.catchUpRequests.map((request) => (
+                    <CatchUpRequestCard key={request.id} lookups={lookups} request={request} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }

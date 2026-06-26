@@ -1,5 +1,6 @@
 import { AlertTriangle, CheckCircle2, RotateCcw, Upload } from "lucide-react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { applyImportBatchAction, createImportPreviewAction, rollbackImportBatchAction } from "@/lib/imports/admin-imports-actions";
 import type { AdminImportsSnapshot, ImportBatch, ImportRow, ImportType } from "@/lib/imports/admin-imports-read-model";
@@ -64,40 +65,50 @@ export function AdminImportsPage({ snapshot }: { snapshot: AdminImportsSnapshot 
         <MetricCard label="Ongeldig" value={totals.invalid} tone="danger" />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.35fr]">
-        <ImportPreviewForm />
-        <LookupPanel snapshot={snapshot} />
+      <div className="mt-6">
+        <AdminTabs
+          tabs={[
+            { id: "preview", label: "Import preview", count: totals.ready + totals.invalid + totals.duplicate, children: <ImportPreviewForm /> },
+            { id: "mapping", label: "Mapping & lookup", count: Object.keys(importTypeLabels).length, children: <LookupPanel snapshot={snapshot} /> },
+            {
+              id: "batches",
+              label: "Batches",
+              count: snapshot.batches.length,
+              children: (
+                <section className="space-y-5">
+                  <div className="flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-bold tracking-tight">Recente importbatches</h2>
+                      <p className="text-sm text-muted-foreground">Rows met duplicate warnings worden niet automatisch toegepast.</p>
+                    </div>
+                    <StatusPill tone="info">rollback/audit actief</StatusPill>
+                  </div>
+
+                  {Object.values(snapshot.errors).some(Boolean) ? (
+                    <Card className="border-red-200 bg-red-50">
+                      <p className="text-sm font-semibold text-red-800">Niet alle importdata kon worden opgehaald.</p>
+                      <ul className="mt-2 space-y-1 text-sm text-red-700">
+                        {Object.entries(snapshot.errors).map(([key, value]) => (value ? <li key={key}>{key}: {value}</li> : null))}
+                      </ul>
+                    </Card>
+                  ) : null}
+
+                  {snapshot.batches.length === 0 ? (
+                    <Card>
+                      <p className="text-sm font-semibold">Nog geen imports.</p>
+                      <p className="mt-1 text-sm text-muted-foreground">Maak links een preview met CSV-data en mapping.</p>
+                    </Card>
+                  ) : (
+                    snapshot.batches.map((batch) => (
+                      <ImportBatchCard key={batch.id} audit={snapshot.auditByBatch[batch.id] ?? []} batch={batch} rows={snapshot.rowsByBatch[batch.id] ?? []} />
+                    ))
+                  )}
+                </section>
+              )
+            }
+          ]}
+        />
       </div>
-
-      <section className="mt-8 space-y-5">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-bold tracking-tight">Recente importbatches</h2>
-            <p className="text-sm text-muted-foreground">Rows met duplicate warnings worden niet automatisch toegepast.</p>
-          </div>
-          <StatusPill tone="info">rollback/audit actief</StatusPill>
-        </div>
-
-        {Object.values(snapshot.errors).some(Boolean) ? (
-          <Card className="border-red-200 bg-red-50">
-            <p className="text-sm font-semibold text-red-800">Niet alle importdata kon worden opgehaald.</p>
-            <ul className="mt-2 space-y-1 text-sm text-red-700">
-              {Object.entries(snapshot.errors).map(([key, value]) => (value ? <li key={key}>{key}: {value}</li> : null))}
-            </ul>
-          </Card>
-        ) : null}
-
-        {snapshot.batches.length === 0 ? (
-          <Card>
-            <p className="text-sm font-semibold">Nog geen imports.</p>
-            <p className="mt-1 text-sm text-muted-foreground">Maak links een preview met CSV-data en mapping.</p>
-          </Card>
-        ) : (
-          snapshot.batches.map((batch) => (
-            <ImportBatchCard key={batch.id} batch={batch} rows={snapshot.rowsByBatch[batch.id] ?? []} audit={snapshot.auditByBatch[batch.id] ?? []} />
-          ))
-        )}
-      </section>
     </div>
   );
 }

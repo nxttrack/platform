@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { BarChart3, CalendarDays, ClipboardList, Download, FileText, Filter, Inbox, Mail, Megaphone, MessageSquare, Newspaper, Send, Settings, ShieldCheck, Users } from "lucide-react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   cancelMessageAction,
@@ -101,60 +102,89 @@ export function AdminMessagesPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<Inbox className="h-5 w-5" />} label="Fouten" value={failedMessages.length.toString()} detail={`${sentMessages} verzonden`} />
       </div>
 
-      <Card>
-        <SectionHeader title="Nieuw bericht" count={data.participants.length + data.instructors.length} />
-        <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-          <QueueMessageForm data={data} />
-          <div className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4 text-sm text-muted-foreground">
-            <p className="font-semibold text-foreground">Kanaalkeuze</p>
-            <p>Kies e-mail voor externe verzending via SMTP of SendGrid. Kies intern bericht voor een portaalnotificatie zonder externe mailprovider.</p>
-            <p>Voor groepen worden actieve groepsplaatsingen uitgeklapt naar gekoppelde ouders/verzorgers. Stage of abonnement wordt hierbij niet aangepast.</p>
-            <div className="grid gap-2">
-              <a className={secondaryButtonClassName} href="/admin/mailtemplates">
-                Mailtemplates beheren
-              </a>
-              <a className={secondaryButtonClassName} href="/admin/mail-instellingen">
-                Mailinstellingen
-              </a>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold">Dispatch worker</h2>
-            <p className="text-sm text-muted-foreground">Verzend maximaal 10 geplande of opnieuw te proberen berichten via SMTP/SendGrid-ready mailconfiguratie.</p>
-          </div>
-          <form action={runMessageDispatchWorkerAction} className="flex items-center gap-2">
-            <input name="limit" type="hidden" value="10" />
-            <button className={primaryButtonClassName} type="submit">
-              Worker starten
-            </button>
-          </form>
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader title="Retry dashboard" count={failedMessages.length} />
-        <div className="grid gap-3">
-          {failedMessages.length === 0 ? <EmptyState>Geen gefaalde berichten. De outbox is schoon.</EmptyState> : null}
-          {failedMessages.map((message) => (
-            <MessageOutboxCard key={message.id} lookups={lookups} message={message} showResetRetry />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader title="Outbox" count={data.messageOutbox.length} />
-        <div className="grid gap-3">
-          {data.messageOutbox.length === 0 ? <EmptyState>Nog geen berichten in de outbox.</EmptyState> : null}
-          {data.messageOutbox.map((message) => (
-            <MessageOutboxCard key={message.id} lookups={lookups} message={message} />
-          ))}
-        </div>
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "nieuw",
+            label: "Nieuw bericht",
+            count: data.participants.length + data.instructors.length,
+            children: (
+              <Card>
+                <SectionHeader title="Nieuw bericht" count={data.participants.length + data.instructors.length} />
+                <div className="mt-4 grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+                  <QueueMessageForm data={data} />
+                  <div className="grid gap-3 rounded-2xl border border-border bg-muted/35 p-4 text-sm text-muted-foreground">
+                    <p className="font-semibold text-foreground">Kanaalkeuze</p>
+                    <p>Kies e-mail voor externe verzending via SMTP of SendGrid. Kies intern bericht voor een portaalnotificatie zonder externe mailprovider.</p>
+                    <p>Voor groepen worden actieve groepsplaatsingen uitgeklapt naar gekoppelde ouders/verzorgers. Stage of abonnement wordt hierbij niet aangepast.</p>
+                    <div className="grid gap-2">
+                      <a className={secondaryButtonClassName} href="/admin/mailtemplates">
+                        Mailtemplates beheren
+                      </a>
+                      <a className={secondaryButtonClassName} href="/admin/mail-instellingen">
+                        Mailinstellingen
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "worker",
+            label: "Worker",
+            count: queuedMessages,
+            children: (
+              <Card>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold">Dispatch worker</h2>
+                    <p className="text-sm text-muted-foreground">Verzend maximaal 10 geplande of opnieuw te proberen berichten via SMTP/SendGrid-ready mailconfiguratie.</p>
+                  </div>
+                  <form action={runMessageDispatchWorkerAction} className="flex items-center gap-2">
+                    <input name="limit" type="hidden" value="10" />
+                    <button className={primaryButtonClassName} type="submit">
+                      Worker starten
+                    </button>
+                  </form>
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "retry",
+            label: "Retry",
+            count: failedMessages.length,
+            children: (
+              <Card>
+                <SectionHeader title="Retry dashboard" count={failedMessages.length} />
+                <div className="grid gap-3">
+                  {failedMessages.length === 0 ? <EmptyState>Geen gefaalde berichten. De outbox is schoon.</EmptyState> : null}
+                  {failedMessages.map((message) => (
+                    <MessageOutboxCard key={message.id} lookups={lookups} message={message} showResetRetry />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "outbox",
+            label: "Outbox",
+            count: data.messageOutbox.length,
+            children: (
+              <Card>
+                <SectionHeader title="Outbox" count={data.messageOutbox.length} />
+                <div className="grid gap-3">
+                  {data.messageOutbox.length === 0 ? <EmptyState>Nog geen berichten in de outbox.</EmptyState> : null}
+                  {data.messageOutbox.map((message) => (
+                    <MessageOutboxCard key={message.id} lookups={lookups} message={message} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
@@ -241,20 +271,36 @@ export function AdminMailSettingsPage({ snapshot }: Phase12PageProps) {
         subtitle="Beheer SMTP als primaire route en houd SendGrid API live-ready naast dezelfde outbox."
         title="Mailinstellingen"
       />
-      <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <SectionHeader title="SMTP" count={smtpProvider ? 1 : 0} />
-          <div className="mt-4">
-            <ProviderConfigCard provider={smtpProvider} title="SMTP provider" />
-          </div>
-        </Card>
-        <Card>
-          <SectionHeader title="SendGrid" count={sendgridProvider ? 1 : 0} />
-          <div className="mt-4">
-            <ProviderConfigCard provider={sendgridProvider} title="SendGrid API provider" />
-          </div>
-        </Card>
-      </div>
+      <AdminTabs
+        tabs={[
+          {
+            id: "smtp",
+            label: "SMTP",
+            count: smtpProvider ? 1 : 0,
+            children: (
+              <Card>
+                <SectionHeader title="SMTP" count={smtpProvider ? 1 : 0} />
+                <div className="mt-4">
+                  <ProviderConfigCard provider={smtpProvider} title="SMTP provider" />
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "sendgrid",
+            label: "SendGrid",
+            count: sendgridProvider ? 1 : 0,
+            children: (
+              <Card>
+                <SectionHeader title="SendGrid" count={sendgridProvider ? 1 : 0} />
+                <div className="mt-4">
+                  <ProviderConfigCard provider={sendgridProvider} title="SendGrid API provider" />
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
@@ -288,27 +334,50 @@ export function AdminNewsletterPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<Users className="h-5 w-5" />} label="Ontvangers" value={snapshot.data.guardians.length.toString()} detail="actieve ouders/verzorgers" />
         <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Gepland" value={scheduledNewsletters.toString()} detail="outbox basis" />
       </div>
-      <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card>
-          <SectionHeader title="Nieuwsbrief opstellen" count={snapshot.data.guardians.length} />
-          <div className="mt-4">
-            <QueueMessageForm data={snapshot.data} newsletter />
-          </div>
-        </Card>
-        <Card>
-          <SectionHeader title="Block builder" count={newsletterTemplates.length} />
-          <TipTapBlockBuilder defaultBody="Beste {{parent_name}},\n\nDit is de nieuwsbrief van {{tenant_name}}.\n\n{{cta_url}}" />
-        </Card>
-      </div>
-      <Card>
-        <SectionHeader title="Nieuwsbrief templates" count={newsletterTemplates.length} />
-        <div className="grid gap-3">
-          {newsletterTemplates.length === 0 ? <EmptyState>Nog geen nieuwsbrief template. Maak een mailtemplate met tag newsletter.</EmptyState> : null}
-          {newsletterTemplates.map((template) => (
-            <TemplateCard key={template.id} template={template} />
-          ))}
-        </div>
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "opstellen",
+            label: "Opstellen",
+            count: snapshot.data.guardians.length,
+            children: (
+              <Card>
+                <SectionHeader title="Nieuwsbrief opstellen" count={snapshot.data.guardians.length} />
+                <div className="mt-4">
+                  <QueueMessageForm data={snapshot.data} newsletter />
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "builder",
+            label: "Block builder",
+            count: newsletterTemplates.length,
+            children: (
+              <Card>
+                <SectionHeader title="Block builder" count={newsletterTemplates.length} />
+                <TipTapBlockBuilder defaultBody="Beste {{parent_name}},\n\nDit is de nieuwsbrief van {{tenant_name}}.\n\n{{cta_url}}" />
+              </Card>
+            )
+          },
+          {
+            id: "templates",
+            label: "Templates",
+            count: newsletterTemplates.length,
+            children: (
+              <Card>
+                <SectionHeader title="Nieuwsbrief templates" count={newsletterTemplates.length} />
+                <div className="grid gap-3">
+                  {newsletterTemplates.length === 0 ? <EmptyState>Nog geen nieuwsbrief template. Maak een mailtemplate met tag newsletter.</EmptyState> : null}
+                  {newsletterTemplates.map((template) => (
+                    <TemplateCard key={template.id} template={template} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
@@ -340,22 +409,37 @@ export function AdminTasksTodoPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<Send className="h-5 w-5" />} label="Afgerond" value={doneTasks.length.toString()} detail="operationeel" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <SectionHeader title="Nieuwe taak" count={data.profiles.length} />
-          <OperationalTaskForm data={data} mode="create" />
-        </Card>
-
-        <Card>
-          <SectionHeader title="Taaklijst" count={data.operationalTasks.length} />
-          <div className="grid gap-3">
-            {data.operationalTasks.length === 0 ? <EmptyState>Nog geen taken.</EmptyState> : null}
-            {data.operationalTasks.map((task) => (
-              <TaskCard key={task.id} data={data} lookups={lookups} task={task} />
-            ))}
-          </div>
-        </Card>
-      </div>
+      <AdminTabs
+        tabs={[
+          {
+            id: "taken",
+            label: "Taaklijst",
+            count: data.operationalTasks.length,
+            children: (
+              <Card>
+                <SectionHeader title="Taaklijst" count={data.operationalTasks.length} />
+                <div className="grid gap-3">
+                  {data.operationalTasks.length === 0 ? <EmptyState>Nog geen taken.</EmptyState> : null}
+                  {data.operationalTasks.map((task) => (
+                    <TaskCard key={task.id} data={data} lookups={lookups} task={task} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "nieuw",
+            label: "Nieuwe taak",
+            count: data.profiles.length,
+            children: (
+              <Card>
+                <SectionHeader title="Nieuwe taak" count={data.profiles.length} />
+                <OperationalTaskForm data={data} mode="create" />
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
@@ -387,35 +471,59 @@ export function AdminDocumentsPage({ snapshot }: Phase12PageProps) {
         <MetricCard icon={<Settings className="h-5 w-5" />} label="Opslag" value={storage.status} detail={storage.bucket} />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <SectionHeader title="Nieuw documentrecord" count={data.participants.length} />
-          <DocumentRecordForm data={data} mode="create" />
-        </Card>
-
-        <Card>
-          <div className="mb-4 flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-muted/35 p-4">
-            <div>
-              <p className="font-semibold">Supabase Storage bucket</p>
-              <p className="text-sm text-muted-foreground">
-                {storage.bucket} - {storage.isPrivate ? "private" : "public"} - limiet {storage.fileSizeLimit ? formatBytes(storage.fileSizeLimit) : "onbekend"}
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Toegestaan: {storage.allowedMimeTypes.length > 0 ? storage.allowedMimeTypes.join(", ") : "nog niet uit bucket gelezen"}
-              </p>
-              {storage.message ? <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{storage.message}</p> : null}
-            </div>
-            <StatusPill tone={storage.status === "ready" ? "success" : storage.status === "missing" ? "warning" : "danger"}>{storage.status}</StatusPill>
-          </div>
-          <SectionHeader title="Documentenlijst" count={data.documentRecords.length} />
-          <div className="grid gap-3">
-            {data.documentRecords.length === 0 ? <EmptyState>Nog geen documenten.</EmptyState> : null}
-            {data.documentRecords.map((document) => (
-              <DocumentRecordCard key={document.id} data={data} document={document} lookups={lookups} />
-            ))}
-          </div>
-        </Card>
-      </div>
+      <AdminTabs
+        tabs={[
+          {
+            id: "documenten",
+            label: "Documentenlijst",
+            count: data.documentRecords.length,
+            children: (
+              <Card>
+                <SectionHeader title="Documentenlijst" count={data.documentRecords.length} />
+                <div className="grid gap-3">
+                  {data.documentRecords.length === 0 ? <EmptyState>Nog geen documenten.</EmptyState> : null}
+                  {data.documentRecords.map((document) => (
+                    <DocumentRecordCard key={document.id} data={data} document={document} lookups={lookups} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "nieuw",
+            label: "Nieuw document",
+            count: data.participants.length,
+            children: (
+              <Card>
+                <SectionHeader title="Nieuw documentrecord" count={data.participants.length} />
+                <DocumentRecordForm data={data} mode="create" />
+              </Card>
+            )
+          },
+          {
+            id: "opslag",
+            label: "Opslag",
+            count: storage.status === "ready" ? 1 : 0,
+            children: (
+              <Card>
+                <div className="flex flex-wrap items-start justify-between gap-3 rounded-2xl border border-border bg-muted/35 p-4">
+                  <div>
+                    <p className="font-semibold">Supabase Storage bucket</p>
+                    <p className="text-sm text-muted-foreground">
+                      {storage.bucket} - {storage.isPrivate ? "private" : "public"} - limiet {storage.fileSizeLimit ? formatBytes(storage.fileSizeLimit) : "onbekend"}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Toegestaan: {storage.allowedMimeTypes.length > 0 ? storage.allowedMimeTypes.join(", ") : "nog niet uit bucket gelezen"}
+                    </p>
+                    {storage.message ? <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2 text-xs font-semibold text-destructive">{storage.message}</p> : null}
+                  </div>
+                  <StatusPill tone={storage.status === "ready" ? "success" : storage.status === "missing" ? "warning" : "danger"}>{storage.status}</StatusPill>
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
@@ -454,69 +562,98 @@ export function AdminReportsExportsPage({ phase12, domain, placement, payments }
         <MetricCard icon={<Download className="h-5 w-5" />} label="Omzet netto" value={formatMoney(numberValue(revenue.net_cents), "EUR")} detail="query-backed" />
       </div>
 
-      <Card>
-        <SectionHeader title="Filters" count={activeFilterCount(reporting.filters)} />
-        <ReportFilterForm reporting={reporting} />
-      </Card>
-
-      <Card>
-        <details>
-          <summary className="cursor-pointer">
-            <SectionHeader title="Export en rechten" count={phase12.data.reportExports.length + reporting.permissions.length} />
-          </summary>
-          <div className="mt-4 grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-            <div className="rounded-2xl border border-border bg-muted/35 p-4">
-              <h3 className="font-bold">Export aanvragen</h3>
-              <div className="mt-3">
-                <ReportExportForm mode="create" reporting={reporting} />
+      <AdminTabs
+        tabs={[
+          {
+            id: "dashboards",
+            label: "Dashboards",
+            count: 6,
+            children: (
+              <div className="grid gap-4 xl:grid-cols-2">
+                <ReportDashboardCard reportType="occupancy" reporting={reporting} section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
+                <ReportDashboardCard reportType="waitlist" reporting={reporting} section={reporting.waitlist} title="Wachtlijst" value={numberValue(reporting.waitlist.summary.total).toString()} />
+                <ReportDashboardCard reportType="progress" reporting={reporting} section={reporting.progress} title="Voortgang" value={numberValue(reporting.progress.summary.updates).toString()} />
+                <ReportDashboardCard reportType="attendance" reporting={reporting} section={reporting.attendance} title="Aanwezigheid" value={`${numberValue(reporting.attendance.summary.attendance_rate)}%`} />
+                <ReportDashboardCard reportType="payments" reporting={reporting} section={reporting.payments} title="Betalingen" value={formatMoney(numberValue(reporting.payments.summary.open_amount_cents), "EUR")} />
+                <ReportDashboardCard reportType="revenue" reporting={reporting} section={reporting.revenue} title="Omzet" value={formatMoney(numberValue(reporting.revenue.summary.net_cents), "EUR")} />
               </div>
-            </div>
-            <div className="rounded-2xl border border-border bg-muted/35 p-4">
-              <h3 className="font-bold">Rapportrechten</h3>
-              <div className="mt-3 grid gap-3">
-                <ReportPermissionForm />
-                {reporting.permissions.length === 0 ? <EmptyState>Nog geen expliciete rapportrechten. Tenant owners/admins houden standaard beheerrechten.</EmptyState> : null}
-                {reporting.permissions.map((grant) => (
-                  <ReportPermissionCard key={grant.id} grant={grant} />
-                ))}
-              </div>
-            </div>
-          </div>
-        </details>
-      </Card>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <ReportDashboardCard reportType="occupancy" reporting={reporting} section={reporting.occupancy} title="Bezetting" value={`${numberValue(reporting.occupancy.summary.occupied)}/${numberValue(reporting.occupancy.summary.capacity)}`} />
-        <ReportDashboardCard reportType="waitlist" reporting={reporting} section={reporting.waitlist} title="Wachtlijst" value={numberValue(reporting.waitlist.summary.total).toString()} />
-        <ReportDashboardCard reportType="progress" reporting={reporting} section={reporting.progress} title="Voortgang" value={numberValue(reporting.progress.summary.updates).toString()} />
-        <ReportDashboardCard reportType="attendance" reporting={reporting} section={reporting.attendance} title="Aanwezigheid" value={`${numberValue(reporting.attendance.summary.attendance_rate)}%`} />
-        <ReportDashboardCard reportType="payments" reporting={reporting} section={reporting.payments} title="Betalingen" value={formatMoney(numberValue(reporting.payments.summary.open_amount_cents), "EUR")} />
-        <ReportDashboardCard reportType="revenue" reporting={reporting} section={reporting.revenue} title="Omzet" value={formatMoney(numberValue(reporting.revenue.summary.net_cents), "EUR")} />
-      </div>
-
-      <Card>
-        <details>
-          <summary className="cursor-pointer">
-            <SectionHeader title="Exportaanvragen" count={phase12.data.reportExports.length} />
-          </summary>
-          <div className="mt-4 grid gap-3">
-            {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
-            {phase12.data.reportExports.map((request) => (
-              <ReportExportCard key={request.id} reporting={reporting} request={request} />
-            ))}
-          </div>
-        </details>
-      </Card>
-
-      <Card>
-        <SectionHeader title="Rapportage audit" count={reporting.auditEvents.length} />
-        <div className="grid gap-3">
-          {reporting.auditEvents.length === 0 ? <EmptyState>Nog geen rapportage-auditregels.</EmptyState> : null}
-          {reporting.auditEvents.map((event) => (
-            <ReportSnapshotRow key={event.id} detail={`${event.source_table} - ${event.risk_level} - ${formatDateTime(event.created_at)}`} label={event.action} value={event.source_record_id?.slice(0, 8) ?? "-"} />
-          ))}
-        </div>
-      </Card>
+            )
+          },
+          {
+            id: "filters",
+            label: "Filters",
+            count: activeFilterCount(reporting.filters),
+            children: (
+              <Card>
+                <SectionHeader title="Filters" count={activeFilterCount(reporting.filters)} />
+                <ReportFilterForm reporting={reporting} />
+              </Card>
+            )
+          },
+          {
+            id: "export",
+            label: "Export",
+            count: phase12.data.reportExports.length,
+            children: (
+              <Card>
+                <SectionHeader title="Export aanvragen" count={phase12.data.reportExports.length} />
+                <div className="mt-3">
+                  <ReportExportForm mode="create" reporting={reporting} />
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "rechten",
+            label: "Rechten",
+            count: reporting.permissions.length,
+            children: (
+              <Card>
+                <SectionHeader title="Rapportrechten" count={reporting.permissions.length} />
+                <div className="grid gap-3">
+                  <ReportPermissionForm />
+                  {reporting.permissions.length === 0 ? <EmptyState>Nog geen expliciete rapportrechten. Tenant owners/admins houden standaard beheerrechten.</EmptyState> : null}
+                  {reporting.permissions.map((grant) => (
+                    <ReportPermissionCard key={grant.id} grant={grant} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "aanvragen",
+            label: "Exportaanvragen",
+            count: phase12.data.reportExports.length,
+            children: (
+              <Card>
+                <SectionHeader title="Exportaanvragen" count={phase12.data.reportExports.length} />
+                <div className="grid gap-3">
+                  {phase12.data.reportExports.length === 0 ? <EmptyState>Nog geen export requests.</EmptyState> : null}
+                  {phase12.data.reportExports.map((request) => (
+                    <ReportExportCard key={request.id} reporting={reporting} request={request} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "audit",
+            label: "Audit",
+            count: reporting.auditEvents.length,
+            children: (
+              <Card>
+                <SectionHeader title="Rapportage audit" count={reporting.auditEvents.length} />
+                <div className="grid gap-3">
+                  {reporting.auditEvents.length === 0 ? <EmptyState>Nog geen rapportage-auditregels.</EmptyState> : null}
+                  {reporting.auditEvents.map((event) => (
+                    <ReportSnapshotRow key={event.id} detail={`${event.source_table} - ${event.risk_level} - ${formatDateTime(event.created_at)}`} label={event.action} value={event.source_record_id?.slice(0, 8) ?? "-"} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }

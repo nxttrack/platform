@@ -1,6 +1,7 @@
 import { AlertTriangle, Bot, CheckCircle2, ClipboardList, FileText, ShieldCheck, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { generateAiAssistantSuggestionAction, updateAiAssistantSettingAction, updateAiAssistantSuggestionAction } from "@/lib/ai/admin-ai-actions";
 import type { AdminAiAssistantSnapshot, AiAssistantContextOption, AiAssistantSuggestionRow, TenantAiAssistantSettingRow } from "@/lib/ai/admin-ai-read-model";
@@ -54,33 +55,56 @@ export function AdminAiAssistantPage({ snapshot }: Props) {
         </div>
       </Card>
 
-      <Card>
-        <SectionHeader count={data.settings.length} icon={<ShieldCheck className="h-5 w-5" />} title="Capability instellingen" />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {data.settings.map((setting) => (
-            <AiSettingCard key={setting.capability} setting={setting} />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader count={data.contextOptions.length} icon={<Sparkles className="h-5 w-5" />} title="Suggesties maken" />
-        <div className="grid gap-5">
-          {aiAssistantCapabilities.map((capability) => (
-            <CapabilityWorkspace key={capability} capability={capability} contextOptions={data.contextOptions.filter((option) => option.capability === capability)} setting={data.settings.find((setting) => setting.capability === capability) ?? null} />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader count={data.suggestions.length} icon={<ClipboardList className="h-5 w-5" />} title="AI-suggestie audit en drafts" />
-        <div className="grid gap-3">
-          {data.suggestions.length === 0 ? <EmptyState>Nog geen AI-suggesties. Maak eerst een gecontroleerd concept vanuit een capability.</EmptyState> : null}
-          {data.suggestions.map((suggestion) => (
-            <SuggestionCard key={suggestion.id} suggestion={suggestion} />
-          ))}
-        </div>
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "suggesties",
+            label: "Suggesties maken",
+            count: data.contextOptions.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.contextOptions.length} icon={<Sparkles className="h-5 w-5" />} title="Suggesties maken" />
+                <div className="grid gap-5">
+                  {aiAssistantCapabilities.map((capability) => (
+                    <CapabilityWorkspace key={capability} capability={capability} contextOptions={data.contextOptions.filter((option) => option.capability === capability)} setting={data.settings.find((setting) => setting.capability === capability) ?? null} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "instellingen",
+            label: "Instellingen",
+            count: data.settings.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.settings.length} icon={<ShieldCheck className="h-5 w-5" />} title="Capability instellingen" />
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {data.settings.map((setting) => (
+                    <AiSettingCard key={setting.capability} setting={setting} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "audit",
+            label: "Audit & drafts",
+            count: data.suggestions.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.suggestions.length} icon={<ClipboardList className="h-5 w-5" />} title="AI-suggestie audit en drafts" />
+                <div className="grid gap-3">
+                  {data.suggestions.length === 0 ? <EmptyState>Nog geen AI-suggesties. Maak eerst een gecontroleerd concept vanuit een capability.</EmptyState> : null}
+                  {data.suggestions.map((suggestion) => (
+                    <SuggestionCard key={suggestion.id} suggestion={suggestion} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronDown, CircleDollarSign, Database, MapPin, Users, Waves } from "lucide-react";
 
 import { AdminActionForm, AdminSubmitButton } from "@/components/admin/action-form";
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { AdminTableEnhancer } from "@/components/admin/table-enhancer";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import type {
@@ -168,55 +169,76 @@ export function AdminProgramsPage({ snapshot }: DomainPageProps) {
 
   return (
     <DomainFrame snapshot={snapshot} kicker="Backoffice - aanbod" title="Programma's" subtitle="Het aangeboden product of leertraject. Niveaus en abonnementen blijven los gekoppeld aan de inschrijving.">
-      <div className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-        <Card>
-          <SectionHeader title="Programma's" count={snapshot.data.programs.length} />
-          <CreateProgramForm />
-          <DomainTable
-            columns={[
-              { header: "Naam", render: (program) => <StrongText>{program.name}</StrongText> },
-              { header: "Code", render: (program) => <CodeText>{program.code}</CodeText> },
-              { header: "Niveaus", render: (program) => countBy(snapshot.data.stages, "program_id", program.id) },
-              { header: "Status", render: (program) => <StatusPill tone={statusTone(program.status)}>{program.status}</StatusPill> },
-              { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (program) => <ProgramForm mode="update" program={program} /> }
-            ]}
-            emptyLabel="Nog geen programma's gevonden voor deze tenant."
-            rows={snapshot.data.programs}
-            rowKey={(program) => program.id}
-          />
-        </Card>
-
-        <Card>
-          <SectionHeader title="Abonnementen" count={snapshot.data.subscriptionPlans.length} />
-          <CreateSubscriptionPlanForm />
-          <DomainTable
-            columns={[
-              { header: "Plan", render: (plan) => <StrongText>{plan.name}</StrongText> },
-              { header: "Facturatie", render: (plan) => billingIntervalLabel(plan.billing_interval) },
-              { header: "Prijs", render: (plan) => formatMoney(plan.price_cents, plan.currency) },
-              { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (plan) => <SubscriptionPlanForm mode="update" plan={plan} /> }
-            ]}
-            emptyLabel="Nog geen abonnementen gevonden."
-            rows={snapshot.data.subscriptionPlans}
-            rowKey={(plan) => plan.id}
-          />
-        </Card>
-      </div>
-
-      <Card>
-        <SectionHeader title="Niveaus per programma" count={snapshot.data.stages.length} />
-        <DomainTable
-          columns={[
-            { header: "Niveau", render: (stage) => <StrongText>{stage.name}</StrongText> },
-            { header: "Programma", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend programma" },
-            { header: "Code", render: (stage) => <CodeText>{stage.code}</CodeText> },
-            { header: "Status", render: (stage) => <StatusPill tone={statusTone(stage.status)}>{stage.status}</StatusPill> }
-          ]}
-          emptyLabel="Nog geen niveaus gevonden."
-          rows={snapshot.data.stages}
-          rowKey={(stage) => stage.id}
-        />
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "programmas",
+            label: "Programma's",
+            count: snapshot.data.programs.length,
+            children: (
+              <Card>
+                <SectionHeader title="Programma's" count={snapshot.data.programs.length} />
+                <CreateProgramForm />
+                <DomainTable
+                  columns={[
+                    { header: "Naam", render: (program) => <StrongText>{program.name}</StrongText> },
+                    { header: "Code", render: (program) => <CodeText>{program.code}</CodeText> },
+                    { header: "Niveaus", render: (program) => countBy(snapshot.data.stages, "program_id", program.id) },
+                    { header: "Status", render: (program) => <StatusPill tone={statusTone(program.status)}>{program.status}</StatusPill> },
+                    { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (program) => <ProgramForm mode="update" program={program} /> }
+                  ]}
+                  emptyLabel="Nog geen programma's gevonden voor deze tenant."
+                  rows={snapshot.data.programs}
+                  rowKey={(program) => program.id}
+                />
+              </Card>
+            )
+          },
+          {
+            id: "abonnementen",
+            label: "Abonnementen",
+            count: snapshot.data.subscriptionPlans.length,
+            children: (
+              <Card>
+                <SectionHeader title="Abonnementen" count={snapshot.data.subscriptionPlans.length} />
+                <CreateSubscriptionPlanForm />
+                <DomainTable
+                  columns={[
+                    { header: "Plan", render: (plan) => <StrongText>{plan.name}</StrongText> },
+                    { header: "Facturatie", render: (plan) => billingIntervalLabel(plan.billing_interval) },
+                    { header: "Prijs", render: (plan) => formatMoney(plan.price_cents, plan.currency) },
+                    { header: "Actie", className: "min-w-[320px] whitespace-normal", render: (plan) => <SubscriptionPlanForm mode="update" plan={plan} /> }
+                  ]}
+                  emptyLabel="Nog geen abonnementen gevonden."
+                  rows={snapshot.data.subscriptionPlans}
+                  rowKey={(plan) => plan.id}
+                />
+              </Card>
+            )
+          },
+          {
+            id: "niveaus",
+            label: "Niveaus",
+            count: snapshot.data.stages.length,
+            children: (
+              <Card>
+                <SectionHeader title="Niveaus per programma" count={snapshot.data.stages.length} />
+                <DomainTable
+                  columns={[
+                    { header: "Niveau", render: (stage) => <StrongText>{stage.name}</StrongText> },
+                    { header: "Programma", render: (stage) => lookups.programs.get(stage.program_id)?.name ?? "Onbekend programma" },
+                    { header: "Code", render: (stage) => <CodeText>{stage.code}</CodeText> },
+                    { header: "Status", render: (stage) => <StatusPill tone={statusTone(stage.status)}>{stage.status}</StatusPill> }
+                  ]}
+                  emptyLabel="Nog geen niveaus gevonden."
+                  rows={snapshot.data.stages}
+                  rowKey={(stage) => stage.id}
+                />
+              </Card>
+            )
+          }
+        ]}
+      />
     </DomainFrame>
   );
 }

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { Banknote, CircleDollarSign, CreditCard, FileText, Landmark, Layers3, Repeat2, ShieldCheck } from "lucide-react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   calculateOverdueInvoicesAction,
@@ -93,89 +94,124 @@ export function AdminPaymentsPage({ snapshot }: AdminPaymentsPageProps) {
             <MetricCard icon={<Layers3 className="h-5 w-5" />} label="Payment batches" value={snapshot.data.paymentBatches.length.toString()} detail={formatMoney(readyBatchTotal, "EUR")} />
           </div>
 
-          <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-            <Card>
-              <SectionHeader title="Nieuwe handmatige factuur" count={snapshot.data.enrollments.length} />
-              <ManualInvoiceForm activeRule={activeRule} data={snapshot.data} />
-            </Card>
-
-            <Card>
-              <SectionHeader title="Factuurregels en providers" count={snapshot.data.providerConfigs.length} />
-              <div className="grid gap-3">
-                <InvoiceRuleCard rule={activeRule} />
-                <ProviderCard provider={manualProvider} fallback="Handmatige betalingen" />
-                <ProviderCard provider={mollieProvider} fallback="Mollie/iDEAL voorbereiding" />
-              </div>
-            </Card>
-          </div>
-
-          <PaymentBatchesPanel data={snapshot.data} lookups={lookups} />
-
-          <SepaIncassoPanel data={snapshot.data} lookups={lookups} mollieProvider={mollieProvider} />
-
-          <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
-            <Card>
-              <SectionHeader title="Overdue en finance export" count={snapshot.data.financeExports.length} />
-              <form action={calculateOverdueInvoicesAction} className="mb-4">
-                <button className="w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
-                  Overdue status berekenen
-                </button>
-              </form>
-              <FinanceExportForm />
-            </Card>
-            <Card>
-              <SectionHeader title="Finance exports" count={snapshot.data.financeExports.length} />
-              <div className="grid gap-3">
-                {snapshot.data.financeExports.length === 0 ? <EmptyState>Nog geen finance exports.</EmptyState> : null}
-                {snapshot.data.financeExports.map((financeExport) => (
-                  <FinanceExportCard key={financeExport.id} financeExport={financeExport} />
-                ))}
-              </div>
-            </Card>
-          </div>
-
-          <Card>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <SectionHeader title="Facturen en betalingen" count={snapshot.data.invoices.length} />
-              <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href="/api/admin-exports/payments/download">
-                Payments CSV
-              </Link>
-            </div>
-            <div className="grid gap-4">
-              {snapshot.data.invoices.length === 0 ? <EmptyState>Nog geen facturen gevonden.</EmptyState> : null}
-              {snapshot.data.invoices.map((invoice) => (
-                <InvoiceCard key={invoice.id} invoice={invoice} lookups={lookups} />
-              ))}
-            </div>
-          </Card>
-
-          <div className="grid gap-4 xl:grid-cols-[1fr_0.8fr]">
-            <Card>
-              <SectionHeader title="Laatste betalingen" count={snapshot.data.paymentRecords.length} />
-              <div className="grid gap-3">
-                {snapshot.data.paymentRecords.length === 0 ? <EmptyState>Nog geen betalingen geregistreerd.</EmptyState> : null}
-                {snapshot.data.paymentRecords.map((payment) => (
-                  <PaymentRecordRowView key={payment.id} lookups={lookups} payment={payment} />
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <SectionHeader title="Refunds en gebeurtenissen" count={snapshot.data.paymentEvents.length + snapshot.data.paymentRefunds.length} />
-              <div className="mb-4 grid gap-3">
-                {snapshot.data.paymentRefunds.length === 0 ? <EmptyState>Nog geen refunds geregistreerd.</EmptyState> : null}
-                {snapshot.data.paymentRefunds.slice(0, 5).map((refund) => (
-                  <RefundRowView key={refund.id} lookups={lookups} refund={refund} />
-                ))}
-              </div>
-              <div className="grid gap-3">
-                {snapshot.data.paymentEvents.length === 0 ? <EmptyState>Nog geen betaalgebeurtenissen.</EmptyState> : null}
-                {snapshot.data.paymentEvents.map((event) => (
-                  <PaymentEventRowView key={event.id} event={event} />
-                ))}
-              </div>
-            </Card>
-          </div>
+          <AdminTabs
+            tabs={[
+              {
+                id: "facturen",
+                label: "Facturen",
+                count: snapshot.data.invoices.length,
+                children: (
+                  <Card>
+                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                      <SectionHeader title="Facturen en betalingen" count={snapshot.data.invoices.length} />
+                      <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href="/api/admin-exports/payments/download">
+                        Payments CSV
+                      </Link>
+                    </div>
+                    <div className="grid gap-4">
+                      {snapshot.data.invoices.length === 0 ? <EmptyState>Nog geen facturen gevonden.</EmptyState> : null}
+                      {snapshot.data.invoices.map((invoice) => (
+                        <InvoiceCard key={invoice.id} invoice={invoice} lookups={lookups} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              },
+              {
+                id: "nieuw",
+                label: "Nieuwe factuur",
+                count: snapshot.data.enrollments.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Nieuwe handmatige factuur" count={snapshot.data.enrollments.length} />
+                    <ManualInvoiceForm activeRule={activeRule} data={snapshot.data} />
+                  </Card>
+                )
+              },
+              {
+                id: "providers",
+                label: "Regels & providers",
+                count: snapshot.data.providerConfigs.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Factuurregels en providers" count={snapshot.data.providerConfigs.length} />
+                    <div className="grid gap-3">
+                      <InvoiceRuleCard rule={activeRule} />
+                      <ProviderCard provider={manualProvider} fallback="Handmatige betalingen" />
+                      <ProviderCard provider={mollieProvider} fallback="Mollie/iDEAL voorbereiding" />
+                    </div>
+                  </Card>
+                )
+              },
+              { id: "batches", label: "Batches", count: snapshot.data.paymentBatches.length, children: <PaymentBatchesPanel data={snapshot.data} lookups={lookups} /> },
+              { id: "sepa", label: "SEPA incasso", count: snapshot.data.sepaCollectionRuns.length + snapshot.data.sepaMandates.length, children: <SepaIncassoPanel data={snapshot.data} lookups={lookups} mollieProvider={mollieProvider} /> },
+              {
+                id: "exports",
+                label: "Exports",
+                count: snapshot.data.financeExports.length,
+                children: (
+                  <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+                    <Card>
+                      <SectionHeader title="Overdue en finance export" count={snapshot.data.financeExports.length} />
+                      <form action={calculateOverdueInvoicesAction} className="mb-4">
+                        <button className="w-fit rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft hover:bg-primary/90" type="submit">
+                          Overdue status berekenen
+                        </button>
+                      </form>
+                      <FinanceExportForm />
+                    </Card>
+                    <Card>
+                      <SectionHeader title="Finance exports" count={snapshot.data.financeExports.length} />
+                      <div className="grid gap-3">
+                        {snapshot.data.financeExports.length === 0 ? <EmptyState>Nog geen finance exports.</EmptyState> : null}
+                        {snapshot.data.financeExports.map((financeExport) => (
+                          <FinanceExportCard key={financeExport.id} financeExport={financeExport} />
+                        ))}
+                      </div>
+                    </Card>
+                  </div>
+                )
+              },
+              {
+                id: "betalingen",
+                label: "Betalingen",
+                count: snapshot.data.paymentRecords.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Laatste betalingen" count={snapshot.data.paymentRecords.length} />
+                    <div className="grid gap-3">
+                      {snapshot.data.paymentRecords.length === 0 ? <EmptyState>Nog geen betalingen geregistreerd.</EmptyState> : null}
+                      {snapshot.data.paymentRecords.map((payment) => (
+                        <PaymentRecordRowView key={payment.id} lookups={lookups} payment={payment} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              },
+              {
+                id: "logboek",
+                label: "Refunds & logboek",
+                count: snapshot.data.paymentEvents.length + snapshot.data.paymentRefunds.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Refunds en gebeurtenissen" count={snapshot.data.paymentEvents.length + snapshot.data.paymentRefunds.length} />
+                    <div className="mb-4 grid gap-3">
+                      {snapshot.data.paymentRefunds.length === 0 ? <EmptyState>Nog geen refunds geregistreerd.</EmptyState> : null}
+                      {snapshot.data.paymentRefunds.slice(0, 5).map((refund) => (
+                        <RefundRowView key={refund.id} lookups={lookups} refund={refund} />
+                      ))}
+                    </div>
+                    <div className="grid gap-3">
+                      {snapshot.data.paymentEvents.length === 0 ? <EmptyState>Nog geen betaalgebeurtenissen.</EmptyState> : null}
+                      {snapshot.data.paymentEvents.map((event) => (
+                        <PaymentEventRowView key={event.id} event={event} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              }
+            ]}
+          />
         </>
       ) : (
         <PaymentsStatusPanel snapshot={snapshot} />

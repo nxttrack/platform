@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { CalendarDays, FileCheck2, GraduationCap, Radar } from "lucide-react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   createAfzwemEventAction,
@@ -78,62 +79,92 @@ export function AdminAfzwemPage({ snapshot }: AdminAfzwemPageProps) {
             <MetricCard icon={<GraduationCap className="h-5 w-5" />} label="Diploma's" value={issuedCertificates.toString()} detail={`${passedResults} geslaagd`} />
           </div>
 
-          <AfzwemRadarPanel data={snapshot.data} lookups={lookups} />
-
-          <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-            <Card>
-              <SectionHeader title="Afzwem-ready criteria" count={snapshot.data.readinessCriteria.length} />
-              <div className="grid gap-3">
-                {snapshot.data.readinessCriteria.length === 0 ? <EmptyState>Geen criteria gevonden.</EmptyState> : null}
-                {snapshot.data.readinessCriteria.map((criteria) => (
-                  <CriteriaCard key={criteria.id} criteria={criteria} lookups={lookups} />
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <SectionHeader title="Nieuw afzwemmoment" count={snapshot.data.events.length} />
-              <AfzwemEventForm data={snapshot.data} />
-            </Card>
-          </div>
-
-          <Card>
-            <SectionHeader title="Afzwemmomenten" count={snapshot.data.events.length} />
-            <div className="grid gap-4">
-              {snapshot.data.events.length === 0 ? <EmptyState>Geen afzwemmomenten gevonden.</EmptyState> : null}
-              {snapshot.data.events.map((event) => (
-                <AfzwemEventCard key={event.id} data={snapshot.data} event={event} lookups={lookups} />
-              ))}
-            </div>
-          </Card>
-
-          <div className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
-            <Card>
-              <SectionHeader title="Resultaten" count={snapshot.data.results.length} />
-              <div className="grid gap-3">
-                {snapshot.data.results.length === 0 ? <EmptyState>Nog geen resultaten geregistreerd.</EmptyState> : null}
-                {snapshot.data.results.map((result) => (
-                  <ResultRow key={result.id} lookups={lookups} result={result} />
-                ))}
-              </div>
-            </Card>
-
-            <Card>
-              <SectionHeader title="Digitale diplomakluis" count={snapshot.data.certificates.length} />
-              <div className="grid gap-3">
-                {snapshot.data.certificates.length === 0 ? <EmptyState>Nog geen diploma-records gevonden.</EmptyState> : null}
-                {snapshot.data.certificates.map((certificate) => (
-                  <CertificateVaultCard
-                    key={certificate.id}
-                    certificate={certificate}
-                    events={lookups.certificateAccessEventsByCertificate.get(certificate.id) ?? []}
-                    lookups={lookups}
-                    versions={lookups.certificateVersionsByCertificate.get(certificate.id) ?? []}
-                  />
-                ))}
-              </div>
-            </Card>
-          </div>
+          <AdminTabs
+            tabs={[
+              { id: "radar", label: "Radar", count: snapshot.data.readinessRadar.length, children: <AfzwemRadarPanel data={snapshot.data} lookups={lookups} /> },
+              {
+                id: "criteria",
+                label: "Criteria",
+                count: snapshot.data.readinessCriteria.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Afzwem-ready criteria" count={snapshot.data.readinessCriteria.length} />
+                    <div className="grid gap-3">
+                      {snapshot.data.readinessCriteria.length === 0 ? <EmptyState>Geen criteria gevonden.</EmptyState> : null}
+                      {snapshot.data.readinessCriteria.map((criteria) => (
+                        <CriteriaCard key={criteria.id} criteria={criteria} lookups={lookups} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              },
+              {
+                id: "nieuw",
+                label: "Nieuw moment",
+                count: snapshot.data.events.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Nieuw afzwemmoment" count={snapshot.data.events.length} />
+                    <AfzwemEventForm data={snapshot.data} />
+                  </Card>
+                )
+              },
+              {
+                id: "momenten",
+                label: "Momenten",
+                count: snapshot.data.events.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Afzwemmomenten" count={snapshot.data.events.length} />
+                    <div className="grid gap-4">
+                      {snapshot.data.events.length === 0 ? <EmptyState>Geen afzwemmomenten gevonden.</EmptyState> : null}
+                      {snapshot.data.events.map((event) => (
+                        <AfzwemEventCard key={event.id} data={snapshot.data} event={event} lookups={lookups} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              },
+              {
+                id: "resultaten",
+                label: "Resultaten",
+                count: snapshot.data.results.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Resultaten" count={snapshot.data.results.length} />
+                    <div className="grid gap-3">
+                      {snapshot.data.results.length === 0 ? <EmptyState>Nog geen resultaten geregistreerd.</EmptyState> : null}
+                      {snapshot.data.results.map((result) => (
+                        <ResultRow key={result.id} lookups={lookups} result={result} />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              },
+              {
+                id: "diplomas",
+                label: "Diplomakluis",
+                count: snapshot.data.certificates.length,
+                children: (
+                  <Card>
+                    <SectionHeader title="Digitale diplomakluis" count={snapshot.data.certificates.length} />
+                    <div className="grid gap-3">
+                      {snapshot.data.certificates.length === 0 ? <EmptyState>Nog geen diploma-records gevonden.</EmptyState> : null}
+                      {snapshot.data.certificates.map((certificate) => (
+                        <CertificateVaultCard
+                          key={certificate.id}
+                          certificate={certificate}
+                          events={lookups.certificateAccessEventsByCertificate.get(certificate.id) ?? []}
+                          lookups={lookups}
+                          versions={lookups.certificateVersionsByCertificate.get(certificate.id) ?? []}
+                        />
+                      ))}
+                    </div>
+                  </Card>
+                )
+              }
+            ]}
+          />
         </>
       ) : (
         <AfzwemStatusPanel snapshot={snapshot} />

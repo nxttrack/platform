@@ -1,6 +1,7 @@
 import { AlertTriangle, Bot, CheckCircle2, History, LockKeyhole, RotateCcw, ShieldCheck, SlidersHorizontal, ToggleLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { createAutomationSafetyLogAction, requestAutomationRollbackAction, updateAutomationEngineSettingsAction, updateTenantFeatureFlagAction } from "@/lib/automation/admin-automation-actions";
 import type { AdminAutomationSnapshot, AutomationEngineHealth, AutomationEngineSettingsRow, AutomationExecutionLogRow, TenantFeatureFlagRow } from "@/lib/automation/admin-automation-read-model";
@@ -37,33 +38,56 @@ export function AdminAutomationPage({ snapshot }: Props) {
         <MetricCard icon={<AlertTriangle className="h-5 w-5" />} label="Geblokkeerd" value={blockedLogs.toString()} detail="logs met safety stop" />
       </div>
 
-      <Card>
-        <SectionHeader count={data.featureFlags.length} icon={<ToggleLeft className="h-5 w-5" />} title="Tenant feature flags" />
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {data.featureFlags.map((flag) => (
-            <FeatureFlagCard key={flag.id} flag={flag} />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader count={data.engineSettings.length} icon={<SlidersHorizontal className="h-5 w-5" />} title="Automation per smart engine" />
-        <div className="grid gap-4">
-          {data.engineSettings.map((setting) => (
-            <EngineSettingsCard key={setting.id} globalFlags={globalFlags} health={data.engineHealth.find((entry) => entry.engineKey === setting.engine_key) ?? null} setting={setting} />
-          ))}
-        </div>
-      </Card>
-
-      <Card>
-        <SectionHeader count={data.executionLogs.length} icon={<History className="h-5 w-5" />} title="Automation logs en rollback" />
-        <div className="grid gap-3">
-          {data.executionLogs.length === 0 ? <EmptyState>Nog geen automation logs. Settingswijzigingen en safety checks worden vanaf S12 vastgelegd.</EmptyState> : null}
-          {data.executionLogs.map((log) => (
-            <AutomationLogCard key={log.id} log={log} />
-          ))}
-        </div>
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "engines",
+            label: "Smart engines",
+            count: data.engineSettings.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.engineSettings.length} icon={<SlidersHorizontal className="h-5 w-5" />} title="Automation per smart engine" />
+                <div className="grid gap-4">
+                  {data.engineSettings.map((setting) => (
+                    <EngineSettingsCard key={setting.id} globalFlags={globalFlags} health={data.engineHealth.find((entry) => entry.engineKey === setting.engine_key) ?? null} setting={setting} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "flags",
+            label: "Feature flags",
+            count: data.featureFlags.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.featureFlags.length} icon={<ToggleLeft className="h-5 w-5" />} title="Tenant feature flags" />
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {data.featureFlags.map((flag) => (
+                    <FeatureFlagCard key={flag.id} flag={flag} />
+                  ))}
+                </div>
+              </Card>
+            )
+          },
+          {
+            id: "logs",
+            label: "Logs & rollback",
+            count: data.executionLogs.length,
+            children: (
+              <Card>
+                <SectionHeader count={data.executionLogs.length} icon={<History className="h-5 w-5" />} title="Automation logs en rollback" />
+                <div className="grid gap-3">
+                  {data.executionLogs.length === 0 ? <EmptyState>Nog geen automation logs. Settingswijzigingen en safety checks worden vanaf S12 vastgelegd.</EmptyState> : null}
+                  {data.executionLogs.map((log) => (
+                    <AutomationLogCard key={log.id} log={log} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }

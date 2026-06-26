@@ -2,6 +2,7 @@ import { CalendarDays, ExternalLink, FileText, Globe2, Image, Newspaper, Palette
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { updateTenantPublicProfileAction, uploadTenantWebsiteAssetAction, upsertIntakeFormConfigAction, upsertProgramPublicSettingsAction } from "@/lib/tenant-website-settings/admin-tenant-website-actions";
 import type {
@@ -127,39 +128,70 @@ export function AdminTenantWebsiteSettingsPage({ snapshot }: Props) {
         <MetricCard icon={<Globe2 className="h-5 w-5" />} label="Domeinen verified" value={`${verifiedDomains}/${snapshot.data.domains.length}`} detail="custom domain status" />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <Card>
-          <SectionHeader icon={<Settings className="h-5 w-5" />} title="Websiteprofiel & branding" />
-          <TenantPublicProfileForm profile={profile} tenantName={snapshot.tenant.name} />
-        </Card>
-
-        <Card>
-          <SectionHeader icon={<Image className="h-5 w-5" />} title="Lovable preview" />
-          <TenantWebsitePreview profile={profile} tenantName={snapshot.tenant.name} />
-        </Card>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[0.9fr_1.1fr]">
-        <Card>
-          <SectionHeader icon={<UploadCloud className="h-5 w-5" />} title="Hero, logo en social assets" />
-          <AssetUploadPanel profile={profile} />
-        </Card>
-
-        <Card>
-          <SectionHeader icon={<Globe2 className="h-5 w-5" />} title="Custom domain status" />
-          <DomainStatusPanel domains={snapshot.data.domains} tenantSlug={snapshot.tenant.slug} />
-        </Card>
-      </div>
-
-      <Card>
-        <SectionHeader icon={<Globe2 className="h-5 w-5" />} title={`Programma-overzicht & intake (${activeIntakes}/${snapshot.data.programs.length} actief)`} />
-        <div className="mt-4 grid gap-4">
-          {snapshot.data.programs.length === 0 ? <EmptyState>Maak eerst programma's aan voordat je de publieke website publiceert.</EmptyState> : null}
-          {snapshot.data.programs.map((program) => (
-            <ProgramWebsiteSettingsCard key={program.id} config={intakeByProgram.get(program.id) ?? null} program={program} setting={settingsByProgram.get(program.id) ?? null} />
-          ))}
-        </div>
-      </Card>
+      <AdminTabs
+        tabs={[
+          {
+            id: "profiel",
+            label: "Profiel & branding",
+            count: 1,
+            children: (
+              <Card>
+                <SectionHeader icon={<Settings className="h-5 w-5" />} title="Websiteprofiel & branding" />
+                <TenantPublicProfileForm profile={profile} tenantName={snapshot.tenant.name} />
+              </Card>
+            )
+          },
+          {
+            id: "preview",
+            label: "Lovable preview",
+            count: 1,
+            children: (
+              <Card>
+                <SectionHeader icon={<Image className="h-5 w-5" />} title="Lovable preview" />
+                <TenantWebsitePreview profile={profile} tenantName={snapshot.tenant.name} />
+              </Card>
+            )
+          },
+          {
+            id: "assets",
+            label: "Assets",
+            count: 3,
+            children: (
+              <Card>
+                <SectionHeader icon={<UploadCloud className="h-5 w-5" />} title="Hero, logo en social assets" />
+                <AssetUploadPanel profile={profile} />
+              </Card>
+            )
+          },
+          {
+            id: "domeinen",
+            label: "Domeinen",
+            count: snapshot.data.domains.length,
+            children: (
+              <Card>
+                <SectionHeader icon={<Globe2 className="h-5 w-5" />} title="Custom domain status" />
+                <DomainStatusPanel domains={snapshot.data.domains} tenantSlug={snapshot.tenant.slug} />
+              </Card>
+            )
+          },
+          {
+            id: "programmas",
+            label: "Programma's & intake",
+            count: snapshot.data.programs.length,
+            children: (
+              <Card>
+                <SectionHeader icon={<Globe2 className="h-5 w-5" />} title={`Programma-overzicht & intake (${activeIntakes}/${snapshot.data.programs.length} actief)`} />
+                <div className="mt-4 grid gap-4">
+                  {snapshot.data.programs.length === 0 ? <EmptyState>Maak eerst programma's aan voordat je de publieke website publiceert.</EmptyState> : null}
+                  {snapshot.data.programs.map((program) => (
+                    <ProgramWebsiteSettingsCard key={program.id} config={intakeByProgram.get(program.id) ?? null} program={program} setting={settingsByProgram.get(program.id) ?? null} />
+                  ))}
+                </div>
+              </Card>
+            )
+          }
+        ]}
+      />
     </div>
   );
 }
