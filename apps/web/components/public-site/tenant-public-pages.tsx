@@ -734,13 +734,10 @@ export function TenantMarketingPage({ snapshot, language }: PublicPageProps) {
 
               <div className="mt-5 flex flex-wrap gap-2">
                 <Link className={tenantPrimaryButtonClassName} href={publicHref(publicLanguage, "intake")}>
-                  {profile.primaryCtaLabel} <ArrowRight className="h-4 w-4" />
+                  {publicLanguage === "en" ? "Register now!" : "Schrijf nu in!"} <ArrowRight className="h-4 w-4" />
                 </Link>
                 <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href={publicHref(publicLanguage, "programs")}>
-                  {profile.secondaryCtaLabel}
-                </Link>
-                <Link className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted" href={publicHref(publicLanguage, "agenda")}>
-                  {copy.labels.viewWaitTimes}
+                  {copy.labels.programs}
                 </Link>
               </div>
 
@@ -2065,7 +2062,7 @@ function Kicker({ children }: { children: ReactNode }) {
   );
 }
 
-const tenantPrimaryButtonClassName = "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-[var(--primary-foreground)] shadow-glow hover:opacity-95";
+const tenantPrimaryButtonClassName = "inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-glow hover:opacity-95";
 
 function statusCopy(snapshot: PublicTenantSiteSnapshot, copy: TenantPublicCopy) {
   if (snapshot.status === "not_configured") {
