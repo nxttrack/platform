@@ -143,7 +143,7 @@ export async function refreshIntakeDuplicateMatchesAction(formData: FormData) {
 }
 
 export async function updateIntakeContactDetailsAction(formData: FormData) {
-  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const { supabase, tenantId } = await requireTenantWriter();
   const intakeId = requiredString(formData, "intake_submission_id");
   const parentName = requiredString(formData, "parent_name");
   const parentEmail = requiredString(formData, "parent_email").toLowerCase();
@@ -172,8 +172,7 @@ export async function updateIntakeContactDetailsAction(formData: FormData) {
       tenant_id: tenantId,
       submission_id: intakeId,
       status: "reviewing",
-      note: `Contact- en intakegegevens bijgewerkt door admin. Ouder e-mail: ${parentEmail}`,
-      created_by: actorProfileId
+      note: `Contact- en intakegegevens bijgewerkt door admin. Ouder e-mail: ${parentEmail}`
     })
   );
 
