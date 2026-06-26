@@ -386,7 +386,7 @@ export function IntakeWizard({ action, copy, initialProgramSlug, language, progr
                 <div>
                   <h3 className="font-bold">{copy.labels.recommendedLessonTimes}</h3>
                   <p className="text-sm text-muted-foreground">{copy.labels.recommendedLessonTimesSub}</p>
-                  <p className="mt-1 text-xs font-semibold text-muted-foreground">{copy.labels.lessonPreferenceHelp}</p>
+                  {copy.labels.lessonPreferenceHelp ? <p className="mt-1 text-xs font-semibold text-muted-foreground">{copy.labels.lessonPreferenceHelp}</p> : null}
                 </div>
               </div>
               {lessonTimes.length > 0 ? (
@@ -412,8 +412,7 @@ export function IntakeWizard({ action, copy, initialProgramSlug, language, progr
                       </p>
                       <p className="mt-2 text-sm font-semibold">{item.slot.groupName}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{item.slot.stageName}{item.slot.locationName ? ` - ${item.slot.locationName}` : ""}</p>
-                      <p className="mt-3 text-xs font-bold text-primary">{selectedLessonPreferences.includes(item.slot.groupId) ? copy.labels.chooseLessonPreferences : copy.labels.availableSpots}</p>
-                      <p className="mt-3 text-xs text-muted-foreground">{copy.labels.whyThisTime}: {item.reasons.join(" ")}</p>
+                      {selectedLessonPreferences.includes(item.slot.groupId) ? <p className="mt-3 text-xs font-bold text-primary">{copy.labels.chooseLessonPreferences}</p> : null}
                     </label>
                   ))}
                 </div>
@@ -764,8 +763,9 @@ function matchesStageCondition(condition: StageRecommendationCondition, answers:
 function rankLessonTimes(input: { program: PublicProgram; recommendedStageId: string | null; values: Record<string, FormValue> }) {
   const preferredDays = arrayValue(input.values.preferred_days);
   const preferredTimes = arrayValue(input.values.preferred_time_windows);
+  const candidateSlots = input.recommendedStageId ? input.program.lessonTimeSuggestions.filter((slot) => slot.stageId === input.recommendedStageId) : input.program.lessonTimeSuggestions;
 
-  return input.program.lessonTimeSuggestions
+  return candidateSlots
     .map((slot) => {
       const weekday = weekdayValue(slot.weekday);
       const stageMatch = input.recommendedStageId ? slot.stageId === input.recommendedStageId : false;
