@@ -14,7 +14,7 @@ import {
 import type { AdminDomainData, AdminDomainSnapshot, EnrollmentRow, GroupMembershipRow, ParticipantGuardianRow, ParticipantRow, TenantAccountInvitationRow } from "@/lib/domain/admin-domain-read-model";
 import type { AdminPaymentsSnapshot } from "@/lib/payments/admin-payments-read-model";
 import type { PlacementWorkflowSnapshot } from "@/lib/placement/admin-placement-read-model";
-import { refreshIntakeDuplicateMatchesAction } from "@/lib/placement/admin-placement-actions";
+import { refreshIntakeDuplicateMatchesAction, updateIntakeContactDetailsAction } from "@/lib/placement/admin-placement-actions";
 
 type DetailProps = {
   id: string;
@@ -477,10 +477,25 @@ export function IntakeDetailPage({ id, placement }: { id: string; placement: Pla
         items={[
           ["Ouder", intake.parent_name],
           ["E-mail", intake.parent_email],
+          ["Telefoon", intake.parent_phone ?? "-"],
           ["Type", intake.intake_type],
           ["Voorkeuren", [...intake.preferred_days, ...intake.preferred_time_windows].join(", ") || "-"]
         ]}
       />
+      <RelationshipCard title="Contactgegevens bewerken">
+        <form action={updateIntakeContactDetailsAction} className="grid gap-4">
+          <input name="intake_submission_id" type="hidden" value={intake.id} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <TextField defaultValue={intake.participant_name} label="Leerlingnaam" name="participant_name" required />
+            <TextField defaultValue={intake.participant_birthdate ?? ""} label="Geboortedatum" name="participant_birthdate" type="date" />
+            <TextField defaultValue={intake.parent_name} label="Ouder/verzorger" name="parent_name" required />
+            <TextField defaultValue={intake.parent_email} label="E-mail ouder" name="parent_email" required type="email" />
+            <TextField defaultValue={intake.parent_phone ?? ""} label="Telefoon ouder" name="parent_phone" />
+          </div>
+          <TextAreaField defaultValue={intake.notes ?? ""} label="Interne notitie" name="notes" />
+          <SubmitButton>Gegevens opslaan</SubmitButton>
+        </form>
+      </RelationshipCard>
       <RelationshipCard title="Smart intake advies">
         <div className="rounded-2xl border border-border bg-muted/35 p-4">
           <div className="flex flex-wrap items-start justify-between gap-3">
@@ -665,6 +680,15 @@ function TextField({ defaultValue, label, name, required, type = "text" }: { def
     <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
       <span>{label}</span>
       <input className={fieldClassName} defaultValue={defaultValue ?? ""} name={name} required={required} type={type} />
+    </label>
+  );
+}
+
+function TextAreaField({ defaultValue, label, name }: { defaultValue?: string | null; label: string; name: string }) {
+  return (
+    <label className="grid gap-1 text-xs font-semibold text-muted-foreground">
+      <span>{label}</span>
+      <textarea className={`${fieldClassName} min-h-24 py-3`} defaultValue={defaultValue ?? ""} name={name} />
     </label>
   );
 }

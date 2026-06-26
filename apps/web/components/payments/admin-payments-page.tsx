@@ -749,7 +749,7 @@ function InvoiceCard({ invoice, lookups }: { invoice: InvoiceRow; lookups: Looku
             {invoice.invoice_number} - {invoice.title}
           </Link>
           <p className="text-sm text-muted-foreground">
-            {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {plan?.name ?? "geen abonnement"}
+            <ParticipantDetailLink participantId={invoice.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink> - {program?.name ?? "Programma"} - {plan?.name ?? "geen abonnement"}
           </p>
         </div>
         <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "overdue" ? "danger" : invoice.status === "partially_paid" ? "warning" : "info"}>{invoice.status}</StatusPill>
@@ -866,7 +866,9 @@ function PaymentRecordRowView({ payment, lookups }: { payment: PaymentRecordRow;
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{formatMoney(payment.amount_cents, payment.currency)}</p>
-          <p className="text-sm text-muted-foreground">{participant?.display_name ?? "Leerling"} - {payment.payment_method} - {payment.provider}</p>
+          <p className="text-sm text-muted-foreground">
+            <ParticipantDetailLink participantId={payment.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink> - {payment.payment_method} - {payment.provider}
+          </p>
           {payment.note ? <p className="mt-1 text-sm text-muted-foreground">{payment.note}</p> : null}
         </div>
         <StatusPill tone={payment.status === "recorded" || payment.status === "paid" ? "success" : payment.status === "failed" ? "danger" : "warning"}>{payment.status}</StatusPill>
@@ -884,7 +886,9 @@ function RefundRowView({ refund, lookups }: { refund: PaymentRefundRow; lookups:
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{formatMoney(refund.amount_cents, refund.currency)} refund</p>
-          <p className="text-sm text-muted-foreground">{participant?.display_name ?? "Leerling"} - {refund.provider}</p>
+          <p className="text-sm text-muted-foreground">
+            <ParticipantDetailLink participantId={refund.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink> - {refund.provider}
+          </p>
           {refund.reason ? <p className="mt-1 text-sm text-muted-foreground">{refund.reason}</p> : null}
         </div>
         <StatusPill tone={refund.status === "recorded" || refund.status === "processed" ? "success" : refund.status === "failed" ? "danger" : "warning"}>{refund.status}</StatusPill>
@@ -1005,6 +1009,14 @@ function InfoTile({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
+  );
+}
+
+function ParticipantDetailLink({ children, participantId }: { children: ReactNode; participantId: string }) {
+  return (
+    <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/leerlingen/${participantId}`}>
+      {children}
+    </Link>
   );
 }
 

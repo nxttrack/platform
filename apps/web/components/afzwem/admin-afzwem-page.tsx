@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { CalendarDays, FileCheck2, GraduationCap, Radar } from "lucide-react";
+import Link from "next/link";
 
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -242,7 +243,9 @@ function AfzwemRadarCard({
       <div className="min-w-0">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-lg font-bold">{participant?.display_name ?? "Leerling"}</p>
+            <p className="text-lg font-bold">
+              <ParticipantDetailLink participantId={radarRow.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink>
+            </p>
             <p className="text-sm text-muted-foreground">
               {program?.name ?? "Programma"} - {stage?.name ?? "Niveau onbekend"} - laatst berekend {formatDateTime(radarRow.last_evaluated_at)}
             </p>
@@ -464,7 +467,9 @@ function AfzwemParticipantRow({ eventParticipant, lookups }: { eventParticipant:
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">{participant?.display_name ?? "Leerling"}</p>
+          <p className="font-semibold">
+            <ParticipantDetailLink participantId={eventParticipant.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink>
+          </p>
           <p className="text-sm text-muted-foreground">{stage?.name ?? "Niveau onbekend"} - {eventParticipant.note ?? "Geen notitie"}</p>
         </div>
         <StatusPill tone={eventParticipant.status === "confirmed" || eventParticipant.status === "attended" ? "success" : eventParticipant.status === "declined" || eventParticipant.status === "no_show" ? "danger" : "warning"}>{eventParticipant.status}</StatusPill>
@@ -503,7 +508,9 @@ function ResultRow({ result, lookups }: { result: AfzwemResultRow; lookups: Look
     <div className="rounded-2xl border border-border bg-muted/35 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-semibold">{participant?.display_name ?? "Leerling"}</p>
+          <p className="font-semibold">
+            <ParticipantDetailLink participantId={result.participant_id}>{participant?.display_name ?? "Leerling"}</ParticipantDetailLink>
+          </p>
           <p className="text-sm text-muted-foreground">{event?.title ?? "Afzwemmoment"} - {formatDateTime(result.registered_at)}</p>
           {result.note ? <p className="mt-2 text-sm text-muted-foreground">{result.note}</p> : null}
         </div>
@@ -532,7 +539,9 @@ function CertificateVaultCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="font-semibold">{certificate.title}</p>
-          <p className="text-sm text-muted-foreground">{lookups.participants.get(certificate.participant_id)?.display_name ?? "Leerling"} - {certificate.certificate_number ?? "geen nummer"}</p>
+          <p className="text-sm text-muted-foreground">
+            <ParticipantDetailLink participantId={certificate.participant_id}>{lookups.participants.get(certificate.participant_id)?.display_name ?? "Leerling"}</ParticipantDetailLink> - {certificate.certificate_number ?? "geen nummer"}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <StatusPill tone={certificate.status === "revoked" ? "danger" : certificate.vault_status === "available" ? "success" : certificate.vault_status === "archived" ? "neutral" : "warning"}>{certificate.status}</StatusPill>
@@ -664,6 +673,14 @@ function InfoTile({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-bold">{value}</p>
     </div>
+  );
+}
+
+function ParticipantDetailLink({ children, participantId }: { children: ReactNode; participantId: string }) {
+  return (
+    <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/leerlingen/${participantId}`}>
+      {children}
+    </Link>
   );
 }
 

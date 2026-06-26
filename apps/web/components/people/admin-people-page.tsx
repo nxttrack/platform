@@ -367,7 +367,9 @@ function GuardianList({ guardians, invitations, lookups }: { guardians: Particip
           <div key={guardian.id} className="rounded-2xl border border-border bg-card p-3">
             <div className="flex flex-wrap items-start justify-between gap-2">
               <div>
-                <p className="font-semibold">{guardian.display_name ?? profile?.full_name ?? guardian.email ?? "Ouder/verzorger"}</p>
+                <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/guardians/${guardian.id}`}>
+                  {guardian.display_name ?? profile?.full_name ?? guardian.email ?? "Ouder/verzorger"}
+                </Link>
                 <p className="text-xs text-muted-foreground">{guardian.email ?? "Geen e-mail override"} - {guardian.relationship}</p>
               </div>
               <StatusPill tone={statusTone(guardian.status)}>{guardian.status}</StatusPill>

@@ -804,7 +804,7 @@ export function AdminEnrollmentsPage({ snapshot }: DomainPageProps) {
           rows={snapshot.data.enrollments}
           rowKey={(enrollment) => enrollment.id}
           summary={(enrollment) => [
-            <StrongText key="learner">{lookups.participants.get(enrollment.participant_id)?.display_name ?? "Onbekende participant"}</StrongText>,
+            <ParticipantDetailLink key="learner" participantId={enrollment.participant_id}>{lookups.participants.get(enrollment.participant_id)?.display_name ?? "Onbekende participant"}</ParticipantDetailLink>,
             <div key="program">
               <StrongText>{lookups.programs.get(enrollment.program_id)?.name ?? "Onbekend"}</StrongText>
               <p className="text-xs text-muted-foreground">{nullableText(lookups.stages.get(enrollment.current_stage_id ?? "")?.name)} · {nullableText(lookups.subscriptionPlans.get(enrollment.subscription_plan_id ?? "")?.name)}</p>
@@ -1510,6 +1510,10 @@ function DetailLink({ children, href }: { children: ReactNode; href: string }) {
       {children}
     </Link>
   );
+}
+
+function ParticipantDetailLink({ children, participantId }: { children: ReactNode; participantId: string }) {
+  return <DetailLink href={`/admin/leerlingen/${participantId}`}>{children}</DetailLink>;
 }
 
 function ExportLink({ children, href }: { children: ReactNode; href: string }) {

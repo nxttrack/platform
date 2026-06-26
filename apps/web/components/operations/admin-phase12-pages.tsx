@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BarChart3, CalendarDays, ClipboardList, Download, FileText, Filter, Inbox, Mail, Megaphone, MessageSquare, Newspaper, Send, Settings, ShieldCheck, Users } from "lucide-react";
+import Link from "next/link";
 
 import { AdminTabs } from "@/components/admin/admin-tabs";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -857,7 +858,7 @@ function AdminHelpdeskTicketCard({ data, lookups, ticket }: { data: AdminPhase12
         <div>
           <p className="text-lg font-bold">{ticket.subject}</p>
           <p className="text-sm text-muted-foreground">
-            {guardian?.display_name ?? guardian?.email ?? "Ouder onbekend"} - {helpdeskCategoryLabel(ticket.category)} - {formatDateTime(ticket.updated_at)}
+            {guardian ? <GuardianDetailLink guardianId={guardian.id}>{guardian.display_name ?? guardian.email ?? "Ouder/verzorger"}</GuardianDetailLink> : "Ouder onbekend"} - {helpdeskCategoryLabel(ticket.category)} - {formatDateTime(ticket.updated_at)}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -940,7 +941,7 @@ function MessageOutboxCard({ lookups, message, showResetRetry }: { lookups: Phas
         <div>
           <p className="font-semibold">{message.subject ?? template?.name ?? "Bericht zonder onderwerp"}</p>
           <p className="text-sm text-muted-foreground">
-            {profile?.full_name ?? message.recipient_email ?? "ontvanger onbekend"} - {participant?.display_name ?? "geen leerling"} - {message.provider}
+            {profile?.full_name ?? message.recipient_email ?? "ontvanger onbekend"} - {participant ? <ParticipantDetailLink participantId={participant.id}>{participant.display_name}</ParticipantDetailLink> : "geen leerling"} - {message.provider}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -1016,7 +1017,7 @@ function TaskCard({ data, lookups, task }: { data: AdminPhase12Data; lookups: Ph
           <div>
             <p className="font-semibold">{task.title}</p>
             <p className="text-sm text-muted-foreground">
-              {task.task_type} - {participant?.display_name ?? "geen leerling"} - {profile?.full_name ?? "niet toegewezen"}
+              {task.task_type} - {participant ? <ParticipantDetailLink participantId={participant.id}>{participant.display_name}</ParticipantDetailLink> : "geen leerling"} - {profile?.full_name ?? "niet toegewezen"}
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -1067,7 +1068,7 @@ function DocumentRecordCard({ data, document, lookups }: { data: AdminPhase12Dat
           <div>
             <p className="font-semibold">{document.title}</p>
             <p className="text-sm text-muted-foreground">
-              {document.document_type} - {document.visibility} - {participant?.display_name ?? "tenant breed"}
+              {document.document_type} - {document.visibility} - {participant ? <ParticipantDetailLink participantId={participant.id}>{participant.display_name}</ParticipantDetailLink> : "tenant breed"}
             </p>
           </div>
           <StatusPill tone={statusTone(document.status)}>{document.status}</StatusPill>
@@ -1442,6 +1443,22 @@ function InfoTile({ label, value }: { label: string; value: string }) {
       <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 truncate text-sm font-bold">{value}</p>
     </div>
+  );
+}
+
+function ParticipantDetailLink({ children, participantId }: { children: ReactNode; participantId: string }) {
+  return (
+    <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/leerlingen/${participantId}`}>
+      {children}
+    </Link>
+  );
+}
+
+function GuardianDetailLink({ children, guardianId }: { children: ReactNode; guardianId: string }) {
+  return (
+    <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/guardians/${guardianId}`}>
+      {children}
+    </Link>
   );
 }
 

@@ -142,6 +142,45 @@ export async function refreshIntakeDuplicateMatchesAction(formData: FormData) {
   revalidatePlacementWorkflow();
 }
 
+export async function updateIntakeContactDetailsAction(formData: FormData) {
+  const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
+  const intakeId = requiredString(formData, "intake_submission_id");
+  const parentName = requiredString(formData, "parent_name");
+  const parentEmail = requiredString(formData, "parent_email").toLowerCase();
+  const participantName = requiredString(formData, "participant_name");
+  const participantBirthdate = optionalString(formData, "participant_birthdate");
+  const parentPhone = optionalString(formData, "parent_phone");
+  const notes = optionalString(formData, "notes");
+
+  await throwOnError(
+    supabase
+      .from("intake_submissions")
+      .update({
+        parent_name: parentName,
+        parent_email: parentEmail,
+        parent_phone: parentPhone,
+        participant_name: participantName,
+        participant_birthdate: participantBirthdate,
+        notes
+      })
+      .eq("id", intakeId)
+      .eq("tenant_id", tenantId)
+  );
+
+  await throwOnError(
+    supabase.from("intake_submission_events").insert({
+      tenant_id: tenantId,
+      submission_id: intakeId,
+      status: "reviewing",
+      note: `Contact- en intakegegevens bijgewerkt door admin. Ouder e-mail: ${parentEmail}`,
+      created_by: actorProfileId
+    })
+  );
+
+  revalidatePlacementWorkflow();
+  revalidatePath(`/admin/intake/${intakeId}`);
+}
+
 export async function createPlacementSuggestionAction(formData: FormData) {
   const { supabase, tenantId, actorProfileId } = await requireTenantWriter();
   const waitlistEntryId = requiredString(formData, "waitlist_entry_id");

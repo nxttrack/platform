@@ -427,6 +427,7 @@ function WaitlistCompactRow({ data, entry, lookups, rank }: { data: PlacementWor
   const program = lookups.programs.get(entry.program_id)?.name ?? "Onbekend programma";
   const stage = nullableText(lookups.stages.get(entry.recommended_stage_id ?? "")?.name);
   const lastEvent = events[0] ?? null;
+  const intakeHref = entry.intake_submission_id ? `/admin/intake/${entry.intake_submission_id}` : null;
 
   return (
     <details className="group rounded-2xl border border-border bg-card shadow-sm transition open:border-primary/25 open:bg-white">
@@ -464,7 +465,14 @@ function WaitlistCompactRow({ data, entry, lookups, rank }: { data: PlacementWor
 
       <div className="grid gap-4 border-t border-border bg-muted/20 p-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,1.2fr)]">
         <div className="rounded-2xl border border-border bg-card p-3">
-          <h3 className="mb-3 text-sm font-bold">Score en onderbouwing</h3>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-bold">Score en onderbouwing</h3>
+            {intakeHref ? (
+              <Link className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-muted" href={intakeHref}>
+                Intakegegevens beheren
+              </Link>
+            ) : null}
+          </div>
           <WaitlistScorePanel decision={decision} entry={entry} />
         </div>
         <div className="rounded-2xl border border-border bg-card p-3">
@@ -1522,7 +1530,7 @@ function intakeName(lookups: LookupMaps, entry: WaitlistEntryRow) {
 
   return intake ? (
     <div>
-      <StrongText>{intake.participant_name}</StrongText>
+      <IntakeDetailLink intakeId={intake.id}>{intake.participant_name}</IntakeDetailLink>
       <p className="text-xs text-muted-foreground">{intake.parent_name}</p>
     </div>
   ) : (
@@ -1536,7 +1544,7 @@ function suggestionName(lookups: LookupMaps, suggestion: PlacementSuggestionRow)
 
   return intake ? (
     <div>
-      <StrongText>{intake.participant_name}</StrongText>
+      <IntakeDetailLink intakeId={intake.id}>{intake.participant_name}</IntakeDetailLink>
       <p className="text-xs text-muted-foreground">{intake.parent_email}</p>
     </div>
   ) : (
@@ -1549,7 +1557,7 @@ function offerName(lookups: LookupMaps, offer: SlotOfferRow) {
 
   return intake ? (
     <div>
-      <StrongText>{intake.participant_name}</StrongText>
+      <IntakeDetailLink intakeId={intake.id}>{intake.participant_name}</IntakeDetailLink>
       <p className="text-xs text-muted-foreground">{intake.parent_email}</p>
     </div>
   ) : (
@@ -1696,6 +1704,14 @@ function nullableText(value: string | null | undefined) {
 
 function StrongText({ children }: { children: ReactNode }) {
   return <span className="font-semibold text-foreground">{children}</span>;
+}
+
+function IntakeDetailLink({ children, intakeId }: { children: ReactNode; intakeId: string }) {
+  return (
+    <Link className="font-semibold text-primary underline-offset-4 hover:underline" href={`/admin/intake/${intakeId}`}>
+      {children}
+    </Link>
+  );
 }
 
 function optionFromName(row: { id: string; name: string }) {
