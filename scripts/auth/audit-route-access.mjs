@@ -6,8 +6,8 @@ const root = process.cwd();
 const shellContracts = [
   {
     shell: "parent",
-    prefix: "/parent",
-    routePath: "apps/web/app/(parent)/parent",
+    prefix: "/portaal",
+    routePath: "apps/web/app/(portaal)/portaal",
     metadataFiles: ["layout.tsx"]
   },
   {
@@ -60,6 +60,19 @@ for (const contract of shellContracts) {
 
   if (!metadataFile) {
     errors.push(`Private shell "${contract.shell}" must export privateRouteMetadata from one of: ${contract.metadataFiles.join(", ")}`);
+  }
+
+  const layoutPath = join(absoluteRoutePath, "layout.tsx");
+
+  if (!existsSync(layoutPath)) {
+    errors.push(`Private shell "${contract.shell}" must use a guarded layout.tsx.`);
+    continue;
+  }
+
+  const layoutSource = readFileSync(layoutPath, "utf8");
+
+  if (!layoutSource.includes("requirePrivateShellContext")) {
+    errors.push(`Private shell "${contract.shell}" layout must call requirePrivateShellContext().`);
   }
 }
 

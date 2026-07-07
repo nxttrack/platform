@@ -29,11 +29,11 @@ export const privateRouteMetadata: Metadata = {
 export const privateShellAccess = {
   parent: {
     shell: "parent",
-    pathPrefix: "/parent",
+    pathPrefix: "/portaal",
     tenantRequired: true,
     platformOnly: false,
     allowedRoles: ["parent", "athlete"],
-    description: "Parent and athlete portal context scoped to one tenant membership."
+    description: "Parent-mediated athlete portal context scoped to one tenant membership."
   },
   instructor: {
     shell: "instructor",

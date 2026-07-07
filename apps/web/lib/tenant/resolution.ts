@@ -4,6 +4,18 @@ export type TenantHostResolution =
       hostname: string;
     }
   | {
+      kind: "platform_marketing";
+      hostname: string;
+    }
+  | {
+      kind: "platform_admin";
+      hostname: string;
+    }
+  | {
+      kind: "staging";
+      hostname: string;
+    }
+  | {
       kind: "tenant_subdomain";
       hostname: string;
       slug: string;
@@ -22,11 +34,17 @@ export type TenantHostResolution =
 export type TenantHostResolutionOptions = {
   tenantBaseDomains?: readonly string[];
   platformHostnames?: readonly string[];
+  platformMarketingHostnames?: readonly string[];
+  platformAdminHostnames?: readonly string[];
+  stagingHostnames?: readonly string[];
   reservedSubdomains?: readonly string[];
 };
 
-const defaultTenantBaseDomains = ["localhost"] as const;
+const defaultTenantBaseDomains = ["nxttrack.nl", "localhost"] as const;
 const defaultPlatformHostnames = ["localhost", "127.0.0.1", "::1"] as const;
+const defaultPlatformMarketingHostnames = ["www.nxttrack.nl", "nxttrack.nl"] as const;
+const defaultPlatformAdminHostnames = ["admin.nxttrack.nl"] as const;
+const defaultStagingHostnames = ["staging.nxttrack.nl"] as const;
 const defaultReservedSubdomains = ["admin", "api", "app", "platform", "staging", "www"] as const;
 
 export function resolveTenantHost(host: string, options: TenantHostResolutionOptions = {}): TenantHostResolution {
@@ -37,6 +55,21 @@ export function resolveTenantHost(host: string, options: TenantHostResolutionOpt
   }
 
   const platformHostnames = normalizeList(options.platformHostnames ?? defaultPlatformHostnames);
+  const platformMarketingHostnames = normalizeList(options.platformMarketingHostnames ?? defaultPlatformMarketingHostnames);
+  const platformAdminHostnames = normalizeList(options.platformAdminHostnames ?? defaultPlatformAdminHostnames);
+  const stagingHostnames = normalizeList(options.stagingHostnames ?? defaultStagingHostnames);
+
+  if (platformMarketingHostnames.includes(hostname)) {
+    return { kind: "platform_marketing", hostname };
+  }
+
+  if (platformAdminHostnames.includes(hostname)) {
+    return { kind: "platform_admin", hostname };
+  }
+
+  if (stagingHostnames.includes(hostname)) {
+    return { kind: "staging", hostname };
+  }
 
   if (platformHostnames.includes(hostname) || isIpAddress(hostname)) {
     return { kind: "platform", hostname };

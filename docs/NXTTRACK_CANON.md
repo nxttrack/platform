@@ -1,8 +1,8 @@
 # NXTTRACK Canon
 
-Last updated: 2026-06-23
+Last updated: 2026-07-07
 
-Status: definitive planning draft. Product implementation starts only after product owner approval.
+Status: definitive product canon. Phase 3 through Phase 11 MVP implementation is represented in code, with staging migration/RLS validation still required before production readiness.
 
 ## 0. Sources And Scope
 
@@ -150,7 +150,7 @@ NXTTRACK has these platform layers:
 Lovable confirms these route groups through:
 
 - Public tenant routes: `/`, `/programmas`, `/intake`, `/nieuws`, `/agenda`, `/login`.
-- Parent routes: `/parent/*`.
+- Lovable parent routes: `/parent/*`; production portal routes: `/portaal/*`.
 - Instructor routes: `/instructor/*`.
 - Admin routes: `/admin/*`.
 - NXTTRACK marketing routes: `/nxttrack/*`.
@@ -185,9 +185,9 @@ Production meaning:
 - News/events.
 - Tenant login.
 
-## 9. Parent / Athlete UserShell
+## 9. Portaal / Parent-Mediated Athlete UserShell
 
-The parent/athlete shell gives families one clear place for:
+The `/portaal` shell gives families one clear place for parent-mediated athlete access:
 
 - Dashboard.
 - Child selector.
@@ -208,18 +208,20 @@ The parent/athlete shell gives families one clear place for:
 Lovable route group:
 
 ```txt
-/parent
-/parent/lessen
-/parent/voortgang
-/parent/diplomas
-/parent/badges
-/parent/afzwemmen
-/parent/berichten
-/parent/documenten
-/parent/profiel
+/portaal
+/portaal/lessen
+/portaal/voortgang
+/portaal/diplomas
+/portaal/badges
+/portaal/afzwemmen
+/portaal/berichten
+/portaal/documenten
+/portaal/profiel
 ```
 
 The shell must be calm, supportive, mobile-friendly, and positive.
+
+MVP decision: child/athlete access is parent-mediated. A separate child login is later scope.
 
 ## 10. Child Portal
 

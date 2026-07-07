@@ -33,15 +33,36 @@ jobs:
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       PLATFORM_ADMIN_URL: ${{ vars.PLATFORM_ADMIN_URL }}
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
+      PLATFORM_HOSTNAMES: ${{ vars.PLATFORM_HOSTNAMES }}
+      PLATFORM_MARKETING_HOSTNAMES: ${{ vars.PLATFORM_MARKETING_HOSTNAMES }}
+      PLATFORM_ADMIN_HOSTNAMES: ${{ vars.PLATFORM_ADMIN_HOSTNAMES }}
+      STAGING_HOSTNAMES: ${{ vars.STAGING_HOSTNAMES }}
+      TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
+      RESERVED_TENANT_SUBDOMAINS: ${{ vars.RESERVED_TENANT_SUBDOMAINS }}
       BASE_PATH: ${{ vars.BASE_PATH }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME }}
 
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_SESSION: ${{ secrets.JWT_SESSION }}
+      AUTH_CODE_PEPPER: ${{ secrets.AUTH_CODE_PEPPER }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
+      DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
+      BOOTSTRAP_PLATFORM_OWNER: ${{ vars.BOOTSTRAP_PLATFORM_OWNER }}
+      BOOTSTRAP_PLATFORM_OWNER_EMAIL: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_EMAIL || 'admin@nxttrack.nl' }}
+      BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD: ${{ secrets.BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD }}
+      BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}
+      RUN_PLAYWRIGHT_SMOKE: ${{ vars.RUN_PLAYWRIGHT_SMOKE }}
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      SMTP_FROM: ${{ vars.SMTP_FROM }}
+      SMTP_FROM_EMAIL: ${{ vars.SMTP_FROM_EMAIL }}
+      SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
 
     steps:
       - name: Checkout
@@ -56,6 +77,9 @@ jobs:
           echo "Service: $SERVICE_NAME"
           echo "App URL: $APP_URL"
           echo "Tenant suffix: $TENANT_DOMAIN_SUFFIX"
+          echo "Tenant base domains: ${TENANT_BASE_DOMAINS:-default}"
+          echo "Run DB migrations: ${RUN_DB_MIGRATIONS:-false}"
+          echo "Bootstrap platform owner: ${BOOTSTRAP_PLATFORM_OWNER:-false}"
 
       - name: Prepare release directory
         run: |
@@ -81,6 +105,10 @@ jobs:
         run: |
           set -euo pipefail
 
+          SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+          SUPABASE_SERVER_SECRET="${SUPABASE_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
+          EFFECTIVE_SESSION_SECRET="${SESSION_SECRET:-$JWT_SESSION}"
+
           {
             printf 'APP_ENV=%s\n' "$APP_ENV"
             printf 'NODE_ENV=%s\n' "$NODE_ENV"
@@ -89,13 +117,31 @@ jobs:
             printf 'NEXT_PUBLIC_APP_URL=%s\n' "$NEXT_PUBLIC_APP_URL"
             printf 'PLATFORM_ADMIN_URL=%s\n' "$PLATFORM_ADMIN_URL"
             printf 'TENANT_DOMAIN_SUFFIX=%s\n' "$TENANT_DOMAIN_SUFFIX"
+            printf 'PLATFORM_HOSTNAMES=%s\n' "$PLATFORM_HOSTNAMES"
+            printf 'PLATFORM_MARKETING_HOSTNAMES=%s\n' "$PLATFORM_MARKETING_HOSTNAMES"
+            printf 'PLATFORM_ADMIN_HOSTNAMES=%s\n' "$PLATFORM_ADMIN_HOSTNAMES"
+            printf 'STAGING_HOSTNAMES=%s\n' "$STAGING_HOSTNAMES"
+            printf 'TENANT_BASE_DOMAINS=%s\n' "$TENANT_BASE_DOMAINS"
+            printf 'RESERVED_TENANT_SUBDOMAINS=%s\n' "$RESERVED_TENANT_SUBDOMAINS"
             printf 'BASE_PATH=%s\n' "$BASE_PATH"
             printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
-            printf 'SESSION_SECRET=%s\n' "$SESSION_SECRET"
+            printf 'SESSION_SECRET=%s\n' "$EFFECTIVE_SESSION_SECRET"
+            printf 'JWT_SESSION=%s\n' "$JWT_SESSION"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
+            printf 'AUTH_CODE_PEPPER=%s\n' "$AUTH_CODE_PEPPER"
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' "$NEXT_PUBLIC_SUPABASE_URL"
+            printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_PUBLIC_KEY"
             printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+            printf 'SUPABASE_SECRET_KEY=%s\n' "$SUPABASE_SERVER_SECRET"
             printf 'SUPABASE_SERVICE_ROLE_KEY=%s\n' "$SUPABASE_SERVICE_ROLE_KEY"
+            printf 'RUN_DB_MIGRATIONS=%s\n' "$RUN_DB_MIGRATIONS"
+            printf 'DB_MIGRATE_DRY_RUN=%s\n' "$DB_MIGRATE_DRY_RUN"
+            printf 'BOOTSTRAP_PLATFORM_OWNER_EMAIL=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_EMAIL"
+            printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
+            printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
+            printf 'SMTP_FROM=%s\n' "$SMTP_FROM"
+            printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
+            printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
           } > "$BASE_DIR/shared/.env"
 
           chmod 640 "$BASE_DIR/shared/.env"
@@ -110,6 +156,16 @@ jobs:
           set -euo pipefail
           pnpm install --frozen-lockfile
 
+      - name: Run hardening audits
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run typecheck
+          pnpm run auth:audit
+          pnpm run db:audit
+          pnpm run db:rls-audit
+          pnpm run staging:gate
+
       - name: Build
         working-directory: ${{ env.RELEASE }}
         run: |
@@ -121,6 +177,13 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run db:migrate
+
+      - name: Bootstrap platform owner
+        if: env.BOOTSTRAP_PLATFORM_OWNER == 'true'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run auth:bootstrap-platform-owner
 
       - name: Activate release
         run: |
@@ -134,6 +197,20 @@ jobs:
 
           sudo systemctl restart "$SERVICE_NAME"
           sudo systemctl reload caddy
+
+      - name: Health endpoint smoke
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run staging:health
+
+      - name: Playwright staging smoke
+        if: env.RUN_PLAYWRIGHT_SMOKE == 'true'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm --filter @nxttrack/web exec playwright install chromium
+          PLAYWRIGHT_BASE_URL="$APP_URL" pnpm run test:e2e
 
       - name: Cleanup old releases
         run: |

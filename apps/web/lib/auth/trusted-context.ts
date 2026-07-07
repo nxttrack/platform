@@ -9,6 +9,12 @@ export type AuthenticatedUserContext = {
   avatarUrl: string | null;
 };
 
+export type UserSecurityContext = {
+  mustChangePassword: boolean;
+  passwordChangedAt: string | null;
+  lastInvitedAt: string | null;
+};
+
 export type TenantMembershipContext = {
   tenantId: string;
   slug: string;
@@ -28,6 +34,7 @@ export type AnonymousTrustedAuthContext = {
   platform: null;
   tenants: readonly [];
   activeTenant: null;
+  security: null;
   roles: readonly [];
 };
 
@@ -38,6 +45,7 @@ export type AuthenticatedTrustedAuthContext = {
   platform: PlatformMembershipContext | null;
   tenants: readonly TenantMembershipContext[];
   activeTenant: TenantMembershipContext | null;
+  security: UserSecurityContext;
   roles: readonly AppRole[];
 };
 
@@ -47,6 +55,7 @@ export type TrustedAuthContextInput = {
   user: AuthenticatedUserContext;
   platformRoles?: readonly PlatformRole[];
   tenantMemberships?: readonly TenantMembershipContext[];
+  security?: Partial<UserSecurityContext> | null;
   activeTenantId?: string | null;
   activeTenantSlug?: string | null;
   checkedAt?: string;
@@ -60,6 +69,7 @@ export function createAnonymousAuthContext(checkedAt = new Date().toISOString())
     platform: null,
     tenants: [],
     activeTenant: null,
+    security: null,
     roles: []
   };
 }
@@ -69,6 +79,11 @@ export function createTrustedAuthContext(input: TrustedAuthContextInput): Authen
   const tenantMemberships = dedupeTenantMemberships(input.tenantMemberships ?? []);
   const activeTenant = resolveActiveTenant(tenantMemberships, input.activeTenantId ?? null, input.activeTenantSlug ?? null);
   const tenantRoles = tenantMemberships.flatMap((membership) => membership.roles);
+  const security: UserSecurityContext = {
+    mustChangePassword: input.security?.mustChangePassword ?? false,
+    passwordChangedAt: input.security?.passwordChangedAt ?? null,
+    lastInvitedAt: input.security?.lastInvitedAt ?? null
+  };
 
   return {
     status: "authenticated",
@@ -77,6 +92,7 @@ export function createTrustedAuthContext(input: TrustedAuthContextInput): Authen
     platform: platformRoles.length > 0 ? { roles: platformRoles } : null,
     tenants: tenantMemberships,
     activeTenant,
+    security,
     roles: uniqueRoles([...platformRoles, ...tenantRoles])
   };
 }

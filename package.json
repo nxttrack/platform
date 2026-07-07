@@ -10,8 +10,15 @@
     "lint": "pnpm --filter @nxttrack/web lint",
     "typecheck": "pnpm --filter @nxttrack/web typecheck",
     "auth:audit": "node scripts/auth/audit-route-access.mjs && node scripts/auth/audit-auth-boundary.mjs",
+    "auth:bootstrap-platform-owner": "node scripts/auth/bootstrap-platform-owner.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
-    "db:migrate": "node scripts/db/migrate.mjs"
+    "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
+    "db:migrate": "node scripts/db/migrate.mjs",
+    "staging:gate": "node scripts/staging/check-launch-gates.mjs",
+    "staging:health": "node scripts/staging/health-smoke.mjs",
+    "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
+    "hardening:local": "pnpm run typecheck && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run staging:gate",
+    "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
     "node": ">=20.19.0"

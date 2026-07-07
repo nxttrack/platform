@@ -59,7 +59,7 @@ apps/
     app/
       (marketing)/
       (tenant-public)/
-      (parent)/
+      (portaal)/
       (instructor)/
       (tenant-admin)/
       (platform-admin)/
@@ -107,8 +107,16 @@ APP_URL=<staging public URL>
 NEXT_PUBLIC_APP_URL=<staging public URL>
 PLATFORM_ADMIN_URL=<staging platform admin URL>
 TENANT_DOMAIN_SUFFIX=<staging tenant suffix>
+PLATFORM_HOSTNAMES=localhost,127.0.0.1,::1,staging.nxttrack.nl
+PLATFORM_MARKETING_HOSTNAMES=www.nxttrack.nl,nxttrack.nl
+PLATFORM_ADMIN_HOSTNAMES=admin.nxttrack.nl
+STAGING_HOSTNAMES=staging.nxttrack.nl
+TENANT_BASE_DOMAINS=nxttrack.nl,localhost
+RESERVED_TENANT_SUBDOMAINS=admin,api,app,platform,staging,www
 BASE_PATH=/
 SERVICE_NAME=nxttrack-staging
+RUN_DB_MIGRATIONS=false
+DB_MIGRATE_DRY_RUN=false
 ```
 
 Recommended staging defaults to confirm with infra owner:
@@ -116,8 +124,8 @@ Recommended staging defaults to confirm with infra owner:
 ```txt
 APP_URL=https://staging.nxttrack.nl
 NEXT_PUBLIC_APP_URL=https://staging.nxttrack.nl
-PLATFORM_ADMIN_URL=https://admin.staging.nxttrack.nl
-TENANT_DOMAIN_SUFFIX=staging.nxttrack.nl
+PLATFORM_ADMIN_URL=https://admin.nxttrack.nl
+TENANT_DOMAIN_SUFFIX=nxttrack.nl
 SERVICE_NAME=nxttrack-staging
 ```
 
@@ -132,7 +140,9 @@ DATABASE_URL
 SESSION_SECRET
 JWT_SECRET
 NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SECRET_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
@@ -236,16 +246,20 @@ staging.nxttrack.nl {
   reverse_proxy 127.0.0.1:<PORT>
 }
 
-admin.staging.nxttrack.nl {
+www.nxttrack.nl {
   reverse_proxy 127.0.0.1:<PORT>
 }
 
-*.staging.nxttrack.nl {
+admin.nxttrack.nl {
+  reverse_proxy 127.0.0.1:<PORT>
+}
+
+*.nxttrack.nl {
   reverse_proxy 127.0.0.1:<PORT>
 }
 ```
 
-Wildcard tenant routing requires DNS and Caddy certificate validation to be confirmed before use.
+Tenant routing uses `<slug>.nxttrack.nl`. Do not use `*.staging.nxttrack.nl` for tenants.
 
 ## Security Hardening
 
@@ -301,7 +315,7 @@ Rollback:
 
 ## Open Questions
 
-1. What exact staging domains should be used: `staging.nxttrack.nl`, `admin.staging.nxttrack.nl`, and wildcard tenant subdomains, or another naming scheme?
+1. Which VPS IP should receive `staging.nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl`, and tenant `<slug>.nxttrack.nl` traffic?
 2. Which Supabase project is staging?
 3. Should the self-hosted runner deploy only from protected `staging`, or also from manual dispatch on selected branches?
 4. Which Next.js deployment mode should be used: standalone output, custom server, or standard `next start`?

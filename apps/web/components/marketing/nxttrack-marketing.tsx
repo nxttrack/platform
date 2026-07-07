@@ -126,7 +126,7 @@ const footerCols = [
     title: "Demo omgevingen",
     links: [
       { href: "/", label: "Tenant marketing" },
-      { href: "/parent", label: "Ouder omgeving" },
+      { href: "/portaal", label: "Ouder omgeving" },
       { href: "/instructor", label: "Trainer omgeving" },
       { href: "/admin", label: "Backoffice" }
     ]
@@ -164,7 +164,7 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:h-18 md:px-8">
-        <Link href="/nxttrack" className="flex items-center">
+        <Link href="/nxttrack" className="flex items-center" aria-label="NXTTRACK homepage">
           <img src={logoPath} alt="NXTTRACK" className="h-7 w-auto" />
         </Link>
         <nav className="ml-6 hidden items-center gap-1 lg:flex">

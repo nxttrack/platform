@@ -38,6 +38,7 @@ export const config = {
 
 function createTenantAwareResponse(request: NextRequest, resolution: TenantHostResolution) {
   const requestHeaders = new Headers(request.headers);
+  const rewritePath = getHostRewritePath(request.nextUrl.pathname, resolution);
 
   requestHeaders.set("x-nxttrack-host-kind", resolution.kind);
   requestHeaders.set("x-nxttrack-hostname", resolution.hostname);
@@ -47,9 +48,36 @@ function createTenantAwareResponse(request: NextRequest, resolution: TenantHostR
     requestHeaders.set("x-nxttrack-tenant-base-domain", resolution.baseDomain);
   }
 
+  if (rewritePath) {
+    const rewriteUrl = request.nextUrl.clone();
+    rewriteUrl.pathname = rewritePath;
+
+    return NextResponse.rewrite(rewriteUrl, {
+      request: {
+        headers: requestHeaders
+      }
+    });
+  }
+
   return NextResponse.next({
     request: {
       headers: requestHeaders
     }
   });
+}
+
+function getHostRewritePath(pathname: string, resolution: TenantHostResolution): string | null {
+  if (resolution.kind === "platform_marketing") {
+    return pathname === "/" || isTenantShellPath(pathname) ? "/nxttrack" : null;
+  }
+
+  if (resolution.kind === "platform_admin" && (pathname === "/" || pathname === "/admin" || pathname.startsWith("/admin/"))) {
+    return "/platform";
+  }
+
+  return null;
+}
+
+function isTenantShellPath(pathname: string) {
+  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/portaal" || pathname.startsWith("/portaal/") || pathname === "/instructor" || pathname.startsWith("/instructor/");
 }

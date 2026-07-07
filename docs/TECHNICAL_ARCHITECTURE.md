@@ -62,7 +62,7 @@ apps/
     app/
       (marketing)/
       (tenant-public)/
-      (parent)/
+      (portaal)/
       (instructor)/
       (tenant-admin)/
       (platform-admin)/
@@ -73,7 +73,7 @@ apps/
       marketing/
       shell/
       ui/
-      parent/
+      portaal/
       instructor/
       admin/
       platform/
@@ -127,8 +127,8 @@ app/
     login/...
     nieuws/...
     programmas/...
-  (parent)/
-    parent/...
+  (portaal)/
+    portaal/...
   (instructor)/
     instructor/...
   (tenant-admin)/
@@ -141,14 +141,14 @@ app/
 
 Host resolution:
 
-- `nxttrack.nl` -> NXTTRACK marketing.
-- `www.nxttrack.nl` -> redirect or marketing.
-- `admin.nxttrack.nl` -> platform admin.
-- `{tenant}.nxttrack.nl` -> tenant public and role shells.
-- `{tenant}.nxttrack.nl/admin` -> tenant admin.
-- `staging.nxttrack.nl` -> staging marketing/app.
-- `admin.staging.nxttrack.nl` -> staging platform admin.
-- `*.staging.nxttrack.nl` -> staging tenant routing.
+- `www.nxttrack.nl` -> NXTTRACK marketing.
+- `nxttrack.nl` -> NXTTRACK marketing or redirect to `www.nxttrack.nl`.
+- `admin.nxttrack.nl` -> platform admin backoffice.
+- `<slug>.nxttrack.nl` -> tenant public website and tenant role shells.
+- `<slug>.nxttrack.nl/portaal` -> logged-in athletes/parents, parent-mediated in MVP.
+- `<slug>.nxttrack.nl/instructor` -> logged-in instructors.
+- `<slug>.nxttrack.nl/admin` -> tenant admin backoffice.
+- `staging.nxttrack.nl` -> staging environment only.
 - Custom domains -> tenant lookup after domain verification.
 
 Local development can keep `/t/[slug]` as a fallback if useful.
@@ -159,7 +159,7 @@ Required shells:
 
 - `MarketingShell` for NXTTRACK marketing.
 - `PublicTenantShell` for tenant public website.
-- `ParentShell` for guardian/family portal.
+- `PortaalShell` for guardian/family and parent-mediated athlete portal.
 - `ChildPortalSurface` inside parent shell for MVP.
 - `InstructorShell` for tablet-first lesson work.
 - `TenantAdminShell` for tenant operations.
@@ -169,7 +169,7 @@ Lovable shell sources:
 
 - Public tenant shell: `src/routes/_public.tsx`.
 - Shared app shell: `src/components/shell/AppShell.tsx`.
-- Parent shell: `src/routes/parent.tsx`.
+- Parent shell reference: Lovable `src/routes/parent.tsx`; production route is `/portaal`.
 - Instructor shell: `src/routes/instructor.tsx`.
 - Tenant admin shell: `src/routes/admin.tsx`.
 - Root shell: `src/routes/__root.tsx`.
@@ -383,7 +383,7 @@ Login routing:
 - Platform admin -> platform admin.
 - Tenant admin/staff -> tenant admin.
 - Instructor -> instructor shell.
-- Guardian -> parent shell.
+- Guardian -> `/portaal` shell.
 - Multi-tenant user -> tenant switcher or last active tenant.
 
 Session strategy:
@@ -578,6 +578,12 @@ APP_URL
 NEXT_PUBLIC_APP_URL
 PLATFORM_ADMIN_URL
 TENANT_DOMAIN_SUFFIX
+PLATFORM_HOSTNAMES
+PLATFORM_MARKETING_HOSTNAMES
+PLATFORM_ADMIN_HOSTNAMES
+STAGING_HOSTNAMES
+TENANT_BASE_DOMAINS
+RESERVED_TENANT_SUBDOMAINS
 BASE_PATH
 SERVICE_NAME
 ```
@@ -589,7 +595,9 @@ DATABASE_URL
 SESSION_SECRET
 JWT_SECRET
 NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SECRET_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ```
 
@@ -625,16 +633,14 @@ Recommended staging domains to confirm:
 
 ```txt
 https://staging.nxttrack.nl
-https://admin.staging.nxttrack.nl
-https://{tenant}.staging.nxttrack.nl
 ```
 
 Production later:
 
 ```txt
-https://nxttrack.nl
+https://www.nxttrack.nl
 https://admin.nxttrack.nl
-https://{tenant}.nxttrack.nl
+https://<slug>.nxttrack.nl
 ```
 
 Staging readiness comes before any production launch planning.
