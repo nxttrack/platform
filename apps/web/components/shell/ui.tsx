@@ -12,11 +12,11 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex min-w-0 max-w-full flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0">
-        {kicker ? <p className="break-words text-xs font-semibold uppercase tracking-wider text-primary">{kicker}</p> : null}
-        <h1 className="break-words text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-        {subtitle ? <p className="mt-1 max-w-2xl break-words text-sm text-muted-foreground">{subtitle}</p> : null}
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        {kicker ? <p className="text-xs font-semibold uppercase tracking-wider text-primary">{kicker}</p> : null}
+        <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
+        {subtitle ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{subtitle}</p> : null}
       </div>
       {action}
     </div>
@@ -24,7 +24,7 @@ export function PageHeader({
 }
 
 export function Card({ className = "", children }: { className?: string; children: ReactNode }) {
-  return <div className={`min-w-0 max-w-full overflow-hidden rounded-3xl border border-border bg-card p-5 shadow-soft ${className}`}>{children}</div>;
+  return <div className={`rounded-3xl border border-border bg-card p-5 shadow-soft ${className}`}>{children}</div>;
 }
 
 export function StatusPill({

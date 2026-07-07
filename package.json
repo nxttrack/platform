@@ -4,34 +4,23 @@
   "private": true,
   "packageManager": "pnpm@10.24.0",
   "scripts": {
-    "build": "corepack pnpm --filter @nxttrack/web build",
-    "dev": "corepack pnpm --filter @nxttrack/web dev",
-    "start": "corepack pnpm --filter @nxttrack/web start",
-    "lint": "corepack pnpm --filter @nxttrack/web lint",
-    "typecheck": "corepack pnpm --filter @nxttrack/web typecheck",
+    "build": "pnpm --filter @nxttrack/web build",
+    "dev": "pnpm --filter @nxttrack/web dev",
+    "start": "pnpm --filter @nxttrack/web start",
+    "lint": "pnpm --filter @nxttrack/web lint",
+    "typecheck": "pnpm --filter @nxttrack/web typecheck",
     "auth:audit": "node scripts/auth/audit-route-access.mjs && node scripts/auth/audit-auth-boundary.mjs",
+    "auth:bootstrap-platform-owner": "node scripts/auth/bootstrap-platform-owner.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
-    "rls:test": "node scripts/db/rls-contract-tests.mjs",
-    "e2e:critical": "node scripts/e2e/critical-workflows.mjs",
-    "e2e:smoke": "node scripts/e2e/quality-smoke.mjs",
-    "e2e:browser": "playwright test tests/e2e/workflow-smoke.spec.ts",
-    "e2e:visual": "playwright test tests/e2e/lovable-pixel.spec.ts",
-    "e2e:visual:update": "playwright test tests/e2e/lovable-pixel.spec.ts --update-snapshots",
-    "ui:audit": "node scripts/ui/audit-accessibility-responsive.mjs",
-    "ui:lovable": "node scripts/ui/lovable-visual-compare.mjs",
+    "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
-    "security:audit": "node scripts/security/audit-release-readiness.mjs",
-    "smoke:staging": "node scripts/smoke/staging-smoke.mjs",
-    "release:gate": "node scripts/release/phase13-gate.mjs"
+    "staging:gate": "node scripts/staging/check-launch-gates.mjs",
+    "staging:health": "node scripts/staging/health-smoke.mjs",
+    "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
+    "hardening:local": "pnpm run typecheck && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run staging:gate",
+    "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
     "node": ">=20.19.0"
-  },
-  "devDependencies": {
-    "@playwright/test": "1.57.0",
-    "supabase": "2.107.0"
-  },
-  "dependencies": {
-    "@supabase/supabase-js": "2.108.2"
   }
 }

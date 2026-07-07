@@ -1,17 +1,5 @@
-import { TenantNewsPage } from "@/components/public-site/tenant-public-pages";
-import { buildTenantPublicMetadata } from "@/lib/public-site/metadata";
-import { getPublicTenantSiteSnapshot } from "@/lib/public-site/tenant-site";
+import { PageHero } from "@/components/lovable/page-kit";
 
-export const dynamic = "force-dynamic";
-
-export async function generateMetadata() {
-  const snapshot = await getPublicTenantSiteSnapshot();
-
-  return buildTenantPublicMetadata(snapshot, "Nieuws");
-}
-
-export default async function NewsPage() {
-  const snapshot = await getPublicTenantSiteSnapshot();
-
-  return <TenantNewsPage snapshot={snapshot} />;
+export default function NewsPage() {
+  return <PageHero kicker="Tenant public" title="Nieuws skeleton" sub="Publieke nieuws-route voor tenant communicatie." primary={{ href: "/", label: "Home" }} />;
 }

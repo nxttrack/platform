@@ -1,18 +1,17 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
-
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { requireSupabasePublicConfig } from "./config";
 
 export function createAdminClient() {
   const config = requireSupabasePublicConfig();
-  const secretKey = process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
 
   if (!secretKey) {
-    throw new Error("Supabase admin key is not configured. Set SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY.");
+    throw new Error("Supabase admin client is not configured. Set SUPABASE_SECRET_KEY on the server.");
   }
 
-  return createClient(config.url, secretKey, {
+  return createSupabaseClient(config.url, secretKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

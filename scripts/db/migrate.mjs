@@ -4,16 +4,13 @@ import { spawnSync } from "node:child_process";
 
 console.log("[db:migrate] Supabase migrations are present in the repository.");
 
-const target = process.env.TARGET ?? process.env.APP_ENV ?? "";
-const shouldRunMigrations = process.env.RUN_DB_MIGRATIONS === "true" || target === "staging";
-
-if (!shouldRunMigrations) {
-  console.log("[db:migrate] RUN_DB_MIGRATIONS is not true and target is not staging. Skipping migration execution.");
+if (process.env.RUN_DB_MIGRATIONS !== "true") {
+  console.log("[db:migrate] RUN_DB_MIGRATIONS is not true. Skipping migration execution.");
   process.exit(0);
 }
 
 if (!process.env.DATABASE_URL) {
-  console.error("[db:migrate] Migrations are enabled, but DATABASE_URL is not set.");
+  console.error("[db:migrate] RUN_DB_MIGRATIONS is true, but DATABASE_URL is not set.");
   process.exit(1);
 }
 
@@ -23,7 +20,7 @@ if (process.env.DB_MIGRATE_DRY_RUN === "true") {
   args.push("--dry-run");
 }
 
-console.log(`[db:migrate] Running Supabase migrations for target=${target || "unknown"}.`);
+console.log("[db:migrate] Running Supabase migrations with explicit opt-in.");
 
 const result = spawnSync("supabase", args, {
   stdio: "inherit",

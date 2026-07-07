@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-      - staging
-      - production
 
 permissions:
   contents: read
@@ -43,95 +41,8 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install Playwright browser
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Resolve E2E base URL
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        env:
-          CONFIGURED_E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
-        run: |
-          set -euo pipefail
-
-          if [ -n "${CONFIGURED_E2E_BASE_URL}" ]; then
-            echo "E2E_BASE_URL=${CONFIGURED_E2E_BASE_URL}" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          if [ "${GITHUB_REF_NAME}" = "staging" ]; then
-            echo "E2E_BASE_URL=https://aquaswim-demo.staging.nxttrack.nl" >> "$GITHUB_ENV"
-            exit 0
-          fi
-
-          echo "::error::Set the E2E_BASE_URL repository variable for ${GITHUB_REF_NAME} before running browser E2E."
-          exit 1
-
-      - name: Browser E2E staging smoke
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        env:
-          E2E_REQUIRE_BASE_URL: "true"
-          E2E_SLOT_OFFER_TOKEN: ${{ secrets.E2E_SLOT_OFFER_TOKEN }}
-          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
-          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
-          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
-          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
-          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
-          E2E_DOCUMENT_ID: ${{ vars.E2E_DOCUMENT_ID }}
-        run: pnpm run e2e:browser
-
-      - name: Restore Lovable pixel baselines
-        id: lovable-pixel-baselines
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        uses: actions/cache@v4
-        with:
-          path: tests/e2e/__screenshots__
-          key: lovable-pixel-${{ github.ref_name }}-${{ hashFiles('tests/e2e/lovable-pixel.spec.ts') }}
-          restore-keys: |
-            lovable-pixel-${{ github.ref_name }}-
-
-      - name: Create Lovable pixel baseline
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production') && steps.lovable-pixel-baselines.outputs.cache-hit != 'true'
-        env:
-          E2E_REQUIRE_BASE_URL: "true"
-          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
-          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
-          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
-          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
-          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
-          VISUAL_REQUIRE_AUTH: ${{ vars.VISUAL_REQUIRE_AUTH }}
-        run: pnpm run e2e:visual:update
-
-      - name: Compare Lovable pixel baseline
-        if: github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        env:
-          E2E_REQUIRE_BASE_URL: "true"
-          E2E_ADMIN_EMAIL: ${{ secrets.E2E_ADMIN_EMAIL }}
-          E2E_ADMIN_PASSWORD: ${{ secrets.E2E_ADMIN_PASSWORD }}
-          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL }}
-          E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
-          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL }}
-          E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
-          VISUAL_REQUIRE_AUTH: ${{ vars.VISUAL_REQUIRE_AUTH }}
-        run: pnpm run e2e:visual
-
-      - name: Upload Lovable pixel QA artifacts
-        if: failure() && github.event_name == 'push' && (github.ref_name == 'staging' || github.ref_name == 'production')
-        uses: actions/upload-artifact@v4
-        with:
-          name: lovable-pixel-qa-${{ github.ref_name }}
-          path: |
-            test-results/
-            playwright-report/
-          if-no-files-found: ignore
-
       - name: Audit migrations
         run: pnpm run db:audit
-
-      - name: Audit release readiness
-        run: pnpm run security:audit
 
       - name: Check migration command
         run: pnpm run db:migrate

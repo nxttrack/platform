@@ -140,11 +140,11 @@ export function FinalCTA() {
       <div className="mx-auto max-w-6xl rounded-3xl bg-[#0f172a] p-10 text-white md:p-14">
         <div className="grid gap-6 md:grid-cols-[1.4fr_auto] md:items-center">
           <div>
-            <h2 className="text-2xl font-bold md:text-3xl">Klaar voor swim-first groei.</h2>
-            <p className="mt-2 text-sm text-white/70">Publieke website, ouderportaal, instructeur app en backoffice groeien vanuit dezelfde Lovable-richting.</p>
+            <h2 className="text-2xl font-bold md:text-3xl">Phase 2 blijft bewust klein.</h2>
+            <p className="mt-2 text-sm text-white/70">Na deze scaffold volgen auth, tenants en echte domeinmodellen pas in Phase 3 en verder.</p>
           </div>
           <Link className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-bold text-slate-900" href="/platform">
-            Platform openen <ArrowRight className="h-4 w-4" />
+            Platform shell <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

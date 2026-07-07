@@ -75,14 +75,15 @@ Target flow from the existing workflow:
 7. Workflow writes shared `.env` from GitHub variables/secrets.
 8. Workflow symlinks `.env` and `.env.production` into release.
 9. Workflow runs `pnpm install --frozen-lockfile`.
-10. Workflow runs `pnpm build`.
-11. Workflow copies `apps/web/.next/static` and `apps/web/public` into the standalone app directory.
+10. Workflow runs hardening audits: typecheck, auth audit, migration audit, RLS coverage audit and staging launch gate.
+11. Workflow runs `pnpm build`.
 12. Workflow runs `pnpm run db:migrate`.
 13. Workflow updates `current` symlink atomically.
 14. Workflow restarts `SERVICE_NAME`.
 15. Workflow reloads Caddy.
-16. Workflow verifies platform and default tenant health endpoints.
-17. Workflow removes old releases beyond retention.
+16. Workflow runs `pnpm run staging:health` against `APP_URL`.
+17. Optional: workflow runs Playwright staging smoke when `RUN_PLAYWRIGHT_SMOKE=true`.
+18. Workflow removes old releases beyond retention.
 
 ## Pre-Deploy Checks
 
@@ -91,8 +92,11 @@ Before first staging deploy:
 - [ ] App scaffold exists.
 - [ ] `pnpm-lock.yaml` exists and is committed.
 - [ ] `pnpm build` exists and succeeds locally/CI.
-- [ ] `pnpm run release:gate` succeeds before release.
 - [ ] `pnpm run db:migrate` exists.
+- [ ] `pnpm run db:rls-audit` exists and succeeds.
+- [ ] `pnpm run staging:gate` exists and records non-strict launch warnings.
+- [ ] `pnpm run staging:health` exists and can reach the active health endpoint.
+- [ ] Playwright browsers are installed or optional `RUN_PLAYWRIGHT_SMOKE` remains disabled.
 - [ ] Health endpoint exists.
 - [ ] GitHub Environment `staging` variables/secrets are complete.
 - [ ] Runner labels match workflow.
@@ -120,6 +124,18 @@ Later response may include non-sensitive checks:
 - database connectivity.
 - storage connectivity.
 - background queue state if used.
+
+Run after deployment:
+
+```bash
+APP_URL=https://staging.nxttrack.nl pnpm run staging:health
+```
+
+Expected:
+
+```txt
+[staging:health] PASS https://staging.nxttrack.nl/api/health -> env=staging
+```
 
 ## Useful Commands
 
@@ -174,7 +190,7 @@ ls -1dt /var/www/nxttrack/staging/releases/*
 
 ## Manual Rollback
 
-Use only after confirming the target previous release.
+Use only after confirming the target previous release. For Phase 13, rehearse this once on staging and then switch back to the current release.
 
 1. List releases:
 
@@ -200,6 +216,15 @@ sudo systemctl restart nxttrack-staging
 5. Verify health:
 
 ```bash
+curl -fsS https://staging.nxttrack.nl/api/health
+```
+
+6. Switch back to the current release after rehearsal:
+
+```bash
+sudo ln -sfn /var/www/nxttrack/staging/releases/<current-release> /var/www/nxttrack/staging/current.new
+sudo mv -Tf /var/www/nxttrack/staging/current.new /var/www/nxttrack/staging/current
+sudo systemctl restart nxttrack-staging
 curl -fsS https://staging.nxttrack.nl/api/health
 ```
 
@@ -241,15 +266,15 @@ Check:
 - RLS/function/view changes follow security guidelines.
 - Do not retry blindly after repeated failures; inspect state first.
 
-### Supabase has no NXTTRACK tables after deploy
+### Hardening audit fails
 
 Check:
 
-- Staging `RUN_DB_MIGRATIONS` must be `true`.
-- Staging `DATABASE_URL` must point to the intended Supabase staging Postgres database.
-- The deploy log must say `Running Supabase migrations for target=staging`, not `Skipping migration execution`.
-- The runner must have the pinned Supabase CLI available through the repository install.
-- Re-run the staging workflow after fixing variables/secrets; the migrations are idempotent through Supabase migration history.
+- `pnpm run auth:audit` output for missing private route guards.
+- `pnpm run db:audit` output for forbidden Supabase patterns.
+- `pnpm run db:rls-audit` output for public tables without RLS, policies or grants.
+- `pnpm run staging:gate` warnings for missing manual confirmations.
+- Supabase CLI version; the runner should be upgraded regularly.
 
 ### Caddy returns 502
 
@@ -260,27 +285,6 @@ Check:
 - Caddy points to correct port.
 - Firewall is not relevant for localhost reverse proxy.
 - App crashed during startup due to missing env.
-
-### HTML loads without styling
-
-Check:
-
-- The release contains `apps/web/.next/standalone/apps/web/.next/static`.
-- The release contains `apps/web/.next/standalone/apps/web/public`.
-- The deploy log includes `Prepared standalone static assets`.
-- The service was restarted after the release was activated.
-
-If these files are missing, rerun the deploy after confirming `.github/workflows/deploy.yml` executes `node scripts/deploy/prepare-standalone-assets.mjs` after `pnpm build`.
-
-### Health verification fails after activation
-
-Check:
-
-- `APP_URL` is correct for the target environment.
-- `DEFAULT_TENANT_SLUG` and `TENANT_DOMAIN_SUFFIX` form a valid tenant health URL.
-- The service restarted after the `current` symlink moved.
-- Caddy points to the expected localhost port.
-- `COMMIT_SHA` is present in the shared `.env`.
 
 ### Wrong tenant/domain routing
 
@@ -299,3 +303,5 @@ This runbook is ready when:
 - Rollback is documented.
 - Common failure modes are documented.
 - Production remains explicitly out of scope until approved.
+- Phase 13 hardening gates can be run without changing production.
+- Rollback rehearsal has been performed on staging and recorded.

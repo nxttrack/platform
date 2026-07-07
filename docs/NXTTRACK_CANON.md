@@ -1,8 +1,8 @@
 # NXTTRACK Canon
 
-Last updated: 2026-06-25
+Last updated: 2026-07-07
 
-Status: definitive planning draft. Product implementation starts only after product owner approval.
+Status: definitive product canon. Phase 3 through Phase 11 MVP implementation is represented in code, with staging migration/RLS validation still required before production readiness.
 
 ## 0. Sources And Scope
 
@@ -22,10 +22,7 @@ Product owner decisions now locked:
 - Lovable UI source of truth is `nxttrack/swim-school-pro`.
 - First target is staging, not a commercial launch tenant.
 - Email provider is SendGrid, using SMTP first.
-- Payments are manual first, with architecture ready for Mollie/iDEAL and SEPA via Mollie.
-- Multi-language readiness starts with Dutch (`nl`) and English (`en`).
-- WhatsApp provider is not selected yet.
-- Helpdesk is a native NXTTRACK ticket system, including parent-to-tenant and tenant-to-platform support.
+- Payments are manual first, with architecture ready for Mollie/iDEAL.
 
 Lovable access status:
 
@@ -153,7 +150,7 @@ NXTTRACK has these platform layers:
 Lovable confirms these route groups through:
 
 - Public tenant routes: `/`, `/programmas`, `/intake`, `/nieuws`, `/agenda`, `/login`.
-- Parent routes: `/parent/*`.
+- Lovable parent routes: `/parent/*`; production portal routes: `/portaal/*`.
 - Instructor routes: `/instructor/*`.
 - Admin routes: `/admin/*`.
 - NXTTRACK marketing routes: `/nxttrack/*`.
@@ -188,9 +185,9 @@ Production meaning:
 - News/events.
 - Tenant login.
 
-## 9. Parent / Athlete UserShell
+## 9. Portaal / Parent-Mediated Athlete UserShell
 
-The parent/athlete shell gives families one clear place for:
+The `/portaal` shell gives families one clear place for parent-mediated athlete access:
 
 - Dashboard.
 - Child selector.
@@ -211,18 +208,20 @@ The parent/athlete shell gives families one clear place for:
 Lovable route group:
 
 ```txt
-/parent
-/parent/lessen
-/parent/voortgang
-/parent/diplomas
-/parent/badges
-/parent/afzwemmen
-/parent/berichten
-/parent/documenten
-/parent/profiel
+/portaal
+/portaal/lessen
+/portaal/voortgang
+/portaal/diplomas
+/portaal/badges
+/portaal/afzwemmen
+/portaal/berichten
+/portaal/documenten
+/portaal/profiel
 ```
 
 The shell must be calm, supportive, mobile-friendly, and positive.
+
+MVP decision: child/athlete access is parent-mediated. A separate child login is later scope.
 
 ## 10. Child Portal
 
@@ -396,7 +395,6 @@ Billing models the commercial agreement, not the learning level.
 MVP direction:
 
 - Manual payments first.
-- Registration fee model prepared, even if collection is manual at first.
 - Track payment status in admin and parent views where needed.
 - Link payment plans to programs when useful.
 - Prepare clear integration boundary for Mollie/iDEAL.
@@ -405,13 +403,6 @@ Later direction:
 
 - Mollie checkout.
 - iDEAL.
-- SEPA direct debit / incasso through Mollie.
-- Registration fee payment.
-- One-off payments.
-- Payment batches.
-- Payment periods.
-- Failed payment signals.
-- Financial overviews.
 - Webhooks.
 - Payment event history.
 - Failed payment handling.
@@ -601,10 +592,6 @@ MVP:
 Later:
 
 - Mollie/iDEAL checkout.
-- Registration fees.
-- SEPA incasso through Mollie.
-- Payment batches.
-- One-off payments.
 - Webhook verification.
 - Automated payment events.
 - Failed payment flows.
@@ -617,14 +604,10 @@ Communication and operations include:
 - Parent messages.
 - Staff/instructor messages.
 - Group messages.
-- Segmented communication.
 - Tasks assigned to staff.
 - Documents and manuals.
 - Parent-visible files.
 - Internal-only files.
-- Emergency communication later.
-- WhatsApp urgent escalation later.
-- SMS fallback later.
 
 Permissions decide visibility. Private instructor notes and private admin documents must never leak to parents.
 
@@ -707,14 +690,6 @@ Later:
 - Full child portal.
 - Advanced AI.
 - Full Mollie/iDEAL automation.
-- SEPA incasso through Mollie and payment batches.
-- Webshop and credit sales.
-- Flex schedule and automatic open-spot fill.
-- Staff leave and competency-aware scheduling.
-- Tenant customer helpdesk and knowledge base.
-- Integration layer with API keys and webhooks.
-- QR/barcode/RFID access control and auto attendance.
-- Safety administration, incidents, BHV, complaints, checklists, and tenant-defined standards.
 - Advanced reporting exports.
 - Drag-and-drop planning depth.
 - Advanced diploma template editor.
@@ -723,198 +698,7 @@ Later:
 - Push notifications.
 - Production launch hardening after staging.
 
-## 34. Extended Swim-School Module Groups
-
-The latest competitor/feature analysis adds official future domains. These modules are not all MVP. They are canonical future modules that must be prepared without hardcoding swim-only internals.
-
-Visible swim-school examples may use labels such as leerling, zweminstructeur, zwemles, badje, baan, afzwemmen, BHV, and zwemschool. Internal concepts stay generic: participant, instructor, session, stage, resource, milestone event, certificate, incident, entitlement, integration, and tenant-defined standard.
-
-### Billing & Incasso Engine
-
-Purpose: make payment operations production-grade while keeping billing separate from learning progress.
-
-Scope:
-
-- iDEAL.
-- SEPA direct debit / incasso through Mollie.
-- Registration fee.
-- One-off payments.
-- Batch payments.
-- Payment periods.
-- Payment reminders.
-- Failed payment signals.
-- Financial overviews.
-
-Canonical rule: registration fee, subscription, one-off payment, credit purchase, and invoice/payment status are billing concepts. They must never imply stage movement or group placement by themselves.
-
-### Flexrooster & Flex Fill Engine
-
-Purpose: support flexible scheduling beside regular fixed groups and use open spots intelligently.
-
-Scope:
-
-- Flex schedule beside regular schedule.
-- Open spot detection.
-- Auto-fill empty lesson spots.
-- Make-up credit placement.
-- Trial lesson placement.
-- Extra paid lesson placement.
-- Priority rules for open spots.
-
-Generic internal concepts: flexible session, open capacity slot, entitlement, placement candidate, priority rule, and capacity hold.
-
-### Webshop & Credits Engine
-
-Purpose: let tenants sell activities, products, extra lessons, and credit-based entitlements.
-
-Scope:
-
-- Sell activities with time slots.
-- Sell products/articles.
-- Sell extra lessons.
-- Sell make-up lesson credits.
-- Sell vacation lessons.
-- Generate credits/entitlements after purchase.
-- Connect webshop purchases to capacity and sessions.
-
-Credits are entitlements, not subscriptions. A purchased credit can permit booking into eligible sessions but does not change a participant's stage or billing plan unless a separate billing action exists.
-
-### Staff Competency & Leave Engine
-
-Purpose: make staffing safe, auditable, and scheduling-aware.
-
-Scope:
-
-- Staff profile information.
-- Instructor competencies.
-- Certificates.
-- BHV/EHBO tracking.
-- Leave requests.
-- Leave approval.
-- Replacement signals.
-- Competency-aware scheduling.
-
-Generic internal concepts: staff profile, competency, credential, certification, leave request, availability exception, replacement requirement, and schedule constraint.
-
-### Access Control & Auto Attendance
-
-Purpose: connect physical check-in to lesson validation and attendance when hardware is approved.
-
-Scope:
-
-- QR check-in.
-- Barcode check-in.
-- RFID check-in.
-- Lesson time validation.
-- Access only during assigned lesson windows.
-- Automatic attendance.
-- Manual correction by instructor/admin.
-
-Hardware integration is later/enterprise. Auto attendance must be explainable, correctable, and audited.
-
-### Safety & Compliance Engine
-
-Purpose: support tenant safety administration and evidence without claiming automatic legal or NRZ compliance.
-
-Scope:
-
-- Incident registration.
-- Accident registration.
-- BHV records.
-- Complaints management.
-- Checklists.
-- Instructor certification tracking.
-- Tenant-defined standards.
-- NRZ-related tracking without claiming automatic compliance.
-- Audit logs.
-
-Rule: NXTTRACK may track tenant-defined norms and NRZ-related fields, but must not claim certification or compliance unless formally verified and approved.
-
-### Communication Escalation Engine
-
-Purpose: send the right message through the least intrusive effective channel.
-
-Escalation order:
-
-1. App notification first.
-2. Email second.
-3. Push if available.
-4. WhatsApp only for urgent reminders or no response.
-5. SMS fallback only if needed.
-
-Scope:
-
-- Emergency broadcast.
-- Segmented communication.
-- Urgent reminders.
-- No-response escalation.
-- Delivery/audit trail.
-
-WhatsApp and SMS are later modules because they require provider approval, cost controls, consent, opt-out handling, and channel policies. The WhatsApp provider is not selected yet.
-
-### Integration Layer
-
-Purpose: provide a controlled, tenant-aware integration surface.
-
-Scope:
-
-- Mollie.
-- Bookkeeping integrations later.
-- WhatsApp Business API later.
-- SMS provider later.
-- Access control hardware later.
-- Optional external CRM/ticket sync later.
-- Webhooks.
-- API keys.
-- Integration settings per tenant.
-
-Integration credentials are secrets and must never be committed. Tenant-specific settings must be encrypted or held through approved secret storage when implemented.
-
-### Tenant Customer Helpdesk & Knowledge Base
-
-Purpose: give parents and tenants a support layer connected to operational context.
-
-Scope:
-
-- Parent support tickets.
-- Tenant-to-platform support tickets.
-- Ticket status flow.
-- Ticket categories.
-- Internal notes.
-- Automatic context from child/program/group/payment.
-- Customer knowledge base.
-- Suggested help articles.
-- Self-service FAQ.
-
-Ticket context must respect permissions. Parent support should never expose internal notes, other families, or cross-tenant data.
-
-Tenant-to-platform tickets are also native NXTTRACK records. They let a tenant ask the NXTTRACK operator for support without giving tenant admins platform-admin permissions. Optional external CRM/ticket sync can be added later, but it is not the core helpdesk.
-
-### Multi-Language Readiness
-
-Purpose: prepare public pages, intake, parent-facing messages, templates, notifications, helpdesk, and knowledge base articles for multiple languages without breaking the Dutch swim-first UI.
-
-First supported languages:
-
-- Dutch (`nl`).
-- English (`en`).
-
-Later candidates:
-
-- Polish (`pl`).
-- Turkish (`tr`).
-- Arabic (`ar`).
-- Ukrainian (`uk`).
-
-Fallback order:
-
-1. User/guardian preferred language.
-2. Tenant default language.
-3. Dutch fallback.
-
-Language is separate from tenant terminology. Internal concepts stay generic; display labels and tenant-owned content become language-aware over time.
-
-## 35. Design-To-Production Mapping
+## 34. Design-To-Production Mapping
 
 | Lovable screen/module | Production module | UI state | Backend/domain work |
 | --- | --- | --- | --- |
@@ -939,7 +723,7 @@ Language is separate from tenant terminology. Internal concepts stay generic; di
 | NXTTRACK marketing | Platform Marketing | Strong reference | Final copy/CMS decision |
 | Platform admin shell | Platform Admin | Pattern needed | Global tenants/domains/templates/support |
 
-## 36. Conflicts / Decisions Needed
+## 35. Conflicts / Decisions Needed
 
 | Conflict | Source A says | Source B says | Risk | Recommended decision | Reason |
 | --- | --- | --- | --- | --- | --- |

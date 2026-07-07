@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
 
-import { PrivateShellBoundary } from "@/components/shell/private-shell-boundary";
+import { AppShell } from "@/components/shell/app-shell";
 import { privateRouteMetadata } from "@/lib/auth/access";
+import { roleLabels } from "@/lib/auth/roles";
+import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { instructorNav } from "@/lib/navigation";
 
 export const metadata: Metadata = privateRouteMetadata;
 export const dynamic = "force-dynamic";
 
-export default function InstructorLayout({ children }: { children: React.ReactNode }) {
+export default async function InstructorLayout({ children }: { children: React.ReactNode }) {
+  const context = await requirePrivateShellContext("/instructor");
+  const tenant = context.activeTenant;
+  const role = tenant?.roles.map((item) => roleLabels[item]).join(", ") ?? "Instructeur";
+
   return (
-    <PrivateShellBoundary shell="instructor" nav={instructorNav} accent="instructor">
+    <AppShell brand={{ title: tenant?.name ?? "Tenant", subtitle: "Instructeur" }} nav={instructorNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="instructor">
       {children}
-    </PrivateShellBoundary>
+    </AppShell>
   );
 }

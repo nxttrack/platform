@@ -4,6 +4,7 @@ import { createAnonymousAuthContext, createTrustedAuthContext, type TenantMember
 
 export const identityBoundarySelects = {
   profile: "id, full_name, avatar_url",
+  userSecurity: "must_change_password, password_changed_at, last_invited_at",
   tenantMemberships: "tenant_id, role, status, tenants!inner(id, slug, name, sector, status, tenant_settings(terminology_sector))",
   platformMemberships: "role, status"
 } as const;
@@ -44,9 +45,16 @@ export type PlatformMembershipIdentityRow = {
   status: string;
 };
 
+export type UserSecurityIdentityRow = {
+  must_change_password: boolean;
+  password_changed_at: string | null;
+  last_invited_at: string | null;
+};
+
 export type IdentityBoundaryRows = {
   user: VerifiedAuthUser | null;
   profile?: ProfileIdentityRow | null;
+  userSecurity?: UserSecurityIdentityRow | null;
   tenantMemberships?: readonly TenantMembershipIdentityRow[] | null;
   platformMemberships?: readonly PlatformMembershipIdentityRow[] | null;
   activeTenantId?: string | null;
@@ -67,6 +75,11 @@ export function mapIdentityRowsToTrustedAuthContext(rows: IdentityBoundaryRows):
       email: rows.user.email ?? null,
       displayName: rows.profile?.full_name ?? null,
       avatarUrl: rows.profile?.avatar_url ?? null
+    },
+    security: {
+      mustChangePassword: rows.userSecurity?.must_change_password ?? false,
+      passwordChangedAt: rows.userSecurity?.password_changed_at ?? null,
+      lastInvitedAt: rows.userSecurity?.last_invited_at ?? null
     },
     platformRoles: mapPlatformRoles(rows.platformMemberships ?? []),
     tenantMemberships: mapTenantMemberships(rows.tenantMemberships ?? []),

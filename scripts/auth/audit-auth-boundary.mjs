@@ -4,7 +4,6 @@ import { join, relative } from "node:path";
 const root = process.cwd();
 const scanRoots = ["apps/web"];
 const ignoredFiles = new Set([normalizePath("scripts/auth/audit-auth-boundary.mjs")]);
-const serviceRoleAllowlist = new Set(["apps/web/lib/supabase/admin.ts"]);
 
 const forbiddenPatterns = [
   {
@@ -73,10 +72,6 @@ function scanDirectory(directory) {
     const source = readFileSync(absolutePath, "utf8");
 
     for (const { pattern, message } of forbiddenPatterns) {
-      if (serviceRoleAllowlist.has(projectPath) && message.includes("service-role credentials")) {
-        continue;
-      }
-
       if (pattern.test(source)) {
         failures.push(`${projectPath}: ${message}.`);
       }

@@ -4,33 +4,30 @@ export function RoutePlaceholder({
   kicker,
   title,
   description,
-  items,
-  status = "Voorbereid"
+  items
 }: {
   kicker: string;
   title: string;
   description: string;
   items?: string[];
-  status?: string;
 }) {
   return (
     <div className="space-y-6">
       <PageHeader kicker={kicker} title={title} subtitle={description} />
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="relative overflow-hidden lg:col-span-2">
-          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-primary/10 blur-3xl" />
+        <Card className="lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-bold">Placeholder met Lovable-stijl</h2>
-            <StatusPill tone="info">{status}</StatusPill>
+            <h2 className="text-lg font-bold">Skeleton state</h2>
+            <StatusPill tone="info">Phase 2</StatusPill>
           </div>
           <p className="text-sm leading-6 text-muted-foreground">
-            Deze pagina is bewust netjes vormgegeven, ook zolang nog niet alle echte productdata beschikbaar is. Zo blijft de omgeving bruikbaar en consistent met de Lovable-richting.
+            Deze route bestaat zodat navigatie, shell-layout, deployment en visuele tokens gevalideerd kunnen worden. Echte domeindata volgt pas in latere fases.
           </p>
         </Card>
         <Card>
-          <h2 className="text-lg font-bold">Onderdelen</h2>
+          <h2 className="text-lg font-bold">Nog niet actief</h2>
           <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            {(items ?? ["Navigatie", "Tenantdata", "Rechten", "Productlogica"]).map((item) => (
+            {(items ?? ["Auth", "Tenantdata", "Supabase", "Productlogica"]).map((item) => (
               <li key={item} className="rounded-xl bg-muted px-3 py-2">
                 {item}
               </li>

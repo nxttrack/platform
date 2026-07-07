@@ -6,9 +6,6 @@ coverage
 .env
 .env.*
 !.env.example
-supabase/.temp
 *.log
 *.tsbuildinfo
 .DS_Store
-playwright-report
-test-results

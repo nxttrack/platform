@@ -1,73 +1,82 @@
 import Link from "next/link";
+import { loginAction } from "@/lib/auth/actions";
+import { sanitizeRelativePath } from "@/lib/auth/redirects";
 
-import { signInAction } from "./actions";
-
-type LoginPageProps = {
+type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-const reasonCopy: Record<string, string> = {
-  auth_required: "Log in om verder te gaan.",
-  invalid_credentials: "Deze combinatie van e-mail en wachtwoord klopt niet.",
-  missing_credentials: "Vul e-mail en wachtwoord in.",
-  not_configured: "Supabase Auth is nog niet geconfigureerd voor deze omgeving."
+const errorMessages: Record<string, string> = {
+  invalid_credentials: "E-mail of wachtwoord klopt niet.",
+  forbidden: "Je account heeft geen toegang tot deze omgeving."
 };
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
+export default async function LoginPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const next = getParam(params.next) ?? "/auth/redirect";
-  const reason = getParam(params.reason);
+  const error = getParam(params, "error");
+  const nextPath = sanitizeRelativePath(getParam(params, "next"), "/portaal");
+  const resetDone = getParam(params, "reset") === "done";
 
   return (
-    <main className="min-h-screen px-4 py-10 md:px-8">
-      <div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-8 lg:grid-cols-[1fr_420px]">
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">NXTTRACK toegang</p>
-          <h1 className="mt-3 max-w-2xl text-4xl font-bold tracking-tight text-foreground md:text-6xl">Log in op je persoonlijke omgeving.</h1>
-          <p className="mt-4 max-w-xl text-base leading-7 text-muted-foreground">Ouders, instructeurs, tenantbeheerders en platformbeheerders loggen via dezelfde veilige toegang in. De rol en actieve organisatie bepalen daarna de omgeving.</p>
-          <div className="mt-8 grid max-w-2xl gap-3 sm:grid-cols-3">
-            {["Ouderportaal", "Trainer app", "Backoffice"].map((item) => (
-              <div key={item} className="rounded-2xl border border-border bg-card p-4 text-sm font-semibold shadow-soft">
-                {item}
-              </div>
-            ))}
-          </div>
-        </section>
+    <main className="flex min-h-screen items-center justify-center px-4 py-10">
+      <section className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-card">
+        <div className="mb-6">
+          <p className="text-xs font-semibold uppercase tracking-wider text-primary">NXTTRACK</p>
+          <h1 className="mt-2 text-2xl font-bold text-foreground">Inloggen</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Gebruik je NXTTRACK account voor portaal, instructor, tenant admin of platform admin.</p>
+        </div>
 
-        <section className="rounded-3xl border border-border bg-card p-6 shadow-card">
-          <div className="mb-6">
-            <p className="text-sm font-semibold text-muted-foreground">Inloggen</p>
-            <h2 className="mt-1 text-2xl font-bold">Welkom terug</h2>
-            {reason ? <p className="mt-2 rounded-2xl bg-muted px-3 py-2 text-sm text-muted-foreground">{reasonCopy[reason] ?? "Controleer je toegang en probeer opnieuw."}</p> : null}
-          </div>
-          <form action={signInAction} className="space-y-4">
-            <input name="next" type="hidden" value={next} />
-            <label className="block">
-              <span className="text-sm font-medium">E-mail</span>
-              <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" name="email" type="email" autoComplete="email" required />
+        {error ? <p className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessages[error] ?? "Inloggen is niet gelukt."}</p> : null}
+        {resetDone ? <p className="mb-4 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Je wachtwoord is gewijzigd. Log opnieuw in.</p> : null}
+
+        <form action={loginAction} className="space-y-4">
+          <input name="next" type="hidden" value={nextPath} />
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-foreground" htmlFor="email">
+              E-mail
             </label>
-            <label className="block">
-              <span className="text-sm font-medium">Wachtwoord</span>
-              <input className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none ring-primary/20 focus:ring-4" name="password" type="password" autoComplete="current-password" required />
-            </label>
-            <button className="h-11 w-full rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow" type="submit">
-              Inloggen
-            </button>
-          </form>
-          <div className="mt-5 flex items-center justify-between text-sm text-muted-foreground">
-            <Link className="hover:text-foreground" href="/nxttrack">
-              NXTTRACK
-            </Link>
-            <Link className="hover:text-foreground" href="/">
-              Terug naar website
-            </Link>
+            <input
+              autoComplete="email"
+              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              id="email"
+              name="email"
+              required
+              type="email"
+            />
           </div>
-        </section>
-      </div>
+          <div className="space-y-2">
+            <label className="text-sm font-semibold text-foreground" htmlFor="password">
+              Wachtwoord
+            </label>
+            <input
+              autoComplete="current-password"
+              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              id="password"
+              name="password"
+              required
+              type="password"
+            />
+          </div>
+          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+            Inloggen
+          </button>
+        </form>
+
+        <div className="mt-5 flex items-center justify-between text-sm">
+          <Link className="font-semibold text-primary hover:underline" href="/wachtwoord-vergeten">
+            Wachtwoord vergeten
+          </Link>
+          <Link className="text-muted-foreground hover:text-foreground" href="/">
+            Terug
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }
 
-function getParam(value: string | string[] | undefined) {
+function getParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+
   return Array.isArray(value) ? value[0] : value;
 }
