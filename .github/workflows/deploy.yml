@@ -171,6 +171,7 @@ jobs:
         run: |
           set -euo pipefail
           pnpm build
+          pnpm run deploy:package-standalone-assets
 
       - name: Run database migrations
         working-directory: ${{ env.RELEASE }}
