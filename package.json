@@ -13,10 +13,12 @@
     "auth:bootstrap-platform-owner": "node scripts/auth/bootstrap-platform-owner.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
     "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
+    "db:rls-role-smoke": "node scripts/db/rls-role-smoke.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:package-standalone-assets": "node scripts/deploy/package-standalone-assets.mjs",
     "staging:gate": "node scripts/staging/check-launch-gates.mjs",
     "staging:health": "node scripts/staging/health-smoke.mjs",
+    "staging:runtime-smoke": "node scripts/staging/runtime-smoke.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
     "hardening:local": "pnpm run typecheck && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"

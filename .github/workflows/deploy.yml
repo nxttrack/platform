@@ -41,6 +41,13 @@ jobs:
       RESERVED_TENANT_SUBDOMAINS: ${{ vars.RESERVED_TENANT_SUBDOMAINS }}
       BASE_PATH: ${{ vars.BASE_PATH }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+      HEALTH_CHECK_DATABASE: ${{ vars.HEALTH_CHECK_DATABASE || 'auto' }}
+      HEALTH_STRICT: ${{ vars.HEALTH_STRICT || 'false' }}
+      REQUIRE_HEALTH_DATABASE: ${{ vars.REQUIRE_HEALTH_DATABASE || 'false' }}
+      REQUIRE_HEALTH_COMMIT: ${{ vars.REQUIRE_HEALTH_COMMIT || 'true' }}
+      RUNTIME_SMOKE_ROUTES: ${{ vars.RUNTIME_SMOKE_ROUTES }}
+      TENANT_SMOKE_URL: ${{ vars.TENANT_SMOKE_URL }}
+      TENANT_SMOKE_ROUTES: ${{ vars.TENANT_SMOKE_ROUTES }}
 
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
@@ -124,6 +131,11 @@ jobs:
             printf 'TENANT_BASE_DOMAINS=%s\n' "$TENANT_BASE_DOMAINS"
             printf 'RESERVED_TENANT_SUBDOMAINS=%s\n' "$RESERVED_TENANT_SUBDOMAINS"
             printf 'BASE_PATH=%s\n' "$BASE_PATH"
+            printf 'RELEASE_COMMIT_SHA=%s\n' "$GITHUB_SHA"
+            printf 'RELEASE_BUILD_TIME=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'HEALTH_CHECK_DATABASE=%s\n' "$HEALTH_CHECK_DATABASE"
+            printf 'HEALTH_STRICT=%s\n' "$HEALTH_STRICT"
+            printf 'REQUIRE_HEALTH_DATABASE=%s\n' "$REQUIRE_HEALTH_DATABASE"
             printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
             printf 'SESSION_SECRET=%s\n' "$EFFECTIVE_SESSION_SECRET"
             printf 'JWT_SESSION=%s\n' "$JWT_SESSION"
@@ -204,6 +216,12 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run staging:health
+
+      - name: Runtime smoke
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run staging:runtime-smoke
 
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'
