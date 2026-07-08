@@ -7,6 +7,7 @@ export type EmailProvider = "sendgrid_api" | "smtp";
 
 export type PlatformEmailSettingsView = {
   enabled: boolean;
+  settingsAvailable: boolean;
   fromEmail: string;
   fromName: string;
   hasSendGridApiKey: boolean;
@@ -64,9 +65,9 @@ const SETTINGS_ID = true;
 const SECRET_PREFIX = "v1";
 
 export async function getPlatformEmailSettingsView(): Promise<PlatformEmailSettingsView> {
-  const row = (await getPlatformEmailSettingsRow()) ?? defaultRow();
+  const { row, settingsAvailable } = await getPlatformEmailSettingsState();
 
-  return toView(row);
+  return toView(row ?? defaultRow(), settingsAvailable);
 }
 
 export async function savePlatformEmailSettings(input: {
@@ -107,7 +108,7 @@ export async function savePlatformEmailSettings(input: {
 }
 
 export async function getExistingPlatformEmailSecrets(): Promise<PlatformEmailSecrets> {
-  const row = await getPlatformEmailSettingsRow();
+  const { row } = await getPlatformEmailSettingsState();
 
   return {
     sendGridApiKey: row?.sendgrid_api_key_encrypted ? decryptSecret(row.sendgrid_api_key_encrypted) : null,
@@ -116,13 +117,27 @@ export async function getExistingPlatformEmailSecrets(): Promise<PlatformEmailSe
 }
 
 export async function getConfiguredEmailDeliveryConfig(): Promise<EmailDeliveryConfig | null> {
-  const platformRow = await getPlatformEmailSettingsRow().catch(() => null);
+  const { row } = await getPlatformEmailSettingsState();
 
-  if (platformRow) {
-    return getPlatformEmailDeliveryConfig(platformRow);
+  if (row) {
+    return getPlatformEmailDeliveryConfig(row);
   }
 
   return getEnvSendGridApiConfig() ?? getEnvSmtpConfig();
+}
+
+async function getPlatformEmailSettingsState(): Promise<{ row: PlatformEmailSettingsRow | null; settingsAvailable: boolean }> {
+  try {
+    return {
+      row: await getPlatformEmailSettingsRow(),
+      settingsAvailable: true
+    };
+  } catch {
+    return {
+      row: null,
+      settingsAvailable: false
+    };
+  }
 }
 
 async function getPlatformEmailSettingsRow(): Promise<PlatformEmailSettingsRow | null> {
@@ -225,9 +240,10 @@ function getEnvSmtpConfig(): SmtpEmailConfig | null {
   };
 }
 
-function toView(row: PlatformEmailSettingsRow): PlatformEmailSettingsView {
+function toView(row: PlatformEmailSettingsRow, settingsAvailable = true): PlatformEmailSettingsView {
   return {
     enabled: row.enabled,
+    settingsAvailable,
     fromEmail: row.from_email ?? "",
     fromName: row.from_name ?? "NXTTRACK",
     hasSendGridApiKey: Boolean(row.sendgrid_api_key_encrypted),

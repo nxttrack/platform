@@ -54,6 +54,9 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
       {test === "sent" ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Testmail is verzonden.</p> : null}
       {test === "failed" ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Testmail versturen is niet gelukt.</p> : null}
       {test === "invalid_email" ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Controleer het testadres.</p> : null}
+      {settings && !settings.settingsAvailable ? (
+        <p className="rounded-lg border border-warning/30 bg-warning/10 px-3 py-2 text-sm font-medium text-warning">Mailinstellingen zijn nog niet beschikbaar op deze omgeving. Pas de database migration toe voordat je deze instellingen opslaat.</p>
+      ) : null}
 
       <form action={savePlatformEmailSettingsAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-col gap-4 border-b border-border pb-4 md:flex-row md:items-center md:justify-between">
@@ -124,7 +127,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           </div>
         </div>
 
-        <button className="mt-5 h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+        <button className="mt-5 h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60" disabled={!settings?.settingsAvailable} type="submit">
           Opslaan
         </button>
       </form>
