@@ -41,12 +41,20 @@ jobs:
       RESERVED_TENANT_SUBDOMAINS: ${{ vars.RESERVED_TENANT_SUBDOMAINS }}
       BASE_PATH: ${{ vars.BASE_PATH }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+      HEALTH_CHECK_DATABASE: ${{ vars.HEALTH_CHECK_DATABASE || 'auto' }}
+      HEALTH_STRICT: ${{ vars.HEALTH_STRICT || 'false' }}
+      REQUIRE_HEALTH_DATABASE: ${{ vars.REQUIRE_HEALTH_DATABASE || 'false' }}
+      REQUIRE_HEALTH_COMMIT: ${{ vars.REQUIRE_HEALTH_COMMIT || 'true' }}
+      RUNTIME_SMOKE_ROUTES: ${{ vars.RUNTIME_SMOKE_ROUTES }}
+      TENANT_SMOKE_URL: ${{ vars.TENANT_SMOKE_URL }}
+      TENANT_SMOKE_ROUTES: ${{ vars.TENANT_SMOKE_ROUTES }}
 
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       JWT_SESSION: ${{ secrets.JWT_SESSION }}
       AUTH_CODE_PEPPER: ${{ secrets.AUTH_CODE_PEPPER }}
+      EMAIL_SETTINGS_SECRET: ${{ secrets.EMAIL_SETTINGS_SECRET }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -60,6 +68,12 @@ jobs:
       BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}
       RUN_PLAYWRIGHT_SMOKE: ${{ vars.RUN_PLAYWRIGHT_SMOKE }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      SMTP_HOST: ${{ vars.SMTP_HOST }}
+      SMTP_PORT: ${{ vars.SMTP_PORT }}
+      SMTP_USER: ${{ vars.SMTP_USER }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD || secrets.SMTP_PASS }}
+      SMTP_SECURE: ${{ vars.SMTP_SECURE }}
+      SMTP_EHLO_HOSTNAME: ${{ vars.SMTP_EHLO_HOSTNAME }}
       SMTP_FROM: ${{ vars.SMTP_FROM }}
       SMTP_FROM_EMAIL: ${{ vars.SMTP_FROM_EMAIL }}
       SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
@@ -108,6 +122,7 @@ jobs:
           SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
           SUPABASE_SERVER_SECRET="${SUPABASE_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
           EFFECTIVE_SESSION_SECRET="${SESSION_SECRET:-$JWT_SESSION}"
+          EFFECTIVE_EMAIL_SETTINGS_SECRET="${EMAIL_SETTINGS_SECRET:-$EFFECTIVE_SESSION_SECRET}"
 
           {
             printf 'APP_ENV=%s\n' "$APP_ENV"
@@ -124,11 +139,17 @@ jobs:
             printf 'TENANT_BASE_DOMAINS=%s\n' "$TENANT_BASE_DOMAINS"
             printf 'RESERVED_TENANT_SUBDOMAINS=%s\n' "$RESERVED_TENANT_SUBDOMAINS"
             printf 'BASE_PATH=%s\n' "$BASE_PATH"
+            printf 'RELEASE_COMMIT_SHA=%s\n' "$GITHUB_SHA"
+            printf 'RELEASE_BUILD_TIME=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            printf 'HEALTH_CHECK_DATABASE=%s\n' "$HEALTH_CHECK_DATABASE"
+            printf 'HEALTH_STRICT=%s\n' "$HEALTH_STRICT"
+            printf 'REQUIRE_HEALTH_DATABASE=%s\n' "$REQUIRE_HEALTH_DATABASE"
             printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
             printf 'SESSION_SECRET=%s\n' "$EFFECTIVE_SESSION_SECRET"
             printf 'JWT_SESSION=%s\n' "$JWT_SESSION"
             printf 'JWT_SECRET=%s\n' "$JWT_SECRET"
             printf 'AUTH_CODE_PEPPER=%s\n' "$AUTH_CODE_PEPPER"
+            printf 'EMAIL_SETTINGS_SECRET=%s\n' "$EFFECTIVE_EMAIL_SETTINGS_SECRET"
             printf 'NEXT_PUBLIC_SUPABASE_URL=%s\n' "$NEXT_PUBLIC_SUPABASE_URL"
             printf 'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=%s\n' "$SUPABASE_PUBLIC_KEY"
             printf 'NEXT_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
@@ -139,6 +160,12 @@ jobs:
             printf 'BOOTSTRAP_PLATFORM_OWNER_EMAIL=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_EMAIL"
             printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
             printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
+            printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
+            printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
+            printf 'SMTP_USER=%s\n' "$SMTP_USER"
+            printf 'SMTP_PASSWORD=%s\n' "$SMTP_PASSWORD"
+            printf 'SMTP_SECURE=%s\n' "$SMTP_SECURE"
+            printf 'SMTP_EHLO_HOSTNAME=%s\n' "$SMTP_EHLO_HOSTNAME"
             printf 'SMTP_FROM=%s\n' "$SMTP_FROM"
             printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
             printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
@@ -204,6 +231,12 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run staging:health
+
+      - name: Runtime smoke
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run staging:runtime-smoke
 
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'

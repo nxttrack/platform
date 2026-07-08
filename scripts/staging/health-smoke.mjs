@@ -23,7 +23,19 @@ try {
     throw new Error(`Unexpected health payload from ${baseUrl}: ${JSON.stringify(body)}`);
   }
 
-  console.log(`[staging:health] PASS ${baseUrl} -> env=${body.env ?? body.environment ?? "unknown"}`);
+  if (process.env.REQUIRE_HEALTH_COMMIT === "true" && !body.commitSha) {
+    throw new Error("Health payload is missing commitSha while REQUIRE_HEALTH_COMMIT=true.");
+  }
+
+  const database = body.checks?.database;
+
+  if (process.env.REQUIRE_HEALTH_DATABASE === "true" && database?.status !== "pass") {
+    throw new Error(`Database health check is required but returned ${database?.status ?? "missing"}.`);
+  }
+
+  console.log(
+    `[staging:health] PASS ${baseUrl} -> env=${body.env ?? body.environment ?? "unknown"} commit=${body.commitSha ?? "unknown"} build=${body.buildTimestamp ?? "unknown"} database=${database?.status ?? "missing"}`
+  );
 } catch (error) {
   console.error(`[staging:health] FAIL ${baseUrl}: ${error instanceof Error ? error.message : String(error)}`);
   process.exit(1);

@@ -61,5 +61,5 @@ export const platformNav: NavItem[] = [
   { href: "/platform", label: "Tenants", icon: Users },
   { href: "/platform/uitnodigingen", label: "Invites", icon: UserPlus },
   { href: "/platform", label: "Templates", icon: Waves },
-  { href: "/platform", label: "Settings", icon: Settings }
+  { href: "/platform/instellingen", label: "Instellingen", icon: Settings }
 ];
