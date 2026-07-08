@@ -57,9 +57,7 @@ export const adminNav: NavItem[] = [
 ];
 
 export const platformNav: NavItem[] = [
-  { href: "/platform", label: "Overview", icon: Home },
-  { href: "/platform", label: "Tenants", icon: Users },
-  { href: "/platform/uitnodigingen", label: "Invites", icon: UserPlus },
-  { href: "/platform", label: "Templates", icon: Waves },
+  { href: "/platform", label: "Overzicht", icon: Home },
+  { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: UserPlus },
   { href: "/platform/instellingen", label: "Instellingen", icon: Settings }
 ];

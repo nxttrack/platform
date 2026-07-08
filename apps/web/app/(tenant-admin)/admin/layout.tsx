@@ -12,10 +12,10 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const context = await requirePrivateShellContext("/admin");
   const tenant = context.activeTenant;
-  const role = tenant?.roles.map((item) => roleLabels[item]).join(", ") ?? "Tenant admin";
+  const role = tenant?.roles.map((item) => roleLabels[item]).join(", ") ?? "Backoffice";
 
   return (
-    <AppShell brand={{ title: tenant?.name ?? "Tenant", subtitle: "Tenant Admin" }} nav={adminNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="admin">
+    <AppShell brand={{ title: tenant?.name ?? "Organisatie", subtitle: "Backoffice" }} nav={adminNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="admin">
       {children}
     </AppShell>
   );

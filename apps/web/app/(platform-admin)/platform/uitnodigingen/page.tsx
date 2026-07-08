@@ -18,7 +18,7 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">Platform admin</p>
         <h1 className="mt-2 text-2xl font-bold text-foreground">Uitnodigingen</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Maak platformgebruikers of tenant-scoped gebruikers aan met een tijdelijk wachtwoord.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Maak platformgebruikers of organisatiegebruikers aan met een tijdelijk wachtwoord.</p>
       </div>
 
       {sent ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{delivery === "sent" ? "Uitnodiging is verzonden." : "Uitnodiging is aangemaakt; mailprovider is nog niet geconfigureerd."}</p> : null}
@@ -51,7 +51,7 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Tenant">
+              <optgroup label="Organisatie">
                 {tenantInviteRoles.map((role) => (
                   <option key={role} value={role}>
                     {roleLabels[role]}
@@ -62,7 +62,7 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
           </div>
           <div className="space-y-2">
             <label className="text-sm font-semibold text-foreground" htmlFor="tenantSlug">
-              Tenant slug
+              Organisatie slug
             </label>
             <input className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" id="tenantSlug" name="tenantSlug" placeholder="aquaswim-demo" type="text" />
           </div>

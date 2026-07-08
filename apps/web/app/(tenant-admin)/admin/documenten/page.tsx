@@ -19,7 +19,7 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Operations" title="Documenten" subtitle="Documentregister voor tenant admin, instructeurs en parent portal zichtbaarheid." />
+      <PageHeader kicker="Operations" title="Documenten" subtitle="Documentregister voor backoffice, instructeurs en ouderportaal." />
       <Feedback saved={saved} error={error} />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
@@ -45,7 +45,7 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Bestandsnaam" name="fileName" placeholder="voorwaarden.pdf" />
-              <Field label="Bestandspad" name="filePath" placeholder="tenant/aquaswim/docs/voorwaarden.pdf" />
+              <Field label="Bestandspad" name="filePath" placeholder="organisaties/aquaswim/docs/voorwaarden.pdf" />
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="MIME type" name="mimeType" placeholder="application/pdf" />

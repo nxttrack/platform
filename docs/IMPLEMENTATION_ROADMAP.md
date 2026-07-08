@@ -794,6 +794,294 @@ What not to do:
 - Do not add new product scope during hardening.
 - Do not deploy production without approval.
 
+## Phase 14 - Canon Alignment And Productization
+
+Goal:
+
+Turn the implemented staging MVP into a coherent product surface that matches the NXTTRACK canon.
+
+Scope:
+
+- Runtime scaffold copy removal.
+- Platform admin overview.
+- Tenant admin settings.
+- Terminology cleanup.
+- Navigation cleanup.
+- Visible MVP route coverage.
+
+Tasks:
+
+- Replace `/platform` placeholder with a useful platform overview.
+- Add `/admin/instellingen` for organization settings and policies.
+- Remove Phase 2/skeleton wording from runtime pages.
+- Replace user-facing tenant terminology with organization/swim-school wording.
+- Remove or fix navigation links that point to missing routes.
+- Update docs so implementation status, staging status and product readiness are distinct.
+
+Dependencies:
+
+- Phase 3 through 13 code baseline.
+- NXTTRACK canon.
+
+Affected areas:
+
+- Platform admin.
+- Tenant admin.
+- Public copy.
+- Navigation.
+- Docs.
+
+Risks:
+
+- Hiding real staging blockers behind nicer copy.
+- Mixing platform admin and tenant admin data.
+- Renaming technical internals while only user-facing terminology needs cleanup.
+
+Acceptance criteria:
+
+- `/platform` is no longer a placeholder.
+- `/admin/instellingen` exists.
+- Runtime UI no longer exposes Phase 2/scaffold language.
+- Backoffice navigation resolves.
+- README and phase docs reflect real status.
+
+What not to do:
+
+- Do not add new business domains.
+- Do not remove staging warnings that are still true.
+- Do not rename database tables for cosmetic terminology.
+
+## Phase 15 - Staging Truth And Security Validation
+
+Goal:
+
+Prove that the MVP code works against the real staging environment and that tenant isolation is intact.
+
+Scope:
+
+- Supabase migrations.
+- Supabase advisors.
+- RLS tests.
+- Seeded role accounts.
+- Staging smoke and launch gates.
+
+Tasks:
+
+- Fix the failing staging migration execution.
+- Apply all migrations to staging.
+- Run Supabase advisors and resolve or explicitly accept findings.
+- Confirm `admin@nxttrack.nl` platform owner access.
+- Run RLS checks with platform owner, tenant admin, instructor and parent.
+- Run `PLAYWRIGHT_BASE_URL=https://staging.nxttrack.nl pnpm run test:e2e`.
+- Run strict launch gate with truthful confirmations.
+
+Acceptance criteria:
+
+- No critical advisor findings remain unresolved.
+- Role smoke tests pass with required credentials.
+- Live Playwright staging smoke passes.
+- Strict staging gate is green.
+
+## Phase 16 - End-To-End Operational Flows
+
+Goal:
+
+Prove that the canonical swim-school journey works without manual database intervention.
+
+Scope:
+
+- Intake to diploma happy path.
+- Admin, parent and instructor workflows.
+- Real staging accounts and seeded demo data.
+
+Tasks:
+
+- Create a demo swim school organization with stable data.
+- Automate parent intake, waitlist conversion, placement scoring and slot offer.
+- Test slot offer accept/decline.
+- Confirm participant appears in parent portal and instructor roster.
+- Record attendance, progress, badge and parent-visible note.
+- Confirm payment/subscription visibility.
+- Confirm afzwem readiness, event, result and diploma record.
+- Add authenticated Playwright coverage for the complete happy path.
+
+Acceptance criteria:
+
+- One complete tenant flow passes on staging.
+- No manual database edits are required during the flow.
+- Core role dashboards show the resulting data correctly.
+
+## Phase 17 - Communication, Storage And Documents
+
+Goal:
+
+Make communication and files production-shaped instead of metadata-only.
+
+Scope:
+
+- SendGrid/API mail delivery.
+- Templates.
+- Notification status.
+- Supabase Storage.
+- Documents and diploma files.
+
+Tasks:
+
+- Add organization-aware mail templates and sender behavior.
+- Log delivery attempts and failures.
+- Add document upload/download with storage policies.
+- Add private diploma/certificate file storage.
+- Add parent/instructor document views.
+- Add retry/admin diagnostics for failed mail.
+
+Acceptance criteria:
+
+- Invites, reset codes, slot offers and notifications send through the configured provider.
+- Documents and diplomas are stored privately and served only to authorized roles.
+- Admin can see delivery/file status.
+
+## Phase 18 - Planning, Capacity And Catch-Up Depth
+
+Goal:
+
+Upgrade the operational planning backbone from basic CRUD to daily scheduling support.
+
+Scope:
+
+- Planboard depth.
+- Resource/lane capacity.
+- Instructor availability.
+- Catch-up scheduling.
+- Conflict detection.
+
+Tasks:
+
+- Add day/week planning views.
+- Surface resource, lane and instructor conflicts.
+- Add capacity colors and occupancy summaries.
+- Add catch-up request/selection flow.
+- Add admin approval where policy requires it.
+- Prepare drag-and-drop as later enhancement, not a blocker.
+
+Acceptance criteria:
+
+- Admin can see planning conflicts before they affect lessons.
+- Catch-up credits can be converted into real lesson options.
+- Capacity calculations remain consistent across admin, parent and instructor views.
+
+## Phase 19 - Parent And Instructor Experience Depth
+
+Goal:
+
+Make the two daily user shells feel polished, fast and role-specific.
+
+Scope:
+
+- Parent portal completeness.
+- Instructor tablet workflow.
+- Messages, tasks and documents.
+- Achievement presentation.
+
+Tasks:
+
+- Add parent messages and documents views.
+- Add parent badge/achievement view if not sufficiently covered by progress.
+- Add instructor messages, tasks and documents routes.
+- Improve mobile parent portal ergonomics.
+- Improve tablet-first instructor roster and assessment flow.
+- Add stronger empty states and loading/error copy.
+
+Acceptance criteria:
+
+- Parent can self-serve lessons, progress, payments, documents and communication.
+- Instructor can handle a lesson from tablet without backoffice detours.
+- Private notes and documents remain correctly separated.
+
+## Phase 20 - Billing Automation Boundary
+
+Goal:
+
+Prepare commercial automation without letting billing distort the learning model.
+
+Scope:
+
+- Mollie/iDEAL boundary.
+- Invoice/export preparation.
+- Failed payment lifecycle.
+- Subscription lifecycle.
+
+Tasks:
+
+- Define provider abstraction for payment sessions and webhooks.
+- Add payment event history.
+- Add failed/overdue workflows and admin follow-up tasks.
+- Add invoice/export data model where needed.
+- Keep stage movement independent from subscription changes.
+
+Acceptance criteria:
+
+- Manual billing remains intact.
+- Payment provider work can start without schema rework.
+- Admin and parent payment status remain understandable.
+
+## Phase 21 - Intelligence, Insights And Automation
+
+Goal:
+
+Add next-gen assistance while keeping humans in control of placement, progress and billing decisions.
+
+Scope:
+
+- Placement recommendations.
+- Planning suggestions.
+- Operational insights.
+- AI-assisted messaging/reporting.
+
+Tasks:
+
+- Add explainable placement suggestions with alternatives.
+- Add waitlist conversion and capacity insights.
+- Add instructor workload and progress bottleneck reports.
+- Add optional AI draft assistance for messages and summaries.
+- Add audit and opt-in controls for AI-assisted behavior.
+
+Acceptance criteria:
+
+- AI assists but never silently decides placement, billing or sensitive child outcomes.
+- Admins can see the reason behind recommendations.
+- Insights map to canonical reports and operational decisions.
+
+## Phase 22 - Production Readiness And Commercial Launch
+
+Goal:
+
+Move from staging MVP to a controlled production launch.
+
+Scope:
+
+- Production environment.
+- Monitoring.
+- Backup/restore proof.
+- Rollback proof.
+- Security review.
+- Product-owner approval.
+
+Tasks:
+
+- Harden production secrets and environment protection.
+- Add monitoring and alerting for health, 5xx, asset MIME failures, Supabase errors and mail failures.
+- Rehearse restore and rollback.
+- Run accessibility and performance pass.
+- Freeze MVP scope for launch candidate.
+- Prepare launch checklist and support runbook.
+
+Acceptance criteria:
+
+- Product owner signs off.
+- No known P0/P1 security or availability issues remain.
+- Production deploy and rollback are proven.
+- Support and monitoring are operational.
+
 ## Recommended Implementation Order
 
 1. Phase 0 because repo, deployment, and secrets block safe work.
@@ -807,13 +1095,17 @@ What not to do:
 9. Phase 11 because billing must attach to enrollment/placement without controlling progress.
 10. Phase 12 because reports and operations need real domain data.
 11. Phase 13 because hardening comes after the MVP surface exists.
+12. Phase 14 because implemented code must become a coherent product surface before review.
+13. Phase 15 because staging truth and security validation must be proven before broader flows.
+14. Phase 16 because the complete swim-school journey must work without database intervention.
+15. Phase 17 through Phase 22 because communication, planning depth, experience polish, billing automation, intelligence and production launch depend on a stable staging MVP.
 
 ## Immediate Next Proposal After PR Approval
 
-After approval of this documentation PR:
+After Phase 14 starts:
 
-1. Confirm staging domains and DNS plan.
-2. Confirm Supabase staging project.
-3. Confirm migration runner.
-4. Create screenshot baseline list for Lovable routes.
-5. Start Phase 2 app scaffold only after those decisions are closed.
+1. Remove runtime scaffold copy.
+2. Build the platform overview.
+3. Add tenant admin settings.
+4. Re-run typecheck/build.
+5. Resume Phase 15 staging validation.

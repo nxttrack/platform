@@ -9,12 +9,12 @@ export const roleLabels: Record<AppRole, string> = {
   platform_owner: "Platform owner",
   platform_admin: "Platform admin",
   platform_support: "Platform support",
-  tenant_owner: "Tenant owner",
-  tenant_admin: "Tenant admin",
-  tenant_staff: "Tenant staff",
-  instructor: "Instructor",
-  parent: "Parent",
-  athlete: "Athlete"
+  tenant_owner: "Organisatie eigenaar",
+  tenant_admin: "Organisatiebeheerder",
+  tenant_staff: "Team",
+  instructor: "Instructeur",
+  parent: "Ouder",
+  athlete: "Leerling"
 };
 
 export function isPlatformRole(role: string): role is PlatformRole {

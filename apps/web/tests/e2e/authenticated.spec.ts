@@ -15,7 +15,7 @@ const authCases: AuthCase[] = [
     password: process.env.E2E_PLATFORM_OWNER_PASSWORD
   },
   {
-    label: "tenant admin",
+    label: "organization admin",
     path: "/admin",
     username: process.env.E2E_TENANT_ADMIN_EMAIL,
     password: process.env.E2E_TENANT_ADMIN_PASSWORD

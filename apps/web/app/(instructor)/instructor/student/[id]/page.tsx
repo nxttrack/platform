@@ -69,7 +69,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
           {data.progressModules.length === 0 ? (
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
               <h2 className="text-lg font-bold text-foreground">Zwemsjabloon</h2>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">Installeer de standaard NXTTRACK zwemmodules, score-items en badgecatalogus voor deze tenant.</p>
+              <p className="mt-2 text-sm leading-6 text-muted-foreground">Installeer de standaard NXTTRACK zwemmodules, score-items en badgecatalogus voor deze organisatie.</p>
               <form action={installSwimProgressTemplateAction} className="mt-4">
                 <input name="next" type="hidden" value={`/instructor/student/${participant.id}`} />
                 <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">

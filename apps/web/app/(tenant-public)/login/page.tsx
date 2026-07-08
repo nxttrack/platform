@@ -23,7 +23,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
         <div className="mb-6">
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">NXTTRACK</p>
           <h1 className="mt-2 text-2xl font-bold text-foreground">Inloggen</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Gebruik je NXTTRACK account voor portaal, instructor, tenant admin of platform admin.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Gebruik je NXTTRACK account voor het portaal, instructeursomgeving, backoffice of platformbeheer.</p>
         </div>
 
         {error ? <p className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessages[error] ?? "Inloggen is niet gelukt."}</p> : null}

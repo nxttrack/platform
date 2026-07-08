@@ -6,18 +6,18 @@ import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/
 const items = [
   {
     icon: Waves,
-    title: "Swim-first basis",
-    description: "Routegroepen en shells staan klaar voor tenant public, portaal, instructor en tenant admin."
+    title: "Zwemschoolworkflow",
+    description: "Publieke site, intake, plaatsing, portaal, instructeurs en backoffice sluiten op elkaar aan."
   },
   {
     icon: Layers,
-    title: "Lovable behouden",
-    description: "Tokens, radius, kleuren en shell-ritme zijn voorbereid op de Lovable UI-port."
+    title: "Lovable visuele lijn",
+    description: "De interface blijft afgestemd op de Lovable-baseline, met NXTTRACK als productlaag."
   },
   {
     icon: ShieldCheck,
-    title: "Nog geen productdata",
-    description: "Auth, Supabase, betalingen en echte tenantdata starten pas in latere fases."
+    title: "Veilige staging-basis",
+    description: "Auth, rollen, RLS-checks en staging-gates blijven expliciet onderdeel van review."
   }
 ];
 
@@ -37,13 +37,13 @@ export default async function HomePage() {
   return (
     <main>
       <PageHero
-        kicker="Phase 2 scaffold"
-        title="NXTTRACK platform foundation"
-        sub="Een minimale Next.js basis voor staging-validatie, route-skeletons en Lovable-tokenconsolidatie."
-        primary={{ href: "/nxttrack", label: "Bekijk marketing skeleton" }}
-        secondary={{ href: "/admin", label: "Open admin shell" }}
+        kicker="Staging platform"
+        title="NXTTRACK platform"
+        sub="De staging-MVP bundelt de zwemschoolreis van publieke intake tot backoffice, portaal, instructeurs en voortgang."
+        primary={{ href: "/nxttrack", label: "Bekijk NXTTRACK" }}
+        secondary={{ href: "/admin", label: "Open backoffice" }}
       />
-      <PageSection kicker="Scope" title="Wat deze fase wel en niet doet">
+      <PageSection kicker="Status" title="Waar deze omgeving voor bedoeld is">
         <FeatureGrid items={items} />
         <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-border bg-card p-5 shadow-soft">
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -131,8 +131,8 @@ function TenantUnavailable({ slug }: { slug: string }) {
     <main className="flex min-h-screen items-center justify-center px-4">
       <section className="max-w-lg rounded-xl border border-border bg-card p-6 text-center shadow-card">
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">{slug}</p>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">Tenant site niet beschikbaar</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Deze tenant is nog niet actief of de publieke data is nog niet verbonden.</p>
+        <h1 className="mt-2 text-2xl font-bold text-foreground">Organisatiesite niet beschikbaar</h1>
+        <p className="mt-2 text-sm text-muted-foreground">Deze organisatie is nog niet actief of de publieke data is nog niet verbonden.</p>
       </section>
     </main>
   );
