@@ -12,7 +12,7 @@ export default async function AdminHomePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Tenant admin" title="Operations dashboard" subtitle={`Dagelijkse backoffice voor ${data.tenant.name}.`} />
+      <PageHeader kicker="Backoffice" title="Operations dashboard" subtitle={`Dagelijkse backoffice voor ${data.tenant.name}.`} />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric label="Actieve inschrijvingen" value={data.kpis.activeEnrollments.toString()} />

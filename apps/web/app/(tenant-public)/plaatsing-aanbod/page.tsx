@@ -80,7 +80,7 @@ export default async function PlacementOfferPage({ searchParams }: PageProps) {
               <p>Is de link verlopen of klopt er iets niet, neem dan contact op met de zwemschool.</p>
             </div>
             <Link className="mt-5 inline-flex text-sm font-semibold text-primary hover:underline" href="/">
-              Terug naar tenant site
+              Terug naar organisatiesite
             </Link>
           </aside>
         </div>

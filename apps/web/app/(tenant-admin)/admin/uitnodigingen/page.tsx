@@ -19,9 +19,9 @@ export default async function TenantInvitationsPage({ searchParams }: PageProps)
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Tenant admin</p>
+        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Backoffice</p>
         <h1 className="mt-2 text-2xl font-bold text-foreground">Uitnodigingen</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Nodig instructeurs, teamleden en ouders uit voor {context.activeTenant?.name ?? "deze tenant"}.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Nodig instructeurs, teamleden en ouders uit voor {context.activeTenant?.name ?? "deze organisatie"}.</p>
       </div>
 
       {sent ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{delivery === "sent" ? "Uitnodiging is verzonden." : "Uitnodiging is aangemaakt; mailprovider is nog niet geconfigureerd."}</p> : null}

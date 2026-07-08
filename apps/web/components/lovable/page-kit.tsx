@@ -140,11 +140,11 @@ export function FinalCTA() {
       <div className="mx-auto max-w-6xl rounded-3xl bg-[#0f172a] p-10 text-white md:p-14">
         <div className="grid gap-6 md:grid-cols-[1.4fr_auto] md:items-center">
           <div>
-            <h2 className="text-2xl font-bold md:text-3xl">Phase 2 blijft bewust klein.</h2>
-            <p className="mt-2 text-sm text-white/70">Na deze scaffold volgen auth, tenants en echte domeinmodellen pas in Phase 3 en verder.</p>
+            <h2 className="text-2xl font-bold md:text-3xl">Staging blijft de plek voor bewijs.</h2>
+            <p className="mt-2 text-sm text-white/70">Gebruik deze omgeving om rollen, workflows, styling en security te valideren voordat productie wordt vrijgegeven.</p>
           </div>
           <Link className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-bold text-slate-900" href="/platform">
-            Platform shell <ArrowRight className="h-4 w-4" />
+            Platformbeheer <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

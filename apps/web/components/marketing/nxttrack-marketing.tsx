@@ -125,7 +125,7 @@ const footerCols = [
   {
     title: "Demo omgevingen",
     links: [
-      { href: "/", label: "Tenant marketing" },
+      { href: "/", label: "Organisatiesite" },
       { href: "/portaal", label: "Ouder omgeving" },
       { href: "/instructor", label: "Trainer omgeving" },
       { href: "/admin", label: "Backoffice" }
@@ -409,7 +409,7 @@ function BadgeSection() {
 
 function TenantSites() {
   return (
-    <Section kicker="Tenant websites" title="Ook de website van jouw zwemschool kan meebewegen." sub="NXTTRACK biedt tenant-facing pagina's, zodat je website altijd up-to-date is met programma's, locaties, nieuws en wachtlijststatus." tinted>
+    <Section kicker="Websites" title="Ook de website van jouw zwemschool kan meebewegen." sub="NXTTRACK biedt organisatiegerichte pagina's, zodat je website altijd up-to-date is met programma's, locaties, nieuws en wachtlijststatus." tinted>
       <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-center">
         <TenantSiteMock />
         <div>
@@ -422,7 +422,7 @@ function TenantSites() {
             ))}
           </ul>
           <Link href="/" className="mt-6 inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50">
-            Bekijk demo tenant site <ArrowRight className="h-4 w-4" />
+            Bekijk demo organisatiesite <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

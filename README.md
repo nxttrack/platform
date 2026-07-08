@@ -2,7 +2,7 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: staged MVP implementation with staging validation still required. Phase 3 through Phase 13 are implemented in code, but live Supabase migrations, tenant DNS, RLS/advisor validation, Playwright staging smoke and end-to-end staging tests are still required before the MVP can be considered product-owner-review ready.
+Current working mode: staged MVP implementation with staging validation and canon-alignment productization still required. Phase 3 through Phase 13 are implemented in code, but live Supabase migrations, tenant DNS, RLS/advisor validation, Playwright staging smoke and end-to-end staging tests are still required before the MVP can be considered product-owner-review ready. Phase 14 starts the cleanup from implemented scaffolding to a coherent product surface.
 
 ## Source of truth
 
@@ -29,6 +29,7 @@ The repository has moved beyond the original documentation-only phase:
 - Phase 11: payment plans, subscriptions, manual payment status, admin payment overview, parent payment view and due/overdue billing events are implemented in code. Staging RLS/advisor validation and manual billing end-to-end tests are still pending.
 - Phase 12: admin operations dashboard, messages, tasks, documents, basic reports, report snapshots, role-based visibility and notification hooks are implemented in code. Staging RLS/advisor validation and role-based operation tests are still pending.
 - Phase 13: hardening automation, RLS coverage audit, service-only auth deny policies, Playwright smoke/visual/performance tests, deploy hardening gates, enriched health smoke, runtime asset/MIME smoke, authenticated Playwright workflows and RLS role smoke scaffolding are implemented in code. Staging execution, seeded authenticated role runs, backups check, Lovable visual comparison and rollback rehearsal are still pending.
+- Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up. Staging validation continues in Phase 15.
 
 Automatic payment provider work, advanced scheduling, full assessments and other product modules should still wait until Phase 3/4/5/6/7/8/9/10/11/12/13 are applied to staging and the identity/RLS/domain/intake/placement/parent-portal/instructor/progress/diploma/billing/admin-operations/hardening boundary is verified with real users.
 
@@ -55,6 +56,7 @@ Automatic payment provider work, advanced scheduling, full assessments and other
 - [Phase 11 - Manual Payments And Subscriptions](docs/PHASE_11_MANUAL_PAYMENTS_SUBSCRIPTIONS.md)
 - [Phase 12 - Admin Operations](docs/PHASE_12_ADMIN_OPERATIONS.md)
 - [Phase 13 - Hardening And Staging Launch](docs/PHASE_13_HARDENING_STAGING_LAUNCH.md)
+- [Phase 14 - Canon Alignment And Productization](docs/PHASE_14_CANON_ALIGNMENT_PRODUCTIZATION.md)
 
 ## Operational prep docs
 

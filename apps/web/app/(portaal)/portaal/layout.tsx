@@ -15,7 +15,7 @@ export default async function ParentLayout({ children }: { children: React.React
   const role = tenant?.roles.map((item) => roleLabels[item]).join(", ") ?? "Portaal";
 
   return (
-    <AppShell brand={{ title: tenant?.name ?? "Tenant", subtitle: "Portaal" }} nav={parentNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="parent">
+    <AppShell brand={{ title: tenant?.name ?? "Organisatie", subtitle: "Portaal" }} nav={parentNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="parent">
       {children}
     </AppShell>
   );

@@ -28,7 +28,7 @@ export default async function AdminIntakePage() {
         <Metric label="Events pending" value={inbox.events.filter((event) => event.status === "pending").length} />
       </div>
 
-      <AdminSection title="Intake inbox" description="Deze lijst is de eerste operationele ingang; intake/wachtlijst-workflow komt later.">
+      <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
         {inbox.submissions.length === 0 ? (
           <EmptyState>Nog geen intake-aanmeldingen.</EmptyState>
         ) : (

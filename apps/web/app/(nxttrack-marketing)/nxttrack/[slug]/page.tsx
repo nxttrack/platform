@@ -20,7 +20,7 @@ const pages = {
   backoffice: {
     kicker: "Backoffice",
     title: "Dagelijkse operatie voor zwemscholen",
-    sub: "Tenant admins beheren programma's, groepen, planning, intake, documenten, taken en rapportages."
+    sub: "Beheerders beheren programma's, groepen, planning, intake, documenten, taken en rapportages."
   },
   prijzen: {
     kicker: "Prijzen",
@@ -40,7 +40,7 @@ const pages = {
   privacy: {
     kicker: "Privacy & AVG",
     title: "Privacy-first gebouwd",
-    sub: "NXTTRACK werkt met tenant-isolatie, rollen, audit trail en minimale datatoegang als uitgangspunt."
+    sub: "NXTTRACK werkt met organisatie-isolatie, rollen, audit trail en minimale datatoegang als uitgangspunt."
   },
   "wachtrij-planning": {
     kicker: "Wachtrij & planning",
@@ -55,7 +55,7 @@ const pages = {
   login: {
     kicker: "Inloggen",
     title: "Kies de juiste NXTTRACK omgeving",
-    sub: "Gebruik tenant-login voor ouders, instructeurs en tenant admins, of de platformomgeving voor NXTTRACK beheer."
+    sub: "Gebruik de organisatie-login voor ouders, instructeurs en beheerders, of de platformomgeving voor NXTTRACK beheer."
   }
 } as const;
 

@@ -171,7 +171,7 @@ function assertCanInvite(input: { actor: AuthenticatedTrustedAuthContext | null;
   const tenantCanInvite = tenantMembership?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   if (!tenantCanInvite) {
-    throw new Error("Alleen tenant owners en admins kunnen gebruikers voor deze tenant uitnodigen.");
+    throw new Error("Alleen organisatiebeheerders kunnen gebruikers voor deze organisatie uitnodigen.");
   }
 }
 
