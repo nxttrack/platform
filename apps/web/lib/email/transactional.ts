@@ -1,5 +1,8 @@
 import "server-only";
 
+import { getConfiguredEmailDeliveryConfig, type SendGridApiEmailConfig } from "./platform-settings";
+import { sendSmtpEmail } from "./smtp";
+
 export type TransactionalEmailInput = {
   to: string;
   subject: string;
@@ -10,31 +13,54 @@ export type TransactionalEmailInput = {
 export type TransactionalEmailResult =
   | {
       delivered: true;
-      provider: "sendgrid";
+      provider: "sendgrid_api" | "smtp";
+      source?: "env" | "platform_settings";
     }
   | {
       delivered: false;
-      provider: "not_configured";
+      provider: "not_configured" | "sendgrid_api" | "smtp";
       reason: string;
+      source?: "env" | "platform_settings";
     };
 
 export async function sendTransactionalEmail(input: TransactionalEmailInput): Promise<TransactionalEmailResult> {
-  const apiKey = process.env.SENDGRID_API_KEY;
-  const fromEmail = process.env.SMTP_FROM || process.env.SMTP_FROM_EMAIL;
-  const fromName = process.env.SMTP_FROM_NAME || "NXTTRACK";
+  const config = await getConfiguredEmailDeliveryConfig();
 
-  if (!apiKey || !fromEmail) {
+  if (!config) {
     return {
       delivered: false,
       provider: "not_configured",
-      reason: "SENDGRID_API_KEY and SMTP_FROM or SMTP_FROM_EMAIL are required for email delivery."
+      reason: "Configureer SendGrid API of SMTP in de platform admin instellingen."
     };
   }
 
+  if (config.provider === "sendgrid_api") {
+    return sendWithSendGridApi(config, input);
+  }
+
+  try {
+    await sendSmtpEmail(config, input);
+
+    return {
+      delivered: true,
+      provider: "smtp",
+      source: config.source
+    };
+  } catch (error) {
+    return {
+      delivered: false,
+      provider: "smtp",
+      reason: error instanceof Error ? error.message : String(error),
+      source: config.source
+    };
+  }
+}
+
+async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: TransactionalEmailInput): Promise<TransactionalEmailResult> {
   const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${config.apiKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -44,8 +70,8 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
         }
       ],
       from: {
-        email: fromEmail,
-        name: fromName
+        email: config.fromEmail,
+        name: config.fromName
       },
       subject: input.subject,
       content: [
@@ -60,13 +86,15 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
   if (!response.ok) {
     return {
       delivered: false,
-      provider: "not_configured",
-      reason: `SendGrid returned ${response.status}.`
+      provider: "sendgrid_api",
+      reason: `SendGrid API returned ${response.status}.`,
+      source: config.source
     };
   }
 
   return {
     delivered: true,
-    provider: "sendgrid"
+    provider: "sendgrid_api",
+    source: config.source
   };
 }
