@@ -69,6 +69,13 @@ jobs:
       BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}
       RUN_PLAYWRIGHT_SMOKE: ${{ vars.RUN_PLAYWRIGHT_SMOKE }}
       RUN_PHASE_15_VALIDATION: ${{ vars.RUN_PHASE_15_VALIDATION }}
+      RUN_PHASE_16_FLOW: ${{ vars.RUN_PHASE_16_FLOW }}
+      PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+      PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
+      PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_SKIP_PLAYWRIGHT_INSTALL: ${{ vars.PHASE16_SKIP_PLAYWRIGHT_INSTALL }}
+      PHASE16_SKIP_PLAYWRIGHT: ${{ vars.PHASE16_SKIP_PLAYWRIGHT }}
       E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
       E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
       E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
@@ -261,6 +268,13 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run phase15:staging
+
+      - name: Phase 16 operational flow validation
+        if: github.ref_name == 'staging' && env.RUN_PHASE_16_FLOW != 'false'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run phase16:flow
 
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'

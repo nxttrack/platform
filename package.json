@@ -18,6 +18,7 @@
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:package-standalone-assets": "node scripts/deploy/package-standalone-assets.mjs",
     "phase15:staging": "node scripts/staging/phase-15-validate.mjs",
+    "phase16:flow": "node scripts/staging/phase-16-operational-flow.mjs",
     "staging:gate": "node scripts/staging/check-launch-gates.mjs",
     "staging:health": "node scripts/staging/health-smoke.mjs",
     "staging:runtime-smoke": "node scripts/staging/runtime-smoke.mjs",
