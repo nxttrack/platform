@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
+import { createRequire } from "node:module";
 
 const cli = process.env.SUPABASE_CLI_BIN || "supabase";
 const baseOptions = {
@@ -10,6 +11,19 @@ const baseOptions = {
     SUPABASE_TELEMETRY_DISABLED: process.env.SUPABASE_TELEMETRY_DISABLED || "1"
   }
 };
+
+const stagingExistingSchemaRepairCandidates = [
+  { version: "20260707152802", table: "user_security", label: "phase 3 auth flows" },
+  { version: "20260707160455", table: "programs", label: "phase 4 core domain model" },
+  { version: "20260707162139", table: "intake_forms", label: "phase 5 public tenant intake" },
+  { version: "20260707163627", table: "waitlist_entries", label: "phase 6 waitlist placement" },
+  { version: "20260707165845", table: "participant_guardians", label: "phase 7 parent portal" },
+  { version: "20260707171704", table: "session_attendance", label: "phase 8 instructor shell" },
+  { version: "20260707173644", table: "progress_modules", label: "phase 9 progress badges" },
+  { version: "20260707180102", table: "graduation_readiness", label: "phase 10 graduation vault" },
+  { version: "20260707181731", table: "payment_plans", label: "phase 11 payments" },
+  { version: "20260707195442", table: "tenant_messages", label: "phase 12 admin operations" }
+];
 
 console.log("[db:migrate] Supabase migrations are present in the repository.");
 
@@ -46,6 +60,10 @@ if (version.status !== 0) {
 
 console.log(`[db:migrate] Using Supabase CLI ${version.stdout.trim() || "unknown version"}.`);
 
+if (process.env.DB_MIGRATE_DRY_RUN !== "true") {
+  await repairAppliedMigrationHistoryWhenNeeded();
+}
+
 const args = ["db", "push", "--db-url", process.env.DATABASE_URL, "--yes"];
 
 if (process.env.DB_MIGRATE_DRY_RUN === "true") {
@@ -69,3 +87,238 @@ if (result.status !== 0) {
 }
 
 process.exit(result.status ?? 1);
+
+async function repairAppliedMigrationHistoryWhenNeeded() {
+  const explicitRepairVersions = parseVersionList(process.env.DB_MIGRATION_REPAIR_APPLIED);
+
+  if (explicitRepairVersions.length > 0) {
+    console.log(`[db:migrate] Repairing ${explicitRepairVersions.length} explicitly configured migration history entry(s).`);
+    repairMigrationHistory(explicitRepairVersions);
+    return;
+  }
+
+  if (!isStagingTarget() || process.env.DB_MIGRATION_REPAIR_EXISTING_SCHEMA === "false") {
+    return;
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  if (!admin) {
+    console.warn("[db:migrate] Skipping staging schema history repair because Supabase admin client config is unavailable.");
+    return;
+  }
+
+  const remoteAppliedVersions = getRemoteAppliedMigrationVersions();
+  const repairs = [];
+
+  console.log("[db:migrate] Checking staging schema for migration history drift.");
+
+  for (const candidate of stagingExistingSchemaRepairCandidates) {
+    if (remoteAppliedVersions?.has(candidate.version)) {
+      continue;
+    }
+
+    const exists = await publicTableExists(admin, candidate.table);
+
+    if (exists) {
+      repairs.push(candidate.version);
+      console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${candidate.version} as applied.`);
+    }
+  }
+
+  if (repairs.length === 0) {
+    console.log("[db:migrate] No staging migration history repair needed.");
+    return;
+  }
+
+  repairMigrationHistory(repairs);
+}
+
+function createSupabaseAdminClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !secretKey) {
+    return null;
+  }
+
+  const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
+  const { createClient } = requireFromWeb("@supabase/supabase-js");
+
+  return createClient(supabaseUrl, secretKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
+
+async function publicTableExists(admin, table) {
+  const { error } = await admin.from(table).select("*", { head: true, count: "exact" }).limit(1);
+
+  if (!error) {
+    return true;
+  }
+
+  if (isMissingTableError(error)) {
+    return false;
+  }
+
+  console.error(`[db:migrate] Could not inspect public.${table}: ${error.message}`);
+  process.exit(1);
+}
+
+function isMissingTableError(error) {
+  const code = error.code ?? "";
+  const message = (error.message ?? "").toLowerCase();
+
+  return (
+    code === "42P01" ||
+    code === "PGRST106" ||
+    code === "PGRST202" ||
+    code === "PGRST205" ||
+    message.includes("could not find the table") ||
+    message.includes("does not exist") ||
+    message.includes("schema cache")
+  );
+}
+
+function getRemoteAppliedMigrationVersions() {
+  const list = spawnSync(cli, ["migration", "list", "--db-url", process.env.DATABASE_URL], {
+    ...baseOptions,
+    encoding: "utf8"
+  });
+
+  if (list.error) {
+    console.warn(`[db:migrate] Could not read remote migration history: ${list.error.message}`);
+    return null;
+  }
+
+  if (list.status !== 0) {
+    const stderr = list.stderr?.trim();
+    console.warn(`[db:migrate] Remote migration history check exited with ${list.status}; continuing with schema checks.`);
+    if (stderr) console.warn(stderr);
+    return null;
+  }
+
+  const versions = parseRemoteMigrationVersions(list.stdout ?? "");
+
+  if (!versions) {
+    console.warn("[db:migrate] Could not parse remote migration history; continuing with schema checks.");
+    return null;
+  }
+
+  console.log(`[db:migrate] Remote migration history contains ${versions.size} applied version(s).`);
+  return versions;
+}
+
+function parseRemoteMigrationVersions(output) {
+  const fromJson = parseRemoteMigrationVersionsFromJson(output);
+
+  if (fromJson) {
+    return fromJson;
+  }
+
+  const versions = new Set();
+  let remoteColumnIndex = 1;
+
+  for (const line of output.split(/\r?\n/)) {
+    if (!line.includes("│") && !line.includes("|")) {
+      continue;
+    }
+
+    const columns = line.split(/[│|]/).map((column) => column.trim());
+    const remoteHeaderIndex = columns.findIndex((column) => column.toLowerCase() === "remote");
+
+    if (remoteHeaderIndex >= 0) {
+      remoteColumnIndex = remoteHeaderIndex;
+      continue;
+    }
+
+    const remoteColumn = columns[remoteColumnIndex] ?? "";
+
+    for (const match of remoteColumn.matchAll(/\b\d{14}\b/g)) {
+      versions.add(match[0]);
+    }
+  }
+
+  return versions.size > 0 ? versions : null;
+}
+
+function parseRemoteMigrationVersionsFromJson(output) {
+  const jsonStart = Math.min(...["[", "{"].map((token) => output.indexOf(token)).filter((index) => index >= 0));
+
+  if (!Number.isFinite(jsonStart)) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(output.slice(jsonStart));
+    const versions = new Set();
+    collectRemoteVersions(parsed, versions);
+    return versions.size > 0 ? versions : null;
+  } catch {
+    return null;
+  }
+}
+
+function collectRemoteVersions(value, versions, parentKey = "") {
+  if (typeof value === "string") {
+    if (parentKey.toLowerCase().includes("remote")) {
+      for (const match of value.matchAll(/\b\d{14}\b/g)) {
+        versions.add(match[0]);
+      }
+    }
+
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectRemoteVersions(item, versions, parentKey);
+    }
+
+    return;
+  }
+
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    collectRemoteVersions(nestedValue, versions, key);
+  }
+}
+
+function repairMigrationHistory(versions) {
+  const uniqueVersions = [...new Set(versions)];
+  const repair = spawnSync(
+    cli,
+    ["migration", "repair", "--status", "applied", "--db-url", process.env.DATABASE_URL, "--yes", ...uniqueVersions],
+    {
+      ...baseOptions,
+      stdio: "inherit"
+    }
+  );
+
+  if (repair.error) {
+    console.error(`[db:migrate] Supabase migration repair failed to start (${cli}): ${repair.error.message}`);
+    process.exit(1);
+  }
+
+  if (repair.status !== 0) {
+    console.error(`[db:migrate] Supabase migration repair failed with exit code ${repair.status ?? 1}.`);
+    process.exit(repair.status ?? 1);
+  }
+}
+
+function parseVersionList(value) {
+  return (value ?? "")
+    .split(/[\s,]+/)
+    .map((version) => version.trim())
+    .filter(Boolean);
+}
+
+function isStagingTarget() {
+  return process.env.APP_ENV === "staging" || process.env.TARGET === "staging" || process.env.GITHUB_REF_NAME === "staging";
+}
