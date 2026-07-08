@@ -66,11 +66,17 @@ if (process.env.DB_MIGRATE_DRY_RUN !== "true") {
 
 const args = ["db", "push", "--db-url", process.env.DATABASE_URL, "--yes"];
 
+if (process.env.DB_MIGRATE_INCLUDE_ALL === "true") {
+  args.push("--include-all");
+}
+
 if (process.env.DB_MIGRATE_DRY_RUN === "true") {
   args.push("--dry-run");
 }
 
-console.log("[db:migrate] Running Supabase migrations with explicit opt-in.");
+console.log(
+  `[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=${process.env.DB_MIGRATE_INCLUDE_ALL === "true"} dryRun=${process.env.DB_MIGRATE_DRY_RUN === "true"}`
+);
 
 const result = spawnSync(cli, args, {
   ...baseOptions,

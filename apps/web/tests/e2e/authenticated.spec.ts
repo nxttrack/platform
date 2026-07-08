@@ -35,8 +35,19 @@ const authCases: AuthCase[] = [
 ];
 
 const configuredCases = authCases.filter((authCase) => authCase.username && authCase.password);
+const requireAuthenticatedWorkflows = process.env.E2E_REQUIRE_AUTHENTICATED_WORKFLOWS === "true";
 
 test.describe("authenticated role workflows", () => {
+  test.beforeAll(() => {
+    if (!requireAuthenticatedWorkflows) {
+      return;
+    }
+
+    const missingCases = authCases.filter((authCase) => !authCase.username || !authCase.password).map((authCase) => authCase.label);
+
+    expect(missingCases, `Missing E2E credentials for: ${missingCases.join(", ")}`).toEqual([]);
+  });
+
   test.skip(configuredCases.length === 0, "Set E2E_* credentials to run authenticated staging workflows.");
 
   for (const authCase of authCases) {

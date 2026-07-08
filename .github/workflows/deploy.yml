@@ -62,11 +62,28 @@ jobs:
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
       DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
+      DB_MIGRATE_INCLUDE_ALL: ${{ vars.DB_MIGRATE_INCLUDE_ALL }}
       BOOTSTRAP_PLATFORM_OWNER: ${{ vars.BOOTSTRAP_PLATFORM_OWNER }}
       BOOTSTRAP_PLATFORM_OWNER_EMAIL: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_EMAIL || 'admin@nxttrack.nl' }}
       BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD: ${{ secrets.BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD }}
       BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}
       RUN_PLAYWRIGHT_SMOKE: ${{ vars.RUN_PLAYWRIGHT_SMOKE }}
+      RUN_PHASE_15_VALIDATION: ${{ vars.RUN_PHASE_15_VALIDATION }}
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+      E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+      E2E_TENANT_ADMIN_PASSWORD: ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+      E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL || vars.E2E_INSTRUCTOR_EMAIL }}
+      E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+      E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
+      E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+      E2E_ALLOW_FORCE_PASSWORD_CHANGE: ${{ vars.E2E_ALLOW_FORCE_PASSWORD_CHANGE || 'false' }}
+      LOVABLE_VISUAL_CHECK_CONFIRMED: ${{ vars.LOVABLE_VISUAL_CHECK_CONFIRMED }}
+      SUPABASE_BACKUPS_CONFIRMED: ${{ vars.SUPABASE_BACKUPS_CONFIRMED }}
+      ROLLBACK_REHEARSAL_CONFIRMED: ${{ vars.ROLLBACK_REHEARSAL_CONFIRMED }}
+      SUPABASE_ADVISOR_TYPE: ${{ vars.SUPABASE_ADVISOR_TYPE }}
+      SUPABASE_ADVISOR_LEVEL: ${{ vars.SUPABASE_ADVISOR_LEVEL }}
+      SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       SMTP_HOST: ${{ vars.SMTP_HOST }}
       SMTP_PORT: ${{ vars.SMTP_PORT }}
@@ -237,6 +254,13 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run staging:runtime-smoke
+
+      - name: Phase 15 staging truth and security validation
+        if: github.ref_name == 'staging' && env.RUN_PHASE_15_VALIDATION != 'false'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run phase15:staging
 
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'

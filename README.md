@@ -2,7 +2,7 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: staged MVP implementation with staging validation and canon-alignment productization still required. Phase 3 through Phase 13 are implemented in code, but live Supabase migrations, tenant DNS, RLS/advisor validation, Playwright staging smoke and end-to-end staging tests are still required before the MVP can be considered product-owner-review ready. Phase 14 starts the cleanup from implemented scaffolding to a coherent product surface.
+Current working mode: staged MVP implementation with canon-aligned productization and strict staging validation. Phase 3 through Phase 14 are implemented in code. Phase 15 adds the required staging truth gate for live Supabase migrations, advisors, RLS role checks, Playwright staging smoke and strict launch confirmation before the MVP can move into full operational flow validation.
 
 ## Source of truth
 
@@ -28,10 +28,11 @@ The repository has moved beyond the original documentation-only phase:
 - Phase 10: afzwem readiness, afzwem events, parent invite/status, result registration, certificate records and private parent diploma vault are implemented in code. Staging RLS/advisor validation and end-to-end afzwem tests are still pending.
 - Phase 11: payment plans, subscriptions, manual payment status, admin payment overview, parent payment view and due/overdue billing events are implemented in code. Staging RLS/advisor validation and manual billing end-to-end tests are still pending.
 - Phase 12: admin operations dashboard, messages, tasks, documents, basic reports, report snapshots, role-based visibility and notification hooks are implemented in code. Staging RLS/advisor validation and role-based operation tests are still pending.
-- Phase 13: hardening automation, RLS coverage audit, service-only auth deny policies, Playwright smoke/visual/performance tests, deploy hardening gates, enriched health smoke, runtime asset/MIME smoke, authenticated Playwright workflows and RLS role smoke scaffolding are implemented in code. Staging execution, seeded authenticated role runs, backups check, Lovable visual comparison and rollback rehearsal are still pending.
-- Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up. Staging validation continues in Phase 15.
+- Phase 13: hardening automation, RLS coverage audit, service-only auth deny policies, Playwright smoke/visual/performance tests, deploy hardening gates, enriched health smoke, runtime asset/MIME smoke, authenticated Playwright workflows and RLS role smoke scaffolding are implemented in code.
+- Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up.
+- Phase 15: staging truth and security validation is implemented as a strict gate. It runs migrations, Supabase advisors, required RLS role checks, live staging health, live Playwright and strict launch confirmations against `https://staging.nxttrack.nl`.
 
-Automatic payment provider work, advanced scheduling, full assessments and other product modules should still wait until Phase 3/4/5/6/7/8/9/10/11/12/13 are applied to staging and the identity/RLS/domain/intake/placement/parent-portal/instructor/progress/diploma/billing/admin-operations/hardening boundary is verified with real users.
+Automatic payment provider work, advanced scheduling, full assessments and other product modules should still wait until Phase 15 is green on staging and Phase 16 proves the operational happy paths with real users.
 
 ## Canon and planning docs
 
@@ -57,6 +58,7 @@ Automatic payment provider work, advanced scheduling, full assessments and other
 - [Phase 12 - Admin Operations](docs/PHASE_12_ADMIN_OPERATIONS.md)
 - [Phase 13 - Hardening And Staging Launch](docs/PHASE_13_HARDENING_STAGING_LAUNCH.md)
 - [Phase 14 - Canon Alignment And Productization](docs/PHASE_14_CANON_ALIGNMENT_PRODUCTIZATION.md)
+- [Phase 15 - Staging Truth And Security Validation](docs/PHASE_15_STAGING_TRUTH_SECURITY_VALIDATION.md)
 
 ## Operational prep docs
 

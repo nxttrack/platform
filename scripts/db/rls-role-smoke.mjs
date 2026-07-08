@@ -7,6 +7,7 @@ const roleChecks = [
   {
     key: "platform-owner",
     prefix: "E2E_PLATFORM_OWNER",
+    expectedEmail: process.env.RLS_PLATFORM_OWNER_EMAIL,
     expectedPlatformRoles: ["platform_owner", "platform_admin", "platform_support"]
   },
   {
@@ -27,6 +28,35 @@ const roleChecks = [
     selfOnlyTenantMemberships: true
   }
 ];
+const tenantScopedTables = parseTableList(
+  process.env.RLS_TENANT_SCOPED_TABLES ||
+    [
+      "programs",
+      "program_stages",
+      "resources",
+      "groups",
+      "sessions",
+      "participants",
+      "enrollments",
+      "group_memberships",
+      "intake_submissions",
+      "waitlist_entries",
+      "placement_recommendations",
+      "slot_offers",
+      "participant_progress_scores",
+      "participant_badge_awards",
+      "tenant_notifications",
+      "graduation_readiness",
+      "graduation_events",
+      "certificate_records",
+      "payment_plans",
+      "subscriptions",
+      "manual_payments",
+      "tenant_messages",
+      "tenant_tasks",
+      "tenant_documents"
+    ].join(",")
+);
 
 const configuredRoleChecks = roleChecks
   .map((check) => ({ ...check, credentials: credentialsFor(check.prefix) }))
@@ -74,6 +104,11 @@ if (failures.length > 0) {
 console.log(`[db:rls-role-smoke] PASS ${configuredRoleChecks.length} role RLS smoke check(s) passed.`);
 
 async function runRoleCheck(check) {
+  if (required && check.expectedEmail && normalizeEmail(check.credentials.email) !== normalizeEmail(check.expectedEmail)) {
+    failures.push(`${check.key} credentials must use ${check.expectedEmail}, got ${check.credentials.email}.`);
+    return;
+  }
+
   const auth = await signIn(check.credentials.email, check.credentials.password);
 
   if (!auth) {
@@ -108,6 +143,8 @@ async function runRoleCheck(check) {
     if (leakedTenant) {
       failures.push(`${check.key} can see tenant ${leakedTenant.slug ?? leakedTenant.id} outside its own memberships.`);
     }
+
+    await assertTenantScopedTableIsolation(check, auth, ownTenantIds);
   }
 
   const leakedPlatformMembership = platformMemberships.find((membership) => membership.user_id !== auth.userId && !check.expectedPlatformRoles);
@@ -119,6 +156,22 @@ async function runRoleCheck(check) {
   console.log(
     `[db:rls-role-smoke] ${check.key}: tenantRows=${tenantMemberships.length} visibleTenants=${tenants.length} platformRows=${platformMemberships.length}`
   );
+}
+
+async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
+  if (ownTenantIds.size === 0) {
+    failures.push(`${check.key} has no own tenant ids available for tenant-scoped isolation checks.`);
+    return;
+  }
+
+  for (const table of tenantScopedTables) {
+    const rows = await optionalRest(auth.accessToken, `/${table}?select=id,tenant_id&limit=50`, table);
+    const leakedRow = rows.find((row) => row.tenant_id && !ownTenantIds.has(row.tenant_id));
+
+    if (leakedRow) {
+      failures.push(`${check.key} can see ${table}.${leakedRow.id ?? "unknown"} for another tenant.`);
+    }
+  }
 }
 
 async function signIn(email, password) {
@@ -147,6 +200,33 @@ async function signIn(email, password) {
 }
 
 async function rest(accessToken, path) {
+  const result = await fetchRest(accessToken, path);
+
+  if (!result.ok) {
+    failures.push(`REST query ${path} failed: HTTP ${result.status} ${result.bodyText}`);
+    return [];
+  }
+
+  return result.rows;
+}
+
+async function optionalRest(accessToken, path, label) {
+  const result = await fetchRest(accessToken, path);
+
+  if (!result.ok) {
+    if ([401, 403, 404].includes(result.status)) {
+      console.log(`[db:rls-role-smoke] optional table ${label} inaccessible with HTTP ${result.status}; treating as no leakage.`);
+      return [];
+    }
+
+    failures.push(`Optional REST query ${path} failed: HTTP ${result.status} ${result.bodyText}`);
+    return [];
+  }
+
+  return result.rows;
+}
+
+async function fetchRest(accessToken, path) {
   const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
     headers: {
       ...baseHeaders(),
@@ -155,13 +235,22 @@ async function rest(accessToken, path) {
   });
 
   if (!response.ok) {
-    failures.push(`REST query ${path} failed: HTTP ${response.status} ${await response.text()}`);
-    return [];
+    return {
+      ok: false,
+      status: response.status,
+      bodyText: await response.text(),
+      rows: []
+    };
   }
 
   const body = await response.json();
 
-  return Array.isArray(body) ? body : [];
+  return {
+    ok: true,
+    status: response.status,
+    bodyText: "",
+    rows: Array.isArray(body) ? body : []
+  };
 }
 
 function baseHeaders() {
@@ -184,4 +273,15 @@ function credentialsFor(prefix) {
 
 function normalizeUrl(value) {
   return value ? value.replace(/\/+$/, "") : "";
+}
+
+function normalizeEmail(value) {
+  return value.trim().toLowerCase();
+}
+
+function parseTableList(value) {
+  return value
+    .split(/[\s,]+/)
+    .map((table) => table.trim())
+    .filter(Boolean);
 }

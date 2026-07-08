@@ -38,6 +38,7 @@ test.describe("staging MVP smoke", () => {
 
   for (const route of privateRoutes) {
     test(`private route ${route} requires authentication`, async ({ page }) => {
+      const failures = collectRuntimeFailures(page);
       const response = await page.goto(route, { waitUntil: "domcontentloaded" });
 
       expect(response?.status() ?? 0).toBeLessThan(500);
@@ -47,6 +48,7 @@ test.describe("staging MVP smoke", () => {
       const hasLoginSurface = await page.locator("input[name='email'], form").first().isVisible().catch(() => false);
 
       expect(currentUrl.pathname === "/login" || hasLoginSurface).toBeTruthy();
+      expect(failures()).toEqual([]);
     });
   }
 });
