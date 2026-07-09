@@ -14,10 +14,18 @@ export default async function ParentProgressPage() {
   const badgeDefinitionById = new Map(data.badgeDefinitions.map((badge) => [badge.id, badge]));
   const itemsByModuleId = new Map(data.progressModules.map((module) => [module.id, data.progressItems.filter((item) => item.module_id === module.id)]));
   const scoreByParticipantItem = new Map(data.progressScores.map((score) => [`${score.participant_id}:${score.item_id}`, score]));
+  const averageScore = data.progressScores.length > 0 ? Math.round((data.progressScores.reduce((total, score) => total + score.score, 0) / data.progressScores.length) * 10) / 10 : null;
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Voortgang" title="Zwemgroei en badges" subtitle="Bekijk de huidige route, positieve scores, badges en updates van de zwemschool." />
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Summary icon={<Waves className="h-5 w-5" />} label="Athletes" value={data.participants.length.toString()} />
+        <Summary icon={<TrendingUp className="h-5 w-5" />} label="Scores" value={data.progressScores.length.toString()} />
+        <Summary icon={<Star className="h-5 w-5" />} label="Gemiddelde" value={averageScore ? averageScore.toString() : "n.v.t."} />
+        <Summary icon={<Award className="h-5 w-5" />} label="Badges" value={data.badgeAwards.length.toString()} />
+      </div>
 
       {data.notifications.length > 0 ? (
         <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -156,6 +164,18 @@ function Detail({ icon, label, value }: { icon: ReactNode; label: string; value:
       <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
     </div>
+  );
+}
+
+function Summary({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <span className="text-primary">{icon}</span>
+      </div>
+      <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+    </section>
   );
 }
 

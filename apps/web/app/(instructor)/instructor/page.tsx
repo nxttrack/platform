@@ -1,8 +1,8 @@
-import { ArrowRight, Bell, CalendarCheck, CheckCircle2, UsersRound } from "lucide-react";
+import { ArrowRight, Bell, CalendarCheck, CheckCircle2, ListChecks, MessageSquare, UsersRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { completeSessionAction } from "@/lib/domain/instructor-actions";
-import { formatSessionTime, getInstructorData, getRosterForGroup, getTodaySessions } from "@/lib/domain/instructor";
+import { formatSessionTime, getInstructorData, getSessionRoster, getTodaySessions } from "@/lib/domain/instructor";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 
 type PageProps = {
@@ -18,6 +18,7 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
   const todaySessions = getTodaySessions(data);
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const attendanceBySession = groupBy(data.attendance, "session_id");
+  const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
 
   return (
     <div className="space-y-6">
@@ -28,6 +29,11 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
         <Metric icon={<CalendarCheck className="h-5 w-5" />} label="Vandaag" value={todaySessions.length} />
         <Metric icon={<UsersRound className="h-5 w-5" />} label="Groepen" value={data.groups.length} />
         <Metric icon={<CheckCircle2 className="h-5 w-5" />} label="Registraties" value={todaySessions.reduce((total, session) => total + (attendanceBySession.get(session.id)?.length ?? 0), 0)} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <QuickLink href="/instructor/berichten" icon={<MessageSquare className="h-5 w-5" />} label="Berichten" value={`${unreadNotifications.length} ongelezen`} />
+        <QuickLink href="/instructor/taken" icon={<ListChecks className="h-5 w-5" />} label="Taken" value="Open teamacties" />
       </div>
 
       {data.notifications.length > 0 ? (
@@ -57,7 +63,7 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
         <div className="grid gap-4 xl:grid-cols-2">
           {todaySessions.map((session) => {
             const group = groupById.get(session.group_id);
-            const rosterSize = getRosterForGroup(data, session.group_id).length;
+            const rosterSize = getSessionRoster(data, session.id).length;
             const attendanceCount = attendanceBySession.get(session.id)?.length ?? 0;
 
             return (
@@ -104,6 +110,21 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
       </div>
       <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
     </section>
+  );
+}
+
+function QuickLink({ href, icon, label, value }: { href: string; icon: ReactNode; label: string; value: string }) {
+  return (
+    <Link className="flex min-h-20 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-soft transition hover:border-primary/40 hover:bg-primary/5" href={href}>
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</span>
+        <span className="min-w-0">
+          <span className="block font-bold text-foreground">{label}</span>
+          <span className="block truncate text-sm text-muted-foreground">{value}</span>
+        </span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+    </Link>
   );
 }
 

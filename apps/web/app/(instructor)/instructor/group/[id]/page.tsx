@@ -36,6 +36,9 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
   const selectedSession = groupSessions.find((session) => session.id === selectedSessionId) ?? groupSessions.find((session) => isToday(session.starts_at)) ?? groupSessions.find((session) => new Date(session.starts_at).getTime() >= Date.now()) ?? groupSessions[0] ?? null;
   const roster = selectedSession ? getSessionRoster(data, selectedSession.id) : [];
   const attendanceByParticipant = new Map(data.attendance.filter((attendance) => attendance.session_id === selectedSession?.id).map((attendance) => [attendance.participant_id, attendance]));
+  const registeredCount = attendanceByParticipant.size;
+  const presentCount = [...attendanceByParticipant.values()].filter((attendance) => attendance.status === "present" || attendance.status === "trial" || attendance.status === "late").length;
+  const openCount = Math.max(0, roster.length - registeredCount);
 
   return (
     <div className="space-y-6">
@@ -83,6 +86,12 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
           <EmptyState>Geen actieve leerlingen in deze groep.</EmptyState>
         ) : (
           <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-4">
+              <SessionMetric label="Roster" value={roster.length} />
+              <SessionMetric label="Aanwezig" value={presentCount} tone="success" />
+              <SessionMetric label="Geregistreerd" value={registeredCount} />
+              <SessionMetric label="Nog open" value={openCount} tone={openCount > 0 ? "warning" : "success"} />
+            </div>
             {roster.map(({ enrollment, participant }) => {
               const attendance = attendanceByParticipant.get(participant.id);
 
@@ -96,6 +105,11 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                       </Link>
                     </div>
                     <StatusPill tone={attendance ? "success" : "neutral"}>{attendance ? attendanceLabels[attendance.status as keyof typeof attendanceLabels] ?? attendance.status : "open"}</StatusPill>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="present" label="Aanwezig" />
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="absent" label="Afwezig" />
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="late" label="Laat" />
                   </div>
                   <form action={markAttendanceAction} className="mt-3 grid gap-2 md:grid-cols-[180px_1fr_auto]">
                     <input name="sessionId" type="hidden" value={selectedSession.id} />
@@ -122,6 +136,32 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
         )}
       </section>
     </div>
+  );
+}
+
+function SessionMetric({ label, tone = "neutral", value }: { label: string; tone?: "success" | "warning" | "neutral"; value: number }) {
+  const toneClass = tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : "text-foreground";
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 px-3 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${toneClass}`}>{value}</p>
+    </div>
+  );
+}
+
+function QuickAttendanceButton({ enrollmentId, groupId, label, participantId, sessionId, status }: { enrollmentId: string; groupId: string; label: string; participantId: string; sessionId: string; status: string }) {
+  return (
+    <form action={markAttendanceAction}>
+      <input name="sessionId" type="hidden" value={sessionId} />
+      <input name="participantId" type="hidden" value={participantId} />
+      <input name="enrollmentId" type="hidden" value={enrollmentId} />
+      <input name="status" type="hidden" value={status} />
+      <input name="next" type="hidden" value={`/instructor/group/${groupId}?session=${sessionId}`} />
+      <button className="inline-flex h-10 min-w-24 items-center justify-center rounded-lg border border-border bg-white px-3 text-sm font-semibold hover:bg-muted" type="submit">
+        {label}
+      </button>
+    </form>
   );
 }
 

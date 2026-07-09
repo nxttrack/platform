@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download, FileText } from "lucide-react";
+import { Download, Eye, FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatDocumentDate, formatDocumentSize, getParentDocuments } from "@/lib/domain/documents";
@@ -12,6 +12,24 @@ export default async function ParentDocumentsPage() {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Documenten" title="Documenten" subtitle="Belangrijke documenten van je zwemschool." />
+
+      <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-foreground">{documents.length} document(en)</p>
+              <p className="text-sm text-muted-foreground">Alleen ouderportaal-documenten worden hier getoond.</p>
+            </div>
+          </div>
+          <StatusPill tone="success">
+            <Eye className="h-3.5 w-3.5" />
+            ouder zichtbaar
+          </StatusPill>
+        </div>
+      </section>
 
       {documents.length === 0 ? (
         <EmptyState>Er zijn nog geen documenten beschikbaar.</EmptyState>
@@ -27,7 +45,7 @@ export default async function ParentDocumentsPage() {
                   </div>
                   {document.description ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{document.description}</p> : null}
                 </div>
-                <StatusPill tone={document.storage_status === "stored" ? "success" : "neutral"}>{document.storage_status}</StatusPill>
+                <StatusPill tone={document.storage_status === "stored" ? "success" : "neutral"}>{document.audience === "all_tenant" ? "iedereen" : "ouders"}</StatusPill>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">
                 {document.file_name ?? "Geen bestand"} - {formatDocumentSize(document.size_bytes)} - {formatDocumentDate(document.created_at)}

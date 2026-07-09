@@ -1,4 +1,4 @@
-import { ArrowRight, Bell, CalendarDays, RefreshCcw, UsersRound, Waves } from "lucide-react";
+import { ArrowRight, Bell, CalendarDays, MessageSquare, RefreshCcw, TrendingUp, UsersRound, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -13,6 +13,7 @@ export default async function ParentHomePage() {
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const nextLesson = getNextLesson(data);
   const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available");
+  const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
 
   return (
     <div className="space-y-6">
@@ -22,6 +23,12 @@ export default async function ParentHomePage() {
         <Metric icon={<UsersRound className="h-5 w-5" />} label="Kinderen" value={data.participants.length} />
         <Metric icon={<CalendarDays className="h-5 w-5" />} label="Geplande lessen" value={data.sessions.filter((session) => new Date(session.starts_at).getTime() >= Date.now()).length} />
         <Metric icon={<RefreshCcw className="h-5 w-5" />} label="Inhaalcredits" value={activeCredits.length} />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <QuickLink href="/portaal/lessen" icon={<Waves className="h-5 w-5" />} label="Mijn lessen" value={nextLesson ? "Volgende les gepland" : "Geen les gepland"} />
+        <QuickLink href="/portaal/voortgang" icon={<TrendingUp className="h-5 w-5" />} label="Voortgang" value={`${data.badgeAwards.length} badges`} />
+        <QuickLink href="/portaal/berichten" icon={<MessageSquare className="h-5 w-5" />} label="Berichten" value={`${unreadNotifications.length} ongelezen`} />
       </div>
 
       {data.notifications.length > 0 ? (
@@ -62,7 +69,7 @@ export default async function ParentHomePage() {
         <Card>
           <p className="text-xs font-semibold uppercase tracking-wider text-primary">Inhalen</p>
           <h2 className="mt-1 text-2xl font-bold text-foreground">{activeCredits.length} beschikbaar</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Credits ontstaan automatisch bij een tijdige annulering volgens het tenantbeleid.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Credits ontstaan automatisch bij een tijdige annulering volgens het beleid van de organisatie.</p>
         </Card>
       </div>
 
@@ -117,6 +124,21 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
       </div>
       <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
     </section>
+  );
+}
+
+function QuickLink({ href, icon, label, value }: { href: string; icon: ReactNode; label: string; value: string }) {
+  return (
+    <Link className="flex min-h-20 items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-soft transition hover:border-primary/40 hover:bg-primary/5" href={href}>
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">{icon}</span>
+        <span className="min-w-0">
+          <span className="block font-bold text-foreground">{label}</span>
+          <span className="block truncate text-sm text-muted-foreground">{value}</span>
+        </span>
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+    </Link>
   );
 }
 
