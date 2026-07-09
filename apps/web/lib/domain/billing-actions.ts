@@ -1,16 +1,47 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
+import { createPaymentSessionDraft, isProviderConfigReady, type PaymentProviderConfigLike } from "./payment-provider";
 import { createTenantNotifications } from "./tenant-notifications";
 
 const planStatuses = new Set(["draft", "active", "archived"]);
 const intervals = new Set(["monthly", "quarterly", "yearly", "one_time", "manual"]);
 const subscriptionStatuses = new Set(["active", "paused", "cancelled", "completed"]);
 const paymentStatuses = new Set(["due", "overdue", "paid", "waived", "cancelled"]);
+const providerKinds = new Set(["manual", "mollie", "ideal", "other"]);
+const providerModes = new Set(["test", "live"]);
+const providerStatuses = new Set(["draft", "active", "disabled"]);
+const collectionMethods = new Set(["manual", "provider"]);
+const invoiceStatuses = new Set(["draft", "issued", "sent", "paid", "void", "exported"]);
+const exportTypes = new Set(["invoices", "payments", "subscriptions", "provider_events"]);
+
+export async function saveBillingProviderConfigAction(formData: FormData) {
+  const { tenant } = await getActionContext();
+  const admin = createAdminClient();
+  const provider = readEnum(formData, "provider", providerKinds, "manual");
+  const mode = readEnum(formData, "mode", providerModes, "test");
+  const payload = {
+    tenant_id: tenant.id,
+    provider,
+    mode,
+    status: readEnum(formData, "status", providerStatuses, "draft"),
+    display_name: readOptional(formData, "displayName") ?? `${provider.toUpperCase()} ${mode}`,
+    secret_reference: readOptional(formData, "secretReference"),
+    webhook_secret_reference: readOptional(formData, "webhookSecretReference"),
+    public_config: {
+      checkout_description: readOptional(formData, "checkoutDescription"),
+      return_url: readOptional(formData, "returnUrl")
+    }
+  };
+  const { error } = await admin.from("billing_provider_configs").upsert(payload, { onConflict: "tenant_id,provider,mode" });
+
+  redirectAfterWrite(error, "provider");
+}
 
 export async function createPaymentPlanAction(formData: FormData) {
   const { tenant } = await getActionContext();
@@ -62,6 +93,11 @@ export async function createSubscriptionAction(formData: FormData) {
       amount_cents: readMoneyCentsOptional(formData, "amount") ?? planResult.data.amount_cents,
       currency: (readOptional(formData, "currency") ?? planResult.data.currency).toUpperCase(),
       billing_interval: readEnum(formData, "billingInterval", intervals, planResult.data.billing_interval),
+      collection_method: readEnum(formData, "collectionMethod", collectionMethods, "manual"),
+      provider_config_id: readOptional(formData, "providerConfigId"),
+      billing_anchor_day: readInteger(formData, "billingAnchorDay"),
+      current_period_start: readOptional(formData, "currentPeriodStart"),
+      current_period_end: readOptional(formData, "currentPeriodEnd"),
       notes: readOptional(formData, "notes")
     })
     .select("id")
@@ -187,6 +223,392 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
   redirectAfterWrite(null, "status");
 }
 
+export async function updateSubscriptionLifecycleAction(formData: FormData) {
+  const { tenant } = await getActionContext();
+  const admin = createAdminClient();
+  const subscriptionId = readRequired(formData, "subscriptionId");
+  const status = readEnum(formData, "status", subscriptionStatuses, "active");
+  const reason = readOptional(formData, "reason");
+  const subscriptionResult = await admin
+    .from("subscriptions")
+    .select("id, participant_id, guardian_user_id")
+    .eq("tenant_id", tenant.id)
+    .eq("id", subscriptionId)
+    .maybeSingle();
+
+  if (subscriptionResult.error || !subscriptionResult.data) {
+    redirect("/admin/betalingen?error=subscription");
+  }
+
+  const now = new Date().toISOString();
+  const update: Record<string, string | null> = {
+    lifecycle_status_reason: reason,
+    status
+  };
+
+  if (status === "paused" || status === "active") {
+    update.paused_at = status === "paused" ? now : null;
+  }
+
+  if (status === "cancelled" || status === "active") {
+    update.cancelled_at = status === "cancelled" ? now : null;
+  }
+
+  if (status === "completed" || status === "active") {
+    update.completed_at = status === "completed" ? now : null;
+  }
+
+  const { error } = await admin.from("subscriptions").update(update).eq("tenant_id", tenant.id).eq("id", subscriptionResult.data.id);
+
+  if (error) {
+    redirect("/admin/betalingen?error=subscription");
+  }
+
+  await createBillingEvent({
+    tenantId: tenant.id,
+    subscriptionId: subscriptionResult.data.id,
+    participantId: subscriptionResult.data.participant_id,
+    guardianUserId: subscriptionResult.data.guardian_user_id,
+    type: subscriptionEventType(status),
+    message: reason ? `Abonnement ${subscriptionStatusLabel(status)}: ${reason}` : `Abonnement ${subscriptionStatusLabel(status)}.`
+  });
+
+  redirectAfterWrite(null, "subscription-status");
+}
+
+export async function createPaymentProviderSessionAction(formData: FormData) {
+  const { tenant } = await getActionContext();
+  const admin = createAdminClient();
+  const paymentId = readRequired(formData, "paymentId");
+  const providerConfigId = readRequired(formData, "providerConfigId");
+  const [paymentResult, providerResult] = await Promise.all([
+    admin
+      .from("manual_payments")
+      .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, status")
+      .eq("tenant_id", tenant.id)
+      .eq("id", paymentId)
+      .maybeSingle(),
+    admin
+      .from("billing_provider_configs")
+      .select("id, provider, mode, status, display_name, secret_reference")
+      .eq("tenant_id", tenant.id)
+      .eq("id", providerConfigId)
+      .maybeSingle()
+  ]);
+
+  if (paymentResult.error || providerResult.error || !paymentResult.data || !providerResult.data) {
+    redirect("/admin/betalingen?error=provider-session");
+  }
+
+  const providerConfig = providerResult.data as PaymentProviderConfigLike;
+
+  if (!isProviderConfigReady(providerConfig)) {
+    redirect("/admin/betalingen?error=provider-not-ready");
+  }
+
+  const idempotencyKey = randomUUID();
+  const returnUrl = readOptional(formData, "returnUrl");
+  const draft = createPaymentSessionDraft({
+    amountCents: paymentResult.data.amount_cents,
+    currency: paymentResult.data.currency,
+    idempotencyKey,
+    paymentId: paymentResult.data.id,
+    providerConfig,
+    returnUrl
+  });
+  const sessionResult = await admin
+    .from("payment_sessions")
+    .insert({
+      tenant_id: tenant.id,
+      provider_config_id: providerConfig.id,
+      subscription_id: paymentResult.data.subscription_id,
+      manual_payment_id: paymentResult.data.id,
+      participant_id: paymentResult.data.participant_id,
+      guardian_user_id: paymentResult.data.guardian_user_id,
+      provider: draft.provider,
+      provider_session_id: draft.providerSessionId,
+      idempotency_key: idempotencyKey,
+      checkout_url: draft.checkoutUrl,
+      amount_cents: paymentResult.data.amount_cents,
+      currency: paymentResult.data.currency,
+      status: draft.status,
+      return_url: returnUrl,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    })
+    .select("id")
+    .single();
+
+  if (sessionResult.error || !sessionResult.data) {
+    redirect("/admin/betalingen?error=provider-session");
+  }
+
+  await createBillingEvent({
+    tenantId: tenant.id,
+    paymentId: paymentResult.data.id,
+    subscriptionId: paymentResult.data.subscription_id,
+    participantId: paymentResult.data.participant_id,
+    guardianUserId: paymentResult.data.guardian_user_id,
+    type: "payment_session_created",
+    message: `${providerConfig.display_name}: betaalpoging voorbereid.`
+  });
+
+  redirectAfterWrite(null, "provider-session");
+}
+
+export async function recordPaymentSessionFailureAction(formData: FormData) {
+  const { tenant, user } = await getActionContext();
+  const admin = createAdminClient();
+  const sessionId = readRequired(formData, "paymentSessionId");
+  const failureMessage = readOptional(formData, "failureMessage") ?? "Payment attempt failed.";
+  const sessionResult = await admin
+    .from("payment_sessions")
+    .select("id, provider_config_id, manual_payment_id, subscription_id, participant_id, guardian_user_id, provider")
+    .eq("tenant_id", tenant.id)
+    .eq("id", sessionId)
+    .maybeSingle();
+
+  if (sessionResult.error || !sessionResult.data) {
+    redirect("/admin/betalingen?error=payment-session");
+  }
+
+  const { error } = await admin
+    .from("payment_sessions")
+    .update({
+      status: "failed",
+      failure_code: readOptional(formData, "failureCode") ?? "manual_failure",
+      failure_message: failureMessage
+    })
+    .eq("tenant_id", tenant.id)
+    .eq("id", sessionResult.data.id);
+
+  if (error) {
+    redirect("/admin/betalingen?error=payment-session");
+  }
+
+  await admin.from("payment_provider_events").insert({
+    tenant_id: tenant.id,
+    provider_config_id: sessionResult.data.provider_config_id,
+    payment_session_id: sessionResult.data.id,
+    manual_payment_id: sessionResult.data.manual_payment_id,
+    provider: sessionResult.data.provider,
+    event_type: "payment.failed",
+    processing_status: "processed",
+    payload: { source: "admin", message: failureMessage },
+    processed_at: new Date().toISOString()
+  });
+
+  await createBillingEvent({
+    tenantId: tenant.id,
+    paymentId: sessionResult.data.manual_payment_id,
+    subscriptionId: sessionResult.data.subscription_id,
+    participantId: sessionResult.data.participant_id,
+    guardianUserId: sessionResult.data.guardian_user_id,
+    type: "payment_failed",
+    message: failureMessage
+  });
+
+  await createBillingFollowUpTask({
+    tenantId: tenant.id,
+    userId: user.id,
+    participantId: sessionResult.data.participant_id,
+    title: "Mislukte betaling opvolgen",
+    description: failureMessage,
+    priority: "high"
+  });
+
+  redirectAfterWrite(null, "payment-failed");
+}
+
+export async function runBillingLifecycleAction() {
+  const { tenant, user } = await getActionContext();
+  const admin = createAdminClient();
+  const today = new Date().toISOString().slice(0, 10);
+  const paymentsResult = await admin
+    .from("manual_payments")
+    .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on")
+    .eq("tenant_id", tenant.id)
+    .eq("status", "due")
+    .lt("due_on", today)
+    .limit(100);
+
+  if (paymentsResult.error) {
+    redirect("/admin/betalingen?error=lifecycle");
+  }
+
+  const payments = (paymentsResult.data ?? []) as Array<{ amount_cents: number; currency: string; due_on: string; guardian_user_id: string | null; id: string; participant_id: string; subscription_id: string }>;
+
+  for (const payment of payments) {
+    const { error } = await admin.from("manual_payments").update({ status: "overdue" }).eq("tenant_id", tenant.id).eq("id", payment.id).eq("status", "due");
+
+    if (error) {
+      continue;
+    }
+
+    await recordPaymentSignal({
+      tenantId: tenant.id,
+      organizationName: tenant.name,
+      paymentId: payment.id,
+      subscriptionId: payment.subscription_id,
+      participantId: payment.participant_id,
+      guardianUserId: payment.guardian_user_id,
+      status: "overdue",
+      amountCents: payment.amount_cents,
+      currency: payment.currency,
+      dueOn: payment.due_on
+    });
+    await createBillingFollowUpTask({
+      tenantId: tenant.id,
+      userId: user.id,
+      participantId: payment.participant_id,
+      title: "Overdue betaling opvolgen",
+      description: `${formatMoney(payment.amount_cents, payment.currency)} verlopen sinds ${formatDate(payment.due_on)}.`,
+      priority: "urgent"
+    });
+  }
+
+  redirectAfterWrite(null, `lifecycle-${payments.length}`);
+}
+
+export async function createInvoiceForPaymentAction(formData: FormData) {
+  const { tenant } = await getActionContext();
+  const admin = createAdminClient();
+  const paymentId = readRequired(formData, "paymentId");
+  const existingInvoiceResult = await admin.from("billing_invoices").select("id").eq("tenant_id", tenant.id).eq("manual_payment_id", paymentId).limit(1);
+
+  if (existingInvoiceResult.error) {
+    redirect("/admin/betalingen?error=invoice");
+  }
+
+  if ((existingInvoiceResult.data ?? []).length > 0) {
+    redirectAfterWrite(null, "invoice-exists");
+  }
+
+  const paymentResult = await admin
+    .from("manual_payments")
+    .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on, paid_on, status, reference")
+    .eq("tenant_id", tenant.id)
+    .eq("id", paymentId)
+    .maybeSingle();
+
+  if (paymentResult.error || !paymentResult.data) {
+    redirect("/admin/betalingen?error=invoice");
+  }
+
+  const status = readEnum(formData, "status", invoiceStatuses, paymentResult.data.status === "paid" ? "paid" : "issued");
+  const invoiceNumber = `INV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`;
+  const invoiceResult = await admin
+    .from("billing_invoices")
+    .insert({
+      tenant_id: tenant.id,
+      subscription_id: paymentResult.data.subscription_id,
+      manual_payment_id: paymentResult.data.id,
+      participant_id: paymentResult.data.participant_id,
+      guardian_user_id: paymentResult.data.guardian_user_id,
+      invoice_number: invoiceNumber,
+      status,
+      issued_on: new Date().toISOString().slice(0, 10),
+      due_on: paymentResult.data.due_on,
+      paid_on: status === "paid" ? paymentResult.data.paid_on ?? new Date().toISOString().slice(0, 10) : null,
+      subtotal_cents: paymentResult.data.amount_cents,
+      tax_cents: 0,
+      total_cents: paymentResult.data.amount_cents,
+      currency: paymentResult.data.currency,
+      export_status: "ready",
+      notes: readOptional(formData, "notes")
+    })
+    .select("id")
+    .single();
+
+  if (invoiceResult.error || !invoiceResult.data) {
+    redirect("/admin/betalingen?error=invoice");
+  }
+
+  const lineError = await admin.from("billing_invoice_lines").insert({
+    tenant_id: tenant.id,
+    invoice_id: invoiceResult.data.id,
+    manual_payment_id: paymentResult.data.id,
+    description: readOptional(formData, "description") ?? paymentResult.data.reference ?? "Zwemles betaling",
+    quantity: 1,
+    unit_amount_cents: paymentResult.data.amount_cents,
+    tax_rate_basis_points: 0,
+    total_cents: paymentResult.data.amount_cents,
+    sort_order: 0
+  });
+
+  if (lineError.error) {
+    redirect("/admin/betalingen?error=invoice-line");
+  }
+
+  await createBillingEvent({
+    tenantId: tenant.id,
+    paymentId: paymentResult.data.id,
+    subscriptionId: paymentResult.data.subscription_id,
+    participantId: paymentResult.data.participant_id,
+    guardianUserId: paymentResult.data.guardian_user_id,
+    type: "invoice_created",
+    message: `Factuur ${invoiceNumber} aangemaakt.`
+  });
+
+  redirectAfterWrite(null, "invoice");
+}
+
+export async function createBillingExportBatchAction(formData: FormData) {
+  const { tenant, user } = await getActionContext();
+  const admin = createAdminClient();
+  const exportType = readEnum(formData, "exportType", exportTypes, "invoices");
+  const periodStart = readOptional(formData, "periodStart");
+  const periodEnd = readOptional(formData, "periodEnd");
+  let invoiceQuery = admin.from("billing_invoices").select("id").eq("tenant_id", tenant.id).eq("export_status", "ready");
+
+  if (periodStart) {
+    invoiceQuery = invoiceQuery.gte("issued_on", periodStart);
+  }
+
+  if (periodEnd) {
+    invoiceQuery = invoiceQuery.lte("issued_on", periodEnd);
+  }
+
+  const invoicesResult = exportType === "invoices" ? await invoiceQuery : { data: [], error: null };
+
+  if (invoicesResult.error) {
+    redirect("/admin/betalingen?error=export");
+  }
+
+  const invoiceIds = ((invoicesResult.data ?? []) as { id: string }[]).map((invoice) => invoice.id);
+  const exportKey = `${exportType}-${new Date().toISOString().slice(0, 10)}-${randomUUID().slice(0, 8)}`;
+  const batchResult = await admin
+    .from("billing_export_batches")
+    .insert({
+      tenant_id: tenant.id,
+      export_key: exportKey,
+      export_type: exportType,
+      status: "ready",
+      period_start: periodStart,
+      period_end: periodEnd,
+      row_count: invoiceIds.length,
+      generated_by_user_id: user.id,
+      generated_at: new Date().toISOString()
+    })
+    .select("id")
+    .single();
+
+  if (batchResult.error || !batchResult.data) {
+    redirect("/admin/betalingen?error=export");
+  }
+
+  if (invoiceIds.length > 0) {
+    await admin.from("billing_invoices").update({ export_status: "exported", status: "exported" }).eq("tenant_id", tenant.id).in("id", invoiceIds);
+  }
+
+  await createBillingEvent({
+    tenantId: tenant.id,
+    type: "invoice_exported",
+    message: `${invoiceIds.length} factuurregel(s) klaargezet voor export.`
+  });
+
+  redirectAfterWrite(null, "export");
+}
+
 async function getActionContext() {
   const context = await requirePrivateShellContext("/admin");
 
@@ -238,8 +660,8 @@ async function createBillingEvent(input: {
   tenantId: string;
   paymentId?: string;
   subscriptionId?: string;
-  participantId: string;
-  guardianUserId: string | null;
+  participantId?: string | null;
+  guardianUserId?: string | null;
   type: string;
   message: string;
 }) {
@@ -249,11 +671,26 @@ async function createBillingEvent(input: {
     tenant_id: input.tenantId,
     subscription_id: input.subscriptionId ?? null,
     manual_payment_id: input.paymentId ?? null,
-    participant_id: input.participantId,
-    guardian_user_id: input.guardianUserId,
+    participant_id: input.participantId ?? null,
+    guardian_user_id: input.guardianUserId ?? null,
     type: input.type,
     status: "open",
     message: input.message
+  });
+}
+
+async function createBillingFollowUpTask(input: { description: string; participantId: string | null; priority: "high" | "urgent"; tenantId: string; title: string; userId: string }) {
+  const admin = createAdminClient();
+
+  await admin.from("tenant_tasks").insert({
+    tenant_id: input.tenantId,
+    created_by_user_id: input.userId,
+    related_participant_id: input.participantId,
+    title: input.title,
+    description: input.description,
+    priority: input.priority,
+    status: "open",
+    due_on: new Date().toISOString().slice(0, 10)
   });
 }
 
@@ -364,6 +801,38 @@ function readMoneyCentsOptional(formData: FormData, field: string) {
   const parsed = Number.parseFloat(normalized);
 
   return Number.isFinite(parsed) ? Math.round(parsed * 100) : null;
+}
+
+function subscriptionEventType(status: string) {
+  if (status === "paused") {
+    return "subscription_paused";
+  }
+
+  if (status === "cancelled") {
+    return "subscription_cancelled";
+  }
+
+  if (status === "completed") {
+    return "subscription_completed";
+  }
+
+  return "subscription_changed";
+}
+
+function subscriptionStatusLabel(status: string) {
+  if (status === "paused") {
+    return "gepauzeerd";
+  }
+
+  if (status === "cancelled") {
+    return "geannuleerd";
+  }
+
+  if (status === "completed") {
+    return "afgerond";
+  }
+
+  return "bijgewerkt";
 }
 
 function unique(values: Array<string | null | undefined>) {

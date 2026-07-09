@@ -19,22 +19,23 @@ export default async function ParentPaymentsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Betalingen" title="Abonnementen en betalingen" subtitle="Bekijk subscriptions, openstaande bedragen en handmatig verwerkte betalingen." />
+      <PageHeader kicker="Betalingen" title="Abonnementen en betalingen" subtitle="Bekijk abonnementen, openstaande bedragen, facturen en betaalpogingen." />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Subscriptions" value={data.subscriptions.length.toString()} />
+      <div className="grid gap-4 md:grid-cols-5">
+        <Metric label="Abonnementen" value={data.subscriptions.length.toString()} />
         <Metric label="Openstaand" value={formatMoney(openAmount)} />
         <Metric label="Overdue" tone={overdueAmount > 0 ? "danger" : "success"} value={formatMoney(overdueAmount)} />
         <Metric label="Betaald" value={paidPayments.length.toString()} />
+        <Metric label="Facturen" value={data.invoices.length.toString()} />
       </div>
 
       <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="mb-4 flex items-center gap-2">
           <CreditCard className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-bold text-foreground">Subscriptions</h2>
+          <h2 className="text-lg font-bold text-foreground">Abonnementen</h2>
         </div>
         {data.subscriptions.length === 0 ? (
-          <EmptyState>Er zijn nog geen subscriptions gekoppeld.</EmptyState>
+          <EmptyState>Er zijn nog geen abonnementen gekoppeld.</EmptyState>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {data.subscriptions.map((subscription) => {
@@ -48,7 +49,7 @@ export default async function ParentPaymentsPage() {
                       <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Kind"}</p>
                       <h3 className="mt-1 font-bold text-foreground">{plan?.name ?? "Subscription"}</h3>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        {formatMoney(subscription.amount_cents, subscription.currency)} - {subscription.billing_interval}
+                        {formatMoney(subscription.amount_cents, subscription.currency)} - {subscription.billing_interval} - {subscription.collection_method === "provider" ? "provider voorbereid" : "handmatig"}
                       </p>
                     </div>
                     <StatusPill tone={subscription.status === "active" ? "success" : "neutral"}>{subscription.status}</StatusPill>
@@ -97,6 +98,58 @@ export default async function ParentPaymentsPage() {
                     <Detail label="Referentie" value={payment.reference ?? "Niet gezet"} />
                   </div>
                   {payment.notes ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{payment.notes}</p> : null}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+        <h2 className="text-lg font-bold text-foreground">Facturen</h2>
+        {data.invoices.length === 0 ? (
+          <EmptyState>Er zijn nog geen facturen beschikbaar.</EmptyState>
+        ) : (
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {data.invoices.map((invoice) => (
+              <article className="rounded-lg border border-border bg-white p-4" key={invoice.id}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">{invoice.invoice_number ?? "Conceptfactuur"}</p>
+                    <h3 className="mt-1 font-bold text-foreground">{formatMoney(invoice.total_cents, invoice.currency)}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">Vervalt {invoice.due_on ? formatDate(invoice.due_on) : "n.v.t."}</p>
+                  </div>
+                  <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "issued" || invoice.status === "sent" ? "warning" : "neutral"}>{invoice.status}</StatusPill>
+                </div>
+                {invoice.notes ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{invoice.notes}</p> : null}
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+        <h2 className="text-lg font-bold text-foreground">Betaalpogingen</h2>
+        {data.paymentSessions.length === 0 ? (
+          <EmptyState>Er zijn nog geen provider-betaalpogingen gestart.</EmptyState>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {data.paymentSessions.map((session) => {
+              const participant = session.participant_id ? participantById.get(session.participant_id) : null;
+
+              return (
+                <article className="rounded-lg border border-border bg-white p-4" key={session.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Betaling"}</p>
+                      <h3 className="mt-1 font-bold text-foreground">{formatMoney(session.amount_cents, session.currency)}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {session.provider} - gestart {formatDateTime(session.created_at)}
+                      </p>
+                    </div>
+                    <StatusPill tone={session.status === "paid" ? "success" : session.status === "failed" ? "danger" : session.status === "pending" ? "warning" : "neutral"}>{session.status}</StatusPill>
+                  </div>
+                  {session.failure_message ? <p className="mt-3 text-sm leading-6 text-danger">{session.failure_message}</p> : null}
                 </article>
               );
             })}

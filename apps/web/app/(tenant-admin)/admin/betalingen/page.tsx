@@ -1,8 +1,21 @@
 import { CreditCard, ReceiptText } from "lucide-react";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { createManualPaymentAction, createPaymentPlanAction, createSubscriptionAction, updateManualPaymentStatusAction } from "@/lib/domain/billing-actions";
+import {
+  createBillingExportBatchAction,
+  createInvoiceForPaymentAction,
+  createManualPaymentAction,
+  createPaymentPlanAction,
+  createPaymentProviderSessionAction,
+  createSubscriptionAction,
+  recordPaymentSessionFailureAction,
+  runBillingLifecycleAction,
+  saveBillingProviderConfigAction,
+  updateManualPaymentStatusAction,
+  updateSubscriptionLifecycleAction
+} from "@/lib/domain/billing-actions";
 import { formatMoney, getBillingAdminData, isPaymentOverdue } from "@/lib/domain/billing";
+import { paymentProviderLabel } from "@/lib/domain/payment-provider";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -29,12 +42,79 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
       <PageHeader kicker="Billing" title="Betalingen en subscriptions" subtitle="Handmatige commerciële basis zonder Mollie/iDEAL-koppeling." />
       <Feedback saved={saved} error={error} />
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Automation boundary</p>
+            <h2 className="mt-1 text-lg font-bold text-foreground">Lifecycle en provider-ready billing</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Markeer verlopen betalingen, maak follow-up taken en houd betaalproviders los van zwemvoortgang.</p>
+          </div>
+          <form action={runBillingLifecycleAction}>
+            <button className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+              Lifecycle run
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <div className="grid gap-4 md:grid-cols-5">
+        <Metric label="Providers" value={data.providerConfigs.length.toString()} />
         <Metric label="Payment plans" value={data.paymentPlans.length.toString()} />
-        <Metric label="Actieve subscriptions" value={data.subscriptions.filter((subscription) => subscription.status === "active").length.toString()} />
+        <Metric label="Actieve abonnementen" value={data.subscriptions.filter((subscription) => subscription.status === "active").length.toString()} />
         <Metric label="Openstaand" value={formatMoney(openAmount)} />
         <Metric label="Overdue" tone={overdueAmount > 0 ? "danger" : "success"} value={formatMoney(overdueAmount)} />
       </div>
+
+      <AdminSection title="Payment provider boundary" description="Leg providerkeuze en secret-referenties vast zonder echte sleutels in de database te bewaren. Manual billing blijft altijd beschikbaar.">
+        <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+          <form action={saveBillingProviderConfigAction} className="grid gap-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <SelectField label="Provider" name="provider">
+                <option value="manual">Handmatig</option>
+                <option value="mollie">Mollie</option>
+                <option value="ideal">iDEAL</option>
+                <option value="other">Andere provider</option>
+              </SelectField>
+              <SelectField label="Mode" name="mode">
+                <option value="test">Test</option>
+                <option value="live">Live</option>
+              </SelectField>
+              <SelectField label="Status" name="status">
+                <option value="draft">Concept</option>
+                <option value="active">Actief</option>
+                <option value="disabled">Uit</option>
+              </SelectField>
+            </div>
+            <Field label="Naam" name="displayName" placeholder="Mollie test" />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Secret reference" name="secretReference" placeholder="GITHUB_ENV:MOLLIE_API_KEY" />
+              <Field label="Webhook secret reference" name="webhookSecretReference" placeholder="GITHUB_ENV:MOLLIE_WEBHOOK_SECRET" />
+            </div>
+            <Field label="Return URL" name="returnUrl" placeholder="https://staging.nxttrack.nl/portaal/betalingen" />
+            <TextAreaField label="Checkout omschrijving" name="checkoutDescription" />
+            <SubmitButton>Provider opslaan</SubmitButton>
+          </form>
+          <DataList>
+            {data.providerConfigs.length === 0 ? (
+              <div className="px-3 py-4">
+                <EmptyState>Nog geen providerconfiguratie.</EmptyState>
+              </div>
+            ) : (
+              data.providerConfigs.map((provider) => (
+                <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={provider.id}>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{provider.display_name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {paymentProviderLabel(provider.provider)} - {provider.mode} - secret: {provider.secret_reference ? "referentie gezet" : "geen referentie"}
+                    </p>
+                  </div>
+                  <StatusPill tone={provider.status === "active" ? "success" : provider.status === "draft" ? "warning" : "neutral"}>{provider.status}</StatusPill>
+                </div>
+              ))
+            )}
+          </DataList>
+        </div>
+      </AdminSection>
 
       <div className="grid gap-5 xl:grid-cols-3">
         <AdminSection title="Payment plan" description="Maak een handmatig tariefplan aan.">
@@ -117,8 +197,27 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               </SelectField>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
+              <SelectField label="Collectie" name="collectionMethod">
+                <option value="manual">Handmatig</option>
+                <option value="provider">Via provider later</option>
+              </SelectField>
+              <SelectField label="Providerconfig" name="providerConfigId">
+                <option value="">Geen provider</option>
+                {data.providerConfigs.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.display_name} ({provider.mode})
+                  </option>
+                ))}
+              </SelectField>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Startdatum" name="startsOn" type="date" />
               <Field label="Volgende vervaldatum" name="nextDueOn" type="date" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Billing anchor" name="billingAnchorDay" type="number" placeholder="1-28" />
+              <Field label="Periode start" name="currentPeriodStart" type="date" />
+              <Field label="Periode eind" name="currentPeriodEnd" type="date" />
             </div>
             <Field label="Bedrag override" name="amount" placeholder="Leeg = planbedrag" />
             <TextAreaField label="Notities" name="notes" />
@@ -163,6 +262,51 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
         </AdminSection>
       </div>
 
+      <AdminSection title="Subscription lifecycle" description="Pauzeren, annuleren of afronden verandert alleen billingstatus; programma, badje en zwemvoortgang blijven onafhankelijk.">
+        {data.subscriptions.length === 0 ? (
+          <EmptyState>Nog geen abonnementen.</EmptyState>
+        ) : (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {data.subscriptions.map((subscription) => {
+              const participant = participantById.get(subscription.participant_id);
+              const plan = planById.get(subscription.payment_plan_id);
+              const provider = subscription.provider_config_id ? data.providerConfigs.find((item) => item.id === subscription.provider_config_id) : null;
+
+              return (
+                <article className="rounded-lg border border-border bg-white p-4" key={subscription.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Leerling"}</p>
+                      <h2 className="mt-1 font-bold text-foreground">{plan?.name ?? "Abonnement"}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {formatMoney(subscription.amount_cents, subscription.currency)} - {subscription.billing_interval} - {subscription.collection_method}
+                      </p>
+                      {provider ? <p className="mt-1 text-xs text-muted-foreground">Provider: {provider.display_name}</p> : null}
+                    </div>
+                    <StatusPill tone={subscription.status === "active" ? "success" : subscription.status === "paused" ? "warning" : "neutral"}>{subscription.status}</StatusPill>
+                  </div>
+                  <form action={updateSubscriptionLifecycleAction} className="mt-3 grid gap-3 md:grid-cols-[160px_1fr_auto]">
+                    <input name="subscriptionId" type="hidden" value={subscription.id} />
+                    <SelectField label="Status" name="status">
+                      <option value="active">Actief</option>
+                      <option value="paused">Gepauzeerd</option>
+                      <option value="cancelled">Geannuleerd</option>
+                      <option value="completed">Afgerond</option>
+                    </SelectField>
+                    <Field label="Reden" name="reason" placeholder={subscription.lifecycle_status_reason ?? "Optioneel"} />
+                    <div className="flex items-end">
+                      <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+                        Bijwerken
+                      </button>
+                    </div>
+                  </form>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </AdminSection>
+
       <AdminSection title="Payment overview">
         {data.manualPayments.length === 0 ? (
           <EmptyState>Nog geen handmatige betalingen.</EmptyState>
@@ -206,11 +350,144 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       </button>
                     </div>
                   </form>
+                  <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                    <form action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
+                      <input name="paymentId" type="hidden" value={payment.id} />
+                      <input name="status" type="hidden" value={payment.status === "paid" ? "paid" : "issued"} />
+                      <Field label="Factuurregel" name="description" placeholder={payment.reference ?? "Zwemles betaling"} />
+                      <div className="mt-3">
+                        <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
+                          Factuur voorbereiden
+                        </button>
+                      </div>
+                    </form>
+                    <form action={createPaymentProviderSessionAction} className="rounded-lg border border-border bg-muted/30 p-3">
+                      <input name="paymentId" type="hidden" value={payment.id} />
+                      <SelectField label="Provider" name="providerConfigId" required>
+                        <option value="">Kies provider</option>
+                        {data.providerConfigs
+                          .filter((provider) => provider.status === "active")
+                          .map((provider) => (
+                            <option key={provider.id} value={provider.id}>
+                              {provider.display_name} ({provider.mode})
+                            </option>
+                          ))}
+                      </SelectField>
+                      <Field label="Return URL" name="returnUrl" placeholder="https://staging.nxttrack.nl/portaal/betalingen" />
+                      <div className="mt-3">
+                        <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
+                          Betaalsessie voorbereiden
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </article>
               );
             })}
           </div>
         )}
+      </AdminSection>
+
+      <AdminSection title="Provider payment sessions">
+        {data.paymentSessions.length === 0 ? (
+          <EmptyState>Nog geen provider-betaalsessies.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            {data.paymentSessions.map((session) => {
+              const participant = session.participant_id ? participantById.get(session.participant_id) : null;
+
+              return (
+                <article className="rounded-lg border border-border bg-white p-4" key={session.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Betaling"}</p>
+                      <h2 className="mt-1 font-bold text-foreground">
+                        {paymentProviderLabel(session.provider)} - {formatMoney(session.amount_cents, session.currency)}
+                      </h2>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {session.provider_session_id ?? "Nog geen provider id"} - {formatDateTime(session.created_at)}
+                      </p>
+                      {session.failure_message ? <p className="mt-1 text-xs text-danger">{session.failure_message}</p> : null}
+                    </div>
+                    <StatusPill tone={session.status === "paid" ? "success" : session.status === "failed" ? "danger" : session.status === "pending" ? "warning" : "neutral"}>{session.status}</StatusPill>
+                  </div>
+                  {session.status !== "failed" && session.status !== "paid" ? (
+                    <form action={recordPaymentSessionFailureAction} className="mt-3 grid gap-3 md:grid-cols-[160px_1fr_auto]">
+                      <input name="paymentSessionId" type="hidden" value={session.id} />
+                      <Field label="Code" name="failureCode" placeholder="provider_failed" />
+                      <Field label="Melding" name="failureMessage" placeholder="Betaling mislukt of verlopen" />
+                      <div className="flex items-end">
+                        <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
+                          Markeer mislukt
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </AdminSection>
+
+      <AdminSection title="Facturen en export">
+        <form action={createBillingExportBatchAction} className="mb-4 grid gap-3 rounded-lg border border-border bg-white p-4 md:grid-cols-[180px_1fr_1fr_auto]">
+          <SelectField label="Exporttype" name="exportType">
+            <option value="invoices">Facturen</option>
+            <option value="payments">Betalingen</option>
+            <option value="subscriptions">Abonnementen</option>
+            <option value="provider_events">Provider events</option>
+          </SelectField>
+          <Field label="Vanaf" name="periodStart" type="date" />
+          <Field label="Tot en met" name="periodEnd" type="date" />
+          <div className="flex items-end">
+            <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+              Export voorbereiden
+            </button>
+          </div>
+        </form>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Facturen</h3>
+            {data.invoices.length === 0 ? (
+              <EmptyState>Nog geen facturen voorbereid.</EmptyState>
+            ) : (
+              <DataList>
+                {data.invoices.slice(0, 12).map((invoice) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={invoice.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{invoice.invoice_number ?? "Conceptfactuur"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatMoney(invoice.total_cents, invoice.currency)} - vervalt {invoice.due_on ? formatDate(invoice.due_on) : "n.v.t."}
+                      </p>
+                    </div>
+                    <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "issued" || invoice.status === "sent" ? "warning" : "neutral"}>{invoice.export_status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Export batches</h3>
+            {data.exportBatches.length === 0 ? (
+              <EmptyState>Nog geen export batches.</EmptyState>
+            ) : (
+              <DataList>
+                {data.exportBatches.slice(0, 8).map((batch) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={batch.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{batch.export_key}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {batch.export_type} - {batch.row_count} regels
+                      </p>
+                    </div>
+                    <StatusPill tone={batch.status === "ready" || batch.status === "exported" ? "success" : batch.status === "failed" ? "danger" : "neutral"}>{batch.status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+        </div>
       </AdminSection>
 
       <AdminSection title="Billing events">

@@ -213,6 +213,15 @@ export type ParentSubscriptionRow = {
   amount_cents: number;
   currency: string;
   billing_interval: string;
+  collection_method: string;
+  provider_config_id: string | null;
+  billing_anchor_day: number | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  lifecycle_status_reason: string | null;
+  paused_at: string | null;
+  cancelled_at: string | null;
+  completed_at: string | null;
   notes: string | null;
 };
 
@@ -242,6 +251,57 @@ export type ParentBillingEventRow = {
   status: string;
   occurred_at: string;
   message: string;
+};
+
+export type ParentPaymentSessionRow = {
+  id: string;
+  provider_config_id: string | null;
+  subscription_id: string | null;
+  manual_payment_id: string | null;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_session_id: string | null;
+  checkout_url: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  failure_code: string | null;
+  failure_message: string | null;
+  expires_at: string | null;
+  created_at: string;
+};
+
+export type ParentBillingInvoiceRow = {
+  id: string;
+  subscription_id: string | null;
+  manual_payment_id: string | null;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  invoice_number: string | null;
+  status: string;
+  issued_on: string | null;
+  due_on: string | null;
+  paid_on: string | null;
+  subtotal_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  currency: string;
+  export_status: string;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ParentBillingInvoiceLineRow = {
+  id: string;
+  invoice_id: string;
+  manual_payment_id: string | null;
+  description: string;
+  quantity: number;
+  unit_amount_cents: number;
+  tax_rate_basis_points: number;
+  total_cents: number;
+  sort_order: number;
 };
 
 export type ParentPortalData = {
@@ -277,6 +337,9 @@ export type ParentPortalData = {
   subscriptions: ParentSubscriptionRow[];
   manualPayments: ParentManualPaymentRow[];
   billingEvents: ParentBillingEventRow[];
+  paymentSessions: ParentPaymentSessionRow[];
+  invoices: ParentBillingInvoiceRow[];
+  invoiceLines: ParentBillingInvoiceLineRow[];
 };
 
 export async function getParentPortalData(): Promise<ParentPortalData> {
@@ -319,7 +382,9 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     certificatesResult,
     subscriptionsResult,
     manualPaymentsResult,
-    billingEventsResult
+    billingEventsResult,
+    paymentSessionsResult,
+    invoicesResult
   ] = await Promise.all([
     loadedParticipantIds.length > 0
       ? admin
@@ -395,7 +460,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("subscriptions")
-          .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, notes")
+          .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, collection_method, provider_config_id, billing_anchor_day, current_period_start, current_period_end, lifecycle_status_reason, paused_at, cancelled_at, completed_at, notes")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("starts_on", { ascending: false })
@@ -416,6 +481,23 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
           .in("participant_id", loadedParticipantIds)
           .order("occurred_at", { ascending: false })
           .limit(40)
+      : Promise.resolve({ data: [], error: null }),
+    loadedParticipantIds.length > 0
+      ? admin
+          .from("payment_sessions")
+          .select("id, provider_config_id, subscription_id, manual_payment_id, participant_id, guardian_user_id, provider, provider_session_id, checkout_url, amount_cents, currency, status, failure_code, failure_message, expires_at, created_at")
+          .eq("tenant_id", tenant.id)
+          .in("participant_id", loadedParticipantIds)
+          .order("created_at", { ascending: false })
+          .limit(40)
+      : Promise.resolve({ data: [], error: null }),
+    loadedParticipantIds.length > 0
+      ? admin
+          .from("billing_invoices")
+          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, created_at")
+          .eq("tenant_id", tenant.id)
+          .in("participant_id", loadedParticipantIds)
+          .order("created_at", { ascending: false })
       : Promise.resolve({ data: [], error: null })
   ]);
 
@@ -431,6 +513,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   assertParentPortalResult(subscriptionsResult.error, "subscriptions");
   assertParentPortalResult(manualPaymentsResult.error, "manual payments");
   assertParentPortalResult(billingEventsResult.error, "billing events");
+  assertParentPortalResult(paymentSessionsResult.error, "payment sessions");
+  assertParentPortalResult(invoicesResult.error, "billing invoices");
 
   const enrollments = (enrollmentsResult.data ?? []) as EnrollmentRow[];
   const memberships = (membershipsResult.data ?? []) as GroupMembershipRow[];
@@ -439,6 +523,20 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   const subscriptions = (subscriptionsResult.data ?? []) as ParentSubscriptionRow[];
   const manualPayments = (manualPaymentsResult.data ?? []) as ParentManualPaymentRow[];
   const billingEvents = (billingEventsResult.data ?? []) as ParentBillingEventRow[];
+  const paymentSessions = (paymentSessionsResult.data ?? []) as ParentPaymentSessionRow[];
+  const invoices = (invoicesResult.data ?? []) as ParentBillingInvoiceRow[];
+  const invoiceIds = invoices.map((invoice) => invoice.id);
+  const invoiceLinesResult =
+    invoiceIds.length > 0
+      ? await admin
+          .from("billing_invoice_lines")
+          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, sort_order")
+          .eq("tenant_id", tenant.id)
+          .in("invoice_id", invoiceIds)
+          .order("sort_order")
+      : { data: [], error: null };
+
+  assertParentPortalResult(invoiceLinesResult.error, "billing invoice lines");
   const groupIds = unique(memberships.filter((membership) => membership.status === "active" || membership.status === "trial").map((membership) => membership.group_id));
   const graduationEventIds = unique(graduationParticipants.map((participant) => participant.event_id));
   const paymentPlanIds = unique(subscriptions.map((subscription) => subscription.payment_plan_id));
@@ -539,7 +637,10 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     paymentPlans: (paymentPlansResult.data ?? []) as ParentPaymentPlanRow[],
     subscriptions,
     manualPayments,
-    billingEvents
+    billingEvents,
+    paymentSessions,
+    invoices,
+    invoiceLines: (invoiceLinesResult.data ?? []) as ParentBillingInvoiceLineRow[]
   };
 }
 
