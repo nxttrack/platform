@@ -96,6 +96,14 @@ export type InstructorAssignmentRow = {
   status: string;
 };
 
+export type SessionInstructorAssignmentRow = {
+  id: string;
+  session_id: string;
+  instructor_user_id: string;
+  role: string;
+  status: string;
+};
+
 export type TenantUserOption = {
   userId: string;
   label: string;
@@ -125,6 +133,7 @@ export type TenantCoreData = {
   enrollments: EnrollmentRow[];
   groupMemberships: GroupMembershipRow[];
   groupInstructorAssignments: InstructorAssignmentRow[];
+  sessionInstructorAssignments: SessionInstructorAssignmentRow[];
   instructors: TenantUserOption[];
   guardians: TenantUserOption[];
   groupCapacity: GroupCapacity[];
@@ -145,6 +154,7 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
     enrollmentsResult,
     membershipsResult,
     assignmentsResult,
+    sessionAssignmentsResult,
     tenantMembershipsResult
   ] = await Promise.all([
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).order("sort_order").order("name"),
@@ -160,6 +170,7 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
     admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on").eq("tenant_id", tenant.id).order("starts_on", { ascending: false }),
     admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id),
     admin.from("group_instructor_assignments").select("id, group_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),
+    admin.from("session_instructor_assignments").select("id, session_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),
     admin.from("tenant_memberships").select("user_id, role").eq("tenant_id", tenant.id).eq("status", "active")
   ]);
 
@@ -172,6 +183,7 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
   assertSupabaseResult(enrollmentsResult.error, "enrollments");
   assertSupabaseResult(membershipsResult.error, "group memberships");
   assertSupabaseResult(assignmentsResult.error, "instructor assignments");
+  assertSupabaseResult(sessionAssignmentsResult.error, "session instructor assignments");
   assertSupabaseResult(tenantMembershipsResult.error, "tenant memberships");
 
   const tenantUsers = await loadTenantUsers(
@@ -191,6 +203,7 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
     enrollments: (enrollmentsResult.data ?? []) as EnrollmentRow[],
     groupMemberships,
     groupInstructorAssignments: (assignmentsResult.data ?? []) as InstructorAssignmentRow[],
+    sessionInstructorAssignments: (sessionAssignmentsResult.data ?? []) as SessionInstructorAssignmentRow[],
     instructors: tenantUsers.instructors,
     guardians: tenantUsers.guardians,
     groupCapacity: summarizeGroupCapacity(groups, groupMemberships)

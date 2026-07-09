@@ -122,6 +122,15 @@ export type InstructorNotificationRow = {
   read_at: string | null;
 };
 
+export type InstructorCatchUpRequestRow = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string;
+  preferred_session_id: string;
+  assigned_session_id: string | null;
+  status: string;
+};
+
 export type InstructorData = {
   tenant: {
     id: string;
@@ -144,6 +153,7 @@ export type InstructorData = {
   groupMemberships: GroupMembershipRow[];
   groupAssignments: InstructorAssignmentRow[];
   sessionAssignments: SessionInstructorAssignmentRow[];
+  catchUpRequests: InstructorCatchUpRequestRow[];
   attendance: AttendanceRow[];
   progressNotes: ProgressNoteRow[];
   badgeAwards: BadgeAwardRow[];
@@ -209,9 +219,12 @@ export async function getInstructorData(): Promise<InstructorData> {
   const groupIds = groups.map((group) => group.id);
   const sessionIds = sessions.map((session) => session.id);
 
-  const [membershipsResult, attendanceResult] = await Promise.all([
+  const [membershipsResult, catchUpRequestsResult, attendanceResult] = await Promise.all([
     groupIds.length > 0
       ? admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id).in("group_id", groupIds)
+      : Promise.resolve({ data: [], error: null }),
+    sessionIds.length > 0
+      ? admin.from("catch_up_requests").select("id, participant_id, enrollment_id, preferred_session_id, assigned_session_id, status").eq("tenant_id", tenant.id).eq("status", "approved").in("assigned_session_id", sessionIds)
       : Promise.resolve({ data: [], error: null }),
     sessionIds.length > 0
       ? admin.from("session_attendance").select("id, session_id, participant_id, enrollment_id, status, marked_by_user_id, marked_at, note").eq("tenant_id", tenant.id).in("session_id", sessionIds)
@@ -219,11 +232,13 @@ export async function getInstructorData(): Promise<InstructorData> {
   ]);
 
   assertInstructorResult(membershipsResult.error, "group memberships");
+  assertInstructorResult(catchUpRequestsResult.error, "catch-up requests");
   assertInstructorResult(attendanceResult.error, "session attendance");
 
   const groupMemberships = (membershipsResult.data ?? []) as GroupMembershipRow[];
-  const participantIds = unique(groupMemberships.map((membership) => membership.participant_id));
-  const enrollmentIds = unique(groupMemberships.map((membership) => membership.enrollment_id));
+  const catchUpRequests = (catchUpRequestsResult.data ?? []) as InstructorCatchUpRequestRow[];
+  const participantIds = unique(groupMemberships.map((membership) => membership.participant_id).concat(catchUpRequests.map((request) => request.participant_id)));
+  const enrollmentIds = unique(groupMemberships.map((membership) => membership.enrollment_id).concat(catchUpRequests.map((request) => request.enrollment_id)));
   const [participantsResult, enrollmentsResult, notesResult, badgeAwardsResult, progressScoresResult] = await Promise.all([
     participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
     enrollmentIds.length > 0
@@ -296,6 +311,7 @@ export async function getInstructorData(): Promise<InstructorData> {
     groupMemberships,
     groupAssignments,
     sessionAssignments,
+    catchUpRequests,
     attendance: (attendanceResult.data ?? []) as AttendanceRow[],
     progressNotes: (notesResult.data ?? []) as ProgressNoteRow[],
     badgeAwards: (badgeAwardsResult.data ?? []) as BadgeAwardRow[],
@@ -339,8 +355,40 @@ export function getRosterForGroup(data: InstructorData, groupId: string) {
 
 export function getSessionRoster(data: InstructorData, sessionId: string) {
   const session = data.sessions.find((item) => item.id === sessionId);
+  const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
+  const enrollmentById = new Map(data.enrollments.map((enrollment) => [enrollment.id, enrollment]));
 
-  return session ? getRosterForGroup(data, session.group_id) : [];
+  if (!session) {
+    return [];
+  }
+
+  const baseRoster = getRosterForGroup(data, session.group_id);
+  const participantIds = new Set(baseRoster.map((item) => item.participant.id));
+  const catchUpRoster = data.catchUpRequests
+    .filter((request) => request.assigned_session_id === session.id && !participantIds.has(request.participant_id))
+    .flatMap((request) => {
+      const participant = participantById.get(request.participant_id);
+      const enrollment = enrollmentById.get(request.enrollment_id);
+
+      return participant && enrollment
+        ? [
+            {
+              membership: {
+                id: `catch-up:${request.id}`,
+                group_id: session.group_id,
+                enrollment_id: request.enrollment_id,
+                participant_id: request.participant_id,
+                status: "trial",
+                capacity_weight: 1
+              },
+              participant,
+              enrollment
+            }
+          ]
+        : [];
+    });
+
+  return [...baseRoster, ...catchUpRoster].sort((a, b) => a.participant.display_name.localeCompare(b.participant.display_name));
 }
 
 export function formatSessionTime(startsAt: string, endsAt?: string | null) {

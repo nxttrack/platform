@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { completeSessionAction, markAttendanceAction } from "@/lib/domain/instructor-actions";
-import { formatSessionTime, getInstructorData, getRosterForGroup } from "@/lib/domain/instructor";
+import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -34,7 +34,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
   const error = getParam(rawParams, "error");
   const groupSessions = data.sessions.filter((session) => session.group_id === group.id);
   const selectedSession = groupSessions.find((session) => session.id === selectedSessionId) ?? groupSessions.find((session) => isToday(session.starts_at)) ?? groupSessions.find((session) => new Date(session.starts_at).getTime() >= Date.now()) ?? groupSessions[0] ?? null;
-  const roster = getRosterForGroup(data, group.id);
+  const roster = selectedSession ? getSessionRoster(data, selectedSession.id) : [];
   const attendanceByParticipant = new Map(data.attendance.filter((attendance) => attendance.session_id === selectedSession?.id).map((attendance) => [attendance.participant_id, attendance]));
 
   return (
