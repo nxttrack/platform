@@ -1,7 +1,8 @@
-import { Award, CalendarCheck, FileBadge, Send } from "lucide-react";
+import Link from "next/link";
+import { Award, CalendarCheck, Download, FileBadge, Send, UploadCloud } from "lucide-react";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { createGraduationEventAction, inviteGraduationParticipantAction, markGraduationReadinessAction, registerGraduationResultAction } from "@/lib/domain/graduation-actions";
+import { createGraduationEventAction, inviteGraduationParticipantAction, markGraduationReadinessAction, registerGraduationResultAction, uploadCertificateFileAction } from "@/lib/domain/graduation-actions";
 import { getGraduationAdminData } from "@/lib/domain/graduation";
 
 type PageProps = {
@@ -227,6 +228,35 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
                               </button>
                             </div>
                           </form>
+                          {certificate ? (
+                            <div className="mt-3 rounded-lg border border-border bg-white p-3">
+                              <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                  <p className="text-sm font-semibold text-foreground">Diplomabestand</p>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    {certificate.file_name ?? "Nog geen bestand"} - {certificate.storage_status}
+                                  </p>
+                                </div>
+                                {certificate.file_path ? (
+                                  <Link className="inline-flex h-10 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-foreground hover:bg-muted" href={`/api/files/certificate/${certificate.id}`}>
+                                    <Download className="h-4 w-4" />
+                                    Download
+                                  </Link>
+                                ) : null}
+                              </div>
+                              <form action={uploadCertificateFileAction} className="mt-3 flex flex-wrap items-end gap-2" encType="multipart/form-data">
+                                <input name="certificateId" type="hidden" value={certificate.id} />
+                                <label className="space-y-2 text-sm font-semibold text-foreground">
+                                  <span>Bestand</span>
+                                  <input className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" required type="file" />
+                                </label>
+                                <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+                                  <UploadCloud className="h-4 w-4" />
+                                  Bestand opslaan
+                                </button>
+                              </form>
+                            </div>
+                          ) : null}
                         </div>
                       );
                     })}

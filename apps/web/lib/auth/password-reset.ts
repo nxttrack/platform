@@ -1,6 +1,7 @@
 import "server-only";
 
 import { sendTransactionalEmail } from "@/lib/email/transactional";
+import { renderPasswordResetEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertStrongPassword, isSixDigitCode } from "./password-policy";
 import { generateSixDigitCode, hashAuthCode, normalizeEmail } from "./tokens";
@@ -35,17 +36,12 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
   }
 
   const resetLink = appendQuery(input.resetUrl, { email });
+  const template = renderPasswordResetEmail({ code, resetLink });
   const mail = await sendTransactionalEmail({
+    ...template,
+    relatedType: "password_reset_challenge",
+    templateKey: "auth_password_reset",
     to: email,
-    subject: "NXTTRACK wachtwoord wijzigen",
-    text: [
-      "Je hebt een code aangevraagd om je NXTTRACK wachtwoord te wijzigen.",
-      "",
-      `Code: ${code}`,
-      `Link: ${resetLink}`,
-      "",
-      "Deze code verloopt na 15 minuten."
-    ].join("\n")
   });
 
   return { requested: true, delivered: mail.delivered };

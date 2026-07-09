@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
+import { createTenantNotifications } from "./tenant-notifications";
 
 const planStatuses = new Set(["draft", "active", "archived"]);
 const intervals = new Set(["monthly", "quarterly", "yearly", "one_time", "manual"]);
@@ -124,6 +125,7 @@ export async function createManualPaymentAction(formData: FormData) {
 
   await recordPaymentSignal({
     tenantId: tenant.id,
+    organizationName: tenant.name,
     paymentId: paymentResult.data.id,
     subscriptionId: subscriptionResult.data.id,
     participantId: subscriptionResult.data.participant_id,
@@ -171,6 +173,7 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
 
   await recordPaymentSignal({
     tenantId: tenant.id,
+    organizationName: tenant.name,
     paymentId: paymentResult.data.id,
     subscriptionId: paymentResult.data.subscription_id,
     participantId: paymentResult.data.participant_id,
@@ -195,6 +198,7 @@ async function getActionContext() {
 
 async function recordPaymentSignal(input: {
   tenantId: string;
+  organizationName: string;
   paymentId: string;
   subscriptionId: string;
   participantId: string;
@@ -221,6 +225,7 @@ async function recordPaymentSignal(input: {
 
   await createParentNotification({
     tenantId: input.tenantId,
+    organizationName: input.organizationName,
     participantId: input.participantId,
     guardianUserId: input.guardianUserId,
     type: notificationType,
@@ -252,7 +257,7 @@ async function createBillingEvent(input: {
   });
 }
 
-async function createParentNotification(input: { tenantId: string; participantId: string; guardianUserId: string | null; type: "payment_due" | "payment_overdue" | "payment_received"; title: string; message: string }) {
+async function createParentNotification(input: { tenantId: string; organizationName: string; participantId: string; guardianUserId: string | null; type: "payment_due" | "payment_overdue" | "payment_received"; title: string; message: string }) {
   const admin = createAdminClient();
   const [participantResult, guardiansResult] = await Promise.all([
     admin.from("participants").select("guardian_user_id, display_name").eq("tenant_id", input.tenantId).eq("id", input.participantId).maybeSingle(),
@@ -271,17 +276,15 @@ async function createParentNotification(input: { tenantId: string; participantId
     return;
   }
 
-  await admin.from("tenant_notifications").insert(
-    recipientIds.map((recipientId) => ({
-      tenant_id: input.tenantId,
-      recipient_user_id: recipientId,
-      participant_id: input.participantId,
-      type: input.type,
-      title: input.title,
-      message: `${participant.display_name}: ${input.message}`,
-      status: "unread"
-    }))
-  );
+  await createTenantNotifications({
+    message: `${participant.display_name}: ${input.message}`,
+    organizationName: input.organizationName,
+    participantId: input.participantId,
+    recipientIds,
+    tenantId: input.tenantId,
+    title: input.title,
+    type: input.type
+  });
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/betalingen");

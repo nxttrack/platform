@@ -6,6 +6,7 @@ import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-g
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
+import { createTenantNotifications } from "./tenant-notifications";
 
 const attendanceStatuses = new Set(["present", "absent", "late", "excused", "trial"]);
 const noteVisibilities = new Set(["internal", "parent_visible"]);
@@ -277,6 +278,7 @@ export async function scoreProgressItemAction(formData: FormData) {
   if (visibility === "parent_visible") {
     await createParentNotificationsForParticipant({
       tenantId: tenant.id,
+      organizationName: tenant.name,
       participantId,
       type: "progress_score",
       title: "Nieuwe voortgang",
@@ -353,6 +355,7 @@ export async function awardBadgeAction(formData: FormData) {
   if (visibility === "parent_visible") {
     await createParentNotificationsForParticipant({
       tenantId: tenant.id,
+      organizationName: tenant.name,
       participantId,
       type: "badge_award",
       title: "Nieuwe badge",
@@ -366,6 +369,7 @@ export async function awardBadgeAction(formData: FormData) {
 
 async function createParentNotificationsForParticipant(input: {
   tenantId: string;
+  organizationName: string;
   participantId: string;
   type: "progress_score" | "badge_award";
   title: string;
@@ -391,19 +395,17 @@ async function createParentNotificationsForParticipant(input: {
     return;
   }
 
-  await admin.from("tenant_notifications").insert(
-    recipientIds.map((recipientId) => ({
-      tenant_id: input.tenantId,
-      recipient_user_id: recipientId,
-      participant_id: input.participantId,
-      type: input.type,
-      title: input.title,
-      message: `${participant.display_name}: ${input.message}`,
-      status: "unread",
-      related_progress_score_id: input.relatedProgressScoreId ?? null,
-      related_badge_award_id: input.relatedBadgeAwardId ?? null
-    }))
-  );
+  await createTenantNotifications({
+    message: `${participant.display_name}: ${input.message}`,
+    organizationName: input.organizationName,
+    participantId: input.participantId,
+    recipientIds,
+    relatedBadgeAwardId: input.relatedBadgeAwardId ?? null,
+    relatedProgressScoreId: input.relatedProgressScoreId ?? null,
+    tenantId: input.tenantId,
+    title: input.title,
+    type: input.type
+  });
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/voortgang");

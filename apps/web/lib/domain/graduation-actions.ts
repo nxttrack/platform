@@ -3,8 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { getFileFromFormData, uploadCertificateFile } from "@/lib/storage/private-files";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
+import { createTenantNotifications } from "./tenant-notifications";
 
 const readinessStatuses = new Set(["not_ready", "nearly_ready", "ready", "blocked"]);
 const eventStatuses = new Set(["planned", "published", "completed", "cancelled"]);
@@ -113,11 +115,12 @@ export async function inviteGraduationParticipantAction(formData: FormData) {
   }
 
   await admin.from("graduation_readiness").update({ status: "invited" }).eq("tenant_id", tenant.id).eq("id", readinessResult.data.id);
-  await createParentNotifications({
-    tenantId: tenant.id,
-    participantId: readinessResult.data.participant_id,
-    type: "graduation_invite",
-    title: "Afzwemuitnodiging",
+    await createParentNotifications({
+      tenantId: tenant.id,
+      organizationName: tenant.name,
+      participantId: readinessResult.data.participant_id,
+      type: "graduation_invite",
+      title: "Afzwemuitnodiging",
     message: `Uitgenodigd voor ${eventResult.data.title} op ${formatDate(eventResult.data.starts_at)}`
   });
 
@@ -202,6 +205,7 @@ export async function registerGraduationResultAction(formData: FormData) {
 
     await createParentNotifications({
       tenantId: tenant.id,
+      organizationName: tenant.name,
       participantId: eventParticipantResult.data.participant_id,
       type: "certificate_issued",
       title: "Diploma beschikbaar",
@@ -210,6 +214,57 @@ export async function registerGraduationResultAction(formData: FormData) {
   }
 
   redirectAfterWrite(null, "result");
+}
+
+export async function uploadCertificateFileAction(formData: FormData) {
+  const { tenant } = await getActionContext();
+  const certificateId = readRequired(formData, "certificateId");
+  let file: File | null = null;
+
+  try {
+    file = getFileFromFormData(formData, "file");
+  } catch {
+    redirect("/admin/afzwemmen?error=file");
+  }
+
+  if (!file) {
+    redirect("/admin/afzwemmen?error=file");
+  }
+
+  const admin = createAdminClient();
+  const certificateResult = await admin.from("certificate_records").select("id").eq("tenant_id", tenant.id).eq("id", certificateId).maybeSingle();
+
+  if (certificateResult.error || !certificateResult.data) {
+    redirect("/admin/afzwemmen?error=certificate");
+  }
+
+  let upload: Awaited<ReturnType<typeof uploadCertificateFile>>;
+
+  try {
+    upload = await uploadCertificateFile({
+      certificateId,
+      file,
+      tenantId: tenant.id
+    });
+  } catch {
+    redirect("/admin/afzwemmen?error=file_upload");
+  }
+
+  const { error } = await admin
+    .from("certificate_records")
+    .update({
+      file_name: upload.fileName,
+      file_path: upload.filePath,
+      mime_type: upload.mimeType,
+      size_bytes: upload.sizeBytes,
+      storage_bucket: upload.storageBucket,
+      storage_status: "stored",
+      uploaded_at: new Date().toISOString()
+    })
+    .eq("tenant_id", tenant.id)
+    .eq("id", certificateId);
+
+  redirectAfterWrite(error, "certificate-file");
 }
 
 async function getActionContext() {
@@ -221,7 +276,7 @@ async function getActionContext() {
   };
 }
 
-async function createParentNotifications(input: { tenantId: string; participantId: string; type: "graduation_invite" | "certificate_issued"; title: string; message: string }) {
+async function createParentNotifications(input: { tenantId: string; organizationName: string; participantId: string; type: "graduation_invite" | "certificate_issued"; title: string; message: string }) {
   const admin = createAdminClient();
   const [participantResult, guardiansResult] = await Promise.all([
     admin.from("participants").select("guardian_user_id, display_name").eq("tenant_id", input.tenantId).eq("id", input.participantId).maybeSingle(),
@@ -240,17 +295,15 @@ async function createParentNotifications(input: { tenantId: string; participantI
     return;
   }
 
-  await admin.from("tenant_notifications").insert(
-    recipientIds.map((recipientId) => ({
-      tenant_id: input.tenantId,
-      recipient_user_id: recipientId,
-      participant_id: input.participantId,
-      type: input.type,
-      title: input.title,
-      message: `${participant.display_name}: ${input.message}`,
-      status: "unread"
-    }))
-  );
+  await createTenantNotifications({
+    message: `${participant.display_name}: ${input.message}`,
+    organizationName: input.organizationName,
+    participantId: input.participantId,
+    recipientIds,
+    tenantId: input.tenantId,
+    title: input.title,
+    type: input.type
+  });
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/diplomas");

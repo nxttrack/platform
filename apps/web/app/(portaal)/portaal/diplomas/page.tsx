@@ -1,4 +1,5 @@
-import { CalendarCheck, CheckCircle2, FileBadge, XCircle } from "lucide-react";
+import Link from "next/link";
+import { CalendarCheck, CheckCircle2, Download, FileBadge, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
@@ -106,6 +107,12 @@ export default async function ParentDiplomaVaultPage({ searchParams }: PageProps
                     <Detail label="Nummer" value={certificate.certificate_number ?? "Niet gezet"} />
                   </div>
                   {certificate.notes ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{certificate.notes}</p> : null}
+                  {certificate.file_path ? (
+                    <Link className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/api/files/certificate/${certificate.id}`}>
+                      <Download className="h-4 w-4" />
+                      Diploma downloaden
+                    </Link>
+                  ) : null}
                 </article>
               );
             })}

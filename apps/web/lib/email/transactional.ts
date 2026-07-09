@@ -1,22 +1,33 @@
 import "server-only";
 
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getConfiguredEmailDeliveryConfig, type SendGridApiEmailConfig } from "./platform-settings";
 import { sendSmtpEmail } from "./smtp";
 
 export type TransactionalEmailInput = {
+  fromName?: string | null;
   to: string;
+  recipientUserId?: string | null;
   subject: string;
   text: string;
   html?: string;
+  metadata?: Record<string, unknown>;
+  organizationName?: string | null;
+  relatedId?: string | null;
+  relatedType?: string | null;
+  templateKey?: string;
+  tenantId?: string | null;
 };
 
 export type TransactionalEmailResult =
   | {
+      attemptId?: string;
       delivered: true;
       provider: "sendgrid_api" | "smtp";
       source?: "env" | "platform_settings";
     }
   | {
+      attemptId?: string;
       delivered: false;
       provider: "not_configured" | "sendgrid_api" | "smtp";
       reason: string;
@@ -27,33 +38,40 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
   const config = await getConfiguredEmailDeliveryConfig();
 
   if (!config) {
-    return {
+    const result: TransactionalEmailResult = {
       delivered: false,
       provider: "not_configured",
       reason: "Configureer SendGrid API of SMTP in de platform admin instellingen."
     };
+
+    return withDeliveryAttempt(input, result);
   }
+
+  const fromName = input.fromName ?? input.organizationName ?? config.fromName;
+  let result: TransactionalEmailResult;
 
   if (config.provider === "sendgrid_api") {
-    return sendWithSendGridApi(config, input);
+    result = await sendWithSendGridApi({ ...config, fromName }, input);
+  } else {
+    try {
+      await sendSmtpEmail({ ...config, fromName }, input);
+
+      result = {
+        delivered: true,
+        provider: "smtp",
+        source: config.source
+      };
+    } catch (error) {
+      result = {
+        delivered: false,
+        provider: "smtp",
+        reason: error instanceof Error ? error.message : String(error),
+        source: config.source
+      };
+    }
   }
 
-  try {
-    await sendSmtpEmail(config, input);
-
-    return {
-      delivered: true,
-      provider: "smtp",
-      source: config.source
-    };
-  } catch (error) {
-    return {
-      delivered: false,
-      provider: "smtp",
-      reason: error instanceof Error ? error.message : String(error),
-      source: config.source
-    };
-  }
+  return withDeliveryAttempt(input, result);
 }
 
 async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: TransactionalEmailInput): Promise<TransactionalEmailResult> {
@@ -97,4 +115,43 @@ async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: Transa
     provider: "sendgrid_api",
     source: config.source
   };
+}
+
+async function withDeliveryAttempt(input: TransactionalEmailInput, result: TransactionalEmailResult): Promise<TransactionalEmailResult> {
+  try {
+    const attemptId = await logDeliveryAttempt(input, result);
+
+    return attemptId ? { ...result, attemptId } : result;
+  } catch {
+    return result;
+  }
+}
+
+async function logDeliveryAttempt(input: TransactionalEmailInput, result: TransactionalEmailResult) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("email_delivery_attempts")
+    .insert({
+      tenant_id: input.tenantId ?? null,
+      recipient_user_id: input.recipientUserId ?? null,
+      recipient_email: input.to,
+      provider: result.provider,
+      provider_source: result.source ?? null,
+      template_key: input.templateKey ?? "custom",
+      subject: input.subject,
+      status: result.delivered ? "sent" : result.provider === "not_configured" ? "skipped" : "failed",
+      error_message: result.delivered ? null : result.reason,
+      related_type: input.relatedType ?? null,
+      related_id: input.relatedId ?? null,
+      metadata: input.metadata ?? {},
+      delivered_at: result.delivered ? new Date().toISOString() : null
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return (data as { id: string }).id;
 }

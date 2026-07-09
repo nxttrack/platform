@@ -1,6 +1,7 @@
 import "server-only";
 
 import { sendTransactionalEmail } from "@/lib/email/transactional";
+import { renderInvitationEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isPlatformRole, isTenantRole, roleLabels, type AppRole, type PlatformRole, type TenantRole } from "./roles";
 import { generateTemporaryPassword, normalizeEmail } from "./tokens";
@@ -76,19 +77,21 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
     actorUserId: input.actor?.user.id ?? null
   });
 
+  const template = renderInvitationEmail({
+    loginUrl: input.loginUrl,
+    organizationName: tenant?.name ?? "NXTTRACK platform admin",
+    roleLabel: roleLabels[role],
+    temporaryPassword: invitedUser.temporaryPassword,
+    tenantSlug: tenant?.slug ?? null
+  });
   const mail = await sendTransactionalEmail({
+    ...template,
+    organizationName: tenant?.name ?? "NXTTRACK",
+    relatedId: invitationId,
+    relatedType: "auth_invitation",
+    templateKey: "auth_invitation",
+    tenantId: tenant?.id ?? null,
     to: email,
-    subject: "Je NXTTRACK uitnodiging",
-    text: [
-      "Je bent uitgenodigd voor NXTTRACK.",
-      "",
-      tenant ? `Omgeving: ${tenant.name} (${tenant.slug})` : "Omgeving: NXTTRACK platform admin",
-      `Rol: ${roleLabels[role]}`,
-      `Login: ${input.loginUrl}`,
-      invitedUser.temporaryPassword ? `Tijdelijk wachtwoord: ${invitedUser.temporaryPassword}` : "Gebruik je bestaande NXTTRACK wachtwoord.",
-      "",
-      invitedUser.temporaryPassword ? "Na je eerste login moet je direct een nieuw wachtwoord kiezen." : "Je hoeft je wachtwoord niet opnieuw te wijzigen voor deze extra toegang."
-    ].join("\n")
   });
 
   await updateInvitationDelivery(invitationId, mail.delivered, mail.delivered ? null : mail.reason);

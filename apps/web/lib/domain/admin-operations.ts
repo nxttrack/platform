@@ -46,8 +46,27 @@ export type AdminDocumentRow = {
   file_path: string | null;
   mime_type: string | null;
   size_bytes: number | null;
+  storage_bucket: string;
+  storage_status: string;
+  uploaded_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type EmailDeliveryAttemptRow = {
+  id: string;
+  recipient_user_id: string | null;
+  recipient_email: string;
+  provider: string;
+  provider_source: string | null;
+  template_key: string;
+  subject: string;
+  status: string;
+  error_message: string | null;
+  related_type: string | null;
+  related_id: string | null;
+  attempted_at: string;
+  delivered_at: string | null;
 };
 
 export type AdminReportSnapshotRow = {
@@ -135,6 +154,7 @@ export type AdminOperationsData = TenantCoreData & {
   messages: AdminMessageRow[];
   tasks: AdminTaskRow[];
   documents: AdminDocumentRow[];
+  emailDeliveryAttempts: EmailDeliveryAttemptRow[];
   reportSnapshots: AdminReportSnapshotRow[];
   intakeSubmissions: IntakeSubmissionRow[];
   waitlistEntries: WaitlistEntryRow[];
@@ -166,6 +186,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
     subscriptionsResult,
     billingEventsResult,
     tenantEventsResult,
+    emailDeliveryAttemptsResult,
     progressScoresResult,
     attendanceResult,
     readinessResult,
@@ -186,7 +207,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
       .order("created_at", { ascending: false }),
     admin
       .from("tenant_documents")
-      .select("id, uploaded_by_user_id, title, description, audience, visibility, status, file_name, file_path, mime_type, size_bytes, created_at, updated_at")
+      .select("id, uploaded_by_user_id, title, description, audience, visibility, status, file_name, file_path, mime_type, size_bytes, storage_bucket, storage_status, uploaded_at, created_at, updated_at")
       .eq("tenant_id", core.tenant.id)
       .order("created_at", { ascending: false }),
     admin
@@ -233,6 +254,12 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
       .order("created_at", { ascending: false })
       .limit(80),
     admin
+      .from("email_delivery_attempts")
+      .select("id, recipient_user_id, recipient_email, provider, provider_source, template_key, subject, status, error_message, related_type, related_id, attempted_at, delivered_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("attempted_at", { ascending: false })
+      .limit(80),
+    admin
       .from("participant_progress_scores")
       .select("id, participant_id, score, visibility, status, scored_at")
       .eq("tenant_id", core.tenant.id)
@@ -271,6 +298,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
   assertAdminOpsResult(subscriptionsResult.error, "subscriptions");
   assertAdminOpsResult(billingEventsResult.error, "billing events");
   assertAdminOpsResult(tenantEventsResult.error, "tenant events");
+  assertAdminOpsResult(emailDeliveryAttemptsResult.error, "email delivery attempts");
   assertAdminOpsResult(progressScoresResult.error, "progress scores");
   assertAdminOpsResult(attendanceResult.error, "session attendance");
   assertAdminOpsResult(readinessResult.error, "graduation readiness");
@@ -289,6 +317,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
   const subscriptions = (subscriptionsResult.data ?? []) as SubscriptionRow[];
   const billingEvents = (billingEventsResult.data ?? []) as BillingEventRow[];
   const tenantEvents = (tenantEventsResult.data ?? []) as AdminEventRow[];
+  const emailDeliveryAttempts = (emailDeliveryAttemptsResult.data ?? []) as EmailDeliveryAttemptRow[];
   const progressScores = (progressScoresResult.data ?? []) as AdminProgressScoreSummary[];
   const attendance = (attendanceResult.data ?? []) as AdminAttendanceSummary[];
   const graduationReadiness = (readinessResult.data ?? []) as AdminGraduationReadinessSummary[];
@@ -322,6 +351,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
     subscriptions,
     billingEvents,
     tenantEvents,
+    emailDeliveryAttempts,
     progressScores,
     attendance,
     graduationReadiness,

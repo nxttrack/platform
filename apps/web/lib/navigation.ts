@@ -26,6 +26,7 @@ export const parentNav: NavItem[] = [
   { href: "/portaal/lessen", label: "Mijn lessen", icon: Waves },
   { href: "/portaal/voortgang", label: "Voortgang", icon: TrendingUp },
   { href: "/portaal/diplomas", label: "Diploma's", icon: GraduationCap },
+  { href: "/portaal/documenten", label: "Documenten", icon: FileText },
   { href: "/portaal/betalingen", label: "Betalingen", icon: CreditCard },
   { href: "/portaal/profiel", label: "Profiel", icon: User }
 ];
@@ -34,7 +35,8 @@ export const instructorNav: NavItem[] = [
   { href: "/instructor", label: "Vandaag", icon: Home },
   { href: "/instructor/agenda", label: "Agenda", icon: Calendar },
   { href: "/instructor/groepen", label: "Mijn groepen", icon: Users },
-  { href: "/instructor/leerlingen", label: "Leerlingen", icon: Users }
+  { href: "/instructor/leerlingen", label: "Leerlingen", icon: Users },
+  { href: "/instructor/documenten", label: "Documenten", icon: FileText }
 ];
 
 export const adminNav: NavItem[] = [

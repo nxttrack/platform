@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { findUserIdByEmail } from "@/lib/auth/user-security";
 import { sendTransactionalEmail } from "@/lib/email/transactional";
+import { renderSlotOfferEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant, summarizeGroupCapacity, type GroupMembershipRow, type GroupRow } from "./core";
 import { computePlacementScores, type WaitlistEntryRow, type WaitlistPreferenceRow } from "./placement";
@@ -212,17 +213,20 @@ export async function createSlotOfferAction(formData: FormData) {
   }
 
   const offerId = (offerResult.data as { id: string }).id;
+  const template = renderSlotOfferEmail({
+    offerLink,
+    organizationName: tenant.name,
+    parentName: entry.parent_name,
+    participantName: entry.participant_name
+  });
   const mail = await sendTransactionalEmail({
+    ...template,
+    organizationName: tenant.name,
+    relatedId: offerId,
+    relatedType: "slot_offer",
+    templateKey: "slot_offer",
+    tenantId: tenant.id,
     to: entry.parent_email,
-    subject: "Er is een plek beschikbaar",
-    text: [
-      `Beste ${entry.parent_name},`,
-      "",
-      `Er is een plek beschikbaar voor ${entry.participant_name}.`,
-      `Bekijk en bevestig het aanbod via: ${offerLink}`,
-      "",
-      "Deze link verloopt na 7 dagen."
-    ].join("\n")
   });
 
   await Promise.all([
