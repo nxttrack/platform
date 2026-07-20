@@ -321,7 +321,7 @@ jobs:
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
-          pnpm --filter @nxttrack/web exec playwright install chromium
+          pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
           PLAYWRIGHT_BASE_URL="$APP_URL" pnpm run test:e2e
 
       - name: Write release evidence

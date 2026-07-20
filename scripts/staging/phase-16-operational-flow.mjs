@@ -144,7 +144,15 @@ if (process.env.PHASE16_SKIP_PLAYWRIGHT !== "true") {
   };
 
   if (process.env.PHASE16_SKIP_PLAYWRIGHT_INSTALL !== "true") {
-    runStep("ensure Playwright Chromium", "pnpm", ["--filter", "@nxttrack/web", "exec", "playwright", "install", "chromium"], playwrightEnv);
+    runStep("ensure Playwright Chromium and system dependencies", "pnpm", [
+      "--filter",
+      "@nxttrack/web",
+      "exec",
+      "playwright",
+      "install",
+      "--with-deps",
+      "chromium"
+    ], playwrightEnv);
   }
 
   runStep("run Phase 16 Playwright operational smoke", "pnpm", ["--filter", "@nxttrack/web", "exec", "playwright", "test", "tests/e2e/phase16-operational.spec.ts"], playwrightEnv);
