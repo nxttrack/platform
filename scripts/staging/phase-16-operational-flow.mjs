@@ -20,6 +20,7 @@ const tenantHostname = process.env.PHASE16_TENANT_HOSTNAME || `${tenantSlug}.sta
 const tenantName = process.env.PHASE16_TENANT_NAME || "AquaSwim Demo";
 const statePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 const today = new Date().toISOString().slice(0, 10);
+const phase16ProgressLabel = "Ik kan het bijna zelf";
 
 const roleAccounts = {
   tenantAdmin: {
@@ -109,6 +110,7 @@ const state = {
     groupId: core.group.id,
     participantId: intake.participant.id,
     badgeTitle: learning.badgeAward.title,
+    progressLabel: learning.progressScore.positive_label,
     certificateTitle: graduation.certificate.title,
     paymentReference: billing.manualPayment.reference,
     declinedParticipantName: intake.declinedEntry.participant_name
@@ -798,7 +800,7 @@ async function ensureLearningFlow(tenantId, users, core, intake) {
       item_id: item.id,
       session_id: core.session.id,
       score: 4,
-      positive_label: "Gaat goed",
+      positive_label: phase16ProgressLabel,
       note: "Sofie blijft rustig en drijft zelfstandig.",
       visibility: "parent_visible",
       status: "active",
@@ -867,7 +869,7 @@ async function ensureLearningFlow(tenantId, users, core, intake) {
     "id, title, note"
   );
 
-  await ensureNotification(tenantId, users.parent.id, intake.participant.id, "progress_score", "Nieuwe voortgang", `${core.participantName}: Zelfstandig drijven: Gaat goed`, {
+  await ensureNotification(tenantId, users.parent.id, intake.participant.id, "progress_score", "Nieuwe voortgang", `${core.participantName}: Zelfstandig drijven: ${phase16ProgressLabel}`, {
     related_progress_score_id: progressScore.id
   });
   await ensureNotification(tenantId, users.parent.id, intake.participant.id, "badge_award", "Nieuwe badge", `${core.participantName}: Waterheld`, {

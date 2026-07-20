@@ -17,6 +17,7 @@ type Phase16State = {
     participantId: string;
     participantName: string;
     paymentReference: string;
+    progressLabel: string;
     programName: string;
     sessionId: string;
     stageLabel: string;
@@ -100,7 +101,7 @@ test.describe("phase 16 operational happy path", () => {
 
     await page.goto("/portaal/voortgang", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
-    await expectBodyToContain(page, "Gaat goed");
+    await expectBodyToContain(page, phase.expected.progressLabel);
 
     await page.goto("/portaal/badges", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);

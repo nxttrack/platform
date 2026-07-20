@@ -232,9 +232,12 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
                             <div className="mt-3 rounded-lg border border-border bg-white p-3">
                               <div className="flex flex-wrap items-center justify-between gap-3">
                                 <div>
-                                  <p className="text-sm font-semibold text-foreground">Diplomabestand</p>
+                                  <p className="text-sm font-semibold text-foreground">{certificate.title}</p>
                                   <p className="mt-1 text-xs text-muted-foreground">
-                                    {certificate.file_name ?? "Nog geen bestand"} - {certificate.storage_status}
+                                    {certificate.certificate_number ?? "Zonder diplomanummer"} - uitgegeven {formatDate(certificate.issued_on)}
+                                  </p>
+                                  <p className="mt-1 text-xs text-muted-foreground">
+                                    Diplomabestand: {certificate.file_name ?? "nog niet toegevoegd"} - {certificate.storage_status}
                                   </p>
                                 </div>
                                 {certificate.file_path ? (
@@ -289,6 +292,10 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function formatDate(value: string | null) {
+  return value ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value)) : "datum onbekend";
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {
