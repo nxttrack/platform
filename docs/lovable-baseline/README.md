@@ -22,3 +22,5 @@ LOVABLE_BASE_URL=http://127.0.0.1:4173 pnpm design:capture-lovable
 ```
 
 Images and `capture.json` are written to the gitignored `artifacts/lovable-baseline/<commit>/` directory. The full local capture result and known asset fixture are documented in `../LOVABLE_SCREENSHOT_BASELINE.md`.
+
+The matching authenticated staging capture and its SHA-bound GitHub artifact are documented in `../STAGING_VISUAL_ACCEPTANCE.md`.

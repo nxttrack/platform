@@ -29,7 +29,7 @@ Immediate order:
 6. Add typed accessible charts for approved operational metrics without importing Lovable mock series.
 7. Standardize core form controls and tabular reports while preserving server actions.
 8. Add Radix tabs and confirmation dialogs where workflow evidence supports them. Completed for the instructor dossier and parent lesson cancellation.
-9. Capture authenticated production routes at the Priority A viewports.
+9. Capture authenticated production routes at the Priority A viewports. Automation is implemented; first live artifact and visual approval remain.
 10. Add tooltips only where visible labels cannot carry the necessary meaning.
 
 ## Phase 0 - Repository And Infrastructure Foundation

@@ -157,7 +157,7 @@ The audit checks the pinned Lovable manifest, source-to-production mappings, sha
 - Promote approved reference photography assets into repository-owned public assets.
 - Add tooltips only where an icon or score explanation cannot remain self-explanatory through visible copy.
 - Run the added authenticated mobile-drawer and active-link Playwright assertions on staging and retain the evidence.
-- Capture production at the exact Priority A viewports and record side-by-side evidence.
+- Run the SHA-bound staging capture for all 56 Priority A production images and review the resulting artifact side by side.
 - Continue component extraction from page-local CRUD markup only where repeated behavior is proven.
 
 ## Non-Goals

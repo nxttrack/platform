@@ -300,6 +300,22 @@ jobs:
           set -euo pipefail
           pnpm run phase16:flow
 
+      - name: Capture Priority A staging visual evidence
+        if: env.TARGET == 'staging'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run design:capture-production
+
+      - name: Upload Priority A staging visual evidence
+        if: always() && env.TARGET == 'staging'
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
+          path: ${{ env.RELEASE }}/artifacts/production-baseline/${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 90
+
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'
         working-directory: ${{ env.RELEASE }}

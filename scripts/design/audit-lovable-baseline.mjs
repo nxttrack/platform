@@ -20,6 +20,7 @@ const requiredFiles = [
   "apps/web/components/ui/native-select.tsx",
   "apps/web/components/ui/table.tsx",
   "apps/web/components/ui/textarea.tsx",
+  "apps/web/scripts/capture-production-baseline.mjs",
   "apps/web/components/admin/operational-charts.tsx",
   "apps/web/components/shell/app-shell-client.tsx",
   "apps/web/components/shell/ui.tsx",
