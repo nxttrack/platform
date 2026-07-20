@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -120,14 +119,17 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
     return;
   }
 
-  const admin = createSupabaseAdminClient();
+  const remoteAppliedVersions = getRemoteAppliedMigrationVersions();
+  const existingAnchorTables = getExistingDatabaseAnchorTables();
 
-  if (!admin) {
-    console.warn("[db:migrate] Skipping staging schema history repair because Supabase admin client config is unavailable.");
+  if (existingAnchorTables.size === 0 && remoteAppliedVersions?.size > 0) {
+    console.warn(
+      `[db:migrate] Database has no NXTTRACK schema anchors but migration history contains ${remoteAppliedVersions.size} applied version(s). Reverting stale history before first-run migration.`
+    );
+    repairMigrationHistory([...remoteAppliedVersions], "reverted");
     return;
   }
 
-  const remoteAppliedVersions = getRemoteAppliedMigrationVersions();
   const repairs = [];
 
   console.log("[db:migrate] Checking staging schema for migration history drift.");
@@ -140,9 +142,7 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
       continue;
     }
 
-    const exists = await publicTableExists(admin, candidate.table);
-
-    if (exists) {
+    if (existingAnchorTables.has(candidate.table)) {
       repairs.push(...missingVersions);
       console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${missingVersions.length} migration history entry(s) as applied.`);
     }
@@ -156,53 +156,42 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
   repairMigrationHistory(repairs);
 }
 
-function createSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !secretKey) {
-    return null;
-  }
-
-  const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
-  const { createClient } = requireFromWeb("@supabase/supabase-js");
-
-  return createClient(supabaseUrl, secretKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+function getExistingDatabaseAnchorTables() {
+  const tableNames = stagingExistingSchemaRepairCandidates.map((candidate) => candidate.table);
+  const quotedTableNames = tableNames.map((table) => `'${table.replaceAll("'", "''")}'`).join(", ");
+  const sql = `select relname as table_name from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname in (${quotedTableNames}) order by c.relname;`;
+  const query = spawnSync(
+    cli,
+    ["db", "query", "--db-url", process.env.DATABASE_URL, "--output-format", "json", sql],
+    {
+      ...baseOptions,
+      encoding: "utf8"
     }
-  });
-}
-
-async function publicTableExists(admin, table) {
-  const { error } = await admin.from(table).select("*", { head: true, count: "exact" }).limit(1);
-
-  if (!error) {
-    return true;
-  }
-
-  if (isMissingTableError(error)) {
-    return false;
-  }
-
-  console.error(`[db:migrate] Could not inspect public.${table}: ${error.message}`);
-  process.exit(1);
-}
-
-function isMissingTableError(error) {
-  const code = error.code ?? "";
-  const message = (error.message ?? "").toLowerCase();
-
-  return (
-    code === "42P01" ||
-    code === "PGRST106" ||
-    code === "PGRST202" ||
-    code === "PGRST205" ||
-    message.includes("could not find the table") ||
-    message.includes("does not exist") ||
-    message.includes("schema cache")
   );
+
+  if (query.error) {
+    console.error(`[db:migrate] Could not inspect schema through DATABASE_URL: ${query.error.message}`);
+    process.exit(1);
+  }
+
+  if (query.status !== 0) {
+    const stderr = query.stderr?.trim();
+    console.error(`[db:migrate] DATABASE_URL schema inspection failed with exit code ${query.status ?? 1}.`);
+    if (stderr) console.error(stderr);
+    process.exit(query.status ?? 1);
+  }
+
+  const rows = parseJsonOutput(query.stdout ?? "");
+
+  if (!rows) {
+    console.error("[db:migrate] Could not parse DATABASE_URL schema inspection output.");
+    process.exit(1);
+  }
+
+  const existingTables = new Set();
+  collectValuesForKey(rows, "table_name", existingTables);
+  console.log(`[db:migrate] DATABASE_URL schema inspection found ${existingTables.size} NXTTRACK anchor table(s).`);
+  return existingTables;
 }
 
 function getRemoteAppliedMigrationVersions() {
@@ -268,20 +257,15 @@ function parseRemoteMigrationVersions(output) {
 }
 
 function parseRemoteMigrationVersionsFromJson(output) {
-  const jsonStart = Math.min(...["[", "{"].map((token) => output.indexOf(token)).filter((index) => index >= 0));
+  const parsed = parseJsonOutput(output);
 
-  if (!Number.isFinite(jsonStart)) {
+  if (!parsed) {
     return null;
   }
 
-  try {
-    const parsed = JSON.parse(output.slice(jsonStart));
-    const versions = new Set();
-    collectRemoteVersions(parsed, versions);
-    return versions.size > 0 ? versions : null;
-  } catch {
-    return null;
-  }
+  const versions = new Set();
+  collectRemoteVersions(parsed, versions);
+  return versions.size > 0 ? versions : null;
 }
 
 function collectRemoteVersions(value, versions, parentKey = "") {
@@ -312,11 +296,46 @@ function collectRemoteVersions(value, versions, parentKey = "") {
   }
 }
 
-function repairMigrationHistory(versions) {
+function parseJsonOutput(output) {
+  const jsonStart = Math.min(...["[", "{"].map((token) => output.indexOf(token)).filter((index) => index >= 0));
+
+  if (!Number.isFinite(jsonStart)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(output.slice(jsonStart));
+  } catch {
+    return null;
+  }
+}
+
+function collectValuesForKey(value, expectedKey, values) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectValuesForKey(item, expectedKey, values);
+    }
+    return;
+  }
+
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (key === expectedKey && typeof nestedValue === "string") {
+      values.add(nestedValue);
+    } else {
+      collectValuesForKey(nestedValue, expectedKey, values);
+    }
+  }
+}
+
+function repairMigrationHistory(versions, status = "applied") {
   const uniqueVersions = [...new Set(versions)];
   const repair = spawnSync(
     cli,
-    ["migration", "repair", "--status", "applied", "--db-url", process.env.DATABASE_URL, "--yes", ...uniqueVersions],
+    ["migration", "repair", "--status", status, "--db-url", process.env.DATABASE_URL, "--yes", ...uniqueVersions],
     {
       ...baseOptions,
       stdio: "inherit"

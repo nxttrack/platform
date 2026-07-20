@@ -29,3 +29,5 @@ Current migrations:
 - `20260720232500_reload_postgrest_schema.sql` explicitly reloads the PostgREST schema cache after a restored or newly migrated environment before bootstrap begins.
 
 The `pnpm run db:migrate` command remains a safe guardrail. It skips unless `RUN_DB_MIGRATIONS=true` is set. When enabled, it requires `DATABASE_URL` and runs `supabase db push --db-url ... --yes`.
+
+On staging, migration-history reconciliation inspects schema anchors through that same `DATABASE_URL`; it never infers database state through the Data API credentials. If a first-run database has no NXTTRACK schema anchors but does contain stale applied-history rows, the script marks only those history rows as reverted before applying the complete migration chain. Existing schemas continue to use anchor-based history repair.
