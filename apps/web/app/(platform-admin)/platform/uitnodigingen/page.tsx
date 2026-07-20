@@ -1,3 +1,7 @@
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { createInvitationAction } from "@/lib/auth/actions";
 import { platformRoles, roleLabels, tenantRoles } from "@/lib/auth/roles";
 
@@ -27,23 +31,17 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
       <form action={createInvitationAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
         <input name="next" type="hidden" value="/platform/uitnodigingen" />
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="fullName">
-              Naam
-            </label>
-            <input className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" id="fullName" name="fullName" type="text" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="email">
-              E-mail
-            </label>
-            <input className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" id="email" name="email" required type="email" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="role">
-              Rol
-            </label>
-            <select className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" id="role" name="role" required>
+          <Field>
+            <FieldLabel htmlFor="fullName">Naam</FieldLabel>
+            <Input className="h-11" autoComplete="name" id="fullName" name="fullName" type="text" />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+            <Input className="h-11" autoComplete="email" id="email" name="email" required type="email" />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="role">Rol</FieldLabel>
+            <NativeSelect className="h-11" id="role" name="role" required>
               <optgroup label="Platform">
                 {platformRoles.map((role) => (
                   <option key={role} value={role}>
@@ -58,18 +56,16 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
                   </option>
                 ))}
               </optgroup>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="tenantSlug">
-              Organisatie slug
-            </label>
-            <input className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" id="tenantSlug" name="tenantSlug" placeholder="aquaswim-demo" type="text" />
-          </div>
+            </NativeSelect>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="tenantSlug">Organisatie slug</FieldLabel>
+            <Input className="h-11" id="tenantSlug" name="tenantSlug" placeholder="aquaswim-demo" type="text" />
+          </Field>
         </div>
-        <button className="mt-5 h-11 rounded-lg bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+        <Button className="mt-5" size="lg" type="submit">
           Uitnodiging sturen
-        </button>
+        </Button>
       </form>
     </section>
   );

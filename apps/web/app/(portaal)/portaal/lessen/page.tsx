@@ -2,6 +2,9 @@ import { ArrowRight, CalendarX, Clock, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { getParentCatchUpData } from "@/lib/domain/catch-up";
 import { cancelLessonAction, requestCatchUpSessionAction } from "@/lib/domain/parent-portal-actions";
 import { canCancelSession, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
@@ -142,19 +145,32 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
 
 function CancelForm({ onTime, participantId, session }: { onTime: boolean; participantId: string; session: SessionRow }) {
   return (
-    <form action={cancelLessonAction} className="flex flex-wrap items-end gap-2">
-      <input name="sessionId" type="hidden" value={session.id} />
-      <input name="participantId" type="hidden" value={participantId} />
-      <input name="next" type="hidden" value="/portaal/lessen" />
-      <label className="space-y-1 text-xs font-semibold text-muted-foreground">
-        <span>Reden</span>
-        <input className="h-9 w-48 rounded-lg border border-border bg-white px-3 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" name="reason" placeholder="Optioneel" />
-      </label>
-      <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" type="submit">
-        <CalendarX className="h-4 w-4" />
-        {onTime ? "Annuleer met credit" : "Annuleer zonder credit"}
-      </button>
-    </form>
+    <ConfirmActionForm
+      action={cancelLessonAction}
+      className="flex flex-wrap items-end gap-2"
+      confirmLabel="Les definitief annuleren"
+      description={
+        onTime
+          ? "Deze les wordt geannuleerd. Volgens de huidige termijn ontvang je hiervoor automatisch een inhaalcredit."
+          : "Deze les wordt geannuleerd buiten de geldende termijn. Je ontvangt hiervoor geen inhaalcredit."
+      }
+      hiddenFields={{ sessionId: session.id, participantId, next: "/portaal/lessen" }}
+      title="Wil je deze les annuleren?"
+      triggerLabel={
+        <>
+          <CalendarX className="h-4 w-4" />
+          {onTime ? "Annuleer met credit" : "Annuleer zonder credit"}
+        </>
+      }
+      triggerVariant={onTime ? "outline" : "destructive"}
+    >
+      <Field className="w-48 gap-1">
+        <FieldLabel className="text-xs text-muted-foreground" htmlFor={`reason-${session.id}-${participantId}`}>
+          Reden
+        </FieldLabel>
+        <Input className="h-9" id={`reason-${session.id}-${participantId}`} name="reason" placeholder="Optioneel" />
+      </Field>
+    </ConfirmActionForm>
   );
 }
 

@@ -4,10 +4,25 @@ const publicRoutes = [
   { path: "/", label: "root" },
   { path: "/login", label: "login" },
   { path: "/wachtwoord-vergeten", label: "password forgotten" },
-  { path: "/nxttrack", label: "marketing" }
+  { path: "/wachtwoord-resetten", label: "password reset" },
+  { path: "/nxttrack", label: "marketing" },
+  { path: "/nxttrack/zwemscholen", label: "marketing swim schools" }
 ];
 
 const privateRoutes = ["/platform", "/admin", "/portaal", "/instructor"];
+
+const marketingSubpages = [
+  { path: "/nxttrack/ouderportaal", heading: "Altijd weten waar je kind staat." },
+  { path: "/nxttrack/trainer-app", heading: "De trainer app die tijdens de les werkt." },
+  { path: "/nxttrack/backoffice", heading: "Volledige controle over jouw zwemschool." },
+  { path: "/nxttrack/wachtrij-planning", heading: "Meer grip op instroom en capaciteit." },
+  { path: "/nxttrack/badges-diplomas", heading: "Van voortgang naar trots." },
+  { path: "/nxttrack/prijzen", heading: "Heldere plannen voor elke zwemschool." },
+  { path: "/nxttrack/demo", heading: "Zie NXTTRACK in actie." },
+  { path: "/nxttrack/contact", heading: "Laten we kennismaken." },
+  { path: "/nxttrack/privacy", heading: "Privacy-first ontwerp." },
+  { path: "/nxttrack/login", heading: "Welkom terug." }
+] as const;
 
 test.describe("staging MVP smoke", () => {
   test("health endpoint returns the expected payload", async ({ request }) => {
@@ -51,6 +66,71 @@ test.describe("staging MVP smoke", () => {
       expect(failures()).toEqual([]);
     });
   }
+
+  test("marketing subpages share an accessible route-aware shell", async ({ page }) => {
+    const failures = collectRuntimeFailures(page);
+
+    await page.goto("/nxttrack/zwemscholen", { waitUntil: "domcontentloaded" });
+
+    await expect(page.getByRole("banner")).toBeVisible();
+    await expect(page.getByRole("contentinfo")).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Software speciaal voor zwemscholen." })).toBeVisible();
+
+    const menuTrigger = page.getByRole("button", { name: "Navigatie openen" });
+
+    if (await menuTrigger.isVisible()) {
+      await menuTrigger.click();
+      await expect(page.getByRole("dialog")).toBeVisible();
+      const mobileNavigation = page.getByRole("navigation", { name: "Mobiele NXTTRACK navigatie" });
+      await expect(mobileNavigation).toBeVisible();
+      await expect(mobileNavigation.getByRole("link", { name: "Zwemscholen" })).toHaveAttribute("aria-current", "page");
+      await page.keyboard.press("Escape");
+      await expect(page.getByRole("dialog")).toBeHidden();
+    } else {
+      const desktopNavigation = page.getByRole("navigation", { name: "NXTTRACK hoofdnavigatie" });
+      await expect(desktopNavigation.getByRole("link", { name: "Zwemscholen" })).toHaveAttribute("aria-current", "page");
+    }
+
+    expect(failures()).toEqual([]);
+  });
+
+  test("every canonical marketing subpage has a dedicated composition", async ({ page }) => {
+    const failures = collectRuntimeFailures(page);
+
+    for (const route of marketingSubpages) {
+      const response = await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      expect(response?.status() ?? 0, route.path).toBeLessThan(500);
+      await expect(page.getByRole("heading", { level: 1, name: route.heading }), route.path).toBeVisible();
+      await expect(page.getByRole("banner"), route.path).toBeVisible();
+      await expect(page.getByRole("contentinfo"), route.path).toBeVisible();
+    }
+
+    await page.goto("/nxttrack/demo", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "Vraag demo aan per e-mail" })).toHaveAttribute("href", /^mailto:/);
+
+    await page.goto("/nxttrack/login", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("link", { name: "Open Ouder / leerling login" })).toHaveAttribute("href", "/login?next=%2Fportaal");
+    await expect(page.getByRole("link", { name: "Open Trainer login" })).toHaveAttribute("href", "/login?next=%2Finstructor");
+    await expect(page.getByRole("link", { name: "Open Beheerder login" })).toHaveAttribute("href", "/login?next=%2Fadmin");
+
+    expect(failures()).toEqual([]);
+  });
+
+  test("public auth forms expose labelled controls and password strength semantics", async ({ page }) => {
+    const failures = collectRuntimeFailures(page);
+
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("E-mail")).toHaveAttribute("autocomplete", "email");
+    await expect(page.getByLabel("Wachtwoord")).toHaveAttribute("autocomplete", "current-password");
+    await expect(page.getByRole("button", { name: "Inloggen" })).toBeVisible();
+
+    await page.goto("/wachtwoord-resetten", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("6-cijferige code")).toHaveAttribute("inputmode", "numeric");
+    await expect(page.getByRole("progressbar", { name: "Wachtwoordsterkte" })).toHaveAttribute("aria-valuenow", "0");
+    await expect(page.getByLabel("Nieuw wachtwoord")).toHaveAttribute("aria-describedby", "password-strength-description");
+
+    expect(failures()).toEqual([]);
+  });
 });
 
 function collectRuntimeFailures(page: Page) {
@@ -67,7 +147,7 @@ function collectRuntimeFailures(page: Page) {
   });
 
   page.on("response", (response) => {
-    if (response.status() >= 500) {
+    if (response.status() >= 500 || (response.status() >= 400 && response.url().includes("/_next/static/"))) {
       failures.push(`response ${response.status()}: ${response.url()}`);
     }
   });
@@ -76,5 +156,5 @@ function collectRuntimeFailures(page: Page) {
 }
 
 function isExpectedBrowserResourceNoise(message: string) {
-  return message.includes("Failed to load resource: the server responded with a status of 404") || message.includes("favicon");
+  return message.includes("favicon");
 }

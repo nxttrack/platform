@@ -1,8 +1,8 @@
 # NXTTRACK Implementation Roadmap
 
-Last updated: 2026-06-23
+Last updated: 2026-07-20
 
-Status: dependency-based roadmap. Implementation starts only after product owner approval.
+Status: active dependency-based roadmap. Phase 3 through Phase 20 implementation exists; Phase 0/1 are locally evidenced and the Phase 2 design-system, shell, Priority A composition and proven-interaction foundations are implemented. Authenticated visual approval remains open.
 
 ## Roadmap Principles
 
@@ -14,6 +14,23 @@ Status: dependency-based roadmap. Implementation starts only after product owner
 - Staging is the first target.
 - Manual payments come before Mollie/iDEAL automation.
 - SendGrid SMTP comes before advanced notification channels.
+
+## Current Execution Focus - Phase 2 Design-System And Shell Recovery
+
+The original build phases remain useful history. Phase 1 pinned the visual reference; the current implementation gate is [Phase 2 - Design System And Interactive Shell Foundation](PHASE_2_APP_SCAFFOLD.md).
+
+Immediate order:
+
+1. Restore exact tokens and shadcn/Radix ownership.
+2. Restore path-aware desktop and accessible mobile shell behavior.
+3. Restore missing semantic primitives and canon routes.
+4. Restore route-group marketing chrome and Priority A swim-school composition.
+5. Restore the remaining canonical marketing product, conversion and information compositions.
+6. Add typed accessible charts for approved operational metrics without importing Lovable mock series.
+7. Standardize core form controls and tabular reports while preserving server actions.
+8. Add Radix tabs and confirmation dialogs where workflow evidence supports them. Completed for the instructor dossier and parent lesson cancellation.
+9. Capture authenticated production routes at the Priority A viewports.
+10. Add tooltips only where visible labels cannot carry the necessary meaning.
 
 ## Phase 0 - Repository And Infrastructure Foundation
 
@@ -1100,12 +1117,10 @@ Acceptance criteria:
 14. Phase 16 because the complete swim-school journey must work without database intervention.
 15. Phase 17 through Phase 22 because communication, planning depth, experience polish, billing automation, intelligence and production launch depend on a stable staging MVP.
 
-## Immediate Next Proposal After PR Approval
+## Immediate Next Proposal After Phase 0 Lands
 
-After Phase 14 starts:
-
-1. Remove runtime scaffold copy.
-2. Build the platform overview.
-3. Add tenant admin settings.
-4. Re-run typecheck/build.
-5. Resume Phase 15 staging validation.
+1. Dispatch staging from the canonical `main` commit.
+2. Retain Phase 15 migration, advisor, RLS and authenticated Playwright evidence.
+3. Run the Phase 16 seeded integration proof and add a separate browser-driven mutation journey.
+4. Execute Phase 17 through Phase 20 staging checklists.
+5. Start Swim Start integrity and the Lovable-preserving shadcn/Radix design-system phase.

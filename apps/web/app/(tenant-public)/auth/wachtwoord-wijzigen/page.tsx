@@ -1,5 +1,8 @@
 import { redirect } from "next/navigation";
 import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { changePasswordAction } from "@/lib/auth/actions";
 import { getDefaultRedirectForRoles, sanitizeRelativePath } from "@/lib/auth/redirects";
 import { requireAuthenticatedContext } from "@/lib/auth/server-guard";
@@ -32,22 +35,20 @@ export default async function ForcePasswordChangePage({ searchParams }: PageProp
         <form action={changePasswordAction} className="mt-6 space-y-4">
           <input name="next" type="hidden" value={nextPath} />
           <PasswordStrengthMeter />
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="confirmPassword">
-              Bevestig wachtwoord
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="confirmPassword">Bevestig wachtwoord</FieldLabel>
+            <Input
               autoComplete="new-password"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="confirmPassword"
               name="confirmPassword"
               required
               type="password"
             />
-          </div>
-          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+          </Field>
+          <Button className="w-full" size="lg" type="submit">
             Wachtwoord opslaan
-          </button>
+          </Button>
         </form>
       </section>
     </main>

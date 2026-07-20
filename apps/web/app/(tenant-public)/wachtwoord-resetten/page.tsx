@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { PasswordStrengthMeter } from "@/components/auth/password-strength-meter";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { confirmPasswordResetAction } from "@/lib/auth/actions";
 
 type PageProps = {
@@ -21,27 +24,23 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
         {error ? <p className="mt-5 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">De code is ongeldig, verlopen of het wachtwoord is niet sterk genoeg.</p> : null}
 
         <form action={confirmPasswordResetAction} className="mt-6 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="email">
-              E-mail
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+            <Input
               autoComplete="email"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               defaultValue={email}
               id="email"
               name="email"
               required
               type="email"
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="code">
-              6-cijferige code
-            </label>
-            <input
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="code">6-cijferige code</FieldLabel>
+            <Input
               autoComplete="one-time-code"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm tracking-[0.3em] outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11 tracking-[0.3em]"
               id="code"
               inputMode="numeric"
               maxLength={6}
@@ -51,24 +50,22 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
               required
               type="text"
             />
-          </div>
+          </Field>
           <PasswordStrengthMeter />
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="confirmPassword">
-              Bevestig wachtwoord
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="confirmPassword">Bevestig wachtwoord</FieldLabel>
+            <Input
               autoComplete="new-password"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="confirmPassword"
               name="confirmPassword"
               required
               type="password"
             />
-          </div>
-          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+          </Field>
+          <Button className="w-full" size="lg" type="submit">
             Wachtwoord wijzigen
-          </button>
+          </Button>
         </form>
 
         <div className="mt-5 text-sm">

@@ -1,6 +1,9 @@
 import { BarChart3, Save } from "lucide-react";
-import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
+import { AdminSection, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
+import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { buildAdminChartData } from "@/lib/domain/admin-chart-data";
 import { createReportSnapshotAction } from "@/lib/domain/admin-operations-actions";
 import { formatDateTime, getAdminOperationsData } from "@/lib/domain/admin-operations";
 
@@ -14,6 +17,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   const [data, params] = await Promise.all([getAdminOperationsData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const charts = buildAdminChartData(data);
 
   return (
     <div className="space-y-6">
@@ -37,6 +41,12 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             </div>
           </section>
         ))}
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <section className="rounded-xl border border-border bg-card p-5 shadow-soft xl:col-span-2"><CapacityChart data={charts.capacity} /></section>
+        <section className="rounded-xl border border-border bg-card p-5 shadow-soft"><StatusDonutChart data={charts.intake} title="Intakeverdeling" description="Aanvragen gegroepeerd op actuele workflowstatus." /></section>
+        <section className="rounded-xl border border-border bg-card p-5 shadow-soft"><StatusDonutChart data={charts.payments} title="Betalingen per status" description="Werkelijke waarde van handmatige betalingen." valueLabel="Bedrag" valueFormat="currency" /></section>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
@@ -67,28 +77,27 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           {data.reportSnapshots.length === 0 ? (
             <EmptyState>Nog geen rapport snapshots.</EmptyState>
           ) : (
-            <DataList>
+            <Table>
+              <TableCaption>Opgeslagen rapportmomenten, nieuwste eerst.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Titel</TableHead>
+                  <TableHead>Rapport</TableHead>
+                  <TableHead>Metrics</TableHead>
+                  <TableHead className="text-right">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
               {data.reportSnapshots.map((snapshot) => (
-                <div className="px-3 py-3" key={snapshot.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-foreground">{snapshot.title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {snapshot.report_key} - {formatDateTime(snapshot.created_at)}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {Object.entries(snapshot.metrics).slice(0, 6).map(([key, value]) => (
-                          <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground" key={key}>
-                            {key}: {String(value)}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <StatusPill tone={snapshot.status === "active" ? "success" : "neutral"}>{snapshot.status}</StatusPill>
-                  </div>
-                </div>
+                <TableRow key={snapshot.id}>
+                  <TableCell className="min-w-44 font-semibold text-foreground">{snapshot.title}</TableCell>
+                  <TableCell className="min-w-40"><p className="font-medium text-foreground">{snapshot.report_key}</p><p className="mt-1 text-xs text-muted-foreground">{formatDateTime(snapshot.created_at)}</p></TableCell>
+                  <TableCell className="min-w-64"><div className="flex flex-wrap gap-2">{Object.entries(snapshot.metrics).slice(0, 6).map(([key, value]) => <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-semibold text-muted-foreground" key={key}>{key}: {String(value)}</span>)}</div></TableCell>
+                  <TableCell className="text-right"><StatusPill tone={snapshot.status === "active" ? "success" : "neutral"}>{snapshot.status}</StatusPill></TableCell>
+                </TableRow>
               ))}
-            </DataList>
+              </TableBody>
+            </Table>
           )}
         </AdminSection>
       </div>

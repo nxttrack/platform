@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PageHero } from "@/components/lovable/page-kit";
+import { commercialSubpageSlugs, MarketingCommercialSubpage, type CommercialSubpageSlug } from "@/components/marketing/commercial-subpages";
+import { MarketingProductSubpage, productSubpageSlugs, type ProductSubpageSlug } from "@/components/marketing/product-subpages";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -87,9 +88,25 @@ export default async function NxttrackMarketingSubpage({ params }: PageProps) {
     notFound();
   }
 
-  return <PageHero kicker={page.kicker} title={page.title} sub={page.sub} primary={{ href: "/nxttrack", label: "Terug naar NXTTRACK" }} secondary={{ href: "/nxttrack/zwemscholen", label: "Voor zwemscholen" }} />;
+  if (isProductSubpage(slug)) {
+    return <MarketingProductSubpage slug={slug} />;
+  }
+
+  if (isCommercialSubpage(slug)) {
+    return <MarketingCommercialSubpage slug={slug} />;
+  }
+
+  notFound();
 }
 
 function getPage(slug: string) {
   return Object.hasOwn(pages, slug) ? pages[slug as KnownSlug] : null;
+}
+
+function isProductSubpage(slug: string): slug is ProductSubpageSlug {
+  return (productSubpageSlugs as readonly string[]).includes(slug);
+}
+
+function isCommercialSubpage(slug: string): slug is CommercialSubpageSlug {
+  return (commercialSubpageSlugs as readonly string[]).includes(slug);
 }

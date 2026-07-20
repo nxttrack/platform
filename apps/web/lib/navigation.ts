@@ -1,68 +1,50 @@
-import {
-  Award,
-  BarChart3,
-  Baby,
-  Calendar,
-  CreditCard,
-  FileText,
-  GraduationCap,
-  Home,
-  Inbox,
-  ListChecks,
-  MapPin,
-  MessageSquare,
-  Settings,
-  TrendingUp,
-  User,
-  UserPlus,
-  Users,
-  Waves
-} from "lucide-react";
 import type { NavItem } from "@/components/shell/app-shell";
 
 export const parentNav: NavItem[] = [
-  { href: "/portaal", label: "Home", icon: Home },
-  { href: "/portaal/kinderen", label: "Kinderen", icon: Baby },
-  { href: "/portaal/lessen", label: "Mijn lessen", icon: Waves },
-  { href: "/portaal/voortgang", label: "Voortgang", icon: TrendingUp },
-  { href: "/portaal/berichten", label: "Berichten", icon: MessageSquare },
-  { href: "/portaal/diplomas", label: "Diploma's", icon: GraduationCap },
-  { href: "/portaal/documenten", label: "Documenten", icon: FileText },
-  { href: "/portaal/betalingen", label: "Betalingen", icon: CreditCard },
-  { href: "/portaal/profiel", label: "Profiel", icon: User }
+  { href: "/portaal", label: "Home", icon: "home" },
+  { href: "/portaal/kinderen", label: "Kinderen", icon: "baby" },
+  { href: "/portaal/lessen", label: "Mijn lessen", icon: "waves" },
+  { href: "/portaal/voortgang", label: "Voortgang", icon: "trending" },
+  { href: "/portaal/badges", label: "Badges", icon: "award" },
+  { href: "/portaal/afzwemmen", label: "Afzwemmen", icon: "calendar" },
+  { href: "/portaal/berichten", label: "Berichten", icon: "message" },
+  { href: "/portaal/diplomas", label: "Diploma's", icon: "graduation" },
+  { href: "/portaal/documenten", label: "Documenten", icon: "file" },
+  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" },
+  { href: "/portaal/profiel", label: "Profiel", icon: "user" }
 ];
 
 export const instructorNav: NavItem[] = [
-  { href: "/instructor", label: "Vandaag", icon: Home },
-  { href: "/instructor/agenda", label: "Agenda", icon: Calendar },
-  { href: "/instructor/berichten", label: "Berichten", icon: MessageSquare },
-  { href: "/instructor/taken", label: "Taken", icon: ListChecks },
-  { href: "/instructor/groepen", label: "Mijn groepen", icon: Users },
-  { href: "/instructor/leerlingen", label: "Leerlingen", icon: Users },
-  { href: "/instructor/documenten", label: "Documenten", icon: FileText }
+  { href: "/instructor", label: "Vandaag", icon: "home" },
+  { href: "/instructor/agenda", label: "Agenda", icon: "calendar" },
+  { href: "/instructor/berichten", label: "Berichten", icon: "message" },
+  { href: "/instructor/taken", label: "Taken", icon: "tasks" },
+  { href: "/instructor/groepen", label: "Mijn groepen", icon: "users" },
+  { href: "/instructor/leerlingen", label: "Leerlingen", icon: "users" },
+  { href: "/instructor/documenten", label: "Documenten", icon: "file" }
 ];
 
 export const adminNav: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: Home },
-  { href: "/admin/agenda", label: "Planboard", icon: Calendar },
-  { href: "/admin/resources", label: "Resources", icon: MapPin },
-  { href: "/admin/leerlingen", label: "Leerlingen", icon: Users },
-  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: Award },
-  { href: "/admin/betalingen", label: "Betalingen", icon: CreditCard },
-  { href: "/admin/rapportages", label: "Rapportages", icon: BarChart3 },
-  { href: "/admin/berichten", label: "Berichten", icon: MessageSquare },
-  { href: "/admin/taken", label: "Taken", icon: ListChecks },
-  { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: UserPlus },
-  { href: "/admin/groepen", label: "Groepen", icon: Users },
-  { href: "/admin/documenten", label: "Documenten", icon: FileText },
-  { href: "/admin/programma", label: "Programma's", icon: Waves },
-  { href: "/admin/intake", label: "Intake", icon: Inbox },
-  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: ListChecks },
-  { href: "/admin/instellingen", label: "Instellingen", icon: Settings }
+  { href: "/admin", label: "Dashboard", icon: "home" },
+  { href: "/admin/agenda", label: "Planboard", icon: "calendar" },
+  { href: "/admin/resources", label: "Resources", icon: "location" },
+  { href: "/admin/leerlingen", label: "Leerlingen", icon: "users" },
+  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award" },
+  { href: "/admin/betalingen", label: "Betalingen", icon: "card" },
+  { href: "/admin/rapportages", label: "Rapportages", icon: "chart" },
+  { href: "/admin/berichten", label: "Berichten", icon: "message" },
+  { href: "/admin/taken", label: "Taken", icon: "tasks" },
+  { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
+  { href: "/admin/groepen", label: "Groepen", icon: "users" },
+  { href: "/admin/documenten", label: "Documenten", icon: "file" },
+  { href: "/admin/programma", label: "Programma's", icon: "waves" },
+  { href: "/admin/intake", label: "Intake", icon: "inbox" },
+  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: "tasks" },
+  { href: "/admin/instellingen", label: "Instellingen", icon: "settings" }
 ];
 
 export const platformNav: NavItem[] = [
-  { href: "/platform", label: "Overzicht", icon: Home },
-  { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: UserPlus },
-  { href: "/platform/instellingen", label: "Instellingen", icon: Settings }
+  { href: "/platform", label: "Overzicht", icon: "home" },
+  { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
+  { href: "/platform/instellingen", label: "Instellingen", icon: "settings" }
 ];

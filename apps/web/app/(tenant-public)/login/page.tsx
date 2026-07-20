@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { loginAction } from "@/lib/auth/actions";
 import { sanitizeRelativePath } from "@/lib/auth/redirects";
 
@@ -31,35 +34,31 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
         <form action={loginAction} className="space-y-4">
           <input name="next" type="hidden" value={nextPath} />
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="email">
-              E-mail
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+            <Input
               autoComplete="email"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="email"
               name="email"
               required
               type="email"
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="password">
-              Wachtwoord
-            </label>
-            <input
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="password">Wachtwoord</FieldLabel>
+            <Input
               autoComplete="current-password"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="password"
               name="password"
               required
               type="password"
             />
-          </div>
-          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+          </Field>
+          <Button className="w-full" size="lg" type="submit">
             Inloggen
-          </button>
+          </Button>
         </form>
 
         <div className="mt-5 flex items-center justify-between text-sm">

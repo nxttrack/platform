@@ -49,6 +49,19 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/admin/afzwemmen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
 
+    await page.goto("/admin", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("[data-chart]")).toHaveCount(2);
+    await expect(page.getByRole("table", { name: "Bezetting per lesgroep" })).toBeAttached();
+
+    await page.goto("/admin/rapportages", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("[data-chart]")).toHaveCount(3);
+    await expect(page.getByRole("table", { name: "Betalingen per status" })).toBeAttached();
+
+    await page.goto("/admin/uitnodigingen", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("E-mail")).toBeVisible();
+    await expect(page.getByLabel("Rol")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Uitnodiging sturen" })).toBeVisible();
+
     expect(failures()).toEqual([]);
   });
 
@@ -61,8 +74,14 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, "Aanwezig");
 
     await page.goto(`/instructor/student/${phase.expected.participantId}`, { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("tablist", { name: `Dossier van ${phase.expected.participantName}` })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Voortgang" })).toHaveAttribute("aria-selected", "true");
+    await page.getByRole("tab", { name: "Badges" }).click();
     await expectBodyToContain(page, phase.expected.badgeTitle);
+    await page.getByRole("tab", { name: "Notities" }).click();
     await expectBodyToContain(page, "Phase 16 ouderzichtbare notitie");
+    await page.getByRole("tab", { name: "Beoordelen" }).click();
+    await expectBodyToContain(page, "Progress modules");
 
     expect(failures()).toEqual([]);
   });
@@ -74,6 +93,7 @@ test.describe("phase 16 operational happy path", () => {
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
     await expectBodyToContain(page, phase.expected.participantName);
     await expectBodyToContain(page, phase.expected.programName);
+    await expectActiveShellLink(page, "Home");
 
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.groupName);
@@ -81,6 +101,14 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/portaal/voortgang", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
     await expectBodyToContain(page, "Gaat goed");
+
+    await page.goto("/portaal/badges", { waitUntil: "domcontentloaded" });
+    await expectBodyToContain(page, phase.expected.badgeTitle);
+    await expectActiveShellLink(page, "Badges");
+
+    await page.goto("/portaal/afzwemmen", { waitUntil: "domcontentloaded" });
+    await expectBodyToContain(page, phase.expected.participantName);
+    await expectActiveShellLink(page, "Afzwemmen");
 
     await page.goto("/portaal/betalingen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.paymentReference);
@@ -123,6 +151,20 @@ async function expectBodyToContain(page: Page, text: string) {
   await expect(page.locator("body")).toContainText(text, { timeout: 10_000 });
 }
 
+async function expectActiveShellLink(page: Page, label: string) {
+  const mobile = (page.viewportSize()?.width ?? 1280) < 768;
+
+  if (mobile) {
+    await page.getByRole("button", { name: "Navigatie openen" }).click();
+  }
+
+  await expect(page.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+
+  if (mobile) {
+    await page.keyboard.press("Escape");
+  }
+}
+
 function collectRuntimeFailures(page: Page) {
   const failures: string[] = [];
 
@@ -137,7 +179,7 @@ function collectRuntimeFailures(page: Page) {
   });
 
   page.on("response", (response) => {
-    if (response.status() >= 500) {
+    if (response.status() >= 500 || (response.status() >= 400 && response.url().includes("/_next/static/"))) {
       failures.push(`response ${response.status()}: ${response.url()}`);
     }
   });
@@ -146,7 +188,7 @@ function collectRuntimeFailures(page: Page) {
 }
 
 function isExpectedBrowserResourceNoise(message: string) {
-  return message.includes("Failed to load resource: the server responded with a status of 404") || message.includes("favicon");
+  return message.includes("favicon");
 }
 
 function loadState() {

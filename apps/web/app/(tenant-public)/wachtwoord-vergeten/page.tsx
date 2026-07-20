@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { requestPasswordResetAction } from "@/lib/auth/actions";
 
 type PageProps = {
@@ -22,23 +25,21 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
         {error ? <p className="mt-5 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">De resetmail kan nu niet worden verstuurd.</p> : null}
 
         <form action={requestPasswordResetAction} className="mt-6 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="email">
-              E-mail
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+            <Input
               autoComplete="email"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               defaultValue={email}
               id="email"
               name="email"
               required
               type="email"
             />
-          </div>
-          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+          </Field>
+          <Button className="w-full" size="lg" type="submit">
             Code versturen
-          </button>
+          </Button>
         </form>
 
         <div className="mt-5 flex items-center justify-between text-sm">

@@ -1,4 +1,9 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Field as FieldRoot, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
 import { submitIntakeAction } from "@/lib/domain/intake-actions";
 import { getPublicTenantSiteData, getTenantSlugFromRequest, type IntakeOption, type PublicIntakeQuestion } from "@/lib/domain/public-site";
 
@@ -121,9 +126,9 @@ export default async function IntakePage({ searchParams }: PageProps) {
               <Link className="text-sm font-semibold text-muted-foreground hover:text-foreground" href="/programmas">
                 Terug naar programma's
               </Link>
-              <button className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground" type="submit">
+              <Button size="lg" type="submit">
                 Aanmelding versturen
-              </button>
+              </Button>
             </div>
           </form>
         </div>
@@ -141,17 +146,17 @@ function QuestionField({ question }: { question: PublicIntakeQuestion }) {
 
   if (question.fieldType === "select") {
     return (
-      <label className="space-y-2 text-sm font-semibold text-foreground">
-        <span>{question.label}</span>
-        <select className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name={name} required={question.required}>
+      <FieldRoot>
+        <FieldLabel htmlFor={name}>{question.label}</FieldLabel>
+        <NativeSelect className="h-11" id={name} name={name} required={question.required}>
           <option value="">Kies</option>
           {question.options.map((option) => (
             <option key={option} value={option}>
               {option}
             </option>
           ))}
-        </select>
-      </label>
+        </NativeSelect>
+      </FieldRoot>
     );
   }
 
@@ -176,19 +181,19 @@ function QuestionField({ question }: { question: PublicIntakeQuestion }) {
 
 function Field({ label, name, type = "text", required = false }: { label: string; name: string; type?: string; required?: boolean }) {
   return (
-    <label className="space-y-2 text-sm font-semibold text-foreground">
-      <span>{label}</span>
-      <input className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name={name} required={required} type={type} />
-    </label>
+    <FieldRoot>
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      <Input className="h-11" id={name} name={name} required={required} type={type} />
+    </FieldRoot>
   );
 }
 
 function TextArea({ label, name, required = false }: { label: string; name: string; required?: boolean }) {
   return (
-    <label className="space-y-2 text-sm font-semibold text-foreground md:col-span-2">
-      <span>{label}</span>
-      <textarea className="min-h-24 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name={name} required={required} />
-    </label>
+    <FieldRoot className="md:col-span-2">
+      <FieldLabel htmlFor={name}>{label}</FieldLabel>
+      <Textarea id={name} name={name} required={required} />
+    </FieldRoot>
   );
 }
 

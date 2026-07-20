@@ -2,22 +2,26 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: staged MVP implementation with canon-aligned productization, strict staging validation and end-to-end operational flow proof. Phase 3 through Phase 14 are implemented in code, Phase 15 adds the staging truth/security gate, and Phase 16 proves the complete swim-school happy path with seeded staging data and authenticated dashboards.
+Current working mode: Phase 2 design-system and interactive-shell recovery on top of the Phase 0 repository-truth and Phase 1 Lovable baselines. Phase 3 through Phase 20 have implementation code, but live staging acceptance, full UI-driven workflow proof, production visual comparison, backup/restore proof and rollback rehearsal remain release gates. Production is not approved.
 
 ## Source of truth
 
 - Final rebuild repository: `nxttrack/platform`
+- Canonical implementation and release branch: `main`
 - Lovable UI reference repository: `nxttrack/swim-school-pro`
 - Legacy/reference workspace: `nxtdev` or earlier local prototypes, reference only
+- Remote `staging` and `production` branches: historical deployment/reference lines, not implementation sources
 - First deployment target: staging environment
+
+Run `pnpm run release:truth` to verify the repository and release-source invariants and to report local branch divergence.
 
 ## Current implementation status
 
 The repository has moved beyond the original documentation-only phase:
 
 - Phase 0: repo, infrastructure direction, environment strategy, migration approach, and staging deploy flow are documented.
-- Phase 1: Lovable UI audit is documented; Lovable remains the visual source of truth.
-- Phase 2: Next.js app scaffold, route skeletons, Lovable-derived tokens, health endpoint, and deploy scripts are present.
+- Phase 1: the Lovable source is pinned to commit `ced1290b239f61566a542825c9ed8a9229cc3282`; 14 Priority A routes have been captured at four viewports, current UI drift is documented, and the shadcn/Radix direction is locked. Product-owner approval and production-side comparison remain.
+- Phase 2: the Next.js foundation now has exact Lovable OKLCH tokens, repository-owned shadcn configuration, a Radix mobile drawer, pathname-aware shell navigation, restored semantic primitives and direct parent badges/afzwem routes. Authenticated visual comparison remains.
 - Phase 3: Supabase SSR utilities, identity-boundary migration, auth-flow migration, login, invite, forced password change, six-digit reset, trusted server guards, and route-access audits are implemented in code. Staging migration/bootstrap/RLS validation is still pending.
 - Phase 4: core domain model migration, RLS/grants, tenant admin pages, and create flows for programs, stages, resources, groups, sessions, instructor assignments, enrollments, memberships, and capacity basics are implemented in code. Staging migration/RLS validation is still pending.
 - Phase 5: tenant public homepage, program overview, dynamic intake, intake submissions/answers, `intake.received` event, and admin intake inbox are implemented in code. Staging tenant DNS and RLS validation are still pending.
@@ -32,8 +36,12 @@ The repository has moved beyond the original documentation-only phase:
 - Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up.
 - Phase 15: staging truth and security validation is implemented as a strict gate. It runs migrations, Supabase advisors, required RLS role checks, live staging health, live Playwright and strict launch confirmations against `https://staging.nxttrack.nl`.
 - Phase 16: end-to-end operational flow validation is implemented as a repeatable staging runner. It seeds a demo swim school, runs intake to placement, attendance, progress, badge, billing, afzwem and diploma records, then verifies admin, instructor and parent dashboards.
+- Phase 17: transactional communication, delivery diagnostics, private document storage and diploma-file access are implemented in code and await current staging validation.
+- Phase 18: planning conflict detection, instructor availability, capacity-aware catch-up requests and approval are implemented in code and await current staging validation.
+- Phase 19: parent/instructor communication, task, document and tablet-oriented lesson-depth improvements are implemented in code and await current staging validation.
+- Phase 20: billing-provider configuration, payment-session/event, invoice/export and subscription-lifecycle boundaries are implemented without activating a live payment provider.
 
-Automatic payment provider work, advanced scheduling, full assessments and document/storage production work should still wait until Phase 15 and Phase 16 are green on staging.
+The Phase 16 runner proves seeded integration state and authenticated dashboard visibility; it does not yet replace a complete browser-driven mutation test of the full journey. Automatic payment providers, Smart Flow/AI and production promotion must wait until the repository-truth and live-staging gates are green.
 
 ## Canon and planning docs
 
@@ -61,6 +69,10 @@ Automatic payment provider work, advanced scheduling, full assessments and docum
 - [Phase 14 - Canon Alignment And Productization](docs/PHASE_14_CANON_ALIGNMENT_PRODUCTIZATION.md)
 - [Phase 15 - Staging Truth And Security Validation](docs/PHASE_15_STAGING_TRUTH_SECURITY_VALIDATION.md)
 - [Phase 16 - End-To-End Operational Flows](docs/PHASE_16_END_TO_END_OPERATIONAL_FLOWS.md)
+- [Phase 17 - Communication, Storage And Documents](docs/PHASE_17_COMMUNICATION_STORAGE_DOCUMENTS.md)
+- [Phase 18 - Planning, Capacity And Catch-Up](docs/PHASE_18_PLANNING_CAPACITY_CATCHUP.md)
+- [Phase 19 - Parent And Instructor Experience](docs/PHASE_19_PARENT_INSTRUCTOR_EXPERIENCE_DEPTH.md)
+- [Phase 20 - Billing Automation Boundary](docs/PHASE_20_BILLING_AUTOMATION_BOUNDARY.md)
 
 ## Operational prep docs
 
@@ -71,6 +83,6 @@ Automatic payment provider work, advanced scheduling, full assessments and docum
 
 ## Deployment baseline
 
-The repository already contains `.github/workflows/deploy.yml`. It targets `staging` and `production` branches using a self-hosted GitHub runner, Caddy, systemd, shared `.env` files, release directories, and symlink activation.
+`.github/workflows/deploy.yml` is manually dispatched from `main` and targets the selected protected GitHub Environment. Staging runs the strict validation flow. Production additionally requires explicit confirmation and the exact full commit SHA already validated on staging.
 
-The staging environment is the only first target. Production remains a future target and should not be treated as launch-ready until explicitly approved.
+The staging environment is the only first target. Historical `staging` and `production` branch pushes no longer constitute a release contract. See [Phase 0](docs/PHASE_0_REPO_INFRA.md) for the canonical promotion and recovery policy.

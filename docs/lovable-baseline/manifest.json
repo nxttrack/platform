@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "repository": "nxttrack/swim-school-pro",
+    "commitSha": "ced1290b239f61566a542825c9ed8a9229cc3282",
+    "capturedAt": "2026-07-20",
+    "runtime": "TanStack Start / Vite"
+  },
+  "viewports": [
+    { "id": "mobile", "width": 390, "height": 844 },
+    { "id": "tablet", "width": 768, "height": 1024 },
+    { "id": "desktop", "width": 1440, "height": 1000 },
+    { "id": "wide", "width": 1728, "height": 1117 }
+  ],
+  "phase2Resolved": [
+    "exact-lovable-oklch-tokens",
+    "shadcn-registry-contract",
+    "radix-mobile-sheet",
+    "path-aware-active-navigation",
+    "progress-ring-primitive",
+    "waitlist-dot-primitive",
+    "photo-and-image-placeholder-primitives",
+    "floating-card-motion-primitive",
+    "parent-badges-route",
+    "parent-graduation-route",
+    "marketing-route-group-shell",
+    "marketing-mobile-sheet",
+    "marketing-swim-schools-composition",
+    "marketing-product-subpage-compositions",
+    "marketing-pricing-composition",
+    "marketing-demo-contact-handoffs",
+    "marketing-privacy-content",
+    "marketing-role-login-handoffs",
+    "typed-recharts-v3-foundation",
+    "admin-real-data-capacity-chart",
+    "admin-real-data-intake-chart",
+    "admin-real-data-payment-chart",
+    "shared-form-primitives",
+    "semantic-report-table",
+    "accessible-password-strength",
+    "auth-and-invitation-form-composition",
+    "radix-instructor-dossier-tabs",
+    "radix-lesson-cancellation-alert-dialog"
+  ],
+  "priorityA": [
+    {
+      "id": "tenant-home",
+      "referenceRoute": "/",
+      "productionRoute": "/",
+      "productionFile": "apps/web/app/page.tsx",
+      "surface": "tenant-public",
+      "knownDrift": ["reference-hero-image-treatment", "public-header-and-footer", "reference-copy"]
+    },
+    {
+      "id": "tenant-programs",
+      "referenceRoute": "/programmas",
+      "productionRoute": "/programmas",
+      "productionFile": "apps/web/app/(tenant-public)/programmas/page.tsx",
+      "surface": "tenant-public",
+      "knownDrift": ["card-density", "public-header-and-footer"]
+    },
+    {
+      "id": "tenant-intake",
+      "referenceRoute": "/intake",
+      "productionRoute": "/intake",
+      "productionFile": "apps/web/app/(tenant-public)/intake/page.tsx",
+      "surface": "tenant-public",
+      "knownDrift": ["form-primitives", "public-header-and-footer"]
+    },
+    {
+      "id": "parent-home",
+      "referenceRoute": "/parent",
+      "productionRoute": "/portaal",
+      "productionFile": "apps/web/app/(portaal)/portaal/page.tsx",
+      "surface": "parent",
+      "knownDrift": ["route-localization", "mobile-drawer", "active-navigation", "motion"]
+    },
+    {
+      "id": "parent-lessons",
+      "referenceRoute": "/parent/lessen",
+      "productionRoute": "/portaal/lessen",
+      "productionFile": "apps/web/app/(portaal)/portaal/lessen/page.tsx",
+      "surface": "parent",
+      "knownDrift": ["route-localization", "authenticated-visual-approval"]
+    },
+    {
+      "id": "parent-progress",
+      "referenceRoute": "/parent/voortgang",
+      "productionRoute": "/portaal/voortgang",
+      "productionFile": "apps/web/app/(portaal)/portaal/voortgang/page.tsx",
+      "surface": "parent",
+      "knownDrift": ["route-localization", "progress-ring", "mobile-drawer", "active-navigation"]
+    },
+    {
+      "id": "instructor-home",
+      "referenceRoute": "/instructor",
+      "productionRoute": "/instructor",
+      "productionFile": "apps/web/app/(instructor)/instructor/page.tsx",
+      "surface": "instructor",
+      "knownDrift": ["mobile-drawer", "active-navigation", "motion"]
+    },
+    {
+      "id": "instructor-group",
+      "referenceRoute": "/instructor/group/badje-1",
+      "productionRoute": "/instructor/group/[id]",
+      "productionFile": "apps/web/app/(instructor)/instructor/group/[id]/page.tsx",
+      "surface": "instructor",
+      "knownDrift": ["mobile-drawer", "active-navigation", "interactive-attendance"]
+    },
+    {
+      "id": "instructor-student",
+      "referenceRoute": "/instructor/student/emma",
+      "productionRoute": "/instructor/student/[id]",
+      "productionFile": "apps/web/app/(instructor)/instructor/student/[id]/page.tsx",
+      "surface": "instructor",
+      "knownDrift": ["assessment-control-visual-comparison", "authenticated-visual-approval"]
+    },
+    {
+      "id": "admin-home",
+      "referenceRoute": "/admin",
+      "productionRoute": "/admin",
+      "productionFile": "apps/web/app/(tenant-admin)/admin/page.tsx",
+      "surface": "tenant-admin",
+      "knownDrift": ["mobile-drawer", "active-navigation", "charts", "motion"]
+    },
+    {
+      "id": "admin-agenda",
+      "referenceRoute": "/admin/agenda",
+      "productionRoute": "/admin/agenda",
+      "productionFile": "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+      "surface": "tenant-admin",
+      "knownDrift": ["mobile-drawer", "active-navigation", "planning-interactions"]
+    },
+    {
+      "id": "admin-waitlist",
+      "referenceRoute": "/admin/wachtlijst",
+      "productionRoute": "/admin/wachtlijst",
+      "productionFile": "apps/web/app/(tenant-admin)/admin/wachtlijst/page.tsx",
+      "surface": "tenant-admin",
+      "knownDrift": ["mobile-drawer", "active-navigation", "waitlist-dot", "matching-interactions"]
+    },
+    {
+      "id": "marketing-home",
+      "referenceRoute": "/nxttrack",
+      "productionRoute": "/nxttrack",
+      "productionFile": "apps/web/app/(nxttrack-marketing)/nxttrack/page.tsx",
+      "surface": "marketing",
+      "knownDrift": ["homepage-motion-depth", "reference-photography-assets"]
+    },
+    {
+      "id": "marketing-swim-schools",
+      "referenceRoute": "/nxttrack/zwemscholen",
+      "productionRoute": "/nxttrack/zwemscholen",
+      "productionFile": "apps/web/app/(nxttrack-marketing)/nxttrack/zwemscholen/page.tsx",
+      "surface": "marketing",
+      "knownDrift": ["reference-photography-assets", "visual-comparison-approval"]
+    }
+  ]
+}

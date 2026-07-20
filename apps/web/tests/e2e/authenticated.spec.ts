@@ -93,7 +93,7 @@ function collectRuntimeFailures(page: Page) {
   });
 
   page.on("response", (response) => {
-    if (response.status() >= 500) {
+    if (response.status() >= 500 || (response.status() >= 400 && response.url().includes("/_next/static/"))) {
       failures.push(`response ${response.status()}: ${response.url()}`);
     }
   });
@@ -102,5 +102,5 @@ function collectRuntimeFailures(page: Page) {
 }
 
 function isExpectedBrowserResourceNoise(message: string) {
-  return message.includes("Failed to load resource: the server responded with a status of 404") || message.includes("favicon");
+  return message.includes("favicon");
 }

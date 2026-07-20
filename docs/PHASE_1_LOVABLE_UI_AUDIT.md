@@ -1,20 +1,88 @@
 # Phase 1 - Lovable UI Audit
 
-Last updated: 2026-06-23
+Last updated: 2026-07-20
 
 ## Status
 
-Lovable UI audit has started and repository access is confirmed.
+The Lovable source audit and local Priority A capture are complete for the pinned reference commit. Product-owner visual approval and production comparison remain open.
 
 Reference repository: `nxttrack/swim-school-pro`
 
-Access status:
+Pinned source:
 
+- Repository: `nxttrack/swim-school-pro`.
+- Commit: `ced1290b239f61566a542825c9ed8a9229cc3282`.
 - GitHub connector access: confirmed.
-- Local git clone: blocked by local Git credentials prompting for a password. The repo itself is accessible through GitHub API/connector.
-- Code search index: not reliable for this private repo, so route inventory uses `src/routeTree.gen.ts` and direct file reads.
+- Read-only local clone for audit/capture: confirmed.
+- Previous audit commit: `b74cbaf30abf99440472b740272f04c3550cfe93`.
+- Delta since the previous audit: 12 commits affecting `package.json`, `bun.lock` and the public homepage hero.
 
-No UI has been moved into `nxttrack/platform` yet.
+UI was already transferred into `nxttrack/platform` before this re-audit. Phase 1 is therefore a recovery audit: establish the reference truth, identify drift, and prevent further UI work from compounding it.
+
+## 2026-07-20 Re-Audit Outcome
+
+### Reference Inventory
+
+- 54 generated route URLs across tenant-public, parent, instructor, tenant-admin, marketing and showcase surfaces.
+- 56 route source files.
+- 46 shadcn-style UI primitive files.
+- 26 direct Radix primitive packages.
+- Framer Motion for entrance, drawer and active-navigation transitions.
+- Recharts for operational dashboard charts.
+- `PageKit`, `AppShell`, five shell primitives and a full responsive public shell.
+
+### Current Next.js Inventory
+
+- 51 page routes.
+- Six shared component files.
+- Two client components.
+- No `components.json` shadcn registry configuration.
+- No Radix dependency set.
+- No Framer Motion dependency.
+- No Recharts dependency.
+
+The route surface is broader than the component system. Most domain pages exist, but they are assembled from server-rendered page-local markup rather than a consistent interactive primitive layer.
+
+### Highest-Priority Drift
+
+| Area | Lovable reference | Current implementation | Required next action |
+| --- | --- | --- | --- |
+| Shell navigation | Path-aware active state with animated indicator | First item is always marked active | Split server context from a small client navigation shell and use the actual pathname |
+| Mobile shell | Menu button, overlay, 280px drawer and close behavior | Static logo only; desktop navigation disappears | Restore accessible Radix Sheet/Dialog-based navigation with focus management |
+| Shell primitives | `PageHeader`, `Card`, `StatusPill`, `ProgressRing`, `WaitlistDot` | First three only | Port the two missing semantic primitives before screen polish |
+| Marketing primitives | Nine PageKit exports with photo, image-placeholder and floating-card treatment | Six exports; no `Photo`, `ImagePlaceholder` or `FloatCard` | Restore the reference primitives and keep Next.js image semantics |
+| Motion | Page entrances, drawer motion, active nav and floating cards | Mostly absent | Add restrained motion with reduced-motion support |
+| Charts | Recharts-based occupancy, intake and revenue visualizations | Static/hand-built output | Introduce chart primitives only for canon-backed metrics |
+| Parent routes | `/parent/*` reference including badges and afzwemmen | Canonical `/portaal/*`; direct badges and afzwemmen pages absent | Keep `/portaal`, add the two missing canon routes |
+| Marketing subpages | Designed module-specific pages | Most slugs render one generic hero | Restore module-specific composition from the reference |
+| Tokens | Exact OKLCH token system and full semantic aliases | Approximate hex mapping and fewer aliases | Preserve exact source tokens, then layer tenant overrides |
+
+### Design-System Decisions Locked
+
+1. Keep production on Next.js; do not copy TanStack Start routing.
+2. Use shadcn component ownership and Radix behavior primitives as the accessibility foundation.
+3. Lovable tokens and compositions remain the visual layer; default shadcn styling is not the target.
+4. Keep `/portaal/*` as the production localization of `/parent/*`, as locked by the canon.
+5. Keep platform admin guards and data access separate from tenant-admin logic even when primitives are shared.
+6. Build a thin client interaction layer around server-rendered data instead of converting whole pages to client components.
+7. Introduce motion selectively and honor `prefers-reduced-motion`.
+8. Do not add a chart until its metric, empty state and data boundary are explicit.
+
+### Screenshot Evidence
+
+The Priority A matrix contains 14 routes at four viewports: 56 screenshots in total. The local capture completed with zero runtime failures.
+
+- Evidence directory: `artifacts/lovable-baseline/ced1290b239f61566a542825c9ed8a9229cc3282`.
+- Image bytes: `24,131,324`.
+- Aggregate checksum over ordered route/viewport hashes: `72f9f3610d8473b298e2735ef9fa44e9a94c6eb931c0a4b1e49eb6e9c1659194`.
+- Tracked capture contract: `docs/lovable-baseline/manifest.json`.
+- Capture command: `LOVABLE_BASE_URL=<reference-url> pnpm design:capture-lovable`.
+
+The Lovable repository contains a zero-byte `public/zwemdemo-logo.png`; the actual 18,574-byte logo is stored as `public/zwemdemo-logoUrlogo.png` and referenced through Lovable's hosted asset path. The local audit server used that exact image as a path fixture. This must be cleaned up in the reference repository or accounted for in every local capture.
+
+### Phase 2 Follow-Up
+
+Phase 2 resolves the first foundation set: exact tokens, shadcn ownership, Radix mobile Sheet, pathname-aware navigation, the missing semantic primitives, consolidated photo handling and direct parent badges/afzwem routes. The drift table above remains the record of the Phase 1 starting point; module-specific composition, charts and approved production comparison remain open.
 
 ## Audit Rule
 
@@ -504,13 +572,14 @@ Reason: visual consistency is useful, but platform-level operations have differe
 
 ## Transfer Strategy After Approval
 
-1. Capture screenshots of Lovable reference routes at desktop and mobile widths.
-2. Port global fonts, tokens, shadows, radius, and semantic colors into the Next.js app.
-3. Port shared marketing primitives from `PageKit`.
-4. Port `AppShell` behavior and shell primitives.
-5. Create route shells in the final app using mock adapters, not production data fetching yet.
-6. Replace hardcoded mock data with typed domain-facing adapters module by module.
-7. Add screenshot regression checks around the ported UI.
+1. Approve the captured Priority A reference baseline.
+2. Restore the exact global tokens, shadows, radius and semantic aliases in the Next.js app.
+3. Establish shadcn/Radix ownership and accessibility conventions without importing default visual direction.
+4. Restore `AppShell` active navigation and mobile drawer behavior.
+5. Restore the missing shell and marketing primitives.
+6. Compare each production route against the pinned reference at matching viewports.
+7. Replace remaining generic/page-local UI module by module while keeping real domain adapters intact.
+8. Add stable visual regression assertions after intentional differences are approved.
 
 ## What Not To Do In Phase 1
 
@@ -523,20 +592,22 @@ Reason: visual consistency is useful, but platform-level operations have differe
 
 ## Phase 1 Acceptance Criteria
 
-- Access to `nxttrack/swim-school-pro` is confirmed.
-- Routes are inventoried.
-- Shells are inventoried.
-- Components and design tokens are inventoried.
-- Responsive patterns are documented.
-- Mock data and domain implications are documented.
-- Design-to-production mapping is documented.
-- Conflicts and decisions needed are documented.
-- No UI transfer has started yet.
+- [x] Access to `nxttrack/swim-school-pro` is confirmed.
+- [x] The reference is pinned to a full commit SHA.
+- [x] Routes and shells are inventoried.
+- [x] Components, Radix dependencies and design tokens are inventoried.
+- [x] Responsive and motion patterns are documented.
+- [x] Mock data and domain implications are documented.
+- [x] Design-to-production mapping is documented.
+- [x] Priority A is captured at four viewports with checksums.
+- [x] Current implementation drift is documented.
+- [x] The shadcn/Radix implementation direction is locked.
+- [ ] Product owner approves the Priority A visual baseline.
+- [ ] Production screenshots are compared at the same commit and viewports.
 
 ## Open Questions
 
-1. Should final production URLs keep `/parent`, `/instructor`, and `/admin`, or should they become localized/user-facing paths later?
-2. Should `/nxttrack/*` marketing live in the same Next.js app as tenant apps, or be split later for operational isolation?
-3. Which tenant branding fields are required for staging: logo, colors, fonts, domain, copy, program labels?
-4. Should platform admin share the same AppShell sidebar pattern visually, with a different nav and permission boundary?
-5. Which Lovable routes need screenshot baselines first: all routes, or the core shells only?
+1. Which intentional production differences are approved after side-by-side Priority A review?
+2. Should the reference repository's malformed duplicate logo file be repaired at source?
+3. Which tenant theme fields may override base tokens in the first design-system release?
+4. Should screenshot images remain workflow artifacts, or should selected approved goldens be committed?
