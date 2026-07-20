@@ -36,6 +36,7 @@ create table public.intake_questions (
   constraint intake_questions_applies_to_options_check check (
     applies_to_options <@ array['enrollment', 'trial', 'waitlist', 'information_request']::text[]
   ),
+  constraint intake_questions_tenant_id_id_unique unique (tenant_id, id),
   constraint intake_questions_tenant_form_key_unique unique (tenant_id, form_id, field_key)
 );
 
