@@ -2,6 +2,8 @@
 
 import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const cli = process.env.SUPABASE_CLI_BIN || "supabase";
 const baseOptions = {
@@ -12,17 +14,28 @@ const baseOptions = {
   }
 };
 
+const migrationsDirectory = fileURLToPath(new URL("../../supabase/migrations/", import.meta.url));
+const legacyRemoteHistoryVersions = readdirSync(migrationsDirectory)
+  .filter((file) => file.endsWith("_legacy_remote_history.sql"))
+  .map((file) => file.slice(0, 14))
+  .filter((version) => /^\d{14}$/.test(version));
+
 const stagingExistingSchemaRepairCandidates = [
-  { version: "20260707152802", table: "user_security", label: "phase 3 auth flows" },
-  { version: "20260707160455", table: "programs", label: "phase 4 core domain model" },
-  { version: "20260707162139", table: "intake_forms", label: "phase 5 public tenant intake" },
-  { version: "20260707163627", table: "waitlist_entries", label: "phase 6 waitlist placement" },
-  { version: "20260707165845", table: "participant_guardians", label: "phase 7 parent portal" },
-  { version: "20260707171704", table: "session_attendance", label: "phase 8 instructor shell" },
-  { version: "20260707173644", table: "progress_modules", label: "phase 9 progress badges" },
-  { version: "20260707180102", table: "graduation_readiness", label: "phase 10 graduation vault" },
-  { version: "20260707181731", table: "payment_plans", label: "phase 11 payments" },
-  { version: "20260707195442", table: "tenant_messages", label: "phase 12 admin operations" }
+  { versions: ["20260623222604"], table: "profiles", label: "identity boundary", includeLegacyHistory: true },
+  { versions: ["20260707152802"], table: "user_security", label: "phase 3 auth flows" },
+  { versions: ["20260707160455"], table: "programs", label: "phase 4 core domain model" },
+  { versions: ["20260707162139"], table: "intake_forms", label: "phase 5 public tenant intake" },
+  { versions: ["20260707163627"], table: "waitlist_entries", label: "phase 6 waitlist placement" },
+  { versions: ["20260707165845"], table: "participant_guardians", label: "phase 7 parent portal" },
+  { versions: ["20260707171704"], table: "session_attendance", label: "phase 8 instructor shell" },
+  { versions: ["20260707173644"], table: "progress_modules", label: "phase 9 progress badges" },
+  { versions: ["20260707180102"], table: "graduation_readiness", label: "phase 10 graduation vault" },
+  { versions: ["20260707181731"], table: "payment_plans", label: "phase 11 payments" },
+  { versions: ["20260707195442"], table: "tenant_messages", label: "phase 12 admin operations" },
+  { versions: ["20260707202417", "20260707232548"], table: "platform_email_settings", label: "phase 13 hardening and platform email settings" },
+  { versions: ["20260708235317"], table: "email_delivery_attempts", label: "phase 17 communication and storage" },
+  { versions: ["20260709002203"], table: "instructor_availability", label: "phase 18 planning and catch-up" },
+  { versions: ["20260709005834"], table: "billing_provider_configs", label: "phase 20 billing boundary" }
 ];
 
 console.log("[db:migrate] Supabase migrations are present in the repository.");
@@ -120,15 +133,18 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
   console.log("[db:migrate] Checking staging schema for migration history drift.");
 
   for (const candidate of stagingExistingSchemaRepairCandidates) {
-    if (remoteAppliedVersions?.has(candidate.version)) {
+    const candidateVersions = candidate.includeLegacyHistory ? [...candidate.versions, ...legacyRemoteHistoryVersions] : candidate.versions;
+    const missingVersions = candidateVersions.filter((version) => !remoteAppliedVersions?.has(version));
+
+    if (missingVersions.length === 0) {
       continue;
     }
 
     const exists = await publicTableExists(admin, candidate.table);
 
     if (exists) {
-      repairs.push(candidate.version);
-      console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${candidate.version} as applied.`);
+      repairs.push(...missingVersions);
+      console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${missingVersions.length} migration history entry(s) as applied.`);
     }
   }
 
