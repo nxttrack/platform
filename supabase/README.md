@@ -26,5 +26,6 @@ Current migrations:
 - `20260707173644_phase_9_progress_badges_notifications.sql` adds progress modules/items, participant progress scores, tenant notifications, badge catalog metadata, explicit grants and RLS policies.
 - `20260707180102_phase_10_graduation_diploma_vault.sql` adds graduation readiness, graduation events, event participants, certificate records, diploma-vault access policies, notification types, explicit grants and RLS policies.
 - `20260707181731_phase_11_manual_payments_subscriptions.sql` adds payment plans, subscriptions, manual payments, billing events, payment notification types, explicit grants and RLS policies.
+- `20260720232500_reload_postgrest_schema.sql` explicitly reloads the PostgREST schema cache after a restored or newly migrated environment before bootstrap begins.
 
 The `pnpm run db:migrate` command remains a safe guardrail. It skips unless `RUN_DB_MIGRATIONS=true` is set. When enabled, it requires `DATABASE_URL` and runs `supabase db push --db-url ... --yes`.

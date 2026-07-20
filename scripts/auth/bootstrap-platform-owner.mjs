@@ -83,10 +83,12 @@ if (passwordWasChanged) {
 console.log(`[bootstrap-platform-owner] Platform owner ready: ${email}`);
 
 async function findUserIdByEmail(targetEmail) {
-  const [profileResult, securityResult] = await Promise.all([
-    admin.from("profiles").select("id").eq("email", targetEmail).maybeSingle(),
-    admin.from("user_security").select("user_id").eq("email", targetEmail).maybeSingle()
-  ]);
+  const [profileResult, securityResult] = await retrySchemaCacheLookup(() =>
+    Promise.all([
+      admin.from("profiles").select("id").eq("email", targetEmail).maybeSingle(),
+      admin.from("user_security").select("user_id").eq("email", targetEmail).maybeSingle()
+    ])
+  );
 
   if (profileResult.error && profileResult.error.code !== "PGRST116") {
     throwFatal(`Could not look up profile: ${profileResult.error.message}`);
@@ -97,6 +99,34 @@ async function findUserIdByEmail(targetEmail) {
   }
 
   return profileResult.data?.id ?? securityResult.data?.user_id ?? null;
+}
+
+async function retrySchemaCacheLookup(lookup) {
+  const attempts = 6;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const result = await lookup();
+    const retryable = result.some(({ error }) => isSchemaCacheError(error));
+
+    if (!retryable || attempt === attempts) {
+      return result;
+    }
+
+    const delayMs = attempt * 1_000;
+    console.warn(`[bootstrap-platform-owner] PostgREST schema cache is not ready; retrying in ${delayMs}ms (${attempt}/${attempts}).`);
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  throw new Error("Unreachable schema-cache retry state.");
+}
+
+function isSchemaCacheError(error) {
+  if (!error) {
+    return false;
+  }
+
+  const message = (error.message ?? "").toLowerCase();
+  return error.code === "PGRST204" || error.code === "PGRST205" || message.includes("schema cache");
 }
 
 async function upsert(table, row, onConflict = undefined) {
