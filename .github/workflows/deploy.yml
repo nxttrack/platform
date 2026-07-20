@@ -289,46 +289,28 @@ jobs:
       - name: Phase 16 operational flow validation
         if: env.TARGET == 'staging'
         working-directory: ${{ env.RELEASE }}
+        env:
+          PHASE16_SKIP_PLAYWRIGHT: "true"
         run: |
           set -euo pipefail
           pnpm run phase16:flow
 
-      - name: Capture Priority A staging visual evidence
+      - name: Upload Phase 16 staging state
         if: env.TARGET == 'staging'
-        working-directory: ${{ env.RELEASE }}
-        run: |
-          set -euo pipefail
-          pnpm run design:capture-production
-
-      - name: Upload Priority A staging visual evidence
-        if: always() && env.TARGET == 'staging'
         uses: actions/upload-artifact@v4
         with:
-          name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
-          path: ${{ env.RELEASE }}/artifacts/production-baseline/${{ github.sha }}
-          if-no-files-found: warn
+          name: nxttrack-staging-${{ github.sha }}-phase16-state
+          path: ${{ env.RELEASE }}/artifacts/phase16-state.json
+          if-no-files-found: error
           retention-days: 90
 
-      - name: Phase 15 staging truth and security validation
-        if: env.TARGET == 'staging'
-        working-directory: ${{ env.RELEASE }}
-        run: |
-          set -euo pipefail
-          pnpm run phase15:staging
-
-      - name: Playwright staging smoke
-        if: env.RUN_PLAYWRIGHT_SMOKE == 'true'
-        working-directory: ${{ env.RELEASE }}
-        run: |
-          set -euo pipefail
-          pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
-          PLAYWRIGHT_BASE_URL="$APP_URL" pnpm run test:e2e
-
       - name: Write release evidence
+        if: env.TARGET == 'production'
         working-directory: ${{ env.RELEASE }}
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
+        if: env.TARGET == 'production'
         uses: actions/upload-artifact@v4
         with:
           name: nxttrack-${{ env.TARGET }}-${{ github.sha }}-release-evidence
@@ -340,3 +322,103 @@ jobs:
         run: |
           set -euo pipefail
           ls -1dt "$BASE_DIR/releases"/* 2>/dev/null | tail -n +6 | xargs -r rm -rf
+
+  staging-browser-validation:
+    name: staging browser validation
+    if: inputs.target == 'staging'
+    needs: deploy
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+      NODE_OPTIONS: --max-old-space-size=1536
+      TARGET: staging
+      RELEASE_TARGET: staging
+      RELEASE_CANONICAL_BRANCH: main
+      APP_ENV: staging
+      NODE_ENV: production
+      APP_URL: ${{ vars.APP_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      PHASE16_STATE_PATH: artifacts/phase16-state.json
+      PHASE15_SKIP_PLAYWRIGHT_INSTALL: "true"
+      RUN_DB_MIGRATIONS: "true"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+      E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+      E2E_TENANT_ADMIN_PASSWORD: ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+      E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL || vars.E2E_INSTRUCTOR_EMAIL }}
+      E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+      E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
+      E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+      E2E_ALLOW_FORCE_PASSWORD_CHANGE: ${{ vars.E2E_ALLOW_FORCE_PASSWORD_CHANGE || 'false' }}
+      LOVABLE_VISUAL_CHECK_CONFIRMED: ${{ vars.LOVABLE_VISUAL_CHECK_CONFIRMED }}
+      SUPABASE_BACKUPS_CONFIRMED: ${{ vars.SUPABASE_BACKUPS_CONFIRMED }}
+      ROLLBACK_REHEARSAL_CONFIRMED: ${{ vars.ROLLBACK_REHEARSAL_CONFIRMED }}
+      SUPABASE_ADVISOR_TYPE: ${{ vars.SUPABASE_ADVISOR_TYPE }}
+      SUPABASE_ADVISOR_LEVEL: ${{ vars.SUPABASE_ADVISOR_LEVEL }}
+      SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Download Phase 16 staging state
+        uses: actions/download-artifact@v4
+        with:
+          name: nxttrack-staging-${{ github.sha }}-phase16-state
+          path: artifacts
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Validate Phase 16 browser flows
+        run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/phase16-operational.spec.ts
+
+      - name: Capture Priority A staging visual evidence
+        run: pnpm run design:capture-production
+
+      - name: Upload Priority A staging visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
+          path: artifacts/production-baseline/${{ github.sha }}
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Phase 15 staging truth and security validation
+        run: pnpm run phase15:staging
+
+      - name: Write release evidence
+        run: pnpm run release:write-evidence
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxttrack-staging-${{ github.sha }}-release-evidence
+          path: artifacts/release-evidence.json
+          if-no-files-found: error
+          retention-days: 90
