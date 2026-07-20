@@ -286,24 +286,6 @@ jobs:
           set -euo pipefail
           pnpm run staging:runtime-smoke
 
-      - name: Phase 16 operational flow validation
-        if: env.TARGET == 'staging'
-        working-directory: ${{ env.RELEASE }}
-        env:
-          PHASE16_SKIP_PLAYWRIGHT: "true"
-        run: |
-          set -euo pipefail
-          pnpm run phase16:flow
-
-      - name: Upload Phase 16 staging state
-        if: env.TARGET == 'staging'
-        uses: actions/upload-artifact@v4
-        with:
-          name: nxttrack-staging-${{ github.sha }}-phase16-state
-          path: ${{ env.RELEASE }}/artifacts/phase16-state.json
-          if-no-files-found: error
-          retention-days: 90
-
       - name: Write release evidence
         if: env.TARGET == 'production'
         working-directory: ${{ env.RELEASE }}
@@ -343,6 +325,11 @@ jobs:
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
       PHASE16_STATE_PATH: artifacts/phase16-state.json
+      PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+      PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
+      PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_SKIP_PLAYWRIGHT_INSTALL: "true"
       PHASE15_SKIP_PLAYWRIGHT_INSTALL: "true"
       RUN_DB_MIGRATIONS: "true"
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -385,23 +372,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Download Phase 16 staging state
-        uses: actions/download-artifact@v4
-        with:
-          name: nxttrack-staging-${{ github.sha }}-phase16-state
-          path: artifacts
-
       - name: Install Playwright Chromium
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
-      - name: Validate Phase 16 browser flows
-        run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/phase16-operational.spec.ts
+      - name: Phase 16 operational flow validation
+        run: pnpm run phase16:flow
 
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
 
       - name: Upload Priority A staging visual evidence
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
