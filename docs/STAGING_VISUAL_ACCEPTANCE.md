@@ -13,13 +13,15 @@ Capture the production implementation for the same 14 Priority A routes and four
 The staging deployment now:
 
 1. activates the exact `main` commit;
-2. completes Phase 15 security validation;
-3. seeds and verifies the Phase 16 operational state;
-4. authenticates as parent, instructor and tenant admin;
-5. resolves the seeded instructor group and student identifiers;
-6. captures all 56 Priority A production screenshots;
-7. records dimensions, byte size, SHA-256 and browser/runtime failures in `capture.json`;
-8. uploads the screenshots and manifest as a 90-day GitHub Actions artifact.
+2. seeds and verifies the Phase 16 operational state and controlled role accounts;
+3. authenticates as parent, instructor and tenant admin;
+4. resolves the seeded instructor group and student identifiers;
+5. captures all 56 Priority A production screenshots;
+6. records dimensions, byte size, SHA-256 and browser/runtime failures in `capture.json`;
+7. uploads the screenshots and manifest as a 90-day GitHub Actions artifact;
+8. completes Phase 15 security validation and the strict launch gate.
+
+Phase 16 deliberately precedes Phase 15 on a first staging release: Phase 15 requires the controlled role accounts that Phase 16 creates or resets. Visual capture precedes the strict launch gate because `LOVABLE_VISUAL_CHECK_CONFIRMED` may only be set after the artifact exists and has been reviewed.
 
 The capture fails when live health exposes another release SHA, authentication redirects back to login, a route fails, a browser/runtime error occurs, or fewer than 56 images are produced.
 

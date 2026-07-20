@@ -286,13 +286,6 @@ jobs:
           set -euo pipefail
           pnpm run staging:runtime-smoke
 
-      - name: Phase 15 staging truth and security validation
-        if: env.TARGET == 'staging'
-        working-directory: ${{ env.RELEASE }}
-        run: |
-          set -euo pipefail
-          pnpm run phase15:staging
-
       - name: Phase 16 operational flow validation
         if: env.TARGET == 'staging'
         working-directory: ${{ env.RELEASE }}
@@ -315,6 +308,13 @@ jobs:
           path: ${{ env.RELEASE }}/artifacts/production-baseline/${{ github.sha }}
           if-no-files-found: warn
           retention-days: 90
+
+      - name: Phase 15 staging truth and security validation
+        if: env.TARGET == 'staging'
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          pnpm run phase15:staging
 
       - name: Playwright staging smoke
         if: env.RUN_PLAYWRIGHT_SMOKE == 'true'
