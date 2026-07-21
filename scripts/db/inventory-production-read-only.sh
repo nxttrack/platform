@@ -26,7 +26,7 @@ if ! command -v psql >/dev/null 2>&1; then
 fi
 
 query() {
-  "${psql_command[@]}" --no-psqlrc --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$1"
+  "${psql_command[@]}" --dbname="$PGDATABASE" --no-psqlrc --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$1"
 }
 
 read_only=$(query "show default_transaction_read_only;")
