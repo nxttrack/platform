@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake, offer, instructor and parent self-service increments implemented; staging evidence pending.
+Status: intake, offer, instructor and parent self-service increments complete; tenant-admin mutations next.
 
 ## Goal
 
@@ -19,7 +19,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 1. Complete - public intake to tenant-admin waitlist and placement score through browser forms.
 2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Complete - instructor attendance, progress, note, badge and session completion mutations.
-4. In progress - parent cancellation, catch-up, profile, notification and graduation responses; implementation complete, staging proof pending.
+4. Complete - parent cancellation, catch-up, profile, notification and graduation responses.
 5. Next - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
 6. Cross-role permission-denial and cross-tenant isolation browser cases.
 7. Critical-route accessibility and performance budgets with recorded exceptions.
@@ -99,6 +99,14 @@ The parent journey uses the normal parent account and a bounded staging fixture 
 - reject browser errors, 5xx responses and broken static assets throughout.
 
 The preparation restores the canonical parent profile and replaces only records carrying exact `sprint4-parent:` markers, the dedicated catch-up group code or notification title. It validates rather than changes tenant policy settings. All asserted self-service outcomes remain browser-driven, and conditional final-state assertions make the journey safe under Playwright retry.
+
+## Fourth Increment Evidence
+
+- Canonical commit: `2249d004e79605a2fa31e3fe298b854d2d41d489`.
+- CI run `29876987337`: repository truth, design contract, type/auth checks, production build, migration/RLS audits, standalone packaging and browser smoke all passed.
+- Staging deploy run `29877128901`: release, migrations, health/runtime smoke, Phase 16, all bounded preparations and the intake/offer, instructor and parent mutation journeys passed.
+- The same staging run passed Supabase advisors, four-role RLS smoke, live health and 42 general Playwright checks. The strict gate reported zero failures and the same two known human warnings: Lovable visual comparison and managed Supabase backups/restore policy.
+- Visual evidence capture passed, but GitHub could not persist its artifact because the repository artifact-storage quota was full; this did not affect the browser assertions or live staging release.
 
 ## Definition Of Done
 
