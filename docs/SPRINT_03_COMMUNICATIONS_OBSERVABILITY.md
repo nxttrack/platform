@@ -79,7 +79,9 @@ The schedule only becomes active when `MONITORING_ENABLED=true`. It checks datab
 
 Provider setup, controlled external delivery, failure diagnosis and manual retry are defined in [Communication Delivery Runbook](COMMUNICATION_DELIVERY_RUNBOOK.md).
 
-Probe evidence: [GitHub Actions run 29871127385](https://github.com/nxttrack/platform/actions/runs/29871127385), executed on commit `747e374f80bab70aa61cc4336bb489860cf0e7f4` on 21 July 2026. All 16 checks passed without alert delivery: live application/database health, commit metadata, four public routes, static asset status/MIME, read-only mail diagnostics, and zero failed, skipped or stuck attempts.
+Latest probe evidence: [GitHub Actions run 29872302160](https://github.com/nxttrack/platform/actions/runs/29872302160), executed after deploying commit `d496d176ea2d107cd63c1775260e30477102c25f` on 21 July 2026. All 16 checks passed without alert delivery: live application/database health, exact commit metadata, four public routes, static asset status/MIME, read-only mail diagnostics, and zero failed, skipped or stuck attempts.
+
+Staging deployment evidence: [GitHub Actions run 29871694124](https://github.com/nxttrack/platform/actions/runs/29871694124). Release activation, health/runtime smoke, Phase 16 operational flow, Supabase Advisors, four-role RLS checks, 42 live browser checks and Priority A visual capture passed. The final strict gate stopped only on the two pre-existing, explicitly human Sprint 1 confirmations (`LOVABLE_VISUAL_CHECK_CONFIRMED` and `SUPABASE_BACKUPS_CONFIRMED`); it reported zero technical failures and two warnings.
 
 ## Remaining Sprint Work
 

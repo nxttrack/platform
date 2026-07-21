@@ -2,7 +2,7 @@
 
 Status: in progress.
 
-Candidate baseline: `892da450a1f475944e4bc610fe12d572630bdbc1`
+Candidate baseline: `d496d176ea2d107cd63c1775260e30477102c25f`
 
 ## Sprint Outcome
 
@@ -10,7 +10,7 @@ Name one staging SHA as an explicitly reviewed release candidate and make the st
 
 ## Evidence Already Complete
 
-- [x] Canonical `main` and live staging expose candidate `892da45`.
+- [x] Live staging exposes candidate `d496d17`, which is contained in canonical `main` history.
 - [x] CI passes for the candidate.
 - [x] Health and database probe pass.
 - [x] All 62 migrations are applied/audited.
@@ -25,8 +25,8 @@ Name one staging SHA as an explicitly reviewed release candidate and make the st
 
 Evidence runs:
 
-- CI: <https://github.com/nxttrack/platform/actions/runs/29818488559>
-- Staging deploy and strict gate: <https://github.com/nxttrack/platform/actions/runs/29818633729>
+- CI: <https://github.com/nxttrack/platform/actions/runs/29871535514>
+- Staging deploy, browser evidence and strict gate: <https://github.com/nxttrack/platform/actions/runs/29871694124>
 - Logical backup/restore: <https://github.com/nxttrack/platform/actions/runs/29818495140>
 - Runtime rollback rehearsal: recorded by `ROLLBACK_REHEARSAL_CONFIRMED=true` in the staging environment.
 
@@ -47,7 +47,7 @@ Decision matrix:
 Approval record:
 
 ```txt
-Reviewed SHA: 892da450a1f475944e4bc610fe12d572630bdbc1
+Reviewed SHA: d496d176ea2d107cd63c1775260e30477102c25f
 Product owner:
 Review date:
 Decision: approved / changes required
@@ -111,4 +111,3 @@ Acceptance date:
 - [ ] Resolve or wait out GitHub artifact quota recalculation and verify a compact artifact can upload.
 - [ ] Set the two environment confirmations truthfully.
 - [ ] Rerun staging and record a 0-warning strict gate.
-
