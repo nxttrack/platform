@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: first browser-driven mutation increment complete; slot-offer edge cases in progress.
+Status: intake and offer increments complete; instructor mutations in progress.
 
 ## Goal
 
@@ -17,7 +17,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 ## Execution Increments
 
 1. Complete - public intake to tenant-admin waitlist and placement score through browser forms.
-2. Slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
+2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Instructor attendance, progress, note, badge and session completion mutations.
 4. Parent cancellation, catch-up, profile, notification and graduation responses.
 5. Tenant-admin program, group, agenda, participant, billing, document and communication mutations.
@@ -60,6 +60,25 @@ The next browser journey extends the first intake mutation and must prove:
 - no real e-mail is sent: browser-created offers record the configured staging skip, while edge fixtures are inserted directly with `delivery_status=skipped`.
 
 The expired/full preconditions use a dedicated one-seat group, participant and offer records. They are exact-marker staging fixtures; the response behavior itself remains browser-driven and cleanup removes prior accepted participants, mail attempts and offer dependencies before reseeding.
+
+## Second Increment Evidence
+
+- Canonical commit: `22eb733c6f86318ea2d1a3a56fe152af68766b27`.
+- CI run `29874352901`: all repository, build, migration and browser-smoke checks passed.
+- Staging deploy run `29874519824`: release, migrations, health/runtime smoke, Phase 16, cleanup, edge preparation and the expanded intake/offer browser journey passed.
+- The same run completed visual capture, Supabase advisors, four-role RLS smoke and 42 general Playwright checks; the strict gate again ended with zero failures and only the two known human warnings.
+
+## Third Increment Contract
+
+The instructor journey uses the normal instructor account and Phase 16 roster to:
+
+- change the exact participant's attendance through the rendered quick action;
+- update the seeded progress item to level 5 with an internal marker note;
+- create an internal progress note and a custom internal badge;
+- complete the selected scheduled session as the last mutation;
+- reject browser errors, 5xx responses and broken static assets throughout.
+
+Internal visibility deliberately avoids parent-notification side effects. Exact `sprint4-instructor:` note markers are removed before the next staging run; Phase 16 restores its canonical attendance, progress score and scheduled-session state before this journey runs again.
 
 ## Definition Of Done
 

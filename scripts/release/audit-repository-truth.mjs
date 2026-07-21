@@ -20,6 +20,7 @@ checkFile(".github/workflows/operational-monitor.yml");
 checkFile("docs/DEFERRED_CONFIGURATION.md");
 checkFile("docs/SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md");
 checkFile("apps/web/tests/e2e/sprint4-mutations.spec.ts");
+checkFile("apps/web/tests/e2e/sprint4-instructor-mutations.spec.ts");
 checkFile("scripts/staging/prepare-sprint4-offer-edges.mjs");
 
 const readme = read("README.md");
@@ -41,6 +42,7 @@ requireText(deployWorkflow, "PRODUCTION_MIGRATION_REHEARSAL_RUN_ID", "Deploy wor
 requireText(deployWorkflow, "sprint4:prepare-mutations", "Deploy workflow does not prepare bounded Sprint 4 mutation fixtures.");
 requireText(deployWorkflow, "sprint4:prepare-offer-edges", "Deploy workflow does not prepare bounded Sprint 4 offer-edge fixtures.");
 requireText(deployWorkflow, "sprint4:test-mutations", "Deploy workflow does not run the browser-driven Sprint 4 mutation journey.");
+requireText(deployWorkflow, "sprint4:test-instructor", "Deploy workflow does not run the browser-driven Sprint 4 instructor journey.");
 requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");

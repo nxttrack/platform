@@ -110,6 +110,7 @@ async function createOffer(page: Page, entry: Locator, groupName: string) {
   await entry.getByLabel("Groep").selectOption({ label: groupName });
   await entry.getByRole("button", { name: "Maak aanbodlink" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&aanbod=/);
+  await expect(entry).toContainText("sent · skipped");
   const offerUrl = new URL(page.url()).searchParams.get("aanbod");
 
   expect(offerUrl).toBeTruthy();

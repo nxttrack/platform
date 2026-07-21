@@ -421,6 +421,11 @@ jobs:
           SPRINT4_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-mutations
 
+      - name: Sprint 4 instructor browser mutations
+        env:
+          SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
+        run: pnpm run sprint4:test-instructor
+
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
 

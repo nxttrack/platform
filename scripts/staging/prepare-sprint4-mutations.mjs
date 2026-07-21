@@ -29,6 +29,8 @@ if (tenantResult.error || !tenantResult.data) {
 }
 
 const tenantId = tenantResult.data.id;
+await removeRows(admin.from("progress_notes").delete().eq("tenant_id", tenantId).like("note", "sprint4-instructor:%"), "instructor note fixtures");
+await removeRows(admin.from("participant_badge_awards").delete().eq("tenant_id", tenantId).like("note", "sprint4-instructor:%"), "instructor badge fixtures");
 const submissionsResult = await admin
   .from("intake_submissions")
   .select("id")
