@@ -24,6 +24,10 @@ const evidence = {
   approval: {
     reference: target === "production" ? process.env.PRODUCTION_APPROVAL_REFERENCE || null : null
   },
+  productionEvidence: {
+    foundationRunId: target === "production" ? process.env.PRODUCTION_FOUNDATION_RUN_ID || null : null,
+    migrationRehearsalRunId: target === "production" ? process.env.PRODUCTION_MIGRATION_REHEARSAL_RUN_ID || null : null
+  },
   gates: {
     repositoryTruth: "passed",
     lovableBaselineContract: "passed",

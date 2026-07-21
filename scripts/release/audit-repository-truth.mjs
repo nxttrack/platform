@@ -28,6 +28,8 @@ requireText(deployWorkflow, "workflow_dispatch:", "Deploy workflow is not manual
 requireText(deployWorkflow, "github.ref_name == 'main'", "Deploy workflow does not restrict releases to main.");
 requireText(deployWorkflow, "PRODUCTION_RELEASE_CONFIRMATION", "Deploy workflow has no explicit production confirmation contract.");
 requireText(deployWorkflow, "PRODUCTION_APPROVAL_REFERENCE", "Deploy workflow has no recorded production approval reference contract.");
+requireText(deployWorkflow, "verify-production-evidence.mjs", "Deploy workflow does not verify successful SHA-bound production foundation evidence.");
+requireText(deployWorkflow, "PRODUCTION_MIGRATION_REHEARSAL_RUN_ID", "Deploy workflow does not require production migration rehearsal evidence.");
 requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");

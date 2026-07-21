@@ -22,6 +22,18 @@ on:
         description: Link or identifier for the recorded production approval (required for production)
         required: false
         type: string
+      production_foundation_run_id:
+        description: Successful production foundation audit run ID for this exact SHA
+        required: false
+        type: string
+      production_migration_rehearsal_run_id:
+        description: Successful production migration rehearsal run ID for this exact SHA
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  actions: read
 
 concurrency:
   group: nxttrack-${{ inputs.target }}
@@ -45,6 +57,8 @@ jobs:
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
       PRODUCTION_RELEASE_CONFIRMATION: ${{ inputs.production_confirmation }}
       PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
+      PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
+      PRODUCTION_MIGRATION_REHEARSAL_RUN_ID: ${{ inputs.production_migration_rehearsal_run_id }}
       BASE_DIR: /var/www/nxttrack/${{ inputs.target }}
 
       APP_ENV: ${{ vars.APP_ENV }}
@@ -133,6 +147,11 @@ jobs:
           set -euo pipefail
           pnpm run release:truth
           pnpm run release:assert-source
+
+      - name: Verify production foundation evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/release/verify-production-evidence.mjs
 
       - name: Check runtime
         run: |

@@ -27,6 +27,13 @@ The manually dispatched `Production migration rehearsal` workflow:
 
 The Supabase CLI contract states that `--dry-run` prints migrations that would be applied without applying them.
 
+Latest successful rehearsal: <https://github.com/nxttrack/platform/actions/runs/29870037253>
+
+- Supabase CLI 2.109.1 reported dry-run mode and listed all 62 pending migrations.
+- Before and after inventories both reported no remote migration history and 62 pending repository migrations.
+- The database fingerprints were identical.
+- No production database state changed.
+
 ## Actual Migration Boundary
 
 Actual production migration remains Sprint 5 work and requires all of the following:
@@ -39,6 +46,7 @@ Actual production migration remains Sprint 5 work and requires all of the follow
 6. Maintenance/support window active.
 7. One explicit migration authorization separate from deployment authorization.
 8. Post-migration Advisors, RLS, health and browser smoke evidence.
+9. Successful foundation-audit and migration-rehearsal run IDs for the exact promoted SHA.
 
 `RUN_DB_MIGRATIONS` remains `false` in the production environment until this boundary is explicitly opened.
 

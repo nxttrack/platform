@@ -61,17 +61,17 @@ Audit run:
 Audited SHA:
 ```
 
-Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29869803046>
+Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29870133969>
 
 - Environment contract: all checks pass, including API reachability, distinct staging/production project fingerprints and internal production secret consistency.
-- Host foundation: passes for release/shared directories, systemd, active Caddy, read-only Caddyfile adaptation, port `3800` and public TLS on apex, `www` and `admin`.
+- Host foundation: passes for release/shared directories, systemd, active Caddy, read-only Caddyfile adaptation, explicit apex/`www`/`admin`/wildcard routes, port `3800`, public TLS and wildcard DNS.
 - Database inventory: transaction-read-only pass on PostgreSQL 17.6.
 - Empty production baseline: 0 public tables, 0 Auth users, 0 Storage objects, no remote migration history and 62 repository migrations pending.
 - No production database or runtime state was changed by the audit.
 
 ## Protection And Authority
 
-GitHub currently reports no protection rules for the `production` environment. Until required reviewers can be configured, the compensating controls are:
+GitHub currently reports no protection rules for the `production` environment. An attempt to enable environment branch/reviewer protection returned HTTP 422 because the repository billing plan does not support the required protection rule. The accepted technical compensating controls are:
 
 1. manual workflow dispatch from `main` only;
 2. exact full SHA equality with a staging-validated commit;
@@ -79,6 +79,7 @@ GitHub currently reports no protection rules for the `production` environment. U
 4. a non-empty recorded approval reference;
 5. no automatic production trigger;
 6. a separate explicit user authorization before Sprint 5 promotion.
+7. successful foundation-audit and migration-rehearsal run IDs bound to the exact production SHA.
 
 Open ownership record:
 
@@ -97,9 +98,9 @@ Environment reviewer limitation/decision:
 - [x] Resolve every failed environment, project-isolation or host-foundation check.
 - [ ] Identify the production Supabase project and owner without exposing credentials.
 - [x] Produce a read-only production database inventory; do not run migrations.
-- [ ] Confirm DNS/TLS intent for `nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl` and `*.nxttrack.nl`.
+- [x] Confirm DNS/TLS intent for `nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl` and `*.nxttrack.nl`.
 - [ ] Record release authority, rollback owner and infrastructure owner.
-- [ ] Configure GitHub environment reviewers, or accept and name the compensating control.
+- [x] Configure GitHub environment reviewers, or accept and name the SHA-bound evidence/confirmation controls as the billing-plan compensation.
 - [x] Write the migration rehearsal and rollback plan for Sprint 5.
 
 Detailed plan: [Production Migration And Rollback Plan](SPRINT_02_PRODUCTION_MIGRATION_PLAN.md).

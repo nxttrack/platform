@@ -53,8 +53,9 @@ Production promotion:
 2. Enter the full commit SHA that passed staging as `staging_release_sha`.
 3. Enter `PROMOTE_PRODUCTION` as explicit confirmation.
 4. Enter a link or identifier for the recorded approval as `production_approval_reference`.
-5. The workflow refuses promotion when the current source SHA differs from the staged SHA.
-6. GitHub's `production` Environment must still provide human approval and protected secrets.
+5. Enter the successful foundation-audit and migration-rehearsal run IDs for the exact SHA.
+6. The workflow refuses promotion when the current source SHA differs from the staged SHA or either evidence run is missing, unsuccessful or belongs to another SHA.
+7. GitHub's `production` Environment must still provide protected secrets; recorded approval and SHA-bound evidence compensate for reviewer rules when the repository billing plan does not support them.
 
 The source contract can be tested independently:
 
@@ -69,6 +70,8 @@ RELEASE_TARGET=production \
 STAGING_RELEASE_SHA=<full-validated-sha> \
 PRODUCTION_RELEASE_CONFIRMATION=PROMOTE_PRODUCTION \
 PRODUCTION_APPROVAL_REFERENCE=<recorded-approval-link-or-id> \
+PRODUCTION_FOUNDATION_RUN_ID=<successful-run-id-for-this-sha> \
+PRODUCTION_MIGRATION_REHEARSAL_RUN_ID=<successful-run-id-for-this-sha> \
 pnpm run release:assert-source
 ```
 
