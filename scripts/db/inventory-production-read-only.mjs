@@ -92,7 +92,7 @@ try {
     extensionCount,
     forceRlsCount: rls.force_rls_count,
     localMigrationCount: localVersions.length,
-    migrationHistoryPresent,
+    migrationHistoryPresent: migrationTablePresent,
     missingRemoteCount: missingRemote.length,
     publicTableCount: rls.public_table_count,
     remoteMigrationCount: remoteVersions.length,
