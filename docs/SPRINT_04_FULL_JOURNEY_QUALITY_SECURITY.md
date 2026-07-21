@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake, offer, instructor and parent self-service increments complete; tenant-admin mutations next.
+Status: intake, offer, instructor and parent self-service increments complete; tenant-admin mutations implemented with staging evidence pending.
 
 ## Goal
 
@@ -20,7 +20,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Complete - instructor attendance, progress, note, badge and session completion mutations.
 4. Complete - parent cancellation, catch-up, profile, notification and graduation responses.
-5. Next - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
+5. In progress - tenant-admin program, group, agenda, participant, billing, document and communication mutations; implementation complete, staging proof pending.
 6. Cross-role permission-denial and cross-tenant isolation browser cases.
 7. Critical-route accessibility and performance budgets with recorded exceptions.
 8. P0/P1 application/database security review and remediation.
@@ -107,6 +107,20 @@ The preparation restores the canonical parent profile and replaces only records 
 - Staging deploy run `29877128901`: release, migrations, health/runtime smoke, Phase 16, all bounded preparations and the intake/offer, instructor and parent mutation journeys passed.
 - The same staging run passed Supabase advisors, four-role RLS smoke, live health and 42 general Playwright checks. The strict gate reported zero failures and the same two known human warnings: Lovable visual comparison and managed Supabase backups/restore policy.
 - Visual evidence capture passed, but GitHub could not persist its artifact because the repository artifact-storage quota was full; this did not affect the browser assertions or live staging release.
+
+## Fifth Increment Contract
+
+The tenant-admin journey uses the normal organization-admin account to create a linked operational chain through rendered forms:
+
+- an active program and stage;
+- a capacity-bound lesson group plus instructor assignment;
+- a participant enrollment plus active group placement;
+- a concrete future session in the planboard;
+- a payment plan, subscription, manual payment and paid-status transition;
+- an internal metadata-only document and internal draft message, so no file upload or real e-mail is triggered;
+- browser/runtime failure rejection throughout.
+
+Every retry uses a unique `sprint4-admin` suffix. The staging-only preparation removes older records through exact title/code/note prefixes and their bounded dependencies; it never creates the outcomes asserted by the browser journey.
 
 ## Definition Of Done
 

@@ -420,6 +420,9 @@ jobs:
       - name: Prepare Sprint 4 parent self-service fixtures
         run: pnpm run sprint4:prepare-parent
 
+      - name: Prepare Sprint 4 tenant-admin fixtures
+        run: pnpm run sprint4:prepare-admin
+
       - name: Sprint 4 intake-to-placement browser mutation
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
@@ -434,6 +437,11 @@ jobs:
         env:
           SPRINT4_PARENT_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-parent
+
+      - name: Sprint 4 tenant-admin browser mutations
+        env:
+          SPRINT4_ADMIN_MUTATIONS_ENABLED: "true"
+        run: pnpm run sprint4:test-admin
 
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
