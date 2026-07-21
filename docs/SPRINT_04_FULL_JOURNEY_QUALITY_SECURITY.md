@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake, offer and instructor increments complete; parent self-service next.
+Status: intake, offer, instructor and parent self-service increments implemented; staging evidence pending.
 
 ## Goal
 
@@ -19,8 +19,8 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 1. Complete - public intake to tenant-admin waitlist and placement score through browser forms.
 2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Complete - instructor attendance, progress, note, badge and session completion mutations.
-4. Parent cancellation, catch-up, profile, notification and graduation responses.
-5. Tenant-admin program, group, agenda, participant, billing, document and communication mutations.
+4. In progress - parent cancellation, catch-up, profile, notification and graduation responses; implementation complete, staging proof pending.
+5. Next - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
 6. Cross-role permission-denial and cross-tenant isolation browser cases.
 7. Critical-route accessibility and performance budgets with recorded exceptions.
 8. P0/P1 application/database security review and remediation.
@@ -86,6 +86,19 @@ Internal visibility deliberately avoids parent-notification side effects. Exact 
 - CI run `29875047273`: all repository, build, migration and browser-smoke checks passed.
 - Staging deploy run `29875252821`: release, Phase 16, both bounded preparations, intake/offer mutations and all instructor mutations passed.
 - Visual capture, Supabase advisors, four-role RLS smoke and 42 general Playwright checks also passed; the strict gate ended with zero failures and the same two known human warnings.
+
+## Fourth Increment Contract
+
+The parent journey uses the normal parent account and a bounded staging fixture to:
+
+- update name and phone through the rendered profile form;
+- cancel one exact future lesson within policy and receive the automatic inhaalcredit;
+- select a compatible, capacity-safe inhaalles and submit the request through the portal;
+- mark one exact unread notification as read;
+- confirm one exact afzwemuitnodiging;
+- reject browser errors, 5xx responses and broken static assets throughout.
+
+The preparation restores the canonical parent profile and replaces only records carrying exact `sprint4-parent:` markers, the dedicated catch-up group code or notification title. It validates rather than changes tenant policy settings. All asserted self-service outcomes remain browser-driven, and conditional final-state assertions make the journey safe under Playwright retry.
 
 ## Definition Of Done
 

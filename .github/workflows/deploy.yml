@@ -354,6 +354,7 @@ jobs:
       TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
       PHASE16_STATE_PATH: artifacts/phase16-state.json
       SPRINT4_EDGE_STATE_PATH: artifacts/sprint4-edge-state.json
+      SPRINT4_PARENT_STATE_PATH: artifacts/sprint4-parent-state.json
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
@@ -416,6 +417,9 @@ jobs:
       - name: Prepare Sprint 4 offer-edge fixtures
         run: pnpm run sprint4:prepare-offer-edges
 
+      - name: Prepare Sprint 4 parent self-service fixtures
+        run: pnpm run sprint4:prepare-parent
+
       - name: Sprint 4 intake-to-placement browser mutation
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
@@ -425,6 +429,11 @@ jobs:
         env:
           SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-instructor
+
+      - name: Sprint 4 parent self-service browser mutations
+        env:
+          SPRINT4_PARENT_MUTATIONS_ENABLED: "true"
+        run: pnpm run sprint4:test-parent
 
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
