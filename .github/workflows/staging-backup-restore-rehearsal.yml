@@ -18,7 +18,7 @@ concurrency:
 jobs:
   rehearse:
     if: github.ref_name == 'main'
-    runs-on: [self-hosted, linux, x64, nxttrack]
+    runs-on: ubuntu-latest
     environment: staging
 
     env:
@@ -37,4 +37,3 @@ jobs:
 
       - name: Dump, restore and compare staging application data
         run: scripts/db/rehearse-logical-restore.sh
-
