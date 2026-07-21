@@ -60,6 +60,13 @@ Audit run:
 Audited SHA:
 ```
 
+Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29825005890>
+
+- Environment contract: 37 checks passed, including distinct staging/production project fingerprints and internal production secret consistency.
+- Host foundation: passed for release/shared directories, systemd, active Caddy, read-only Caddyfile adaptation, port `3800` and public TLS on apex, `www` and `admin`.
+- Database inventory: blocked before the first query because both the stored production Supabase API hostname and direct database hostname no longer resolve in DNS.
+- Interpretation: the production secret set is internally consistent but points to a removed, incorrect or otherwise unreachable Supabase project. It must be replaced or restored; staging credentials are not an acceptable fallback.
+
 ## Protection And Authority
 
 GitHub currently reports no protection rules for the `production` environment. Until required reviewers can be configured, the compensating controls are:
@@ -83,7 +90,8 @@ Environment reviewer limitation/decision:
 
 ## Remaining Sprint Tasks
 
-- [ ] Run the read-only audit and record its exact result.
+- [x] Run the read-only audit and record its exact result.
+- [ ] Restore or replace the unreachable production Supabase project and update the production-only secret set.
 - [ ] Resolve every failed environment, project-isolation or host-foundation check.
 - [ ] Identify the production Supabase project and owner without exposing credentials.
 - [ ] Produce a read-only production database inventory; do not run migrations.

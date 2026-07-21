@@ -85,6 +85,11 @@ present(
   process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
   "A Supabase server-only secret is configured."
 );
+check(
+  "supabase-public-reachable",
+  await urlReachable(process.env.NEXT_PUBLIC_SUPABASE_URL),
+  "The production Supabase API hostname resolves and responds."
+);
 
 const productionIdentity = supabaseIdentity(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const databaseMatches = productionIdentity ? databaseContainsIdentity(process.env.DATABASE_URL, productionIdentity) : false;
@@ -226,5 +231,30 @@ function normalized(value) {
 function writeOutput(name, value) {
   if (process.env.GITHUB_OUTPUT) {
     appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
+  }
+}
+
+async function urlReachable(value) {
+  let url;
+
+  try {
+    url = new URL("/auth/v1/health", value || "");
+  } catch {
+    return false;
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+
+  try {
+    const response = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: controller.signal
+    });
+    return response.status < 500;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeout);
   }
 }

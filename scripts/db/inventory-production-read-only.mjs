@@ -150,7 +150,15 @@ function first(result) {
 
 function safeMessage(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.replaceAll(connectionString, "[DATABASE_URL]");
+  let sanitized = message.replaceAll(connectionString, "[DATABASE_URL]");
+
+  try {
+    sanitized = sanitized.replaceAll(new URL(connectionString).hostname, "[DATABASE_HOST]");
+  } catch {
+    // Invalid connection URLs are reported without attempting additional parsing.
+  }
+
+  return sanitized;
 }
 
 function writeSummary(inventory) {
