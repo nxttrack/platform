@@ -16,6 +16,7 @@ checkFile(".github/workflows/deploy.yml");
 checkFile(".github/workflows/production-foundation-audit.yml");
 checkFile(".github/workflows/production-migration-rehearsal.yml");
 checkFile(".github/workflows/communications-foundation-audit.yml");
+checkFile(".github/workflows/operational-monitor.yml");
 
 const readme = read("README.md");
 const phaseZero = read("docs/PHASE_0_REPO_INFRA.md");
@@ -23,6 +24,7 @@ const deployWorkflow = read(".github/workflows/deploy.yml");
 const productionAuditWorkflow = read(".github/workflows/production-foundation-audit.yml");
 const productionMigrationRehearsal = read(".github/workflows/production-migration-rehearsal.yml");
 const communicationsAuditWorkflow = read(".github/workflows/communications-foundation-audit.yml");
+const operationalMonitorWorkflow = read(".github/workflows/operational-monitor.yml");
 
 requireText(readme, `Canonical implementation and release branch: \`${canonicalBranch}\``, "README does not declare the canonical release branch.");
 requireText(phaseZero, `Canonical implementation branch: \`${canonicalBranch}\``, "Phase 0 does not lock the canonical implementation branch.");
@@ -41,6 +43,9 @@ requireText(productionMigrationRehearsal, 'DB_MIGRATE_DRY_RUN: "true"', "Product
 requireText(productionMigrationRehearsal, "BEFORE_FINGERPRINT", "Production migration rehearsal does not prove an unchanged database fingerprint.");
 requireText(communicationsAuditWorkflow, "AUDIT_COMMUNICATIONS_FOUNDATION", "Communications foundation audit has no explicit confirmation contract.");
 requireText(communicationsAuditWorkflow, "operations:audit-communications", "Communications foundation workflow does not run the non-sending audit.");
+requireText(operationalMonitorWorkflow, "MONITORING_ENABLED", "Operational monitor is not protected by an explicit enable switch.");
+requireText(operationalMonitorWorkflow, "SEND_SYNTHETIC_ALERT", "Operational monitor has no explicit synthetic-alert confirmation contract.");
+requireText(operationalMonitorWorkflow, "operations:monitor", "Operational monitor workflow does not run the canonical monitor.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");

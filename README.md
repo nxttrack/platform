@@ -52,6 +52,7 @@ The Phase 16 runner proves seeded integration state and authenticated dashboard 
 - [Active Sprint 1](docs/SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md)
 - [Sprint 2 Production Foundation](docs/SPRINT_02_PRODUCTION_FOUNDATION.md)
 - [Sprint 3 Communications And Observability](docs/SPRINT_03_COMMUNICATIONS_OBSERVABILITY.md)
+- [Operations And Incident Runbook](docs/OPERATIONS_INCIDENT_RUNBOOK.md)
 
 ## Phase docs
 

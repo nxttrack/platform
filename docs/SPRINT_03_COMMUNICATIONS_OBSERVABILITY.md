@@ -1,6 +1,6 @@
 # Sprint 3 - Communications, Monitoring And Operations
 
-Status: non-sending preflight started. Sprint acceptance depends on Sprint 2 ownership closure and real provider/operator configuration.
+Status: non-sending baseline recorded. Sprint acceptance depends on Sprint 2 ownership closure and real provider/operator configuration.
 
 ## Goal
 
@@ -27,6 +27,27 @@ The initial GitHub environment inventory found no staging or production variable
 
 No message or alert is sent during preflight.
 
+Baseline evidence: [GitHub Actions run 29870813800](https://github.com/nxttrack/platform/actions/runs/29870813800), executed on commit `b927197f3b8581e85b0dc747c8adbb004f97cb30` on 21 July 2026.
+
+Passing controls:
+
+- staging health and database probe;
+- enforced read-only database transaction;
+- platform email settings and delivery-attempt schema;
+- singleton platform settings row;
+- SPF and DMARC DNS policies;
+- aggregate delivery diagnostics (zero attempts at baseline).
+
+Blocking controls:
+
+- transactional email is disabled;
+- no verified sender address is configured;
+- the selected provider is missing its required secret/connection fields;
+- no DKIM selector is configured;
+- no operator alert destination is configured;
+- incident and support owners are unnamed;
+- log retention is unspecified.
+
 ## Non-Sending Audit
 
 Dispatch `.github/workflows/communications-foundation-audit.yml` from `main` with:
@@ -43,9 +64,18 @@ The audit checks:
 - SPF, DMARC and the configured DKIM selector;
 - alert destination, incident owner, support owner and log-retention policy.
 
+## Operational Monitor
+
+`.github/workflows/operational-monitor.yml` provides a dormant-by-default 15-minute monitor plus two manual modes:
+
+- `probe` runs all checks without sending alerts;
+- `drill` sends one explicitly confirmed synthetic alert.
+
+The schedule only becomes active when `MONITORING_ENABLED=true`. It checks database-aware health, sampled 5xx responses, static asset MIME and aggregate mail failures/skips/stuck attempts. Alert payloads contain operational metadata only. Activation and response are defined in [Operations And Incident Runbook](OPERATIONS_INCIDENT_RUNBOOK.md).
+
 ## Remaining Sprint Work
 
-- [ ] Run and record the non-sending baseline audit.
+- [x] Run and record the non-sending baseline audit.
 - [ ] Configure SendGrid API or SMTP in staging.
 - [ ] Verify sender/domain ownership, SPF, DKIM and DMARC.
 - [ ] Deliver invite, password-reset and operational test mail to a controlled external inbox.
@@ -53,7 +83,7 @@ The audit checks:
 - [ ] Configure health/5xx/database/asset/mail alert destinations.
 - [ ] Run a synthetic alert drill received by the named incident owner.
 - [ ] Record support ownership, escalation times and log retention.
-- [ ] Complete incident and recovery runbooks.
+- [x] Add an executable incident and recovery runbook; ownership fields remain to be filled through environment configuration.
 
 ## Definition Of Done
 

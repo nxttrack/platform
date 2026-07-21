@@ -30,8 +30,8 @@ jobs:
       APP_URL: ${{ vars.APP_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       EMAIL_DKIM_SELECTOR: ${{ vars.EMAIL_DKIM_SELECTOR }}
-      ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
       ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+      MONITORING_ENABLED: ${{ vars.MONITORING_ENABLED }}
       INCIDENT_OWNER: ${{ vars.INCIDENT_OWNER }}
       SUPPORT_OWNER: ${{ vars.SUPPORT_OWNER }}
       LOG_RETENTION_DAYS: ${{ vars.LOG_RETENTION_DAYS }}

@@ -102,7 +102,8 @@ if (dkimSelector) {
   );
 }
 
-check("alert-destination", Boolean(process.env.ALERT_WEBHOOK_URL || process.env.ALERT_EMAIL), "An operator alert destination is configured.");
+check("alert-destination", Boolean(process.env.ALERT_WEBHOOK_URL), "An independent operator webhook destination is configured.");
+check("monitor-enabled", process.env.MONITORING_ENABLED === "true", "Scheduled operational monitoring is enabled.");
 check("incident-owner", Boolean(process.env.INCIDENT_OWNER), "INCIDENT_OWNER names the incident escalation owner.");
 check("support-owner", Boolean(process.env.SUPPORT_OWNER), "SUPPORT_OWNER names the user-support owner.");
 check(
