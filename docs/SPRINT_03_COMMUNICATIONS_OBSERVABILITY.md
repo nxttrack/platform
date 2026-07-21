@@ -10,6 +10,7 @@ Make account and operational communication deliverable, and make health/mail fai
 
 - SendGrid API and SMTP transports are implemented.
 - Platform-admin provider settings store encrypted secrets.
+- Platform owners have a controlled test-mail action and platform-scoped delivery diagnostics.
 - Transactional templates exist for invites, password resets, slot offers and notifications.
 - Delivery attempts record sent, failed and skipped outcomes.
 - Database-aware health and runtime/static-asset smoke checks exist.
@@ -61,6 +62,7 @@ The audit checks:
 - staging health and database connectivity;
 - email settings and selected provider completeness without decrypting or printing secrets;
 - delivery-attempt diagnostics availability and aggregate counts only;
+- a successful controlled platform test in the previous 30 days;
 - SPF, DMARC and the configured DKIM selector;
 - alert destination, incident owner, support owner and log-retention policy.
 

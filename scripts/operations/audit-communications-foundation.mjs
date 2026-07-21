@@ -69,7 +69,12 @@ if (databaseUrl) {
             count(*)::int as total,
             count(*) filter (where status = 'sent')::int as sent,
             count(*) filter (where status = 'failed')::int as failed,
-            count(*) filter (where status = 'skipped')::int as skipped
+            count(*) filter (where status = 'skipped')::int as skipped,
+            count(*) filter (
+              where template_key = 'platform_delivery_test'
+                and status = 'sent'
+                and delivered_at >= now() - interval '30 days'
+            )::int as controlled_test_sent
           from public.email_delivery_attempts
         `)
       );
@@ -87,6 +92,12 @@ if (databaseUrl) {
     await client.end().catch(() => undefined);
   }
 }
+
+check(
+  "controlled-test-delivery",
+  Number(deliveryStats?.controlled_test_sent ?? 0) > 0,
+  "At least one controlled platform test email was delivered in the last 30 days."
+);
 
 check("spf", await txtContains("nxttrack.nl", "v=spf1"), "nxttrack.nl publishes an SPF policy.");
 check("dmarc", await txtContains("_dmarc.nxttrack.nl", "v=DMARC1"), "nxttrack.nl publishes a DMARC policy.");
@@ -119,7 +130,7 @@ for (const result of results) {
 
 if (deliveryStats) {
   console.log(
-    `[communications:foundation] INFO delivery attempts total=${deliveryStats.total} sent=${deliveryStats.sent} failed=${deliveryStats.failed} skipped=${deliveryStats.skipped}.`
+    `[communications:foundation] INFO delivery attempts total=${deliveryStats.total} sent=${deliveryStats.sent} failed=${deliveryStats.failed} skipped=${deliveryStats.skipped} controlled_test_sent_30d=${deliveryStats.controlled_test_sent}.`
   );
 }
 

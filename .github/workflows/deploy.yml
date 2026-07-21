@@ -137,6 +137,7 @@ jobs:
       SMTP_FROM: ${{ vars.SMTP_FROM }}
       SMTP_FROM_EMAIL: ${{ vars.SMTP_FROM_EMAIL }}
       SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+      EMAIL_DELIVERY_TIMEOUT_MS: ${{ vars.EMAIL_DELIVERY_TIMEOUT_MS || '15000' }}
 
     steps:
       - name: Checkout
@@ -240,6 +241,7 @@ jobs:
             printf 'SMTP_FROM=%s\n' "$SMTP_FROM"
             printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
             printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
+            printf 'EMAIL_DELIVERY_TIMEOUT_MS=%s\n' "$EMAIL_DELIVERY_TIMEOUT_MS"
           } > "$BASE_DIR/shared/.env"
 
           chmod 640 "$BASE_DIR/shared/.env"

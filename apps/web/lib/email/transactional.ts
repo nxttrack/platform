@@ -24,12 +24,14 @@ export type TransactionalEmailResult =
       attemptId?: string;
       delivered: true;
       provider: "sendgrid_api" | "smtp";
+      providerMessageId?: string;
       source?: "env" | "platform_settings";
     }
   | {
       attemptId?: string;
       delivered: false;
       provider: "not_configured" | "sendgrid_api" | "smtp";
+      providerMessageId?: string;
       reason: string;
       source?: "env" | "platform_settings";
     };
@@ -51,7 +53,16 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
   let result: TransactionalEmailResult;
 
   if (config.provider === "sendgrid_api") {
-    result = await sendWithSendGridApi({ ...config, fromName }, input);
+    try {
+      result = await sendWithSendGridApi({ ...config, fromName }, input);
+    } catch (error) {
+      result = {
+        delivered: false,
+        provider: "sendgrid_api",
+        reason: error instanceof Error ? error.message : String(error),
+        source: config.source
+      };
+    }
   } else {
     try {
       await sendSmtpEmail({ ...config, fromName }, input);
@@ -98,7 +109,8 @@ async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: Transa
           value: input.html ?? input.text
         }
       ]
-    })
+    }),
+    signal: AbortSignal.timeout(emailDeliveryTimeoutMs())
   });
 
   if (!response.ok) {
@@ -113,6 +125,7 @@ async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: Transa
   return {
     delivered: true,
     provider: "sendgrid_api",
+    providerMessageId: response.headers.get("x-message-id") ?? undefined,
     source: config.source
   };
 }
@@ -129,6 +142,12 @@ async function withDeliveryAttempt(input: TransactionalEmailInput, result: Trans
 
 async function logDeliveryAttempt(input: TransactionalEmailInput, result: TransactionalEmailResult) {
   const admin = createAdminClient();
+  const metadata = { ...input.metadata };
+
+  if (result.providerMessageId) {
+    metadata.providerMessageId = result.providerMessageId;
+  }
+
   const { data, error } = await admin
     .from("email_delivery_attempts")
     .insert({
@@ -143,7 +162,7 @@ async function logDeliveryAttempt(input: TransactionalEmailInput, result: Transa
       error_message: result.delivered ? null : result.reason,
       related_type: input.relatedType ?? null,
       related_id: input.relatedId ?? null,
-      metadata: input.metadata ?? {},
+      metadata,
       delivered_at: result.delivered ? new Date().toISOString() : null
     })
     .select("id")
@@ -154,4 +173,10 @@ async function logDeliveryAttempt(input: TransactionalEmailInput, result: Transa
   }
 
   return (data as { id: string }).id;
+}
+
+function emailDeliveryTimeoutMs() {
+  const value = Number.parseInt(process.env.EMAIL_DELIVERY_TIMEOUT_MS ?? "15000", 10);
+
+  return Number.isInteger(value) && value >= 1_000 && value <= 60_000 ? value : 15_000;
 }

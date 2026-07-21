@@ -47,6 +47,17 @@ export type PlatformEmailSecrets = {
   smtpPassword: string | null;
 };
 
+export type PlatformEmailTestAttemptView = {
+  attemptedAt: string;
+  deliveredAt: string | null;
+  errorMessage: string | null;
+  id: string;
+  provider: string;
+  providerMessageId: string | null;
+  recipientEmail: string;
+  status: string;
+};
+
 type PlatformEmailSettingsRow = {
   enabled: boolean;
   from_email: string | null;
@@ -68,6 +79,36 @@ export async function getPlatformEmailSettingsView(): Promise<PlatformEmailSetti
   const { row, settingsAvailable } = await getPlatformEmailSettingsState();
 
   return toView(row ?? defaultRow(), settingsAvailable);
+}
+
+export async function getPlatformEmailTestAttempts(): Promise<PlatformEmailTestAttemptView[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("email_delivery_attempts")
+    .select("id, recipient_email, provider, status, error_message, metadata, attempted_at, delivered_at")
+    .is("tenant_id", null)
+    .eq("template_key", "platform_delivery_test")
+    .order("attempted_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const metadata = isRecord(row.metadata) ? row.metadata : {};
+
+    return {
+      attemptedAt: row.attempted_at,
+      deliveredAt: row.delivered_at,
+      errorMessage: row.error_message,
+      id: row.id,
+      provider: row.provider,
+      providerMessageId: typeof metadata.providerMessageId === "string" ? metadata.providerMessageId : null,
+      recipientEmail: row.recipient_email,
+      status: row.status
+    };
+  });
 }
 
 export async function savePlatformEmailSettings(input: {
@@ -303,4 +344,8 @@ function secretKey() {
   }
 
   return createHash("sha256").update(secret).digest();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

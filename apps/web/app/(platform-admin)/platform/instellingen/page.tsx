@@ -1,5 +1,5 @@
 import { savePlatformEmailSettingsAction, sendPlatformEmailTestAction } from "@/lib/email/actions";
-import { getPlatformEmailSettingsView, type EmailProvider } from "@/lib/email/platform-settings";
+import { getPlatformEmailSettingsView, getPlatformEmailTestAttempts, type EmailProvider } from "@/lib/email/platform-settings";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 
 type PageProps = {
@@ -27,7 +27,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
   const test = getParam(params, "test");
-  const settings = isPlatformOwner ? await getPlatformEmailSettingsView() : null;
+  const [settings, testAttempts] = isPlatformOwner ? await Promise.all([getPlatformEmailSettingsView(), getPlatformEmailTestAttempts()]) : [null, []];
 
   if (!isPlatformOwner) {
     return (
@@ -134,13 +134,40 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
 
       <form action={sendPlatformEmailTestAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h2 className="text-lg font-bold text-foreground">Testmail</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Gebruik uitsluitend een gecontroleerde externe inbox. Iedere poging wordt vastgelegd voor delivery-diagnostiek.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
           <Field label="Ontvanger" name="testEmail" defaultValue={context.user.email ?? ""} type="email" />
-          <button className="h-11 rounded-lg border border-border bg-white px-5 text-sm font-semibold text-foreground transition hover:bg-muted" type="submit">
+          <button className="h-11 rounded-lg border border-border bg-white px-5 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60" disabled={!settings?.enabled || !settings.settingsAvailable} type="submit">
             Test versturen
           </button>
         </div>
       </form>
+
+      <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <h2 className="text-lg font-bold text-foreground">Testhistorie</h2>
+        <p className="mt-1 text-sm text-muted-foreground">De laatste tien gecontroleerde platformtests, inclusief providerreferentie en foutdiagnostiek.</p>
+        {testAttempts.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">Nog geen gecontroleerde testmail geregistreerd.</p>
+        ) : (
+          <div className="mt-4 divide-y divide-border overflow-hidden rounded-lg border border-border">
+            {testAttempts.map((attempt) => (
+              <div className="flex flex-wrap items-start justify-between gap-3 bg-white px-4 py-3" key={attempt.id}>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground">{attempt.recipientEmail}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {attempt.provider} - {formatDateTime(attempt.attemptedAt)}
+                    {attempt.providerMessageId ? ` - provider-id ${attempt.providerMessageId}` : ""}
+                  </p>
+                  {attempt.errorMessage ? <p className="mt-1 text-xs font-medium text-danger">{attempt.errorMessage}</p> : null}
+                </div>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${attempt.status === "sent" ? "bg-success/10 text-success" : attempt.status === "failed" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
+                  {attempt.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -187,4 +214,8 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   const value = params[key];
 
   return Array.isArray(value) ? value[0] : value;
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }

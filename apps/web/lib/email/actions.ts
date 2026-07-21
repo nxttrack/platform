@@ -78,7 +78,9 @@ export async function sendPlatformEmailTestAction(formData: FormData) {
     to,
     subject: "NXTTRACK mail test",
     text: "Dit is een testmail vanuit de NXTTRACK platform admin instellingen.",
-    html: "<p>Dit is een testmail vanuit de NXTTRACK platform admin instellingen.</p>"
+    html: "<p>Dit is een testmail vanuit de NXTTRACK platform admin instellingen.</p>",
+    metadata: { kind: "controlled_delivery_test" },
+    templateKey: "platform_delivery_test"
   });
 
   redirect(`${settingsPath}?test=${result.delivered ? "sent" : "failed"}`);
