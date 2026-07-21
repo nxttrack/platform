@@ -20,20 +20,22 @@ check() {
 }
 
 check_caddy_config() {
-  local output=""
+  local unprivileged_output=""
+  local elevated_output=""
 
-  if output=$(caddy validate --config /etc/caddy/Caddyfile 2>&1); then
+  if unprivileged_output=$(caddy validate --config /etc/caddy/Caddyfile 2>&1); then
     echo "[production:host] PASS caddy-config: The active Caddy configuration validates without elevation."
     return
   fi
 
-  if output=$(sudo -n caddy validate --config /etc/caddy/Caddyfile 2>&1); then
+  if elevated_output=$(sudo -n caddy validate --config /etc/caddy/Caddyfile 2>&1); then
     echo "[production:host] PASS caddy-config: The active Caddy configuration validates with read-only elevation."
     return
   fi
 
   echo "[production:host] FAIL caddy-config: The active Caddy configuration could not be validated." >&2
-  printf '%s\n' "$output" | tail -n 8 | sed 's/^/[production:host] DETAIL caddy-config: /' >&2
+  printf '%s\n' "$unprivileged_output" | tail -n 6 | sed 's/^/[production:host] DETAIL caddy-unprivileged: /' >&2
+  printf '%s\n' "$elevated_output" | tail -n 3 | sed 's/^/[production:host] DETAIL caddy-elevated: /' >&2
   failures=$((failures + 1))
 }
 
