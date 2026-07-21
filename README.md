@@ -21,33 +21,35 @@ The repository has moved beyond the original documentation-only phase:
 
 - Phase 0: repo, infrastructure direction, environment strategy, migration approach, and staging deploy flow are documented.
 - Phase 1: the Lovable source is pinned to commit `ced1290b239f61566a542825c9ed8a9229cc3282`; 14 Priority A routes have been captured at four viewports, current UI drift is documented, and the shadcn/Radix direction is locked. Product-owner approval and production-side comparison remain.
-- Phase 2: the Next.js foundation now has exact Lovable OKLCH tokens, repository-owned shadcn configuration, a Radix mobile drawer, pathname-aware shell navigation, restored semantic primitives and direct parent badges/afzwem routes. Authenticated visual comparison remains.
-- Phase 3: Supabase SSR utilities, identity-boundary migration, auth-flow migration, login, invite, forced password change, six-digit reset, trusted server guards, and route-access audits are implemented in code. Staging migration/bootstrap/RLS validation is still pending.
-- Phase 4: core domain model migration, RLS/grants, tenant admin pages, and create flows for programs, stages, resources, groups, sessions, instructor assignments, enrollments, memberships, and capacity basics are implemented in code. Staging migration/RLS validation is still pending.
-- Phase 5: tenant public homepage, program overview, dynamic intake, intake submissions/answers, `intake.received` event, and admin intake inbox are implemented in code. Staging tenant DNS and RLS validation are still pending.
-- Phase 6: waitlist entries, preferences, placement scoring, admin placement panel, slot offer tokens, public accept/decline flow, placement-to-core-domain conversion, and audit trail are implemented in code. Staging e-mail, RLS/advisor validation and end-to-end tests are still pending.
-- Phase 7: parent portal dashboard, children/athletes, current program/stage/group, lessons, lesson details, cancellation policy, catch-up credits, profile basics, parent access links and RLS updates are implemented in code. Staging parent/tenant data and RLS validation are still pending.
-- Phase 8: instructor dashboard, assigned sessions agenda, group roster, attendance registration, student detail, progress notes, internal versus parent-visible note separation, badge action foundation and instructor-scoped RLS are implemented in code. Staging tablet workflow and RLS validation are still pending.
-- Phase 9: structured progress modules/items, 5-level positive scoring, swim progress templates, badge catalog install, parent progress view, badge awards and parent notifications for visible progress/badges are implemented in code. Staging RLS/advisor validation and role-based progress tests are still pending.
-- Phase 10: afzwem readiness, afzwem events, parent invite/status, result registration, certificate records and private parent diploma vault are implemented in code. Staging RLS/advisor validation and end-to-end afzwem tests are still pending.
-- Phase 11: payment plans, subscriptions, manual payment status, admin payment overview, parent payment view and due/overdue billing events are implemented in code. Staging RLS/advisor validation and manual billing end-to-end tests are still pending.
-- Phase 12: admin operations dashboard, messages, tasks, documents, basic reports, report snapshots, role-based visibility and notification hooks are implemented in code. Staging RLS/advisor validation and role-based operation tests are still pending.
+- Phase 2: the Next.js foundation has exact Lovable OKLCH tokens, repository-owned shadcn configuration, Radix interaction primitives, pathname-aware shells and restored parent routes. Authenticated engineering comparison is complete; product-owner approval remains.
+- Phase 3: Supabase SSR, identity/auth flows, trusted server guards and route audits are implemented; live migration, bootstrap and four-role RLS validation pass on staging.
+- Phase 4: the core domain, RLS/grants and tenant-admin create flows are implemented and live-migration/RLS validated on staging.
+- Phase 5: tenant public site, program overview, dynamic intake and admin inbox are implemented; tenant DNS, seeded intake and RLS behavior pass on staging.
+- Phase 6: waitlist, placement scoring, slot offers, accept/decline conversion and audit trail are implemented; staging operational and role checks pass. External production mail delivery remains Sprint 3 scope.
+- Phase 7: parent dashboard, lessons, cancellation, catch-up and profile flows are implemented; controlled parent data and role isolation pass on staging.
+- Phase 8: instructor dashboard, roster, attendance, dossier, notes and badge foundation are implemented; staging tablet-oriented routes and instructor isolation pass.
+- Phase 9: structured progress, positive scoring, badges and notifications are implemented; seeded progress/badge visibility and role checks pass on staging.
+- Phase 10: afzwem readiness/events, invitations, results, certificates and private diploma vault are implemented and visible in the staging operational flow.
+- Phase 11: subscriptions, manual payments and billing events are implemented and staging-visible; full user-driven mutation coverage remains Sprint 4 scope.
+- Phase 12: operations dashboard, messages, tasks, documents and reports are implemented and role-visible on staging; deeper mutation coverage remains Sprint 4 scope.
 - Phase 13: hardening automation, RLS coverage audit, service-only auth deny policies, Playwright smoke/visual/performance tests, deploy hardening gates, enriched health smoke, runtime asset/MIME smoke, authenticated Playwright workflows and RLS role smoke scaffolding are implemented in code.
 - Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up.
 - Phase 15: staging truth and security validation is implemented as a strict gate. It runs migrations, Supabase advisors, required RLS role checks, live staging health, live Playwright and strict launch confirmations against `https://staging.nxttrack.nl`.
 - Phase 16: end-to-end operational flow validation is implemented as a repeatable staging runner. It seeds a demo swim school, runs intake to placement, attendance, progress, badge, billing, afzwem and diploma records, then verifies admin, instructor and parent dashboards.
-- Phase 17: transactional communication, delivery diagnostics, private document storage and diploma-file access are implemented in code and await current staging validation.
-- Phase 18: planning conflict detection, instructor availability, capacity-aware catch-up requests and approval are implemented in code and await current staging validation.
-- Phase 19: parent/instructor communication, task, document and tablet-oriented lesson-depth improvements are implemented in code and await current staging validation.
+- Phase 17: transactional communication, delivery diagnostics, private document storage and diploma-file access are implemented and staging-visible; external mail delivery remains Sprint 3 scope.
+- Phase 18: planning conflict detection, instructor availability, capacity-aware catch-up requests and approval are implemented and staging-visible.
+- Phase 19: parent/instructor communication, tasks, documents and tablet-oriented lesson depth are implemented and staging-visible; full mutation and usability coverage remains Sprint 4 scope.
 - Phase 20: billing-provider configuration, payment-session/event, invoice/export and subscription-lifecycle boundaries are implemented without activating a live payment provider.
 
-The Phase 16 runner proves seeded integration state and authenticated dashboard visibility; it does not yet replace a complete browser-driven mutation test of the full journey. Automatic payment providers, Smart Flow/AI and production promotion must wait until the repository-truth and live-staging gates are green.
+The Phase 16 runner proves seeded integration state and authenticated dashboard visibility; it does not yet replace the complete browser-driven mutation suite planned for Sprint 4. Automatic payment providers, Smart Flow/AI and production promotion follow the dependencies in the delivery sprint plan.
 
 ## Canon and planning docs
 
 - [NXTTRACK Canon](docs/NXTTRACK_CANON.md)
 - [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
 - [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)
+- [Delivery Sprints](docs/DELIVERY_SPRINTS.md)
+- [Active Sprint 1](docs/SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md)
 
 ## Phase docs
 

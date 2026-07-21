@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-21
 
-Status: automated SHA-bound staging capture and the first engineering side-by-side review are complete. Product-owner approval remains open because several production flows intentionally differ materially from the pinned Lovable composition.
+Status: automated SHA-bound staging capture and two engineering reviews are complete. Product-owner approval remains open because several production flows intentionally differ materially from the pinned Lovable composition.
 
 ## Goal
 
@@ -18,7 +18,7 @@ The staging deployment now:
 4. resolves the seeded instructor group and student identifiers;
 5. captures all 56 Priority A production screenshots;
 6. records dimensions, byte size, SHA-256 and browser/runtime failures in `capture.json`;
-7. uploads the screenshots and manifest as a 90-day GitHub Actions artifact;
+7. uploads the screenshots and manifest as a 14-day GitHub Actions review artifact;
 8. completes Phase 15 security validation and the strict launch gate.
 
 Phase 16 deliberately precedes Phase 15 on a first staging release: Phase 15 requires the controlled role accounts that Phase 16 creates or resets. Visual capture precedes the strict launch gate because `LOVABLE_VISUAL_CHECK_CONFIRMED` may only be set after the artifact exists and has been reviewed.
@@ -58,7 +58,7 @@ artifacts/production-baseline/<release-sha>/
 
 Images remain gitignored. The GitHub artifact is the review handoff; approved selected goldens should only be committed after explicit product-owner approval.
 
-If GitHub artifact storage is temporarily unavailable, the workflow emits compact per-route contact sheets to the job log. This fallback is intended only for immediate visual review; it does not replace the SHA-bound 90-day artifact once storage becomes available.
+If GitHub artifact storage is temporarily unavailable, the workflow emits compact per-route contact sheets to the job log. This fallback is intended only for immediate visual review; it does not replace the SHA-bound 14-day artifact once storage becomes available.
 
 ## Remaining Approval
 
@@ -93,7 +93,7 @@ This engineering review is deliberately not recorded as product-owner approval, 
 
 ## Canon Parity Implementation Pass
 
-Implemented after the first live review and awaiting a new SHA-bound staging capture:
+Implemented after the first live review and captured on release `892da450a1f475944e4bc610fe12d572630bdbc1`:
 
 - Tenant public routes now share a sticky branded header, desktop navigation, a Radix Sheet mobile menu, intake/login calls to action and a complete public footer.
 - Tenant home now follows the reference hierarchy more closely: trust marker, outcome-led hero, program availability panel, three-step journey and richer program cards.
@@ -102,4 +102,15 @@ Implemented after the first live review and awaiting a new SHA-bound staging cap
 - The instructor dossier visual capture now opens the assessment tab so it compares the same workflow state as the pinned reference.
 - Admin planning now presents the real day/week plan before creation and availability controls. The richer capacity, conflict, catch-up and placement workflows remain the accepted production information architecture pending product-owner sign-off.
 
-Known remaining visual work is limited to approved photography, final public copy, seeded data density and product-owner acceptance of the richer admin composition. The visual confirmation gate remains unset until the new staging artifact is reviewed.
+## Latest Release-Candidate Engineering Review
+
+Reviewed staging release: `892da450a1f475944e4bc610fe12d572630bdbc1` on 2026-07-21.
+
+- All 56 screenshots completed for the exact SHA exposed by live health.
+- Tenant public shell, parent progress, instructor quiet-day state, instructor assessment capture and admin information hierarchy render coherently across all four viewports.
+- Marketing placeholder instructions were replaced by intentional NXTTRACK editorial panels; approved photography is now a product choice rather than a broken-state blocker.
+- Direct full-page review of marketing home and swim schools found no clipping, blank content or hierarchy regression.
+- Phase 16, Supabase Advisors, four-role RLS and 42 live Playwright checks passed after capture.
+- GitHub artifact upload still hit delayed storage-quota recalculation; compact contact sheets were emitted successfully to the workflow log.
+
+Known remaining visual work is limited to the product decision on approved photography/final copy, seeded data density and acceptance of the richer data-backed parent/admin composition. The visual confirmation gate remains unset until the product-owner decision is recorded in [Sprint 1](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md).

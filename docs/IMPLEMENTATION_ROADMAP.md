@@ -1,8 +1,8 @@
 # NXTTRACK Implementation Roadmap
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
-Status: active dependency-based roadmap. Phase 3 through Phase 20 implementation exists; Phase 0/1 are locally evidenced and the Phase 2 design-system, shell, Priority A composition and proven-interaction foundations are implemented. Authenticated visual approval remains open.
+Status: historical dependency-based phase roadmap. Phase 0 through Phase 20 implementation is present and live staging evidence now covers migrations, operational seed state, role isolation, browser checks, visual capture and rollback. Remaining execution is managed through [Delivery Sprints](DELIVERY_SPRINTS.md); production remains unapproved.
 
 ## Roadmap Principles
 
@@ -15,22 +15,17 @@ Status: active dependency-based roadmap. Phase 3 through Phase 20 implementation
 - Manual payments come before Mollie/iDEAL automation.
 - SendGrid SMTP comes before advanced notification channels.
 
-## Current Execution Focus - Phase 2 Design-System And Shell Recovery
+## Current Execution Focus - Sprint 1 Release-Candidate Evidence
 
-The original build phases remain useful history. Phase 1 pinned the visual reference; the current implementation gate is [Phase 2 - Design System And Interactive Shell Foundation](PHASE_2_APP_SCAFFOLD.md).
+The original build phases remain the architecture and dependency history. Active work has moved to [Sprint 1 - Release Candidate Evidence](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md).
 
 Immediate order:
 
-1. Restore exact tokens and shadcn/Radix ownership.
-2. Restore path-aware desktop and accessible mobile shell behavior.
-3. Restore missing semantic primitives and canon routes.
-4. Restore route-group marketing chrome and Priority A swim-school composition.
-5. Restore the remaining canonical marketing product, conversion and information compositions.
-6. Add typed accessible charts for approved operational metrics without importing Lovable mock series.
-7. Standardize core form controls and tabular reports while preserving server actions.
-8. Add Radix tabs and confirmation dialogs where workflow evidence supports them. Completed for the instructor dossier and parent lesson cancellation.
-9. Capture authenticated production routes at the Priority A viewports. Automation is implemented; first live artifact and visual approval remain.
-10. Add tooltips only where visible labels cannot carry the necessary meaning.
+1. Record product-owner acceptance or required fixes for the 56 SHA-bound visual captures.
+2. Record provider-side Supabase backup, Auth/Storage and PITR policy.
+3. Set the two remaining staging confirmations only from those completed records.
+4. Rerun the strict staging gate to `0 failure(s), 0 warning(s)`.
+5. Name the accepted release-candidate SHA and begin Sprint 2 production foundation work.
 
 ## Phase 0 - Repository And Infrastructure Foundation
 

@@ -298,7 +298,7 @@ jobs:
           name: nxttrack-${{ env.TARGET }}-${{ github.sha }}-release-evidence
           path: ${{ env.RELEASE }}/artifacts/release-evidence.json
           if-no-files-found: error
-          retention-days: 90
+          retention-days: ${{ inputs.target == 'production' && 90 || 14 }}
 
       - name: Cleanup old releases
         run: |
@@ -395,7 +395,7 @@ jobs:
           name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
           path: artifacts/production-baseline/${{ github.sha }}
           if-no-files-found: warn
-          retention-days: 90
+          retention-days: 14
 
       - name: Emit compact visual review fallback
         if: steps.upload-priority-a-visuals.outcome == 'failure'
@@ -414,4 +414,4 @@ jobs:
           name: nxttrack-staging-${{ github.sha }}-release-evidence
           path: artifacts/release-evidence.json
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 14

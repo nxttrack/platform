@@ -1,6 +1,6 @@
 # Phase 22 - Production Readiness And Commercial Launch
 
-Status: launch-readiness foundation in progress. Staging is technically healthy; production remains blocked on explicit product-owner approval and provider-side backup confirmation.
+Status: launch-readiness foundation in progress under [Sprint 1](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md). Staging is technically healthy; production remains blocked on explicit product-owner approval and provider-side backup confirmation.
 
 ## Completed Evidence
 
@@ -14,6 +14,8 @@ Status: launch-readiness foundation in progress. Staging is technically healthy;
 ## Logical Backup/Restore Rehearsal
 
 The manual `Staging backup restore rehearsal` workflow reads the staging `DATABASE_URL`, creates a PostgreSQL custom-format dump of the application-owned `public` and `app_private` schemas, and restores it into an isolated disposable PostgreSQL 17 container.
+
+Latest successful evidence: candidate `892da450a1f475944e4bc610fe12d572630bdbc1` restored all 63 public tables and 65 rows with exact source/target count parity in <https://github.com/nxttrack/platform/actions/runs/29818495140>.
 
 The rehearsal:
 
@@ -37,4 +39,3 @@ This proves that an application-level logical export is readable and restorable.
 ## Production Boundary
 
 No production deployment, DNS change, data copy or launch approval is part of this phase pass. A green staging gate is necessary evidence, not automatic authorization to promote to production.
-
