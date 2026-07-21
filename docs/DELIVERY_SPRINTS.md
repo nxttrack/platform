@@ -89,6 +89,8 @@ Definition of done:
 - Synthetic failures generate alerts received by the named owner.
 - On-call/support ownership and incident steps are usable without repository archaeology.
 
+Detailed execution: [Sprint 3 - Communications And Observability](SPRINT_03_COMMUNICATIONS_OBSERVABILITY.md).
+
 ## Sprint 4 - Full-Journey Quality And Security
 
 Goal: prove user-driven mutations rather than only seeded state and dashboard visibility.
