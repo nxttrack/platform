@@ -73,6 +73,8 @@ The audit checks:
 
 The schedule only becomes active when `MONITORING_ENABLED=true`. It checks database-aware health, sampled 5xx responses, static asset MIME and aggregate mail failures/skips/stuck attempts. Alert payloads contain operational metadata only. Activation and response are defined in [Operations And Incident Runbook](OPERATIONS_INCIDENT_RUNBOOK.md).
 
+Probe evidence: [GitHub Actions run 29871127385](https://github.com/nxttrack/platform/actions/runs/29871127385), executed on commit `747e374f80bab70aa61cc4336bb489860cf0e7f4` on 21 July 2026. All 16 checks passed without alert delivery: live application/database health, commit metadata, four public routes, static asset status/MIME, read-only mail diagnostics, and zero failed, skipped or stuck attempts.
+
 ## Remaining Sprint Work
 
 - [x] Run and record the non-sending baseline audit.
@@ -80,6 +82,7 @@ The schedule only becomes active when `MONITORING_ENABLED=true`. It checks datab
 - [ ] Verify sender/domain ownership, SPF, DKIM and DMARC.
 - [ ] Deliver invite, password-reset and operational test mail to a controlled external inbox.
 - [ ] Prove bounce/failure diagnostics and retry behavior.
+- [x] Prove the dormant operational monitor with a non-alerting 16-check staging probe.
 - [ ] Configure health/5xx/database/asset/mail alert destinations.
 - [ ] Run a synthetic alert drill received by the named incident owner.
 - [ ] Record support ownership, escalation times and log retention.
