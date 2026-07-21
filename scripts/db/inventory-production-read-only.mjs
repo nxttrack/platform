@@ -55,14 +55,13 @@ try {
     await client.query("select to_regclass('supabase_migrations.schema_migrations') is not null")
   );
 
-  if (migrationTablePresent !== true) {
-    throw new Error("supabase_migrations.schema_migrations is missing.");
-  }
-
-  const remoteMigrationResult = await client.query(
-    "select version::text as version from supabase_migrations.schema_migrations order by version"
-  );
-  const remoteVersions = remoteMigrationResult.rows.map((row) => row.version);
+  const remoteVersions = migrationTablePresent
+    ? (
+        await client.query(
+          "select version::text as version from supabase_migrations.schema_migrations order by version"
+        )
+      ).rows.map((row) => row.version)
+    : [];
   const localVersions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
     .map((name) => name.match(/^(\d+)_.*\.sql$/)?.[1])
     .filter(Boolean)
@@ -83,6 +82,7 @@ try {
     `[production:db-inventory] public tables=${rls.public_table_count}; RLS enabled=${rls.rls_enabled_count}; FORCE RLS=${rls.force_rls_count}.`
   );
   console.log(`[production:db-inventory] auth users=${authUserCount}; storage objects=${storageObjectCount}.`);
+  console.log(`[production:db-inventory] migration history present=${migrationTablePresent}.`);
   console.log(
     `[production:db-inventory] migrations repo=${localVersions.length}; remote=${remoteVersions.length}; missing_remote=${missingRemote.length}; unexpected_remote=${unexpectedRemote.length}.`
   );
@@ -92,6 +92,7 @@ try {
     extensionCount,
     forceRlsCount: rls.force_rls_count,
     localMigrationCount: localVersions.length,
+    migrationHistoryPresent,
     missingRemoteCount: missingRemote.length,
     publicTableCount: rls.public_table_count,
     remoteMigrationCount: remoteVersions.length,
@@ -176,6 +177,7 @@ function writeSummary(inventory) {
     `- Auth users: ${inventory.authUserCount}`,
     `- Storage objects: ${inventory.storageObjectCount}`,
     `- Repository migrations: ${inventory.localMigrationCount}`,
+    `- Migration history present: ${inventory.migrationHistoryPresent}`,
     `- Remote migrations: ${inventory.remoteMigrationCount}`,
     `- Missing remotely: ${inventory.missingRemoteCount}`,
     `- Unexpected remotely: ${inventory.unexpectedRemoteCount}`,
