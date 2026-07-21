@@ -15,6 +15,7 @@
     "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
     "db:rls-role-smoke": "node scripts/db/rls-role-smoke.mjs",
     "db:advisors": "node scripts/db/supabase-advisors.mjs",
+    "db:inventory-production-read-only": "node scripts/db/inventory-production-read-only.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:package-standalone-assets": "node scripts/deploy/package-standalone-assets.mjs",
     "design:audit": "node scripts/design/audit-lovable-baseline.mjs",
@@ -38,6 +39,7 @@
     "node": ">=20.19.0"
   },
   "devDependencies": {
+    "pg": "^8.22.0",
     "supabase": "^2.109.1"
   }
 }
