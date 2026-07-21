@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: first browser-driven mutation increment in progress.
+Status: first browser-driven mutation increment complete; slot-offer edge cases next.
 
 ## Goal
 
@@ -16,7 +16,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 
 ## Execution Increments
 
-1. Public intake to tenant-admin waitlist and placement score through browser forms.
+1. Complete - public intake to tenant-admin waitlist and placement score through browser forms.
 2. Slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Instructor attendance, progress, note, badge and session completion mutations.
 4. Parent cancellation, catch-up, profile, notification and graduation responses.
@@ -39,6 +39,13 @@ The first mutation test:
 - sends no mail and uses no direct database write to produce the tested business outcome.
 
 Before each run, a staging-only cleanup removes older records carrying the exact `sprint4-browser:` marker. Cleanup is test-fixture hygiene; every asserted business mutation in the journey itself remains browser-driven.
+
+## First Increment Evidence
+
+- Canonical commit: `2d6b2c4ff665e5517264da24904ce717f906890b`.
+- CI run `29873176135`: all repository, build, migration and browser-smoke checks passed.
+- Staging deploy run `29873356009`: deploy, migrations, health, runtime smoke, Phase 16, bounded fixture cleanup, the Sprint 4 browser mutation, visual capture, Supabase advisors, four-role RLS smoke and 42 general Playwright checks passed.
+- The strict launch gate reported zero failures and exactly two already-known human warnings: Lovable visual comparison and managed Supabase backups/restore policy.
 
 ## Definition Of Done
 
