@@ -79,6 +79,7 @@ try {
             }
 
             await settlePage(page);
+            await assertExpectedSurface(page, route);
             await page.screenshot({ path: imagePath, fullPage: true, animations: "disabled" });
 
             const image = readFileSync(imagePath);
@@ -218,6 +219,21 @@ async function settlePage(page) {
   });
   await page.addStyleTag({ content: "*, *::before, *::after { caret-color: transparent !important; }" });
   await page.waitForTimeout(250);
+}
+
+async function assertExpectedSurface(page, route) {
+  if (route.surface !== "tenant-public") return;
+
+  const body = await page.locator("body").innerText();
+  const expectedProgram = state.expected?.programName;
+
+  if (body.includes("Open deze pagina via een tenant-subdomain") || body.includes("NXTTRACK platform")) {
+    throw new Error(`tenant host resolved to a platform or unavailable page for ${route.productionRoute}`);
+  }
+
+  if (!expectedProgram || !body.includes(expectedProgram)) {
+    throw new Error(`tenant page ${route.productionRoute} does not contain seeded program '${expectedProgram ?? "missing"}'`);
+  }
 }
 
 async function readHealth(baseUrl) {
