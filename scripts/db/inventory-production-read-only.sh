@@ -6,18 +6,27 @@ if [[ -z "${DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
-if ! command -v psql >/dev/null 2>&1; then
-  echo "[production:db-inventory] psql is required on the audit runner." >&2
-  exit 1
-fi
-
 export PGDATABASE="$DATABASE_URL"
 export PGCONNECT_TIMEOUT="${PGCONNECT_TIMEOUT:-10}"
 export PGOPTIONS="-c default_transaction_read_only=on -c statement_timeout=15000"
 unset DATABASE_URL
 
+psql_command=(psql)
+
+if ! command -v psql >/dev/null 2>&1; then
+  if ! command -v docker >/dev/null 2>&1; then
+    echo "[production:db-inventory] psql or Docker is required on the audit runner." >&2
+    exit 1
+  fi
+
+  postgres_image="${PRODUCTION_INVENTORY_POSTGRES_IMAGE:-postgres:17-alpine}"
+  echo "[production:db-inventory] Local psql is unavailable; using ${postgres_image}."
+  docker pull "$postgres_image" >/dev/null
+  psql_command=(docker run --rm --network host -e PGDATABASE -e PGCONNECT_TIMEOUT -e PGOPTIONS "$postgres_image" psql)
+fi
+
 query() {
-  psql --no-psqlrc --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$1"
+  "${psql_command[@]}" --no-psqlrc --no-align --tuples-only --set ON_ERROR_STOP=1 --command "$1"
 }
 
 read_only=$(query "show default_transaction_read_only;")
