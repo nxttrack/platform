@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: first browser-driven mutation increment complete; slot-offer edge cases next.
+Status: first browser-driven mutation increment complete; slot-offer edge cases in progress.
 
 ## Goal
 
@@ -46,6 +46,20 @@ Before each run, a staging-only cleanup removes older records carrying the exact
 - CI run `29873176135`: all repository, build, migration and browser-smoke checks passed.
 - Staging deploy run `29873356009`: deploy, migrations, health, runtime smoke, Phase 16, bounded fixture cleanup, the Sprint 4 browser mutation, visual capture, Supabase advisors, four-role RLS smoke and 42 general Playwright checks passed.
 - The strict launch gate reported zero failures and exactly two already-known human warnings: Lovable visual comparison and managed Supabase backups/restore policy.
+
+## Second Increment Contract
+
+The next browser journey extends the first intake mutation and must prove:
+
+- offer creation by a signed-in tenant admin through the rendered group selector;
+- public acceptance and the resulting confirmation;
+- safe sequential reuse of an already accepted token without a second placement;
+- public refusal of a separate browser-created offer;
+- an expired offer rendered without response controls;
+- an open offer rejected at response time when its group has become full;
+- no real e-mail is sent: browser-created offers record the configured staging skip, while edge fixtures are inserted directly with `delivery_status=skipped`.
+
+The expired/full preconditions use a dedicated one-seat group, participant and offer records. They are exact-marker staging fixtures; the response behavior itself remains browser-driven and cleanup removes prior accepted participants, mail attempts and offer dependencies before reseeding.
 
 ## Definition Of Done
 

@@ -353,6 +353,7 @@ jobs:
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
       TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
       PHASE16_STATE_PATH: artifacts/phase16-state.json
+      SPRINT4_EDGE_STATE_PATH: artifacts/sprint4-edge-state.json
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
@@ -411,6 +412,9 @@ jobs:
 
       - name: Prepare Sprint 4 browser-mutation fixture
         run: pnpm run sprint4:prepare-mutations
+
+      - name: Prepare Sprint 4 offer-edge fixtures
+        run: pnpm run sprint4:prepare-offer-edges
 
       - name: Sprint 4 intake-to-placement browser mutation
         env:
