@@ -1,0 +1,40 @@
+name: Staging backup restore rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_RESTORE to run the isolated staging restore rehearsal
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-backup-restore
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    if: github.ref_name == 'main'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EXPECTED_PUBLIC_TABLES: "63"
+      POSTGRES_REHEARSAL_IMAGE: postgres:17
+
+    steps:
+      - name: Confirm isolated restore rehearsal
+        env:
+          RESTORE_CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$RESTORE_CONFIRMATION" = "REHEARSE_RESTORE"
+
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+
+      - name: Dump, restore and compare staging application data
+        run: scripts/db/rehearse-logical-restore.sh
+

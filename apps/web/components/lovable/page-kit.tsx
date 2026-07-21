@@ -1,4 +1,4 @@
-import { ArrowRight, Camera, CheckCircle2, ImageIcon } from "lucide-react";
+import { ArrowRight, CheckCircle2, Sparkles, Waves } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
@@ -141,25 +141,53 @@ export function Photo({
   height?: number;
   priority?: boolean;
 }) {
+  const sceneLabel = label.replace(/^foto:\s*/i, "");
+
   if (src) {
-    return <Image alt={alt || label} className={`${ratio} ${className ?? ""} w-full rounded-2xl object-cover shadow-sm`} height={height} priority={priority} src={src} width={width} />;
+    return <Image alt={alt || sceneLabel} className={`${ratio} ${className ?? ""} w-full rounded-2xl object-cover shadow-sm`} height={height} priority={priority} src={src} width={width} />;
   }
 
+  const sceneTone = getSceneTone(sceneLabel);
+
   return (
-    <div className={`relative ${ratio} ${className ?? ""} w-full overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-sm`}>
-      <div className="absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.08)_1px,transparent_0)] [background-size:14px_14px]" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-5 text-center">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#1D4ED8] shadow-sm ring-1 ring-slate-200">
-          <ImageIcon className="h-5 w-5" />
-        </div>
-        <p className="max-w-[80%] text-xs font-semibold text-slate-700">{label}</p>
-        {hint ? <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{hint}</p> : null}
-        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">
-          <Camera className="h-3 w-3" /> plaats hier je foto
-        </span>
+    <div
+      aria-label={alt || sceneLabel}
+      className={`relative ${ratio} ${className ?? ""} w-full overflow-hidden rounded-2xl border border-white/60 bg-gradient-to-br ${sceneTone} shadow-sm`}
+      role="img"
+    >
+      <div className="absolute -right-16 -top-16 h-52 w-52 rounded-full bg-white/30 blur-2xl" />
+      <div className="absolute -bottom-20 -left-16 h-64 w-64 rounded-full border-[28px] border-white/20" />
+      <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.65)_1px,transparent_0)] [background-size:18px_18px]" />
+      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-slate-950/45 to-transparent" />
+      <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/90 text-[#1D4ED8] shadow-lg ring-1 ring-white/80 backdrop-blur">
+        <Waves className="h-5 w-5" />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-6">
+        <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+          <Sparkles className="h-3 w-3" /> NXTTRACK in de praktijk
+        </p>
+        <p className="mt-2 max-w-sm text-base font-bold leading-snug drop-shadow-sm md:text-lg">{sceneLabel}</p>
       </div>
     </div>
   );
+}
+
+function getSceneTone(label: string) {
+  const normalized = label.toLowerCase();
+
+  if (normalized.includes("ouder") || normalized.includes("app")) {
+    return "from-cyan-500 via-sky-600 to-blue-900";
+  }
+
+  if (normalized.includes("instructeur") || normalized.includes("trainer")) {
+    return "from-indigo-500 via-blue-700 to-slate-950";
+  }
+
+  if (normalized.includes("diploma") || normalized.includes("badge")) {
+    return "from-amber-400 via-orange-500 to-rose-700";
+  }
+
+  return "from-sky-400 via-blue-600 to-indigo-950";
 }
 
 export const ImagePlaceholder = Photo;

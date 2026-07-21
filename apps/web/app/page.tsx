@@ -13,13 +13,13 @@ const items = [
   },
   {
     icon: Layers,
-    title: "Lovable visuele lijn",
-    description: "De interface blijft afgestemd op de Lovable-baseline, met NXTTRACK als productlaag."
+    title: "Eén herkenbare ervaring",
+    description: "Van eerste aanmelding tot diploma werkt iedereen in dezelfde heldere productervaring."
   },
   {
     icon: ShieldCheck,
-    title: "Veilige staging-basis",
-    description: "Auth, rollen, RLS-checks en staging-gates blijven expliciet onderdeel van review."
+    title: "Veilig vanaf de basis",
+    description: "Duidelijke rollen, afgeschermde gegevens en controleerbare processen beschermen iedere organisatie."
   }
 ];
 
@@ -39,19 +39,19 @@ export default async function HomePage() {
   return (
     <main>
       <PageHero
-        kicker="Staging platform"
+        kicker="Platform voor zwemscholen"
         title="NXTTRACK platform"
-        sub="De staging-MVP bundelt de zwemschoolreis van publieke intake tot backoffice, portaal, instructeurs en voortgang."
+        sub="Eén omgeving voor de volledige zwemschoolreis: van publieke intake en planning tot ouderportaal, instructeurs en zichtbare voortgang."
         primary={{ href: "/nxttrack", label: "Bekijk NXTTRACK" }}
         secondary={{ href: "/admin", label: "Open backoffice" }}
       />
-      <PageSection kicker="Status" title="Waar deze omgeving voor bedoeld is">
+      <PageSection kicker="Samenhang" title="Alles rondom de zwemles verbonden">
         <FeatureGrid items={items} />
         <div className="mx-auto mt-8 max-w-3xl rounded-3xl border border-border bg-card p-5 shadow-soft">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-foreground">Health endpoint</p>
-              <p className="text-sm text-muted-foreground">Beschikbaar voor staging smoke checks.</p>
+              <p className="text-sm font-semibold text-foreground">Platformstatus</p>
+              <p className="text-sm text-muted-foreground">Bekijk de actuele beschikbaarheid van deze omgeving.</p>
             </div>
             <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-glow" href="/api/health">
               /api/health <ArrowRight className="h-4 w-4" />
@@ -59,7 +59,7 @@ export default async function HomePage() {
           </div>
         </div>
       </PageSection>
-      <FinalCTA />
+      <FinalCTA variant="marketing" />
     </main>
   );
 }

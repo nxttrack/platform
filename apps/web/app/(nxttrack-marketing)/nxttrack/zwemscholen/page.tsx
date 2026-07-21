@@ -37,7 +37,7 @@ export default function SwimSchoolsPage() {
         visual={
           <>
             <HeroVisual caption="Live · 24 lessen vandaag">
-              <Photo label="Kinderen tijdens de zwemles" hint="Lovable fotografie" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
+              <Photo label="Kinderen tijdens de zwemles" hint="Persoonlijke begeleiding" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
             </HeroVisual>
             <FloatCard className="absolute -bottom-6 -left-4 hidden w-[230px] sm:block">
               <p className="text-[10px] font-semibold uppercase text-slate-500">Bezetting vandaag</p>

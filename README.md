@@ -2,7 +2,7 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: Phase 2 design-system and interactive-shell recovery on top of the Phase 0 repository-truth and Phase 1 Lovable baselines. Phase 3 through Phase 20 have implementation code, but live staging acceptance, full UI-driven workflow proof, production visual comparison, backup/restore proof and rollback rehearsal remain release gates. Production is not approved.
+Current working mode: Phase 22 launch-readiness foundation on top of the completed repository, canon, staging and operational-flow passes. Live staging now proves migrations, role isolation, browser workflows, SHA-bound visual capture and runtime rollback. Product-owner visual approval, provider-side Supabase backup confirmation and production authorization remain explicit release gates. Production is not approved.
 
 ## Source of truth
 
@@ -73,6 +73,7 @@ The Phase 16 runner proves seeded integration state and authenticated dashboard 
 - [Phase 18 - Planning, Capacity And Catch-Up](docs/PHASE_18_PLANNING_CAPACITY_CATCHUP.md)
 - [Phase 19 - Parent And Instructor Experience](docs/PHASE_19_PARENT_INSTRUCTOR_EXPERIENCE_DEPTH.md)
 - [Phase 20 - Billing Automation Boundary](docs/PHASE_20_BILLING_AUTOMATION_BOUNDARY.md)
+- [Phase 22 - Production Readiness](docs/PHASE_22_PRODUCTION_READINESS.md)
 
 ## Operational prep docs
 

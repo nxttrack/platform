@@ -369,7 +369,6 @@ function Moments() {
         </div>
         <Photo label="Foto: groep kinderen in bad" hint="1200x1500" ratio="aspect-[4/5]" />
       </div>
-      <p className="mt-6 text-center text-xs text-slate-500">Tip: gebruik warme, natuurlijke beelden — geen stockfoto's.</p>
     </Section>
   );
 }
