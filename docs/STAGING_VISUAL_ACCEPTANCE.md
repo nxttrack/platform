@@ -58,6 +58,8 @@ artifacts/production-baseline/<release-sha>/
 
 Images remain gitignored. The GitHub artifact is the review handoff; approved selected goldens should only be committed after explicit product-owner approval.
 
+If GitHub artifact storage is temporarily unavailable, the workflow emits compact per-route contact sheets to the job log. This fallback is intended only for immediate visual review; it does not replace the SHA-bound 90-day artifact once storage becomes available.
+
 ## Remaining Approval
 
 - Download the Lovable and staging artifacts.

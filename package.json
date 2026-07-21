@@ -20,6 +20,7 @@
     "design:audit": "node scripts/design/audit-lovable-baseline.mjs",
     "design:capture-lovable": "pnpm --filter @nxttrack/web exec node scripts/capture-lovable-baseline.mjs",
     "design:capture-production": "pnpm --filter @nxttrack/web exec node scripts/capture-production-baseline.mjs",
+    "design:log-visual-review": "pnpm --filter @nxttrack/web exec node scripts/log-production-visual-review.mjs",
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
     "release:assert-source": "node scripts/release/assert-release-source.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",

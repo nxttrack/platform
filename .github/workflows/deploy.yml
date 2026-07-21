@@ -386,6 +386,7 @@ jobs:
 
       - name: Upload Priority A staging visual evidence
         if: always()
+        id: upload-priority-a-visuals
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -393,6 +394,10 @@ jobs:
           path: artifacts/production-baseline/${{ github.sha }}
           if-no-files-found: warn
           retention-days: 90
+
+      - name: Emit compact visual review fallback
+        if: steps.upload-priority-a-visuals.outcome == 'failure'
+        run: pnpm run design:log-visual-review
 
       - name: Phase 15 staging truth and security validation
         run: pnpm run phase15:staging
