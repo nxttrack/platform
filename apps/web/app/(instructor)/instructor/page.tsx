@@ -1,4 +1,4 @@
-import { ArrowRight, Bell, CalendarCheck, CheckCircle2, ListChecks, MessageSquare, UsersRound } from "lucide-react";
+import { ArrowRight, Bell, CalendarCheck, CalendarDays, CheckCircle2, Clock3, ListChecks, MessageSquare, Sparkles, UsersRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { completeSessionAction } from "@/lib/domain/instructor-actions";
@@ -19,6 +19,7 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const attendanceBySession = groupBy(data.attendance, "session_id");
   const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
+  const nextSessions = data.sessions.filter((session) => new Date(session.starts_at).getTime() > Date.now()).slice(0, 3);
 
   return (
     <div className="space-y-6">
@@ -58,7 +59,53 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
       ) : null}
 
       {todaySessions.length === 0 ? (
-        <EmptyState>Geen toegewezen lessen vandaag.</EmptyState>
+        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+          <div className="grid gap-5 bg-gradient-to-br from-aqua-soft via-card to-primary/10 p-5 md:grid-cols-[1fr_auto] md:items-center md:p-6">
+            <div className="flex gap-4">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary"><Sparkles className="h-6 w-6" /></span>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Rustige lesdag</p>
+                <h2 className="mt-1 text-2xl font-bold text-foreground">Geen lessen toegewezen voor vandaag</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">Gebruik dit moment om komende groepen te bekijken, taken af te ronden of ouderupdates voor te bereiden.</p>
+              </div>
+            </div>
+            <Link className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow" href="/instructor/agenda">
+              Open volledige agenda <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <div className="grid gap-4 p-5 lg:grid-cols-[1.25fr_0.75fr]">
+            <div>
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h3 className="font-bold text-foreground">Eerstvolgende lessen</h3>
+                <StatusPill tone={nextSessions.length > 0 ? "info" : "neutral"}>{nextSessions.length} gepland</StatusPill>
+              </div>
+              <div className="grid gap-2">
+                {nextSessions.length === 0 ? <EmptyState>Nog geen volgende les in de komende 30 dagen.</EmptyState> : null}
+                {nextSessions.map((session) => {
+                  const group = groupById.get(session.group_id);
+
+                  return (
+                    <Link className="flex items-center justify-between gap-3 rounded-xl border border-border bg-background/70 px-4 py-3 transition hover:border-primary/30 hover:bg-primary/5" href={`/instructor/group/${session.group_id}?session=${session.id}`} key={session.id}>
+                      <span className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><CalendarDays className="h-5 w-5" /></span>
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-bold text-foreground">{group?.name ?? "Lesgroep"}</span>
+                          <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground"><Clock3 className="h-3.5 w-3.5" />{formatUpcomingSession(session.starts_at, session.ends_at)}</span>
+                        </span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="grid content-start gap-2">
+              <p className="mb-1 font-bold text-foreground">Snel voorbereiden</p>
+              <QuickLink href="/instructor/groepen" icon={<UsersRound className="h-5 w-5" />} label="Mijn groepen" value={`${data.groups.length} toegewezen`} />
+              <QuickLink href="/instructor/taken" icon={<ListChecks className="h-5 w-5" />} label="Open taken" value="Werk teamacties bij" />
+            </div>
+          </div>
+        </section>
       ) : (
         <div className="grid gap-4 xl:grid-cols-2">
           {todaySessions.map((session) => {
@@ -162,6 +209,16 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function formatUpcomingSession(startsAt: string, endsAt: string) {
+  const start = new Date(startsAt);
+  const end = new Date(endsAt);
+  const day = new Intl.DateTimeFormat("nl-NL", { weekday: "short", day: "numeric", month: "short" }).format(start);
+  const startTime = new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(start);
+  const endTime = new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(end);
+
+  return `${day} · ${startTime}-${endTime}`;
 }
 
 function notificationLabel(type: string) {

@@ -77,7 +77,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
               const offers = offersByEntry.get(entry.id) ?? [];
 
               return (
-                <article className="rounded-xl border border-border bg-white p-4" key={entry.id}>
+                <article className="rounded-2xl border border-border bg-white p-4 shadow-soft" key={entry.id}>
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{programById.get(entry.program_id)?.name ?? "Programma"}</p>
@@ -183,7 +183,7 @@ function getOfferGroups(entry: WaitlistEntryRow, scores: PlacementScoreRow[], gr
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+    <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-aqua before:to-primary">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
       <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
     </section>

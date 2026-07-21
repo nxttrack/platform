@@ -49,7 +49,7 @@
       "productionRoute": "/",
       "productionFile": "apps/web/app/page.tsx",
       "surface": "tenant-public",
-      "knownDrift": ["reference-hero-image-treatment", "public-header-and-footer", "reference-copy"]
+      "knownDrift": ["reference-hero-image-treatment", "reference-copy"]
     },
     {
       "id": "tenant-programs",
@@ -57,7 +57,7 @@
       "productionRoute": "/programmas",
       "productionFile": "apps/web/app/(tenant-public)/programmas/page.tsx",
       "surface": "tenant-public",
-      "knownDrift": ["card-density", "public-header-and-footer"]
+      "knownDrift": ["card-density"]
     },
     {
       "id": "tenant-intake",
@@ -65,7 +65,7 @@
       "productionRoute": "/intake",
       "productionFile": "apps/web/app/(tenant-public)/intake/page.tsx",
       "surface": "tenant-public",
-      "knownDrift": ["form-primitives", "public-header-and-footer"]
+      "knownDrift": ["form-primitives"]
     },
     {
       "id": "parent-home",
@@ -89,7 +89,7 @@
       "productionRoute": "/portaal/voortgang",
       "productionFile": "apps/web/app/(portaal)/portaal/voortgang/page.tsx",
       "surface": "parent",
-      "knownDrift": ["route-localization", "progress-ring", "mobile-drawer", "active-navigation"]
+      "knownDrift": ["route-localization", "mobile-drawer", "active-navigation"]
     },
     {
       "id": "instructor-home",

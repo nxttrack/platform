@@ -61,8 +61,9 @@ try {
         for (const route of routes) {
           runtimeFailures = [];
           const productionPath = resolveProductionPath(route.productionRoute);
+          const capturePath = route.id === "instructor-student" ? `${productionPath}?tab=assessment` : productionPath;
           const baseUrl = route.surface === "marketing" ? appBaseUrl : tenantBaseUrl;
-          const url = `${baseUrl}${productionPath}`;
+          const url = `${baseUrl}${capturePath}`;
           const relativeImagePath = join(route.id, `${viewport.id}.png`);
           const imagePath = join(captureRoot, relativeImagePath);
           mkdirSync(dirname(imagePath), { recursive: true });
@@ -86,7 +87,7 @@ try {
             const entry = {
               routeId: route.id,
               referenceRoute: route.referenceRoute,
-              productionRoute: productionPath,
+              productionRoute: capturePath,
               surface: route.surface,
               viewport: viewport.id,
               width: viewport.width,
@@ -102,9 +103,9 @@ try {
               failures.push(`${productionPath} (${viewport.id}): ${runtimeFailures.join(" | ")}`);
             }
 
-            console.log(`[design:capture-production] ${productionPath} ${viewport.id} ${entry.sha256.slice(0, 12)}`);
+            console.log(`[design:capture-production] ${capturePath} ${viewport.id} ${entry.sha256.slice(0, 12)}`);
           } catch (error) {
-            failures.push(`${productionPath} (${viewport.id}): ${formatError(error)}`);
+            failures.push(`${capturePath} (${viewport.id}): ${formatError(error)}`);
           }
         }
       } catch (error) {

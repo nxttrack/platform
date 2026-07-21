@@ -90,3 +90,16 @@ Engineering classification:
 | Product decision required | tenant public shell, parent home/lessons/progress, instructor dossier state, admin agenda/waitlist composition | Production is functional but materially diverges from the pinned layout or information architecture. |
 
 This engineering review is deliberately not recorded as product-owner approval, so `LOVABLE_VISUAL_CHECK_CONFIRMED` remains unset.
+
+## Canon Parity Implementation Pass
+
+Implemented after the first live review and awaiting a new SHA-bound staging capture:
+
+- Tenant public routes now share a sticky branded header, desktop navigation, a Radix Sheet mobile menu, intake/login calls to action and a complete public footer.
+- Tenant home now follows the reference hierarchy more closely: trust marker, outcome-led hero, program availability panel, three-step journey and richer program cards.
+- Parent progress now presents a child-first swim route with progress ring, stage context, latest compliment, skill progress bars and badges while retaining real scores and visibility rules.
+- Instructor home now turns a date-sensitive empty dashboard into a useful quiet-day state with upcoming lessons and preparation shortcuts.
+- The instructor dossier visual capture now opens the assessment tab so it compares the same workflow state as the pinned reference.
+- Admin planning now presents the real day/week plan before creation and availability controls. The richer capacity, conflict, catch-up and placement workflows remain the accepted production information architecture pending product-owner sign-off.
+
+Known remaining visual work is limited to approved photography, final public copy, seeded data density and product-owner acceptance of the richer admin composition. The visual confirmation gate remains unset until the new staging artifact is reviewed.

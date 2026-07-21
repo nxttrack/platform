@@ -36,6 +36,28 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
         <Metric icon={<Clock className="h-5 w-5" />} label="Inhaalverzoeken" tone={pendingCatchUps.length > 0 ? "warning" : "success"} value={pendingCatchUps.length.toString()} />
       </div>
 
+      <AdminSection title="Dag- en weekplan" description="Begin bij het rooster; open daarna alleen de formulieren die nodig zijn om de planning bij te sturen.">
+        {data.dayPlan.length === 0 ? (
+          <EmptyState>Geen lessen in de komende 14 dagen.</EmptyState>
+        ) : (
+          <div className="grid gap-4 xl:grid-cols-2">
+            {data.dayPlan.map((day) => (
+              <section className="rounded-2xl border border-border bg-white p-4 shadow-soft" key={day.key}>
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-bold text-foreground">{day.label}</h2>
+                  <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>
+                </div>
+                <div className="space-y-2">
+                  {day.sessions.map((insight) => (
+                    <SessionPlanRow insight={insight} key={insight.session.id} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
+      </AdminSection>
+
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <AdminSection title="Les plannen" description="Een sessie is een concrete lesdatum en tijd. Conflicten verschijnen direct in het planboard.">
           <form action={createSessionAction} className="grid gap-4 md:grid-cols-2">
@@ -178,28 +200,6 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
           </div>
         </AdminSection>
       </div>
-
-      <AdminSection title="Dag- en weekplan">
-        {data.dayPlan.length === 0 ? (
-          <EmptyState>Geen lessen in de komende 14 dagen.</EmptyState>
-        ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
-            {data.dayPlan.map((day) => (
-              <section className="rounded-lg border border-border bg-white p-4" key={day.key}>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-bold text-foreground">{day.label}</h2>
-                  <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>
-                </div>
-                <div className="space-y-2">
-                  {day.sessions.map((insight) => (
-                    <SessionPlanRow insight={insight} key={insight.session.id} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        )}
-      </AdminSection>
     </div>
   );
 }
@@ -208,7 +208,7 @@ function Metric({ icon, label, value, tone = "neutral" }: { icon: ReactNode; lab
   const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
 
   return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
       <div className="flex items-center justify-between gap-3">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
         <span className={toneClass}>{icon}</span>
@@ -234,7 +234,7 @@ function ConflictRow({ conflict }: { conflict: PlanningConflict }) {
 
 function SessionPlanRow({ insight }: { insight: PlanningSessionInsight }) {
   return (
-    <article className="rounded-lg border border-border bg-muted/30 px-3 py-3">
+    <article className="rounded-xl border border-border bg-muted/30 px-3 py-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-sm font-semibold text-foreground">
