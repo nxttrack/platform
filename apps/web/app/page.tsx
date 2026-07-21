@@ -149,6 +149,22 @@ function TenantHome({ data }: { data: NonNullable<Awaited<ReturnType<typeof getP
                 <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground" href={`/intake?programma=${program.id}`}>Bekijk en meld aan <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" /></Link>
               </article>
             ))}
+            {data.programs.length < 2 ? (
+              <article className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 to-aqua-soft p-5 shadow-soft">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Keuzehulp</p>
+                <h3 className="mt-2 text-xl font-bold text-foreground">Nog niet zeker welke route past?</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Vertel ons over zwemervaring, leeftijd en voorkeursmoment. De zwemschool helpt je naar de juiste start.</p>
+                <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary" href="/intake">Start de keuzehulp <ArrowRight className="h-4 w-4" /></Link>
+              </article>
+            ) : null}
+            {data.programs.length < 3 ? (
+              <article className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+                <p className="text-xs font-semibold uppercase tracking-wider text-primary">Flexibele instroom</p>
+                <h3 className="mt-2 text-xl font-bold text-foreground">Geen directe plek?</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Ook dan kun je aanmelden. Je voorkeuren gaan mee naar de wachtlijst en plaatsingsassistent.</p>
+                <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-foreground" href="/intake">Bekijk de mogelijkheden <ArrowRight className="h-4 w-4" /></Link>
+              </article>
+            ) : null}
           </div>
         </div>
       </section>
