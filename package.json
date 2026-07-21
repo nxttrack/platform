@@ -23,6 +23,7 @@
     "design:log-visual-review": "pnpm --filter @nxttrack/web exec node scripts/log-production-visual-review.mjs",
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
     "release:assert-source": "node scripts/release/assert-release-source.mjs",
+    "release:audit-production-foundation": "node scripts/release/audit-production-foundation.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
     "phase15:staging": "node scripts/staging/phase-15-validate.mjs",
     "phase16:flow": "node scripts/staging/phase-16-operational-flow.mjs",

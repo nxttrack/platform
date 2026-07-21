@@ -18,6 +18,10 @@ on:
         description: Type PROMOTE_PRODUCTION for a production release
         required: false
         type: string
+      production_approval_reference:
+        description: Link or identifier for the recorded production approval (required for production)
+        required: false
+        type: string
 
 concurrency:
   group: nxttrack-${{ inputs.target }}
@@ -40,6 +44,7 @@ jobs:
       RELEASE_CANONICAL_BRANCH: main
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
       PRODUCTION_RELEASE_CONFIRMATION: ${{ inputs.production_confirmation }}
+      PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
       BASE_DIR: /var/www/nxttrack/${{ inputs.target }}
 
       APP_ENV: ${{ vars.APP_ENV }}

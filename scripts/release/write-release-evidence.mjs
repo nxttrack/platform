@@ -21,6 +21,9 @@ const evidence = {
     runAttempt: process.env.GITHUB_RUN_ATTEMPT || null,
     actor: process.env.GITHUB_ACTOR || null
   },
+  approval: {
+    reference: target === "production" ? process.env.PRODUCTION_APPROVAL_REFERENCE || null : null
+  },
   gates: {
     repositoryTruth: "passed",
     lovableBaselineContract: "passed",

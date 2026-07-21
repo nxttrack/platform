@@ -25,9 +25,14 @@ if (!/^[a-f0-9]{40}$/.test(sourceSha)) {
 if (target === "production") {
   const stagedSha = (process.env.STAGING_RELEASE_SHA || "").trim().toLowerCase();
   const confirmation = process.env.PRODUCTION_RELEASE_CONFIRMATION || "";
+  const approvalReference = (process.env.PRODUCTION_APPROVAL_REFERENCE || "").trim();
 
   if (confirmation !== "PROMOTE_PRODUCTION") {
     failures.push("Production requires PRODUCTION_RELEASE_CONFIRMATION=PROMOTE_PRODUCTION.");
+  }
+
+  if (approvalReference.length < 8) {
+    failures.push("Production requires a recorded PRODUCTION_APPROVAL_REFERENCE.");
   }
 
   if (!/^[a-f0-9]{40}$/.test(stagedSha)) {

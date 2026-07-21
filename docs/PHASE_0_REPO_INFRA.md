@@ -52,8 +52,9 @@ Production promotion:
 1. Select target `production` while dispatching the workflow from `main`.
 2. Enter the full commit SHA that passed staging as `staging_release_sha`.
 3. Enter `PROMOTE_PRODUCTION` as explicit confirmation.
-4. The workflow refuses promotion when the current source SHA differs from the staged SHA.
-5. GitHub's `production` Environment must still provide human approval and protected secrets.
+4. Enter a link or identifier for the recorded approval as `production_approval_reference`.
+5. The workflow refuses promotion when the current source SHA differs from the staged SHA.
+6. GitHub's `production` Environment must still provide human approval and protected secrets.
 
 The source contract can be tested independently:
 
@@ -67,6 +68,7 @@ Production example, only after live staging acceptance:
 RELEASE_TARGET=production \
 STAGING_RELEASE_SHA=<full-validated-sha> \
 PRODUCTION_RELEASE_CONFIRMATION=PROMOTE_PRODUCTION \
+PRODUCTION_APPROVAL_REFERENCE=<recorded-approval-link-or-id> \
 pnpm run release:assert-source
 ```
 

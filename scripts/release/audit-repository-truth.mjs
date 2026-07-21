@@ -13,16 +13,22 @@ const warnings = [];
 checkFile("README.md");
 checkFile("docs/PHASE_0_REPO_INFRA.md");
 checkFile(".github/workflows/deploy.yml");
+checkFile(".github/workflows/production-foundation-audit.yml");
 
 const readme = read("README.md");
 const phaseZero = read("docs/PHASE_0_REPO_INFRA.md");
 const deployWorkflow = read(".github/workflows/deploy.yml");
+const productionAuditWorkflow = read(".github/workflows/production-foundation-audit.yml");
 
 requireText(readme, `Canonical implementation and release branch: \`${canonicalBranch}\``, "README does not declare the canonical release branch.");
 requireText(phaseZero, `Canonical implementation branch: \`${canonicalBranch}\``, "Phase 0 does not lock the canonical implementation branch.");
 requireText(deployWorkflow, "workflow_dispatch:", "Deploy workflow is not manually dispatched.");
 requireText(deployWorkflow, "github.ref_name == 'main'", "Deploy workflow does not restrict releases to main.");
 requireText(deployWorkflow, "PRODUCTION_RELEASE_CONFIRMATION", "Deploy workflow has no explicit production confirmation contract.");
+requireText(deployWorkflow, "PRODUCTION_APPROVAL_REFERENCE", "Deploy workflow has no recorded production approval reference contract.");
+requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
+requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
+requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");

@@ -69,6 +69,8 @@ Definition of done:
 - Release authority, required confirmation and rollback owner are documented.
 - Production remains undeployed until Sprint 5 authorization.
 
+Detailed execution: [Sprint 2 - Production Foundation](SPRINT_02_PRODUCTION_FOUNDATION.md).
+
 ## Sprint 3 - Communications, Monitoring And Operations
 
 Goal: make account flows deliverable and failures visible to an accountable operator.
@@ -176,4 +178,3 @@ Definition of done:
 
 - Each selected enhancement has a user/problem metric and usability acceptance.
 - Nice-to-haves do not bypass security, privacy or release controls.
-

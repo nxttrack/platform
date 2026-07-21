@@ -1,0 +1,105 @@
+name: Production foundation audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type AUDIT_PRODUCTION_FOUNDATION to run the read-only audit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    name: authorize read-only audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "AUDIT_PRODUCTION_FOUNDATION"
+
+  staging-project:
+    name: fingerprint staging project
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: staging
+    outputs:
+      supabase-fingerprint: ${{ steps.fingerprint.outputs.supabase_fingerprint }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Produce non-sensitive project fingerprint
+        id: fingerprint
+        env:
+          PRODUCTION_FOUNDATION_AUDIT_MODE: fingerprint
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        run: node scripts/release/audit-production-foundation.mjs
+
+  production-contract:
+    name: audit production environment contract
+    needs: staging-project
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AUDIT_TARGET: production
+      STAGING_SUPABASE_FINGERPRINT: ${{ needs.staging-project.outputs.supabase-fingerprint }}
+      APP_ENV: ${{ vars.APP_ENV }}
+      NODE_ENV: ${{ vars.NODE_ENV }}
+      PORT: ${{ vars.PORT }}
+      APP_URL: ${{ vars.APP_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      PLATFORM_ADMIN_URL: ${{ vars.PLATFORM_ADMIN_URL }}
+      TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
+      PLATFORM_HOSTNAMES: ${{ vars.PLATFORM_HOSTNAMES }}
+      PLATFORM_MARKETING_HOSTNAMES: ${{ vars.PLATFORM_MARKETING_HOSTNAMES }}
+      PLATFORM_ADMIN_HOSTNAMES: ${{ vars.PLATFORM_ADMIN_HOSTNAMES }}
+      TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
+      RESERVED_TENANT_SUBDOMAINS: ${{ vars.RESERVED_TENANT_SUBDOMAINS }}
+      BASE_PATH: ${{ vars.BASE_PATH }}
+      SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL }}
+      TENANT_SMOKE_URL: ${{ vars.TENANT_SMOKE_URL }}
+      RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
+      DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
+      DB_MIGRATE_INCLUDE_ALL: ${{ vars.DB_MIGRATE_INCLUDE_ALL }}
+      BOOTSTRAP_PLATFORM_OWNER: ${{ vars.BOOTSTRAP_PLATFORM_OWNER }}
+      BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}
+      HEALTH_CHECK_DATABASE: ${{ vars.HEALTH_CHECK_DATABASE }}
+      HEALTH_STRICT: ${{ vars.HEALTH_STRICT }}
+      REQUIRE_HEALTH_DATABASE: ${{ vars.REQUIRE_HEALTH_DATABASE }}
+      REQUIRE_HEALTH_COMMIT: ${{ vars.REQUIRE_HEALTH_COMMIT }}
+      RUNTIME_SMOKE_ROUTES: ${{ vars.RUNTIME_SMOKE_ROUTES }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      JWT_SESSION: ${{ secrets.JWT_SESSION }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Audit environment contract and project isolation
+        run: node scripts/release/audit-production-foundation.mjs
+
+  production-host:
+    name: audit production host foundation
+    needs: production-contract
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: production
+    env:
+      PRODUCTION_BASE_DIR: /var/www/nxttrack/production
+      SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+      PORT: ${{ vars.PORT }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Audit directories, systemd and Caddy without changing state
+        run: scripts/release/audit-production-host.sh

@@ -15,9 +15,9 @@ Status: historical dependency-based phase roadmap. Phase 0 through Phase 20 impl
 - Manual payments come before Mollie/iDEAL automation.
 - SendGrid SMTP comes before advanced notification channels.
 
-## Current Execution Focus - Sprint 1 Release-Candidate Evidence
+## Current Execution Focus - Sprint 1 With Sprint 2 Preflight
 
-The original build phases remain the architecture and dependency history. Active work has moved to [Sprint 1 - Release Candidate Evidence](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md).
+The original build phases remain the architecture and dependency history. Active acceptance remains [Sprint 1 - Release Candidate Evidence](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md). The non-deploying [Sprint 2 - Production Foundation](SPRINT_02_PRODUCTION_FOUNDATION.md) preflight has started in parallel so environment defects can be removed without inferring either open Sprint 1 approval.
 
 Immediate order:
 
@@ -25,7 +25,7 @@ Immediate order:
 2. Record provider-side Supabase backup, Auth/Storage and PITR policy.
 3. Set the two remaining staging confirmations only from those completed records.
 4. Rerun the strict staging gate to `0 failure(s), 0 warning(s)`.
-5. Name the accepted release-candidate SHA and begin Sprint 2 production foundation work.
+5. Name the accepted release-candidate SHA and complete the already-started Sprint 2 production foundation audit.
 
 ## Phase 0 - Repository And Infrastructure Foundation
 
