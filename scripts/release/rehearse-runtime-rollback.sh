@@ -76,7 +76,8 @@ read_healthy_commit() {
 assert_service_release() {
   local expected_release="$1"
   local service_pid=""
-  local service_directory=""
+  local service_state=""
+  local active_release=""
 
   service_pid=$(systemctl show --property MainPID --value "$rollback_service_name")
   if [[ ! "$service_pid" =~ ^[1-9][0-9]*$ ]]; then
@@ -84,13 +85,34 @@ assert_service_release() {
     return 1
   fi
 
-  service_directory=$(readlink -f "/proc/$service_pid/cwd")
-  if [[ "$service_directory" != "$expected_release" ]]; then
-    echo "[rollback:rehearsal] Service runs from '$service_directory', expected '$expected_release'." >&2
+  service_state=$(systemctl show --property ActiveState --value "$rollback_service_name")
+  if [[ "$service_state" != "active" ]]; then
+    echo "[rollback:rehearsal] Service state is '$service_state', expected 'active'." >&2
     return 1
   fi
 
-  echo "[rollback:rehearsal] Service PID $service_pid runs from $(basename "$service_directory")."
+  active_release=$(readlink -f "$rollback_current_link")
+  if [[ "$active_release" != "$expected_release" ]]; then
+    echo "[rollback:rehearsal] Current symlink targets '$active_release', expected '$expected_release'." >&2
+    return 1
+  fi
+
+  echo "[rollback:rehearsal] Service PID $service_pid is active with $(basename "$active_release")."
+}
+
+read_service_pid() {
+  systemctl show --property MainPID --value "$rollback_service_name"
+}
+
+require_new_service_pid() {
+  local previous_pid="$1"
+  local current_pid=""
+
+  current_pid=$(read_service_pid)
+  if [[ "$current_pid" == "$previous_pid" ]]; then
+    echo "[rollback:rehearsal] Service PID did not change after restart: $current_pid" >&2
+    return 1
+  fi
 }
 
 restore_original_release() {
@@ -143,15 +165,19 @@ echo "[rollback:rehearsal] Previous release: $rollback_previous_name"
 
 assert_service_release "$rollback_original_release"
 read_healthy_commit >/dev/null
+rollback_original_pid=$(read_service_pid)
 
 rollback_restore_required=true
 switch_release "$rollback_previous_release"
 assert_service_release "$rollback_previous_release"
+require_new_service_pid "$rollback_original_pid"
+rollback_previous_pid=$(read_service_pid)
 rollback_previous_health_commit=$(read_healthy_commit)
 echo "[rollback:rehearsal] PASS previous release is active and healthy."
 
 switch_release "$rollback_original_release"
 assert_service_release "$rollback_original_release"
+require_new_service_pid "$rollback_previous_pid"
 rollback_original_health_commit=$(read_healthy_commit)
 rollback_restore_required=false
 echo "[rollback:rehearsal] PASS original release restored and healthy."
