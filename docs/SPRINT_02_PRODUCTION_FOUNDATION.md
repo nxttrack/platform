@@ -30,6 +30,7 @@ Read-only GitHub environment inventory on 2026-07-21 found:
 - [x] Verify that production `DATABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` refer to the same project.
 - [x] Added a read-only runner audit for production directories, systemd, Caddy and port reservation.
 - [x] Added a transaction-read-only production database inventory with repository/remote migration parity reporting.
+- [x] Added a separate dry-run migration rehearsal with before/after database fingerprint equality.
 - [x] Require a recorded `production_approval_reference` for any future production deployment.
 
 ## Read-Only Audit
@@ -60,12 +61,13 @@ Audit run:
 Audited SHA:
 ```
 
-Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29825005890>
+Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29869803046>
 
-- Environment contract: 37 checks passed, including distinct staging/production project fingerprints and internal production secret consistency.
-- Host foundation: passed for release/shared directories, systemd, active Caddy, read-only Caddyfile adaptation, port `3800` and public TLS on apex, `www` and `admin`.
-- Database inventory: blocked before the first query because both the stored production Supabase API hostname and direct database hostname no longer resolve in DNS.
-- Interpretation: the production secret set is internally consistent but points to a removed, incorrect or otherwise unreachable Supabase project. It must be replaced or restored; staging credentials are not an acceptable fallback.
+- Environment contract: all checks pass, including API reachability, distinct staging/production project fingerprints and internal production secret consistency.
+- Host foundation: passes for release/shared directories, systemd, active Caddy, read-only Caddyfile adaptation, port `3800` and public TLS on apex, `www` and `admin`.
+- Database inventory: transaction-read-only pass on PostgreSQL 17.6.
+- Empty production baseline: 0 public tables, 0 Auth users, 0 Storage objects, no remote migration history and 62 repository migrations pending.
+- No production database or runtime state was changed by the audit.
 
 ## Protection And Authority
 
@@ -91,14 +93,16 @@ Environment reviewer limitation/decision:
 ## Remaining Sprint Tasks
 
 - [x] Run the read-only audit and record its exact result.
-- [ ] Restore or replace the unreachable production Supabase project and update the production-only secret set.
-- [ ] Resolve every failed environment, project-isolation or host-foundation check.
+- [x] Restore or replace the unreachable production Supabase project and update the production-only secret set.
+- [x] Resolve every failed environment, project-isolation or host-foundation check.
 - [ ] Identify the production Supabase project and owner without exposing credentials.
-- [ ] Produce a read-only production database inventory; do not run migrations.
+- [x] Produce a read-only production database inventory; do not run migrations.
 - [ ] Confirm DNS/TLS intent for `nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl` and `*.nxttrack.nl`.
 - [ ] Record release authority, rollback owner and infrastructure owner.
 - [ ] Configure GitHub environment reviewers, or accept and name the compensating control.
-- [ ] Write the migration rehearsal and rollback plan for Sprint 5.
+- [x] Write the migration rehearsal and rollback plan for Sprint 5.
+
+Detailed plan: [Production Migration And Rollback Plan](SPRINT_02_PRODUCTION_MIGRATION_PLAN.md).
 
 ## Definition Of Done
 

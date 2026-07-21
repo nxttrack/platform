@@ -14,11 +14,13 @@ checkFile("README.md");
 checkFile("docs/PHASE_0_REPO_INFRA.md");
 checkFile(".github/workflows/deploy.yml");
 checkFile(".github/workflows/production-foundation-audit.yml");
+checkFile(".github/workflows/production-migration-rehearsal.yml");
 
 const readme = read("README.md");
 const phaseZero = read("docs/PHASE_0_REPO_INFRA.md");
 const deployWorkflow = read(".github/workflows/deploy.yml");
 const productionAuditWorkflow = read(".github/workflows/production-foundation-audit.yml");
+const productionMigrationRehearsal = read(".github/workflows/production-migration-rehearsal.yml");
 
 requireText(readme, `Canonical implementation and release branch: \`${canonicalBranch}\``, "README does not declare the canonical release branch.");
 requireText(phaseZero, `Canonical implementation branch: \`${canonicalBranch}\``, "Phase 0 does not lock the canonical implementation branch.");
@@ -30,6 +32,9 @@ requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production 
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");
 requireText(productionAuditWorkflow, "db:inventory-production-read-only", "Production foundation workflow does not run the read-only database inventory.");
+requireText(productionMigrationRehearsal, "REHEARSE_PRODUCTION_MIGRATIONS", "Production migration rehearsal has no explicit confirmation contract.");
+requireText(productionMigrationRehearsal, 'DB_MIGRATE_DRY_RUN: "true"', "Production migration rehearsal is not locked to dry-run mode.");
+requireText(productionMigrationRehearsal, "BEFORE_FINGERPRINT", "Production migration rehearsal does not prove an unchanged database fingerprint.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");

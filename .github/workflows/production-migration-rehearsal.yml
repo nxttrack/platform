@@ -1,0 +1,71 @@
+name: Production migration rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_PRODUCTION_MIGRATIONS to run a read-only migration dry-run
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    name: authorize read-only rehearsal
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "REHEARSE_PRODUCTION_MIGRATIONS"
+
+  rehearsal:
+    name: rehearse production migrations without writes
+    needs: authorize
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: production
+    env:
+      APP_ENV: production
+      TARGET: production
+      RUN_DB_MIGRATIONS: "true"
+      DB_MIGRATE_DRY_RUN: "true"
+      DB_MIGRATE_INCLUDE_ALL: "false"
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.19.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fingerprint database before rehearsal
+        id: before
+        run: pnpm run db:inventory-production-read-only
+
+      - name: Print pending migrations without applying them
+        run: pnpm run db:migrate
+
+      - name: Fingerprint database after rehearsal
+        id: after
+        run: pnpm run db:inventory-production-read-only
+
+      - name: Assert rehearsal made no database changes
+        env:
+          BEFORE_FINGERPRINT: ${{ steps.before.outputs.inventory_fingerprint }}
+          AFTER_FINGERPRINT: ${{ steps.after.outputs.inventory_fingerprint }}
+        run: |
+          test -n "$BEFORE_FINGERPRINT"
+          test "$BEFORE_FINGERPRINT" = "$AFTER_FINGERPRINT"
+          echo "[production:migration-rehearsal] PASS database fingerprint is unchanged."

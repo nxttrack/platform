@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { createHash } from "node:crypto";
 import { appendFileSync, readdirSync } from "node:fs";
 import pg from "pg";
 
@@ -70,6 +71,19 @@ try {
   const remoteSet = new Set(remoteVersions);
   const missingRemote = localVersions.filter((version) => !remoteSet.has(version));
   const unexpectedRemote = remoteVersions.filter((version) => !localSet.has(version));
+  const inventoryFingerprint = createHash("sha256")
+    .update(
+      JSON.stringify({
+        authUserCount,
+        forceRlsCount: rls.force_rls_count,
+        publicTableCount: rls.public_table_count,
+        remoteVersions,
+        rlsEnabledCount: rls.rls_enabled_count,
+        schemaCounts: schemaCounts.rows,
+        storageObjectCount
+      })
+    )
+    .digest("hex");
 
   console.log("[production:db-inventory] PASS transaction_read_only=on.");
   console.log(`[production:db-inventory] PostgreSQL ${serverVersion}; extensions=${extensionCount}.`);
@@ -101,6 +115,7 @@ try {
     storageObjectCount,
     unexpectedRemoteCount: unexpectedRemote.length
   });
+  writeOutput("inventory_fingerprint", inventoryFingerprint);
 
   await client.query("rollback");
   console.log("[production:db-inventory] PASS inventory completed without database writes.");
@@ -185,4 +200,9 @@ function writeSummary(inventory) {
   ];
 
   appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join("\n")}\n`);
+}
+
+function writeOutput(name, value) {
+  if (!process.env.GITHUB_OUTPUT) return;
+  appendFileSync(process.env.GITHUB_OUTPUT, `${name}=${value}\n`);
 }
