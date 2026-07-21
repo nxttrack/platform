@@ -78,13 +78,13 @@ assert_service_release() {
   local service_pid=""
   local service_directory=""
 
-  service_pid=$(sudo systemctl show --property MainPID --value "$rollback_service_name")
+  service_pid=$(systemctl show --property MainPID --value "$rollback_service_name")
   if [[ ! "$service_pid" =~ ^[1-9][0-9]*$ ]]; then
     echo "[rollback:rehearsal] Service has no active MainPID: $rollback_service_name" >&2
     return 1
   fi
 
-  service_directory=$(sudo readlink -f "/proc/$service_pid/cwd")
+  service_directory=$(readlink -f "/proc/$service_pid/cwd")
   if [[ "$service_directory" != "$expected_release" ]]; then
     echo "[rollback:rehearsal] Service runs from '$service_directory', expected '$expected_release'." >&2
     return 1
