@@ -103,3 +103,17 @@ jobs:
 
       - name: Audit directories, systemd and Caddy without changing state
         run: scripts/release/audit-production-host.sh
+
+  production-database:
+    name: inventory production database read-only
+    needs: production-host
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inventory schemas, RLS and migration parity without writes
+        run: scripts/db/inventory-production-read-only.sh

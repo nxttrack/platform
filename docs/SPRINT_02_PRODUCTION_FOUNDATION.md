@@ -29,6 +29,7 @@ Read-only GitHub environment inventory on 2026-07-21 found:
 - [x] Compare staging and production Supabase project identities using one-way SHA-256 fingerprints; raw project identities and credentials are never printed.
 - [x] Verify that production `DATABASE_URL` and `NEXT_PUBLIC_SUPABASE_URL` refer to the same project.
 - [x] Added a read-only runner audit for production directories, systemd, Caddy and port reservation.
+- [x] Added a transaction-read-only production database inventory with repository/remote migration parity reporting.
 - [x] Require a recorded `production_approval_reference` for any future production deployment.
 
 ## Read-Only Audit
@@ -47,6 +48,7 @@ The workflow may read environment configuration and host state, but it cannot:
 - write deployment directories;
 - change DNS;
 - deploy the application.
+- write to the production database; PostgreSQL enforces `default_transaction_read_only=on` for the inventory connection.
 
 Expected evidence:
 

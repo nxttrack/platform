@@ -29,6 +29,7 @@ requireText(deployWorkflow, "PRODUCTION_APPROVAL_REFERENCE", "Deploy workflow ha
 requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");
+requireText(productionAuditWorkflow, "inventory-production-read-only.sh", "Production foundation workflow does not run the read-only database inventory.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");
