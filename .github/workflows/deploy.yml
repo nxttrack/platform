@@ -397,6 +397,7 @@ jobs:
 
       - name: Emit compact visual review fallback
         if: steps.upload-priority-a-visuals.outcome == 'failure'
+        continue-on-error: true
         run: pnpm run design:log-visual-review
 
       - name: Phase 15 staging truth and security validation

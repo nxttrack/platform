@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
@@ -11,16 +11,19 @@ const manifest = readJson(join(repoRoot, "docs/lovable-baseline/manifest.json"))
 const state = readJson(resolve(repoRoot, process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json"));
 const appBaseUrl = process.env.PRODUCTION_BASE_URL || state.appUrl || "https://staging.nxttrack.nl";
 const health = await readHealth(appBaseUrl);
-const referenceRoot = join(repoRoot, "artifacts/lovable-baseline", manifest.source.commitSha);
+const referenceRoot = resolve(repoRoot, process.env.LOVABLE_BASELINE_ROOT || join("artifacts/lovable-baseline", manifest.source.commitSha));
 const productionRoot = join(resolve(repoRoot, process.env.PRODUCTION_BASELINE_OUTPUT || "artifacts/production-baseline"), health.commitSha);
+const referenceAvailable = existsSync(join(referenceRoot, manifest.priorityA[0].id, `${manifest.viewports[0].id}.png`));
 const browser = await chromium.launch({ headless: true });
+
+console.log(`[visual-review-log] Lovable image columns: ${referenceAvailable ? "available" : "unavailable; emitting live staging only"}.`);
 
 try {
   for (const route of manifest.priorityA) {
     const page = await browser.newPage({ viewport: { width: 1600, height: 1200 }, deviceScaleFactor: 1 });
     const comparisons = manifest.viewports.map((viewport) => ({
       viewport,
-      reference: imageDataUrl(join(referenceRoot, route.id, `${viewport.id}.png`)),
+      reference: referenceAvailable ? imageDataUrl(join(referenceRoot, route.id, `${viewport.id}.png`)) : null,
       production: imageDataUrl(join(productionRoot, route.id, `${viewport.id}.png`))
     }));
 
@@ -42,8 +45,8 @@ function renderContactSheet(route, comparisons) {
   const rows = comparisons.map(({ viewport, reference, production }) => `
     <section>
       <h2>${escapeHtml(viewport.id)} · ${viewport.width}×${viewport.height}</h2>
-      <div class="comparison">
-        <figure><figcaption>Lovable canon</figcaption><img src="${reference}" alt="Lovable ${escapeHtml(route.id)} ${escapeHtml(viewport.id)}"></figure>
+      <div class="comparison ${reference ? "comparison-paired" : ""}">
+        ${reference ? `<figure><figcaption>Lovable canon</figcaption><img src="${reference}" alt="Lovable ${escapeHtml(route.id)} ${escapeHtml(viewport.id)}"></figure>` : ""}
         <figure><figcaption>Live staging</figcaption><img src="${production}" alt="Staging ${escapeHtml(route.id)} ${escapeHtml(viewport.id)}"></figure>
       </div>
     </section>
@@ -61,7 +64,8 @@ function renderContactSheet(route, comparisons) {
           header p, h2 { margin: 0; color: #475569; }
           section { margin-top: 24px; }
           h2 { margin-bottom: 8px; font-size: 18px; }
-          .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+          .comparison { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+          .comparison-paired { grid-template-columns: 1fr 1fr; }
           figure { margin: 0; overflow: hidden; border: 1px solid #cbd5e1; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgb(15 23 42 / 8%); }
           figcaption { padding: 10px 14px; border-bottom: 1px solid #e2e8f0; font-weight: 700; }
           img { display: block; width: 100%; height: 520px; object-fit: contain; object-position: top center; background: #f8fafc; }
