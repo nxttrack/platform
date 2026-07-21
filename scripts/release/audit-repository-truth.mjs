@@ -17,6 +17,9 @@ checkFile(".github/workflows/production-foundation-audit.yml");
 checkFile(".github/workflows/production-migration-rehearsal.yml");
 checkFile(".github/workflows/communications-foundation-audit.yml");
 checkFile(".github/workflows/operational-monitor.yml");
+checkFile("docs/DEFERRED_CONFIGURATION.md");
+checkFile("docs/SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md");
+checkFile("apps/web/tests/e2e/sprint4-mutations.spec.ts");
 
 const readme = read("README.md");
 const phaseZero = read("docs/PHASE_0_REPO_INFRA.md");
@@ -34,6 +37,8 @@ requireText(deployWorkflow, "PRODUCTION_RELEASE_CONFIRMATION", "Deploy workflow 
 requireText(deployWorkflow, "PRODUCTION_APPROVAL_REFERENCE", "Deploy workflow has no recorded production approval reference contract.");
 requireText(deployWorkflow, "verify-production-evidence.mjs", "Deploy workflow does not verify successful SHA-bound production foundation evidence.");
 requireText(deployWorkflow, "PRODUCTION_MIGRATION_REHEARSAL_RUN_ID", "Deploy workflow does not require production migration rehearsal evidence.");
+requireText(deployWorkflow, "sprint4:prepare-mutations", "Deploy workflow does not prepare bounded Sprint 4 mutation fixtures.");
+requireText(deployWorkflow, "sprint4:test-mutations", "Deploy workflow does not run the browser-driven Sprint 4 mutation journey.");
 requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");

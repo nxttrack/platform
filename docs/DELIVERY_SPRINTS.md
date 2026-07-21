@@ -109,6 +109,8 @@ Definition of done:
 - No known P0/P1 security, accessibility or availability issue remains.
 - Performance budgets and accepted exceptions are recorded.
 
+Detailed execution: [Sprint 4 - Full-Journey Quality And Security](SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md).
+
 ## Sprint 5 - Controlled Production Rehearsal And Launch
 
 Goal: promote one frozen, approved candidate with proven recovery and support.

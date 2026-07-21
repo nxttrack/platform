@@ -409,6 +409,14 @@ jobs:
       - name: Phase 16 operational flow validation
         run: pnpm run phase16:flow
 
+      - name: Prepare Sprint 4 browser-mutation fixture
+        run: pnpm run sprint4:prepare-mutations
+
+      - name: Sprint 4 intake-to-placement browser mutation
+        env:
+          SPRINT4_MUTATIONS_ENABLED: "true"
+        run: pnpm run sprint4:test-mutations
+
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
 

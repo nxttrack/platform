@@ -33,6 +33,8 @@
     "staging:runtime-smoke": "node scripts/staging/runtime-smoke.mjs",
     "operations:audit-communications": "node scripts/operations/audit-communications-foundation.mjs",
     "operations:monitor": "node scripts/operations/monitor-operational-health.mjs",
+    "sprint4:prepare-mutations": "node scripts/staging/prepare-sprint4-mutations.mjs",
+    "sprint4:test-mutations": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-mutations.spec.ts --project=chromium-desktop",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
     "hardening:local": "pnpm run typecheck && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"

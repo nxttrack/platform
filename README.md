@@ -54,6 +54,8 @@ The Phase 16 runner proves seeded integration state and authenticated dashboard 
 - [Sprint 3 Communications And Observability](docs/SPRINT_03_COMMUNICATIONS_OBSERVABILITY.md)
 - [Operations And Incident Runbook](docs/OPERATIONS_INCIDENT_RUNBOOK.md)
 - [Communication Delivery Runbook](docs/COMMUNICATION_DELIVERY_RUNBOOK.md)
+- [Deferred Configuration Register](docs/DEFERRED_CONFIGURATION.md)
+- [Sprint 4 Full-Journey Quality And Security](docs/SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md)
 
 ## Phase docs
 
