@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake and offer increments complete; instructor mutations in progress.
+Status: intake, offer and instructor increments complete; parent self-service next.
 
 ## Goal
 
@@ -18,7 +18,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 
 1. Complete - public intake to tenant-admin waitlist and placement score through browser forms.
 2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
-3. Instructor attendance, progress, note, badge and session completion mutations.
+3. Complete - instructor attendance, progress, note, badge and session completion mutations.
 4. Parent cancellation, catch-up, profile, notification and graduation responses.
 5. Tenant-admin program, group, agenda, participant, billing, document and communication mutations.
 6. Cross-role permission-denial and cross-tenant isolation browser cases.
@@ -79,6 +79,13 @@ The instructor journey uses the normal instructor account and Phase 16 roster to
 - reject browser errors, 5xx responses and broken static assets throughout.
 
 Internal visibility deliberately avoids parent-notification side effects. Exact `sprint4-instructor:` note markers are removed before the next staging run; Phase 16 restores its canonical attendance, progress score and scheduled-session state before this journey runs again.
+
+## Third Increment Evidence
+
+- Canonical commit: `68667928c535c5878bdb699ad90beb087a9cdeaa`.
+- CI run `29875047273`: all repository, build, migration and browser-smoke checks passed.
+- Staging deploy run `29875252821`: release, Phase 16, both bounded preparations, intake/offer mutations and all instructor mutations passed.
+- Visual capture, Supabase advisors, four-role RLS smoke and 42 general Playwright checks also passed; the strict gate ended with zero failures and the same two known human warnings.
 
 ## Definition Of Done
 
