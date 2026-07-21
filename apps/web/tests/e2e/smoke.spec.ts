@@ -71,6 +71,7 @@ test.describe("staging MVP smoke", () => {
     const failures = collectRuntimeFailures(page);
 
     await page.goto("/nxttrack/zwemscholen", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
 
     await expect(page.getByRole("banner")).toBeVisible();
     await expect(page.getByRole("contentinfo")).toBeVisible();
