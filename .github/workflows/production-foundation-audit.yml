@@ -107,7 +107,7 @@ jobs:
   production-database:
     name: inventory production database read-only
     needs: production-host
-    runs-on: [self-hosted, linux, x64, nxttrack]
+    runs-on: ubuntu-latest
     environment: production
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
