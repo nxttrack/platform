@@ -49,6 +49,8 @@ Blocking controls:
 - incident and support owners are unnamed;
 - log retention is unspecified.
 
+Latest evidence: [GitHub Actions run 29871427347](https://github.com/nxttrack/platform/actions/runs/29871427347), executed on commit `c6a1dbe79bf58c6c8c0ca18289aa11b794dd2006`. It preserves all earlier passing controls and reports ten explicit blockers: the original eight plus no controlled test delivery in the previous 30 days and monitoring not yet enabled.
+
 ## Non-Sending Audit
 
 Dispatch `.github/workflows/communications-foundation-audit.yml` from `main` with:
@@ -75,6 +77,8 @@ The audit checks:
 
 The schedule only becomes active when `MONITORING_ENABLED=true`. It checks database-aware health, sampled 5xx responses, static asset MIME and aggregate mail failures/skips/stuck attempts. Alert payloads contain operational metadata only. Activation and response are defined in [Operations And Incident Runbook](OPERATIONS_INCIDENT_RUNBOOK.md).
 
+Provider setup, controlled external delivery, failure diagnosis and manual retry are defined in [Communication Delivery Runbook](COMMUNICATION_DELIVERY_RUNBOOK.md).
+
 Probe evidence: [GitHub Actions run 29871127385](https://github.com/nxttrack/platform/actions/runs/29871127385), executed on commit `747e374f80bab70aa61cc4336bb489860cf0e7f4` on 21 July 2026. All 16 checks passed without alert delivery: live application/database health, commit metadata, four public routes, static asset status/MIME, read-only mail diagnostics, and zero failed, skipped or stuck attempts.
 
 ## Remaining Sprint Work
@@ -89,6 +93,7 @@ Probe evidence: [GitHub Actions run 29871127385](https://github.com/nxttrack/pla
 - [ ] Run a synthetic alert drill received by the named incident owner.
 - [ ] Record support ownership, escalation times and log retention.
 - [x] Add an executable incident and recovery runbook; ownership fields remain to be filled through environment configuration.
+- [x] Add a controlled-delivery, failure-diagnosis and retry runbook.
 
 ## Definition Of Done
 
