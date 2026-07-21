@@ -19,13 +19,31 @@ check() {
   fi
 }
 
+check_caddy_config() {
+  local output=""
+
+  if output=$(caddy validate --config /etc/caddy/Caddyfile 2>&1); then
+    echo "[production:host] PASS caddy-config: The active Caddy configuration validates without elevation."
+    return
+  fi
+
+  if output=$(sudo -n caddy validate --config /etc/caddy/Caddyfile 2>&1); then
+    echo "[production:host] PASS caddy-config: The active Caddy configuration validates with read-only elevation."
+    return
+  fi
+
+  echo "[production:host] FAIL caddy-config: The active Caddy configuration could not be validated." >&2
+  printf '%s\n' "$output" | tail -n 8 | sed 's/^/[production:host] DETAIL caddy-config: /' >&2
+  failures=$((failures + 1))
+}
+
 check "base-directory" "${base_dir} exists." test -d "$base_dir"
 check "release-directory" "${base_dir}/releases exists." test -d "$base_dir/releases"
 check "shared-directory" "${base_dir}/shared exists." test -d "$base_dir/shared"
 check "service-unit" "systemd knows ${service_name}." systemctl cat "$service_name"
 check "service-enabled" "${service_name} is enabled." systemctl is-enabled --quiet "$service_name"
 check "caddy-unit" "Caddy is active." systemctl is-active --quiet caddy
-check "caddy-config" "The active Caddy configuration validates." sudo caddy validate --config /etc/caddy/Caddyfile
+check_caddy_config
 
 if ss -ltnH "sport = :${port}" | grep -q .; then
   echo "[production:host] PASS port: Port ${port} has a listening socket."
