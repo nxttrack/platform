@@ -192,6 +192,10 @@ ls -1dt /var/www/nxttrack/staging/releases/*
 
 Use only after confirming the target previous release. For Phase 13, rehearse this once on staging and then switch back to the current release.
 
+The canonical rehearsal is the manually dispatched `Staging rollback rehearsal` GitHub Action on `main`. It serializes with staging deploys, selects the newest release other than `current`, verifies database-aware health on that release, and always restores and verifies the original release. Its implementation is `scripts/release/rehearse-runtime-rollback.sh`.
+
+The steps below remain the break-glass manual procedure.
+
 1. List releases:
 
 ```bash

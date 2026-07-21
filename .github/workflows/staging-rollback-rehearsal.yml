@@ -1,0 +1,30 @@
+name: Staging rollback rehearsal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    if: github.ref_name == 'main'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+
+    env:
+      ROLLBACK_BASE_DIR: /var/www/nxttrack/staging
+      ROLLBACK_SERVICE_NAME: ${{ vars.SERVICE_NAME || 'nxttrack-staging' }}
+      ROLLBACK_HEALTH_URL: ${{ vars.APP_URL }}/api/health
+
+    steps:
+      - name: Checkout canonical main
+        uses: actions/checkout@v4
+
+      - name: Rehearse previous release and restore current release
+        run: scripts/release/rehearse-runtime-rollback.sh
+
