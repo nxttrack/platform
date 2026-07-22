@@ -172,6 +172,8 @@ The critical-route quality suite runs against realistic Phase 16 data and enforc
 
 The suite is staging-only, requires a readable absolute Phase 16 state path and fails closed when explicitly enabled without that state. No exception is accepted implicitly: any temporary accessibility or performance exception must be named, scoped, owned and given an expiry before it can enter this document.
 
+The first axe run (`29882847946`) found one serious shared-token issue: the original Lovable primary blue produced only `4.0:1` contrast for normal text and white button labels. The primary and sidebar-primary tokens are darkened from OKLCH lightness `0.58` to `0.53`; this is an intentional WCAG correction to the visual canon, not an accepted accessibility exception.
+
 ## Definition Of Done
 
 - Critical journey mutations pass against staging without direct database intervention.
