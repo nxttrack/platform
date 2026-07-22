@@ -37,6 +37,14 @@ export type TransactionalEmailResult =
     };
 
 export async function sendTransactionalEmail(input: TransactionalEmailInput): Promise<TransactionalEmailResult> {
+  if (isReservedTestRecipient(input.to)) {
+    return withDeliveryAttempt(input, {
+      delivered: false,
+      provider: "not_configured",
+      reason: "Delivery intentionally skipped for a reserved .test recipient."
+    });
+  }
+
   const config = await getConfiguredEmailDeliveryConfig();
 
   if (!config) {
@@ -179,4 +187,10 @@ function emailDeliveryTimeoutMs() {
   const value = Number.parseInt(process.env.EMAIL_DELIVERY_TIMEOUT_MS ?? "15000", 10);
 
   return Number.isInteger(value) && value >= 1_000 && value <= 60_000 ? value : 15_000;
+}
+
+function isReservedTestRecipient(value: string) {
+  const domain = value.trim().toLowerCase().split("@").at(-1);
+
+  return domain === "test" || domain?.endsWith(".test") === true;
 }
