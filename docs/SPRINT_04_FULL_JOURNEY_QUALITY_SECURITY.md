@@ -174,6 +174,8 @@ The suite is staging-only, requires a readable absolute Phase 16 state path and 
 
 The first axe run (`29882847946`) found one serious shared-token issue: the original Lovable primary blue produced only `4.0:1` contrast for normal text and white button labels. The primary and sidebar-primary tokens are darkened from OKLCH lightness `0.58` to `0.53`; this is an intentional WCAG correction to the visual canon, not an accepted accessibility exception.
 
+The second axe run (`29883448507`) passed the mobile login and then found `muted-foreground` labels on a muted parent-dashboard surface at `4.3:1`. That shared foreground token is darkened from OKLCH lightness `0.55` to `0.52`. The suite now continues across independent viewports after a failure so one run reports every remaining route-level issue.
+
 ## Definition Of Done
 
 - Critical journey mutations pass against staging without direct database intervention.

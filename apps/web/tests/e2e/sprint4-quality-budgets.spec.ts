@@ -58,7 +58,6 @@ const qualityCases: QualityCase[] = [
 ];
 
 test.describe("Sprint 4 critical-route accessibility and performance budgets", () => {
-  test.describe.configure({ mode: "serial" });
   test.skip(!enabled, "Enable quality budgets to run this staging-only suite.");
   test.beforeAll(() => {
     expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when quality budgets are enabled.").not.toBeNull();
