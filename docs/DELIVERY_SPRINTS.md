@@ -1,6 +1,6 @@
 # NXTTRACK Delivery Sprints
 
-Status: active delivery plan from the technically healthy staging release `d496d176ea2d107cd63c1775260e30477102c25f` toward controlled production launch and post-launch product growth.
+Status: active delivery plan from technically completed Sprint 4 staging release `cb9c0b621de67125923a4cd92f1c04d9f3717a06` toward controlled production launch and post-launch product growth. Sprint 5 remains gated by the two human release confirmations and explicit production authorization.
 
 ## Working Agreement
 

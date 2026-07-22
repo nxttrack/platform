@@ -30,18 +30,18 @@ The repository has moved beyond the original documentation-only phase:
 - Phase 8: instructor dashboard, roster, attendance, dossier, notes and badge foundation are implemented; staging tablet-oriented routes and instructor isolation pass.
 - Phase 9: structured progress, positive scoring, badges and notifications are implemented; seeded progress/badge visibility and role checks pass on staging.
 - Phase 10: afzwem readiness/events, invitations, results, certificates and private diploma vault are implemented and visible in the staging operational flow.
-- Phase 11: subscriptions, manual payments and billing events are implemented and staging-visible; full user-driven mutation coverage remains Sprint 4 scope.
-- Phase 12: operations dashboard, messages, tasks, documents and reports are implemented and role-visible on staging; deeper mutation coverage remains Sprint 4 scope.
+- Phase 11: subscriptions, manual payments and billing events are implemented, staging-visible and covered by the Sprint 4 tenant-admin mutation journey.
+- Phase 12: operations dashboard, messages, tasks, documents and reports are implemented, role-visible on staging and covered by the Sprint 4 tenant-admin mutation journey.
 - Phase 13: hardening automation, RLS coverage audit, service-only auth deny policies, Playwright smoke/visual/performance tests, deploy hardening gates, enriched health smoke, runtime asset/MIME smoke, authenticated Playwright workflows and RLS role smoke scaffolding are implemented in code.
 - Phase 14: canon alignment and productization is implemented in code. Runtime scaffold copy is removed, `/platform` is a real overview, `/admin/instellingen` exists, backoffice navigation resolves, and user-facing terminology is cleaned up.
 - Phase 15: staging truth and security validation is implemented as a strict gate. It runs migrations, Supabase advisors, required RLS role checks, live staging health, live Playwright and strict launch confirmations against `https://staging.nxttrack.nl`.
 - Phase 16: end-to-end operational flow validation is implemented as a repeatable staging runner. It seeds a demo swim school, runs intake to placement, attendance, progress, badge, billing, afzwem and diploma records, then verifies admin, instructor and parent dashboards.
 - Phase 17: transactional communication, delivery diagnostics, private document storage and diploma-file access are implemented and staging-visible; external mail delivery remains Sprint 3 scope.
 - Phase 18: planning conflict detection, instructor availability, capacity-aware catch-up requests and approval are implemented and staging-visible.
-- Phase 19: parent/instructor communication, tasks, documents and tablet-oriented lesson depth are implemented and staging-visible; full mutation and usability coverage remains Sprint 4 scope.
+- Phase 19: parent/instructor communication, tasks, documents and tablet-oriented lesson depth are implemented, staging-visible and covered by Sprint 4 mutation and quality checks.
 - Phase 20: billing-provider configuration, payment-session/event, invoice/export and subscription-lifecycle boundaries are implemented without activating a live payment provider.
 
-The Phase 16 runner proves seeded integration state and authenticated dashboard visibility; it does not yet replace the complete browser-driven mutation suite planned for Sprint 4. Automatic payment providers, Smart Flow/AI and production promotion follow the dependencies in the delivery sprint plan.
+The Phase 16 runner proves seeded integration state and authenticated dashboard visibility. Sprint 4 now adds browser-driven mutation, negative-isolation, accessibility, performance and P0/P1 security proof on top. Automatic payment providers, Smart Flow/AI and production promotion follow the dependencies in the delivery sprint plan.
 
 ## Canon and planning docs
 

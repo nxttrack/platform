@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: increments 1-7 complete; P0/P1 application and database security review is next.
+Status: complete. All eight technical increments pass on staging; the two separate human launch confirmations remain open.
 
 ## Goal
 
@@ -29,7 +29,7 @@ Commit `e1dbb11d2813b6cfac6e7b3d0a9f89f7ba9c18d4` switched every state path to a
 5. Complete - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
 6. Complete - cross-role permission-denial and cross-tenant isolation browser cases.
 7. Complete - critical-route accessibility and performance budgets with no accepted exceptions.
-8. In progress - P0/P1 application/database security review and remediation.
+8. Complete - P0/P1 application/database security review and remediation.
 
 ## First Increment Contract
 
@@ -203,9 +203,21 @@ The P0/P1 review starts with fail-closed controls for the confirmed highest-impa
 - the transitive Sharp/libvips high-severity advisory is remediated by pinning the patched `0.35.0` runtime;
 - every public table uses both `ENABLE` and `FORCE ROW LEVEL SECURITY`, closing the ordinary table-owner bypass while preserving Supabase `service_role` BYPASSRLS operations;
 - staging queries `pg_catalog` after migration and fails unless every discovered public table has both flags active;
-- public responses enforce frame denial, MIME sniffing prevention, strict referrer handling, HSTS, a bounded permissions policy and CSP restrictions for framing, forms, base URLs and objects;
-- browser smoke asserts the release headers so proxy or packaging changes cannot silently remove them.
+- public responses enforce CSP frame denial, MIME sniffing prevention, strict referrer handling, HSTS, a bounded permissions policy and restrictions for forms, base URLs and objects;
+- browser smoke asserts the effective release headers so proxy or packaging changes cannot silently remove the controls;
 - password-reset, invitation and slot-offer links reject unknown/custom Host and forwarded-host values; only configured platform, staging and tenant domains can determine their origin.
 - password-reset requests retain the generic anti-enumeration response while limiting known addresses to one challenge per minute and five per rolling hour.
 
 The dependency audit still reports one moderate PostCSS advisory inherited from Next's pinned runtime. It is below the P0/P1 release threshold and remains tracked pending an upstream-compatible Next/PostCSS update; it is not being hidden with an audit ignore.
+
+The first end-to-end header run (`29886390992`) caught that Caddy replaces the application's legacy `X-Frame-Options: DENY` value with `SAMEORIGIN`. The effective response still carries the stricter modern `Content-Security-Policy: frame-ancestors 'none'`. The browser contract now verifies that complete semantic boundary: strict CSP frame denial is mandatory and the redundant legacy header must be either `DENY` or `SAMEORIGIN`. It also verifies camera, microphone and geolocation denial independently.
+
+## Eighth Increment Evidence
+
+- Canonical commit: `cb9c0b621de67125923a4cd92f1c04d9f3717a06`.
+- CI run `29886978781`: repository truth, Lovable contract, type/auth checks, high/critical production dependency audit, production build, migration/RLS audits, standalone packaging and browser smoke all passed.
+- Staging deploy run `29887115033`: deployment, migrations, health/runtime smoke, Phase 16 and all bounded fixture preparations passed on the canonical commit.
+- Browser-driven Sprint 4 blocks reported `1 passed` for intake/offer, instructor, parent and tenant-admin mutations, `4 passed` for role/tenant isolation and `4 passed` for the accessibility/performance budgets.
+- Live database verification reported all 63 public tables with both `ENABLE` and `FORCE ROW LEVEL SECURITY`; Supabase Advisors reported no unresolved error-level findings and all four role-specific RLS checks passed.
+- The general desktop/mobile suite reported `52 passed`, including the effective security-header contract. Visual capture and artifact handling also completed.
+- The strict gate reported `0 failure(s), 2 warning(s)`: only the Lovable visual comparison and managed Supabase backup/restore confirmation remain. These are human release records, not unresolved Sprint 4 technical defects.
