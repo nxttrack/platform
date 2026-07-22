@@ -34,7 +34,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await rosterEntry.getByRole("button", { name: "Laat", exact: true }).click();
     await expect(page.getByText("Attendance opgeslagen.")).toBeVisible();
     rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
-    await expect(rosterEntry.getByText("Laat", { exact: true })).toBeVisible();
+    await expect(rosterEntry.locator("span").filter({ hasText: /^Laat$/ })).toBeVisible();
 
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
     let assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
