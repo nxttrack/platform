@@ -93,18 +93,24 @@ function auditEmailSecretPreservation() {
   const actionsPath = join(root, "apps/web/lib/email/actions.ts");
   const settingsPath = join(root, "apps/web/lib/email/platform-settings.ts");
   const transactionalPath = join(root, "apps/web/lib/email/transactional.ts");
+  const settingsPagePath = join(root, "apps/web/app/(platform-admin)/platform/instellingen/page.tsx");
   const actions = readFileSync(actionsPath, "utf8");
   const settings = readFileSync(settingsPath, "utf8");
   const transactional = readFileSync(transactionalPath, "utf8");
+  const settingsPage = readFileSync(settingsPagePath, "utf8");
 
   requireContract(actions, 'formData.get("replaceSendGridApiKey") === "on"', "SendGrid replacement must require explicit user intent");
   requireContract(actions, 'formData.get("replaceSmtpPassword") === "on"', "SMTP password replacement must require explicit user intent");
+  requireContract(actions, "replaceSendGridApiKeyRequested && Boolean(submittedSendGridApiKey)", "SendGrid replacement must combine explicit intent with a submitted value");
+  requireContract(actions, "replaceSmtpPasswordRequested && Boolean(submittedSmtpPassword)", "SMTP password replacement must combine explicit intent with a submitted value");
   requireContract(actions, "replaceSendGridApiKey ? submittedSendGridApiKey : undefined", "an unconfirmed SendGrid field must resolve to an omitted secret update");
   requireContract(actions, "replaceSmtpPassword ? submittedSmtpPassword : undefined", "an unconfirmed SMTP password must resolve to an omitted secret update");
   requireContract(settings, "if (input.sendGridApiKey !== undefined)", "SendGrid storage must only change for replace or clear requests");
   requireContract(settings, "if (input.smtpPassword !== undefined)", "SMTP password storage must only change for replace or clear requests");
   requireContract(settings, '.update(values).eq("id", SETTINGS_ID)', "email settings must preserve omitted database columns during updates");
   requireContract(transactional, "if (isReservedTestRecipient(input.to))", "reserved .test recipients must be intercepted before provider delivery");
+  requireContract(settingsPage, 'settings?.provider === "sendgrid_api" && !settings.hasSendGridApiKey', "SendGrid replacement must only default on for an active unconfigured provider");
+  requireContract(settingsPage, 'settings?.provider === "smtp" && !settings.hasSmtpPassword', "SMTP replacement must only default on for an active unconfigured provider");
 
   if (actions.includes("getExistingPlatformEmailSecrets")) {
     failures.push("apps/web/lib/email/actions.ts: unchanged email secrets must not be decrypted and rewritten during a settings save.");

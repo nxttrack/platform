@@ -21,19 +21,21 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
   const submittedSendGridApiKey = nullableString(formData, "sendGridApiKey");
   const clearSmtpPassword = formData.get("clearSmtpPassword") === "on";
   const clearSendGridApiKey = formData.get("clearSendGridApiKey") === "on";
-  const replaceSmtpPassword = formData.get("replaceSmtpPassword") === "on";
-  const replaceSendGridApiKey = formData.get("replaceSendGridApiKey") === "on";
+  const replaceSmtpPasswordRequested = formData.get("replaceSmtpPassword") === "on";
+  const replaceSendGridApiKeyRequested = formData.get("replaceSendGridApiKey") === "on";
+  const replaceSmtpPassword = replaceSmtpPasswordRequested && Boolean(submittedSmtpPassword);
+  const replaceSendGridApiKey = replaceSendGridApiKeyRequested && Boolean(submittedSendGridApiKey);
   const existingSettings = await getPlatformEmailSettingsView();
   const smtpPassword = clearSmtpPassword ? null : replaceSmtpPassword ? submittedSmtpPassword : undefined;
   const sendGridApiKey = clearSendGridApiKey ? null : replaceSendGridApiKey ? submittedSendGridApiKey : undefined;
   const willHaveSmtpPassword = !clearSmtpPassword && Boolean((replaceSmtpPassword ? submittedSmtpPassword : null) || existingSettings.hasSmtpPassword);
   const willHaveSendGridApiKey = !clearSendGridApiKey && Boolean((replaceSendGridApiKey ? submittedSendGridApiKey : null) || existingSettings.hasSendGridApiKey);
 
-  if ((clearSmtpPassword && replaceSmtpPassword) || (clearSendGridApiKey && replaceSendGridApiKey)) {
+  if ((clearSmtpPassword && replaceSmtpPasswordRequested) || (clearSendGridApiKey && replaceSendGridApiKeyRequested)) {
     redirect(`${settingsPath}?error=conflicting_secret_action`);
   }
 
-  if ((replaceSmtpPassword && !submittedSmtpPassword) || (replaceSendGridApiKey && !submittedSendGridApiKey)) {
+  if ((provider === "smtp" && replaceSmtpPasswordRequested && !submittedSmtpPassword) || (provider === "sendgrid_api" && replaceSendGridApiKeyRequested && !submittedSendGridApiKey)) {
     redirect(`${settingsPath}?error=missing_secret_value`);
   }
 

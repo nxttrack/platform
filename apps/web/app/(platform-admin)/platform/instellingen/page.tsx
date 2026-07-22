@@ -95,7 +95,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
             <Field autoComplete="new-password" label="Nieuwe SendGrid API key" name="sendGridApiKey" placeholder="SG..." type="password" />
             <div className="flex flex-col justify-end gap-3 pb-3">
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                <input className="size-4 rounded border-border" defaultChecked={!settings?.hasSendGridApiKey} name="replaceSendGridApiKey" type="checkbox" />
+                <input className="size-4 rounded border-border" defaultChecked={settings?.provider === "sendgrid_api" && !settings.hasSendGridApiKey} name="replaceSendGridApiKey" type="checkbox" />
                 API key vervangen
               </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
@@ -128,7 +128,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
             <Field autoComplete="new-password" label="Nieuw SMTP wachtwoord" name="smtpPassword" type="password" />
             <div className="flex flex-col justify-end gap-3 pb-3">
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                <input className="size-4 rounded border-border" defaultChecked={!settings?.hasSmtpPassword} name="replaceSmtpPassword" type="checkbox" />
+                <input className="size-4 rounded border-border" defaultChecked={settings?.provider === "smtp" && !settings.hasSmtpPassword} name="replaceSmtpPassword" type="checkbox" />
                 SMTP wachtwoord vervangen
               </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
