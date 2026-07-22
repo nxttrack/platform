@@ -176,6 +176,8 @@ The first axe run (`29882847946`) found one serious shared-token issue: the orig
 
 The second axe run (`29883448507`) passed the mobile login and then found `muted-foreground` labels on a muted parent-dashboard surface at `4.3:1`. That shared foreground token is darkened from OKLCH lightness `0.55` to `0.52`. The suite now continues across independent viewports after a failure so one run reports every remaining route-level issue.
 
+The full-viewports run (`29883870217`) passed mobile login and parent. It found the instructor's selected-session chip at `4.27:1`, a green admin KPI at `2.48:1` despite its large type, and Recharts tooltip names inheriting decorative series colors at `2.2–4.0:1`. Primary is therefore minimally darkened to `0.51`, success to `0.60`, and tooltip text now always uses `popover-foreground` while markers and chart geometry retain their series colors.
+
 ## Definition Of Done
 
 - Critical journey mutations pass against staging without direct database intervention.

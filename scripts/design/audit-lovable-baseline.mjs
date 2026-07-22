@@ -84,7 +84,7 @@ if (shadcnConfig.tailwind?.css !== "app/globals.css") fail("shadcn configuration
 
 requireText("apps/web/app/globals.css", '@import "tw-animate-css";', "Tailwind animation utilities are not enabled.");
 requireText("apps/web/app/globals.css", "--background: oklch(0.985 0.012 230);", "Exact Lovable background token is missing.");
-requireText("apps/web/app/globals.css", "--sidebar-primary: oklch(0.53 0.18 240);", "The WCAG-adjusted Lovable sidebar token is missing.");
+requireText("apps/web/app/globals.css", "--sidebar-primary: oklch(0.51 0.18 240);", "The WCAG-adjusted Lovable sidebar token is missing.");
 requireText("apps/web/components/shell/app-shell-client.tsx", "usePathname", "AppShell is not path-aware.");
 requireText("apps/web/components/shell/app-shell-client.tsx", "SheetContent", "AppShell has no Radix mobile drawer.");
 requireText("apps/web/components/shell/app-shell-client.tsx", 'aria-current={active ? "page"', "AppShell active navigation is not exposed accessibly.");

@@ -23,7 +23,7 @@ export function CapacityChart({ data }: { data: CapacityChartDatum[] }) {
           <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="4 4" />
           <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} interval={0} fontSize={11} />
           <YAxis allowDecimals={false} axisLine={false} tickLine={false} fontSize={11} />
-          <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={tooltipStyle} />
+          <Tooltip cursor={{ fill: "var(--muted)" }} contentStyle={tooltipStyle} itemStyle={tooltipTextStyle} labelStyle={tooltipTextStyle} />
           <Bar dataKey="bezet" stackId="capacity" fill="var(--color-bezet)" radius={[0, 0, 4, 4]} isAnimationActive={false} />
           <Bar dataKey="vrij" stackId="capacity" fill="var(--color-vrij)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
         </BarChart>
@@ -48,7 +48,7 @@ export function StatusDonutChart({ data, title, description, valueLabel = "Aanta
       <div className="relative">
         <ChartContainer config={config} className="h-64">
           <PieChart accessibilityLayer>
-            <Tooltip contentStyle={tooltipStyle} formatter={(value) => valueFormatter(Number(value))} />
+            <Tooltip contentStyle={tooltipStyle} formatter={(value) => valueFormatter(Number(value))} itemStyle={tooltipTextStyle} labelStyle={tooltipTextStyle} />
             <Pie data={data} dataKey="value" nameKey="name" innerRadius={54} outerRadius={88} paddingAngle={2} stroke="var(--card)" strokeWidth={2} isAnimationActive={false} />
           </PieChart>
         </ChartContainer>
@@ -78,4 +78,8 @@ const tooltipStyle = {
   background: "var(--popover)",
   color: "var(--popover-foreground)",
   boxShadow: "var(--shadow-soft)"
+};
+
+const tooltipTextStyle = {
+  color: "var(--popover-foreground)"
 };
