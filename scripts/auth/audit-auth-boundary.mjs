@@ -38,6 +38,8 @@ for (const scanRoot of scanRoots) {
   }
 }
 
+auditEmailSecretPreservation();
+
 if (failures.length > 0) {
   console.error("Auth boundary audit failed:");
 
@@ -85,4 +87,27 @@ function scanDirectory(directory) {
 
 function normalizePath(value) {
   return value.replaceAll("\\", "/");
+}
+
+function auditEmailSecretPreservation() {
+  const actionsPath = join(root, "apps/web/lib/email/actions.ts");
+  const settingsPath = join(root, "apps/web/lib/email/platform-settings.ts");
+  const actions = readFileSync(actionsPath, "utf8");
+  const settings = readFileSync(settingsPath, "utf8");
+
+  requireContract(actions, "submittedSendGridApiKey ?? undefined", "an empty SendGrid field must resolve to an omitted secret update");
+  requireContract(actions, "submittedSmtpPassword ?? undefined", "an empty SMTP password must resolve to an omitted secret update");
+  requireContract(settings, "if (input.sendGridApiKey !== undefined)", "SendGrid storage must only change for replace or clear requests");
+  requireContract(settings, "if (input.smtpPassword !== undefined)", "SMTP password storage must only change for replace or clear requests");
+  requireContract(settings, '.update(values).eq("id", SETTINGS_ID)', "email settings must preserve omitted database columns during updates");
+
+  if (actions.includes("getExistingPlatformEmailSecrets")) {
+    failures.push("apps/web/lib/email/actions.ts: unchanged email secrets must not be decrypted and rewritten during a settings save.");
+  }
+}
+
+function requireContract(source, expected, message) {
+  if (!source.includes(expected)) {
+    failures.push(`email settings secret contract: ${message}.`);
+  }
 }

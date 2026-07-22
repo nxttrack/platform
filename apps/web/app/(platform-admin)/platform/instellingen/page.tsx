@@ -87,6 +87,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SendGrid API</h3>
             <p className="mt-1 text-sm text-muted-foreground">API key: {settings?.hasSendGridApiKey ? "ingesteld" : "niet ingesteld"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Laat het veld leeg om de bestaande key te behouden. Alleen &quot;API key wissen&quot; verwijdert hem.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="SendGrid API key" name="sendGridApiKey" placeholder={settings?.hasSendGridApiKey ? "Ongewijzigd laten" : "SG..."} type="password" />
@@ -103,6 +104,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SMTP</h3>
             <p className="mt-1 text-sm text-muted-foreground">Wachtwoord: {settings?.hasSmtpPassword ? "ingesteld" : "niet ingesteld"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Laat het veld leeg om het bestaande wachtwoord te behouden. Alleen &quot;SMTP wachtwoord wissen&quot; verwijdert het.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="SMTP host" name="smtpHost" defaultValue={settings?.smtpHost} placeholder="smtp.sendgrid.net" />

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { sendTransactionalEmail } from "./transactional";
-import { getExistingPlatformEmailSecrets, savePlatformEmailSettings, type EmailProvider } from "./platform-settings";
+import { getPlatformEmailSettingsView, savePlatformEmailSettings, type EmailProvider } from "./platform-settings";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 
 const settingsPath = "/platform/instellingen";
@@ -21,9 +21,11 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
   const submittedSendGridApiKey = nullableString(formData, "sendGridApiKey");
   const clearSmtpPassword = formData.get("clearSmtpPassword") === "on";
   const clearSendGridApiKey = formData.get("clearSendGridApiKey") === "on";
-  const existingSecrets = await getExistingPlatformEmailSecrets();
-  const smtpPassword = clearSmtpPassword ? null : submittedSmtpPassword ?? existingSecrets.smtpPassword;
-  const sendGridApiKey = clearSendGridApiKey ? null : submittedSendGridApiKey ?? existingSecrets.sendGridApiKey;
+  const existingSettings = await getPlatformEmailSettingsView();
+  const smtpPassword = clearSmtpPassword ? null : submittedSmtpPassword ?? undefined;
+  const sendGridApiKey = clearSendGridApiKey ? null : submittedSendGridApiKey ?? undefined;
+  const willHaveSmtpPassword = !clearSmtpPassword && Boolean(submittedSmtpPassword || existingSettings.hasSmtpPassword);
+  const willHaveSendGridApiKey = !clearSendGridApiKey && Boolean(submittedSendGridApiKey || existingSettings.hasSendGridApiKey);
 
   if (!smtpPort || smtpPort < 1 || smtpPort > 65535) {
     redirect(`${settingsPath}?error=invalid_port`);
@@ -37,11 +39,11 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
     redirect(`${settingsPath}?error=missing_from`);
   }
 
-  if (enabled && provider === "sendgrid_api" && !sendGridApiKey) {
+  if (enabled && provider === "sendgrid_api" && !willHaveSendGridApiKey) {
     redirect(`${settingsPath}?error=missing_sendgrid`);
   }
 
-  if (enabled && provider === "smtp" && (!smtpHost || !smtpUser || !smtpPassword)) {
+  if (enabled && provider === "smtp" && (!smtpHost || !smtpUser || !willHaveSmtpPassword)) {
     redirect(`${settingsPath}?error=missing_smtp`);
   }
 
