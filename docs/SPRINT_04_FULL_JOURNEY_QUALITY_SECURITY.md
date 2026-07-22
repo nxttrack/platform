@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: increments 1-6 complete; critical-route accessibility and performance budgets implemented with staging evidence pending.
+Status: increments 1-7 complete; P0/P1 application and database security review is next.
 
 ## Goal
 
@@ -28,8 +28,8 @@ Commit `e1dbb11d2813b6cfac6e7b3d0a9f89f7ba9c18d4` switched every state path to a
 4. Complete - parent cancellation, catch-up, profile, notification and graduation responses.
 5. Complete - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
 6. Complete - cross-role permission-denial and cross-tenant isolation browser cases.
-7. In progress - critical-route accessibility and performance budgets; implementation complete, staging proof pending.
-8. P0/P1 application/database security review and remediation.
+7. Complete - critical-route accessibility and performance budgets with no accepted exceptions.
+8. In progress - P0/P1 application/database security review and remediation.
 
 ## First Increment Contract
 
@@ -179,6 +179,14 @@ The second axe run (`29883448507`) passed the mobile login and then found `muted
 The full-viewports run (`29883870217`) passed mobile login and parent. It found the instructor's selected-session chip at `4.27:1`, a green admin KPI at `2.48:1` despite its large type, and Recharts tooltip names inheriting decorative series colors at `2.2–4.0:1`. Primary is therefore minimally darkened to `0.51`, success to `0.60`, and tooltip text now always uses `popover-foreground` while markers and chart geometry retain their series colors.
 
 Run `29884306288` passed login, parent and tenant admin including their performance budgets. The remaining instructor failure was one unlabeled attendance selector; each roster row now exposes participant-specific accessible names for both status and lesson note.
+
+## Seventh Increment Evidence
+
+- Canonical commit: `731bbe0e811ea461314ce4a7963f75c8989f0a53`.
+- CI run `29884586138`: repository truth, design contract, type/auth checks, production build, migration/RLS audits, standalone packaging and browser smoke all passed.
+- Staging deploy run `29884734687`: all five browser mutation/isolation blocks passed, followed by `4 passed` for the mobile, tablet and desktop accessibility/performance gate.
+- The same run completed visual capture/upload, Supabase Advisors, all four role-specific RLS checks, live health and `50 passed` general Playwright checks.
+- No accessibility or performance exception is open. The workflow's final failure is limited to the two existing human confirmations: Lovable visual comparison and managed Supabase backups/restore policy.
 
 ## Definition Of Done
 
