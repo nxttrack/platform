@@ -82,7 +82,9 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
 async function submitIntake(page: Page, tenantUrl: string, participantName: string, marker: string) {
   await page.goto(`${tenantUrl}/intake`, { waitUntil: "domcontentloaded" });
-  await page.locator("input[name='selectedOption'][value='waitlist']").check();
+  const waitlistOption = page.locator("label").filter({ hasText: "Ik wil op de wachtlijst komen." });
+  await waitlistOption.click();
+  await expect(page.locator("input[name='selectedOption'][value='waitlist']")).toBeChecked();
   await page.getByLabel("Naam ouder/verzorger").fill(`Sprint4 Ouder ${marker}`);
   await page.getByLabel("E-mail").fill(`sprint4-${marker}@example.test`);
   await page.getByLabel("Naam kind").fill(participantName);
