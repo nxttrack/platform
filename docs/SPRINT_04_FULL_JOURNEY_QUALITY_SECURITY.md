@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake, offer, instructor and parent self-service increments complete; tenant-admin mutations implemented with staging evidence pending.
+Status: intake, offer, instructor, parent self-service and tenant-admin mutation increments complete; cross-role permission-denial and cross-tenant isolation are next.
 
 ## Goal
 
@@ -20,8 +20,8 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 2. Complete - slot offer creation plus accepted, declined, expired, duplicate and full-capacity responses.
 3. Complete - instructor attendance, progress, note, badge and session completion mutations.
 4. Complete - parent cancellation, catch-up, profile, notification and graduation responses.
-5. In progress - tenant-admin program, group, agenda, participant, billing, document and communication mutations; implementation complete, staging proof pending.
-6. Cross-role permission-denial and cross-tenant isolation browser cases.
+5. Complete - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
+6. Next - cross-role permission-denial and cross-tenant isolation browser cases.
 7. Critical-route accessibility and performance budgets with recorded exceptions.
 8. P0/P1 application/database security review and remediation.
 
@@ -121,6 +121,15 @@ The tenant-admin journey uses the normal organization-admin account to create a 
 - browser/runtime failure rejection throughout.
 
 Every retry uses a unique `sprint4-admin` suffix. The staging-only preparation removes older records through exact title/code/note prefixes and their bounded dependencies; it never creates the outcomes asserted by the browser journey.
+
+## Fifth Increment Evidence
+
+- Canonical commit: `350ea24c0cc8247e684138451659274d6daed304`.
+- CI run `29878694645`: repository truth, design contract, type/auth checks, production build, migration/RLS audits, standalone packaging and browser smoke all passed.
+- Staging deploy run `29878847807`: release, migrations, health/runtime smoke, Phase 16 and every bounded Sprint 4 preparation passed.
+- The intake/offer, instructor, parent and new tenant-admin browser mutation journeys all passed. The tenant-admin journey created and linked the program, stage, group, instructor assignment, participant, enrollment, placement, session, payment plan, subscription, payment, document and message through the rendered application.
+- Supabase Advisors reported no unresolved findings at error level, all four role-specific RLS checks passed and 42 general Playwright checks passed.
+- Visual capture and artifact upload passed. The strict launch gate reported zero technical failures and only the two known human confirmations still open: Lovable visual comparison and managed Supabase backups/restore policy.
 
 ## Definition Of Done
 
