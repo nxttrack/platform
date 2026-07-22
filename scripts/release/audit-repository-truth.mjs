@@ -23,9 +23,11 @@ checkFile("apps/web/tests/e2e/sprint4-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-instructor-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-parent-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-admin-mutations.spec.ts");
+checkFile("apps/web/tests/e2e/sprint4-isolation.spec.ts");
 checkFile("scripts/staging/prepare-sprint4-offer-edges.mjs");
 checkFile("scripts/staging/prepare-sprint4-parent.mjs");
 checkFile("scripts/staging/prepare-sprint4-admin.mjs");
+checkFile("scripts/staging/prepare-sprint4-isolation.mjs");
 
 const readme = read("README.md");
 const phaseZero = read("docs/PHASE_0_REPO_INFRA.md");
@@ -51,6 +53,8 @@ requireText(deployWorkflow, "sprint4:prepare-parent", "Deploy workflow does not 
 requireText(deployWorkflow, "sprint4:test-parent", "Deploy workflow does not run the browser-driven Sprint 4 parent journey.");
 requireText(deployWorkflow, "sprint4:prepare-admin", "Deploy workflow does not prepare bounded Sprint 4 admin fixtures.");
 requireText(deployWorkflow, "sprint4:test-admin", "Deploy workflow does not run the browser-driven Sprint 4 admin journey.");
+requireText(deployWorkflow, "sprint4:prepare-isolation", "Deploy workflow does not prepare bounded Sprint 4 isolation fixtures.");
+requireText(deployWorkflow, "sprint4:test-isolation", "Deploy workflow does not run the browser-driven Sprint 4 role and tenant isolation checks.");
 requireText(productionAuditWorkflow, "AUDIT_PRODUCTION_FOUNDATION", "Production foundation audit has no explicit read-only confirmation contract.");
 requireText(productionAuditWorkflow, "audit-production-foundation.mjs", "Production foundation workflow does not run the environment contract audit.");
 requireText(productionAuditWorkflow, "audit-production-host.sh", "Production foundation workflow does not run the host audit.");

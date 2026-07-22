@@ -355,6 +355,7 @@ jobs:
       PHASE16_STATE_PATH: artifacts/phase16-state.json
       SPRINT4_EDGE_STATE_PATH: artifacts/sprint4-edge-state.json
       SPRINT4_PARENT_STATE_PATH: artifacts/sprint4-parent-state.json
+      SPRINT4_ISOLATION_STATE_PATH: artifacts/sprint4-isolation-state.json
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
@@ -423,6 +424,9 @@ jobs:
       - name: Prepare Sprint 4 tenant-admin fixtures
         run: pnpm run sprint4:prepare-admin
 
+      - name: Prepare Sprint 4 isolation fixtures
+        run: pnpm run sprint4:prepare-isolation
+
       - name: Sprint 4 intake-to-placement browser mutation
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
@@ -442,6 +446,11 @@ jobs:
         env:
           SPRINT4_ADMIN_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-admin
+
+      - name: Sprint 4 role and tenant isolation
+        env:
+          SPRINT4_ISOLATION_ENABLED: "true"
+        run: pnpm run sprint4:test-isolation
 
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production

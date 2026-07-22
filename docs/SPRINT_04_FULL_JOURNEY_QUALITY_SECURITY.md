@@ -1,6 +1,6 @@
 # Sprint 4 - Full-Journey Quality And Security
 
-Status: intake, offer, instructor, parent self-service and tenant-admin mutation increments complete; cross-role permission-denial and cross-tenant isolation are next.
+Status: increments 1-5 complete; cross-role permission-denial and cross-tenant isolation implemented with staging evidence pending.
 
 ## Goal
 
@@ -21,7 +21,7 @@ Prove critical user-driven writes, denial/recovery behavior, accessibility, perf
 3. Complete - instructor attendance, progress, note, badge and session completion mutations.
 4. Complete - parent cancellation, catch-up, profile, notification and graduation responses.
 5. Complete - tenant-admin program, group, agenda, participant, billing, document and communication mutations.
-6. Next - cross-role permission-denial and cross-tenant isolation browser cases.
+6. In progress - cross-role permission-denial and cross-tenant isolation browser cases; implementation complete, staging proof pending.
 7. Critical-route accessibility and performance budgets with recorded exceptions.
 8. P0/P1 application/database security review and remediation.
 
@@ -130,6 +130,20 @@ Every retry uses a unique `sprint4-admin` suffix. The staging-only preparation r
 - The intake/offer, instructor, parent and new tenant-admin browser mutation journeys all passed. The tenant-admin journey created and linked the program, stage, group, instructor assignment, participant, enrollment, placement, session, payment plan, subscription, payment, document and message through the rendered application.
 - Supabase Advisors reported no unresolved findings at error level, all four role-specific RLS checks passed and 42 general Playwright checks passed.
 - Visual capture and artifact upload passed. The strict launch gate reported zero technical failures and only the two known human confirmations still open: Lovable visual comparison and managed Supabase backups/restore policy.
+
+## Sixth Increment Contract
+
+The negative browser suite proves the server-side authorization boundary rather than merely hiding navigation:
+
+- a parent cannot enter the instructor or tenant-admin shells and is returned to the parent portal;
+- an instructor cannot enter the parent or tenant-admin shells and is returned to the instructor shell;
+- a tenant admin cannot enter the parent or platform shells, with platform access producing the explicit forbidden state;
+- a stable, bounded second staging tenant publishes a uniquely named program so its hostname and data context are independently verifiable;
+- the primary tenant admin can see that second tenant's public program page, but is explicitly denied after authenticating against its admin hostname;
+- the same tenant admin can still open the primary tenant's program administration and never sees the second tenant's marker there;
+- every case rejects browser errors, 5xx responses and broken static assets.
+
+The isolation preparation only upserts the dedicated `sprint4-isolation` tenant, its verified staging subdomain, settings and one public marker program. It grants no membership and therefore cannot manufacture the denial result being asserted.
 
 ## Definition Of Done
 
