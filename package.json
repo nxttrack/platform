@@ -43,6 +43,7 @@
     "sprint4:test-parent": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-parent-mutations.spec.ts --project=chromium-desktop",
     "sprint4:test-admin": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-admin-mutations.spec.ts --project=chromium-desktop",
     "sprint4:test-isolation": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-isolation.spec.ts --project=chromium-desktop",
+    "sprint4:test-quality": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-quality-budgets.spec.ts --project=chromium-desktop",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
     "hardening:local": "pnpm run typecheck && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"

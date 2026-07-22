@@ -95,6 +95,7 @@ function ResponseForm({ eventParticipantId, response, secondary = false, childre
   return (
     <form action={respondGraduationInviteAction}>
       <input name="eventParticipantId" type="hidden" value={eventParticipantId} />
+      <input name="next" type="hidden" value="/portaal/afzwemmen" />
       <input name="response" type="hidden" value={response} />
       <button className={secondary ? "inline-flex h-10 items-center gap-2 rounded-xl border bg-white px-4 text-sm font-semibold text-foreground transition hover:bg-muted" : "inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-glow transition hover:opacity-90"} type="submit">
         {children}

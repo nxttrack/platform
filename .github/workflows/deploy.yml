@@ -452,6 +452,11 @@ jobs:
           SPRINT4_ISOLATION_ENABLED: "true"
         run: pnpm run sprint4:test-isolation
 
+      - name: Sprint 4 accessibility and performance budgets
+        env:
+          SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
+        run: pnpm run sprint4:test-quality
+
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
 
