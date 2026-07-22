@@ -26,7 +26,11 @@ const isolation = loadState<IsolationState>("SPRINT4_ISOLATION_STATE_PATH");
 const enabled = process.env.SPRINT4_ISOLATION_ENABLED === "true";
 
 test.describe("Sprint 4 role and tenant isolation", () => {
-  test.skip(!enabled || !phase || !isolation, "Enable isolation checks with Phase 16 and isolation state files.");
+  test.skip(!enabled, "Enable isolation checks to run this staging-only journey.");
+  test.beforeAll(() => {
+    expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when isolation checks are enabled.").not.toBeNull();
+    expect(isolation, "SPRINT4_ISOLATION_STATE_PATH must resolve to a readable state file when isolation checks are enabled.").not.toBeNull();
+  });
 
   test("parent cannot enter instructor or tenant-admin shells", async ({ page }) => {
     const state = requirePhase();

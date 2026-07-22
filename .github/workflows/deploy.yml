@@ -352,10 +352,10 @@ jobs:
       PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
       TENANT_BASE_DOMAINS: ${{ vars.TENANT_BASE_DOMAINS }}
-      PHASE16_STATE_PATH: artifacts/phase16-state.json
-      SPRINT4_EDGE_STATE_PATH: artifacts/sprint4-edge-state.json
-      SPRINT4_PARENT_STATE_PATH: artifacts/sprint4-parent-state.json
-      SPRINT4_ISOLATION_STATE_PATH: artifacts/sprint4-isolation-state.json
+      PHASE16_STATE_PATH: ${{ github.workspace }}/artifacts/phase16-state.json
+      SPRINT4_EDGE_STATE_PATH: ${{ github.workspace }}/artifacts/sprint4-edge-state.json
+      SPRINT4_PARENT_STATE_PATH: ${{ github.workspace }}/artifacts/sprint4-parent-state.json
+      SPRINT4_ISOLATION_STATE_PATH: ${{ github.workspace }}/artifacts/sprint4-isolation-state.json
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}

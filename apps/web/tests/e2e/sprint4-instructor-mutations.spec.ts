@@ -16,7 +16,10 @@ const state = loadState();
 const enabled = process.env.SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED === "true";
 
 test.describe("Sprint 4 instructor mutations", () => {
-  test.skip(!enabled || !state, "Enable instructor mutations with a Phase 16 staging state file.");
+  test.skip(!enabled, "Enable instructor mutations to run this staging-only journey.");
+  test.beforeAll(() => {
+    expect(state, "PHASE16_STATE_PATH must resolve to a readable state file when instructor mutations are enabled.").not.toBeNull();
+  });
 
   test("instructor records attendance, progress, note, badge and session completion", async ({ page }, testInfo) => {
     test.setTimeout(60_000);

@@ -18,7 +18,11 @@ const edgeState = loadJson<Sprint4EdgeState>("SPRINT4_EDGE_STATE_PATH");
 const enabled = process.env.SPRINT4_MUTATIONS_ENABLED === "true";
 
 test.describe("Sprint 4 browser-driven mutations", () => {
-  test.skip(!enabled || !state || !edgeState, "Enable Sprint 4 mutations with Phase 16 and edge-fixture state files.");
+  test.skip(!enabled, "Enable Sprint 4 mutations to run this staging-only journey.");
+  test.beforeAll(() => {
+    expect(state, "PHASE16_STATE_PATH must resolve to a readable state file when Sprint 4 mutations are enabled.").not.toBeNull();
+    expect(edgeState, "SPRINT4_EDGE_STATE_PATH must resolve to a readable state file when Sprint 4 mutations are enabled.").not.toBeNull();
+  });
 
   test("intake, placement and slot-offer outcomes are driven through the UI", async ({ page }, testInfo) => {
     test.setTimeout(90_000);

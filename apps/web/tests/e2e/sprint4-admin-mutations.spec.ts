@@ -13,7 +13,10 @@ const phase = loadState();
 const enabled = process.env.SPRINT4_ADMIN_MUTATIONS_ENABLED === "true";
 
 test.describe("Sprint 4 tenant-admin mutations", () => {
-  test.skip(!enabled || !phase, "Enable admin mutations with a Phase 16 staging state file.");
+  test.skip(!enabled, "Enable admin mutations to run this staging-only journey.");
+  test.beforeAll(() => {
+    expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when admin mutations are enabled.").not.toBeNull();
+  });
 
   test("admin creates the core, planning, billing, document and communication chain", async ({ page }, testInfo) => {
     test.setTimeout(120_000);

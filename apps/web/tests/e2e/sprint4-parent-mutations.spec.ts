@@ -18,7 +18,11 @@ const parent = loadJson<ParentState>(process.env.SPRINT4_PARENT_STATE_PATH);
 const enabled = process.env.SPRINT4_PARENT_MUTATIONS_ENABLED === "true";
 
 test.describe("Sprint 4 parent self-service mutations", () => {
-  test.skip(!enabled || !phase || !parent, "Enable parent mutations with Phase 16 and parent staging state files.");
+  test.skip(!enabled, "Enable parent mutations to run this staging-only journey.");
+  test.beforeAll(() => {
+    expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when parent mutations are enabled.").not.toBeNull();
+    expect(parent, "SPRINT4_PARENT_STATE_PATH must resolve to a readable state file when parent mutations are enabled.").not.toBeNull();
+  });
 
   test("parent updates profile, cancels, requests catch-up, reads a notification and confirms graduation", async ({ page }) => {
     test.setTimeout(75_000);
