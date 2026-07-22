@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 
 const root = process.cwd();
 const scanRoots = ["apps/web"];
-const ignoredFiles = new Set([normalizePath("scripts/auth/audit-auth-boundary.mjs")]);
+const ignoredFiles = new Set([normalizePath("scripts/auth/audit-auth-boundary.mjs"), normalizePath("apps/web/lib/http/trusted-request-origin.ts")]);
 
 const forbiddenPatterns = [
   {
@@ -21,6 +21,10 @@ const forbiddenPatterns = [
   {
     pattern: /\bSUPABASE_SERVICE_ROLE_KEY\b|\bservice_role_key\b/i,
     message: "service-role credentials must not be used in the web app boundary"
+  },
+  {
+    pattern: /["']x-forwarded-host["']/,
+    message: "forwarded hosts must only be read through getTrustedRequestOrigin()"
   }
 ];
 

@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -11,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant, summarizeGroupCapacity, type GroupMembershipRow, type GroupRow } from "./core";
 import { computePlacementScores, type WaitlistEntryRow, type WaitlistPreferenceRow } from "./placement";
 import { generateOfferToken, hashOfferToken } from "./placement-token";
+import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 
 const weekdayMap: Record<string, number> = {
   maandag: 1,
@@ -192,7 +192,7 @@ export async function createSlotOfferAction(formData: FormData) {
   }
 
   const token = generateOfferToken();
-  const offerLink = `${await getRequestBaseUrl()}/plaatsing-aanbod?token=${encodeURIComponent(token)}`;
+  const offerLink = `${await getTrustedRequestOrigin()}/plaatsing-aanbod?token=${encodeURIComponent(token)}`;
   const offerResult = await admin
     .from("slot_offers")
     .insert({
@@ -577,18 +577,6 @@ async function writeAudit(input: {
     message: input.message ?? null,
     payload: input.payload ?? {}
   });
-}
-
-async function getRequestBaseUrl() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "https";
-
-  if (host) {
-    return `${protocol}://${host}`;
-  }
-
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 function readRequired(formData: FormData, field: string) {

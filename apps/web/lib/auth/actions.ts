@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createInvitation } from "./invitations";
 import { confirmPasswordReset, changeAuthenticatedPassword, requestPasswordResetCode } from "./password-reset";
@@ -10,6 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getTrustedAuthContextForRequest, requireAuthenticatedContext, requirePrivateShellContext } from "./server-guard";
 import { normalizeEmail } from "./tokens";
 import { markAcceptedInvitations } from "./user-security";
+import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 
 export async function loginAction(formData: FormData) {
   const nextPath = sanitizeRelativePath(formData.get("next"), "/portaal");
@@ -56,7 +56,7 @@ export async function loginAction(formData: FormData) {
 
 export async function requestPasswordResetAction(formData: FormData) {
   const email = readString(formData, "email");
-  const baseUrl = await getRequestBaseUrl();
+  const baseUrl = await getTrustedRequestOrigin();
 
   try {
     await requestPasswordResetCode({
@@ -131,7 +131,7 @@ export async function createInvitationAction(formData: FormData) {
       fullName,
       role,
       tenantSlug,
-      loginUrl: `${await getRequestBaseUrl()}/login?next=${encodeURIComponent(getInviteNextPath(role))}`,
+      loginUrl: `${await getTrustedRequestOrigin()}/login?next=${encodeURIComponent(getInviteNextPath(role))}`,
       actor
     });
 
@@ -153,18 +153,6 @@ function optionalString(formData: FormData, field: string) {
   const value = readString(formData, field);
 
   return value === "" ? null : value;
-}
-
-async function getRequestBaseUrl() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "https";
-
-  if (host) {
-    return `${protocol}://${host}`;
-  }
-
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 function getInviteNextPath(role: AppRole): `/${string}` {

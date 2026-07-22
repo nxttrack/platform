@@ -205,5 +205,6 @@ The P0/P1 review starts with fail-closed controls for the confirmed highest-impa
 - staging queries `pg_catalog` after migration and fails unless every discovered public table has both flags active;
 - public responses enforce frame denial, MIME sniffing prevention, strict referrer handling, HSTS, a bounded permissions policy and CSP restrictions for framing, forms, base URLs and objects;
 - browser smoke asserts the release headers so proxy or packaging changes cannot silently remove them.
+- password-reset, invitation and slot-offer links reject unknown/custom Host and forwarded-host values; only configured platform, staging and tenant domains can determine their origin.
 
 The dependency audit still reports one moderate PostCSS advisory inherited from Next's pinned runtime. It is below the P0/P1 release threshold and remains tracked pending an upstream-compatible Next/PostCSS update; it is not being hidden with an audit ignore.
