@@ -14,6 +14,7 @@
     "db:audit": "node scripts/db/audit-migrations.mjs",
     "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
     "db:rls-role-smoke": "node scripts/db/rls-role-smoke.mjs",
+    "db:verify-force-rls": "node scripts/db/verify-force-rls.mjs",
     "db:advisors": "node scripts/db/supabase-advisors.mjs",
     "db:inventory-production-read-only": "node scripts/db/inventory-production-read-only.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",

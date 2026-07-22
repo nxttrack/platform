@@ -202,6 +202,7 @@ The P0/P1 review starts with fail-closed controls for the confirmed highest-impa
 - production dependencies are audited in CI and every deploy; high/critical advisories block release;
 - the transitive Sharp/libvips high-severity advisory is remediated by pinning the patched `0.35.0` runtime;
 - every public table uses both `ENABLE` and `FORCE ROW LEVEL SECURITY`, closing the ordinary table-owner bypass while preserving Supabase `service_role` BYPASSRLS operations;
+- staging queries `pg_catalog` after migration and fails unless every discovered public table has both flags active;
 - public responses enforce frame denial, MIME sniffing prevention, strict referrer handling, HSTS, a bounded permissions policy and CSP restrictions for framing, forms, base URLs and objects;
 - browser smoke asserts the release headers so proxy or packaging changes cannot silently remove them.
 

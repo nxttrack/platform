@@ -53,6 +53,7 @@ if (failures.length > 0) {
 console.log(`[phase15] Starting staging truth and security validation against ${appUrl}.`);
 
 runStep("apply Supabase migrations", "pnpm", ["run", "db:migrate"], phaseEnv);
+runStep("verify live FORCE RLS catalog state", "pnpm", ["run", "db:verify-force-rls"], phaseEnv);
 runStep("run Supabase advisors", "pnpm", ["run", "db:advisors"], phaseEnv);
 runStep("run required RLS role smoke", "pnpm", ["run", "db:rls-role-smoke"], phaseEnv);
 runStep("check live staging health", "pnpm", ["run", "staging:health"], phaseEnv);
