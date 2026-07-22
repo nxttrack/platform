@@ -2,7 +2,7 @@
 
 Status: in progress.
 
-Candidate baseline: `02fde48a197a72e80c624adee3ccddc836852807`
+Security-maintenance application baseline: `c8bf0a5f8c6b8930a1067f51a55deda0b62af60d`
 
 ## Sprint Outcome
 
@@ -10,7 +10,7 @@ Name one staging SHA as an explicitly reviewed release candidate and make the st
 
 ## Evidence Already Complete
 
-- [x] Live staging exposes candidate `02fde48`, which is contained in canonical `main` history.
+- [x] Live staging exposes maintenance candidate `c8bf0a5`, which is contained in canonical `main` history.
 - [x] CI passes for the candidate.
 - [x] Health and database probe pass.
 - [x] All 63 migrations are applied/audited.
@@ -27,8 +27,10 @@ Evidence runs:
 
 - CI: <https://github.com/nxttrack/platform/actions/runs/29871535514>
 - Staging deploy, browser evidence and strict gate: <https://github.com/nxttrack/platform/actions/runs/29871694124>
-- Current candidate CI: <https://github.com/nxttrack/platform/actions/runs/29912642269>
-- Current candidate staging deploy, 56-screen capture and browser validation: <https://github.com/nxttrack/platform/actions/runs/29912854831>
+- Approved baseline CI: <https://github.com/nxttrack/platform/actions/runs/29912642269>
+- Approved baseline staging deploy, 56-screen capture and browser validation: <https://github.com/nxttrack/platform/actions/runs/29912854831>
+- Security maintenance CI: <https://github.com/nxttrack/platform/actions/runs/29966467895>
+- Security maintenance staging deploy, 56-screen capture and expected manual-gate stop: <https://github.com/nxttrack/platform/actions/runs/29966623671>
 - Logical backup/restore: <https://github.com/nxttrack/platform/actions/runs/29818495140>
 - Runtime rollback rehearsal: recorded by `ROLLBACK_REHEARSAL_CONFIRMED=true` in the staging environment.
 
@@ -141,6 +143,23 @@ Local revalidation on 2026-07-23 completed successfully:
 The existing product-owner decision remains the visual baseline, but the manual visual gate is intentionally
 reopened for SHA-bound equivalence review after the framework patch is deployed to staging.
 
+Equivalence review on 2026-07-23:
+
+```txt
+Approved visual baseline: 02fde48a197a72e80c624adee3ccddc836852807
+Maintenance application SHA: c8bf0a5f8c6b8930a1067f51a55deda0b62af60d
+Reviewer: Codex engineering review under the existing Danny Goldenbelt product decision
+Evidence: 56 SHA-bound screenshots and 14 reconstructed contact sheets
+Functional result: Phase 16, all Sprint 4 browser flows, quality budgets and 52 Phase 15 checks passed
+Pixel comparison: 3 contact sheets exact; remaining sheets have at most 0.124% strong pixel difference
+Difference classification: regenerated seed identifiers/rows only; no layout, styling or responsive regression
+Decision: visually equivalent; manual visual gate may be restored for the final exact-SHA run
+```
+
+GitHub artifact storage still reported delayed quota recalculation. The log fallback completed for all 14 routes
+and was reconstructed successfully, so the review evidence is usable even though a retained Actions artifact is
+still unavailable.
+
 ## Gate Closure
 
 After both records are approved:
@@ -165,7 +184,8 @@ Acceptance date:
 
 - [x] Complete and record product-owner visual decision.
 - [x] Complete and record Supabase managed-backup decision.
-- [ ] Resolve or wait out GitHub artifact quota recalculation and verify a compact artifact can upload.
-- [ ] Reconfirm the visual environment gate for the security maintenance SHA.
+- [x] Reconstruct and review all 14 compact contact sheets from the artifact-quota fallback.
+- [ ] Recheck GitHub artifact quota after recalculation; this is a non-blocking platform follow-up.
+- [x] Reconfirm the visual environment gate for the security maintenance SHA.
 - [x] Record the Supabase environment confirmation truthfully.
 - [ ] Rerun staging and record a 0-warning strict gate.

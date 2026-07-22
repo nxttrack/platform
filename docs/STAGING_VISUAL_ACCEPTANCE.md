@@ -74,6 +74,15 @@ new live SHA can be captured and compared with the approved `02fde48a197a72e80c6
 contact sheets. The confirmation may be restored only after all Priority A routes and viewports complete and
 the comparison finds no framework-induced visual regression.
 
+The SHA-bound revalidation completed on 2026-07-23 for maintenance application SHA
+`c8bf0a5f8c6b8930a1067f51a55deda0b62af60d`. All 56 screenshots, Phase 16, the complete Sprint 4 browser suite,
+quality budgets and 52 Phase 15 checks passed. All 14 compact contact sheets were reconstructed from the workflow
+log because GitHub artifact quota recalculation remained delayed. Pixel comparison against the approved
+`02fde48a197a72e80c624adee3ccddc836852807` contact sheets found three exact matches and at most 0.124% strong
+pixel difference elsewhere. Inspection classified those differences as regenerated seed identifiers and rows;
+no layout, styling or responsive regression was found. The visual confirmation may therefore be restored for
+the final exact-SHA gate run.
+
 ## First Live Engineering Review
 
 Reviewed staging release: `cab337c71a02024fa2b77201f6a4f6f6657beb70` on 2026-07-21.
