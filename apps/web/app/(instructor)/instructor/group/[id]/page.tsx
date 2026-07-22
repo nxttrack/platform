@@ -116,14 +116,14 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                     <input name="participantId" type="hidden" value={participant.id} />
                     <input name="enrollmentId" type="hidden" value={enrollment.id} />
                     <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
-                    <select className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.status ?? "present"} name="status">
+                    <select aria-label={`Aanwezigheidsstatus van ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.status ?? "present"} name="status">
                       {Object.entries(attendanceLabels).map(([value, label]) => (
                         <option key={value} value={value}>
                           {label}
                         </option>
                       ))}
                     </select>
-                    <input className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.note ?? ""} name="note" placeholder="Korte lesnotitie" />
+                    <input aria-label={`Lesnotitie voor ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.note ?? ""} name="note" placeholder="Korte lesnotitie" />
                     <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
                       <ClipboardCheck className="h-4 w-4" />
                       Opslaan

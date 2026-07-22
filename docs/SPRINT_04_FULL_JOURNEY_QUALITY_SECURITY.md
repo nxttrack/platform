@@ -178,6 +178,8 @@ The second axe run (`29883448507`) passed the mobile login and then found `muted
 
 The full-viewports run (`29883870217`) passed mobile login and parent. It found the instructor's selected-session chip at `4.27:1`, a green admin KPI at `2.48:1` despite its large type, and Recharts tooltip names inheriting decorative series colors at `2.2–4.0:1`. Primary is therefore minimally darkened to `0.51`, success to `0.60`, and tooltip text now always uses `popover-foreground` while markers and chart geometry retain their series colors.
 
+Run `29884306288` passed login, parent and tenant admin including their performance budgets. The remaining instructor failure was one unlabeled attendance selector; each roster row now exposes participant-specific accessible names for both status and lesson note.
+
 ## Definition Of Done
 
 - Critical journey mutations pass against staging without direct database intervention.
