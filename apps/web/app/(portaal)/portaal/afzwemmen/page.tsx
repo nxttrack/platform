@@ -45,33 +45,35 @@ export default async function ParentGraduationPage({ searchParams }: PageProps) 
             const resource = event?.resource_id ? resourceById.get(event.resource_id) : null;
 
             return (
-              <Card key={invite.id}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Kind"}</p>
-                    <h2 className="mt-1 text-xl font-bold text-foreground">{event?.title ?? "Afzwemevent"}</h2>
+              <article key={invite.id}>
+                <Card>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Kind"}</p>
+                      <h2 className="mt-1 text-xl font-bold text-foreground">{event?.title ?? "Afzwemevent"}</h2>
+                    </div>
+                    <StatusPill tone={invite.invite_status === "confirmed" ? "success" : invite.invite_status === "declined" ? "danger" : "info"}>{inviteLabel(invite.invite_status)}</StatusPill>
                   </div>
-                  <StatusPill tone={invite.invite_status === "confirmed" ? "success" : invite.invite_status === "declined" ? "danger" : "info"}>{inviteLabel(invite.invite_status)}</StatusPill>
-                </div>
 
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Detail icon={<CalendarCheck className="h-4 w-4" />} label="Moment" value={event ? formatDateTime(event.starts_at) : "Datum volgt"} />
-                  <Detail icon={<MapPin className="h-4 w-4" />} label="Locatie" value={resource?.name ?? "Locatie volgt"} />
-                  <Detail icon={<GraduationCap className="h-4 w-4" />} label="Niveau" value={stage?.badge_label ?? stage?.name ?? "Wordt bepaald"} />
-                  <Detail icon={<CheckCircle2 className="h-4 w-4" />} label="Resultaat" value={invite.result === "pending" ? "Nog niet bekend" : invite.result} />
-                </div>
-
-                {invite.invite_status === "sent" ? (
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <ResponseForm eventParticipantId={invite.id} response="confirmed">
-                      <CheckCircle2 className="h-4 w-4" /> Bevestigen
-                    </ResponseForm>
-                    <ResponseForm eventParticipantId={invite.id} response="declined" secondary>
-                      <XCircle className="h-4 w-4" /> Afwijzen
-                    </ResponseForm>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <Detail icon={<CalendarCheck className="h-4 w-4" />} label="Moment" value={event ? formatDateTime(event.starts_at) : "Datum volgt"} />
+                    <Detail icon={<MapPin className="h-4 w-4" />} label="Locatie" value={resource?.name ?? "Locatie volgt"} />
+                    <Detail icon={<GraduationCap className="h-4 w-4" />} label="Niveau" value={stage?.badge_label ?? stage?.name ?? "Wordt bepaald"} />
+                    <Detail icon={<CheckCircle2 className="h-4 w-4" />} label="Resultaat" value={invite.result === "pending" ? "Nog niet bekend" : invite.result} />
                   </div>
-                ) : null}
-              </Card>
+
+                  {invite.invite_status === "sent" ? (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      <ResponseForm eventParticipantId={invite.id} response="confirmed">
+                        <CheckCircle2 className="h-4 w-4" /> Bevestigen
+                      </ResponseForm>
+                      <ResponseForm eventParticipantId={invite.id} response="declined" secondary>
+                        <XCircle className="h-4 w-4" /> Afwijzen
+                      </ResponseForm>
+                    </div>
+                  ) : null}
+                </Card>
+              </article>
             );
           })}
         </div>

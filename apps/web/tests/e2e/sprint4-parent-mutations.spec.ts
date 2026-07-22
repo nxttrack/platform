@@ -43,8 +43,12 @@ test.describe("Sprint 4 parent self-service mutations", () => {
 
     if ((await cancelButton.count()) === 1) {
       await page.getByLabel("Reden").fill("Sprint 4 browserjourney");
-      await cancelButton.click();
-      await page.getByRole("button", { name: "Les definitief annuleren" }).click();
+      const cancellationDialog = page.getByRole("alertdialog");
+      await expect(async () => {
+        await cancelButton.click();
+        await expect(cancellationDialog).toBeVisible({ timeout: 2_000 });
+      }).toPass({ timeout: 10_000 });
+      await cancellationDialog.getByRole("button", { name: "Les definitief annuleren" }).click();
       await expect(page.getByText("Les geannuleerd en inhaalcredit toegevoegd.")).toBeVisible();
     }
 

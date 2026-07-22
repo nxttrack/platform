@@ -148,6 +148,29 @@ const graduationParticipant = await insertOne("graduation_event_participants", {
   result: "pending"
 });
 
+const [graduationEventCheck, graduationParticipantCheck] = await Promise.all([
+  admin.from("graduation_events").select("id, title, status").eq("tenant_id", tenantId).eq("id", graduationEvent.id).single(),
+  admin
+    .from("graduation_event_participants")
+    .select("id, event_id, participant_id, invite_status, status")
+    .eq("tenant_id", tenantId)
+    .eq("id", graduationParticipant.id)
+    .single()
+]);
+const verifiedGraduationEvent = checked(graduationEventCheck, "Sprint 4 graduation event");
+const verifiedGraduationParticipant = checked(graduationParticipantCheck, "Sprint 4 graduation participant");
+
+if (
+  verifiedGraduationEvent.title !== graduationTitle ||
+  verifiedGraduationEvent.status !== "published" ||
+  verifiedGraduationParticipant.event_id !== graduationEvent.id ||
+  verifiedGraduationParticipant.participant_id !== participantId ||
+  verifiedGraduationParticipant.invite_status !== "sent" ||
+  verifiedGraduationParticipant.status !== "invited"
+) {
+  throw new Error("Sprint 4 graduation fixture verification failed.");
+}
+
 const state = {
   profileName: "Sprint 4 Ouder",
   profilePhone: "0612345678",
