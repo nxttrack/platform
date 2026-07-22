@@ -97,8 +97,10 @@ function auditEmailSecretPreservation() {
   const settings = readFileSync(settingsPath, "utf8");
   const transactional = readFileSync(transactionalPath, "utf8");
 
-  requireContract(actions, "submittedSendGridApiKey ?? undefined", "an empty SendGrid field must resolve to an omitted secret update");
-  requireContract(actions, "submittedSmtpPassword ?? undefined", "an empty SMTP password must resolve to an omitted secret update");
+  requireContract(actions, 'formData.get("replaceSendGridApiKey") === "on"', "SendGrid replacement must require explicit user intent");
+  requireContract(actions, 'formData.get("replaceSmtpPassword") === "on"', "SMTP password replacement must require explicit user intent");
+  requireContract(actions, "replaceSendGridApiKey ? submittedSendGridApiKey : undefined", "an unconfirmed SendGrid field must resolve to an omitted secret update");
+  requireContract(actions, "replaceSmtpPassword ? submittedSmtpPassword : undefined", "an unconfirmed SMTP password must resolve to an omitted secret update");
   requireContract(settings, "if (input.sendGridApiKey !== undefined)", "SendGrid storage must only change for replace or clear requests");
   requireContract(settings, "if (input.smtpPassword !== undefined)", "SMTP password storage must only change for replace or clear requests");
   requireContract(settings, '.update(values).eq("id", SETTINGS_ID)', "email settings must preserve omitted database columns during updates");

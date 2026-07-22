@@ -12,6 +12,8 @@ const errorMessages: Record<string, string> = {
   missing_from: "Vul een geldig afzenderadres in.",
   missing_sendgrid: "Vul een SendGrid API key in voordat je SendGrid API activeert.",
   missing_smtp: "Vul host, gebruiker en wachtwoord in voordat je SMTP activeert.",
+  missing_secret_value: "Vul de nieuwe geheime waarde in, of zet vervangen uit.",
+  conflicting_secret_action: "Kies voor een geheim óf vervangen óf wissen.",
   save_failed: "Instellingen opslaan is niet gelukt."
 };
 
@@ -87,11 +89,15 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SendGrid API</h3>
             <p className="mt-1 text-sm text-muted-foreground">API key: {settings?.hasSendGridApiKey ? "ingesteld" : "niet ingesteld"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Laat het veld leeg om de bestaande key te behouden. Alleen &quot;API key wissen&quot; verwijdert hem.</p>
+            <p className="mt-1 text-xs text-muted-foreground">De bestaande key blijft altijd behouden, tenzij je expliciet vervangen of wissen kiest.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="SendGrid API key" name="sendGridApiKey" placeholder={settings?.hasSendGridApiKey ? "Ongewijzigd laten" : "SG..."} type="password" />
-            <div className="flex items-end pb-3">
+            <Field autoComplete="new-password" label="Nieuwe SendGrid API key" name="sendGridApiKey" placeholder="SG..." type="password" />
+            <div className="flex flex-col justify-end gap-3 pb-3">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                <input className="size-4 rounded border-border" defaultChecked={!settings?.hasSendGridApiKey} name="replaceSendGridApiKey" type="checkbox" />
+                API key vervangen
+              </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                 <input className="size-4 rounded border-border" name="clearSendGridApiKey" type="checkbox" />
                 API key wissen
@@ -104,7 +110,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SMTP</h3>
             <p className="mt-1 text-sm text-muted-foreground">Wachtwoord: {settings?.hasSmtpPassword ? "ingesteld" : "niet ingesteld"}</p>
-            <p className="mt-1 text-xs text-muted-foreground">Laat het veld leeg om het bestaande wachtwoord te behouden. Alleen &quot;SMTP wachtwoord wissen&quot; verwijdert het.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Het bestaande wachtwoord blijft altijd behouden, tenzij je expliciet vervangen of wissen kiest.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="SMTP host" name="smtpHost" defaultValue={settings?.smtpHost} placeholder="smtp.sendgrid.net" />
@@ -119,8 +125,12 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
               </select>
             </div>
             <Field label="SMTP gebruiker" name="smtpUser" defaultValue={settings?.smtpUser} placeholder="apikey" />
-            <Field label="SMTP wachtwoord" name="smtpPassword" placeholder={settings?.hasSmtpPassword ? "Ongewijzigd laten" : ""} type="password" />
-            <div className="flex items-end pb-3">
+            <Field autoComplete="new-password" label="Nieuw SMTP wachtwoord" name="smtpPassword" type="password" />
+            <div className="flex flex-col justify-end gap-3 pb-3">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                <input className="size-4 rounded border-border" defaultChecked={!settings?.hasSmtpPassword} name="replaceSmtpPassword" type="checkbox" />
+                SMTP wachtwoord vervangen
+              </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                 <input className="size-4 rounded border-border" name="clearSmtpPassword" type="checkbox" />
                 SMTP wachtwoord wissen
@@ -187,6 +197,7 @@ function ProviderOption(props: { checked: boolean; description: string; label: s
 }
 
 function Field(props: {
+  autoComplete?: string;
   defaultValue?: string;
   inputMode?: "numeric";
   label: string;
@@ -201,6 +212,7 @@ function Field(props: {
       </label>
       <input
         className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        autoComplete={props.autoComplete}
         defaultValue={props.defaultValue}
         id={props.name}
         inputMode={props.inputMode}

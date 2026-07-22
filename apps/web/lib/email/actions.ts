@@ -21,11 +21,21 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
   const submittedSendGridApiKey = nullableString(formData, "sendGridApiKey");
   const clearSmtpPassword = formData.get("clearSmtpPassword") === "on";
   const clearSendGridApiKey = formData.get("clearSendGridApiKey") === "on";
+  const replaceSmtpPassword = formData.get("replaceSmtpPassword") === "on";
+  const replaceSendGridApiKey = formData.get("replaceSendGridApiKey") === "on";
   const existingSettings = await getPlatformEmailSettingsView();
-  const smtpPassword = clearSmtpPassword ? null : submittedSmtpPassword ?? undefined;
-  const sendGridApiKey = clearSendGridApiKey ? null : submittedSendGridApiKey ?? undefined;
-  const willHaveSmtpPassword = !clearSmtpPassword && Boolean(submittedSmtpPassword || existingSettings.hasSmtpPassword);
-  const willHaveSendGridApiKey = !clearSendGridApiKey && Boolean(submittedSendGridApiKey || existingSettings.hasSendGridApiKey);
+  const smtpPassword = clearSmtpPassword ? null : replaceSmtpPassword ? submittedSmtpPassword : undefined;
+  const sendGridApiKey = clearSendGridApiKey ? null : replaceSendGridApiKey ? submittedSendGridApiKey : undefined;
+  const willHaveSmtpPassword = !clearSmtpPassword && Boolean((replaceSmtpPassword ? submittedSmtpPassword : null) || existingSettings.hasSmtpPassword);
+  const willHaveSendGridApiKey = !clearSendGridApiKey && Boolean((replaceSendGridApiKey ? submittedSendGridApiKey : null) || existingSettings.hasSendGridApiKey);
+
+  if ((clearSmtpPassword && replaceSmtpPassword) || (clearSendGridApiKey && replaceSendGridApiKey)) {
+    redirect(`${settingsPath}?error=conflicting_secret_action`);
+  }
+
+  if ((replaceSmtpPassword && !submittedSmtpPassword) || (replaceSendGridApiKey && !submittedSendGridApiKey)) {
+    redirect(`${settingsPath}?error=missing_secret_value`);
+  }
 
   if (!smtpPort || smtpPort < 1 || smtpPort > 65535) {
     redirect(`${settingsPath}?error=invalid_port`);
