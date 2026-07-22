@@ -1,8 +1,8 @@
 # Staging Visual Acceptance
 
-Last updated: 2026-07-21
+Last updated: 2026-07-23
 
-Status: automated SHA-bound staging capture and two engineering reviews are complete. Product-owner approval remains open because several production flows intentionally differ materially from the pinned Lovable composition.
+Status: automated SHA-bound staging capture, engineering review and product-owner approval are complete for release `02fde48a197a72e80c624adee3ccddc836852807`.
 
 ## Goal
 
@@ -60,13 +60,19 @@ Images remain gitignored. The GitHub artifact is the review handoff; approved se
 
 If GitHub artifact storage is temporarily unavailable, the workflow emits compact per-route contact sheets to the job log. This fallback is intended only for immediate visual review; it does not replace the SHA-bound 14-day artifact once storage becomes available.
 
-## Remaining Approval
+## Product-Owner Approval
 
-- Download the Lovable and staging artifacts.
-- Review every route at matching viewport dimensions.
-- Classify differences as accepted, fix required, or data/runtime intentional.
-- Record product-owner approval and the reviewed staging release SHA.
-- Do not set `LOVABLE_VISUAL_CHECK_CONFIRMED=true` until that review is complete.
+Danny Goldenbelt approved the 14 Priority A routes across mobile, tablet, desktop and wide viewports on 2026-07-23 for SHA `02fde48a197a72e80c624adee3ccddc836852807`. The review found no visual release blocker. It accepts the richer data-backed parent/admin composition, expanded planning and waitlist workflows, the quiet instructor state and current staging data density as intentional differences. Final photography and copy, more compact mobile admin workflows, better use of wide desktop space and production-ready demo/seed names remain non-blocking follow-ups.
+
+`LOVABLE_VISUAL_CHECK_CONFIRMED=true` was set in the staging environment for this recorded approval.
+
+## Framework Security Revalidation
+
+A new maintenance candidate upgrades Next.js from `16.2.9` to the patched Active LTS release `16.2.11` without
+changing application components, styling or content. The visual confirmation is temporarily reopened so the
+new live SHA can be captured and compared with the approved `02fde48a197a72e80c624adee3ccddc836852807`
+contact sheets. The confirmation may be restored only after all Priority A routes and viewports complete and
+the comparison finds no framework-induced visual regression.
 
 ## First Live Engineering Review
 

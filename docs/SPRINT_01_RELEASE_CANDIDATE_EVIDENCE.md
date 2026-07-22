@@ -2,7 +2,7 @@
 
 Status: in progress.
 
-Candidate baseline: `d496d176ea2d107cd63c1775260e30477102c25f`
+Candidate baseline: `02fde48a197a72e80c624adee3ccddc836852807`
 
 ## Sprint Outcome
 
@@ -10,13 +10,13 @@ Name one staging SHA as an explicitly reviewed release candidate and make the st
 
 ## Evidence Already Complete
 
-- [x] Live staging exposes candidate `d496d17`, which is contained in canonical `main` history.
+- [x] Live staging exposes candidate `02fde48`, which is contained in canonical `main` history.
 - [x] CI passes for the candidate.
 - [x] Health and database probe pass.
-- [x] All 62 migrations are applied/audited.
+- [x] All 63 migrations are applied/audited.
 - [x] Supabase Advisors report no issues.
 - [x] Four-role RLS smoke passes.
-- [x] Live Playwright passes: 42 checks.
+- [x] Live Phase 15 Playwright passes: 52 checks.
 - [x] Phase 16 operational seed and visibility flow passes.
 - [x] All 56 Priority A screenshots are captured for the candidate.
 - [x] Runtime rollback rehearsal is confirmed.
@@ -27,6 +27,8 @@ Evidence runs:
 
 - CI: <https://github.com/nxttrack/platform/actions/runs/29871535514>
 - Staging deploy, browser evidence and strict gate: <https://github.com/nxttrack/platform/actions/runs/29871694124>
+- Current candidate CI: <https://github.com/nxttrack/platform/actions/runs/29912642269>
+- Current candidate staging deploy, 56-screen capture and browser validation: <https://github.com/nxttrack/platform/actions/runs/29912854831>
 - Logical backup/restore: <https://github.com/nxttrack/platform/actions/runs/29818495140>
 - Runtime rollback rehearsal: recorded by `ROLLBACK_REHEARSAL_CONFIRMED=true` in the staging environment.
 
@@ -38,51 +40,106 @@ Decision matrix:
 
 | Surface | Current engineering classification | Product-owner decision |
 | --- | --- | --- |
-| Tenant public home/programs/intake | Canon-aligned shell and hierarchy; real data/copy differs | Pending |
-| Parent home/lessons/progress | Real child-first data model; localized routes and richer progress | Pending |
-| Instructor home/group/student | Responsive operational flow; date-sensitive data is intentional | Pending |
-| Admin dashboard/agenda/waitlist | Richer planning and placement workflow than static reference | Pending |
-| Marketing home/swim schools | Branded editorial panels are coherent; approved photography remains optional | Pending |
+| Tenant public home/programs/intake | Canon-aligned shell and hierarchy; real data/copy differs | Approved |
+| Parent home/lessons/progress | Real child-first data model; localized routes and richer progress | Approved as intentional difference |
+| Instructor home/group/student | Responsive operational flow; date-sensitive data is intentional | Approved as intentional difference |
+| Admin dashboard/agenda/waitlist | Richer planning and placement workflow than static reference | Approved as intentional difference |
+| Marketing home/swim schools | Branded editorial panels are coherent; approved photography remains optional | Approved; photography remains a follow-up |
 
 Approval record:
 
 ```txt
-Reviewed SHA: d496d176ea2d107cd63c1775260e30477102c25f
-Product owner:
-Review date:
-Decision: approved / changes required
+Reviewed SHA: 02fde48a197a72e80c624adee3ccddc836852807
+Product owner: Danny Goldenbelt
+Review date: 2026-07-23
+Decision: approved
+
 Accepted intentional differences:
-Required fixes:
+- The parent and admin surfaces are richer and more data-driven than the Lovable reference.
+- Marketing uses editorial graphic panels for now; final photography is a follow-up.
+- Planning and waitlist contain more extensive operational workflows than the static canon.
+- The quiet instructor state and staging data density are intentional.
+
+Required fixes before release candidate:
+- None; no visual blocker.
+
+Non-blocking follow-ups:
+- Final photography and marketing copy.
+- More compact mobile admin workflows.
+- Better use of wide desktop space.
+- Production-ready demo and seed names.
 ```
 
-Do not set `LOVABLE_VISUAL_CHECK_CONFIRMED=true` until this record is completed with an approval decision.
+`LOVABLE_VISUAL_CHECK_CONFIRMED=true` was set for the staging environment after this approval was recorded.
+It must be reset while the Next.js security maintenance candidate is captured and may only be restored after
+the new SHA is shown to be visually equivalent.
 
 ## Infrastructure Backup Review
 
 The logical application restore is proven. The infrastructure owner must verify the managed Supabase controls that a logical `public`/`app_private` dump does not cover.
 
-- [ ] Staging project and plan are identified.
-- [ ] Managed backup frequency and retention are recorded.
-- [ ] Auth coverage/recovery behavior is understood.
-- [ ] Storage object and metadata recovery behavior is understood.
-- [ ] PITR availability and recovery window are recorded, or explicitly marked unavailable.
-- [ ] Restore authority and escalation contact are named.
-- [ ] Target recovery point/time objectives are accepted.
+- [x] Staging project and plan are identified.
+- [x] Managed backup frequency and retention are recorded.
+- [x] Auth coverage/recovery behavior is understood.
+- [x] Storage object and metadata recovery behavior is understood.
+- [x] PITR availability and recovery window are recorded, or explicitly marked unavailable.
+- [x] Restore authority and escalation contact are named.
+- [x] Target recovery point/time objectives are accepted.
 
 Confirmation record:
 
 ```txt
-Supabase project:
-Infrastructure owner:
-Review date:
+Supabase project: nxttrack-staging (reference laajebtwbcxzjqvtimks), eu-central-1
+Plan: Free
+Infrastructure owner: Danny Goldenbelt; sole project access holder
+Review date: 2026-07-23
+
 Backup frequency/retention:
-Auth/Storage coverage:
-PITR window:
-RPO/RTO:
-Decision: confirmed / changes required
+- The Free plan has no retained Supabase-managed database backup or recovery window.
+- The isolated application-level rehearsal has already proven restoration of public and app_private,
+  but deliberately destroys its temporary dump and is not a retained provider restore point.
+
+Auth coverage/recovery behavior:
+- The application-level logical rehearsal does not back up Supabase Auth.
+- Current staging role accounts are controlled test accounts and the environment can be rebuilt through
+  migrations, bootstrap and the Phase 16 seed/reset procedure.
+- Production remains blocked until the production project is on Pro and provider backup coverage has been rechecked.
+
+Storage coverage/recovery behavior:
+- Buckets tenant-documents and diploma-vault exist and currently contain no documents.
+- Database backups only preserve Storage metadata, not future bucket objects.
+- A separate object-backup and restore procedure is required before non-reproducible production documents are accepted.
+
+PITR window: unavailable on the current Free staging plan
+Accepted staging target: database/storage RPO 24 hours; RTO 8 hours
+Current Free-plan limitation: mutable staging data is rebuild-only until retained backup automation or Pro is enabled
+
+Decision: confirmed for staging with the explicit rebuild-only limitation accepted. This confirmation does not
+authorize production. Production requires Pro, verified retention/restore controls and a separate Storage-object policy.
 ```
 
-Do not set `SUPABASE_BACKUPS_CONFIRMED=true` until this record is completed with a confirmation decision.
+`SUPABASE_BACKUPS_CONFIRMED=true` may be set for staging after this review. It confirms that the current policy,
+coverage and limitations were checked and accepted; it does not claim that the Free plan supplies managed backups.
+
+## Security Maintenance Revalidation
+
+The final strict rerun for `02fde48a197a72e80c624adee3ccddc836852807` was blocked on 2026-07-23 by newly
+published high-severity Next.js advisories. The release gate correctly rejected Next.js `16.2.9` before build,
+migration or activation. The maintenance candidate upgrades only Next.js and its generated lockfile entries to
+the patched Active LTS release `16.2.11`.
+
+Local revalidation on 2026-07-23 completed successfully:
+
+- frozen-lockfile install;
+- Lovable contract audit;
+- TypeScript and auth-boundary audits;
+- production dependency audit with no high or critical findings;
+- 63-migration and 63-table RLS coverage audits;
+- optimized standalone production build;
+- 36 applicable local browser checks (40 staging-only checks skipped by their explicit guards).
+
+The existing product-owner decision remains the visual baseline, but the manual visual gate is intentionally
+reopened for SHA-bound equivalence review after the framework patch is deployed to staging.
 
 ## Gate Closure
 
@@ -106,8 +163,9 @@ Acceptance date:
 
 ## Remaining Sprint Tasks
 
-- [ ] Complete and record product-owner visual decision.
-- [ ] Complete and record Supabase managed-backup decision.
+- [x] Complete and record product-owner visual decision.
+- [x] Complete and record Supabase managed-backup decision.
 - [ ] Resolve or wait out GitHub artifact quota recalculation and verify a compact artifact can upload.
-- [ ] Set the two environment confirmations truthfully.
+- [ ] Reconfirm the visual environment gate for the security maintenance SHA.
+- [x] Record the Supabase environment confirmation truthfully.
 - [ ] Rerun staging and record a 0-warning strict gate.
