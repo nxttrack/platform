@@ -263,6 +263,7 @@ jobs:
           pnpm run design:audit
           pnpm run typecheck
           pnpm run auth:audit
+          pnpm run security:audit-dependencies
           pnpm run db:audit
           pnpm run db:rls-audit
           pnpm run staging:gate

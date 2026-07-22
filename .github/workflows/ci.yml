@@ -46,6 +46,9 @@ jobs:
       - name: Audit auth boundaries
         run: pnpm run auth:audit
 
+      - name: Audit production dependencies
+        run: pnpm run security:audit-dependencies
+
       - name: Build
         run: pnpm build
 

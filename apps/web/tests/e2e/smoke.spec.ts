@@ -39,6 +39,18 @@ test.describe("staging MVP smoke", () => {
     });
   });
 
+  test("public responses expose the release security headers", async ({ request }) => {
+    const response = await request.get("/login");
+
+    expect(response.status()).toBeLessThan(500);
+    expect(response.headers()["content-security-policy"]).toContain("frame-ancestors 'none'");
+    expect(response.headers()["permissions-policy"]).toContain("camera=()");
+    expect(response.headers()["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    expect(response.headers()["strict-transport-security"]).toContain("max-age=31536000");
+    expect(response.headers()["x-content-type-options"]).toBe("nosniff");
+    expect(response.headers()["x-frame-options"]).toBe("DENY");
+  });
+
   for (const route of publicRoutes) {
     test(`public route ${route.label} renders without server error`, async ({ page }) => {
       const failures = collectRuntimeFailures(page);

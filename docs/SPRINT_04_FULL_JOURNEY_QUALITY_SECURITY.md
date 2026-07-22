@@ -194,3 +194,15 @@ Run `29884306288` passed login, parent and tenant admin including their performa
 - Duplicate, expired, denied and recovery paths are explicit.
 - No known P0/P1 security or accessibility issue remains.
 - Performance budgets and accepted exceptions are recorded.
+
+## Eighth Increment Contract
+
+The P0/P1 review starts with fail-closed controls for the confirmed highest-impact boundaries:
+
+- production dependencies are audited in CI and every deploy; high/critical advisories block release;
+- the transitive Sharp/libvips high-severity advisory is remediated by pinning the patched `0.35.0` runtime;
+- every public table uses both `ENABLE` and `FORCE ROW LEVEL SECURITY`, closing the ordinary table-owner bypass while preserving Supabase `service_role` BYPASSRLS operations;
+- public responses enforce frame denial, MIME sniffing prevention, strict referrer handling, HSTS, a bounded permissions policy and CSP restrictions for framing, forms, base URLs and objects;
+- browser smoke asserts the release headers so proxy or packaging changes cannot silently remove them.
+
+The dependency audit still reports one moderate PostCSS advisory inherited from Next's pinned runtime. It is below the P0/P1 release threshold and remains tracked pending an upstream-compatible Next/PostCSS update; it is not being hidden with an audit ignore.
