@@ -15,7 +15,8 @@ Status: prepared. Any real restore is destructive, can cause downtime and requir
 1. Upgrade production Supabase to Pro.
 2. Open Database > Backups and record the earliest/latest available restore point and retention.
 3. Decide whether daily backups meet the RPO; enable PITR only if the added cost and lower RPO are approved.
-4. Configure and test a separate Storage export using the Supabase Storage CLI or S3-compatible endpoint.
+4. Configure and test the encrypted off-platform Storage export defined in
+   [Private Storage Backup And Restore](STORAGE_BACKUP_RUNBOOK.md).
 5. Perform a restore-to-new-project rehearsal. Verify public/app-private schema, Auth users, RLS, migrations, bucket configuration and actual object downloads.
 6. Store Supabase project ownership, recovery authority and emergency contacts in the controlled operations record, not in the repository.
 
@@ -45,9 +46,13 @@ Stop application writes before choosing a recovery point. Preserve logs and, whe
 ## Storage object restore
 
 1. Recreate/verify the private `tenant-documents` and `diploma-vault` buckets and their policies through reviewed migrations/configuration.
-2. Restore object bytes through the Storage API or S3-compatible endpoint, not by writing directly to the `storage` schema.
-3. Reconcile every restored object with bucket, path, size/checksum, tenant ownership and database metadata.
-4. Test signed/private download authorization for a tenant admin, instructor and parent; verify cross-tenant denial.
+2. Decrypt and locally verify the selected manifest as defined in
+   [Private Storage Backup And Restore](STORAGE_BACKUP_RUNBOOK.md).
+3. Restore object bytes through `pnpm run storage:restore`, which uses the Storage API with overwrite disabled;
+   never write directly to the `storage` schema.
+4. Re-download and checksum every restored object through `pnpm run storage:verify-remote`.
+5. Reconcile every restored object with bucket, path, size/checksum, tenant ownership and database metadata.
+6. Test signed/private download authorization for a tenant admin, instructor and parent; verify cross-tenant denial.
 
 ## Verification and return to service
 

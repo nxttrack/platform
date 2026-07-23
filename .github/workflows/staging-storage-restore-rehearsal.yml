@@ -1,0 +1,104 @@
+name: Staging Storage restore rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_STAGING_STORAGE_RESTORE
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-storage-restore-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: backup, delete, restore and verify controlled objects
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      APP_ENV: staging
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      STORAGE_BACKUP_DIR: ${{ runner.temp }}/storage-backup
+      STORAGE_BACKUP_PREFIX: backup-rehearsal/${{ github.run_id }}
+      STORAGE_REHEARSAL_CONFIRMATION: ${{ inputs.confirmation }}
+    steps:
+      - name: Authorize controlled staging restore
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "REHEARSE_STAGING_STORAGE_RESTORE"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Seed controlled private objects
+        id: seed
+        run: node scripts/storage/object-backup.mjs seed-rehearsal
+
+      - name: Export and verify controlled objects
+        run: |
+          pnpm run storage:backup
+          pnpm run storage:verify-local
+
+      - name: Encrypt, decrypt and verify backup package
+        run: |
+          umask 077
+          openssl rand -base64 48 > "${RUNNER_TEMP}/storage-rehearsal-passphrase"
+          tar -C "$STORAGE_BACKUP_DIR" -czf "${RUNNER_TEMP}/storage-rehearsal.tar.gz" .
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "${RUNNER_TEMP}/storage-rehearsal-passphrase" \
+            --symmetric --cipher-algo AES256 \
+            --output "${RUNNER_TEMP}/storage-rehearsal.tar.gz.gpg" \
+            "${RUNNER_TEMP}/storage-rehearsal.tar.gz"
+          mkdir -m 700 "${RUNNER_TEMP}/storage-restored"
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "${RUNNER_TEMP}/storage-rehearsal-passphrase" \
+            --decrypt "${RUNNER_TEMP}/storage-rehearsal.tar.gz.gpg" |
+            tar -xzf - -C "${RUNNER_TEMP}/storage-restored"
+          STORAGE_BACKUP_DIR="${RUNNER_TEMP}/storage-restored" pnpm run storage:verify-local
+
+      - name: Delete only the controlled source objects
+        run: node scripts/storage/object-backup.mjs delete-rehearsal
+
+      - name: Restore without overwrite and verify remotely
+        env:
+          STORAGE_BACKUP_DIR: ${{ runner.temp }}/storage-restored
+          STORAGE_RESTORE_CONFIRMATION: RESTORE_STORAGE_OBJECTS
+        run: |
+          pnpm run storage:restore
+          pnpm run storage:verify-remote
+          node scripts/storage/object-backup.mjs summary > "${RUNNER_TEMP}/storage-rehearsal-evidence.json"
+
+      - name: Remove controlled restored objects
+        if: always() && steps.seed.outcome == 'success'
+        run: node scripts/storage/object-backup.mjs delete-rehearsal
+
+      - name: Retain encrypted synthetic backup and evidence
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-storage-restore-rehearsal-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/storage-rehearsal.tar.gz.gpg
+            ${{ runner.temp }}/storage-rehearsal-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0
