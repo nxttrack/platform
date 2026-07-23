@@ -15,6 +15,13 @@ import {
 
 const mollieApiBase = "https://api.mollie.com/v2";
 
+export class MollieApiError extends Error {
+  constructor(message: string, readonly status: number | null, readonly indeterminate: boolean) {
+    super(message);
+    this.name = "MollieApiError";
+  }
+}
+
 export type MolliePayment = {
   id: string;
   status: MollieProviderStatus;
@@ -263,18 +270,27 @@ async function mollieRequest<T>(path: string, secretReference: string, mode: Mol
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 12_000);
   try {
-    const response = await fetch(`${mollieApiBase}${path}`, {
-      ...init,
-      cache: "no-store",
-      headers: { Authorization: `Bearer ${resolveMollieSecret(secretReference, mode)}`, Accept: "application/json", ...init.headers },
-      signal: controller.signal
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${mollieApiBase}${path}`, {
+        ...init,
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${resolveMollieSecret(secretReference, mode)}`, Accept: "application/json", ...init.headers },
+        signal: controller.signal
+      });
+    } catch {
+      throw new MollieApiError("Mollie API request had an indeterminate network outcome.", null, init.method !== "GET");
+    }
     const payload = response.status === 204
       ? undefined
       : await response.json().catch(() => null) as (T & { detail?: string; title?: string }) | null;
     if (!response.ok || (response.status !== 204 && !payload)) {
       const errorPayload = payload as ({ detail?: string; title?: string } | null | undefined);
-      throw new Error(errorPayload?.detail || errorPayload?.title || `Mollie API returned ${response.status}`);
+      throw new MollieApiError(
+        errorPayload?.detail || errorPayload?.title || `Mollie API returned ${response.status}`,
+        response.status,
+        false
+      );
     }
     return payload as T;
   } finally {

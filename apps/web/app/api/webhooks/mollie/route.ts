@@ -11,6 +11,7 @@ import {
   type MollieSessionStatus
 } from "@/lib/domain/mollie-contract";
 import { getMolliePayment, listMollieMandates, type MollieMandate } from "@/lib/domain/mollie";
+import { syncMollieFinancialAdjustments } from "@/lib/domain/mollie-financial-sync";
 import { createTenantNotifications } from "@/lib/domain/tenant-notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -158,7 +159,7 @@ export async function POST(request: Request) {
         .update({ status: "paid", paid_on: paidOn, method: "Mollie", reference: payment.id })
         .eq("tenant_id", session.tenant_id)
         .eq("id", session.manual_payment_id)
-        .neq("status", "paid")
+        .in("status", ["due", "overdue"])
         .select("id");
       if (paymentUpdate.error) throw paymentUpdate.error;
       if ((paymentUpdate.data ?? []).length) {
@@ -176,6 +177,13 @@ export async function POST(request: Request) {
         });
         if (billingEvent.error && billingEvent.error.code !== "23505") throw billingEvent.error;
       }
+      processingStage = "financial_adjustments";
+      await syncMollieFinancialAdjustments({
+        mode,
+        paymentId: payment.id,
+        secretReference,
+        session
+      });
     } else if (session.sequence_type === "recurring" && isFailureStatus(status)) {
       processingStage = "collection_failure";
       await recordCollectionFailure({ failure, session, status });
