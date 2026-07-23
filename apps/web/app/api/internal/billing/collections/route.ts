@@ -19,11 +19,18 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const configsResult = await admin
+  const body = await request.json().catch(() => ({})) as { tenantId?: unknown };
+  const requestedTenantId = typeof body.tenantId === "string" && isUuid(body.tenantId) ? body.tenantId : null;
+  if (body.tenantId !== undefined && !requestedTenantId) {
+    return NextResponse.json({ accepted: false, reason: "invalid_tenant" }, { status: 400 });
+  }
+  let configsQuery = admin
     .from("billing_provider_configs")
     .select("id, tenant_id, public_config")
     .eq("provider", "mollie")
     .eq("status", "active");
+  if (requestedTenantId) configsQuery = configsQuery.eq("tenant_id", requestedTenantId);
+  const configsResult = await configsQuery;
   if (configsResult.error) {
     return NextResponse.json({ accepted: false, reason: "provider_config_lookup" }, { status: 503 });
   }
@@ -113,4 +120,8 @@ function hasValidAutomationToken(request: Request) {
   const expectedBuffer = Buffer.from(expected);
   const actualBuffer = Buffer.from(actual);
   return expectedBuffer.length === actualBuffer.length && timingSafeEqual(expectedBuffer, actualBuffer);
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
