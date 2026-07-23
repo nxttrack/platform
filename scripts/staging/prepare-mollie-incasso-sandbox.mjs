@@ -360,6 +360,8 @@ async function removePreviousRehearsalRows(tenantId) {
   );
   const customerIds = [...new Set(attemptRows.map((row) => row.billing_provider_customer_id))];
   const mandateIds = [...new Set(attemptRows.map((row) => row.billing_mandate_id))];
+  await checkedDelete(admin.from("billing_refunds").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "billing refunds");
+  await checkedDelete(admin.from("billing_chargebacks").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "billing chargebacks");
   await checkedDelete(admin.from("payment_provider_events").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "provider events");
   await checkedDelete(admin.from("billing_events").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "billing events");
   await checkedDelete(admin.from("payment_sessions").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "payment sessions");
