@@ -1,13 +1,15 @@
 # Communication Delivery Runbook
 
-Status: staging SendGrid, sender/DNS and controlled platform-test delivery are proven. Controlled invite/reset
-delivery and the tenant-notification retry rehearsal remain.
+Status: staging SendGrid, sender/DNS, platform-test delivery, invite/reset delivery and tenant-notification
+retry are technically proven. External inbox receipt and header confirmation remain a human release check.
 
 ## Safety Boundary
 
 - Configure secrets only through the platform-owner settings screen or the scoped GitHub environment; never commit or paste them into Actions logs.
 - Use a dedicated sending-domain credential with only the permissions needed to send mail.
-- Use a controlled external inbox for tests. Do not create a real invitation, reset request or tenant broadcast merely to test transport.
+- Use a controlled external inbox for tests. Routine transport checks use the platform test-mail action. Only
+  the explicitly confirmed staging rehearsal may create an invitation, reset request and retry notification,
+  and it must target the scoped `CONTROLLED_COMMUNICATIONS_RECIPIENT` staging secret.
 - One explicit test at a time. A provider acceptance response proves hand-off, while inbox receipt and headers prove external delivery.
 
 ## Configure Staging
@@ -49,6 +51,30 @@ one-time bootstrap script and as a pre-schema fallback.
 6. Re-run `Communications foundation audit`; `controlled-test-delivery` accepts a successful test for 30 days.
 
 Provider acceptance is not the same as inbox delivery. The human receipt/header record remains mandatory.
+
+## Controlled Application-Flow Rehearsal
+
+Dispatch `.github/workflows/staging-communications-rehearsal.yml` from `main` with:
+
+```txt
+confirmation=SEND_CONTROLLED_STAGING_COMMUNICATIONS
+```
+
+The workflow is staging-only and performs one non-retrying browser test. It sends an invitation and a reset
+code through their real application actions, creates a controlled failed tenant-notification attempt outside
+the active monitoring window, and uses the tenant-admin UI to retry it. It requires the exact approved
+recipient in the staging environment secret `CONTROLLED_COMMUNICATIONS_RECIPIENT`. Do not configure this
+secret in production or use a recipient that has not explicitly consented.
+
+Passing staging evidence:
+
+- [rehearsal 30009871228](https://github.com/nxttrack/platform/actions/runs/30009871228), exact SHA
+  `1f4e4a340040b1550bac05b68ff856fea5bf8a4f`;
+- [post-rehearsal operational probe 30010019404](https://github.com/nxttrack/platform/actions/runs/30010019404);
+- [post-rehearsal communications audit 30010021296](https://github.com/nxttrack/platform/actions/runs/30010021296).
+
+These runs prove application execution, provider acceptance and preserved retry evidence. The recipient owner
+must separately confirm inbox receipt and SPF, DKIM and DMARC results.
 
 ## Failure And Retry
 

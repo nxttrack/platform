@@ -1,7 +1,8 @@
 # Sprint 3 - Communications, Monitoring And Operations
 
-Status: communications and operational monitoring are active and proven on staging. The remaining sprint checks
-are controlled invite/reset delivery and one tenant-notification retry rehearsal.
+Status: communications and operational monitoring are active and technically proven on staging. Invite,
+password-reset and tenant-notification retry delivery were accepted by SendGrid through the real application
+flows; external inbox receipt and header confirmation remain the final human check.
 
 ## Goal
 
@@ -70,6 +71,15 @@ Current evidence on 23 July 2026:
   passed every mail, DNS, ownership, retention, alert-destination, schedule and health control.
 - [Post-activation probe 30009139430](https://github.com/nxttrack/platform/actions/runs/30009139430) passed all
   16 operational checks without sending another alert.
+- [Controlled communications rehearsal 30009871228](https://github.com/nxttrack/platform/actions/runs/30009871228)
+  passed on exact SHA `1f4e4a340040b1550bac05b68ff856fea5bf8a4f`. It used the real platform invitation,
+  public password-reset and tenant-admin retry actions against one explicitly approved staging recipient.
+  SendGrid accepted all three deliveries. The retry preserved the controlled failed attempt and created a
+  separate successful attempt.
+- [Post-rehearsal operational probe 30010019404](https://github.com/nxttrack/platform/actions/runs/30010019404)
+  passed on the same SHA without sending an alert.
+- [Post-rehearsal communications audit 30010021296](https://github.com/nxttrack/platform/actions/runs/30010021296)
+  passed on the same SHA without sending mail.
 
 ## Non-Sending Audit
 
@@ -109,9 +119,10 @@ Staging deployment evidence: [GitHub Actions run 29871694124](https://github.com
 - [x] Configure SendGrid API in staging through platform-global settings.
 - [x] Verify sender/domain ownership, SPF, DKIM and DMARC.
 - [x] Deliver and record controlled operational test mail to an external inbox.
-- [ ] Deliver one invite and one password-reset message to controlled accounts.
+- [x] Deliver one invite and one password-reset message to a controlled account; provider acceptance is recorded.
+- [ ] Confirm external inbox receipt and SPF, DKIM and DMARC headers for those controlled messages.
 - [x] Prove provider-auth failure diagnostics and platform-test recovery without overwriting failed evidence.
-- [ ] Exercise the tenant-notification retry action once with a controlled recipient.
+- [x] Exercise the tenant-notification retry action once with a controlled recipient.
 - [x] Prove the dormant operational monitor with a non-alerting 16-check staging probe.
 - [x] Configure the Slack destination for health/5xx/database/asset/mail alerts.
 - [x] Run a synthetic alert drill received by the named incident owner.
