@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
 const target = process.env.RELEASE_TARGET || process.env.TARGET || "unknown";
@@ -48,3 +48,11 @@ const evidence = {
 mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o640 });
 console.log(`[release:evidence] Wrote non-sensitive release evidence to ${outputPath}.`);
+
+if (process.env.GITHUB_STEP_SUMMARY) {
+  appendFileSync(
+    process.env.GITHUB_STEP_SUMMARY,
+    `## NXTTRACK release evidence\n\n\`\`\`json\n${JSON.stringify(evidence, null, 2)}\n\`\`\`\n`
+  );
+  console.log("[release:evidence] Preserved release evidence in the GitHub job summary.");
+}
