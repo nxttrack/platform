@@ -34,6 +34,7 @@ jobs:
       PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
       STAGING_RELEASE_SHA: ${{ inputs.release_sha }}
       MOLLIE_REHEARSAL_STATE_PATH: ${{ github.workspace }}/artifacts/mollie-rehearsal-state.json
+      MOLLIE_REHEARSAL_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-checkout-diagnostic
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
@@ -93,6 +94,15 @@ jobs:
 
       - name: Verify duplicate webhook and exactly-once effects
         run: pnpm run sprint6:verify-mollie
+
+      - name: Upload checkout diagnostic after a failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mollie-checkout-diagnostic-${{ github.run_id }}
+          path: artifacts/mollie-checkout-diagnostic.*
+          if-no-files-found: ignore
+          retention-days: 1
 
       - name: Upload redacted rehearsal evidence
         if: always()

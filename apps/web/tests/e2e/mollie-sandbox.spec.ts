@@ -1,5 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { expect, test, type Frame, type Page } from "@playwright/test";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 type RehearsalState = {
@@ -83,22 +83,109 @@ async function configureTestProvider(page: Page) {
 async function completeMollieTestCheckout(page: Page, status: "paid") {
   await expect(page).toHaveURL(/^https:\/\/(?:[^/]+\.)?mollie\.com\//);
 
-  const statusSelect = page.locator("select").filter({ has: page.locator(`option[value='${status}']`) }).first();
-  if (await statusSelect.count()) {
-    await statusSelect.selectOption(status);
-  } else {
-    const radio = page.locator(`input[type='radio'][value='${status}']`).first();
-    if (await radio.count()) {
-      await radio.check();
-    } else {
-      await page.getByText(/^(Paid|Betaald)$/i).first().click();
+  if (!await chooseMollieStatus(page, status)) {
+    const methodSelected = await chooseMollieTestMethod(page);
+    if (methodSelected) {
+      await page.waitForTimeout(1_000);
+    }
+    if (!await chooseMollieStatus(page, status)) {
+      await writeMollieDiagnostic(page);
+      throw new Error("Mollie test checkout did not expose a supported paid-status control.");
     }
   }
 
-  const continueButton = page.getByRole("button", { name: /continue|confirm|doorgaan|verder|bevestigen|submit/i }).first();
-  if (await continueButton.isVisible().catch(() => false)) {
-    await continueButton.click();
+  for (const context of pageContexts(page)) {
+    const continueButton = context.getByRole("button", { name: /continue|confirm|doorgaan|verder|bevestigen|submit/i }).first();
+    if (await continueButton.isVisible().catch(() => false)) {
+      await continueButton.click();
+      return;
+    }
   }
+}
+
+async function chooseMollieStatus(page: Page, status: "paid") {
+  const statusLabel = /^(paid|betaald|successful|success|geslaagd)$/i;
+
+  for (const context of pageContexts(page)) {
+    const selects = context.locator("select");
+    for (let index = 0; index < await selects.count(); index += 1) {
+      const select = selects.nth(index);
+      const option = await select.locator("option").evaluateAll((options, pattern) => {
+        const matcher = new RegExp(pattern, "i");
+        const match = options.find((item) => matcher.test(`${(item as HTMLOptionElement).value} ${item.textContent ?? ""}`));
+        return match ? { label: match.textContent?.trim() ?? "", value: (match as HTMLOptionElement).value } : null;
+      }, "^(paid|betaald|successful|success|geslaagd)(\\s|$)");
+      if (option) {
+        await select.selectOption(option.value ? { value: option.value } : { label: option.label });
+        return true;
+      }
+    }
+
+    for (const role of ["radio", "button", "option"] as const) {
+      const control = context.getByRole(role, { name: statusLabel }).first();
+      if (await control.isVisible().catch(() => false)) {
+        if (role === "radio") await control.check();
+        else await control.click();
+        return true;
+      }
+    }
+
+    const exactText = context.getByText(statusLabel).first();
+    if (await exactText.isVisible().catch(() => false)) {
+      await exactText.click();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function chooseMollieTestMethod(page: Page) {
+  const methodLabel = /^(iDEAL|Credit card|Creditcard|Bank card|Bancontact)$/i;
+
+  for (const context of pageContexts(page)) {
+    for (const role of ["radio", "button", "link"] as const) {
+      const control = context.getByRole(role, { name: methodLabel }).first();
+      if (await control.isVisible().catch(() => false)) {
+        if (role === "radio") await control.check();
+        else await control.click();
+        return true;
+      }
+    }
+
+    const exactText = context.getByText(methodLabel).first();
+    if (await exactText.isVisible().catch(() => false)) {
+      await exactText.click();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+async function writeMollieDiagnostic(page: Page) {
+  const basePath = process.env.MOLLIE_REHEARSAL_DIAGNOSTIC_PATH;
+  if (!basePath) return;
+  mkdirSync(path.dirname(basePath), { recursive: true });
+  await page.screenshot({ path: `${basePath}.png`, fullPage: true });
+  const frames = await Promise.all(pageContexts(page).map(async (context) => ({
+    buttons: await context.getByRole("button").allTextContents(),
+    links: await context.getByRole("link").allTextContents(),
+    radios: await context.getByRole("radio").evaluateAll((items) => items.map((item) => ({
+      ariaLabel: item.getAttribute("aria-label"),
+      value: (item as HTMLInputElement).value
+    }))),
+    selects: await context.locator("select").evaluateAll((items) => items.map((item) => ({
+      ariaLabel: item.getAttribute("aria-label"),
+      options: [...(item as HTMLSelectElement).options].map((option) => ({ text: option.text, value: option.value }))
+    }))),
+    url: context.url()
+  })));
+  writeFileSync(`${basePath}.json`, `${JSON.stringify({ frames, pageUrl: page.url() }, null, 2)}\n`);
+}
+
+function pageContexts(page: Page): Array<Page | Frame> {
+  return [page, ...page.frames().filter((frame) => frame !== page.mainFrame())];
 }
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
