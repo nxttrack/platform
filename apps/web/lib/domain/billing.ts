@@ -10,6 +10,8 @@ export type PaymentPlanRow = {
   name: string;
   description: string | null;
   amount_cents: number;
+  refunded_cents: number;
+  chargeback_cents: number;
   currency: string;
   billing_interval: string;
   billing_day: number | null;
@@ -177,6 +179,44 @@ export type BillingCollectionAttemptRow = {
   updated_at: string;
 };
 
+export type BillingRefundRow = {
+  id: string;
+  provider_config_id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  provider_payment_id: string;
+  provider_refund_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  description: string;
+  requested_at: string;
+  completed_at: string | null;
+  last_synced_at: string | null;
+  failure_code: string | null;
+  failure_message: string | null;
+};
+
+export type BillingChargebackRow = {
+  id: string;
+  provider_config_id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  provider_payment_id: string;
+  provider_chargeback_id: string;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  reason_code: string | null;
+  occurred_at: string;
+  reversed_at: string | null;
+  last_synced_at: string;
+};
+
 export type PaymentProviderEventRow = {
   id: string;
   provider_config_id: string | null;
@@ -247,6 +287,8 @@ export type BillingAdminData = TenantCoreData & {
   providerCustomers: BillingProviderCustomerRow[];
   mandates: BillingMandateRow[];
   collectionAttempts: BillingCollectionAttemptRow[];
+  refunds: BillingRefundRow[];
+  chargebacks: BillingChargebackRow[];
   paymentPlans: PaymentPlanRow[];
   subscriptions: SubscriptionRow[];
   manualPayments: ManualPaymentRow[];
@@ -261,7 +303,7 @@ export type BillingAdminData = TenantCoreData & {
 export async function getBillingAdminData(): Promise<BillingAdminData> {
   const core = await getTenantCoreData();
   const admin = createAdminClient();
-  const [providerConfigsResult, providerCustomersResult, mandatesResult, collectionAttemptsResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, exportBatchesResult] = await Promise.all([
+  const [providerConfigsResult, providerCustomersResult, mandatesResult, collectionAttemptsResult, refundsResult, chargebacksResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, exportBatchesResult] = await Promise.all([
     admin
       .from("billing_provider_configs")
       .select("id, provider, mode, status, display_name, secret_reference, webhook_secret_reference, public_config, created_at, updated_at")
@@ -285,6 +327,18 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
       .order("created_at", { ascending: false })
       .limit(80),
     admin
+      .from("billing_refunds")
+      .select("id, provider_config_id, payment_session_id, manual_payment_id, participant_id, guardian_user_id, provider_payment_id, provider_refund_id, amount_cents, currency, status, description, requested_at, completed_at, last_synced_at, failure_code, failure_message")
+      .eq("tenant_id", core.tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(80),
+    admin
+      .from("billing_chargebacks")
+      .select("id, provider_config_id, payment_session_id, manual_payment_id, participant_id, guardian_user_id, provider_payment_id, provider_chargeback_id, amount_cents, currency, status, reason_code, occurred_at, reversed_at, last_synced_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("occurred_at", { ascending: false })
+      .limit(80),
+    admin
       .from("payment_plans")
       .select("id, program_id, code, name, description, amount_cents, currency, billing_interval, billing_day, payment_terms_days, status, sort_order")
       .eq("tenant_id", core.tenant.id)
@@ -297,7 +351,7 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
       .order("starts_on", { ascending: false }),
     admin
       .from("manual_payments")
-      .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, currency, due_on, paid_on, status, reference, method, notes, recorded_by_user_id")
+      .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, refunded_cents, chargeback_cents, currency, due_on, paid_on, status, reference, method, notes, recorded_by_user_id")
       .eq("tenant_id", core.tenant.id)
       .order("due_on", { ascending: false }),
     admin
@@ -335,6 +389,8 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
   assertBillingResult(providerCustomersResult.error, "billing provider customers");
   assertBillingResult(mandatesResult.error, "billing mandates");
   assertBillingResult(collectionAttemptsResult.error, "billing collection attempts");
+  assertBillingResult(refundsResult.error, "billing refunds");
+  assertBillingResult(chargebacksResult.error, "billing chargebacks");
   assertBillingResult(plansResult.error, "payment plans");
   assertBillingResult(subscriptionsResult.error, "subscriptions");
   assertBillingResult(paymentsResult.error, "manual payments");
@@ -364,6 +420,8 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
     providerCustomers: (providerCustomersResult.data ?? []) as BillingProviderCustomerRow[],
     mandates: (mandatesResult.data ?? []) as BillingMandateRow[],
     collectionAttempts: (collectionAttemptsResult.data ?? []) as BillingCollectionAttemptRow[],
+    refunds: (refundsResult.data ?? []) as BillingRefundRow[],
+    chargebacks: (chargebacksResult.data ?? []) as BillingChargebackRow[],
     paymentPlans: (plansResult.data ?? []) as PaymentPlanRow[],
     subscriptions: (subscriptionsResult.data ?? []) as SubscriptionRow[],
     manualPayments: (paymentsResult.data ?? []) as ManualPaymentRow[],

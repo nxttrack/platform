@@ -234,6 +234,8 @@ export type ParentManualPaymentRow = {
   enrollment_id: string;
   guardian_user_id: string | null;
   amount_cents: number;
+  refunded_cents: number;
+  chargeback_cents: number;
   currency: string;
   due_on: string;
   paid_on: string | null;
@@ -332,6 +334,33 @@ export type ParentBillingCollectionAttemptRow = {
   failure_message: string | null;
 };
 
+export type ParentBillingRefundRow = {
+  id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  description: string;
+  requested_at: string;
+  completed_at: string | null;
+  failure_message: string | null;
+};
+
+export type ParentBillingChargebackRow = {
+  id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  reason_code: string | null;
+  occurred_at: string;
+  reversed_at: string | null;
+};
+
 export type ParentBillingInvoiceRow = {
   id: string;
   subscription_id: string | null;
@@ -401,6 +430,8 @@ export type ParentPortalData = {
   providerCustomers: ParentBillingProviderCustomerRow[];
   mandates: ParentBillingMandateRow[];
   collectionAttempts: ParentBillingCollectionAttemptRow[];
+  refunds: ParentBillingRefundRow[];
+  chargebacks: ParentBillingChargebackRow[];
   invoices: ParentBillingInvoiceRow[];
   invoiceLines: ParentBillingInvoiceLineRow[];
 };
@@ -450,6 +481,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     providerCustomersResult,
     mandatesResult,
     collectionAttemptsResult,
+    refundsResult,
+    chargebacksResult,
     invoicesResult
   ] = await Promise.all([
     loadedParticipantIds.length > 0
@@ -534,7 +567,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("manual_payments")
-          .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, currency, due_on, paid_on, status, reference, method, notes")
+          .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, refunded_cents, chargeback_cents, currency, due_on, paid_on, status, reference, method, notes")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("due_on", { ascending: false })
@@ -576,6 +609,20 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
       .eq("guardian_user_id", context.user.id)
       .order("created_at", { ascending: false })
       .limit(40),
+    admin
+      .from("billing_refunds")
+      .select("id, payment_session_id, manual_payment_id, participant_id, amount_cents, currency, status, description, requested_at, completed_at, failure_message")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    admin
+      .from("billing_chargebacks")
+      .select("id, payment_session_id, manual_payment_id, participant_id, amount_cents, currency, status, reason_code, occurred_at, reversed_at")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("occurred_at", { ascending: false })
+      .limit(40),
     loadedParticipantIds.length > 0
       ? admin
           .from("billing_invoices")
@@ -602,6 +649,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   assertParentPortalResult(providerCustomersResult.error, "billing provider customers");
   assertParentPortalResult(mandatesResult.error, "billing mandates");
   assertParentPortalResult(collectionAttemptsResult.error, "billing collection attempts");
+  assertParentPortalResult(refundsResult.error, "billing refunds");
+  assertParentPortalResult(chargebacksResult.error, "billing chargebacks");
   assertParentPortalResult(invoicesResult.error, "billing invoices");
 
   const enrollments = (enrollmentsResult.data ?? []) as EnrollmentRow[];
@@ -615,6 +664,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   const providerCustomers = (providerCustomersResult.data ?? []) as ParentBillingProviderCustomerRow[];
   const mandates = (mandatesResult.data ?? []) as ParentBillingMandateRow[];
   const collectionAttempts = (collectionAttemptsResult.data ?? []) as ParentBillingCollectionAttemptRow[];
+  const refunds = (refundsResult.data ?? []) as ParentBillingRefundRow[];
+  const chargebacks = (chargebacksResult.data ?? []) as ParentBillingChargebackRow[];
   const invoices = (invoicesResult.data ?? []) as ParentBillingInvoiceRow[];
   const invoiceIds = invoices.map((invoice) => invoice.id);
   const invoiceLinesResult =
@@ -733,6 +784,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     providerCustomers,
     mandates,
     collectionAttempts,
+    refunds,
+    chargebacks,
     invoices,
     invoiceLines: (invoiceLinesResult.data ?? []) as ParentBillingInvoiceLineRow[]
   };
