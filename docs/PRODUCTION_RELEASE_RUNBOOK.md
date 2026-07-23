@@ -53,7 +53,9 @@ Complete the generated file under `artifacts/production-go-no-go/` and store the
 - Confirm Caddy validates and `nxttrack-production` is healthy before touching it.
 - Keep `BOOTSTRAP_PLATFORM_OWNER` and its reset flag `false`.
 - Set `RUN_DB_MIGRATIONS=true` only when the reviewed first-install/change set is authorized. Return it to `false` immediately after the successful release.
-- Ensure the SendGrid fallback/provider secret and approved sender pass the foundation audit.
+- Ensure the SendGrid first-release/bootstrap fallback and approved sender pass the foundation audit.
+- Record the separately authorized one-time owner-creation step. Do not leave bootstrap or password-reset flags
+  enabled as persistent production configuration.
 
 ## 3. Dispatch production
 
@@ -77,11 +79,14 @@ Within five minutes:
 1. `https://nxttrack.nl/api/health` reports `ok=true`, `env=production`, a passing database probe and `commit=RELEASE_SHA`.
 2. Apex, `www` and `admin` have valid TLS and expected routing.
 3. A controlled tenant hostname resolves through the wildcard route.
-4. Platform-owner login, tenant-admin login and one tenant-isolation denial work.
-5. Send one controlled mail and verify the delivery record plus SendGrid response.
-6. Confirm the production release-evidence artifact is downloadable.
-7. Restore `RUN_DB_MIGRATIONS=false` and reconfirm both bootstrap flags are `false`.
-8. Start the 30-minute observation window and enable production monitoring only as described in the monitoring checklist.
+4. The initial platform owner can log in and must change the temporary password.
+5. In Platform Admin, enable the database-backed production SendGrid settings. The singleton row is authoritative
+   after migration; the environment fallback does not override an intentionally disabled or incomplete row.
+6. Send one controlled mail and verify the delivery record, SendGrid response, inbox receipt and authentication
+   headers.
+7. Confirm the production release-evidence artifact is downloadable.
+8. Restore `RUN_DB_MIGRATIONS=false` and reconfirm both bootstrap flags are `false`.
+9. Start the 30-minute observation window and enable production monitoring only as described in the monitoring checklist.
 
 ## Runtime rollback
 

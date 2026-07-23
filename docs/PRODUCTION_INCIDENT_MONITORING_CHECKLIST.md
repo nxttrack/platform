@@ -25,6 +25,9 @@ The current scheduled `operational-monitor.yml` is staging-scoped. Do not silent
 5. verify alert receipt, ownership and acknowledgement time;
 6. only then enable the 15-minute schedule.
 
+Alert payloads must carry the named incident/support owners, environment, exact SHA and Actions run URL without
+including recipient addresses, message contents or credentials.
+
 ## Routine probe checklist
 
 - Production health returns `ok=true`, `env=production`, exact deployed SHA and passing database check.

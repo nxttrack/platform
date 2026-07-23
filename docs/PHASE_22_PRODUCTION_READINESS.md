@@ -1,8 +1,8 @@
 # Phase 22 - Production Readiness And Commercial Launch
 
 Status: staging release candidate approved and technically healthy. Exact-SHA foundation and migration-rehearsal
-evidence are current for the accepted application candidate; production remains no-go until Pro backup controls,
-the production provider mail secret and final go/no-go are complete.
+evidence are available for the accepted application candidate; production remains no-go until Pro backup
+controls, database-backed production mail activation, controlled delivery and final go/no-go are complete.
 
 Canonical production procedures:
 
@@ -51,7 +51,8 @@ This proves that an application-level logical export is readable and restorable.
 ## Remaining Manual Gates
 
 - Upgrade production Supabase to Pro, record provider backup retention and establish a separate backup for Storage object bytes.
-- Configure a production SendGrid/SMTP provider secret and record a controlled successful delivery.
+- Enable the database-backed production SendGrid provider after first install and record a controlled successful
+  delivery. The GitHub first-release/bootstrap secret already passes its non-sending audit.
 - Re-run foundation, migration rehearsal and staging evidence only when the promoted SHA changes.
 - Record production monitoring destinations, incident/support ownership and commercial launch timing.
 - Complete and sign the generated exact-SHA go/no-go form.

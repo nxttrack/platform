@@ -1,6 +1,7 @@
 # Communication Delivery Runbook
 
-Status: executable process; real staging provider, sender and controlled-inbox evidence remain required.
+Status: staging SendGrid, sender/DNS and controlled platform-test delivery are proven. Controlled invite/reset
+delivery and the tenant-notification retry rehearsal remain.
 
 ## Safety Boundary
 
@@ -19,6 +20,24 @@ Status: executable process; real staging provider, sender and controlled-inbox e
 6. Run `Communications foundation audit`; sender/provider/DKIM must pass before a delivery test.
 
 The deploy-time environment fallback remains supported, but database-backed platform settings take precedence when their singleton row exists. Do not configure both paths with different senders.
+
+## Production First-Release Order
+
+Production uses the same platform-global settings model as staging:
+
+1. The GitHub `production` environment keeps a scoped `SENDGRID_API_KEY` and approved sender as a first-release
+   and bootstrap fallback. The key is not copied into platform settings automatically.
+2. Apply the first-install migrations and create the initial platform owner through the separately authorized
+   production bootstrap step.
+3. Sign in to `/platform/instellingen`, configure and enable the production provider and sender, and save the
+   production key as the encrypted platform-global secret.
+4. Re-open the page and verify that it reports the secret only as configured.
+5. Send exactly one controlled production test and confirm provider acceptance, inbox receipt and headers.
+
+Once the singleton database row exists, it is authoritative. Disabled or incomplete platform settings
+deliberately disable regular transactional delivery instead of silently falling back to the environment key.
+This makes the Platform Admin switch a real operational control. The environment key remains available to the
+one-time bootstrap script and as a pre-schema fallback.
 
 ## Controlled Delivery Test
 

@@ -8,10 +8,10 @@ Live production SHA observed at audit start: `ba8932b5ecc5c4148c1b5d6d14b27ba662
 
 Status: production foundation present; release remains no-go until the open controls below pass for the final exact SHA.
 
-Latest read-only candidate audit: <https://github.com/nxttrack/platform/actions/runs/30003665341> for
-`e4b7125ea4efd9fddfc18550c3ddf3fbd7373fcb`. All 40 environment/project checks, the production host foundation
-and the transaction-read-only database inventory passed. The production database remains empty with 65 pending
-repository migrations. The workflow's only failure is the absent production SendGrid/SMTP provider secret.
+Latest successful read-only candidate audit: <https://github.com/nxttrack/platform/actions/runs/30005553727> for
+`983abaa13e1bab545b8773aa740d9eaaa21d9bef`. All 40 environment/project checks, the production host foundation,
+the transaction-read-only database inventory and all eight mail configuration checks passed. The production
+database remains empty with 65 pending repository migrations.
 
 Latest read-only migration rehearsal: <https://github.com/nxttrack/platform/actions/runs/30003666813>. Supabase
 CLI dry-run listed all 65 migrations and the database fingerprints before and after were identical.
@@ -61,13 +61,17 @@ Public DNS currently exposes SPF, DMARC and SendGrid DKIM selectors `s1`/`s2`. P
 - `EMAIL_DKIM_SELECTOR=s1`
 - `EMAIL_DELIVERY_TIMEOUT_MS=15000`
 
-Open blocker: the GitHub production environment has no `SENDGRID_API_KEY`/SMTP password, and a first-install database cannot yet supply an encrypted platform setting. Add the production provider secret before the final foundation audit, then send and record one controlled production test after schema initialization.
+The GitHub production environment now has a `SENDGRID_API_KEY`; the foundation audit proves its presence without
+printing or using it. This is the first-release/bootstrap fallback. After schema initialization, the singleton
+database setting is authoritative and the provider must be enabled through Platform Admin, as on staging. Send
+and record one controlled production test after that activation.
 
 ## Open go-live controls
 
 - [ ] Upgrade production Supabase to Pro and record provider backup retention.
 - [ ] Implement/test off-platform Storage object backups for both private buckets.
-- [ ] Add a production SendGrid API key or SMTP password and pass a controlled delivery test.
+- [x] Add a production SendGrid API key and pass the non-sending provider/DNS foundation audit.
+- [ ] Enable the database-backed production provider and pass a controlled delivery test after first install.
 - [ ] Run foundation audit and migration rehearsal for the final exact SHA.
 - [x] Confirm screenshots and release evidence persist as downloadable GitHub artifacts.
 - [ ] Decide and rehearse the one-time production owner creation path if the production Auth schema remains empty; keep the deploy bootstrap flag disabled by default and remove any temporary password immediately.

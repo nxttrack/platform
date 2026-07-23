@@ -1,6 +1,8 @@
 # Sprint 3 - Communications, Monitoring And Operations
 
-Status: non-sending baseline recorded. Sprint acceptance depends on Sprint 2 ownership closure and real provider/operator configuration.
+Status: mail delivery and the non-alerting operational probe are proven on staging. Named ownership, DKIM and
+log retention are configured. Sprint acceptance is blocked only by an independent alert webhook, a received
+synthetic alert drill and activation of the 15-minute schedule.
 
 ## Goal
 
@@ -51,6 +53,18 @@ Blocking controls:
 
 Latest evidence: [GitHub Actions run 29871427347](https://github.com/nxttrack/platform/actions/runs/29871427347), executed on commit `c6a1dbe79bf58c6c8c0ca18289aa11b794dd2006`. It preserves all earlier passing controls and reports ten explicit blockers: the original eight plus no controlled test delivery in the previous 30 days and monitoring not yet enabled.
 
+Current evidence on 23 July 2026:
+
+- [Production foundation run 30005553727](https://github.com/nxttrack/platform/actions/runs/30005553727)
+  passes the provider-secret, sender, SPF, DMARC and DKIM checks without sending mail.
+- [Communications audit 30005867738](https://github.com/nxttrack/platform/actions/runs/30005867738) proves the
+  active database-backed SendGrid configuration, verified sender, four successful controlled platform tests in
+  the last 30 days, SPF, DMARC, SendGrid DKIM public key, named incident/support owners, 30-day log retention and
+  database-aware staging health. It is fail-closed on only the absent alert webhook and disabled schedule.
+- [Operational probe 30005869686](https://github.com/nxttrack/platform/actions/runs/30005869686) passes all 16
+  health, route, asset and read-only mail-window checks with zero failed, skipped or stuck deliveries in the
+  current 15-minute window. No alert was sent.
+
 ## Non-Sending Audit
 
 Dispatch `.github/workflows/communications-foundation-audit.yml` from `main` with:
@@ -86,14 +100,16 @@ Staging deployment evidence: [GitHub Actions run 29871694124](https://github.com
 ## Remaining Sprint Work
 
 - [x] Run and record the non-sending baseline audit.
-- [ ] Configure SendGrid API or SMTP in staging.
-- [ ] Verify sender/domain ownership, SPF, DKIM and DMARC.
-- [ ] Deliver invite, password-reset and operational test mail to a controlled external inbox.
-- [ ] Prove bounce/failure diagnostics and retry behavior.
+- [x] Configure SendGrid API in staging through platform-global settings.
+- [x] Verify sender/domain ownership, SPF, DKIM and DMARC.
+- [x] Deliver and record controlled operational test mail to an external inbox.
+- [ ] Deliver one invite and one password-reset message to controlled accounts.
+- [x] Prove provider-auth failure diagnostics and platform-test recovery without overwriting failed evidence.
+- [ ] Exercise the tenant-notification retry action once with a controlled recipient.
 - [x] Prove the dormant operational monitor with a non-alerting 16-check staging probe.
 - [ ] Configure health/5xx/database/asset/mail alert destinations.
 - [ ] Run a synthetic alert drill received by the named incident owner.
-- [ ] Record support ownership, escalation times and log retention.
+- [x] Record Danny Goldenbelt as incident/support owner and set log retention to 30 days.
 - [x] Add an executable incident and recovery runbook; ownership fields remain to be filled through environment configuration.
 - [x] Add a controlled-delivery, failure-diagnosis and retry runbook.
 

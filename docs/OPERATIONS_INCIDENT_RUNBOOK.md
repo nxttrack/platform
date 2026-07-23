@@ -1,6 +1,7 @@
 # Operations And Incident Runbook
 
-Status: executable foundation; ownership and alert destination must be configured before enabling the schedule.
+Status: executable foundation. Danny Goldenbelt is the named staging incident/support owner and log retention is
+30 days. An independent alert destination and received drill are still required before enabling the schedule.
 
 ## Configuration Contract
 
@@ -19,6 +20,11 @@ The staging GitHub environment owns the operational configuration:
 | `MAIL_SKIPPED_THRESHOLD` | variable | Allowed skipped attempts in the window; default 0 |
 
 The scheduled monitor checks database-aware health, public-route 5xx responses, static asset status/MIME and aggregate failed, skipped or stuck mail attempts. It never reads recipient addresses or message bodies.
+Alert payloads include the named incident/support owners, environment, commit SHA, failed check identifiers and
+the Actions run URL, but no recipient addresses, message bodies or credentials.
+
+Latest non-alerting evidence: [run 30005869686](https://github.com/nxttrack/platform/actions/runs/30005869686)
+passed all 16 checks on 23 July 2026.
 
 ## Activation And Drill
 

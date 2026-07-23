@@ -1,8 +1,8 @@
 # Sprint 2 - Production Foundation
 
-Status: the core production foundation is technically proven for the accepted application candidate. Production
-mail, provider backup controls and final promotion authorization remain separate go-live gates. No production
-migration or deployment is authorized by this work.
+Status: the core production foundation and first-release mail fallback are technically proven. Provider backup
+controls, database-backed production mail activation, controlled delivery and final promotion authorization
+remain separate go-live gates. No production migration or deployment is authorized by this work.
 
 ## Sprint Outcome
 
@@ -84,6 +84,10 @@ Final Sprint 2 candidate evidence:
 - Exact-SHA CI passed: <https://github.com/nxttrack/platform/actions/runs/30002916927>.
 - Exact-SHA staging deployment and browser validation passed:
   <https://github.com/nxttrack/platform/actions/runs/30002927818>.
+
+The missing provider-secret blocker was resolved in Deel 3. Follow-up
+[run 30005553727](https://github.com/nxttrack/platform/actions/runs/30005553727) passed all foundation, host,
+read-only database and mail configuration jobs after the production `SENDGRID_API_KEY` was added.
 
 ## Protection And Authority
 
