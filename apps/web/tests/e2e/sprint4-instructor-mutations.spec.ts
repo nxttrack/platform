@@ -74,6 +74,18 @@ test.describe("Sprint 4 instructor mutations", () => {
     }
 
     await expect(completedStatus).toBeVisible();
+
+    // Leave the shared Phase 16 fixture in its parent-visible canonical state so
+    // later full-suite role checks do not inherit this test's private assessment.
+    await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
+    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
+    await assessment.getByLabel("Score").selectOption("4");
+    await assessment.getByLabel("Zichtbaarheid").selectOption("guardian");
+    await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
+    await assessment.getByRole("button", { name: "Score opslaan" }).click();
+    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
+    await expect(assessment.getByText("Ik kan het bijna zelf", { exact: true })).toBeVisible();
+
     expect(failures()).toEqual([]);
   });
 });
