@@ -1,7 +1,7 @@
 # Sprint 6 - Billing Activation
 
-Status: active, staging-first. The checkout and webhook safety increment is implemented locally; a Mollie test
-credential and controlled sandbox transaction are still required before tenant activation.
+Status: active, staging-first. Checkout, mandate, recurring SEPA, refund, chargeback and guarded scheduler
+increments are implemented. The Phase 29 exact-SHA staging rehearsals remain required before live activation.
 
 ## Outcome
 
@@ -57,14 +57,18 @@ that must be retrieved and verified through the API. Follow the
 
 ## Increment C - Financial Operations
 
-Still required after the first sandbox pass:
+Implemented in [Phase 29](PHASE_29_MOLLIE_FINANCIAL_OPERATIONS.md):
 
-- explicit refund creation, partial refund state and authorization;
-- chargeback/dispute intake and operational tasking;
-- reconciliation exceptions and repeatable export;
-- retry policy for interrupted provider creation;
+- explicit partial/full refund creation with atomic reservation and authorization;
+- chargeback intake, reversal state, urgent tasking and guardian communication;
+- reconciliation of provider refunds/chargebacks with exactly-once effects;
+- retry policy for interrupted creation and failed recurring payments;
+- guarded scheduled collection with independent tenant featureflags.
+
+Still required:
+
 - invoice numbering/tax/accounting decisions;
-- recurring/SEPA mandate lifecycle only after the commercial model is approved;
+- finance approval of retry and customer-communication policy;
 - controlled live transaction, refund and settlement evidence.
 
 ### Bounded recurring SEPA rehearsal
@@ -78,9 +82,9 @@ open and mark only the provider session as failed.
 
 The workflow requires the literal confirmation `REHEARSE_MOLLIE_INCASSO_TEST`, an exact SHA already deployed
 to staging, and a `test_` credential. Its artifact is redacted and deliberately excludes the test-state URL.
-This rehearsal is evidence for the technical incasso path only. Customer consent capture, mandate lifecycle
-storage, advance notice, retries, chargebacks, reconciliation and live activation remain separate release
-work.
+This rehearsal is evidence for the technical incasso path only. Consent capture, mandate lifecycle,
+advance notice, retries, refunds, chargebacks and reconciliation are implemented in later increments but
+retain their own exact-SHA staging evidence. Live activation remains separate release work.
 
 First successful incasso evidence:
 
