@@ -37,11 +37,11 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
     await signIn(page, phase.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/wachtlijst");
     let entry = await convertIntake(page, participantName);
-    await expect(entry).toContainText("waiting");
-    await entry.getByRole("button", { name: "Herbereken" }).click();
+    await expect(entry).toContainText("Wachtend");
+    await entry.getByRole("button", { name: "Voorstellen herberekenen" }).click();
     await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1/);
 
-    entry = page.locator("article").filter({ hasText: participantName });
+    entry = await openPlacementDetails(page, participantName);
     await expect(entry).toContainText(phase.expected.groupName);
     await expect(entry).toContainText("voorkeursdag match");
 
@@ -107,20 +107,26 @@ async function convertIntake(page: Page, participantName: string) {
   await pendingIntake.getByRole("button", { name: "Maak wachtlijst" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1/);
 
-  const entry = page.locator("article").filter({ hasText: participantName });
-  await expect(entry).toHaveCount(1);
-  return entry;
+  return openPlacementDetails(page, participantName);
 }
 
 async function createOffer(page: Page, entry: Locator, groupName: string) {
   await entry.getByLabel("Groep").selectOption({ label: groupName });
-  await entry.getByRole("button", { name: "Maak aanbodlink" }).click();
+  await entry.getByRole("button", { name: "Goedkeuren en aanbod maken" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&aanbod=/);
-  await expect(entry).toContainText("sent · skipped");
   const offerUrl = new URL(page.url()).searchParams.get("aanbod");
 
   expect(offerUrl).toBeTruthy();
   return offerUrl as string;
+}
+
+async function openPlacementDetails(page: Page, participantName: string) {
+  const row = page.getByRole("row").filter({ hasText: participantName });
+  await expect(row).toHaveCount(1);
+  await row.getByRole("button", { name: "Details openen" }).click();
+  const dialog = page.getByRole("dialog").filter({ hasText: participantName });
+  await expect(dialog).toBeVisible();
+  return dialog;
 }
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
