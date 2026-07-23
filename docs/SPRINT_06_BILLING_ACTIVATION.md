@@ -90,6 +90,14 @@ First successful incasso evidence:
 - valid direct-debit mandate, `sequenceType: recurring`, paid local state, one provider event, one billing
   event and no duplicate effects after two repeated webhooks.
 
+Failed incasso evidence:
+
+- harness SHA `52f42ed20f9a5f2c61bfa5dc5256245c8e3c5218`;
+- staging application SHA `16694b6062b7b89d58866e1487bb15cdac77348f`;
+- workflow run `30039371945`, artifact `8576610204`;
+- valid direct-debit mandate, provider and session status `failed`, failure code `provider_failed`, manual
+  payment still `due`, zero paid billing events and no duplicate effects after two repeated webhooks.
+
 ## Go/No-Go Boundary
 
 No live key, production provider row, real charge or recurring mandate is authorized by this sprint document.
