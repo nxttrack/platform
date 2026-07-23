@@ -1,6 +1,8 @@
 # NXTTRACK Delivery Sprints
 
-Status: active delivery plan from technically completed Sprint 4 staging release `cb9c0b621de67125923a4cd92f1c04d9f3717a06` toward controlled production launch and post-launch product growth. Sprint 5 remains gated by the two human release confirmations and explicit production authorization.
+Status: Sprint 5 preflight is active. Sprints 1-4 are accepted; staging communications, encrypted Storage
+restore and one-time owner recovery are proven. Production promotion still requires a final exact-SHA
+staging/foundation/migration evidence set, Supabase Pro backup confirmation and explicit production authorization.
 
 ## Working Agreement
 

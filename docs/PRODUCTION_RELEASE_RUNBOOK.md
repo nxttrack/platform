@@ -147,3 +147,6 @@ confirmation=REHEARSE_EXISTING_PLATFORM_OWNER
 That rehearsal never creates an Auth user, changes a password or sends mail. It proves the idempotent
 create/repair boundary against the existing controlled staging owner. The earlier staging bootstrap plus
 successful human login proves the create/reset/login path.
+
+Passing rehearsal evidence: [run 30012816446](https://github.com/nxttrack/platform/actions/runs/30012816446)
+on exact SHA `a4b16b74da8d2653d53d5de8f766748863674955`.

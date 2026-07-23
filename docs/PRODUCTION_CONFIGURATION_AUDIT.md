@@ -77,7 +77,7 @@ and record one controlled production test after that activation.
 - [ ] Enable the database-backed production provider and pass a controlled delivery test after first install.
 - [ ] Run foundation audit and migration rehearsal for the final exact SHA.
 - [x] Confirm screenshots and release evidence persist as downloadable GitHub artifacts.
-- [ ] Rehearse and record the one-time owner path. The chosen route is a one-run deploy input while persistent
-  bootstrap/reset variables remain `false`; the script preserves existing security fields and never prints a
-  generated undelivered password.
+- [x] Rehearse and record the one-time owner path. The chosen route is a one-run deploy input while persistent
+  bootstrap/reset variables remain `false`; [run 30012816446](https://github.com/nxttrack/platform/actions/runs/30012816446)
+  proves the non-resetting idempotent owner repair and postconditions on staging.
 - [ ] Complete the generated exact-SHA go/no-go form.
