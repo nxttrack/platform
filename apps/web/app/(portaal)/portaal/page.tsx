@@ -1,6 +1,7 @@
 import { ArrowRight, Bell, CalendarDays, MessageSquare, RefreshCcw, TrendingUp, UsersRound, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { FamilyCommandCenter, type FamilyChild } from "@/components/parent/family-command-center";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatLessonDate, getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getNextLesson, getParentPortalData } from "@/lib/domain/parent-portal";
 
@@ -14,6 +15,30 @@ export default async function ParentHomePage() {
   const nextLesson = getNextLesson(data);
   const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available");
   const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
+  const familyChildren: FamilyChild[] = data.participants.map((participant) => {
+    const enrollment = getActiveEnrollmentForParticipant(data, participant.id);
+    const memberships = getActiveMembershipsForParticipant(data, participant.id);
+    const next = getNextLesson(data, participant.id);
+    const scores = data.progressScores.filter((score) => score.participant_id === participant.id);
+    const badges = data.badgeAwards.filter((badge) => badge.participant_id === participant.id);
+    const timeline: FamilyChild["timeline"] = [
+      ...scores.map((score) => ({ date: score.scored_at, detail: score.note || score.positive_label, kind: "progress" as const, title: score.positive_label })),
+      ...badges.map((badge) => ({ date: badge.awarded_at, detail: badge.note || "Een nieuwe mijlpaal is behaald.", kind: "badge" as const, title: badge.title })),
+      ...data.sessions.filter((session) => memberships.some((membership) => membership.group_id === session.group_id) && new Date(session.ends_at).getTime() < Date.now()).slice(-3).map((session) => ({ date: session.ends_at, detail: groupById.get(session.group_id)?.name ?? "Lesgroep", kind: "lesson" as const, title: "Les gevolgd" }))
+    ].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
+    const averageScore = scores.length ? scores.reduce((total, score) => total + Number(score.score), 0) / scores.length : 0;
+
+    return {
+      id: participant.id,
+      name: participant.display_name,
+      program: enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Nog geen programma",
+      stage: enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau" : "Startniveau",
+      group: memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst",
+      nextLesson: next ? formatLessonDate(next.starts_at, next.ends_at) : null,
+      progressPercent: Math.max(0, Math.min(100, Math.round((averageScore / 4) * 100))),
+      timeline
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -83,32 +108,7 @@ export default async function ParentHomePage() {
         {data.participants.length === 0 ? (
           <EmptyState>Er zijn nog geen kinderen gekoppeld aan dit portaal.</EmptyState>
         ) : (
-          <div className="grid gap-4 lg:grid-cols-2">
-            {data.participants.map((participant) => {
-              const enrollment = getActiveEnrollmentForParticipant(data, participant.id);
-              const memberships = getActiveMembershipsForParticipant(data, participant.id);
-              const next = getNextLesson(data, participant.id);
-              const groupNames = memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep");
-
-              return (
-                <article className="rounded-xl border border-border bg-card p-5 shadow-soft" key={participant.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Athlete</p>
-                      <h3 className="mt-1 text-xl font-bold text-foreground">{participant.display_name}</h3>
-                    </div>
-                    <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status}</StatusPill>
-                  </div>
-                  <div className="mt-4 grid gap-3 text-sm">
-                    <Info label="Programma" value={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Geen actieve inschrijving"} />
-                    <Info label="Badje" value={enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Badje" : "Nog niet gezet"} />
-                    <Info label="Groep" value={groupNames.length > 0 ? groupNames.join(", ") : "Nog niet geplaatst"} />
-                    <Info label="Volgende les" value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          <FamilyCommandCenter children={familyChildren} />
         )}
       </section>
     </div>
@@ -139,16 +139,6 @@ function QuickLink({ href, icon, label, value }: { href: string; icon: ReactNode
       </span>
       <ArrowRight className="h-4 w-4 shrink-0 text-primary" />
     </Link>
-  );
-}
-
-function Info({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg bg-muted px-3 py-2">
-      <Waves className="h-4 w-4 text-primary" />
-      <span className="w-24 shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
-      <span className="font-semibold text-foreground">{value}</span>
-    </div>
   );
 }
 

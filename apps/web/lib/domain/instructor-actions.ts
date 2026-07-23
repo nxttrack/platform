@@ -132,6 +132,57 @@ export async function markAttendanceAction(formData: FormData) {
   redirectWithStatus(nextPath, "saved", "attendance");
 }
 
+export async function markRosterPresentAction(formData: FormData) {
+  const nextPath = getFormNextPath(formData, "/instructor");
+  const context = await requirePrivateShellContext("/instructor");
+  const tenant = getActiveTenant(context);
+  const sessionId = readRequired(formData, "sessionId");
+  const access = await canAccessSession({
+    tenantId: tenant.id,
+    userId: context.user.id,
+    canManageTenant: isTenantOperator(context.activeTenant?.roles ?? []),
+    sessionId
+  });
+
+  if (!access.allowed || !access.session) {
+    redirectWithStatus(nextPath, "error", "access");
+  }
+
+  const admin = createAdminClient();
+  const membershipsResult = await admin
+    .from("group_memberships")
+    .select("participant_id, enrollment_id")
+    .eq("tenant_id", tenant.id)
+    .eq("group_id", access.session.group_id)
+    .in("status", ["active", "trial"]);
+
+  if (membershipsResult.error) {
+    redirectWithStatus(nextPath, "error", "attendance");
+  }
+
+  const memberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  if (memberships.length) {
+    const markedAt = new Date().toISOString();
+    const { error } = await admin.from("session_attendance").upsert(
+      memberships.map((membership) => ({
+        tenant_id: tenant.id,
+        session_id: sessionId,
+        participant_id: membership.participant_id,
+        enrollment_id: membership.enrollment_id,
+        status: "present",
+        marked_by_user_id: context.user.id,
+        marked_at: markedAt
+      })),
+      { onConflict: "tenant_id,session_id,participant_id" }
+    );
+
+    if (error) redirectWithStatus(nextPath, "error", "attendance");
+  }
+
+  revalidateInstructorPaths(nextPath);
+  redirectWithStatus(nextPath, "saved", "roster");
+}
+
 export async function completeSessionAction(formData: FormData) {
   const nextPath = getFormNextPath(formData, "/instructor");
   const context = await requirePrivateShellContext("/instructor");

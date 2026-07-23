@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { completeSessionAction, markAttendanceAction } from "@/lib/domain/instructor-actions";
+import { completeSessionAction, markAttendanceAction, markRosterPresentAction } from "@/lib/domain/instructor-actions";
 import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
 
 type PageProps = {
@@ -132,6 +132,28 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                 </article>
               );
             })}
+            {selectedSession.status === "scheduled" ? (
+              <div className="sticky bottom-3 z-20 flex flex-col gap-3 rounded-2xl border border-primary/20 bg-card/95 p-3 shadow-card backdrop-blur sm:flex-row sm:items-center">
+                <div className="mr-auto">
+                  <p className="text-sm font-bold text-foreground">Poolside acties</p>
+                  <p className="text-xs text-muted-foreground">Grote touch targets · controleer uitzonderingen na de batch.</p>
+                </div>
+                <form action={markRosterPresentAction}>
+                  <input name="sessionId" type="hidden" value={selectedSession.id} />
+                  <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                  <button className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold transition hover:bg-muted sm:w-auto" type="submit">
+                    <ClipboardCheck className="size-5 text-primary" /> Iedereen aanwezig
+                  </button>
+                </form>
+                <form action={completeSessionAction}>
+                  <input name="sessionId" type="hidden" value={selectedSession.id} />
+                  <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                  <button className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-glow sm:w-auto" type="submit">
+                    <CheckCircle2 className="size-5" /> Les afronden
+                  </button>
+                </form>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
@@ -168,6 +190,10 @@ function QuickAttendanceButton({ enrollmentId, groupId, label, participantId, se
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved === "attendance") {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Attendance opgeslagen.</p>;
+  }
+
+  if (saved === "roster") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Het volledige roster is als aanwezig geregistreerd. Uitzonderingen kunnen direct worden aangepast.</p>;
   }
 
   if (saved === "completed") {
