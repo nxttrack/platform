@@ -74,10 +74,9 @@ test.describe("staging MVP smoke", () => {
       expect(response?.status() ?? 0).toBeLessThan(500);
       await expect(page.locator("body")).toBeVisible();
 
-      const currentUrl = new URL(page.url());
-      const hasLoginSurface = await page.locator("input[name='email'], form").first().isVisible().catch(() => false);
-
-      expect(currentUrl.pathname === "/login" || hasLoginSurface).toBeTruthy();
+      await expect
+        .poll(async () => new URL(page.url()).pathname === "/login" || (await page.getByLabel("E-mail").isVisible().catch(() => false)))
+        .toBe(true);
       expect(failures()).toEqual([]);
     });
   }
