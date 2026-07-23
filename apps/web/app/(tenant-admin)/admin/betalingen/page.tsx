@@ -753,11 +753,28 @@ function Metric({ label, value, tone = "neutral" }: { label: string; value: stri
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+    const message = {
+      "incasso-prenotified": "De incasso is aangekondigd en staat klaar voor de geplande datum.",
+      "incasso-reconciled": "De betaalstatus is opnieuw bij Mollie gecontroleerd.",
+      "incasso-started": "De incasso is veilig bij Mollie gestart.",
+      "refund-created": "De terugbetaling is bij Mollie aangevraagd.",
+      "refund-reconciled": "De terugbetaling en eventuele storneringen zijn opnieuw gesynchroniseerd."
+    }[saved] ?? `Opgeslagen: ${saved}.`;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{message}</p>;
   }
 
   if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Actie is niet gelukt: {error}.</p>;
+    const message = {
+      "incasso-outcome-unknown": "Mollie heeft niet tijdig geantwoord. Dezelfde poging wordt eerst veilig gereconcilieerd; start geen nieuwe incasso.",
+      "provider-automation-requires-incasso": "Schakel terugkerende SEPA-incasso in voordat je automatische uitvoering of retries activeert.",
+      "provider-retry-policy": "Gebruik 1–5 pogingen en een wachttijd van 1–30 dagen.",
+      "refund-amount": "Dit bedrag is hoger dan het nog beschikbare terug te betalen bedrag.",
+      "refund-confirmation": "Typ REFUND om deze terugbetaling bewust te bevestigen.",
+      "refund-idempotency": "Deze aanvraagcode hoort al bij een andere terugbetaling.",
+      "refund-reconcile": "De provideruitkomst is bekend, maar de lokale synchronisatie vraagt aandacht. Gebruik ‘Synchroniseren’ voordat je opnieuw handelt.",
+      "refund-unknown": "De provideruitkomst is onbekend. Synchroniseer de aanvraag voordat je opnieuw handelt."
+    }[error] ?? `Actie is niet gelukt: ${error}.`;
+    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{message}</p>;
   }
 
   return null;

@@ -117,8 +117,9 @@ export async function createMollieRefundAction(formData: FormData) {
     refundId = reservation.data.id;
   }
 
+  let providerRefund;
   try {
-    const providerRefund = await createMollieRefund({
+    providerRefund = await createMollieRefund({
       amountCents,
       currency: session.currency,
       description,
@@ -132,32 +133,6 @@ export async function createMollieRefundAction(formData: FormData) {
       mode: configResult.data.mode as MollieMode,
       paymentId: session.provider_session_id,
       secretReference: configResult.data.secret_reference
-    });
-    const status = normalizeMollieRefundStatus(providerRefund.status);
-    const update = await admin
-      .from("billing_refunds")
-      .update({
-        provider_refund_id: providerRefund.id,
-        status,
-        completed_at: ["refunded", "failed", "cancelled"].includes(status) ? new Date().toISOString() : null,
-        last_synced_at: new Date().toISOString(),
-        provider_payload: {
-          amount: providerRefund.amount,
-          createdAt: providerRefund.createdAt,
-          id: providerRefund.id,
-          paymentId: providerRefund.paymentId,
-          status: providerRefund.status
-        }
-      })
-      .eq("tenant_id", tenant.id)
-      .eq("id", refundId);
-    if (update.error) throw update.error;
-
-    await syncMollieFinancialAdjustments({
-      mode: configResult.data.mode as MollieMode,
-      paymentId: session.provider_session_id,
-      secretReference: configResult.data.secret_reference,
-      session
     });
   } catch (error) {
     const indeterminate = error instanceof MollieApiError && error.indeterminate;
@@ -176,6 +151,43 @@ export async function createMollieRefundAction(formData: FormData) {
     redirect(`/admin/betalingen?error=${indeterminate ? "refund-unknown" : "refund-provider"}`);
   }
 
+  const status = normalizeMollieRefundStatus(providerRefund.status);
+  await admin
+    .from("billing_refunds")
+    .update({
+      provider_refund_id: providerRefund.id,
+      status,
+      completed_at: ["refunded", "failed", "cancelled"].includes(status) ? new Date().toISOString() : null,
+      last_synced_at: new Date().toISOString(),
+      provider_payload: {
+        amount: providerRefund.amount,
+        createdAt: providerRefund.createdAt,
+        id: providerRefund.id,
+        paymentId: providerRefund.paymentId,
+        status: providerRefund.status
+      }
+    })
+    .eq("tenant_id", tenant.id)
+    .eq("id", refundId);
+
+  try {
+    await syncMollieFinancialAdjustments({
+      mode: configResult.data.mode as MollieMode,
+      paymentId: session.provider_session_id,
+      secretReference: configResult.data.secret_reference,
+      session
+    });
+  } catch (error) {
+    await admin
+      .from("billing_refunds")
+      .update({
+        failure_code: "reconciliation_pending",
+        failure_message: safeErrorMessage(error)
+      })
+      .eq("tenant_id", tenant.id)
+      .eq("id", refundId);
+    redirect("/admin/betalingen?error=refund-reconcile");
+  }
   revalidateBilling();
   redirect("/admin/betalingen?saved=refund-created");
 }
