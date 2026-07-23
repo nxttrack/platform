@@ -51,7 +51,9 @@ Complete the generated file under `artifacts/production-go-no-go/` and store the
 - Confirm an object-backup route for `tenant-documents` and `diploma-vault`; database backups contain Storage metadata, not the object bytes.
 - Record the current live production SHA from `/api/health` and the current symlink target on the VPS.
 - Confirm Caddy validates and `nxttrack-production` is healthy before touching it.
-- Keep `BOOTSTRAP_PLATFORM_OWNER` and its reset flag `false`.
+- Keep persistent `BOOTSTRAP_PLATFORM_OWNER` and its reset flag `false`. Select the one-run
+  `bootstrap_platform_owner` dispatch input only for the approved first install; it does not change the stored
+  environment variable.
 - Set `RUN_DB_MIGRATIONS=true` only when the reviewed first-install/change set is authorized. Return it to `false` immediately after the successful release.
 - Ensure the SendGrid first-release/bootstrap fallback and approved sender pass the foundation audit.
 - Record the separately authorized one-time owner-creation step. Do not leave bootstrap or password-reset flags
@@ -69,6 +71,7 @@ Use Actions > Deploy NXTTRACK > Run workflow on `main`:
 | `production_approval_reference` | immutable approval reference |
 | `production_foundation_run_id` | successful exact-SHA run ID |
 | `production_migration_rehearsal_run_id` | successful exact-SHA run ID |
+| `bootstrap_platform_owner` | `true` only for the approved first install; otherwise `false` |
 
 Watch every step. The workflow checks repository truth, evidence binding, migrations, hardening, build, atomic symlink activation, systemd, Caddy, health, runtime routes and 90-day production release evidence. Do not manually bypass a failed step.
 
@@ -119,3 +122,28 @@ Immediately choose no-go or rollback when any of these occurs:
 - controlled mail fails;
 - release evidence cannot be retained;
 - no known-good runtime target or database recovery point is available.
+
+## One-time platform owner
+
+The deploy-integrated bootstrap runs after migrations and before release activation. Persistent production
+variables remain `false`; the first-install workflow input is the only create/repair trigger.
+
+The script:
+
+- refuses a staging rehearsal if the expected owner does not already exist;
+- creates or repairs the profile, security row and active `platform_owner` membership;
+- preserves existing security fields during an idempotent repair;
+- marks a newly created/reset account for forced password change;
+- uses the production SendGrid fallback to deliver a generated temporary password;
+- never prints a generated password when delivery is unavailable;
+- re-reads profile, security and membership postconditions before reporting success.
+
+Staging rehearsal is performed by `Staging platform-owner bootstrap rehearsal` with:
+
+```txt
+confirmation=REHEARSE_EXISTING_PLATFORM_OWNER
+```
+
+That rehearsal never creates an Auth user, changes a password or sends mail. It proves the idempotent
+create/repair boundary against the existing controlled staging owner. The earlier staging bootstrap plus
+successful human login proves the create/reset/login path.

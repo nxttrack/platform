@@ -11,6 +11,7 @@ const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVIC
 const email = normalizeEmail(process.env.PLATFORM_OWNER_EMAIL || process.env.BOOTSTRAP_PLATFORM_OWNER_EMAIL || "admin@nxttrack.nl");
 const configuredPassword = process.env.PLATFORM_OWNER_TEMP_PASSWORD || process.env.BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD;
 const resetExistingPassword = process.env.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD === "true";
+const expectExistingUser = process.env.BOOTSTRAP_PLATFORM_OWNER_EXPECT_EXISTING === "true";
 
 if (!supabaseUrl || !secretKey) {
   console.error("[bootstrap-platform-owner] NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY are required.");
@@ -25,6 +26,11 @@ const admin = createClient(supabaseUrl, secretKey, {
 });
 
 const existingUserId = await findUserIdByEmail(email);
+
+if (expectExistingUser && !existingUserId) {
+  throwFatal("Expected an existing platform owner for this rehearsal; refusing to create a user.");
+}
+
 const temporaryPassword = configuredPassword || generateTemporaryPassword();
 let userId = existingUserId;
 let passwordWasChanged = false;
@@ -55,12 +61,20 @@ if (!userId) {
 }
 
 await upsert("profiles", { id: userId, email });
-await upsert("user_security", {
-  user_id: userId,
-  email,
-  must_change_password: passwordWasChanged,
-  last_invited_at: passwordWasChanged ? new Date().toISOString() : null
-});
+await upsert(
+  "user_security",
+  passwordWasChanged
+    ? {
+        user_id: userId,
+        email,
+        must_change_password: true,
+        last_invited_at: new Date().toISOString()
+      }
+    : {
+        user_id: userId,
+        email
+      }
+);
 await upsert(
   "platform_memberships",
   {
@@ -75,11 +89,13 @@ if (passwordWasChanged) {
   const delivered = await maybeSendBootstrapEmail({ email, temporaryPassword });
 
   if (!configuredPassword && !delivered) {
-    console.warn("[bootstrap-platform-owner] Mail is not configured. Generated temporary password follows; store it and rotate immediately.");
-    console.warn(`[bootstrap-platform-owner] ${temporaryPassword}`);
+    throwFatal(
+      "Generated credentials could not be delivered. The password was not printed; rerun an explicitly authorized reset with a scoped temporary-password secret."
+    );
   }
 }
 
+await verifyPlatformOwner({ email, userId });
 console.log(`[bootstrap-platform-owner] Platform owner ready: ${email}`);
 
 async function findUserIdByEmail(targetEmail) {
@@ -135,6 +151,31 @@ async function upsert(table, row, onConflict = undefined) {
 
   if (error) {
     throwFatal(`Could not upsert ${table}: ${error.message}`);
+  }
+}
+
+async function verifyPlatformOwner({ email: targetEmail, userId: targetUserId }) {
+  const [profileResult, securityResult, membershipResult] = await Promise.all([
+    admin.from("profiles").select("id, email").eq("id", targetUserId).single(),
+    admin.from("user_security").select("user_id, email").eq("user_id", targetUserId).single(),
+    admin
+      .from("platform_memberships")
+      .select("user_id, role, status")
+      .eq("user_id", targetUserId)
+      .eq("role", "platform_owner")
+      .single()
+  ]);
+
+  const failed =
+    profileResult.error ||
+    securityResult.error ||
+    membershipResult.error ||
+    profileResult.data?.email !== targetEmail ||
+    securityResult.data?.email !== targetEmail ||
+    membershipResult.data?.status !== "active";
+
+  if (failed) {
+    throwFatal("Platform owner postcondition verification failed.");
   }
 }
 

@@ -30,6 +30,11 @@ on:
         description: Successful production migration rehearsal run ID for this exact SHA
         required: false
         type: string
+      bootstrap_platform_owner:
+        description: Create/repair the initial platform owner during this deploy only
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -98,7 +103,7 @@ jobs:
       RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
       DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
       DB_MIGRATE_INCLUDE_ALL: ${{ vars.DB_MIGRATE_INCLUDE_ALL }}
-      BOOTSTRAP_PLATFORM_OWNER: ${{ vars.BOOTSTRAP_PLATFORM_OWNER }}
+      BOOTSTRAP_PLATFORM_OWNER: ${{ inputs.bootstrap_platform_owner && 'true' || vars.BOOTSTRAP_PLATFORM_OWNER }}
       BOOTSTRAP_PLATFORM_OWNER_EMAIL: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_EMAIL || 'admin@nxttrack.nl' }}
       BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD: ${{ secrets.BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD }}
       BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD }}

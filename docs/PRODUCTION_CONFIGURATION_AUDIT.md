@@ -69,10 +69,15 @@ and record one controlled production test after that activation.
 ## Open go-live controls
 
 - [ ] Upgrade production Supabase to Pro and record provider backup retention.
-- [ ] Implement/test off-platform Storage object backups for both private buckets.
+- [x] Implement and test the encrypted off-platform Storage backup/restore route for both private buckets on
+  staging; run `30012250717` proves export, encryption, restore, remote checksum and zero-object cleanup.
+- [ ] Store the production encryption passphrase independently and create the first encrypted production
+  Storage recovery point during the approved release window.
 - [x] Add a production SendGrid API key and pass the non-sending provider/DNS foundation audit.
 - [ ] Enable the database-backed production provider and pass a controlled delivery test after first install.
 - [ ] Run foundation audit and migration rehearsal for the final exact SHA.
 - [x] Confirm screenshots and release evidence persist as downloadable GitHub artifacts.
-- [ ] Decide and rehearse the one-time production owner creation path if the production Auth schema remains empty; keep the deploy bootstrap flag disabled by default and remove any temporary password immediately.
+- [ ] Rehearse and record the one-time owner path. The chosen route is a one-run deploy input while persistent
+  bootstrap/reset variables remain `false`; the script preserves existing security fields and never prints a
+  generated undelivered password.
 - [ ] Complete the generated exact-SHA go/no-go form.

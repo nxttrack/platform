@@ -41,6 +41,8 @@ This form is valid for this exact 40-character SHA only. A code, workflow, depen
 
 - [ ] `BOOTSTRAP_PLATFORM_OWNER=false` and `BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=false` in the production environment.
 - [ ] If an initial owner is still required, the separate one-time bootstrap procedure and immediate secret removal are approved.
+- [ ] The `bootstrap_platform_owner` dispatch input is `true` only for the approved first install and persistent
+      bootstrap/reset variables remain `false`.
 - [ ] Production SendGrid/SMTP provider secret, `noreply@nxttrack.nl`, `NXTTRACK`, SPF, DKIM and DMARC have passed the communications audit.
 - [ ] A controlled production delivery test has status `sent`; no test recipient or secret appears in logs.
 
