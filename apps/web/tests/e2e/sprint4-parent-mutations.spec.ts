@@ -88,8 +88,11 @@ test.describe("Sprint 4 parent self-service mutations", () => {
     let graduation = page.locator("article").filter({ hasText: parentState.graduationTitle });
     await expect(graduation).toHaveCount(1);
     const confirmButton = graduation.getByRole("button", { name: "Bevestigen" });
+    const confirmedStatus = graduation.getByText("bevestigd", { exact: true });
 
-    if ((await confirmButton.count()) === 1) {
+    await expect(confirmButton.or(confirmedStatus)).toBeVisible();
+
+    if (await confirmButton.isVisible()) {
       await confirmButton.click();
       await expect(page.getByText("De uitnodiging is bevestigd.")).toBeVisible();
       graduation = page.locator("article").filter({ hasText: parentState.graduationTitle });
