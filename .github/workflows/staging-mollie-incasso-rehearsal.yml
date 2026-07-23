@@ -11,6 +11,14 @@ on:
         description: Exact SHA currently deployed to staging
         required: true
         type: string
+      outcome:
+        description: Final Mollie test state
+        required: true
+        default: paid
+        type: choice
+        options:
+          - paid
+          - failed
 
 permissions:
   contents: read
@@ -36,6 +44,7 @@ jobs:
       MOLLIE_INCASSO_STATE_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-runtime.json
       MOLLIE_INCASSO_EVIDENCE_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-evidence.json
       MOLLIE_INCASSO_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-diagnostic
+      MOLLIE_INCASSO_OUTCOME: ${{ inputs.outcome }}
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
@@ -87,9 +96,14 @@ jobs:
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
       - name: Move the recurring test payment to paid
+        if: inputs.outcome == 'paid'
         run: pnpm run sprint6:test-incasso
 
-      - name: Verify provider contract and exactly-once effects
+      - name: Move the recurring test payment to failed
+        if: inputs.outcome == 'failed'
+        run: pnpm run sprint6:test-incasso
+
+      - name: Verify provider contract, status and exactly-once effects
         run: pnpm run sprint6:verify-incasso
 
       - name: Upload browser diagnostic after a failure

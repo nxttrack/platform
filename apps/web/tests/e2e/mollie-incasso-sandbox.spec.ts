@@ -9,11 +9,12 @@ type IncassoState = {
 
 const statePath = path.resolve(process.cwd(), process.env.MOLLIE_INCASSO_STATE_PATH || "artifacts/mollie-incasso-runtime.json");
 const enabled = process.env.MOLLIE_INCASSO_REHEARSAL === "true";
+const outcome = process.env.MOLLIE_INCASSO_OUTCOME === "failed" ? "failed" : "paid";
 
 test.describe("Sprint 6 Mollie recurring incasso sandbox", () => {
   test.skip(!enabled, "Enable MOLLIE_INCASSO_REHEARSAL only in the bounded staging workflow.");
 
-  test("moves the background SEPA Direct Debit payment to paid", async ({ page }) => {
+  test(`moves the background SEPA Direct Debit payment to ${outcome}`, async ({ page }) => {
     test.setTimeout(90_000);
     const state = JSON.parse(readFileSync(statePath, "utf8")) as IncassoState;
 
@@ -22,27 +23,32 @@ test.describe("Sprint 6 Mollie recurring incasso sandbox", () => {
     await page.goto(state.changePaymentStateUrl, { waitUntil: "domcontentloaded" });
     await expect(page).toHaveURL(/^https:\/\/(?:[^/]+\.)?mollie\.com\//);
 
-    if (!(await choosePaidStatus(page))) {
+    if (!(await chooseFinalStatus(page, outcome))) {
       await writeDiagnostic(page);
-      throw new Error("Mollie recurring test page did not expose a paid-status control.");
+      throw new Error(`Mollie recurring test page did not expose a ${outcome}-status control.`);
     }
     await continueTestPayment(page);
     await page.waitForTimeout(1_500);
   });
 });
 
-async function choosePaidStatus(page: Page) {
-  const paidLabel = /^(paid|betaald|successful|success|geslaagd)$/i;
+async function chooseFinalStatus(page: Page, status: "paid" | "failed") {
+  const statusLabel = status === "paid"
+    ? /^(paid|betaald|successful|success|geslaagd)$/i
+    : /^(failed|mislukt|failure|geweigerd)$/i;
+  const optionPattern = status === "paid"
+    ? "^(paid|betaald|successful|success|geslaagd)(\\s|$)"
+    : "^(failed|mislukt|failure|geweigerd)(\\s|$)";
 
   for (const context of pageContexts(page)) {
     const selects = context.locator("select");
     for (let index = 0; index < await selects.count(); index += 1) {
       const select = selects.nth(index);
-      const option = await select.locator("option").evaluateAll((options) => {
-        const matcher = /^(paid|betaald|successful|success|geslaagd)(\s|$)/i;
+      const option = await select.locator("option").evaluateAll((options, pattern) => {
+        const matcher = new RegExp(pattern, "i");
         const match = options.find((item) => matcher.test(`${(item as HTMLOptionElement).value} ${item.textContent ?? ""}`));
         return match ? { label: match.textContent?.trim() ?? "", value: (match as HTMLOptionElement).value } : null;
-      });
+      }, optionPattern);
       if (option) {
         await select.selectOption(option.value ? { value: option.value } : { label: option.label });
         return true;
@@ -50,7 +56,7 @@ async function choosePaidStatus(page: Page) {
     }
 
     for (const role of ["radio", "button", "option"] as const) {
-      const control = context.getByRole(role, { name: paidLabel }).first();
+      const control = context.getByRole(role, { name: statusLabel }).first();
       if (await control.isVisible().catch(() => false)) {
         if (role === "radio") await control.check();
         else await control.click();

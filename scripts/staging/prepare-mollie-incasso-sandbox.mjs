@@ -17,6 +17,7 @@ const runId = process.env.GITHUB_RUN_ID || `local-${Date.now()}`;
 const releaseSha = process.env.STAGING_RELEASE_SHA || "";
 const statePath = path.resolve(process.cwd(), process.env.MOLLIE_INCASSO_STATE_PATH || "artifacts/mollie-incasso-runtime.json");
 const referencePrefix = "SPRINT6-MOLLIE-INCASSO-";
+const outcome = process.env.MOLLIE_INCASSO_OUTCOME || "paid";
 
 if (process.env.APP_ENV !== "staging" || hostname(appUrl) !== "staging.nxttrack.nl") {
   throw new Error("Mollie incasso preparation is restricted to staging.nxttrack.nl.");
@@ -28,6 +29,9 @@ if (!mollieApiKey.startsWith("test_")) {
 
 if (!supabaseUrl || !supabaseSecret) {
   throw new Error("Staging Supabase credentials are required.");
+}
+if (outcome !== "paid" && outcome !== "failed") {
+  throw new Error("MOLLIE_INCASSO_OUTCOME must be paid or failed.");
 }
 
 const admin = createClient(supabaseUrl, supabaseSecret, {
@@ -192,6 +196,7 @@ const state = {
   harnessSha: process.env.GITHUB_SHA || "",
   releaseSha,
   runId,
+  outcome,
   tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug },
   providerConfigId: providerConfig.id,
   subscriptionId: subscription.id,
@@ -204,9 +209,10 @@ const state = {
   providerPaymentStatus: providerPayment.status,
   changePaymentStateUrl,
   expected: {
-    billingEventCount: 1,
-    finalPaymentStatus: "paid",
-    finalSessionStatus: "paid",
+    billingEventCount: outcome === "paid" ? 1 : 0,
+    finalPaymentStatus: outcome === "paid" ? "paid" : "due",
+    finalProviderStatus: outcome,
+    finalSessionStatus: outcome,
     mandateStatus: "valid",
     method: "directdebit",
     providerEventCount: 1,
@@ -217,7 +223,7 @@ const state = {
 
 mkdirSync(path.dirname(statePath), { recursive: true });
 writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
-console.log(`[mollie:incasso:prepare] PASS created test customer, mandate and €1.43 recurring payment for ${reference}.`);
+console.log(`[mollie:incasso:prepare] PASS created €1.43 recurring payment for the ${outcome} rehearsal ${reference}.`);
 
 async function mollieRequest(apiPath, input) {
   const response = await fetch(`https://api.mollie.com/v2${apiPath}`, {

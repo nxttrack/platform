@@ -72,14 +72,23 @@ Still required after the first sandbox pass:
 The staging-only `Staging Mollie incasso rehearsal` workflow proves the provider contract without activating
 recurring collection for production tenants. It creates an isolated Mollie test customer and direct-debit
 mandate, creates a €1.43 `sequenceType: recurring` payment without a customer checkout URL, moves the payment
-to `paid` through Mollie's test-only `changePaymentState` page, and verifies the existing provider-verified
-webhook path plus exactly-once local effects.
+to `paid` or `failed` through Mollie's test-only `changePaymentState` page, and verifies the existing
+provider-verified webhook path plus exactly-once local effects. A failed debit must leave the manual payment
+open and mark only the provider session as failed.
 
 The workflow requires the literal confirmation `REHEARSE_MOLLIE_INCASSO_TEST`, an exact SHA already deployed
 to staging, and a `test_` credential. Its artifact is redacted and deliberately excludes the test-state URL.
 This rehearsal is evidence for the technical incasso path only. Customer consent capture, mandate lifecycle
 storage, advance notice, retries, chargebacks, reconciliation and live activation remain separate release
 work.
+
+First successful incasso evidence:
+
+- harness SHA `f83fdefcac0ab337e8508628ce59448f990fec4b`;
+- staging application SHA `16694b6062b7b89d58866e1487bb15cdac77348f`;
+- workflow run `30038823927`, artifact `8576396852`;
+- valid direct-debit mandate, `sequenceType: recurring`, paid local state, one provider event, one billing
+  event and no duplicate effects after two repeated webhooks.
 
 ## Go/No-Go Boundary
 

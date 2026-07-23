@@ -25,7 +25,7 @@ const admin = createClient(supabaseUrl, supabaseSecret, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
-const providerPayment = await pollProviderPaid();
+const providerPayment = await pollProviderFinalState();
 const mandate = await mollieRequest(`/customers/${encodeURIComponent(state.customerId)}/mandates/${encodeURIComponent(state.mandateId)}`);
 
 for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -63,6 +63,7 @@ if (
 const evidence = {
   schemaVersion: 1,
   rehearsal: "mollie-recurring-sepa-direct-debit",
+  outcome: state.outcome,
   harnessSha: state.harnessSha,
   releaseSha: state.releaseSha,
   runId: state.runId,
@@ -86,15 +87,15 @@ const evidence = {
 
 mkdirSync(path.dirname(evidencePath), { recursive: true });
 writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
-console.log("[mollie:incasso:verify] PASS recurring SEPA payment and repeated webhooks produced exactly one business effect.");
+console.log(`[mollie:incasso:verify] PASS ${state.outcome} recurring SEPA payment preserved the expected exactly-once effects.`);
 
-async function pollProviderPaid() {
+async function pollProviderFinalState() {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const payment = await mollieRequest(`/payments/${encodeURIComponent(state.providerPaymentId)}`);
-    if (payment.status === state.expected.finalPaymentStatus) return payment;
+    if (payment.status === state.expected.finalProviderStatus) return payment;
     await wait(1_000);
   }
-  throw new Error("Mollie recurring payment did not reach paid provider state.");
+  throw new Error(`Mollie recurring payment did not reach ${state.expected.finalProviderStatus} provider state.`);
 }
 
 async function pollLocalPaidState() {
@@ -108,15 +109,15 @@ async function pollLocalPaidState() {
     if (payment.data.status === state.expected.finalPaymentStatus && session.data.status === state.expected.finalSessionStatus) return;
     await wait(1_000);
   }
-  throw new Error("Mollie incasso webhook did not produce the expected local paid state.");
+  throw new Error("Mollie incasso webhook did not produce the expected local state.");
 }
 
 async function verifyExactlyOnce() {
   const [payment, session, sessions, providerEvents, billingEvents] = await Promise.all([
     admin.from("manual_payments").select("status, method, reference").eq("tenant_id", state.tenant.id).eq("id", state.payment.id).single(),
-    admin.from("payment_sessions").select("status, provider_session_id").eq("tenant_id", state.tenant.id).eq("id", state.paymentSessionId).single(),
+    admin.from("payment_sessions").select("status, provider_session_id, failure_code, failure_message").eq("tenant_id", state.tenant.id).eq("id", state.paymentSessionId).single(),
     admin.from("payment_sessions").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id),
-    admin.from("payment_provider_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("provider_event_id", `${state.providerPaymentId}:paid`),
+    admin.from("payment_provider_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("provider_event_id", `${state.providerPaymentId}:${state.expected.finalProviderStatus}`),
     admin.from("billing_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id).eq("type", "payment_paid")
   ]);
   for (const query of [payment, session, sessions, providerEvents, billingEvents]) {
@@ -125,6 +126,8 @@ async function verifyExactlyOnce() {
 
   const checks = {
     billingEventCount: billingEvents.count ?? 0,
+    failureCode: session.data.failure_code,
+    hasFailureMessage: Boolean(session.data.failure_message),
     manualPaymentMethod: payment.data.method,
     manualPaymentStatus: payment.data.status,
     paymentSessionStatus: session.data.status,
@@ -134,6 +137,8 @@ async function verifyExactlyOnce() {
   if (
     checks.manualPaymentStatus !== state.expected.finalPaymentStatus ||
     checks.paymentSessionStatus !== state.expected.finalSessionStatus ||
+    (state.outcome === "failed" && (checks.failureCode !== "provider_failed" || !checks.hasFailureMessage)) ||
+    (state.outcome === "paid" && (checks.failureCode !== null || checks.hasFailureMessage)) ||
     checks.sessionCount !== state.expected.sessionCount ||
     checks.providerEventCount !== state.expected.providerEventCount ||
     checks.billingEventCount !== state.expected.billingEventCount
