@@ -1,8 +1,7 @@
 # Sprint 3 - Communications, Monitoring And Operations
 
-Status: mail delivery and the non-alerting operational probe are proven on staging. Named ownership, DKIM and
-log retention are configured. Sprint acceptance is blocked only by an independent alert webhook, a received
-synthetic alert drill and activation of the 15-minute schedule.
+Status: communications and operational monitoring are active and proven on staging. The remaining sprint checks
+are controlled invite/reset delivery and one tenant-notification retry rehearsal.
 
 ## Goal
 
@@ -64,6 +63,13 @@ Current evidence on 23 July 2026:
 - [Operational probe 30005869686](https://github.com/nxttrack/platform/actions/runs/30005869686) passes all 16
   health, route, asset and read-only mail-window checks with zero failed, skipped or stuck deliveries in the
   current 15-minute window. No alert was sent.
+- [Slack drill 30009018133](https://github.com/nxttrack/platform/actions/runs/30009018133) was accepted by the
+  webhook and visibly received by Danny Goldenbelt in `nxttrack-alerts` at 14:56 Europe/Amsterdam.
+- `MONITORING_ENABLED=true` was recorded for staging at 12:57:30 UTC.
+- [Final communications audit 30009137492](https://github.com/nxttrack/platform/actions/runs/30009137492)
+  passed every mail, DNS, ownership, retention, alert-destination, schedule and health control.
+- [Post-activation probe 30009139430](https://github.com/nxttrack/platform/actions/runs/30009139430) passed all
+  16 operational checks without sending another alert.
 
 ## Non-Sending Audit
 
@@ -107,8 +113,8 @@ Staging deployment evidence: [GitHub Actions run 29871694124](https://github.com
 - [x] Prove provider-auth failure diagnostics and platform-test recovery without overwriting failed evidence.
 - [ ] Exercise the tenant-notification retry action once with a controlled recipient.
 - [x] Prove the dormant operational monitor with a non-alerting 16-check staging probe.
-- [ ] Configure health/5xx/database/asset/mail alert destinations.
-- [ ] Run a synthetic alert drill received by the named incident owner.
+- [x] Configure the Slack destination for health/5xx/database/asset/mail alerts.
+- [x] Run a synthetic alert drill received by the named incident owner.
 - [x] Record Danny Goldenbelt as incident/support owner and set log retention to 30 days.
 - [x] Add an executable incident and recovery runbook; ownership fields remain to be filled through environment configuration.
 - [x] Add a controlled-delivery, failure-diagnosis and retry runbook.

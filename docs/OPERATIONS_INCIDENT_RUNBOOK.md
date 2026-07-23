@@ -1,7 +1,7 @@
 # Operations And Incident Runbook
 
-Status: executable foundation. Danny Goldenbelt is the named staging incident/support owner and log retention is
-30 days. An independent alert destination and received drill are still required before enabling the schedule.
+Status: active on staging. Danny Goldenbelt is the named incident/support owner, log retention is 30 days and
+the 15-minute schedule was enabled only after a Slack drill was received.
 
 ## Configuration Contract
 
@@ -23,8 +23,15 @@ The scheduled monitor checks database-aware health, public-route 5xx responses, 
 Alert payloads include the named incident/support owners, environment, commit SHA, failed check identifiers and
 the Actions run URL, but no recipient addresses, message bodies or credentials.
 
-Latest non-alerting evidence: [run 30005869686](https://github.com/nxttrack/platform/actions/runs/30005869686)
-passed all 16 checks on 23 July 2026.
+Activation evidence on 23 July 2026:
+
+- [Slack drill 30009018133](https://github.com/nxttrack/platform/actions/runs/30009018133) was accepted and
+  received in `nxttrack-alerts` by Danny Goldenbelt at 14:56 Europe/Amsterdam.
+- `MONITORING_ENABLED=true` was set at 12:57:30 UTC.
+- [Communications audit 30009137492](https://github.com/nxttrack/platform/actions/runs/30009137492) passed all
+  foundation checks.
+- [Post-activation probe 30009139430](https://github.com/nxttrack/platform/actions/runs/30009139430) passed all
+  16 checks without sending another alert.
 
 ## Activation And Drill
 
