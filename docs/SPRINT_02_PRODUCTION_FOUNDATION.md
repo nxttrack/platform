@@ -71,16 +71,19 @@ Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29870133969>
 - Empty production baseline: 0 public tables, 0 Auth users, 0 Storage objects, no remote migration history and 62 repository migrations pending.
 - No production database or runtime state was changed by the audit.
 
-Current candidate evidence:
+Final Sprint 2 candidate evidence:
 
-- Read-only foundation audit: <https://github.com/nxttrack/platform/actions/runs/30002149086>
-- Audited SHA: `e9a57c95216e60303a8e3544ee7d2da6df2e5082`
+- Read-only foundation audit: <https://github.com/nxttrack/platform/actions/runs/30003665341>
+- Audited SHA: `e4b7125ea4efd9fddfc18550c3ddf3fbd7373fcb`
 - Environment/project contract: all 40 checks pass; staging and production Supabase identities are different.
 - Host: release/shared directories, systemd, Caddy, apex/`www`/admin/wildcard routes, TLS, DNS and port `3800` pass.
 - Database inventory: PostgreSQL 17.6, 0 public tables, 0 Auth users, 0 Storage objects and 65 pending repository migrations.
 - The overall workflow stops only on the absent production SendGrid/SMTP secret. Sender, timeout, SPF, DMARC and
   DKIM pass. Provider-secret activation and controlled delivery belong to the communications/go-live gate.
 - No production database or runtime state was changed.
+- Exact-SHA CI passed: <https://github.com/nxttrack/platform/actions/runs/30002916927>.
+- Exact-SHA staging deployment and browser validation passed:
+  <https://github.com/nxttrack/platform/actions/runs/30002927818>.
 
 ## Protection And Authority
 

@@ -8,13 +8,17 @@ Live production SHA observed at audit start: `ba8932b5ecc5c4148c1b5d6d14b27ba662
 
 Status: production foundation present; release remains no-go until the open controls below pass for the final exact SHA.
 
-Latest read-only candidate audit: <https://github.com/nxttrack/platform/actions/runs/30002149086> for
-`e9a57c95216e60303a8e3544ee7d2da6df2e5082`. All 40 environment/project checks, the production host foundation
+Latest read-only candidate audit: <https://github.com/nxttrack/platform/actions/runs/30003665341> for
+`e4b7125ea4efd9fddfc18550c3ddf3fbd7373fcb`. All 40 environment/project checks, the production host foundation
 and the transaction-read-only database inventory passed. The production database remains empty with 65 pending
 repository migrations. The workflow's only failure is the absent production SendGrid/SMTP provider secret.
 
-Latest read-only migration rehearsal: <https://github.com/nxttrack/platform/actions/runs/30002255154>. Supabase
+Latest read-only migration rehearsal: <https://github.com/nxttrack/platform/actions/runs/30003666813>. Supabase
 CLI dry-run listed all 65 migrations and the database fingerprints before and after were identical.
+
+Exact-SHA CI passed in <https://github.com/nxttrack/platform/actions/runs/30002916927>. Exact-SHA staging
+deployment, all browser gates, 56 visual captures and release-evidence upload passed in
+<https://github.com/nxttrack/platform/actions/runs/30002927818>.
 
 ## GitHub production environment
 

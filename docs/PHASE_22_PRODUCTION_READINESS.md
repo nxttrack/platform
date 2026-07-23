@@ -22,6 +22,12 @@ Canonical production procedures:
 - Placeholder instructions and internal Lovable terminology no longer appear as public-facing marketing copy.
 - Product-owner visual approval is recorded with no visual release blocker.
 - The staging release-candidate workflow passes all Phase 15/16 and Sprint 4 gates.
+- Final accepted candidate: `e4b7125ea4efd9fddfc18550c3ddf3fbd7373fcb`.
+- Exact-SHA CI: <https://github.com/nxttrack/platform/actions/runs/30002916927>.
+- Exact-SHA staging deployment and browser evidence:
+  <https://github.com/nxttrack/platform/actions/runs/30002927818>.
+- Exact-SHA production migration dry-run:
+  <https://github.com/nxttrack/platform/actions/runs/30003666813>.
 
 ## Logical Backup/Restore Rehearsal
 
