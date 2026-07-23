@@ -41,8 +41,8 @@ test.describe("Sprint 6 Mollie sandbox", () => {
     const paymentArticle = page.locator("article").filter({ hasText: state.payment.reference }).first();
     await expect(paymentArticle).toBeVisible();
     const checkoutForm = paymentArticle.locator("form").filter({ has: page.getByRole("button", { name: "Checkout aanmaken" }) });
-    await checkoutForm.getByLabel("Provider").selectOption({ label: "Mollie Sprint 6 test (test)" });
-    await checkoutForm.getByLabel("Return URL").fill(`${state.appUrl}/portaal/betalingen`);
+    await checkoutForm.getByLabel("Provider", { exact: true }).selectOption({ label: "Mollie Sprint 6 test (test)" });
+    await checkoutForm.getByLabel("Return URL", { exact: true }).fill(`${state.appUrl}/portaal/betalingen`);
 
     await checkoutForm.evaluate((form) => {
       (form as HTMLFormElement).requestSubmit();
@@ -69,13 +69,13 @@ test.describe("Sprint 6 Mollie sandbox", () => {
 
 async function configureTestProvider(page: Page) {
   const providerForm = page.locator("form").filter({ has: page.getByRole("button", { name: "Provider opslaan" }) });
-  await providerForm.getByLabel("Provider").selectOption("mollie");
-  await providerForm.getByLabel("Mode").selectOption("test");
-  await providerForm.getByLabel("Status").selectOption("active");
-  await providerForm.getByLabel("Naam").fill("Mollie Sprint 6 test");
-  await providerForm.getByLabel("Secret reference").fill("ENV:MOLLIE_API_KEY");
-  await providerForm.getByLabel("Return URL").fill(`${state.appUrl}/portaal/betalingen`);
-  await providerForm.getByLabel("Checkout omschrijving").fill("NXTTRACK staging sandboxbetaling");
+  await providerForm.getByLabel("Provider", { exact: true }).selectOption("mollie");
+  await providerForm.getByLabel("Mode", { exact: true }).selectOption("test");
+  await providerForm.getByLabel("Status", { exact: true }).selectOption("active");
+  await providerForm.getByLabel("Naam", { exact: true }).fill("Mollie Sprint 6 test");
+  await providerForm.getByLabel("Secret reference", { exact: true }).fill("ENV:MOLLIE_API_KEY");
+  await providerForm.getByLabel("Return URL", { exact: true }).fill(`${state.appUrl}/portaal/betalingen`);
+  await providerForm.getByLabel("Checkout omschrijving", { exact: true }).fill("NXTTRACK staging sandboxbetaling");
   await providerForm.getByRole("button", { name: "Provider opslaan" }).click();
   await expect(page.getByText("Opgeslagen: provider.")).toBeVisible();
 }

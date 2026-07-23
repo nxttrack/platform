@@ -7,6 +7,10 @@ on:
         description: Type REHEARSE_MOLLIE_TEST
         required: true
         type: string
+      release_sha:
+        description: Exact SHA currently deployed to staging
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -28,7 +32,7 @@ jobs:
       APP_URL: ${{ vars.APP_URL }}
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
-      STAGING_RELEASE_SHA: ${{ github.sha }}
+      STAGING_RELEASE_SHA: ${{ inputs.release_sha }}
       MOLLIE_REHEARSAL_STATE_PATH: ${{ github.workspace }}/artifacts/mollie-rehearsal-state.json
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
@@ -48,6 +52,7 @@ jobs:
         run: |
           set -euo pipefail
           test "${{ inputs.confirmation }}" = "REHEARSE_MOLLIE_TEST"
+          node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.STAGING_RELEASE_SHA ?? "")) throw new Error("release_sha must be a full commit SHA.")'
           node -e 'if (!process.env.MOLLIE_API_KEY?.startsWith("test_")) throw new Error("Staging MOLLIE_API_KEY must be a test_ credential.")'
 
       - name: Checkout

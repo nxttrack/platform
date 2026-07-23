@@ -73,8 +73,9 @@ const payment = await one(
 );
 
 const state = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   appUrl,
+  harnessSha: process.env.GITHUB_SHA || "",
   releaseSha,
   runId,
   tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug },
