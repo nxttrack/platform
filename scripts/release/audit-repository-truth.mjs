@@ -17,6 +17,7 @@ checkFile(".github/workflows/production-foundation-audit.yml");
 checkFile(".github/workflows/production-migration-rehearsal.yml");
 checkFile(".github/workflows/communications-foundation-audit.yml");
 checkFile(".github/workflows/operational-monitor.yml");
+checkFile("scripts/operations/monitor-operational-health.mjs");
 checkFile("docs/DEFERRED_CONFIGURATION.md");
 checkFile("docs/SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md");
 checkFile("apps/web/tests/e2e/sprint4-mutations.spec.ts");
@@ -36,6 +37,7 @@ const productionAuditWorkflow = read(".github/workflows/production-foundation-au
 const productionMigrationRehearsal = read(".github/workflows/production-migration-rehearsal.yml");
 const communicationsAuditWorkflow = read(".github/workflows/communications-foundation-audit.yml");
 const operationalMonitorWorkflow = read(".github/workflows/operational-monitor.yml");
+const operationalMonitorScript = read("scripts/operations/monitor-operational-health.mjs");
 
 requireText(readme, `Canonical implementation and release branch: \`${canonicalBranch}\``, "README does not declare the canonical release branch.");
 requireText(phaseZero, `Canonical implementation branch: \`${canonicalBranch}\``, "Phase 0 does not lock the canonical implementation branch.");
@@ -71,6 +73,7 @@ requireText(operationalMonitorWorkflow, "Resolve monitoring gate", "Operational 
 requireText(operationalMonitorWorkflow, "MONITORING_ENABLED", "Operational monitor is not protected by an explicit enable switch.");
 requireText(operationalMonitorWorkflow, "SEND_SYNTHETIC_ALERT", "Operational monitor has no explicit synthetic-alert confirmation contract.");
 requireText(operationalMonitorWorkflow, "operations:monitor", "Operational monitor workflow does not run the canonical monitor.");
+requireText(operationalMonitorScript, "recipient_email !~* '@[^@]+[.]test$'", "Operational monitor does not exclude intentionally skipped reserved test recipients.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");

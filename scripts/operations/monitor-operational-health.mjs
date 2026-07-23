@@ -146,7 +146,11 @@ async function checkMailDelivery() {
     const result = await client.query(
       `select
          count(*) filter (where status = 'failed' and created_at >= now() - ($1::int * interval '1 minute'))::int as failed,
-         count(*) filter (where status = 'skipped' and created_at >= now() - ($1::int * interval '1 minute'))::int as skipped,
+         count(*) filter (
+           where status = 'skipped'
+             and recipient_email !~* '@[^@]+[.]test$'
+             and created_at >= now() - ($1::int * interval '1 minute')
+         )::int as skipped,
          count(*) filter (where status = 'pending' and created_at < now() - interval '10 minutes')::int as stuck
        from public.email_delivery_attempts`,
       [windowMinutes]
