@@ -34,7 +34,6 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
       STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
-      STORAGE_BACKUP_DIR: ${{ runner.temp }}/storage-backup
     steps:
       - name: Authorize scoped export
         env:
@@ -52,6 +51,9 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Prepare isolated backup directory
+        run: echo "STORAGE_BACKUP_DIR=${RUNNER_TEMP}/storage-backup" >> "$GITHUB_ENV"
 
       - name: Setup Node
         uses: actions/setup-node@v6
