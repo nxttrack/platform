@@ -4,7 +4,10 @@ import { describe, it } from "node:test";
 
 import {
   assertMollieSecretMode,
+  getMollieAccountLast4,
   getSafeMollieCheckoutUrl,
+  isMollieCustomerId,
+  isMollieMandateId,
   MollieWebhookRequestError,
   normalizeMollieStatus,
   readClassicMollieWebhookId,
@@ -22,6 +25,21 @@ describe("Mollie credential contract", () => {
     assert.equal(assertMollieSecretMode("test_example", "test", "MOLLIE_API_KEY"), "test_example");
     assert.throws(() => assertMollieSecretMode("live_example", "test", "MOLLIE_API_KEY"), /does not match test mode/);
     assert.throws(() => assertMollieSecretMode(undefined, "live", "MOLLIE_API_KEY"), /is not configured/);
+  });
+});
+
+describe("Mollie recurring identifiers and account masking", () => {
+  it("accepts only provider-shaped customer and mandate ids", () => {
+    assert.equal(isMollieCustomerId("cst_abc123"), true);
+    assert.equal(isMollieCustomerId("mdt_abc123"), false);
+    assert.equal(isMollieMandateId("mdt_abc123"), true);
+    assert.equal(isMollieMandateId("cst_abc123"), false);
+  });
+
+  it("stores only a validated account suffix", () => {
+    assert.equal(getMollieAccountLast4("NL55 INGB 0000 0000 00"), "0000");
+    assert.equal(getMollieAccountLast4("not-an-account"), null);
+    assert.equal(getMollieAccountLast4(null), null);
   });
 });
 

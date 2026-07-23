@@ -1,8 +1,11 @@
 export type MollieMode = "test" | "live";
 export type MollieProviderStatus = "open" | "canceled" | "pending" | "authorized" | "expired" | "failed" | "paid";
 export type MollieSessionStatus = "pending" | "authorized" | "paid" | "expired" | "cancelled" | "failed";
+export type MollieMandateStatus = "pending" | "valid" | "invalid";
 
 const molliePaymentIdPattern = /^tr_[A-Za-z0-9]+$/;
+const mollieCustomerIdPattern = /^cst_[A-Za-z0-9]+$/;
+const mollieMandateIdPattern = /^mdt_[A-Za-z0-9]+$/;
 const mollieSecretReferencePattern = /^(?:(?:GITHUB_ENV|ENV):)?MOLLIE_[A-Z0-9_]+$/;
 
 export class MollieWebhookRequestError extends Error {
@@ -14,6 +17,14 @@ export class MollieWebhookRequestError extends Error {
 
 export function isMolliePaymentId(value: string) {
   return molliePaymentIdPattern.test(value);
+}
+
+export function isMollieCustomerId(value: string) {
+  return mollieCustomerIdPattern.test(value);
+}
+
+export function isMollieMandateId(value: string) {
+  return mollieMandateIdPattern.test(value);
 }
 
 export function isMollieSecretReference(value: string) {
@@ -39,6 +50,16 @@ export function normalizeMollieStatus(status: MollieProviderStatus): MollieSessi
   if (status === "expired") return "expired";
   if (status === "canceled") return "cancelled";
   return "failed";
+}
+
+export function normalizeMollieMandateStatus(status: MollieMandateStatus) {
+  return status;
+}
+
+export function getMollieAccountLast4(account: string | null | undefined) {
+  if (!account) return null;
+  const normalized = account.replace(/\s+/g, "").toUpperCase();
+  return /^[A-Z0-9]{4,34}$/.test(normalized) ? normalized.slice(-4) : null;
 }
 
 export function validateMolliePaymentSnapshot(input: {

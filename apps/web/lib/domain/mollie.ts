@@ -2,8 +2,11 @@ import "server-only";
 
 import {
   assertMollieSecretMode,
+  isMollieCustomerId,
+  isMollieMandateId,
   isMolliePaymentId,
   isMollieSecretReference,
+  type MollieMandateStatus,
   type MollieMode,
   type MollieProviderStatus
 } from "./mollie-contract";
@@ -17,7 +20,30 @@ export type MolliePayment = {
   metadata?: Record<string, unknown> | null;
   expiresAt?: string | null;
   paidAt?: string | null;
-  _links?: { checkout?: { href?: string } };
+  customerId?: string | null;
+  mandateId?: string | null;
+  method?: string | null;
+  sequenceType?: "oneoff" | "first" | "recurring";
+  _links?: { changePaymentState?: { href?: string }; checkout?: { href?: string } };
+};
+
+export type MollieCustomer = {
+  id: string;
+  name?: string | null;
+  email?: string | null;
+  metadata?: Record<string, unknown> | null;
+};
+
+export type MollieMandate = {
+  id: string;
+  method: "creditcard" | "directdebit" | "paypal";
+  status: MollieMandateStatus;
+  mandateReference?: string | null;
+  signatureDate?: string | null;
+  details?: {
+    consumerAccount?: string | null;
+    consumerName?: string | null;
+  } | null;
 };
 
 export async function createMolliePayment(input: { amountCents: number; currency: string; description: string; idempotencyKey: string; metadata: Record<string, string>; mode: MollieMode; redirectUrl: string; secretReference: string; webhookUrl: string }) {
@@ -32,6 +58,109 @@ export async function createMolliePayment(input: { amountCents: number; currency
       metadata: input.metadata
     })
   });
+}
+
+export async function createMollieCustomer(input: {
+  email: string;
+  guardianUserId: string;
+  mode: MollieMode;
+  name: string;
+  secretReference: string;
+  tenantId: string;
+}) {
+  return mollieRequest<MollieCustomer>("/customers", input.secretReference, input.mode, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: input.email,
+      locale: "nl_NL",
+      name: input.name,
+      metadata: {
+        guardianUserId: input.guardianUserId,
+        tenantId: input.tenantId
+      }
+    })
+  });
+}
+
+export async function createMollieFirstPayment(input: {
+  amountCents: number;
+  currency: string;
+  customerId: string;
+  description: string;
+  idempotencyKey: string;
+  metadata: Record<string, string>;
+  mode: MollieMode;
+  redirectUrl: string;
+  secretReference: string;
+  webhookUrl: string;
+}) {
+  if (!isMollieCustomerId(input.customerId)) throw new Error("Invalid Mollie customer id");
+  return mollieRequest<MolliePayment>("/payments", input.secretReference, input.mode, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": input.idempotencyKey },
+    body: JSON.stringify({
+      amount: { currency: input.currency, value: (input.amountCents / 100).toFixed(2) },
+      customerId: input.customerId,
+      description: input.description.slice(0, 255),
+      metadata: input.metadata,
+      redirectUrl: input.redirectUrl,
+      sequenceType: "first",
+      webhookUrl: input.webhookUrl
+    })
+  });
+}
+
+export async function createMollieRecurringPayment(input: {
+  amountCents: number;
+  currency: string;
+  customerId: string;
+  description: string;
+  idempotencyKey: string;
+  mandateId: string;
+  metadata: Record<string, string>;
+  mode: MollieMode;
+  secretReference: string;
+  webhookUrl: string;
+}) {
+  if (!isMollieCustomerId(input.customerId)) throw new Error("Invalid Mollie customer id");
+  if (!isMollieMandateId(input.mandateId)) throw new Error("Invalid Mollie mandate id");
+  return mollieRequest<MolliePayment>("/payments", input.secretReference, input.mode, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Idempotency-Key": input.idempotencyKey },
+    body: JSON.stringify({
+      amount: { currency: input.currency, value: (input.amountCents / 100).toFixed(2) },
+      customerId: input.customerId,
+      description: input.description.slice(0, 255),
+      mandateId: input.mandateId,
+      metadata: input.metadata,
+      method: "directdebit",
+      sequenceType: "recurring",
+      webhookUrl: input.webhookUrl
+    })
+  });
+}
+
+export async function listMollieMandates(customerId: string, secretReference: string, mode: MollieMode) {
+  if (!isMollieCustomerId(customerId)) throw new Error("Invalid Mollie customer id");
+  const result = await mollieRequest<{ _embedded?: { mandates?: MollieMandate[] } }>(
+    `/customers/${encodeURIComponent(customerId)}/mandates?limit=250`,
+    secretReference,
+    mode,
+    { method: "GET" }
+  );
+  return result._embedded?.mandates ?? [];
+}
+
+export async function revokeMollieMandate(customerId: string, mandateId: string, secretReference: string, mode: MollieMode) {
+  if (!isMollieCustomerId(customerId)) throw new Error("Invalid Mollie customer id");
+  if (!isMollieMandateId(mandateId)) throw new Error("Invalid Mollie mandate id");
+  await mollieRequest<void>(
+    `/customers/${encodeURIComponent(customerId)}/mandates/${encodeURIComponent(mandateId)}`,
+    secretReference,
+    mode,
+    { method: "DELETE" }
+  );
 }
 
 export async function getMolliePayment(paymentId: string, secretReference: string, mode: MollieMode) {
@@ -58,9 +187,14 @@ async function mollieRequest<T>(path: string, secretReference: string, mode: Mol
       headers: { Authorization: `Bearer ${resolveMollieSecret(secretReference, mode)}`, Accept: "application/json", ...init.headers },
       signal: controller.signal
     });
-    const payload = await response.json().catch(() => null) as (T & { detail?: string; title?: string }) | null;
-    if (!response.ok || !payload) throw new Error(payload?.detail || payload?.title || `Mollie API returned ${response.status}`);
-    return payload;
+    const payload = response.status === 204
+      ? undefined
+      : await response.json().catch(() => null) as (T & { detail?: string; title?: string }) | null;
+    if (!response.ok || (response.status !== 204 && !payload)) {
+      const errorPayload = payload as ({ detail?: string; title?: string } | null | undefined);
+      throw new Error(errorPayload?.detail || errorPayload?.title || `Mollie API returned ${response.status}`);
+    }
+    return payload as T;
   } finally {
     clearTimeout(timeout);
   }
