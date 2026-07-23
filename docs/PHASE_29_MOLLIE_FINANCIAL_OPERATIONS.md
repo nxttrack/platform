@@ -1,6 +1,6 @@
 # Phase 29 - Mollie Financial Operations
 
-Status: implemented, staging validation in progress. Production automation remains disabled by default.
+Status: implemented and provider-validated on staging. Production automation remains disabled by default.
 
 ## Outcome
 
@@ -46,14 +46,23 @@ finance approval and a controlled live rehearsal.
 
 ## Staging Evidence
 
-Use these SHA-bound workflows:
+The application release `b7bf813a217b9e163ceb862bb15c066ed6eafdd5` passed the complete staging
+deployment and browser-validation run `30048744283`. Its retained artifacts contain 56 screenshots and
+`release-evidence.json`.
 
-- `Staging Mollie incasso rehearsal`, with `automation=true`, for the secured scheduler and exactly one
-  provider payment/session.
-- `Staging Mollie adjustment rehearsal`, with `refund`, for a €0.43 partial refund, idempotency replay,
-  provider synchronization and exactly-once events.
-- `Staging Mollie adjustment rehearsal`, with `chargeback`, for provider-created chargeback intake,
-  payment state, urgent task and exactly-once events.
+Provider rehearsals:
+
+- Run `30049435689`: secured scheduler created one €1.43 recurring SEPA test payment. Two webhook calls
+  resulted in exactly one paid session, provider event and billing event.
+- Run `30049842167`: Mollie accepted one €0.43 partial refund and returned the same refund ID for the
+  idempotency replay. Provider and local state both remained `pending`; two webhook calls resulted in one
+  provider event and no premature refund booking.
+- Run `30049949323`: Mollie created one €1.43 test chargeback. Two webhook calls resulted in one local
+  chargeback, one provider event, one billing event and one urgent follow-up task.
+
+The refund harness was corrected in commit `bbc2211e4fa3f018dd141edfeb3d3e9651ccb12c`
+after run `30049556392` demonstrated that Mollie can legitimately keep an accepted API refund pending.
+NXTTRACK records completion only when provider state becomes `refunded`.
 
 All workflows require a full SHA already deployed to staging, a Mollie `test_` key and an explicit literal
 confirmation. Their artifacts contain redacted evidence and no API credentials or hosted test-state URLs.
@@ -65,4 +74,3 @@ confirmation. Their artifacts contain redacted evidence and no API credentials o
 - Verify Mollie balance/settlement reconciliation read-only. Mollie business-operations APIs do not support
   test mode, so this cannot be proven in the sandbox.
 - Export/accounting decisions still need final invoice numbering, VAT rules and bookkeeping mapping.
-
