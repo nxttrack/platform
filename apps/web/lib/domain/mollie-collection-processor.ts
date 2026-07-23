@@ -3,8 +3,9 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createMollieRecurringPayment, MollieApiError } from "./mollie";
+import { createMollieRecurringPayment, getMolliePayment, MollieApiError } from "./mollie";
 import {
+  isMolliePaymentId,
   normalizeMollieStatus,
   resolveMollieApplicationUrl,
   type MollieMode
@@ -25,13 +26,16 @@ export async function processMollieCollectionAttempt(input: {
   const admin = createAdminClient();
   const attemptResult = await admin
     .from("billing_collection_attempts")
-    .select("id, provider_config_id, subscription_id, manual_payment_id, billing_provider_customer_id, billing_mandate_id, guardian_user_id, attempt_number, status, scheduled_for, prenotification_delivery_status, idempotency_key, failure_code")
+    .select("id, provider_config_id, subscription_id, manual_payment_id, billing_provider_customer_id, billing_mandate_id, guardian_user_id, attempt_number, status, scheduled_for, prenotification_delivery_status, idempotency_key, failure_code, initiated_at")
     .eq("tenant_id", input.tenantId)
     .eq("id", input.attemptId)
     .maybeSingle();
   const attempt = attemptResult.data;
   const isRecovery = attempt?.status === "processing" &&
-    ["provider_outcome_unknown", "provider_state_persistence_pending"].includes(attempt.failure_code ?? "");
+    (
+      ["provider_outcome_unknown", "provider_state_persistence_pending"].includes(attempt.failure_code ?? "") ||
+      (!attempt.failure_code && Boolean(attempt.initiated_at) && new Date(attempt.initiated_at).getTime() < Date.now() - 15 * 60 * 1000)
+    );
   if (
     attemptResult.error ||
     !attempt ||
@@ -95,6 +99,7 @@ export async function processMollieCollectionAttempt(input: {
   const appUrl = resolveMollieApplicationUrl(returnUrl, process.env.APP_URL);
 
   let sessionId: string;
+  let knownProviderPaymentId: string | null = null;
   if (isRecovery) {
     const existingSession = await admin
       .from("payment_sessions")
@@ -106,6 +111,9 @@ export async function processMollieCollectionAttempt(input: {
       throw new MollieCollectionError("already_processing", "Recoverable attempt has no reusable local session.");
     }
     sessionId = existingSession.data.id;
+    knownProviderPaymentId = isMolliePaymentId(existingSession.data.provider_session_id ?? "")
+      ? existingSession.data.provider_session_id
+      : null;
   } else {
     const now = new Date().toISOString();
     const claim = await admin
@@ -156,29 +164,35 @@ export async function processMollieCollectionAttempt(input: {
 
   let providerPayment;
   try {
-    providerPayment = await createMollieRecurringPayment({
-      amountCents: paymentResult.data.amount_cents,
-      currency: paymentResult.data.currency,
-      customerId: customerResult.data.provider_customer_id,
-      description: `${input.organizationName} incasso ${attempt.attempt_number}`,
-      idempotencyKey: attempt.idempotency_key,
-      mandateId: mandateResult.data.provider_mandate_id,
-      metadata: {
-        tenantId: input.tenantId,
-        paymentSessionId: sessionId,
-        manualPaymentId: paymentResult.data.id,
-        subscriptionId: attempt.subscription_id,
-        billingProviderCustomerId: attempt.billing_provider_customer_id,
-        billingMandateId: attempt.billing_mandate_id,
-        collectionAttemptId: attempt.id,
-        sequenceType: "recurring"
-      },
-      mode: configResult.data.mode as MollieMode,
-      secretReference: configResult.data.secret_reference,
-      webhookUrl: `${appUrl}/api/webhooks/mollie`
-    });
+    providerPayment = knownProviderPaymentId
+      ? await getMolliePayment(
+          knownProviderPaymentId,
+          configResult.data.secret_reference,
+          configResult.data.mode as MollieMode
+        )
+      : await createMollieRecurringPayment({
+          amountCents: paymentResult.data.amount_cents,
+          currency: paymentResult.data.currency,
+          customerId: customerResult.data.provider_customer_id,
+          description: `${input.organizationName} incasso ${attempt.attempt_number}`,
+          idempotencyKey: attempt.idempotency_key,
+          mandateId: mandateResult.data.provider_mandate_id,
+          metadata: {
+            tenantId: input.tenantId,
+            paymentSessionId: sessionId,
+            manualPaymentId: paymentResult.data.id,
+            subscriptionId: attempt.subscription_id,
+            billingProviderCustomerId: attempt.billing_provider_customer_id,
+            billingMandateId: attempt.billing_mandate_id,
+            collectionAttemptId: attempt.id,
+            sequenceType: "recurring"
+          },
+          mode: configResult.data.mode as MollieMode,
+          secretReference: configResult.data.secret_reference,
+          webhookUrl: `${appUrl}/api/webhooks/mollie`
+        });
   } catch (error) {
-    const indeterminate = error instanceof MollieApiError && error.indeterminate;
+    const indeterminate = Boolean(knownProviderPaymentId) || (error instanceof MollieApiError && error.indeterminate);
     const message = safeErrorMessage(error);
     await Promise.all([
       admin

@@ -194,9 +194,8 @@ async function checkMailDelivery() {
              where status = 'received'
                and occurred_at >= now() - ($1::int * interval '1 minute')) as chargebacks,
            (select count(*)::int
-              from public.billing_collection_attempts
+             from public.billing_collection_attempts
              where status = 'processing'
-               and failure_code in ('provider_outcome_unknown', 'provider_state_persistence_pending')
                and updated_at < now() - ($2::int * interval '1 minute')) as collection_unknown`,
         [windowMinutes, billingStuckMinutes]
       );

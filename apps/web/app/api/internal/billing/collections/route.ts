@@ -46,7 +46,8 @@ export async function POST(request: Request) {
   const configIds = enabledConfigs.map((config) => config.id);
   const tenantIds = [...new Set(enabledConfigs.map((config) => config.tenant_id))];
   const now = new Date().toISOString();
-  const [prenotifiedResult, recoveryResult, tenantsResult] = await Promise.all([
+  const staleBefore = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+  const [prenotifiedResult, recoveryResult, staleResult, tenantsResult] = await Promise.all([
     admin
       .from("billing_collection_attempts")
       .select("id, tenant_id, provider_config_id, scheduled_for")
@@ -66,14 +67,24 @@ export async function POST(request: Request) {
       .lte("scheduled_for", now)
       .order("scheduled_for")
       .limit(maximumAttemptsPerRun),
+    admin
+      .from("billing_collection_attempts")
+      .select("id, tenant_id, provider_config_id, scheduled_for")
+      .in("provider_config_id", configIds)
+      .eq("status", "processing")
+      .is("failure_code", null)
+      .eq("prenotification_delivery_status", "sent")
+      .lt("initiated_at", staleBefore)
+      .order("scheduled_for")
+      .limit(maximumAttemptsPerRun),
     admin.from("tenants").select("id, name").in("id", tenantIds)
   ]);
-  if (prenotifiedResult.error || recoveryResult.error || tenantsResult.error) {
+  if (prenotifiedResult.error || recoveryResult.error || staleResult.error || tenantsResult.error) {
     return NextResponse.json({ accepted: false, reason: "collection_queue_lookup" }, { status: 503 });
   }
 
   const tenantNames = new Map((tenantsResult.data ?? []).map((tenant) => [tenant.id, tenant.name]));
-  const queue = [...(recoveryResult.data ?? []), ...(prenotifiedResult.data ?? [])]
+  const queue = [...(recoveryResult.data ?? []), ...(staleResult.data ?? []), ...(prenotifiedResult.data ?? [])]
     .sort((left, right) => left.scheduled_for.localeCompare(right.scheduled_for))
     .slice(0, maximumAttemptsPerRun);
   const results: Array<{ attemptId: string; code: string; status: "failed" | "processed" | "skipped" }> = [];
