@@ -11,6 +11,9 @@ const timeoutMs = integer("MONITOR_TIMEOUT_MS", 15_000, 1_000);
 const windowMinutes = integer("MONITOR_WINDOW_MINUTES", 15, 1);
 const failedMailThreshold = integer("MAIL_FAILURE_THRESHOLD", 0, 0);
 const skippedMailThreshold = integer("MAIL_SKIPPED_THRESHOLD", 0, 0);
+const billingFailureThreshold = integer("BILLING_FAILURE_THRESHOLD", 0, 0);
+const billingChargebackThreshold = integer("BILLING_CHARGEBACK_THRESHOLD", 0, 0);
+const billingStuckMinutes = integer("BILLING_STUCK_MINUTES", 30, 5);
 const routes = csv(process.env.RUNTIME_SMOKE_ROUTES, ["/", "/login", "/wachtwoord-vergeten", "/nxttrack"]);
 const results = [];
 
@@ -160,6 +163,65 @@ async function checkMailDelivery() {
     check("mail-failed", stats.failed <= failedMailThreshold, `${stats.failed} failed mail attempt(s) in ${windowMinutes} minutes; threshold ${failedMailThreshold}.`);
     check("mail-skipped", stats.skipped <= skippedMailThreshold, `${stats.skipped} skipped mail attempt(s) in ${windowMinutes} minutes; threshold ${skippedMailThreshold}.`);
     check("mail-stuck", stats.stuck === 0, `${stats.stuck} mail attempt(s) have remained pending for more than 10 minutes.`);
+
+    const schema = await client.query(
+      `select
+         to_regclass('public.billing_refunds') is not null as refunds,
+         to_regclass('public.billing_chargebacks') is not null as chargebacks,
+         to_regclass('public.billing_collection_attempts') is not null as collections`
+    );
+    const billingSchemaReady = schema.rows[0]?.refunds && schema.rows[0]?.chargebacks && schema.rows[0]?.collections;
+    check(
+      "billing-schema",
+      true,
+      billingSchemaReady
+        ? "Refund, chargeback and collection diagnostics are available."
+        : "Billing adjustment schema is not deployed yet; diagnostics are intentionally skipped."
+    );
+    if (billingSchemaReady) {
+      const billingResult = await client.query(
+        `select
+           (select count(*)::int
+              from public.billing_refunds
+             where status = 'failed'
+               and created_at >= now() - ($1::int * interval '1 minute')) as refund_failed,
+           (select count(*)::int
+              from public.billing_refunds
+             where status = 'unknown'
+               and updated_at < now() - ($2::int * interval '1 minute')) as refund_stuck,
+           (select count(*)::int
+              from public.billing_chargebacks
+             where status = 'received'
+               and occurred_at >= now() - ($1::int * interval '1 minute')) as chargebacks,
+           (select count(*)::int
+              from public.billing_collection_attempts
+             where status = 'processing'
+               and failure_code = 'provider_outcome_unknown'
+               and updated_at < now() - ($2::int * interval '1 minute')) as collection_unknown`,
+        [windowMinutes, billingStuckMinutes]
+      );
+      const billing = billingResult.rows[0] || { chargebacks: 0, collection_unknown: 0, refund_failed: 0, refund_stuck: 0 };
+      check(
+        "billing-refund-failed",
+        billing.refund_failed <= billingFailureThreshold,
+        `${billing.refund_failed} failed refund(s) in ${windowMinutes} minutes; threshold ${billingFailureThreshold}.`
+      );
+      check(
+        "billing-refund-stuck",
+        billing.refund_stuck === 0,
+        `${billing.refund_stuck} refund(s) have an unknown outcome for more than ${billingStuckMinutes} minutes.`
+      );
+      check(
+        "billing-chargebacks",
+        billing.chargebacks <= billingChargebackThreshold,
+        `${billing.chargebacks} new chargeback(s) in ${windowMinutes} minutes; threshold ${billingChargebackThreshold}.`
+      );
+      check(
+        "billing-collection-unknown",
+        billing.collection_unknown === 0,
+        `${billing.collection_unknown} collection(s) have an unknown provider outcome for more than ${billingStuckMinutes} minutes.`
+      );
+    }
     await client.query("rollback");
   } catch (error) {
     fail("mail-diagnostics", `Mail delivery diagnostics failed: ${safeMessage(error)}.`);
