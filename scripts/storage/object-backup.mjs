@@ -189,7 +189,7 @@ async function seedRehearsal() {
       const path = `${scopedPrefix}/probe.txt`;
       const bytes = Buffer.from(`NXTTRACK controlled storage restore rehearsal\nbucket=${bucket}\n`, "utf8");
       const { error } = await admin.storage.from(bucket).upload(path, bytes, {
-        contentType: "text/plain; charset=utf-8",
+        contentType: "text/plain",
         cacheControl: "60",
         upsert: false
       });
