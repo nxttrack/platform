@@ -91,6 +91,11 @@ Within five minutes:
 8. Restore `RUN_DB_MIGRATIONS=false` and reconfirm both bootstrap flags are `false`.
 9. Start the 30-minute observation window and enable production monitoring only as described in the monitoring checklist.
 
+Production monitoring activation uses `Operational monitor` with `target=production`. Run a manual `probe`,
+then a separately confirmed `drill`; only after both pass and the alert is received may the production
+environment variable `MONITORING_ENABLED` be changed to `true`. The scheduled workflow evaluates staging and
+production independently, with environment-scoped URLs, database credentials and alert configuration.
+
 ## Runtime rollback
 
 Use runtime rollback for an application regression when the database remains compatible. It does not undo database writes or migrations.

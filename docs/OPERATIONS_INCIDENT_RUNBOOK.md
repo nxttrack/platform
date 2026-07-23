@@ -1,11 +1,12 @@
 # Operations And Incident Runbook
 
-Status: active on staging. Danny Goldenbelt is the named incident/support owner, log retention is 30 days and
-the 15-minute schedule was enabled only after a Slack drill was received.
+Status: active on staging and prepared for controlled production activation. Danny Goldenbelt is the named
+incident/support owner, log retention is 30 days and each environment's 15-minute schedule is enabled only
+after its own probe and Slack drill have succeeded.
 
 ## Configuration Contract
 
-The staging GitHub environment owns the operational configuration:
+Each GitHub environment owns its own operational configuration:
 
 | Setting | Kind | Purpose |
 | --- | --- | --- |
@@ -23,7 +24,7 @@ The scheduled monitor checks database-aware health, public-route 5xx responses, 
 Alert payloads include the named incident/support owners, environment, commit SHA, failed check identifiers and
 the Actions run URL, but no recipient addresses, message bodies or credentials.
 
-Activation evidence on 23 July 2026:
+Staging activation evidence on 23 July 2026:
 
 - [Slack drill 30009018133](https://github.com/nxttrack/platform/actions/runs/30009018133) was accepted and
   received in `nxttrack-alerts` by Danny Goldenbelt at 14:56 Europe/Amsterdam.
@@ -35,21 +36,26 @@ Activation evidence on 23 July 2026:
 
 ## Activation And Drill
 
-1. Configure the independent webhook and its format in the staging environment.
+Repeat these steps independently for `staging` and `production`:
+
+1. Configure the independent webhook and its format in the target GitHub environment.
 2. Name `INCIDENT_OWNER` and `SUPPORT_OWNER`; set `LOG_RETENTION_DAYS`.
-3. Dispatch `Operational monitor` from `main` in `probe` mode with `RUN_OPERATIONAL_PROBE`.
+3. Dispatch `Operational monitor` from `main`, select the target environment and use `probe` mode with
+   `RUN_OPERATIONAL_PROBE`.
 4. Resolve every failed probe before continuing.
-5. Dispatch it in `drill` mode with `SEND_SYNTHETIC_ALERT`.
+5. Dispatch the same target in `drill` mode with `SEND_SYNTHETIC_ALERT`.
 6. Record who received the alert, its timestamp and the Actions run URL.
-7. Only then set `MONITORING_ENABLED=true`; the monitor runs every 15 minutes.
+7. Only then set `MONITORING_ENABLED=true` in that target environment; the scheduled matrix checks both
+   environments every 15 minutes and skips any target whose switch is not enabled.
 
 ## Triage
 
 1. The incident owner acknowledges the alert and opens its GitHub Actions run URL.
 2. Classify impact: P0 is cross-tenant confidentiality/integrity or total outage; P1 blocks a critical account/operational journey; P2 is degraded or isolated.
-3. Confirm `https://staging.nxttrack.nl/api/health`, including `checks.database.status` and `commitSha`.
+3. Confirm the affected environment's `/api/health`, including `checks.database.status` and `commitSha`.
 4. Check the failed monitor IDs: `health-*`, `route-*`, `asset-*` or `mail-*` identify the subsystem without exposing user data.
-5. On the host, inspect `systemctl status nxttrack-staging`, `journalctl -u nxttrack-staging` and Caddy status/logs within the agreed retention window.
+5. On the host, inspect the target service (`nxttrack-staging` or `nxttrack-production`), its journal and Caddy
+   status/logs within the agreed retention window.
 6. For mail, inspect aggregate delivery diagnostics and the relevant authorized admin screen; never paste credentials, recipient addresses or message content into an incident ticket.
 
 ## Containment And Recovery

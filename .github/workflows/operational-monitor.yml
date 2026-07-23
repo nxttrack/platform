@@ -5,6 +5,14 @@ on:
     - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
+      target:
+        description: Environment to monitor
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
       mode:
         description: Probe without alerts, or send a synthetic alert
         required: true
@@ -21,18 +29,20 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: nxttrack-staging-operational-monitor
-  cancel-in-progress: false
-
 jobs:
   monitor:
-    name: monitor staging operations
-    if: github.event_name == 'workflow_dispatch' || vars.MONITORING_ENABLED == 'true'
+    name: monitor ${{ matrix.target }} operations
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ github.event_name == 'schedule' && fromJSON('["staging","production"]') || fromJSON(format('["{0}"]', inputs.target)) }}
     runs-on: [self-hosted, linux, x64, nxttrack]
-    environment: staging
+    environment: ${{ matrix.target }}
+    concurrency:
+      group: nxttrack-${{ matrix.target }}-operational-monitor
+      cancel-in-progress: false
     env:
-      APP_ENV: staging
+      APP_ENV: ${{ matrix.target }}
       APP_URL: ${{ vars.APP_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
@@ -48,6 +58,18 @@ jobs:
       MAIL_SKIPPED_THRESHOLD: ${{ vars.MAIL_SKIPPED_THRESHOLD }}
       RUNTIME_SMOKE_ROUTES: ${{ vars.RUNTIME_SMOKE_ROUTES }}
     steps:
+      - name: Resolve monitoring gate
+        id: gate
+        env:
+          SCHEDULE_ENABLED: ${{ vars.MONITORING_ENABLED }}
+        run: |
+          enabled=false
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$SCHEDULE_ENABLED" == "true" ]]; then
+            enabled=true
+          fi
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          echo "target=$APP_ENV event=$GITHUB_EVENT_NAME enabled=$enabled"
+
       - name: Authorize manual execution
         if: github.event_name == 'workflow_dispatch'
         env:
@@ -61,20 +83,25 @@ jobs:
           fi
 
       - name: Checkout
+        if: steps.gate.outputs.enabled == 'true'
         uses: actions/checkout@v6
 
       - name: Setup Node
+        if: steps.gate.outputs.enabled == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: "20.19.0"
 
       - name: Setup pnpm
+        if: steps.gate.outputs.enabled == 'true'
         run: |
           corepack enable
           corepack prepare pnpm@10.24.0 --activate
 
       - name: Install dependencies
+        if: steps.gate.outputs.enabled == 'true'
         run: pnpm install --frozen-lockfile
 
       - name: Run operational monitor
+        if: steps.gate.outputs.enabled == 'true'
         run: pnpm run operations:monitor

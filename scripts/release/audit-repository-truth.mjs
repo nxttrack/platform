@@ -64,6 +64,10 @@ requireText(productionMigrationRehearsal, 'DB_MIGRATE_DRY_RUN: "true"', "Product
 requireText(productionMigrationRehearsal, "BEFORE_FINGERPRINT", "Production migration rehearsal does not prove an unchanged database fingerprint.");
 requireText(communicationsAuditWorkflow, "AUDIT_COMMUNICATIONS_FOUNDATION", "Communications foundation audit has no explicit confirmation contract.");
 requireText(communicationsAuditWorkflow, "operations:audit-communications", "Communications foundation workflow does not run the non-sending audit.");
+requireText(operationalMonitorWorkflow, "Environment to monitor", "Operational monitor has no explicit target selection.");
+requireText(operationalMonitorWorkflow, 'fromJSON(\'[\"staging\",\"production\"]\')', "Scheduled operational monitoring does not cover staging and production.");
+requireText(operationalMonitorWorkflow, "environment: ${{ matrix.target }}", "Operational monitor does not bind secrets and variables to the selected environment.");
+requireText(operationalMonitorWorkflow, "Resolve monitoring gate", "Operational monitor does not resolve its enable switch after environment binding.");
 requireText(operationalMonitorWorkflow, "MONITORING_ENABLED", "Operational monitor is not protected by an explicit enable switch.");
 requireText(operationalMonitorWorkflow, "SEND_SYNTHETIC_ALERT", "Operational monitor has no explicit synthetic-alert confirmation contract.");
 requireText(operationalMonitorWorkflow, "operations:monitor", "Operational monitor workflow does not run the canonical monitor.");
