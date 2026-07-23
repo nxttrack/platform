@@ -26,7 +26,7 @@ const admin = createClient(supabaseUrl, supabaseSecret, {
 });
 
 const session = await pollSession();
-await pollPaidState();
+await pollProviderPaid(session.provider_session_id);
 
 for (let attempt = 0; attempt < 2; attempt += 1) {
   const response = await fetch(`${appUrl}/api/webhooks/mollie`, {
@@ -37,6 +37,7 @@ for (let attempt = 0; attempt < 2; attempt += 1) {
   if (!response.ok) throw new Error(`Repeated Mollie webhook returned ${response.status}.`);
 }
 
+await pollPaidState();
 const result = await verifyExactlyOnce(session);
 writeFileSync(statePath, `${JSON.stringify({ ...state, result }, null, 2)}\n`);
 console.log("[mollie:verify] PASS paid checkout and two repeated webhooks produced exactly one business effect.");
@@ -68,6 +69,23 @@ async function pollPaidState() {
     await wait(1_000);
   }
   throw new Error("Mollie webhook did not produce the expected paid state.");
+}
+
+async function pollProviderPaid(providerPaymentId) {
+  const apiKey = process.env.MOLLIE_API_KEY || "";
+  if (!apiKey.startsWith("test_")) throw new Error("A Mollie test credential is required for provider verification.");
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const response = await fetch(`https://api.mollie.com/v2/payments/${encodeURIComponent(providerPaymentId)}`, {
+      headers: { Accept: "application/json", Authorization: `Bearer ${apiKey}` }
+    });
+    const payment = await response.json().catch(() => null);
+    if (!response.ok || !payment) throw new Error(`Mollie provider verification returned ${response.status}.`);
+    if (payment.status === state.expected.finalPaymentStatus) return;
+    await wait(1_000);
+  }
+
+  throw new Error("Mollie hosted checkout did not reach the expected paid provider state.");
 }
 
 async function verifyExactlyOnce(session) {
