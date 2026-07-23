@@ -15,7 +15,6 @@ import {
   MapPin,
   Menu,
   MessageSquare,
-  Search,
   Settings,
   TrendingUp,
   User,
@@ -28,6 +27,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+import { GlobalCommandPalette, type GlobalSearchItem } from "@/components/shell/global-command-palette";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +67,7 @@ type Props = {
   user: { name: string; role: string };
   children: ReactNode;
   accent?: ShellAccent;
+  searchItems?: GlobalSearchItem[];
 };
 
 const accentStyles: Record<ShellAccent, string> = {
@@ -76,7 +77,7 @@ const accentStyles: Record<ShellAccent, string> = {
   platform: "from-slate-900 to-blue-800"
 };
 
-export function AppShellClient({ brand, nav, user, children, accent = "parent" }: Props) {
+export function AppShellClient({ brand, nav, user, children, accent = "parent", searchItems }: Props) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const activeHref = findActiveHref(pathname, nav);
@@ -107,10 +108,7 @@ export function AppShellClient({ brand, nav, user, children, accent = "parent" }
             <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <div className="hidden h-9 w-64 items-center gap-2 rounded-xl border border-border bg-background px-3 text-sm text-muted-foreground lg:flex">
-              <Search className="h-4 w-4" />
-              <span>Zoeken…</span>
-            </div>
+            <GlobalCommandPalette items={searchItems} nav={nav} />
             {messagesHref ? (
               <Link className="relative rounded-xl border border-border bg-background p-2 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={messagesHref} aria-label="Berichten en meldingen">
                 <Bell className="h-4 w-4" />

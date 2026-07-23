@@ -164,3 +164,54 @@
 @utility shadow-glow {
   box-shadow: var(--shadow-glow);
 }
+
+@layer components {
+  .rdp-root {
+    --rdp-day_button-width: 2.25rem;
+    --rdp-day_button-height: 2.25rem;
+    --rdp-day-width: 2.4rem;
+    --rdp-day-height: 2.4rem;
+    --rdp-nav_button-width: 2rem;
+    --rdp-nav_button-height: 2rem;
+    --rdp-selected-border: 0;
+  }
+
+  .rdp-month_caption {
+    display: flex;
+    min-height: 2.5rem;
+    align-items: center;
+    padding-inline: 0.5rem;
+    font-weight: 700;
+  }
+
+  .rdp-nav {
+    position: absolute;
+    inset-block-start: 0.25rem;
+    inset-inline-end: 0.25rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+
+  .rdp-button_previous,
+  .rdp-button_next,
+  .rdp-day_button {
+    border-radius: 0.65rem;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .rdp-day_button:hover,
+  .rdp-button_previous:hover,
+  .rdp-button_next:hover {
+    background: var(--color-muted);
+  }
+
+  .rdp-selected .rdp-day_button {
+    background: var(--color-primary);
+    color: var(--color-primary-foreground);
+  }
+
+  .rdp-outside {
+    color: var(--color-muted-foreground);
+    opacity: 0.55;
+  }
+}
