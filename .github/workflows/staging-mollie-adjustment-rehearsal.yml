@@ -1,0 +1,135 @@
+name: Staging Mollie adjustment rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_MOLLIE_ADJUSTMENT_TEST
+        required: true
+        type: string
+      release_sha:
+        description: Exact SHA currently deployed to staging
+        required: true
+        type: string
+      adjustment:
+        description: Provider-side financial adjustment
+        required: true
+        default: refund
+        type: choice
+        options:
+          - refund
+          - chargeback
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-mollie-adjustment-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: ${{ inputs.adjustment }} and exactly-once synchronization
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      CI: true
+      APP_ENV: staging
+      APP_URL: ${{ vars.APP_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      STAGING_RELEASE_SHA: ${{ inputs.release_sha }}
+      MOLLIE_INCASSO_STATE_PATH: ${{ github.workspace }}/artifacts/mollie-adjustment-runtime.json
+      MOLLIE_INCASSO_EVIDENCE_PATH: ${{ github.workspace }}/artifacts/mollie-adjustment-paid-evidence.json
+      MOLLIE_INCASSO_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-adjustment-paid-diagnostic
+      MOLLIE_ADJUSTMENT_EVIDENCE_PATH: ${{ github.workspace }}/artifacts/mollie-adjustment-evidence.json
+      MOLLIE_ADJUSTMENT_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-adjustment-diagnostic
+      MOLLIE_INCASSO_OUTCOME: paid
+      MOLLIE_ADJUSTMENT: ${{ inputs.adjustment }}
+      MOLLIE_ADJUSTMENT_REHEARSAL: "true"
+      MOLLIE_INCASSO_REHEARSAL: "true"
+      PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
+
+    steps:
+      - name: Authorize bounded adjustment sandbox rehearsal
+        run: |
+          set -euo pipefail
+          test "${{ inputs.confirmation }}" = "REHEARSE_MOLLIE_ADJUSTMENT_TEST"
+          node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.STAGING_RELEASE_SHA ?? "")) throw new Error("release_sha must be a full commit SHA.")'
+          node -e 'if (!process.env.MOLLIE_API_KEY?.startsWith("test_")) throw new Error("Staging MOLLIE_API_KEY must be a test_ credential.")'
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact staging SHA
+        run: |
+          set -euo pipefail
+          node -e '
+            const response = await fetch(`${process.env.APP_URL}/api/health`, { cache: "no-store" });
+            const body = await response.json();
+            if (!response.ok || !body.ok || body.commitSha !== process.env.STAGING_RELEASE_SHA || body.checks?.database?.status !== "pass") {
+              throw new Error(`Staging health does not expose ${process.env.STAGING_RELEASE_SHA}.`);
+            }
+          '
+
+      - name: Prepare paid recurring test payment
+        run: pnpm run sprint6:prepare-incasso
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Move recurring payment to paid
+        run: pnpm run sprint6:test-incasso
+
+      - name: Verify paid provider state
+        run: pnpm run sprint6:verify-incasso
+
+      - name: Create test chargeback
+        if: inputs.adjustment == 'chargeback'
+        run: pnpm run sprint6:test-adjustment
+
+      - name: Create or synchronize adjustment and verify exactly-once effects
+        run: pnpm run sprint6:verify-adjustment
+
+      - name: Upload browser diagnostic after a failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mollie-adjustment-diagnostic-${{ github.run_id }}
+          path: |
+            artifacts/mollie-adjustment-paid-diagnostic.*
+            artifacts/mollie-adjustment-diagnostic.*
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Upload redacted adjustment evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mollie-adjustment-${{ inputs.adjustment }}-${{ github.sha }}-${{ github.run_id }}
+          path: |
+            artifacts/mollie-adjustment-paid-evidence.json
+            artifacts/mollie-adjustment-evidence.json
+          if-no-files-found: warn
+          retention-days: 30

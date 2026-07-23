@@ -61,6 +61,8 @@
     "sprint6:prepare-incasso": "node scripts/staging/prepare-mollie-incasso-sandbox.mjs",
     "sprint6:test-incasso": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-incasso-sandbox.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-incasso": "node scripts/staging/verify-mollie-incasso-sandbox.mjs",
+    "sprint6:test-adjustment": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-adjustment-sandbox.spec.ts --project=chromium-desktop --retries=0",
+    "sprint6:verify-adjustment": "node scripts/staging/verify-mollie-adjustment-sandbox.mjs",
     "sprint6:prepare-mandate": "node scripts/staging/prepare-mollie-mandate-onboarding.mjs",
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
