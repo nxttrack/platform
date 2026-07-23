@@ -393,23 +393,29 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                     </div>
                     <StatusPill tone={payment.status === "paid" ? "success" : overdue || payment.status === "overdue" ? "danger" : payment.status === "due" ? "warning" : "neutral"}>{overdue && payment.status === "due" ? "overdue" : payment.status}</StatusPill>
                   </div>
-                  <form action={updateManualPaymentStatusAction} className="mt-3 grid gap-3 md:grid-cols-4">
-                    <input name="paymentId" type="hidden" value={payment.id} />
-                    <SelectField label="Status" name="status">
-                      <option value="due">Open</option>
-                      <option value="overdue">Overdue</option>
-                      <option value="paid">Betaald</option>
-                      <option value="waived">Kwijtgescholden</option>
-                      <option value="cancelled">Geannuleerd</option>
-                    </SelectField>
-                    <Field label="Betaaldatum" name="paidOn" type="date" />
-                    <Field label="Methode" name="method" placeholder={payment.method ?? "Bank"} />
-                    <div className="flex items-end">
-                      <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
-                        Status bijwerken
-                      </button>
-                    </div>
-                  </form>
+                  {payment.status === "refunded" || payment.status === "chargeback" ? (
+                    <p className="mt-3 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground">
+                      Deze financiële status wordt uitsluitend vanuit de geverifieerde Mollie-administratie bijgewerkt.
+                    </p>
+                  ) : (
+                    <form action={updateManualPaymentStatusAction} className="mt-3 grid gap-3 md:grid-cols-4">
+                      <input name="paymentId" type="hidden" value={payment.id} />
+                      <SelectField defaultValue={payment.status} label="Status" name="status">
+                        <option value="due">Open</option>
+                        <option value="overdue">Overdue</option>
+                        <option value="paid">Betaald</option>
+                        <option value="waived">Kwijtgescholden</option>
+                        <option value="cancelled">Geannuleerd</option>
+                      </SelectField>
+                      <Field defaultValue={payment.paid_on ?? ""} label="Betaaldatum" name="paidOn" type="date" />
+                      <Field defaultValue={payment.method ?? ""} label="Methode" name="method" placeholder="Bank" />
+                      <div className="flex items-end">
+                        <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+                          Status bijwerken
+                        </button>
+                      </div>
+                    </form>
+                  )}
                   <div className="mt-3 grid gap-3 xl:grid-cols-3">
                     <form action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
@@ -766,6 +772,7 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (error) {
     const message = {
       "incasso-outcome-unknown": "Mollie heeft niet tijdig geantwoord. Dezelfde poging wordt eerst veilig gereconcilieerd; start geen nieuwe incasso.",
+      "payment-provider-managed": "Een terugbetaling of stornering kan alleen via de geverifieerde Mollie-synchronisatie worden gewijzigd.",
       "provider-automation-requires-incasso": "Schakel terugkerende SEPA-incasso in voordat je automatische uitvoering of retries activeert.",
       "provider-retry-policy": "Gebruik 1–5 pogingen en een wachttijd van 1–30 dagen.",
       "refund-amount": "Dit bedrag is hoger dan het nog beschikbare terug te betalen bedrag.",

@@ -236,13 +236,16 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
   const status = readEnum(formData, "status", paymentStatuses, "due");
   const paymentResult = await admin
     .from("manual_payments")
-    .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on")
+    .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on, status, notes")
     .eq("tenant_id", tenant.id)
     .eq("id", paymentId)
     .maybeSingle();
 
   if (paymentResult.error || !paymentResult.data) {
     redirect("/admin/betalingen?error=payment");
+  }
+  if (paymentResult.data.status === "refunded" || paymentResult.data.status === "chargeback") {
+    redirect("/admin/betalingen?error=payment-provider-managed");
   }
 
   const paidOn = status === "paid" ? readOptional(formData, "paidOn") ?? new Date().toISOString().slice(0, 10) : readOptional(formData, "paidOn");
@@ -252,7 +255,7 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
       status,
       paid_on: paidOn,
       method: readOptional(formData, "method"),
-      notes: readOptional(formData, "notes")
+      notes: readOptional(formData, "notes") ?? paymentResult.data.notes
     })
     .eq("tenant_id", tenant.id)
     .eq("id", paymentResult.data.id);

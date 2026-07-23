@@ -76,11 +76,13 @@ export function SelectField({
   label,
   name,
   required = false,
+  defaultValue,
   children
 }: {
   label: string;
   name: string;
   required?: boolean;
+  defaultValue?: string;
   children: ReactNode;
 }) {
   const id = useId();
@@ -88,7 +90,7 @@ export function SelectField({
   return (
     <FieldRoot>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <NativeSelect id={id} name={name} required={required}>
+      <NativeSelect defaultValue={defaultValue} id={id} name={name} required={required}>
         {children}
       </NativeSelect>
     </FieldRoot>
