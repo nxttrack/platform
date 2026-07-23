@@ -36,12 +36,17 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
   const status = readEnum(formData, "status", providerStatuses, "draft");
   const secretReference = readOptional(formData, "secretReference");
   const returnUrl = readOptional(formData, "returnUrl");
+  const directDebitNoticeDays = readInteger(formData, "directDebitNoticeDays") ?? 7;
+  const recurringEnabled = formData.get("recurringEnabled") === "on";
 
   if (status === "active" && provider !== "manual" && provider !== "mollie") {
     redirect("/admin/betalingen?error=provider-unsupported");
   }
 
   if (provider === "mollie") {
+    if (directDebitNoticeDays < 2 || directDebitNoticeDays > 30) {
+      redirect("/admin/betalingen?error=provider-notice-days");
+    }
     if (secretReference && !isMollieSecretReference(secretReference)) {
       redirect("/admin/betalingen?error=provider-secret-reference");
     }
@@ -68,7 +73,9 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
     webhook_secret_reference: readOptional(formData, "webhookSecretReference"),
     public_config: {
       checkout_description: readOptional(formData, "checkoutDescription"),
-      return_url: returnUrl
+      return_url: returnUrl,
+      direct_debit_notice_days: directDebitNoticeDays,
+      recurring_enabled: provider === "mollie" && recurringEnabled
     }
   };
   const { error } = await admin.from("billing_provider_configs").upsert(payload, { onConflict: "tenant_id,provider,mode" });

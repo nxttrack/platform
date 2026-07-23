@@ -63,6 +63,7 @@ export async function createMolliePayment(input: { amountCents: number; currency
 export async function createMollieCustomer(input: {
   email: string;
   guardianUserId: string;
+  idempotencyKey: string;
   mode: MollieMode;
   name: string;
   secretReference: string;
@@ -70,7 +71,7 @@ export async function createMollieCustomer(input: {
 }) {
   return mollieRequest<MollieCustomer>("/customers", input.secretReference, input.mode, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Idempotency-Key": input.idempotencyKey },
     body: JSON.stringify({
       email: input.email,
       locale: "nl_NL",
