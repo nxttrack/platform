@@ -12,6 +12,8 @@ check("apps/web/lib/domain/billing-actions.ts", ["readPaymentIdempotencyKey", "i
 check("apps/web/app/api/webhooks/mollie/route.ts", ["getMolliePayment", "validateMolliePaymentSnapshot", "provider_event_id: `${paymentId}:webhook_error`"]);
 check("supabase/migrations/20260723153000_phase_27_billing_activation_hardening.sql", ["billing_provider_configs_mollie_secret_reference_check", "payment_sessions_idempotency_key_format_check", "payment_sessions_one_open_provider_attempt"]);
 check("tests/unit/billing-contract.test.ts", ["checkout idempotency contract", "classic Mollie webhook contract", "provider-verified payment state"]);
+check("scripts/staging/prepare-mollie-sandbox.mjs", ["SPRINT6-MOLLIE-REHEARSAL-", "removePreviousRehearsalRows", "Mollie sandbox preparation is restricted"]);
+check("apps/web/tests/e2e/mollie-sandbox.spec.ts", ["requestSubmit()", "repeatedWebhookCount: 2", "providerEventCount", "billingEventCount"]);
 check("apps/web/public/sw.js", ["request.mode === \"navigate\"", "url.pathname.startsWith(\"/api/\")", "request.headers.has(\"authorization\")"]);
 check("supabase/migrations/20260723120000_phase_25_premium_operations.sql", ["automation_runs_idempotency_unique", "alter table public.import_jobs force row level security", "alter table public.media_consents force row level security"]);
 check("supabase/migrations/20260723140000_phase_26_planning_undo.sql", ["before_state jsonb not null", "alter table public.planning_change_events force row level security"]);
