@@ -34,7 +34,16 @@ for (let attempt = 0; attempt < 2; attempt += 1) {
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({ id: session.provider_session_id })
   });
-  if (!response.ok) throw new Error(`Repeated Mollie webhook returned ${response.status}.`);
+  if (!response.ok) {
+    const diagnostic = await admin
+      .from("payment_provider_events")
+      .select("error_message")
+      .eq("tenant_id", state.tenant.id)
+      .eq("provider_event_id", `${session.provider_session_id}:webhook_error`)
+      .maybeSingle();
+    const message = diagnostic.data?.error_message ? ` ${String(diagnostic.data.error_message).slice(0, 300)}` : "";
+    throw new Error(`Repeated Mollie webhook returned ${response.status}.${message}`);
+  }
 }
 
 await pollPaidState();
