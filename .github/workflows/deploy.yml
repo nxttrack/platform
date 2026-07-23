@@ -134,6 +134,7 @@ jobs:
       SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
+      BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       SMTP_HOST: ${{ vars.SMTP_HOST }}
       SMTP_PORT: ${{ vars.SMTP_PORT }}
       SMTP_USER: ${{ vars.SMTP_USER }}
@@ -239,6 +240,7 @@ jobs:
             printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
             printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
             printf 'MOLLIE_API_KEY=%s\n' "$MOLLIE_API_KEY"
+            printf 'BILLING_AUTOMATION_SECRET=%s\n' "$BILLING_AUTOMATION_SECRET"
             printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
             printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
             printf 'SMTP_USER=%s\n' "$SMTP_USER"
