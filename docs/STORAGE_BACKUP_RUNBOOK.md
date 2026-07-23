@@ -1,7 +1,7 @@
 # Private Storage Backup And Restore
 
-Status: implementation ready for staging rehearsal. Production use requires an independently retained
-production encryption passphrase and explicit backup/restore authorization.
+Status: implementation and full staging backup/delete/restore/verification rehearsal passed. Production use
+requires an independently retained production encryption passphrase and explicit backup/restore authorization.
 
 ## Scope And Safety
 
@@ -46,6 +46,15 @@ MIME allowlists. It then:
 
 The cleanup step is bounded to the exact rehearsal prefix and runs even after a later failure. The workflow
 never lists, downloads, changes or deletes objects outside that run-specific prefix.
+
+Passing evidence:
+
+- [Staging Storage restore rehearsal 30012250717](https://github.com/nxttrack/platform/actions/runs/30012250717)
+  on exact SHA `70db98592f5dcda1f85ef121efef4b0ce1638a38`;
+- both private bucket probes exported with SHA-256, encrypted, decrypted and locally verified;
+- both source probes deleted, restored without overwrite and re-downloaded with matching checksums;
+- final cleanup verified zero remaining objects under the exact rehearsal prefix;
+- encrypted archive and non-sensitive two-object summary retained as a downloadable 30-day artifact.
 
 ## Create A Real Backup
 

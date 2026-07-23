@@ -2,6 +2,10 @@
 
 Status: prepared. Any real restore is destructive, can cause downtime and requires explicit incident-commander approval for the exact project and recovery point.
 
+The object-level implementation passed its controlled staging rehearsal in
+[run 30012250717](https://github.com/nxttrack/platform/actions/runs/30012250717) on
+`70db98592f5dcda1f85ef121efef4b0ce1638a38`.
+
 ## Recovery contract
 
 - Target RPO: record the accepted value at go/no-go; daily Pro backups can still imply up to roughly one day of database loss.
