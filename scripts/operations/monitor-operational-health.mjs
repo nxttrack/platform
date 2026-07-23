@@ -196,7 +196,7 @@ async function checkMailDelivery() {
            (select count(*)::int
               from public.billing_collection_attempts
              where status = 'processing'
-               and failure_code = 'provider_outcome_unknown'
+               and failure_code in ('provider_outcome_unknown', 'provider_state_persistence_pending')
                and updated_at < now() - ($2::int * interval '1 minute')) as collection_unknown`,
         [windowMinutes, billingStuckMinutes]
       );

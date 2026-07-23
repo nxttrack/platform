@@ -30,11 +30,12 @@ export async function processMollieCollectionAttempt(input: {
     .eq("id", input.attemptId)
     .maybeSingle();
   const attempt = attemptResult.data;
-  const isIndeterminateRetry = attempt?.status === "processing" && attempt.failure_code === "provider_outcome_unknown";
+  const isRecovery = attempt?.status === "processing" &&
+    ["provider_outcome_unknown", "provider_state_persistence_pending"].includes(attempt.failure_code ?? "");
   if (
     attemptResult.error ||
     !attempt ||
-    (!isIndeterminateRetry && attempt.status !== "prenotified") ||
+    (!isRecovery && attempt.status !== "prenotified") ||
     attempt.prenotification_delivery_status !== "sent" ||
     new Date(attempt.scheduled_for).getTime() > Date.now()
   ) {
@@ -94,15 +95,15 @@ export async function processMollieCollectionAttempt(input: {
   const appUrl = resolveMollieApplicationUrl(returnUrl, process.env.APP_URL);
 
   let sessionId: string;
-  if (isIndeterminateRetry) {
+  if (isRecovery) {
     const existingSession = await admin
       .from("payment_sessions")
       .select("id, provider_session_id")
       .eq("tenant_id", input.tenantId)
       .eq("collection_attempt_id", attempt.id)
       .maybeSingle();
-    if (existingSession.error || !existingSession.data || existingSession.data.provider_session_id) {
-      throw new MollieCollectionError("already_processing", "Indeterminate attempt cannot be replayed.");
+    if (existingSession.error || !existingSession.data) {
+      throw new MollieCollectionError("already_processing", "Recoverable attempt has no reusable local session.");
     }
     sessionId = existingSession.data.id;
   } else {
@@ -153,8 +154,9 @@ export async function processMollieCollectionAttempt(input: {
     }
   }
 
+  let providerPayment;
   try {
-    const providerPayment = await createMollieRecurringPayment({
+    providerPayment = await createMollieRecurringPayment({
       amountCents: paymentResult.data.amount_cents,
       currency: paymentResult.data.currency,
       customerId: customerResult.data.provider_customer_id,
@@ -175,42 +177,6 @@ export async function processMollieCollectionAttempt(input: {
       secretReference: configResult.data.secret_reference,
       webhookUrl: `${appUrl}/api/webhooks/mollie`
     });
-    const status = normalizeMollieStatus(providerPayment.status);
-    const [sessionUpdate, attemptUpdate] = await Promise.all([
-      admin
-        .from("payment_sessions")
-        .update({
-          provider_session_id: providerPayment.id,
-          checkout_url: null,
-          status,
-          failure_code: null,
-          failure_message: null
-        })
-        .eq("tenant_id", input.tenantId)
-        .eq("id", sessionId),
-      admin
-        .from("billing_collection_attempts")
-        .update({
-          provider_payment_id: providerPayment.id,
-          status,
-          completed_at: ["paid", "failed", "expired", "cancelled"].includes(status) ? new Date().toISOString() : null,
-          failure_code: null,
-          failure_message: null
-        })
-        .eq("tenant_id", input.tenantId)
-        .eq("id", attempt.id)
-    ]);
-    if (sessionUpdate.error || attemptUpdate.error) throw sessionUpdate.error ?? attemptUpdate.error;
-    await recordCollectionStarted({
-      attemptNumber: attempt.attempt_number,
-      guardianUserId: paymentResult.data.guardian_user_id,
-      participantId: paymentResult.data.participant_id,
-      paymentId: paymentResult.data.id,
-      sessionId,
-      subscriptionId: attempt.subscription_id,
-      tenantId: input.tenantId
-    });
-    return { attemptId: attempt.id, paymentSessionId: sessionId, providerPaymentId: providerPayment.id, status };
   } catch (error) {
     const indeterminate = error instanceof MollieApiError && error.indeterminate;
     const message = safeErrorMessage(error);
@@ -237,6 +203,70 @@ export async function processMollieCollectionAttempt(input: {
     ]);
     throw new MollieCollectionError(indeterminate ? "outcome_unknown" : "provider_api", message);
   }
+
+  const status = normalizeMollieStatus(providerPayment.status);
+  const [sessionUpdate, attemptUpdate] = await Promise.all([
+    admin
+      .from("payment_sessions")
+      .update({
+        provider_session_id: providerPayment.id,
+        checkout_url: null,
+        status,
+        failure_code: null,
+        failure_message: null
+      })
+      .eq("tenant_id", input.tenantId)
+      .eq("id", sessionId),
+    admin
+      .from("billing_collection_attempts")
+      .update({
+        provider_payment_id: providerPayment.id,
+        status,
+        completed_at: ["paid", "failed", "expired", "cancelled"].includes(status) ? new Date().toISOString() : null,
+        failure_code: null,
+        failure_message: null
+      })
+      .eq("tenant_id", input.tenantId)
+      .eq("id", attempt.id)
+  ]);
+  if (sessionUpdate.error || attemptUpdate.error) {
+    const message = "Mollie accepted the collection, but local provider state still needs persistence.";
+    await Promise.all([
+      admin
+        .from("payment_sessions")
+        .update({
+          provider_session_id: providerPayment.id,
+          status: "pending",
+          failure_code: "provider_state_persistence_pending",
+          failure_message: message
+        })
+        .eq("tenant_id", input.tenantId)
+        .eq("id", sessionId),
+      admin
+        .from("billing_collection_attempts")
+        .update({
+          provider_payment_id: providerPayment.id,
+          status: "processing",
+          completed_at: null,
+          failure_code: "provider_state_persistence_pending",
+          failure_message: message
+        })
+        .eq("tenant_id", input.tenantId)
+        .eq("id", attempt.id)
+    ]);
+    throw new MollieCollectionError("persistence_pending", message);
+  }
+
+  await recordCollectionStarted({
+    attemptNumber: attempt.attempt_number,
+    guardianUserId: paymentResult.data.guardian_user_id,
+    participantId: paymentResult.data.participant_id,
+    paymentId: paymentResult.data.id,
+    sessionId,
+    subscriptionId: attempt.subscription_id,
+    tenantId: input.tenantId
+  });
+  return { attemptId: attempt.id, paymentSessionId: sessionId, providerPaymentId: providerPayment.id, status };
 }
 
 async function recordCollectionStarted(input: {

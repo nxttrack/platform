@@ -511,6 +511,7 @@ export async function startMollieCollectionAction(formData: FormData) {
       disabled: "incasso-disabled",
       not_due: "incasso-not-due",
       outcome_unknown: "incasso-outcome-unknown",
+      persistence_pending: "incasso-outcome-unknown",
       provider_api: "incasso-provider-api"
     }[code] ?? "incasso-not-ready";
     redirect(`/admin/betalingen?error=${feedback}`);
