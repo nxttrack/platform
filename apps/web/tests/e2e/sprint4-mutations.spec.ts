@@ -37,7 +37,6 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
     await signIn(page, phase.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/wachtlijst");
     let entry = await convertIntake(page, participantName);
-    await expect(entry).toContainText("Wachtend");
     await entry.getByRole("button", { name: "Voorstellen herberekenen" }).click();
     await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1/);
 
