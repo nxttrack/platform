@@ -1,4 +1,5 @@
-import { BarChart3, Save } from "lucide-react";
+import { AlertTriangle, ArrowRight, BarChart3, CheckCircle2, Save, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { AdminSection, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
 import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -18,11 +19,28 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const charts = buildAdminChartData(data);
+  const activeCapacity = data.groups.filter((group) => group.status === "active").reduce((total, group) => total + Number(group.capacity), 0);
+  const occupancy = activeCapacity ? Math.round((data.kpis.activeEnrollments / activeCapacity) * 100) : 0;
+  const placed = data.waitlistEntries.filter((entry) => entry.status === "placed").length;
+  const conversion = data.waitlistEntries.length ? Math.round((placed / data.waitlistEntries.length) * 100) : 0;
+  const attended = data.attendance.filter((row) => ["present", "late", "trial"].includes(row.status)).length;
+  const attendanceRate = data.attendance.length ? Math.round((attended / data.attendance.length) * 100) : 0;
+  const growthActions = [
+    { href: "/admin/wachtlijst", label: "Plaatsingsvoorstellen beoordelen", metric: `${conversion}% wachtlijstconversie`, urgent: data.kpis.openWaitlist > 0 },
+    { href: "/admin/agenda", label: "Capaciteit en planning optimaliseren", metric: `${occupancy}% bezetting`, urgent: occupancy > 90 || occupancy < 60 },
+    { href: "/admin/betalingen", label: "Betalingsachterstand opvolgen", metric: `${data.kpis.overduePayments} overdue`, urgent: data.kpis.overduePayments > 0 },
+    { href: "/instructor/groepen", label: "Aanwezigheid met team bespreken", metric: `${attendanceRate}% attendance`, urgent: attendanceRate > 0 && attendanceRate < 85 }
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Operations" title="Rapportages" subtitle="Basisrapportages met echte tenant-data uit operatie, intake, billing en voortgang." />
       <Feedback saved={saved} error={error} />
+
+      <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-gradient-to-r from-blue-950 to-primary px-5 py-4 text-white"><div><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-aqua"><Sparkles className="size-4" />School Health & Growth</p><h2 className="mt-1 text-xl font-bold">Van metric naar vervolgstap</h2></div><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold">{growthActions.filter((action) => action.urgent).length} aandachtspunt(en)</span></div>
+        <div className="grid gap-px bg-border md:grid-cols-2 xl:grid-cols-4">{growthActions.map((action) => <Link className="group bg-card p-4 transition hover:bg-primary/5" href={action.href} key={action.label}><div className="flex items-center justify-between gap-3">{action.urgent ? <AlertTriangle className="size-5 text-warning" /> : <CheckCircle2 className="size-5 text-success" />}<ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><p className="mt-4 text-2xl font-bold text-foreground">{action.metric}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{action.label}</p></Link>)}</div>
+      </section>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {data.reports.map((report) => (

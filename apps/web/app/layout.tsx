@@ -4,7 +4,9 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "NXTTRACK Platform",
-  description: "Swim-first SaaS platform scaffold for NXTTRACK.",
+  description: "Planning, voortgang en familieportaal voor moderne zwemscholen.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "NXTTRACK" },
   robots: {
     index: false,
     follow: false

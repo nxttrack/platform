@@ -1,9 +1,10 @@
 import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { PlanningWorkbench } from "@/components/admin/planning-workbench";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { createSessionAction } from "@/lib/domain/actions";
-import { decideCatchUpRequestAction, saveInstructorAvailabilityAction } from "@/lib/domain/planning-actions";
+import { decideCatchUpRequestAction, saveInstructorAvailabilityAction, undoPlanningChangeAction } from "@/lib/domain/planning-actions";
 import { getPlanningData, type PlanningConflict, type PlanningSessionInsight } from "@/lib/domain/planning";
 
 type PageProps = {
@@ -16,6 +17,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const [data, params] = await Promise.all([getPlanningData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const undo = getParam(params, "undo");
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const sessionInsightById = new Map(data.sessionInsights.map((insight) => [insight.session.id, insight]));
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
@@ -27,7 +29,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Planboard" title="Planning en capaciteit" subtitle="Dag- en weekplanning met resource-, instructor- en capaciteitssignalen." />
-      <Feedback saved={saved} error={error} />
+      <Feedback saved={saved} error={error} undo={undo} />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric icon={<CalendarDays className="h-5 w-5" />} label="Vandaag" value={todaySessions.length.toString()} />
@@ -56,6 +58,10 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
             ))}
           </div>
         )}
+      </AdminSection>
+
+      <AdminSection title="Visuele what-if planning" description="Sleep lessen tussen dagen of gebruik de toetsenbordbedienbare pijlen. De database verandert pas na toepassen; elke wijziging krijgt een undo-event.">
+        <PlanningWorkbench initialItems={data.sessionInsights.map((insight) => ({ id: insight.session.id, groupName: insight.group?.name ?? "Lesgroep", startsAt: insight.session.starts_at, endsAt: insight.session.ends_at, resourceId: insight.session.resource_id, resourceName: insight.resourceName }))} />
       </AdminSection>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
@@ -252,9 +258,9 @@ function SessionPlanRow({ insight }: { insight: PlanningSessionInsight }) {
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
+function Feedback({ saved, error, undo }: { saved?: string; error?: string; undo?: string }) {
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+    return <div className="flex flex-wrap items-center gap-3 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success"><span className="mr-auto">Opgeslagen: {saved}.</span>{undo ? <form action={undoPlanningChangeAction}><input name="changeId" type="hidden" value={undo} /><button className="rounded-lg border border-success/30 bg-background px-3 py-1.5 font-bold text-foreground hover:bg-muted" type="submit">Ongedaan maken</button></form> : null}</div>;
   }
 
   if (error === "time") {
@@ -264,6 +270,8 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (error === "capacity") {
     return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Geen capaciteit meer voor deze inhaalles.</p>;
   }
+
+  if (error === "conflict") return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">De wijziging is niet toegepast: de resource is op dit tijdstip al bezet.</p>;
 
   if (error) {
     return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Actie is niet gelukt: {error}.</p>;
