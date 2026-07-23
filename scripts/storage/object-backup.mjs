@@ -186,10 +186,13 @@ async function seedRehearsal() {
   try {
     for (const bucket of buckets) {
       await assertBucketExists(bucket);
-      const path = `${scopedPrefix}/probe.txt`;
-      const bytes = Buffer.from(`NXTTRACK controlled storage restore rehearsal\nbucket=${bucket}\n`, "utf8");
+      const path = `${scopedPrefix}/probe.pdf`;
+      const bytes = Buffer.from(
+        `%PDF-1.4\n% NXTTRACK controlled storage restore rehearsal\n% bucket=${bucket}\n%%EOF\n`,
+        "utf8"
+      );
       const { error } = await admin.storage.from(bucket).upload(path, bytes, {
-        contentType: "text/plain",
+        contentType: "application/pdf",
         cacheControl: "60",
         upsert: false
       });
@@ -206,7 +209,7 @@ async function seedRehearsal() {
 }
 
 async function deleteRehearsalObjects() {
-  const objects = buckets.map((bucket) => ({ bucket, path: `${scopedPrefix}/probe.txt` }));
+  const objects = buckets.map((bucket) => ({ bucket, path: `${scopedPrefix}/probe.pdf` }));
   await removeObjects(objects);
   return { buckets, prefix: scopedPrefix, objectCount: objects.length };
 }

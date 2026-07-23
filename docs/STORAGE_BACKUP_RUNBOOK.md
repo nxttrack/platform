@@ -31,8 +31,9 @@ Dispatch `Staging Storage restore rehearsal` from `main` with:
 confirmation=REHEARSE_STAGING_STORAGE_RESTORE
 ```
 
-The workflow creates exactly one synthetic text object under
-`backup-rehearsal/<github-run-id>/probe.txt` in each private bucket. It then:
+The workflow creates exactly one synthetic minimal PDF object under
+`backup-rehearsal/<github-run-id>/probe.pdf` in each private bucket. PDF is part of both canonical bucket
+MIME allowlists. It then:
 
 1. exports both objects and generates the checksum manifest;
 2. verifies all local bytes;
