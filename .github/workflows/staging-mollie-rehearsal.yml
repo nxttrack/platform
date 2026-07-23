@@ -86,6 +86,9 @@ jobs:
       - name: Run paid checkout and duplicate webhook rehearsal
         run: pnpm run sprint6:test-mollie
 
+      - name: Verify duplicate webhook and exactly-once effects
+        run: pnpm run sprint6:verify-mollie
+
       - name: Upload redacted rehearsal evidence
         if: always()
         uses: actions/upload-artifact@v6
