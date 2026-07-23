@@ -177,6 +177,8 @@ async function deliverAlert(event) {
     schemaVersion: 1,
     source: "nxttrack-operations-monitor",
     environment: process.env.APP_ENV || "staging",
+    incidentOwner: process.env.INCIDENT_OWNER || null,
+    supportOwner: process.env.SUPPORT_OWNER || null,
     occurredAt: new Date().toISOString(),
     commitSha: process.env.GITHUB_SHA || null,
     runUrl: githubRunUrl(),
@@ -210,6 +212,8 @@ function formatPayload(payload, format) {
   const text = [
     payload.summary,
     `environment=${payload.environment}`,
+    payload.incidentOwner ? `incident_owner=${payload.incidentOwner}` : null,
+    payload.supportOwner ? `support_owner=${payload.supportOwner}` : null,
     ...payload.details,
     payload.runUrl ? `run=${payload.runUrl}` : null
   ].filter(Boolean).join("\n");
