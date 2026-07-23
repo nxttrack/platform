@@ -20,6 +20,10 @@ import {
   reconcileMolliePaymentAction,
   startMollieCollectionAction
 } from "@/lib/domain/billing-recurring-actions";
+import {
+  createMollieRefundAction,
+  reconcileMollieRefundAction
+} from "@/lib/domain/billing-refund-actions";
 import { formatMoney, getBillingAdminData, isPaymentOverdue } from "@/lib/domain/billing";
 import { paymentProviderLabel } from "@/lib/domain/payment-provider";
 
@@ -494,6 +498,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
           <div className="space-y-3">
             {data.paymentSessions.map((session) => {
               const participant = session.participant_id ? participantById.get(session.participant_id) : null;
+              const sessionRefunds = data.refunds.filter((refund) => refund.payment_session_id === session.id);
+              const reservedRefundCents = sessionRefunds
+                .filter((refund) => !["failed", "cancelled"].includes(refund.status))
+                .reduce((total, refund) => total + refund.amount_cents, 0);
+              const refundableCents = Math.max(0, session.amount_cents - reservedRefundCents);
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={session.id}>
@@ -532,11 +541,94 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       </form>
                     </div>
                   ) : null}
+                  {session.status === "paid" && refundableCents > 0 ? (
+                    <form action={createMollieRefundAction} className="mt-3 grid gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3 lg:grid-cols-[150px_1fr_150px_auto]">
+                      <input name="paymentSessionId" type="hidden" value={session.id} />
+                      <input name="idempotencyKey" type="hidden" value={randomUUID()} />
+                      <Field label={`Bedrag (max. ${formatMoney(refundableCents, session.currency)})`} name="amount" required defaultValue={(refundableCents / 100).toFixed(2)} />
+                      <Field label="Reden voor terugbetaling" name="description" required placeholder="Correctie zwemlesfactuur" />
+                      <Field label="Typ REFUND" name="confirmation" required />
+                      <div className="flex items-end">
+                        <button className="h-10 rounded-lg bg-warning px-4 text-sm font-semibold text-warning-foreground" type="submit">
+                          Refund aanvragen
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
+                  {sessionRefunds.length > 0 ? (
+                    <div className="mt-3 space-y-2">
+                      {sessionRefunds.map((refund) => (
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 p-3" key={refund.id}>
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{formatMoney(refund.amount_cents, refund.currency)} · {refund.description}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {refund.provider_refund_id ?? "Provider-id nog onbekend"} · aangevraagd {formatDateTime(refund.requested_at)}
+                            </p>
+                            {refund.failure_message ? <p className="mt-1 text-xs text-danger">{refund.failure_message}</p> : null}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <StatusPill tone={refund.status === "refunded" ? "success" : refund.status === "failed" ? "danger" : "warning"}>{refund.status}</StatusPill>
+                            {!["refunded", "failed", "cancelled"].includes(refund.status) ? (
+                              <form action={reconcileMollieRefundAction}>
+                                <input name="refundId" type="hidden" value={refund.id} />
+                                <button className="h-9 rounded-lg border border-border bg-white px-3 text-xs font-semibold hover:bg-muted" type="submit">
+                                  Synchroniseren
+                                </button>
+                              </form>
+                            ) : null}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </article>
               );
             })}
           </div>
         )}
+      </AdminSection>
+
+      <AdminSection title="Refunds en storneringen" description="Provider-geverifieerde mutaties. Refunds kunnen gedeeltelijk zijn; storneringen vereisen altijd operationele opvolging.">
+        <div className="grid gap-5 xl:grid-cols-2">
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Refundledger</h3>
+            {data.refunds.length === 0 ? (
+              <EmptyState>Nog geen refunds.</EmptyState>
+            ) : (
+              <DataList>
+                {data.refunds.slice(0, 30).map((refund) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={refund.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{formatMoney(refund.amount_cents, refund.currency)} · {refund.description}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{refund.provider_refund_id ?? "reconciliatie nodig"} · {formatDateTime(refund.requested_at)}</p>
+                    </div>
+                    <StatusPill tone={refund.status === "refunded" ? "success" : refund.status === "failed" ? "danger" : "warning"}>{refund.status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Chargebacks</h3>
+            {data.chargebacks.length === 0 ? (
+              <EmptyState>Nog geen storneringen gesynchroniseerd.</EmptyState>
+            ) : (
+              <DataList>
+                {data.chargebacks.slice(0, 30).map((chargeback) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={chargeback.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{formatMoney(chargeback.amount_cents, chargeback.currency)} · {chargeback.provider_chargeback_id}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {chargeback.reason_code ?? "Geen redencode"} · ontvangen {formatDateTime(chargeback.occurred_at)}
+                      </p>
+                    </div>
+                    <StatusPill tone={chargeback.status === "reversed" ? "success" : "danger"}>{chargeback.status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+        </div>
       </AdminSection>
 
       <AdminSection title="Facturen en export">

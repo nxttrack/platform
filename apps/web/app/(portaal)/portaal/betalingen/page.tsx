@@ -183,10 +183,53 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                     <Detail label="Methode" value={payment.method ?? "Niet gezet"} />
                     <Detail label="Referentie" value={payment.reference ?? "Niet gezet"} />
                   </div>
+                  {payment.refunded_cents > 0 || payment.chargeback_cents > 0 ? (
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {payment.refunded_cents > 0 ? <Detail label="Terugbetaald" value={formatMoney(payment.refunded_cents, payment.currency)} /> : null}
+                      {payment.chargeback_cents > 0 ? <Detail label="Gestorneerd" value={formatMoney(payment.chargeback_cents, payment.currency)} /> : null}
+                    </div>
+                  ) : null}
                   {payment.notes ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{payment.notes}</p> : null}
                 </article>
               );
             })}
+          </div>
+        )}
+      </section>
+
+      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+        <h2 className="text-lg font-bold text-foreground">Terugbetalingen en storneringen</h2>
+        {data.refunds.length === 0 && data.chargebacks.length === 0 ? (
+          <EmptyState>Er zijn geen terugbetalingen of storneringen.</EmptyState>
+        ) : (
+          <div className="mt-4 space-y-3">
+            {data.refunds.map((refund) => (
+              <article className="rounded-lg border border-border bg-white p-4" key={refund.id}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">Terugbetaling</p>
+                    <p className="mt-1 font-bold text-foreground">{formatMoney(refund.amount_cents, refund.currency)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{refund.description} · aangevraagd {formatDate(refund.requested_at)}</p>
+                    {refund.failure_message ? <p className="mt-2 text-xs text-danger">{refund.failure_message}</p> : null}
+                  </div>
+                  <StatusPill tone={refund.status === "refunded" ? "success" : refund.status === "failed" ? "danger" : "warning"}>{refund.status}</StatusPill>
+                </div>
+              </article>
+            ))}
+            {data.chargebacks.map((chargeback) => (
+              <article className="rounded-lg border border-danger/20 bg-danger/5 p-4" key={chargeback.id}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-danger">Stornering</p>
+                    <p className="mt-1 font-bold text-foreground">{formatMoney(chargeback.amount_cents, chargeback.currency)}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      Ontvangen {formatDate(chargeback.occurred_at)}{chargeback.reason_code ? ` · reden ${chargeback.reason_code}` : ""}
+                    </p>
+                  </div>
+                  <StatusPill tone={chargeback.status === "reversed" ? "success" : "danger"}>{chargeback.status}</StatusPill>
+                </div>
+              </article>
+            ))}
           </div>
         )}
       </section>
