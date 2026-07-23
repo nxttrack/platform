@@ -99,17 +99,28 @@ console.log(`[mollie:incasso:verify] PASS ${state.outcome} recurring SEPA paymen
 async function withTemporaryRetryPolicy(callback) {
   if (!verifyRetry) return callback();
 
-  const config = await one(
-    admin
-      .from("billing_provider_configs")
-      .select("public_config")
-      .eq("tenant_id", state.tenant.id)
-      .eq("id", state.providerConfigId)
-      .single(),
-    "Mollie retry policy"
-  );
+  const [config, subscription] = await Promise.all([
+    one(
+      admin
+        .from("billing_provider_configs")
+        .select("public_config")
+        .eq("tenant_id", state.tenant.id)
+        .eq("id", state.providerConfigId)
+        .single(),
+      "Mollie retry policy"
+    ),
+    one(
+      admin
+        .from("subscriptions")
+        .select("collection_method, billing_provider_customer_id, billing_mandate_id")
+        .eq("tenant_id", state.tenant.id)
+        .eq("id", state.subscriptionId)
+        .single(),
+      "Mollie retry subscription"
+    )
+  ]);
   const originalPublicConfig = config.public_config ?? {};
-  const update = await admin
+  const configUpdate = await admin
     .from("billing_provider_configs")
     .update({
       public_config: {
@@ -123,17 +134,38 @@ async function withTemporaryRetryPolicy(callback) {
     })
     .eq("tenant_id", state.tenant.id)
     .eq("id", state.providerConfigId);
-  if (update.error) throw update.error;
+  if (configUpdate.error) throw configUpdate.error;
 
   try {
+    const subscriptionUpdate = await admin
+      .from("subscriptions")
+      .update({
+        billing_mandate_id: state.localMandateId,
+        billing_provider_customer_id: state.localCustomerId,
+        collection_method: "provider"
+      })
+      .eq("tenant_id", state.tenant.id)
+      .eq("id", state.subscriptionId);
+    if (subscriptionUpdate.error) throw subscriptionUpdate.error;
+
     return await callback();
   } finally {
-    const restore = await admin
+    const subscriptionRestore = await admin
+      .from("subscriptions")
+      .update({
+        billing_mandate_id: subscription.billing_mandate_id,
+        billing_provider_customer_id: subscription.billing_provider_customer_id,
+        collection_method: subscription.collection_method
+      })
+      .eq("tenant_id", state.tenant.id)
+      .eq("id", state.subscriptionId);
+    const configRestore = await admin
       .from("billing_provider_configs")
       .update({ public_config: originalPublicConfig })
       .eq("tenant_id", state.tenant.id)
       .eq("id", state.providerConfigId);
-    if (restore.error) throw restore.error;
+    if (subscriptionRestore.error) throw subscriptionRestore.error;
+    if (configRestore.error) throw configRestore.error;
   }
 }
 
@@ -203,6 +235,7 @@ async function verifyExactlyOnce() {
 }
 
 async function verifyRetryExactlyOnce() {
+  let lastSnapshot = null;
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const [retries, retryEvents] = await Promise.all([
       admin
@@ -233,6 +266,15 @@ async function verifyRetryExactlyOnce() {
         "retry pre-notification"
       );
       const delayHours = (new Date(retry.scheduled_for).getTime() - Date.now()) / 3_600_000;
+      lastSnapshot = {
+        attemptCount: retries.count,
+        attemptNumber: retry.attempt_number,
+        billingEventCount: retryEvents.count,
+        deliveryStatus: retry.prenotification_delivery_status,
+        notificationDeliveryStatus: notification.delivery_status,
+        notificationType: notification.type,
+        scheduledDelayHours: Math.round(delayHours)
+      };
       if (
         retry.status === "prenotified" &&
         retry.prenotification_delivery_status === "sent" &&
@@ -241,18 +283,19 @@ async function verifyRetryExactlyOnce() {
         delayHours >= 47 &&
         delayHours <= 49
       ) {
-        return {
-          attemptCount: retries.count,
-          attemptNumber: retry.attempt_number,
-          billingEventCount: retryEvents.count,
-          deliveryStatus: retry.prenotification_delivery_status,
-          scheduledDelayHours: Math.round(delayHours)
-        };
+        return lastSnapshot;
       }
+    } else {
+      lastSnapshot = {
+        attemptCount: retries.count ?? 0,
+        billingEventCount: retryEvents.count ?? 0,
+        hasPrenotification: Boolean(retry?.prenotification_id),
+        retryStatus: retry?.status ?? null
+      };
     }
     await wait(1_000);
   }
-  throw new Error("Failed Mollie incasso did not create one delivered, policy-compliant retry.");
+  throw new Error(`Failed Mollie incasso did not create one delivered, policy-compliant retry: ${JSON.stringify(lastSnapshot)}.`);
 }
 
 async function mollieRequest(apiPath) {
