@@ -19,6 +19,11 @@ on:
         options:
           - paid
           - failed
+      automation:
+        description: Start the provider payment through the secured scheduler
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -45,6 +50,7 @@ jobs:
       MOLLIE_INCASSO_EVIDENCE_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-evidence.json
       MOLLIE_INCASSO_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-diagnostic
       MOLLIE_INCASSO_OUTCOME: ${{ inputs.outcome }}
+      MOLLIE_INCASSO_AUTOMATION: ${{ inputs.automation }}
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
@@ -52,6 +58,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
+      BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       MOLLIE_INCASSO_REHEARSAL: "true"
 
     steps:

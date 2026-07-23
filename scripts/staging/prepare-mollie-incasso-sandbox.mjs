@@ -18,6 +18,7 @@ const releaseSha = process.env.STAGING_RELEASE_SHA || "";
 const statePath = path.resolve(process.cwd(), process.env.MOLLIE_INCASSO_STATE_PATH || "artifacts/mollie-incasso-runtime.json");
 const referencePrefix = "SPRINT6-MOLLIE-INCASSO-";
 const outcome = process.env.MOLLIE_INCASSO_OUTCOME || "paid";
+const automationEnabled = process.env.MOLLIE_INCASSO_AUTOMATION === "true";
 
 if (process.env.APP_ENV !== "staging" || hostname(appUrl) !== "staging.nxttrack.nl") {
   throw new Error("Mollie incasso preparation is restricted to staging.nxttrack.nl.");
@@ -54,7 +55,7 @@ const subscription = await one(
 const providerConfig = await one(
   admin
     .from("billing_provider_configs")
-    .select("id, mode, provider, status")
+    .select("id, mode, provider, status, public_config")
     .eq("tenant_id", tenant.id)
     .eq("provider", "mollie")
     .eq("mode", "test")
@@ -89,7 +90,7 @@ const payment = await one(
   "sandbox incasso payment"
 );
 
-const paymentSessionId = randomUUID();
+let paymentSessionId = randomUUID();
 const idempotencyKey = randomUUID();
 
 let customer;
@@ -182,52 +183,58 @@ try {
       .single(),
     "local collection attempt"
   );
-  await one(
-    admin
-      .from("payment_sessions")
-      .insert({
-        id: paymentSessionId,
-        tenant_id: tenant.id,
-        provider_config_id: providerConfig.id,
-        subscription_id: subscription.id,
-        manual_payment_id: payment.id,
-        participant_id: subscription.participant_id,
-        guardian_user_id: subscription.guardian_user_id,
-        provider: "mollie",
-        sequence_type: "recurring",
-        billing_provider_customer_id: localCustomer.id,
-        billing_mandate_id: localMandate.id,
-        collection_attempt_id: collectionAttempt.id,
-        idempotency_key: idempotencyKey,
-        amount_cents: payment.amount_cents,
-        currency: payment.currency,
-        status: "pending",
-        return_url: null,
-        expires_at: null
-      })
-      .select("id")
-      .single(),
-    "sandbox incasso payment session"
-  );
-  providerPayment = await mollieRequest("/payments", {
-    method: "POST",
-    idempotencyKey,
-    body: {
-      amount: { currency: payment.currency, value: (payment.amount_cents / 100).toFixed(2) },
-      customerId: customer.id,
-      mandateId: mandate.id,
-      method: "directdebit",
-      sequenceType: "recurring",
-      description: `NXTTRACK staging incasso ${runId}`.slice(0, 255),
-      webhookUrl: `${appUrl}/api/webhooks/mollie`,
-      metadata: {
-        tenantId: tenant.id,
-        paymentSessionId,
-        manualPaymentId: payment.id,
-        rehearsal: "recurring_directdebit"
+  if (automationEnabled) {
+    const automated = await startAutomatedCollection(collectionAttempt.id);
+    paymentSessionId = automated.paymentSessionId;
+    providerPayment = automated.providerPayment;
+  } else {
+    await one(
+      admin
+        .from("payment_sessions")
+        .insert({
+          id: paymentSessionId,
+          tenant_id: tenant.id,
+          provider_config_id: providerConfig.id,
+          subscription_id: subscription.id,
+          manual_payment_id: payment.id,
+          participant_id: subscription.participant_id,
+          guardian_user_id: subscription.guardian_user_id,
+          provider: "mollie",
+          sequence_type: "recurring",
+          billing_provider_customer_id: localCustomer.id,
+          billing_mandate_id: localMandate.id,
+          collection_attempt_id: collectionAttempt.id,
+          idempotency_key: idempotencyKey,
+          amount_cents: payment.amount_cents,
+          currency: payment.currency,
+          status: "pending",
+          return_url: null,
+          expires_at: null
+        })
+        .select("id")
+        .single(),
+      "sandbox incasso payment session"
+    );
+    providerPayment = await mollieRequest("/payments", {
+      method: "POST",
+      idempotencyKey,
+      body: {
+        amount: { currency: payment.currency, value: (payment.amount_cents / 100).toFixed(2) },
+        customerId: customer.id,
+        mandateId: mandate.id,
+        method: "directdebit",
+        sequenceType: "recurring",
+        description: `NXTTRACK staging incasso ${runId}`.slice(0, 255),
+        webhookUrl: `${appUrl}/api/webhooks/mollie`,
+        metadata: {
+          tenantId: tenant.id,
+          paymentSessionId,
+          manualPaymentId: payment.id,
+          rehearsal: "recurring_directdebit"
+        }
       }
-    }
-  });
+    });
+  }
 } catch (error) {
   await admin
     .from("payment_sessions")
@@ -291,6 +298,7 @@ const state = {
   releaseSha,
   runId,
   outcome,
+  automationEnabled,
   tenant: { id: tenant.id, name: tenant.name, slug: tenant.slug },
   providerConfigId: providerConfig.id,
   subscriptionId: subscription.id,
@@ -322,6 +330,89 @@ const state = {
 mkdirSync(path.dirname(statePath), { recursive: true });
 writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
 console.log(`[mollie:incasso:prepare] PASS created €1.43 recurring payment for the ${outcome} rehearsal ${reference}.`);
+
+async function startAutomatedCollection(collectionAttemptId) {
+  const automationSecret = process.env.BILLING_AUTOMATION_SECRET || "";
+  if (automationSecret.length < 32) throw new Error("A staging BILLING_AUTOMATION_SECRET is required for the automation rehearsal.");
+
+  const otherDueAttempts = checked(
+    await admin
+      .from("billing_collection_attempts")
+      .select("id")
+      .eq("tenant_id", tenant.id)
+      .eq("provider_config_id", providerConfig.id)
+      .eq("status", "prenotified")
+      .eq("prenotification_delivery_status", "sent")
+      .lte("scheduled_for", new Date().toISOString())
+      .neq("id", collectionAttemptId),
+    "other due collection attempts"
+  );
+  if (otherDueAttempts.length > 0) {
+    throw new Error("Automation rehearsal refused to enable the tenant gate while another collection attempt is due.");
+  }
+
+  const originalPublicConfig = providerConfig.public_config ?? {};
+  const enabledPublicConfig = {
+    ...originalPublicConfig,
+    automatic_collection_enabled: true,
+    recurring_enabled: true
+  };
+  const enableResult = await admin
+    .from("billing_provider_configs")
+    .update({ public_config: enabledPublicConfig })
+    .eq("tenant_id", tenant.id)
+    .eq("id", providerConfig.id);
+  if (enableResult.error) throw enableResult.error;
+
+  let first;
+  let replay;
+  try {
+    first = await callCollectionAutomation(automationSecret);
+    replay = await callCollectionAutomation(automationSecret);
+  } finally {
+    const restoreResult = await admin
+      .from("billing_provider_configs")
+      .update({ public_config: originalPublicConfig })
+      .eq("tenant_id", tenant.id)
+      .eq("id", providerConfig.id);
+    if (restoreResult.error) throw restoreResult.error;
+  }
+
+  const firstResult = first.results?.find((result) => result.attemptId === collectionAttemptId);
+  if (!first.accepted || firstResult?.status !== "processed") {
+    throw new Error(`Automation endpoint did not process the bounded attempt: ${JSON.stringify(first)}`);
+  }
+  if (!replay.accepted || replay.processed !== 0) {
+    throw new Error(`Automation endpoint replay was not idempotent: ${JSON.stringify(replay)}`);
+  }
+
+  const sessions = checked(
+    await admin
+      .from("payment_sessions")
+      .select("id, provider_session_id")
+      .eq("tenant_id", tenant.id)
+      .eq("collection_attempt_id", collectionAttemptId),
+    "automated collection payment session"
+  );
+  if (sessions.length !== 1 || !sessions[0].provider_session_id) {
+    throw new Error(`Automation created ${sessions.length} local payment sessions instead of exactly one.`);
+  }
+  return {
+    paymentSessionId: sessions[0].id,
+    providerPayment: await mollieRequest(`/payments/${encodeURIComponent(sessions[0].provider_session_id)}`, { method: "GET" })
+  };
+}
+
+async function callCollectionAutomation(automationSecret) {
+  const response = await fetch(`${appUrl}/api/internal/billing/collections`, {
+    body: JSON.stringify({ tenantId: tenant.id }),
+    headers: { Authorization: `Bearer ${automationSecret}`, "Content-Type": "application/json" },
+    method: "POST"
+  });
+  const payload = await response.json().catch(() => null);
+  if (!response.ok || !payload) throw new Error(`Collection automation returned ${response.status}.`);
+  return payload;
+}
 
 async function mollieRequest(apiPath, input) {
   const response = await fetch(`https://api.mollie.com/v2${apiPath}`, {

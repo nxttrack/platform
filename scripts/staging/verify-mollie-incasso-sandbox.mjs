@@ -64,6 +64,7 @@ const evidence = {
   schemaVersion: 1,
   rehearsal: "mollie-recurring-sepa-direct-debit",
   outcome: state.outcome,
+  automationEnabled: state.automationEnabled === true,
   harnessSha: state.harnessSha,
   releaseSha: state.releaseSha,
   runId: state.runId,
