@@ -6,8 +6,13 @@ import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const failures = [];
-check("apps/web/lib/domain/mollie.ts", ["Idempotency-Key", "resolveMollieSecret", "cache: \"no-store\""]);
-check("apps/web/app/api/webhooks/mollie/route.ts", ["getMolliePayment", "metadata.paymentSessionId", "amountCents !== session.amount_cents"]);
+check("apps/web/lib/domain/mollie.ts", ["Idempotency-Key", "resolveMollieSecret", "expectedMode", "cache: \"no-store\""]);
+check("apps/web/lib/domain/mollie-contract.ts", ["readClassicMollieWebhookId", "validateMolliePaymentSnapshot", "metadata.paymentSessionId", "getSafeMollieCheckoutUrl", "resolveMollieApplicationUrl"]);
+check("apps/web/lib/domain/billing-actions.ts", ["readPaymentIdempotencyKey", "isMatchingPaymentSessionRetry", "provider-session-reused"]);
+check("apps/web/app/api/webhooks/mollie/route.ts", ["getMolliePayment", "validateMolliePaymentSnapshot", "provider_event_id: `${paymentId}:webhook_error`"]);
+check("supabase/migrations/20260723153000_phase_27_billing_activation_hardening.sql", ["billing_provider_configs_mollie_secret_reference_check", "payment_sessions_idempotency_key_format_check", "payment_sessions_one_open_provider_attempt"]);
+check("tests/unit/billing-contract.test.ts", ["checkout idempotency contract", "classic Mollie webhook contract", "provider-verified payment state"]);
+check(".github/workflows/deploy.yml", ["MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}", "printf 'MOLLIE_API_KEY=%s", "pnpm run test:billing-contract"]);
 check("apps/web/public/sw.js", ["request.mode === \"navigate\"", "url.pathname.startsWith(\"/api/\")", "request.headers.has(\"authorization\")"]);
 check("supabase/migrations/20260723120000_phase_25_premium_operations.sql", ["automation_runs_idempotency_unique", "alter table public.import_jobs force row level security", "alter table public.media_consents force row level security"]);
 check("supabase/migrations/20260723140000_phase_26_planning_undo.sql", ["before_state jsonb not null", "alter table public.planning_change_events force row level security"]);

@@ -2,6 +2,7 @@ import { CreditCard, ReceiptText } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatMoney, isPaymentOverdue } from "@/lib/domain/billing";
+import { getSafeMollieCheckoutUrl } from "@/lib/domain/mollie-contract";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
 
 export const dynamic = "force-dynamic";
@@ -136,6 +137,12 @@ export default async function ParentPaymentsPage() {
           <div className="mt-4 space-y-3">
             {data.paymentSessions.map((session) => {
               const participant = session.participant_id ? participantById.get(session.participant_id) : null;
+              const checkoutUrl = getSafeMollieCheckoutUrl({
+                checkoutUrl: session.checkout_url,
+                expiresAt: session.expires_at,
+                provider: session.provider,
+                status: session.status
+              });
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={session.id}>
@@ -150,6 +157,15 @@ export default async function ParentPaymentsPage() {
                     <StatusPill tone={session.status === "paid" ? "success" : session.status === "failed" ? "danger" : session.status === "pending" ? "warning" : "neutral"}>{session.status}</StatusPill>
                   </div>
                   {session.failure_message ? <p className="mt-3 text-sm leading-6 text-danger">{session.failure_message}</p> : null}
+                  {checkoutUrl ? (
+                    <a
+                      className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
+                      href={checkoutUrl}
+                      rel="noreferrer"
+                    >
+                      Veilig betalen via Mollie
+                    </a>
+                  ) : null}
                 </article>
               );
             })}

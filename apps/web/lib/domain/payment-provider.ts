@@ -1,5 +1,3 @@
-import "server-only";
-
 export type PaymentProviderKind = "manual" | "mollie" | "ideal" | "other";
 export type PaymentProviderMode = "test" | "live";
 
@@ -36,6 +34,35 @@ export type NormalizedPaymentWebhook = {
   providerSessionId: string | null;
   statusHint: "paid" | "failed" | "expired" | "cancelled" | "pending" | "unknown";
 };
+
+export type PaymentSessionRetryCandidate = {
+  amount_cents: number;
+  currency: string;
+  id: string;
+  manual_payment_id: string | null;
+  provider_config_id: string | null;
+};
+
+const paymentIdempotencyKeyPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function readPaymentIdempotencyKey(value: FormDataEntryValue | null) {
+  const key = typeof value === "string" ? value.trim() : "";
+  return paymentIdempotencyKeyPattern.test(key) ? key.toLowerCase() : null;
+}
+
+export function isMatchingPaymentSessionRetry(candidate: PaymentSessionRetryCandidate, expected: {
+  amountCents: number;
+  currency: string;
+  manualPaymentId: string;
+  providerConfigId: string;
+}) {
+  return (
+    candidate.amount_cents === expected.amountCents &&
+    candidate.currency === expected.currency &&
+    candidate.manual_payment_id === expected.manualPaymentId &&
+    candidate.provider_config_id === expected.providerConfigId
+  );
+}
 
 export function createPaymentSessionDraft(input: PaymentSessionDraftInput): PaymentSessionDraft {
   const provider = normalizeProvider(input.providerConfig.provider);
@@ -75,7 +102,8 @@ export function isProviderConfigReady(config: PaymentProviderConfigLike) {
     return false;
   }
 
-  return normalizeProvider(config.provider) === "manual" || Boolean(config.secret_reference);
+  const provider = normalizeProvider(config.provider);
+  return provider === "manual" || (provider === "mollie" && Boolean(config.secret_reference));
 }
 
 export function paymentProviderLabel(provider: string) {

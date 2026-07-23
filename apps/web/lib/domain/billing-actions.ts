@@ -6,8 +6,15 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
-import { createMolliePayment } from "./mollie";
-import { createPaymentSessionDraft, isProviderConfigReady, type PaymentProviderConfigLike } from "./payment-provider";
+import { isMollieSecretReference, resolveMollieApplicationUrl, type MollieMode } from "./mollie-contract";
+import { createMolliePayment, resolveMollieSecret } from "./mollie";
+import {
+  createPaymentSessionDraft,
+  isMatchingPaymentSessionRetry,
+  isProviderConfigReady,
+  readPaymentIdempotencyKey,
+  type PaymentProviderConfigLike
+} from "./payment-provider";
 import { createTenantNotifications } from "./tenant-notifications";
 
 const planStatuses = new Set(["draft", "active", "archived"]);
@@ -26,17 +33,42 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
   const admin = createAdminClient();
   const provider = readEnum(formData, "provider", providerKinds, "manual");
   const mode = readEnum(formData, "mode", providerModes, "test");
+  const status = readEnum(formData, "status", providerStatuses, "draft");
+  const secretReference = readOptional(formData, "secretReference");
+  const returnUrl = readOptional(formData, "returnUrl");
+
+  if (status === "active" && provider !== "manual" && provider !== "mollie") {
+    redirect("/admin/betalingen?error=provider-unsupported");
+  }
+
+  if (provider === "mollie") {
+    if (secretReference && !isMollieSecretReference(secretReference)) {
+      redirect("/admin/betalingen?error=provider-secret-reference");
+    }
+    if (status === "active") {
+      if (!secretReference || !returnUrl) {
+        redirect("/admin/betalingen?error=provider-not-ready");
+      }
+      try {
+        resolveMollieSecret(secretReference, mode as MollieMode);
+        resolveApplicationUrl(returnUrl);
+      } catch {
+        redirect("/admin/betalingen?error=provider-not-ready");
+      }
+    }
+  }
+
   const payload = {
     tenant_id: tenant.id,
     provider,
     mode,
-    status: readEnum(formData, "status", providerStatuses, "draft"),
+    status,
     display_name: readOptional(formData, "displayName") ?? `${provider.toUpperCase()} ${mode}`,
-    secret_reference: readOptional(formData, "secretReference"),
+    secret_reference: secretReference,
     webhook_secret_reference: readOptional(formData, "webhookSecretReference"),
     public_config: {
       checkout_description: readOptional(formData, "checkoutDescription"),
-      return_url: readOptional(formData, "returnUrl")
+      return_url: returnUrl
     }
   };
   const { error } = await admin.from("billing_provider_configs").upsert(payload, { onConflict: "tenant_id,provider,mode" });
@@ -306,8 +338,15 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
   if (!isProviderConfigReady(providerConfig)) {
     redirect("/admin/betalingen?error=provider-not-ready");
   }
+  if (paymentResult.data.status !== "due" && paymentResult.data.status !== "overdue") {
+    redirect("/admin/betalingen?error=payment-not-open");
+  }
 
-  const idempotencyKey = randomUUID();
+  const idempotencyKey = readPaymentIdempotencyKey(formData.get("idempotencyKey"));
+  if (!idempotencyKey) {
+    redirect("/admin/betalingen?error=provider-idempotency");
+  }
+
   const publicConfig = providerConfig.public_config ?? {};
   const returnUrl = readOptional(formData, "returnUrl") ?? optionalString(publicConfig.return_url);
   const draft = createPaymentSessionDraft({
@@ -337,10 +376,63 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
       return_url: returnUrl,
       expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     })
-    .select("id")
+    .select("id, provider_config_id, manual_payment_id, amount_cents, currency")
     .single();
 
-  if (sessionResult.error || !sessionResult.data) {
+  if (sessionResult.error) {
+    if (sessionResult.error.code !== "23505") {
+      redirect("/admin/betalingen?error=provider-session");
+    }
+
+    const existingByKeyResult = await admin
+      .from("payment_sessions")
+      .select("id, provider_config_id, manual_payment_id, amount_cents, currency")
+      .eq("tenant_id", tenant.id)
+      .eq("idempotency_key", idempotencyKey)
+      .maybeSingle();
+
+    if (existingByKeyResult.error) {
+      redirect("/admin/betalingen?error=provider-session");
+    }
+
+    if (existingByKeyResult.data) {
+      if (!isMatchingPaymentSessionRetry(existingByKeyResult.data, {
+        amountCents: paymentResult.data.amount_cents,
+        currency: paymentResult.data.currency,
+        manualPaymentId: paymentResult.data.id,
+        providerConfigId: providerConfig.id
+      })) {
+        redirect("/admin/betalingen?error=provider-idempotency-conflict");
+      }
+      redirectAfterWrite(null, "provider-session-reused");
+    }
+
+    const openSessionResult = await admin
+      .from("payment_sessions")
+      .select("id, provider_config_id, manual_payment_id, amount_cents, currency")
+      .eq("tenant_id", tenant.id)
+      .eq("manual_payment_id", paymentResult.data.id)
+      .eq("provider_config_id", providerConfig.id)
+      .in("status", ["draft", "pending", "authorized"])
+      .maybeSingle();
+
+    if (
+      openSessionResult.error ||
+      !openSessionResult.data ||
+      !isMatchingPaymentSessionRetry(openSessionResult.data, {
+        amountCents: paymentResult.data.amount_cents,
+        currency: paymentResult.data.currency,
+        manualPaymentId: paymentResult.data.id,
+        providerConfigId: providerConfig.id
+      })
+    ) {
+      redirect("/admin/betalingen?error=provider-session-conflict");
+    }
+
+    redirectAfterWrite(null, "provider-session-reused");
+  }
+
+  if (!sessionResult.data) {
     redirect("/admin/betalingen?error=provider-session");
   }
 
@@ -358,6 +450,7 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
         description: optionalString(publicConfig.checkout_description) ?? `${tenant.name} betaling`,
         idempotencyKey,
         metadata: { tenantId: tenant.id, paymentSessionId: sessionResult.data.id, manualPaymentId: paymentResult.data.id },
+        mode: providerConfig.mode as MollieMode,
         redirectUrl: returnUrl,
         secretReference: providerConfig.secret_reference,
         webhookUrl: `${appUrl}/api/webhooks/mollie`
@@ -657,11 +750,7 @@ function optionalString(value: unknown) {
 }
 
 function resolveApplicationUrl(returnUrl: string) {
-  const configured = process.env.APP_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  const parsed = new URL(returnUrl);
-  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") throw new Error("Return URL must use HTTPS");
-  return parsed.origin;
+  return resolveMollieApplicationUrl(returnUrl, process.env.APP_URL);
 }
 
 async function recordPaymentSignal(input: {

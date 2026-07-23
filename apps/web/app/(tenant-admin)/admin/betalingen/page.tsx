@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { CreditCard, ReceiptText } from "lucide-react";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -363,6 +364,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                     </form>
                     <form action={createPaymentProviderSessionAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
+                      <input name="idempotencyKey" type="hidden" value={randomUUID()} />
                       <SelectField label="Provider" name="providerConfigId" required>
                         <option value="">Kies provider</option>
                         {data.providerConfigs
@@ -375,9 +377,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       </SelectField>
                       <Field label="Return URL" name="returnUrl" placeholder="https://staging.nxttrack.nl/portaal/betalingen" />
                       <div className="mt-3">
-                        <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
-                          Checkout aanmaken
-                        </button>
+                        <SubmitButton>Checkout aanmaken</SubmitButton>
                       </div>
                     </form>
                   </div>

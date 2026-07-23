@@ -43,6 +43,9 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Test billing provider contracts
+        run: pnpm run test:billing-contract
+
       - name: Audit auth boundaries
         run: pnpm run auth:audit
 
