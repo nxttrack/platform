@@ -145,6 +145,7 @@ export async function POST(request: Request) {
         await activateFirstPaymentMandate({
           mode,
           paidAt: payment.paidAt ?? now,
+          providerMandateId: payment.mandateId ?? null,
           secretReference,
           session
         });
@@ -204,6 +205,7 @@ export async function POST(request: Request) {
 async function activateFirstPaymentMandate(input: {
   mode: MollieMode;
   paidAt: string;
+  providerMandateId: string | null;
   secretReference: string;
   session: SessionRow;
 }) {
@@ -225,7 +227,7 @@ async function activateFirstPaymentMandate(input: {
   }
 
   const mandates = await listMollieMandates(customerResult.data.provider_customer_id, input.secretReference, input.mode);
-  const mandate = chooseValidDirectDebitMandate(mandates);
+  const mandate = chooseValidDirectDebitMandate(mandates, input.providerMandateId);
   if (!mandate) throw new Error("Mollie did not return a valid direct debit mandate.");
 
   const now = new Date().toISOString();
@@ -326,8 +328,9 @@ async function recordCollectionFailure(input: {
   }
 }
 
-function chooseValidDirectDebitMandate(mandates: MollieMandate[]) {
-  return mandates.find((mandate) => mandate.method === "directdebit" && mandate.status === "valid") ?? null;
+function chooseValidDirectDebitMandate(mandates: MollieMandate[], preferredId: string | null) {
+  const valid = mandates.filter((mandate) => mandate.method === "directdebit" && mandate.status === "valid");
+  return valid.find((mandate) => mandate.id === preferredId) ?? valid[0] ?? null;
 }
 
 function maskedMandateReference(mandate: MollieMandate) {
