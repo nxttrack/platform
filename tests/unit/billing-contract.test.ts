@@ -116,7 +116,7 @@ describe("classic Mollie webhook contract", () => {
     const source = readFileSync("apps/web/app/api/webhooks/mollie/route.ts", "utf8");
     assert.match(source, /reason: "session_lookup"/);
     assert.match(source, /reason: "provider_config"/);
-    assert.match(source, /reason: "processing"/);
+    assert.match(source, /reason: `processing_\$\{processingStage\}`/);
     assert.doesNotMatch(source, /reason: sessionResult\.error/);
     assert.doesNotMatch(source, /reason: configResult\.error/);
   });

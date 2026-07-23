@@ -37,9 +37,11 @@ export async function POST(request: Request) {
   const secretReference = config?.secret_reference;
   if (configResult.error || !config || !secretReference) return NextResponse.json({ accepted: false, reason: "provider_config" }, { status: 503 });
 
+  let processingStage = "provider_fetch";
   try {
     const mode = config.mode as MollieMode;
     const payment = await getMolliePayment(paymentId, secretReference, mode);
+    processingStage = "snapshot_validation";
     validateMolliePaymentSnapshot({
       payment,
       session: {
@@ -54,8 +56,10 @@ export async function POST(request: Request) {
     const status = normalizeMollieStatus(payment.status);
     const now = new Date().toISOString();
     const failure = providerFailure(status);
+    processingStage = "session_update";
     const sessionUpdate = await admin.from("payment_sessions").update({ status, webhook_received_at: now, failure_code: failure?.code ?? null, failure_message: failure?.message ?? null }).eq("tenant_id", session.tenant_id).eq("id", session.id);
     if (sessionUpdate.error) throw sessionUpdate.error;
+    processingStage = "provider_event";
     const providerEvent = await admin.from("payment_provider_events").upsert({
       tenant_id: session.tenant_id,
       provider_config_id: session.provider_config_id,
@@ -72,9 +76,11 @@ export async function POST(request: Request) {
 
     if (status === "paid") {
       const paidOn = (payment.paidAt ?? now).slice(0, 10);
+      processingStage = "payment_update";
       const paymentUpdate = await admin.from("manual_payments").update({ status: "paid", paid_on: paidOn, method: "Mollie", reference: payment.id }).eq("tenant_id", session.tenant_id).eq("id", session.manual_payment_id).neq("status", "paid").select("id");
       if (paymentUpdate.error) throw paymentUpdate.error;
       if ((paymentUpdate.data ?? []).length) {
+        processingStage = "billing_event";
         const billingEvent = await admin.from("billing_events").insert({ tenant_id: session.tenant_id, subscription_id: session.subscription_id, manual_payment_id: session.manual_payment_id, participant_id: session.participant_id, guardian_user_id: session.guardian_user_id, type: "payment_paid", status: "processed", message: `Mollie betaling ${payment.id} geverifieerd.` });
         if (billingEvent.error) throw billingEvent.error;
       }
@@ -94,7 +100,7 @@ export async function POST(request: Request) {
       payload: { id: paymentId },
       error_message: error instanceof Error ? error.message.slice(0, 500) : "Webhook processing failed"
     }, { onConflict: "tenant_id,provider,provider_event_id", ignoreDuplicates: true });
-    return NextResponse.json({ accepted: false, reason: "processing" }, { status: 503 });
+    return NextResponse.json({ accepted: false, reason: `processing_${processingStage}` }, { status: 503 });
   }
 }
 
