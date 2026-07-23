@@ -25,70 +25,117 @@ const admin = createClient(supabaseUrl, supabaseSecret, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
 
-const providerPayment = await pollProviderFinalState();
-const mandate = await mollieRequest(`/customers/${encodeURIComponent(state.customerId)}/mandates/${encodeURIComponent(state.mandateId)}`);
+const verifyRetry = state.outcome === "failed" && process.env.MOLLIE_INCASSO_VERIFY_RETRY === "true";
+const evidence = await withTemporaryRetryPolicy(async () => {
+  const providerPayment = await pollProviderFinalState();
+  const mandate = await mollieRequest(`/customers/${encodeURIComponent(state.customerId)}/mandates/${encodeURIComponent(state.mandateId)}`);
 
-for (let attempt = 0; attempt < 2; attempt += 1) {
-  const response = await fetch(`${appUrl}/api/webhooks/mollie`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ id: state.providerPaymentId })
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    throw new Error(`Repeated Mollie incasso webhook returned ${response.status}${body?.reason ? ` (${body.reason})` : ""}.`);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(`${appUrl}/api/webhooks/mollie`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ id: state.providerPaymentId })
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(`Repeated Mollie incasso webhook returned ${response.status}${body?.reason ? ` (${body.reason})` : ""}.`);
+    }
   }
-}
 
-await pollLocalPaidState();
-const result = await verifyExactlyOnce();
-const providerContract = {
-  hasCheckoutUrl: Boolean(providerPayment._links?.checkout?.href),
-  hasChangePaymentStateUrl: Boolean(providerPayment._links?.changePaymentState?.href),
-  mandateStatus: mandate.status,
-  method: providerPayment.method,
-  sequenceType: providerPayment.sequenceType
-};
+  await pollLocalPaidState();
+  const result = await verifyExactlyOnce();
+  const retryResult = verifyRetry ? await verifyRetryExactlyOnce() : null;
+  const providerContract = {
+    hasCheckoutUrl: Boolean(providerPayment._links?.checkout?.href),
+    hasChangePaymentStateUrl: Boolean(providerPayment._links?.changePaymentState?.href),
+    mandateStatus: mandate.status,
+    method: providerPayment.method,
+    sequenceType: providerPayment.sequenceType
+  };
 
-if (
-  providerContract.hasCheckoutUrl ||
-  providerContract.hasChangePaymentStateUrl !== (state.outcome === "paid") ||
-  providerContract.mandateStatus !== state.expected.mandateStatus ||
-  providerContract.method !== state.expected.method ||
-  providerContract.sequenceType !== state.expected.sequenceType
-) {
-  throw new Error(`Mollie recurring provider contract failed: ${JSON.stringify(providerContract)}`);
-}
-
-const evidence = {
-  schemaVersion: 1,
-  rehearsal: "mollie-recurring-sepa-direct-debit",
-  outcome: state.outcome,
-  automationEnabled: state.automationEnabled === true,
-  harnessSha: state.harnessSha,
-  releaseSha: state.releaseSha,
-  runId: state.runId,
-  tenantSlug: state.tenant.slug,
-  amount: {
-    cents: state.payment.amount_cents,
-    currency: state.payment.currency
-  },
-  provider: {
-    customerId: state.customerId,
-    mandateId: state.mandateId,
-    paymentId: state.providerPaymentId,
-    ...providerContract
-  },
-  result: {
-    ...result,
-    repeatedWebhookCount: 2,
-    verifiedAt: new Date().toISOString()
+  if (
+    providerContract.hasCheckoutUrl ||
+    providerContract.hasChangePaymentStateUrl !== (state.outcome === "paid") ||
+    providerContract.mandateStatus !== state.expected.mandateStatus ||
+    providerContract.method !== state.expected.method ||
+    providerContract.sequenceType !== state.expected.sequenceType
+  ) {
+    throw new Error(`Mollie recurring provider contract failed: ${JSON.stringify(providerContract)}`);
   }
-};
+
+  return {
+    schemaVersion: 1,
+    rehearsal: "mollie-recurring-sepa-direct-debit",
+    outcome: state.outcome,
+    automationEnabled: state.automationEnabled === true,
+    retryVerificationEnabled: verifyRetry,
+    harnessSha: state.harnessSha,
+    releaseSha: state.releaseSha,
+    runId: state.runId,
+    tenantSlug: state.tenant.slug,
+    amount: {
+      cents: state.payment.amount_cents,
+      currency: state.payment.currency
+    },
+    provider: {
+      customerId: state.customerId,
+      mandateId: state.mandateId,
+      paymentId: state.providerPaymentId,
+      ...providerContract
+    },
+    result: {
+      ...result,
+      retry: retryResult,
+      repeatedWebhookCount: 2,
+      verifiedAt: new Date().toISOString()
+    }
+  };
+});
 
 mkdirSync(path.dirname(evidencePath), { recursive: true });
 writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
 console.log(`[mollie:incasso:verify] PASS ${state.outcome} recurring SEPA payment preserved the expected exactly-once effects.`);
+
+async function withTemporaryRetryPolicy(callback) {
+  if (!verifyRetry) return callback();
+
+  const config = await one(
+    admin
+      .from("billing_provider_configs")
+      .select("public_config")
+      .eq("tenant_id", state.tenant.id)
+      .eq("id", state.providerConfigId)
+      .single(),
+    "Mollie retry policy"
+  );
+  const originalPublicConfig = config.public_config ?? {};
+  const update = await admin
+    .from("billing_provider_configs")
+    .update({
+      public_config: {
+        ...originalPublicConfig,
+        automatic_retries_enabled: true,
+        direct_debit_notice_days: 2,
+        max_collection_attempts: 2,
+        recurring_enabled: true,
+        retry_delay_days: 1
+      }
+    })
+    .eq("tenant_id", state.tenant.id)
+    .eq("id", state.providerConfigId);
+  if (update.error) throw update.error;
+
+  try {
+    return await callback();
+  } finally {
+    const restore = await admin
+      .from("billing_provider_configs")
+      .update({ public_config: originalPublicConfig })
+      .eq("tenant_id", state.tenant.id)
+      .eq("id", state.providerConfigId);
+    if (restore.error) throw restore.error;
+  }
+}
 
 async function pollProviderFinalState() {
   for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -155,6 +202,59 @@ async function verifyExactlyOnce() {
   return checks;
 }
 
+async function verifyRetryExactlyOnce() {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const [retries, retryEvents] = await Promise.all([
+      admin
+        .from("billing_collection_attempts")
+        .select("id, status, attempt_number, scheduled_for, prenotification_id, prenotification_delivery_status", { count: "exact" })
+        .eq("tenant_id", state.tenant.id)
+        .eq("manual_payment_id", state.payment.id)
+        .eq("attempt_number", 2),
+      admin
+        .from("billing_events")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", state.tenant.id)
+        .eq("manual_payment_id", state.payment.id)
+        .eq("type", "collection_retry_scheduled")
+    ]);
+    if (retries.error) throw retries.error;
+    if (retryEvents.error) throw retryEvents.error;
+
+    const retry = retries.data?.[0];
+    if (retries.count === 1 && retryEvents.count === 1 && retry?.prenotification_id) {
+      const notification = await one(
+        admin
+          .from("tenant_notifications")
+          .select("type, delivery_status")
+          .eq("tenant_id", state.tenant.id)
+          .eq("id", retry.prenotification_id)
+          .single(),
+        "retry pre-notification"
+      );
+      const delayHours = (new Date(retry.scheduled_for).getTime() - Date.now()) / 3_600_000;
+      if (
+        retry.status === "prenotified" &&
+        retry.prenotification_delivery_status === "sent" &&
+        notification.type === "payment_due" &&
+        notification.delivery_status === "sent" &&
+        delayHours >= 47 &&
+        delayHours <= 49
+      ) {
+        return {
+          attemptCount: retries.count,
+          attemptNumber: retry.attempt_number,
+          billingEventCount: retryEvents.count,
+          deliveryStatus: retry.prenotification_delivery_status,
+          scheduledDelayHours: Math.round(delayHours)
+        };
+      }
+    }
+    await wait(1_000);
+  }
+  throw new Error("Failed Mollie incasso did not create one delivered, policy-compliant retry.");
+}
+
 async function mollieRequest(apiPath) {
   const response = await fetch(`https://api.mollie.com/v2${apiPath}`, {
     headers: { Accept: "application/json", Authorization: `Bearer ${mollieApiKey}` }
@@ -162,6 +262,14 @@ async function mollieRequest(apiPath) {
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload) throw new Error(`Mollie verification returned ${response.status}.`);
   return payload;
+}
+
+async function one(query, label) {
+  const result = await query;
+  if (result.error || !result.data) {
+    throw new Error(`Could not load ${label}: ${result.error?.message ?? "row missing"}`);
+  }
+  return result.data;
 }
 
 function wait(milliseconds) {

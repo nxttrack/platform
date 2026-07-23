@@ -24,6 +24,11 @@ on:
         required: true
         default: false
         type: boolean
+      verify_retry:
+        description: Temporarily enable and verify one failed-payment retry
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -51,6 +56,7 @@ jobs:
       MOLLIE_INCASSO_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-incasso-diagnostic
       MOLLIE_INCASSO_OUTCOME: ${{ inputs.outcome }}
       MOLLIE_INCASSO_AUTOMATION: ${{ inputs.automation }}
+      MOLLIE_INCASSO_VERIFY_RETRY: ${{ inputs.verify_retry }}
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
