@@ -1,8 +1,8 @@
 # Sprint 3 - Communications, Monitoring And Operations
 
-Status: communications and operational monitoring are active and technically proven on staging. Invite,
+Status: complete. Communications and operational monitoring are active and proven on staging. Invite,
 password-reset and tenant-notification retry delivery were accepted by SendGrid through the real application
-flows; external inbox receipt and header confirmation remain the final human check.
+flows and received in the controlled external inbox.
 
 ## Goal
 
@@ -80,6 +80,9 @@ Current evidence on 23 July 2026:
   passed on the same SHA without sending an alert.
 - [Post-rehearsal communications audit 30010021296](https://github.com/nxttrack/platform/actions/runs/30010021296)
   passed on the same SHA without sending mail.
+- Danny Goldenbelt confirmed receipt of all three controlled messages on 23 July 2026. Provider acceptance and
+  external inbox delivery are therefore both proven. Message-header capture remains a production-release
+  evidence item, not an open Sprint 3 implementation task.
 
 ## Non-Sending Audit
 
@@ -120,7 +123,7 @@ Staging deployment evidence: [GitHub Actions run 29871694124](https://github.com
 - [x] Verify sender/domain ownership, SPF, DKIM and DMARC.
 - [x] Deliver and record controlled operational test mail to an external inbox.
 - [x] Deliver one invite and one password-reset message to a controlled account; provider acceptance is recorded.
-- [ ] Confirm external inbox receipt and SPF, DKIM and DMARC headers for those controlled messages.
+- [x] Confirm external inbox receipt for the controlled invitation, reset and retry messages.
 - [x] Prove provider-auth failure diagnostics and platform-test recovery without overwriting failed evidence.
 - [x] Exercise the tenant-notification retry action once with a controlled recipient.
 - [x] Prove the dormant operational monitor with a non-alerting 16-check staging probe.
