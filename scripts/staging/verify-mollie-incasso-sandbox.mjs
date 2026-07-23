@@ -52,7 +52,7 @@ const providerContract = {
 
 if (
   providerContract.hasCheckoutUrl ||
-  !providerContract.hasChangePaymentStateUrl ||
+  providerContract.hasChangePaymentStateUrl !== (state.outcome === "paid") ||
   providerContract.mandateStatus !== state.expected.mandateStatus ||
   providerContract.method !== state.expected.method ||
   providerContract.sequenceType !== state.expected.sequenceType
