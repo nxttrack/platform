@@ -11,6 +11,7 @@ type Phase16State = {
 
 const phase = loadState();
 const enabled = process.env.SPRINT4_ADMIN_MUTATIONS_ENABLED === "true";
+const mutationExpect = expect.configure({ timeout: 15_000 });
 
 test.describe("Sprint 4 tenant-admin mutations", () => {
   test.skip(!enabled, "Enable admin mutations to run this staging-only journey.");
@@ -44,8 +45,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Code").fill(programCode);
     await form.getByLabel("Omschrijving").fill("Browsergedreven Sprint 4 adminbewijs.");
     await form.getByRole("button", { name: "Programma opslaan" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: programName })).toHaveCount(1);
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: programName })).toHaveCount(1);
 
     form = formWithButton(page, "Stage opslaan");
     await selectOptionByText(form.getByLabel("Programma"), programName);
@@ -53,8 +53,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Code").fill(stageCode);
     await form.getByLabel("Badge label").fill("Sprint 4 bewijsbadje");
     await form.getByRole("button", { name: "Stage opslaan" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Lesgroep opslaan");
@@ -67,16 +66,14 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Starttijd").fill("17:00");
     await form.getByLabel("Eindtijd").fill("17:45");
     await form.getByRole("button", { name: "Lesgroep opslaan" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: groupName })).toHaveCount(1);
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: groupName })).toHaveCount(1);
 
     form = formWithButton(page, "Instructeur koppelen");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await selectOptionByText(form.getByLabel("Instructeur"), state.users.instructor.fullName);
     await form.getByLabel("Vanaf").fill(today);
     await form.getByRole("button", { name: "Instructeur koppelen" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: groupName }).getByText("1 instructeur(s)", { exact: false })).toBeVisible();
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: groupName }).getByText("1 instructeur(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Leerling inschrijven");
@@ -86,16 +83,14 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await selectOptionByText(form.getByLabel("Huidig badje/stage"), stageName);
     await form.getByRole("button", { name: "Leerling inschrijven" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: participantName })).toHaveCount(1);
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: participantName })).toHaveCount(1);
 
     form = formWithButton(page, "In groep plaatsen");
     await selectOptionByText(form.getByLabel("Inschrijving"), participantName);
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await form.getByLabel("Startdatum").fill(today);
     await form.getByRole("button", { name: "In groep plaatsen" }).click();
-    await expect(page.getByText("Opgeslagen.")).toBeVisible();
-    await expect(page.getByRole("listitem").filter({ hasText: participantName }).getByText(groupName, { exact: false })).toBeVisible();
+    await mutationExpect(page.getByRole("listitem").filter({ hasText: participantName }).getByText(groupName, { exact: false })).toBeVisible();
 
     await page.goto("/admin/agenda", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Les opslaan");

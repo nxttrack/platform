@@ -1,9 +1,9 @@
 import { useId, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
 import { Field as FieldRoot, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { SubmitButton as PendingSubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 
 export function AdminSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
@@ -96,7 +96,7 @@ export function SelectField({
 }
 
 export function SubmitButton({ children = "Opslaan" }: { children?: ReactNode }) {
-  return <Button type="submit">{children}</Button>;
+  return <PendingSubmitButton>{children}</PendingSubmitButton>;
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
