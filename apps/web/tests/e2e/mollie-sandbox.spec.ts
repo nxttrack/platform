@@ -141,7 +141,7 @@ async function chooseMollieStatus(page: Page, status: "paid") {
 }
 
 async function chooseMollieTestMethod(page: Page) {
-  const methodLabel = /^(iDEAL|Credit card|Creditcard|Bank card|Bancontact)$/i;
+  const methodLabel = /iDEAL|Credit card|Creditcard|Bank card|Bancontact/i;
 
   for (const context of pageContexts(page)) {
     for (const role of ["radio", "button", "link"] as const) {
