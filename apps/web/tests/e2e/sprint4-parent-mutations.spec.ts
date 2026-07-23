@@ -40,8 +40,11 @@ test.describe("Sprint 4 parent self-service mutations", () => {
 
     await page.goto(`/portaal/lessen/${parentState.sourceSessionId}`, { waitUntil: "domcontentloaded" });
     const cancelButton = page.getByRole("button", { name: "Annuleer met credit" });
+    const cancellationStatus = page.getByText("on_time", { exact: true });
 
-    if ((await cancelButton.count()) === 1) {
+    await expect(cancelButton.or(cancellationStatus)).toBeVisible();
+
+    if (await cancelButton.isVisible()) {
       await page.getByLabel("Reden").fill("Sprint 4 browserjourney");
       const cancellationDialog = page.getByRole("alertdialog");
       await expect(async () => {
@@ -52,17 +55,21 @@ test.describe("Sprint 4 parent self-service mutations", () => {
       await expect(page.getByText("Les geannuleerd en inhaalcredit toegevoegd.")).toBeVisible();
     }
 
-    await expect(page.getByText("on_time", { exact: true })).toBeVisible();
+    await expect(cancellationStatus).toBeVisible();
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
     const catchUpOption = page.locator("form").filter({ hasText: parentState.targetGroupName });
+    const chooseCatchUpButton = catchUpOption.getByRole("button", { name: "Kiezen" });
+    const catchUpStatus = page.getByText(`Aanvraag ingediend. Status: ${parentState.catchUpOutcome}.`);
 
-    if ((await catchUpOption.count()) === 1) {
-      await catchUpOption.getByRole("button", { name: "Kiezen" }).click();
+    await expect(chooseCatchUpButton.or(catchUpStatus)).toBeVisible();
+
+    if (await chooseCatchUpButton.isVisible()) {
+      await chooseCatchUpButton.click();
       const feedback = parentState.catchUpOutcome === "requested" ? "Inhaalles aangevraagd. De administratie beoordeelt de aanvraag." : "Inhaalles ingepland.";
       await expect(page.getByText(feedback)).toBeVisible();
     }
 
-    await expect(page.getByText(`Aanvraag ingediend. Status: ${parentState.catchUpOutcome}.`)).toBeVisible();
+    await expect(catchUpStatus).toBeVisible();
 
     await page.goto("/portaal/berichten", { waitUntil: "domcontentloaded" });
     let notification = page.locator("article").filter({ hasText: parentState.notificationTitle });
