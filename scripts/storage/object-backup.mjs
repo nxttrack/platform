@@ -211,6 +211,13 @@ async function seedRehearsal() {
 async function deleteRehearsalObjects() {
   const objects = buckets.map((bucket) => ({ bucket, path: `${scopedPrefix}/probe.pdf` }));
   await removeObjects(objects);
+
+  for (const bucket of buckets) {
+    if ((await listAllObjects(bucket, scopedPrefix)).length > 0) {
+      throw new Error(`Controlled rehearsal cleanup left an object behind in ${bucket}.`);
+    }
+  }
+
   return { buckets, prefix: scopedPrefix, objectCount: objects.length };
 }
 
