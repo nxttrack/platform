@@ -10,8 +10,6 @@ export type PaymentPlanRow = {
   name: string;
   description: string | null;
   amount_cents: number;
-  refunded_cents: number;
-  chargeback_cents: number;
   currency: string;
   billing_interval: string;
   billing_day: number | null;
@@ -54,6 +52,8 @@ export type ManualPaymentRow = {
   enrollment_id: string;
   guardian_user_id: string | null;
   amount_cents: number;
+  refunded_cents: number;
+  chargeback_cents: number;
   currency: string;
   due_on: string;
   paid_on: string | null;

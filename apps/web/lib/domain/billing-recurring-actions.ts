@@ -10,9 +10,9 @@ import { getActiveTenant } from "./core";
 import {
   createMollieCustomer,
   createMollieFirstPayment,
-  createMollieRecurringPayment,
   revokeMollieMandate
 } from "./mollie";
+import { MollieCollectionError, processMollieCollectionAttempt } from "./mollie-collection-processor";
 import {
   isMolliePaymentId,
   normalizeMollieStatus,
@@ -498,182 +498,24 @@ export async function prenotifyMollieCollectionAction(formData: FormData) {
 export async function startMollieCollectionAction(formData: FormData) {
   const context = await requirePrivateShellContext("/admin/betalingen");
   const tenant = getActiveTenant(context);
-  const admin = createAdminClient();
   const attemptId = readRequired(formData, "attemptId");
-  const attemptResult = await admin
-    .from("billing_collection_attempts")
-    .select("id, provider_config_id, subscription_id, manual_payment_id, billing_provider_customer_id, billing_mandate_id, guardian_user_id, attempt_number, status, scheduled_for, prenotification_delivery_status, idempotency_key")
-    .eq("tenant_id", tenant.id)
-    .eq("id", attemptId)
-    .maybeSingle();
-  const attempt = attemptResult.data;
-  if (
-    attemptResult.error ||
-    !attempt ||
-    attempt.status !== "prenotified" ||
-    attempt.prenotification_delivery_status !== "sent" ||
-    new Date(attempt.scheduled_for).getTime() > Date.now()
-  ) {
-    redirect("/admin/betalingen?error=incasso-not-due");
-  }
-
-  const [paymentResult, customerResult, mandateResult, configResult] = await Promise.all([
-    admin
-      .from("manual_payments")
-      .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, status")
-      .eq("tenant_id", tenant.id)
-      .eq("id", attempt.manual_payment_id)
-      .maybeSingle(),
-    admin
-      .from("billing_provider_customers")
-      .select("id, provider_customer_id, status")
-      .eq("tenant_id", tenant.id)
-      .eq("id", attempt.billing_provider_customer_id)
-      .maybeSingle(),
-    admin
-      .from("billing_mandates")
-      .select("id, provider_mandate_id, status")
-      .eq("tenant_id", tenant.id)
-      .eq("id", attempt.billing_mandate_id)
-      .maybeSingle(),
-    admin
-      .from("billing_provider_configs")
-      .select("id, mode, secret_reference, public_config")
-      .eq("tenant_id", tenant.id)
-      .eq("id", attempt.provider_config_id)
-      .eq("provider", "mollie")
-      .eq("status", "active")
-      .maybeSingle()
-  ]);
-  if (
-    paymentResult.error ||
-    customerResult.error ||
-    mandateResult.error ||
-    configResult.error ||
-    !paymentResult.data ||
-    !customerResult.data ||
-    !mandateResult.data ||
-    !configResult.data?.secret_reference ||
-    !["due", "overdue"].includes(paymentResult.data.status) ||
-    customerResult.data.status !== "active" ||
-    mandateResult.data.status !== "valid"
-  ) {
-    redirect("/admin/betalingen?error=incasso-not-ready");
-  }
-
-  const publicConfig = (configResult.data.public_config ?? {}) as Record<string, unknown>;
-  if (publicConfig.recurring_enabled !== true) {
-    redirect("/admin/betalingen?error=incasso-disabled");
-  }
-  const returnUrl = optionalString(publicConfig.return_url);
-  if (!returnUrl) redirect("/admin/betalingen?error=incasso-provider");
-  const appUrl = resolveMollieApplicationUrl(returnUrl, process.env.APP_URL);
-  const sessionId = randomUUID();
-  const now = new Date().toISOString();
-  const processingUpdate = await admin
-    .from("billing_collection_attempts")
-    .update({ status: "processing", initiated_at: now })
-    .eq("tenant_id", tenant.id)
-    .eq("id", attempt.id)
-    .eq("status", "prenotified");
-  if (processingUpdate.error) redirect("/admin/betalingen?error=incasso-attempt");
-
-  const sessionResult = await admin
-    .from("payment_sessions")
-    .insert({
-      id: sessionId,
-      tenant_id: tenant.id,
-      provider_config_id: attempt.provider_config_id,
-      subscription_id: attempt.subscription_id,
-      manual_payment_id: attempt.manual_payment_id,
-      participant_id: paymentResult.data.participant_id,
-      guardian_user_id: attempt.guardian_user_id,
-      provider: "mollie",
-      sequence_type: "recurring",
-      billing_provider_customer_id: attempt.billing_provider_customer_id,
-      billing_mandate_id: attempt.billing_mandate_id,
-      collection_attempt_id: attempt.id,
-      idempotency_key: attempt.idempotency_key,
-      amount_cents: paymentResult.data.amount_cents,
-      currency: paymentResult.data.currency,
-      status: "pending",
-      return_url: null,
-      expires_at: null
-    })
-    .select("id")
-    .single();
-  if (sessionResult.error) {
-    await admin.from("billing_collection_attempts").update({ status: "prenotified", initiated_at: null }).eq("tenant_id", tenant.id).eq("id", attempt.id);
-    redirect("/admin/betalingen?error=incasso-session");
-  }
-
   try {
-    const providerPayment = await createMollieRecurringPayment({
-      amountCents: paymentResult.data.amount_cents,
-      currency: paymentResult.data.currency,
-      customerId: customerResult.data.provider_customer_id,
-      description: `${tenant.name} incasso ${attempt.attempt_number}`,
-      idempotencyKey: attempt.idempotency_key,
-      mandateId: mandateResult.data.provider_mandate_id,
-      metadata: {
-        tenantId: tenant.id,
-        paymentSessionId: sessionId,
-        manualPaymentId: paymentResult.data.id,
-        subscriptionId: attempt.subscription_id,
-        billingProviderCustomerId: attempt.billing_provider_customer_id,
-        billingMandateId: attempt.billing_mandate_id,
-        collectionAttemptId: attempt.id,
-        sequenceType: "recurring"
-      },
-      mode: configResult.data.mode as MollieMode,
-      secretReference: configResult.data.secret_reference,
-      webhookUrl: `${appUrl}/api/webhooks/mollie`
+    await processMollieCollectionAttempt({
+      attemptId,
+      organizationName: tenant.name,
+      tenantId: tenant.id
     });
-    const status = normalizeMollieStatus(providerPayment.status);
-    const [sessionUpdate, attemptUpdate] = await Promise.all([
-      admin
-        .from("payment_sessions")
-        .update({ provider_session_id: providerPayment.id, checkout_url: null, status })
-        .eq("tenant_id", tenant.id)
-        .eq("id", sessionId),
-      admin
-        .from("billing_collection_attempts")
-        .update({
-          provider_payment_id: providerPayment.id,
-          status,
-          completed_at: ["paid", "failed", "expired", "cancelled"].includes(status) ? new Date().toISOString() : null
-        })
-        .eq("tenant_id", tenant.id)
-        .eq("id", attempt.id)
-    ]);
-    if (sessionUpdate.error || attemptUpdate.error) throw sessionUpdate.error ?? attemptUpdate.error;
   } catch (error) {
-    const message = safeErrorMessage(error);
-    await Promise.all([
-      admin
-        .from("payment_sessions")
-        .update({ status: "failed", failure_code: "provider_api", failure_message: message })
-        .eq("tenant_id", tenant.id)
-        .eq("id", sessionId),
-      admin
-        .from("billing_collection_attempts")
-        .update({ status: "failed", completed_at: new Date().toISOString(), failure_code: "provider_api", failure_message: message })
-        .eq("tenant_id", tenant.id)
-        .eq("id", attempt.id)
-    ]);
-    redirect("/admin/betalingen?error=incasso-provider-api");
+    const code = error instanceof MollieCollectionError ? error.code : "not_ready";
+    const feedback = {
+      disabled: "incasso-disabled",
+      not_due: "incasso-not-due",
+      outcome_unknown: "incasso-outcome-unknown",
+      provider_api: "incasso-provider-api"
+    }[code] ?? "incasso-not-ready";
+    redirect(`/admin/betalingen?error=${feedback}`);
   }
 
-  await createBillingEvent({
-    guardianUserId: paymentResult.data.guardian_user_id,
-    message: `SEPA-incasso poging ${attempt.attempt_number} gestart.`,
-    participantId: paymentResult.data.participant_id,
-    paymentId: paymentResult.data.id,
-    paymentSessionId: sessionId,
-    subscriptionId: attempt.subscription_id,
-    tenantId: tenant.id,
-    type: "collection_started"
-  });
   revalidateBillingPaths();
   redirect("/admin/betalingen?saved=incasso-started");
 }
