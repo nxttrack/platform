@@ -6,10 +6,14 @@ import {
   assertMollieSecretMode,
   getMollieAccountLast4,
   getSafeMollieCheckoutUrl,
+  isMollieChargebackId,
   isMollieCustomerId,
   isMollieMandateId,
+  isMollieRefundId,
   MollieWebhookRequestError,
   normalizeMollieStatus,
+  normalizeMollieRefundStatus,
+  parseMollieAmountCents,
   readClassicMollieWebhookId,
   resolveMollieApplicationUrl,
   validateMolliePaymentSnapshot
@@ -34,12 +38,23 @@ describe("Mollie recurring identifiers and account masking", () => {
     assert.equal(isMollieCustomerId("mdt_abc123"), false);
     assert.equal(isMollieMandateId("mdt_abc123"), true);
     assert.equal(isMollieMandateId("cst_abc123"), false);
+    assert.equal(isMollieRefundId("re_abc123"), true);
+    assert.equal(isMollieRefundId("tr_abc123"), false);
+    assert.equal(isMollieChargebackId("chb_abc123"), true);
+    assert.equal(isMollieChargebackId("re_abc123"), false);
   });
 
   it("stores only a validated account suffix", () => {
     assert.equal(getMollieAccountLast4("NL55 INGB 0000 0000 00"), "0000");
     assert.equal(getMollieAccountLast4("not-an-account"), null);
     assert.equal(getMollieAccountLast4(null), null);
+  });
+
+  it("normalizes refund statuses and exact decimal amounts", () => {
+    assert.equal(normalizeMollieRefundStatus("canceled"), "cancelled");
+    assert.equal(normalizeMollieRefundStatus("refunded"), "refunded");
+    assert.equal(parseMollieAmountCents("12.50"), 1250);
+    assert.throws(() => parseMollieAmountCents("12.5"), /invalid format/);
   });
 
   it("keeps recurring collection behind consent, pre-notification and an explicit feature switch", () => {

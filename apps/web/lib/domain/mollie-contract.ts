@@ -2,10 +2,13 @@ export type MollieMode = "test" | "live";
 export type MollieProviderStatus = "open" | "canceled" | "pending" | "authorized" | "expired" | "failed" | "paid";
 export type MollieSessionStatus = "pending" | "authorized" | "paid" | "expired" | "cancelled" | "failed";
 export type MollieMandateStatus = "pending" | "valid" | "invalid";
+export type MollieRefundStatus = "queued" | "pending" | "processing" | "refunded" | "failed" | "canceled";
 
 const molliePaymentIdPattern = /^tr_[A-Za-z0-9]+$/;
 const mollieCustomerIdPattern = /^cst_[A-Za-z0-9]+$/;
 const mollieMandateIdPattern = /^mdt_[A-Za-z0-9]+$/;
+const mollieRefundIdPattern = /^re_[A-Za-z0-9]+$/;
+const mollieChargebackIdPattern = /^chb_[A-Za-z0-9]+$/;
 const mollieSecretReferencePattern = /^(?:(?:GITHUB_ENV|ENV):)?MOLLIE_[A-Z0-9_]+$/;
 
 export class MollieWebhookRequestError extends Error {
@@ -25,6 +28,14 @@ export function isMollieCustomerId(value: string) {
 
 export function isMollieMandateId(value: string) {
   return mollieMandateIdPattern.test(value);
+}
+
+export function isMollieRefundId(value: string) {
+  return mollieRefundIdPattern.test(value);
+}
+
+export function isMollieChargebackId(value: string) {
+  return mollieChargebackIdPattern.test(value);
 }
 
 export function isMollieSecretReference(value: string) {
@@ -54,6 +65,24 @@ export function normalizeMollieStatus(status: MollieProviderStatus): MollieSessi
 
 export function normalizeMollieMandateStatus(status: MollieMandateStatus) {
   return status;
+}
+
+export function normalizeMollieRefundStatus(status: MollieRefundStatus) {
+  return status === "canceled" ? "cancelled" : status;
+}
+
+export function parseMollieAmountCents(value: string) {
+  const match = /^(\d+)\.(\d{2})$/.exec(value);
+  if (!match) {
+    throw new Error("Mollie amount has an invalid format");
+  }
+
+  const cents = Number(match[1]) * 100 + Number(match[2]);
+  if (!Number.isSafeInteger(cents)) {
+    throw new Error("Mollie amount is outside the supported range");
+  }
+
+  return cents;
 }
 
 export function getMollieAccountLast4(account: string | null | undefined) {
@@ -143,20 +172,6 @@ export function resolveMollieApplicationUrl(returnUrl: string, configuredAppUrl?
   }
 
   return parsedAppUrl.origin;
-}
-
-function parseMollieAmountCents(value: string) {
-  const match = /^(\d+)\.(\d{2})$/.exec(value);
-  if (!match) {
-    throw new Error("Mollie amount has an invalid format");
-  }
-
-  const cents = Number(match[1]) * 100 + Number(match[2]);
-  if (!Number.isSafeInteger(cents)) {
-    throw new Error("Mollie amount is outside the supported range");
-  }
-
-  return cents;
 }
 
 async function readBoundedBody(stream: ReadableStream<Uint8Array> | null, maximumBytes: number) {

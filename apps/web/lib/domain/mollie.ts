@@ -5,10 +5,12 @@ import {
   isMollieCustomerId,
   isMollieMandateId,
   isMolliePaymentId,
+  isMollieRefundId,
   isMollieSecretReference,
   type MollieMandateStatus,
   type MollieMode,
-  type MollieProviderStatus
+  type MollieProviderStatus,
+  type MollieRefundStatus
 } from "./mollie-contract";
 
 const mollieApiBase = "https://api.mollie.com/v2";
@@ -44,6 +46,25 @@ export type MollieMandate = {
     consumerAccount?: string | null;
     consumerName?: string | null;
   } | null;
+};
+
+export type MollieRefund = {
+  id: string;
+  amount: { currency: string; value: string };
+  description: string;
+  metadata?: Record<string, unknown> | null;
+  paymentId: string;
+  status: MollieRefundStatus;
+  createdAt: string;
+};
+
+export type MollieChargeback = {
+  id: string;
+  amount: { currency: string; value: string };
+  paymentId: string;
+  reason?: { code?: string; description?: string } | null;
+  createdAt: string;
+  reversedAt?: string | null;
 };
 
 export async function createMolliePayment(input: { amountCents: number; currency: string; description: string; idempotencyKey: string; metadata: Record<string, string>; mode: MollieMode; redirectUrl: string; secretReference: string; webhookUrl: string }) {
@@ -162,6 +183,66 @@ export async function revokeMollieMandate(customerId: string, mandateId: string,
     mode,
     { method: "DELETE" }
   );
+}
+
+export async function createMollieRefund(input: {
+  amountCents: number;
+  currency: string;
+  description: string;
+  idempotencyKey: string;
+  metadata: Record<string, string>;
+  mode: MollieMode;
+  paymentId: string;
+  secretReference: string;
+}) {
+  if (!isMolliePaymentId(input.paymentId)) throw new Error("Invalid Mollie payment id");
+  return mollieRequest<MollieRefund>(
+    `/payments/${encodeURIComponent(input.paymentId)}/refunds`,
+    input.secretReference,
+    input.mode,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Idempotency-Key": input.idempotencyKey },
+      body: JSON.stringify({
+        amount: { currency: input.currency, value: (input.amountCents / 100).toFixed(2) },
+        description: input.description.slice(0, 255),
+        metadata: input.metadata
+      })
+    }
+  );
+}
+
+export async function listMolliePaymentRefunds(paymentId: string, secretReference: string, mode: MollieMode) {
+  if (!isMolliePaymentId(paymentId)) throw new Error("Invalid Mollie payment id");
+  const result = await mollieRequest<{ _embedded?: { refunds?: MollieRefund[] } }>(
+    `/payments/${encodeURIComponent(paymentId)}/refunds?limit=250`,
+    secretReference,
+    mode,
+    { method: "GET" }
+  );
+  return result._embedded?.refunds ?? [];
+}
+
+export async function getMolliePaymentRefund(paymentId: string, refundId: string, secretReference: string, mode: MollieMode) {
+  if (!isMolliePaymentId(paymentId)) throw new Error("Invalid Mollie payment id");
+  if (!isMollieRefundId(refundId)) throw new Error("Invalid Mollie refund id");
+  return mollieRequest<MollieRefund>(
+    `/payments/${encodeURIComponent(paymentId)}/refunds/${encodeURIComponent(refundId)}`,
+    secretReference,
+    mode,
+    { method: "GET" }
+  );
+}
+
+export async function listMolliePaymentChargebacks(paymentId: string, secretReference: string, mode: MollieMode) {
+  if (!isMolliePaymentId(paymentId)) throw new Error("Invalid Mollie payment id");
+  const result = await mollieRequest<{ _embedded?: { chargebacks?: MollieChargeback[] } }>(
+    `/payments/${encodeURIComponent(paymentId)}/chargebacks?limit=250`,
+    secretReference,
+    mode,
+    { method: "GET" }
+  );
+  return result._embedded?.chargebacks ?? [];
 }
 
 export async function getMolliePayment(paymentId: string, secretReference: string, mode: MollieMode) {
