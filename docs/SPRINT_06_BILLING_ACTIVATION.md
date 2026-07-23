@@ -67,6 +67,20 @@ Still required after the first sandbox pass:
 - recurring/SEPA mandate lifecycle only after the commercial model is approved;
 - controlled live transaction, refund and settlement evidence.
 
+### Bounded recurring SEPA rehearsal
+
+The staging-only `Staging Mollie incasso rehearsal` workflow proves the provider contract without activating
+recurring collection for production tenants. It creates an isolated Mollie test customer and direct-debit
+mandate, creates a €1.43 `sequenceType: recurring` payment without a customer checkout URL, moves the payment
+to `paid` through Mollie's test-only `changePaymentState` page, and verifies the existing provider-verified
+webhook path plus exactly-once local effects.
+
+The workflow requires the literal confirmation `REHEARSE_MOLLIE_INCASSO_TEST`, an exact SHA already deployed
+to staging, and a `test_` credential. Its artifact is redacted and deliberately excludes the test-state URL.
+This rehearsal is evidence for the technical incasso path only. Customer consent capture, mandate lifecycle
+storage, advance notice, retries, chargebacks, reconciliation and live activation remain separate release
+work.
+
 ## Go/No-Go Boundary
 
 No live key, production provider row, real charge or recurring mandate is authorized by this sprint document.
