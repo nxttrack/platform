@@ -15,6 +15,11 @@ on:
         description: Type BACKUP_STAGING_STORAGE or BACKUP_PRODUCTION_STORAGE
         required: true
         type: string
+      first_install_empty_project:
+        description: Allow both required buckets to be absent before the first production migration only
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -34,16 +39,19 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
       STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+      STORAGE_BACKUP_ALLOW_EMPTY_FIRST_INSTALL: ${{ inputs.first_install_empty_project && 'true' || 'false' }}
     steps:
       - name: Authorize scoped export
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
+          FIRST_INSTALL_EMPTY_PROJECT: ${{ inputs.first_install_empty_project }}
           TARGET: ${{ inputs.target }}
         run: |
           if [[ "$TARGET" == "production" ]]; then
             test "$CONFIRMATION" = "BACKUP_PRODUCTION_STORAGE"
           else
             test "$CONFIRMATION" = "BACKUP_STAGING_STORAGE"
+            test "$FIRST_INSTALL_EMPTY_PROJECT" != "true"
           fi
 
       - name: Require independently retained encryption secret

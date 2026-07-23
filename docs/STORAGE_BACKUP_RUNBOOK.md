@@ -84,6 +84,12 @@ encrypts the archive with GnuPG AES-256 and uploads only the encrypted archive p
 summary. GitHub retains the artifact for 30 days. Download and verify the artifact before treating the backup
 as a recovery point.
 
+For a verified empty production project before its first migration, dispatch may additionally set
+`first_install_empty_project=true`. This records both required buckets as absent in a versioned, encrypted
+manifest. It is production-only, refuses a mixed state where only one bucket exists, and defaults to `false`.
+After the first migration creates the buckets, immediately create a normal strict backup with this input left
+`false`.
+
 Thirty-day GitHub retention is the initial off-platform route, not an indefinite archive. Before production
 volume grows, copy encrypted artifacts into an approved immutable long-retention destination and define the
 schedule/RPO in the go/no-go record.

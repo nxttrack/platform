@@ -15,6 +15,7 @@ const backupDirectory = resolve(process.env.STORAGE_BACKUP_DIR ?? "artifacts/sto
 const scopedPrefix = normalizePrefix(process.env.STORAGE_BACKUP_PREFIX ?? "");
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+const allowEmptyFirstInstall = process.env.STORAGE_BACKUP_ALLOW_EMPTY_FIRST_INSTALL === "true";
 
 if (!supabaseUrl || !supabaseSecret) {
   fatal("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY are required.");
@@ -59,9 +60,16 @@ try {
 async function exportObjects() {
   await assertNewBackupDirectory();
   const entries = [];
+  const missingBuckets = [];
 
   for (const bucket of buckets) {
-    await assertBucketExists(bucket);
+    const bucketExists = await assertBucketExists(bucket, { allowMissing: allowEmptyFirstInstall });
+
+    if (!bucketExists) {
+      missingBuckets.push(bucket);
+      continue;
+    }
+
     const remoteObjects = await listAllObjects(bucket, scopedPrefix);
 
     for (const remoteObject of remoteObjects) {
@@ -84,13 +92,24 @@ async function exportObjects() {
     }
   }
 
+  if (missingBuckets.length > 0) {
+    if (process.env.APP_ENV !== "production") {
+      throw new Error("Missing buckets may only be recorded for a production first install.");
+    }
+
+    if (missingBuckets.length !== buckets.length) {
+      throw new Error("Backup refused a mixed bucket state; all required buckets must exist or all must be absent.");
+    }
+  }
+
   entries.sort((left, right) => `${left.bucket}/${left.path}`.localeCompare(`${right.bucket}/${right.path}`));
   const manifest = {
-    version: 1,
+    version: 2,
     createdAt: new Date().toISOString(),
     sourceProjectFingerprint: sha256(new URL(supabaseUrl).hostname).slice(0, 16),
     environment: process.env.APP_ENV,
     buckets,
+    missingBuckets,
     prefix: scopedPrefix || null,
     objectCount: entries.length,
     totalBytes: entries.reduce((sum, entry) => sum + entry.size, 0),
@@ -284,10 +303,14 @@ async function removeObjects(objects) {
   }
 }
 
-async function assertBucketExists(bucket) {
+async function assertBucketExists(bucket, { allowMissing = false } = {}) {
   const { data, error } = await admin.storage.getBucket(bucket);
-  if (error || !data) throw new Error(`Required private bucket ${bucket} is unavailable.`);
+  if (error || !data) {
+    if (allowMissing && isMissingBucketError(error)) return false;
+    throw new Error(`Required private bucket ${bucket} is unavailable.`);
+  }
   if (data.public) throw new Error(`Required bucket ${bucket} must remain private.`);
+  return true;
 }
 
 async function assertNewBackupDirectory() {
@@ -307,7 +330,7 @@ async function readManifest() {
   const manifest = JSON.parse(await readFile(join(backupDirectory, "manifest.json"), "utf8"));
 
   if (
-    manifest.version !== 1 ||
+    ![1, 2].includes(manifest.version) ||
     !Array.isArray(manifest.objects) ||
     !Array.isArray(manifest.buckets) ||
     !Number.isInteger(manifest.objectCount) ||
@@ -318,6 +341,22 @@ async function readManifest() {
 
   for (const bucket of manifest.buckets) {
     if (!allowedBuckets.has(bucket)) throw new Error("Backup manifest contains an unsupported bucket.");
+  }
+
+  if (manifest.version === 2) {
+    if (!Array.isArray(manifest.missingBuckets)) {
+      throw new Error("Storage backup manifest has no missing-bucket inventory.");
+    }
+
+    for (const bucket of manifest.missingBuckets) {
+      if (!manifest.buckets.includes(bucket)) {
+        throw new Error("Storage backup manifest contains an unsupported missing bucket.");
+      }
+    }
+
+    if (manifest.missingBuckets.length > 0 && manifest.missingBuckets.length !== manifest.buckets.length) {
+      throw new Error("Storage backup manifest contains a mixed bucket state.");
+    }
   }
 
   return manifest;
@@ -364,6 +403,13 @@ function normalizeCacheControl(value) {
   return value.replace(/^max-age=/, "");
 }
 
+function isMissingBucketError(error) {
+  if (!error) return true;
+  const status = Number(error.statusCode ?? error.status ?? 0);
+  const message = String(error.message ?? "").toLowerCase();
+  return status === 404 || message.includes("not found") || message.includes("does not exist");
+}
+
 function requireStagingRehearsal() {
   if (process.env.APP_ENV !== "staging") fatal("Storage restore rehearsal is staging-only.");
   requireConfirmation("STORAGE_REHEARSAL_CONFIRMATION", "REHEARSE_STAGING_STORAGE_RESTORE");
@@ -384,6 +430,7 @@ function summarizeManifest(manifest) {
     sourceProjectFingerprint: manifest.sourceProjectFingerprint,
     environment: manifest.environment,
     buckets: manifest.buckets,
+    missingBuckets: manifest.missingBuckets ?? [],
     prefix: manifest.prefix,
     objectCount: manifest.objectCount,
     totalBytes: manifest.totalBytes
