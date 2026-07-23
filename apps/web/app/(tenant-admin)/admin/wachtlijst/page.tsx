@@ -1,7 +1,8 @@
-import { AdminSection, DataList, DataListRow, EmptyState, SelectField, SubmitButton } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { createSlotOfferAction, createWaitlistEntryFromIntakeAction, scoreWaitlistEntryAction } from "@/lib/domain/placement-actions";
-import { computePlacementScores, getPlacementDashboardData, type PlacementScoreRow, type WaitlistEntryRow } from "@/lib/domain/placement";
+import { AdminSection, DataList, DataListRow, EmptyState, SubmitButton } from "@/components/admin/domain-ui";
+import { PlacementCockpit, type PlacementCockpitRow } from "@/components/admin/placement-cockpit";
+import { PageHeader } from "@/components/shell/ui";
+import { createWaitlistEntryFromIntakeAction } from "@/lib/domain/placement-actions";
+import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -23,6 +24,24 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
   const preferencesByEntry = groupBy(data.waitlistPreferences, "waitlist_entry_id");
   const scoresByEntry = groupBy(data.placementScores, "waitlist_entry_id");
   const offersByEntry = groupBy(data.slotOffers, "waitlist_entry_id");
+  const cockpitRows: PlacementCockpitRow[] = data.waitlistEntries.map((entry) => {
+    const stored = scoresByEntry.get(entry.id) ?? [];
+    const computed = computePlacementScores({ entry, preferences: preferencesByEntry.get(entry.id) ?? [], groups: data.groups, memberships: data.groupMemberships });
+    const proposals = stored.length ? stored.map((score) => ({ capacity: score.capacity_available, groupId: score.group_id, groupName: groupById.get(score.group_id)?.name ?? "Groep", reasons: score.reasons, score: Number(score.score) })) : computed.map((score) => ({ capacity: score.capacityAvailable, groupId: score.group.id, groupName: score.group.name, reasons: score.reasons, score: score.score }));
+    return {
+      id: entry.id,
+      participantName: entry.participant_name,
+      parentName: entry.parent_name,
+      parentEmail: entry.parent_email,
+      program: programById.get(entry.program_id)?.name ?? "Programma onbekend",
+      stage: entry.recommended_stage_id ? stageById.get(entry.recommended_stage_id)?.name ?? null : null,
+      status: entry.status,
+      priorityDate: entry.priority_date,
+      proposals,
+      offerGroups: getOfferGroups(entry.program_id, proposals.map((proposal) => proposal.groupId), data.groups),
+      offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
+    };
+  });
 
   return (
     <div className="space-y-6">
@@ -58,127 +77,23 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
         )}
       </AdminSection>
 
-      <AdminSection title="Placement assistant">
+      <AdminSection title="Smart Placement & Capacity Cockpit" description="Vergelijk verklaarbare voorstellen, bewaar rolgerichte filters en keur een plaatsing handmatig goed.">
         {data.waitlistEntries.length === 0 ? (
           <EmptyState>Nog geen wachtlijstentries.</EmptyState>
         ) : (
-          <div className="space-y-4">
-            {data.waitlistEntries.map((entry) => {
-              const savedScores = scoresByEntry.get(entry.id) ?? [];
-              const computedScores =
-                savedScores.length > 0
-                  ? savedScores
-                  : computePlacementScores({
-                      entry,
-                      preferences: preferencesByEntry.get(entry.id) ?? [],
-                      groups: data.groups,
-                      memberships: data.groupMemberships
-                    });
-              const offers = offersByEntry.get(entry.id) ?? [];
-
-              return (
-                <article className="rounded-2xl border border-border bg-white p-4 shadow-soft" key={entry.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-4">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{programById.get(entry.program_id)?.name ?? "Programma"}</p>
-                      <h3 className="mt-1 text-lg font-bold text-foreground">{entry.participant_name}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        {entry.parent_name} · {entry.parent_email}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <StatusPill tone={entry.status === "waiting" ? "info" : entry.status === "offered" ? "warning" : entry.status === "placed" ? "success" : "neutral"}>{entry.status}</StatusPill>
-                      {entry.recommended_stage_id ? <StatusPill>{stageById.get(entry.recommended_stage_id)?.name ?? "Stage"}</StatusPill> : null}
-                    </div>
-                  </div>
-
-                  <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_1fr]">
-                    <div>
-                      <div className="mb-2 flex items-center justify-between gap-3">
-                        <h4 className="text-sm font-bold text-foreground">Scores</h4>
-                        <form action={scoreWaitlistEntryAction}>
-                          <input name="waitlistEntryId" type="hidden" value={entry.id} />
-                          <button className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold hover:bg-muted" type="submit">
-                            Herbereken
-                          </button>
-                        </form>
-                      </div>
-                      <div className="space-y-2">
-                        {computedScores.slice(0, 3).map((score) => (
-                          <ScoreRow groupName={getScoreGroupName(score, groupById)} key={getScoreGroupId(score)} score={score} />
-                        ))}
-                        {computedScores.length === 0 ? <p className="rounded-lg bg-muted px-3 py-2 text-sm text-muted-foreground">Geen passende actieve groepen.</p> : null}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="mb-2 text-sm font-bold text-foreground">Aanbod maken</h4>
-                      <form action={createSlotOfferAction} className="grid gap-3">
-                        <input name="waitlistEntryId" type="hidden" value={entry.id} />
-                        <SelectField label="Groep" name="groupId" required>
-                          <option value="">Kies groep</option>
-                          {getOfferGroups(entry, data.placementScores, data.groups).map((group) => (
-                            <option key={group.id} value={group.id}>
-                              {group.name}
-                            </option>
-                          ))}
-                        </SelectField>
-                        <SubmitButton>Maak aanbodlink</SubmitButton>
-                      </form>
-                      <div className="mt-3 space-y-1 text-xs text-muted-foreground">
-                        {offers.slice(0, 3).map((offer) => (
-                          <p key={offer.id}>
-                            {groupById.get(offer.group_id)?.name ?? "Groep"} · {offer.status} · {offer.delivery_status}
-                          </p>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          <PlacementCockpit rows={cockpitRows} />
         )}
       </AdminSection>
     </div>
   );
 }
 
-function ScoreRow({ groupName, score }: { groupName: string; score: PlacementScoreRow | ReturnType<typeof computePlacementScores>[number] }) {
-  const value = "score" in score ? Number(score.score) : 0;
-  const reasons = Array.isArray(score.reasons) ? score.reasons.join(", ") : "";
-
-  return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-muted px-3 py-2 text-sm">
-      <div>
-        <p className="font-semibold text-foreground">{groupName}</p>
-        <p className="text-xs text-muted-foreground">{reasons}</p>
-      </div>
-      <span className="font-bold text-primary">{Math.round(value)}</span>
-    </div>
-  );
-}
-
-function getScoreGroupName(score: PlacementScoreRow | ReturnType<typeof computePlacementScores>[number], groupById: Map<string, { name: string }>) {
-  if ("group" in score) {
-    return score.group.name;
-  }
-
-  return groupById.get(score.group_id)?.name ?? "Groep";
-}
-
-function getScoreGroupId(score: PlacementScoreRow | ReturnType<typeof computePlacementScores>[number]) {
-  return "group" in score ? score.group.id : score.group_id;
-}
-
-function getOfferGroups(entry: WaitlistEntryRow, scores: PlacementScoreRow[], groups: { id: string; name: string; program_id: string; status: string }[]) {
-  const scoredGroupIds = scores.filter((score) => score.waitlist_entry_id === entry.id).sort((a, b) => Number(b.score) - Number(a.score)).map((score) => score.group_id);
-
+function getOfferGroups(programId: string, scoredGroupIds: string[], groups: { id: string; name: string; program_id: string; status: string }[]) {
   if (scoredGroupIds.length > 0) {
     return scoredGroupIds.flatMap((groupId) => groups.find((group) => group.id === groupId) ?? []);
   }
 
-  return groups.filter((group) => group.program_id === entry.program_id && group.status === "active");
+  return groups.filter((group) => group.program_id === programId && group.status === "active");
 }
 
 function Metric({ label, value }: { label: string; value: number }) {
