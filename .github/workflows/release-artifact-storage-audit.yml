@@ -30,7 +30,7 @@ jobs:
           node-version: "24.18.0"
 
       - name: Write non-sensitive artifact probe
-        run: pnpm run release:write-artifact-probe
+        run: node scripts/release/write-artifact-storage-probe.mjs
 
       - name: Upload artifact probe
         id: upload
