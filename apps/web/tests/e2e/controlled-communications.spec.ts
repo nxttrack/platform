@@ -13,6 +13,7 @@ test.describe("controlled staging communications", () => {
   test("delivers invite and reset mail, then preserves failed evidence during a notification retry", async ({ page }) => {
     test.setTimeout(120_000);
     expect(process.env.APP_ENV).toBe("staging");
+    expect(process.env.CONTROLLED_COMMUNICATIONS_REHEARSAL).toBe("true");
 
     const startedAt = new Date().toISOString();
     const marker = `controlled-communications:${process.env.GITHUB_RUN_ID ?? Date.now()}`;

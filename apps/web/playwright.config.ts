@@ -6,6 +6,10 @@ const useExternalServer = Boolean(process.env.PLAYWRIGHT_BASE_URL);
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  testIgnore:
+    process.env.CONTROLLED_COMMUNICATIONS_REHEARSAL === "true"
+      ? undefined
+      : "**/controlled-communications.spec.ts",
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
