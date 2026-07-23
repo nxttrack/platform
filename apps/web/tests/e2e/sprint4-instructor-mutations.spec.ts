@@ -63,11 +63,13 @@ test.describe("Sprint 4 instructor mutations", () => {
     await expect(page.getByText(`Sprint4 Browserbadge ${marker}`)).toBeVisible();
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
-    const completeButton = page.getByRole("button", { name: "Afronden" });
+    const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
 
-    if ((await completeButton.count()) === 1) {
+    if (await completeButton.isVisible()) {
       await completeButton.click();
       await expect(page.getByText("Les afgerond.")).toBeVisible();
+    } else {
+      await expect(page.getByText("completed", { exact: true })).toBeVisible();
     }
 
     await expect(page.getByText("completed", { exact: true })).toBeVisible();
