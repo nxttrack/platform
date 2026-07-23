@@ -5,6 +5,7 @@ import {
   Baby,
   BarChart3,
   Bell,
+  Bot,
   Calendar,
   CreditCard,
   FileText,
@@ -15,11 +16,13 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  Palette,
   Settings,
   TrendingUp,
   User,
   UserPlus,
   Users,
+  Upload,
   Waves
 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -34,6 +37,7 @@ import { cn } from "@/lib/utils";
 const shellIcons = {
   award: Award,
   baby: Baby,
+  bot: Bot,
   chart: BarChart3,
   calendar: Calendar,
   card: CreditCard,
@@ -43,12 +47,14 @@ const shellIcons = {
   inbox: Inbox,
   location: MapPin,
   message: MessageSquare,
+  palette: Palette,
   settings: Settings,
   tasks: ListChecks,
   trending: TrendingUp,
   user: User,
   userPlus: UserPlus,
   users: Users,
+  upload: Upload,
   waves: Waves
 } as const;
 

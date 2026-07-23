@@ -32,6 +32,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award" },
   { href: "/admin/betalingen", label: "Betalingen", icon: "card" },
   { href: "/admin/rapportages", label: "Rapportages", icon: "chart" },
+  { href: "/admin/automatisering", label: "Automatisering", icon: "bot" },
   { href: "/admin/berichten", label: "Berichten", icon: "message" },
   { href: "/admin/taken", label: "Taken", icon: "tasks" },
   { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
@@ -39,7 +40,9 @@ export const adminNav: NavItem[] = [
   { href: "/admin/documenten", label: "Documenten", icon: "file" },
   { href: "/admin/programma", label: "Programma's", icon: "waves" },
   { href: "/admin/intake", label: "Intake", icon: "inbox" },
+  { href: "/admin/importeren", label: "Importeren", icon: "upload" },
   { href: "/admin/wachtlijst", label: "Wachtlijst", icon: "tasks" },
+  { href: "/admin/branding", label: "Branding", icon: "palette" },
   { href: "/admin/instellingen", label: "Instellingen", icon: "settings" }
 ];
 
