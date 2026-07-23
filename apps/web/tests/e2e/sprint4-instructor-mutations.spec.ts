@@ -64,15 +64,16 @@ test.describe("Sprint 4 instructor mutations", () => {
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
+    const completedStatus = page.getByText("completed", { exact: true });
+
+    await expect(completeButton.or(completedStatus)).toBeVisible();
 
     if (await completeButton.isVisible()) {
       await completeButton.click();
       await expect(page.getByText("Les afgerond.")).toBeVisible();
-    } else {
-      await expect(page.getByText("completed", { exact: true })).toBeVisible();
     }
 
-    await expect(page.getByText("completed", { exact: true })).toBeVisible();
+    await expect(completedStatus).toBeVisible();
     expect(failures()).toEqual([]);
   });
 });
