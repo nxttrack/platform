@@ -15,6 +15,10 @@ import {
   updateManualPaymentStatusAction,
   updateSubscriptionLifecycleAction
 } from "@/lib/domain/billing-actions";
+import {
+  prenotifyMollieCollectionAction,
+  startMollieCollectionAction
+} from "@/lib/domain/billing-recurring-actions";
 import { formatMoney, getBillingAdminData, isPaymentOverdue } from "@/lib/domain/billing";
 import { paymentProviderLabel } from "@/lib/domain/payment-provider";
 
@@ -92,6 +96,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               <Field label="Webhook secret reference" name="webhookSecretReference" placeholder="GITHUB_ENV:MOLLIE_WEBHOOK_SECRET" />
             </div>
             <Field label="Return URL" name="returnUrl" placeholder="https://staging.nxttrack.nl/portaal/betalingen" />
+            <Field label="Incasso vooraf aankondigen (dagen, 2–30)" name="directDebitNoticeDays" type="number" defaultValue={7} />
+            <label className="flex min-h-11 items-center gap-3 rounded-lg border border-border bg-muted/30 px-3 text-sm font-semibold text-foreground">
+              <input className="h-4 w-4 accent-primary" name="recurringEnabled" type="checkbox" />
+              Terugkerende SEPA-incasso bewust inschakelen
+            </label>
             <TextAreaField label="Checkout omschrijving" name="checkoutDescription" />
             <SubmitButton>Provider opslaan</SubmitButton>
           </form>
@@ -108,6 +117,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                     <p className="mt-1 text-xs text-muted-foreground">
                       {paymentProviderLabel(provider.provider)} - {provider.mode} - secret: {provider.secret_reference ? "referentie gezet" : "geen referentie"}
                     </p>
+                    {provider.provider === "mollie" ? (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Incasso: {provider.public_config.recurring_enabled === true ? "ingeschakeld" : "uit"} · aankondiging {String(provider.public_config.direct_debit_notice_days ?? 7)} dagen
+                      </p>
+                    ) : null}
                   </div>
                   <StatusPill tone={provider.status === "active" ? "success" : provider.status === "draft" ? "warning" : "neutral"}>{provider.status}</StatusPill>
                 </div>
@@ -272,6 +286,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               const participant = participantById.get(subscription.participant_id);
               const plan = planById.get(subscription.payment_plan_id);
               const provider = subscription.provider_config_id ? data.providerConfigs.find((item) => item.id === subscription.provider_config_id) : null;
+              const mandate = subscription.billing_mandate_id ? data.mandates.find((item) => item.id === subscription.billing_mandate_id) : null;
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={subscription.id}>
@@ -283,6 +298,13 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                         {formatMoney(subscription.amount_cents, subscription.currency)} - {subscription.billing_interval} - {subscription.collection_method}
                       </p>
                       {provider ? <p className="mt-1 text-xs text-muted-foreground">Provider: {provider.display_name}</p> : null}
+                      {mandate ? (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Machtiging: {mandate.status} · rekening •••• {mandate.account_last4 ?? "onbekend"}
+                        </p>
+                      ) : subscription.collection_method === "provider" ? (
+                        <p className="mt-1 text-xs font-semibold text-warning">Wacht op incassomachtiging van de ouder.</p>
+                      ) : null}
                     </div>
                     <StatusPill tone={subscription.status === "active" ? "success" : subscription.status === "paused" ? "warning" : "neutral"}>{subscription.status}</StatusPill>
                   </div>
@@ -318,6 +340,12 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               const enrollment = enrollmentById.get(payment.enrollment_id);
               const plan = enrollment ? planById.get(data.subscriptions.find((subscription) => subscription.id === payment.subscription_id)?.payment_plan_id ?? "") : null;
               const overdue = isPaymentOverdue(payment);
+              const subscription = data.subscriptions.find((item) => item.id === payment.subscription_id);
+              const mandate = subscription?.billing_mandate_id ? data.mandates.find((item) => item.id === subscription.billing_mandate_id) : null;
+              const latestAttempt = data.collectionAttempts.find((item) => item.manual_payment_id === payment.id);
+              const activeAttempt = latestAttempt && ["scheduled", "prenotified", "processing", "pending", "authorized"].includes(latestAttempt.status);
+              const canPrenotify = (payment.status === "due" || payment.status === "overdue") && subscription?.collection_method === "provider" && mandate?.status === "valid" && !activeAttempt;
+              const canStartCollection = latestAttempt?.status === "prenotified" && latestAttempt.prenotification_delivery_status === "sent" && new Date(latestAttempt.scheduled_for).getTime() <= Date.now();
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={payment.id}>
@@ -351,7 +379,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       </button>
                     </div>
                   </form>
-                  <div className="mt-3 grid gap-3 lg:grid-cols-2">
+                  <div className="mt-3 grid gap-3 xl:grid-cols-3">
                     <form action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
                       <input name="status" type="hidden" value={payment.status === "paid" ? "paid" : "issued"} />
@@ -380,12 +408,82 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                         <SubmitButton>Checkout aanmaken</SubmitButton>
                       </div>
                     </form>
+                    <div className="rounded-lg border border-border bg-muted/30 p-3">
+                      <p className="text-sm font-bold text-foreground">Automatische incasso</p>
+                      {latestAttempt ? (
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          Poging {latestAttempt.attempt_number}: {latestAttempt.status} · gepland {formatDateTime(latestAttempt.scheduled_for)} · e-mail {latestAttempt.prenotification_delivery_status ?? "nog niet"}
+                        </p>
+                      ) : (
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">Nog geen incassopoging voor deze betaling.</p>
+                      )}
+                      {latestAttempt?.failure_message ? <p className="mt-2 text-xs text-danger">{latestAttempt.failure_message}</p> : null}
+                      {canStartCollection && latestAttempt ? (
+                        <form action={startMollieCollectionAction} className="mt-3">
+                          <input name="attemptId" type="hidden" value={latestAttempt.id} />
+                          <SubmitButton>Incasso nu indienen</SubmitButton>
+                        </form>
+                      ) : canPrenotify ? (
+                        <form action={prenotifyMollieCollectionAction} className="mt-3">
+                          <input name="paymentId" type="hidden" value={payment.id} />
+                          <SubmitButton>{latestAttempt ? "Nieuwe poging aankondigen" : "Incasso aankondigen"}</SubmitButton>
+                        </form>
+                      ) : (
+                        <p className="mt-3 text-xs font-medium text-muted-foreground">
+                          {mandate?.status === "valid" ? "Wacht op de geplande datum of lopende verwerking." : "Eerst is een geldige oudermachtiging nodig."}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </article>
               );
             })}
           </div>
         )}
+      </AdminSection>
+
+      <AdminSection title="Incassomachtigingen en pogingen" description="Alleen gemaskeerde rekeninggegevens worden getoond; volledige rekeningnummers en API-sleutels worden niet opgeslagen.">
+        <div className="grid gap-5 xl:grid-cols-2">
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Machtigingen</h3>
+            {data.mandates.length === 0 ? (
+              <EmptyState>Nog geen Mollie-machtigingen.</EmptyState>
+            ) : (
+              <DataList>
+                {data.mandates.map((mandate) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={mandate.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{mandate.account_holder ?? "Rekeninghouder"} · •••• {mandate.account_last4 ?? "onbekend"}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Toestemming {mandate.consent_recorded_at ? formatDateTime(mandate.consent_recorded_at) : "nog niet bevestigd"} · {mandate.method}
+                      </p>
+                    </div>
+                    <StatusPill tone={mandate.status === "valid" ? "success" : mandate.status === "pending" ? "warning" : "neutral"}>{mandate.status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+          <div>
+            <h3 className="mb-3 font-bold text-foreground">Recente incassopogingen</h3>
+            {data.collectionAttempts.length === 0 ? (
+              <EmptyState>Nog geen terugkerende incassopogingen.</EmptyState>
+            ) : (
+              <DataList>
+                {data.collectionAttempts.slice(0, 20).map((attempt) => (
+                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={attempt.id}>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Poging {attempt.attempt_number} · {formatDateTime(attempt.scheduled_for)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Voorafmelding: {attempt.prenotification_delivery_status ?? "niet verstuurd"}</p>
+                      {attempt.failure_message ? <p className="mt-1 text-xs text-danger">{attempt.failure_message}</p> : null}
+                    </div>
+                    <StatusPill tone={attempt.status === "paid" ? "success" : ["failed", "expired", "cancelled"].includes(attempt.status) ? "danger" : "warning"}>{attempt.status}</StatusPill>
+                  </div>
+                ))}
+              </DataList>
+            )}
+          </div>
+        </div>
       </AdminSection>
 
       <AdminSection title="Provider payment sessions">
