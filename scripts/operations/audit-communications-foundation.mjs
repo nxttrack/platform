@@ -108,8 +108,8 @@ check("dkim-selector", Boolean(dkimSelector), "EMAIL_DKIM_SELECTOR identifies th
 if (dkimSelector) {
   check(
     "dkim",
-    await txtContains(`${dkimSelector}._domainkey.nxttrack.nl`, "v=DKIM1"),
-    "The configured DKIM selector publishes a DKIM key."
+    await txtContains(`${dkimSelector}._domainkey.nxttrack.nl`, "p="),
+    "The configured DKIM selector publishes a public key."
   );
 }
 
