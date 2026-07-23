@@ -11,6 +11,7 @@ import {
   type MollieSessionStatus
 } from "@/lib/domain/mollie-contract";
 import { getMolliePayment, listMollieMandates, type MollieMandate } from "@/lib/domain/mollie";
+import { scheduleMollieCollectionRetry } from "@/lib/domain/billing-dunning";
 import { syncMollieFinancialAdjustments } from "@/lib/domain/mollie-financial-sync";
 import { createTenantNotifications } from "@/lib/domain/tenant-notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -187,6 +188,13 @@ export async function POST(request: Request) {
     } else if (session.sequence_type === "recurring" && isFailureStatus(status)) {
       processingStage = "collection_failure";
       await recordCollectionFailure({ failure, session, status });
+      if (status === "failed" && session.collection_attempt_id) {
+        processingStage = "collection_retry";
+        await scheduleMollieCollectionRetry({
+          collectionAttemptId: session.collection_attempt_id,
+          tenantId: session.tenant_id
+        });
+      }
     }
 
     return NextResponse.json({ accepted: true });
