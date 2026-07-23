@@ -83,17 +83,25 @@ async function configureTestProvider(page: Page) {
 async function completeMollieTestCheckout(page: Page, status: "paid") {
   await expect(page).toHaveURL(/^https:\/\/(?:[^/]+\.)?mollie\.com\//);
 
-  if (!await chooseMollieStatus(page, status)) {
-    const methodSelected = await chooseMollieTestMethod(page);
-    if (methodSelected) {
+  for (let step = 0; step < 4; step += 1) {
+    if (await chooseMollieStatus(page, status)) {
+      await continueMollieCheckout(page);
+      return;
+    }
+
+    if (await chooseMollieTestMethod(page) || await chooseMollieTestIssuer(page)) {
       await page.waitForTimeout(1_000);
+      continue;
     }
-    if (!await chooseMollieStatus(page, status)) {
-      await writeMollieDiagnostic(page);
-      throw new Error("Mollie test checkout did not expose a supported paid-status control.");
-    }
+
+    break;
   }
 
+  await writeMollieDiagnostic(page);
+  throw new Error("Mollie test checkout did not expose a supported paid-status control.");
+}
+
+async function continueMollieCheckout(page: Page) {
   for (const context of pageContexts(page)) {
     const continueButton = context.getByRole("button", { name: /continue|confirm|doorgaan|verder|bevestigen|submit/i }).first();
     if (await continueButton.isVisible().catch(() => false)) {
@@ -160,6 +168,17 @@ async function chooseMollieTestMethod(page: Page) {
     }
   }
 
+  return false;
+}
+
+async function chooseMollieTestIssuer(page: Page) {
+  for (const context of pageContexts(page)) {
+    const issuer = context.getByRole("button", { name: /ABN AMRO/i }).first();
+    if (await issuer.isVisible().catch(() => false)) {
+      await issuer.click();
+      return true;
+    }
+  }
   return false;
 }
 
