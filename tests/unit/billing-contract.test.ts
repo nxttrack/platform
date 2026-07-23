@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import {
@@ -109,6 +110,15 @@ describe("classic Mollie webhook contract", () => {
     await assert.rejects(() => readClassicMollieWebhookId(request, 32), (error: unknown) => {
       return error instanceof MollieWebhookRequestError && error.status === 413;
     });
+  });
+
+  it("returns bounded operational reason codes without provider details", () => {
+    const source = readFileSync("apps/web/app/api/webhooks/mollie/route.ts", "utf8");
+    assert.match(source, /reason: "session_lookup"/);
+    assert.match(source, /reason: "provider_config"/);
+    assert.match(source, /reason: "processing"/);
+    assert.doesNotMatch(source, /reason: sessionResult\.error/);
+    assert.doesNotMatch(source, /reason: configResult\.error/);
   });
 });
 

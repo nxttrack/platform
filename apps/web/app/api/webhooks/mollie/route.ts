@@ -29,13 +29,13 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const sessionResult = await admin.from("payment_sessions").select("id, tenant_id, provider_config_id, subscription_id, manual_payment_id, participant_id, guardian_user_id, amount_cents, currency, status").eq("provider", "mollie").eq("provider_session_id", paymentId).maybeSingle();
-  if (sessionResult.error) return NextResponse.json({ accepted: false }, { status: 503 });
+  if (sessionResult.error) return NextResponse.json({ accepted: false, reason: "session_lookup" }, { status: 503 });
   if (!sessionResult.data) return NextResponse.json({ accepted: true });
   const session = sessionResult.data as SessionRow;
   const configResult = await admin.from("billing_provider_configs").select("secret_reference, mode").eq("tenant_id", session.tenant_id).eq("id", session.provider_config_id).eq("provider", "mollie").maybeSingle();
   const config = configResult.data;
   const secretReference = config?.secret_reference;
-  if (configResult.error || !config || !secretReference) return NextResponse.json({ accepted: false }, { status: 503 });
+  if (configResult.error || !config || !secretReference) return NextResponse.json({ accepted: false, reason: "provider_config" }, { status: 503 });
 
   try {
     const mode = config.mode as MollieMode;
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
       payload: { id: paymentId },
       error_message: error instanceof Error ? error.message.slice(0, 500) : "Webhook processing failed"
     }, { onConflict: "tenant_id,provider,provider_event_id", ignoreDuplicates: true });
-    return NextResponse.json({ accepted: false }, { status: 503 });
+    return NextResponse.json({ accepted: false, reason: "processing" }, { status: 503 });
   }
 }
 

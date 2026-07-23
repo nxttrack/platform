@@ -35,6 +35,7 @@ for (let attempt = 0; attempt < 2; attempt += 1) {
     body: new URLSearchParams({ id: session.provider_session_id })
   });
   if (!response.ok) {
+    const responseBody = await response.json().catch(() => null);
     const diagnostic = await admin
       .from("payment_provider_events")
       .select("error_message")
@@ -42,7 +43,8 @@ for (let attempt = 0; attempt < 2; attempt += 1) {
       .eq("provider_event_id", `${session.provider_session_id}:webhook_error`)
       .maybeSingle();
     const message = diagnostic.data?.error_message ? ` ${String(diagnostic.data.error_message).slice(0, 300)}` : "";
-    throw new Error(`Repeated Mollie webhook returned ${response.status}.${message}`);
+    const reason = typeof responseBody?.reason === "string" ? ` reason=${responseBody.reason}.` : "";
+    throw new Error(`Repeated Mollie webhook returned ${response.status}.${reason}${message}`);
   }
 }
 
