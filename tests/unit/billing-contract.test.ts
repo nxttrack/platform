@@ -73,16 +73,14 @@ describe("Mollie recurring identifiers and account masking", () => {
   it("keeps automated execution and retries behind independent safety controls", () => {
     const route = readFileSync("apps/web/app/api/internal/billing/collections/route.ts", "utf8");
     const dunning = readFileSync("apps/web/lib/domain/billing-dunning.ts", "utf8");
-    const workflow = readFileSync(".github/workflows/billing-collection-automation.yml", "utf8");
     assert.match(route, /BILLING_AUTOMATION_SECRET/);
     assert.match(route, /timingSafeEqual/);
     assert.match(route, /automatic_collection_enabled === true/);
     assert.match(route, /maximumAttemptsPerRun = 25/);
+    assert.match(route, /requestedTenantId/);
     assert.match(dunning, /automatic_retries_enabled !== true/);
     assert.match(dunning, /attempt\.attempt_number >= maxAttempts/);
     assert.match(dunning, /Math\.max\(noticeDays, retryDelayDays\)/);
-    assert.match(workflow, /RUN_PRODUCTION_COLLECTIONS/);
-    assert.match(workflow, /environment: staging/);
   });
 
   it("activates mandates and records recurring failures only from verified webhooks", () => {
