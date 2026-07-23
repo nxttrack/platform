@@ -30,7 +30,7 @@ jobs:
       supabase-fingerprint: ${{ steps.fingerprint.outputs.supabase_fingerprint }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Produce non-sensitive project fingerprint
         id: fingerprint
@@ -76,14 +76,23 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
       JWT_SESSION: ${{ secrets.JWT_SESSION }}
+      AUTH_CODE_PEPPER: ${{ secrets.AUTH_CODE_PEPPER }}
+      EMAIL_SETTINGS_SECRET: ${{ secrets.EMAIL_SETTINGS_SECRET }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD || secrets.SMTP_PASS }}
+      SMTP_FROM: ${{ vars.SMTP_FROM }}
+      SMTP_FROM_EMAIL: ${{ vars.SMTP_FROM_EMAIL }}
+      SMTP_FROM_NAME: ${{ vars.SMTP_FROM_NAME }}
+      EMAIL_DELIVERY_TIMEOUT_MS: ${{ vars.EMAIL_DELIVERY_TIMEOUT_MS }}
+      EMAIL_DKIM_SELECTOR: ${{ vars.EMAIL_DKIM_SELECTOR }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Audit environment contract and project isolation
         run: node scripts/release/audit-production-foundation.mjs
@@ -99,7 +108,7 @@ jobs:
       PORT: ${{ vars.PORT }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Audit directories, systemd and Caddy without changing state
         run: scripts/release/audit-production-host.sh
@@ -113,10 +122,10 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20.19.0"
 

@@ -33,7 +33,7 @@ jobs:
         run: test "$RESTORE_CONFIRMATION" = "REHEARSE_RESTORE"
 
       - name: Checkout canonical main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Dump, restore and compare staging application data
         run: scripts/db/rehearse-logical-restore.sh

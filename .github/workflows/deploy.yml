@@ -141,7 +141,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Assert canonical release source
         run: |
@@ -320,7 +320,7 @@ jobs:
 
       - name: Upload release evidence
         if: env.TARGET == 'production'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nxttrack-${{ env.TARGET }}-${{ github.sha }}-release-evidence
           path: ${{ env.RELEASE }}/artifacts/release-evidence.json
@@ -391,10 +391,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "24.18.0"
 
@@ -465,7 +465,7 @@ jobs:
         if: always()
         id: upload-priority-a-visuals
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nxttrack-staging-${{ github.sha }}-priority-a-visuals
           path: artifacts/production-baseline/${{ github.sha }}
@@ -486,7 +486,7 @@ jobs:
       - name: Upload release evidence
         id: upload-release-evidence
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: nxttrack-staging-${{ github.sha }}-release-evidence
           path: artifacts/release-evidence.json

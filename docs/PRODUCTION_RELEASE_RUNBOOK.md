@@ -1,0 +1,116 @@
+# Production release and runtime rollback runbook
+
+Status: prepared, not authorization to deploy. Production promotion remains blocked until every exact-SHA go/no-go item is complete.
+
+## Fixed production contract
+
+| Item | Value |
+| --- | --- |
+| Canonical branch | `main` |
+| Release source | a full SHA already validated on staging |
+| Platform URL | `https://nxttrack.nl` |
+| Admin URL | `https://admin.nxttrack.nl` |
+| Tenant suffix | `nxttrack.nl` |
+| VPS base directory | `/var/www/nxttrack/production` |
+| systemd service | `nxttrack-production` |
+| application port | `3800` |
+| Active release | `/var/www/nxttrack/production/current` |
+| Shared environment | `/var/www/nxttrack/production/shared/.env` |
+
+The workflow may only be dispatched from `main`. It requires literal production confirmation, a staging SHA equal to the workflow SHA, a recorded approval reference and successful foundation/migration-rehearsal run IDs for that same SHA.
+
+## 1. Prepare exact-SHA evidence
+
+```bash
+git fetch origin main
+git rev-parse origin/main
+```
+
+Record the full value as `RELEASE_SHA`. Do not use a seven-character abbreviation in approvals.
+
+1. Deploy `RELEASE_SHA` to staging and wait for the deploy plus browser-validation job.
+2. Verify the live staging health commit, all 56 Priority A screenshots and release-evidence artifacts.
+3. Dispatch `production-foundation-audit.yml` from `main` with `AUDIT_PRODUCTION_FOUNDATION`.
+4. Dispatch `production-migration-rehearsal.yml` from `main` with `REHEARSE_PRODUCTION_MIGRATIONS`.
+5. Confirm both runs succeeded for `RELEASE_SHA`, not merely for the branch name.
+6. Generate the form:
+
+```bash
+RELEASE_CANDIDATE_SHA="$RELEASE_SHA" \
+STAGING_RELEASE_RUN_ID="<run-id>" \
+PRODUCTION_FOUNDATION_RUN_ID="<run-id>" \
+PRODUCTION_MIGRATION_REHEARSAL_RUN_ID="<run-id>" \
+pnpm run release:create-go-no-go
+```
+
+Complete the generated file under `artifacts/production-go-no-go/` and store the signed decision outside the mutable workspace.
+
+## 2. Pre-deploy controls
+
+- Upgrade the production Supabase project to Pro and record the visible backup retention.
+- Confirm an object-backup route for `tenant-documents` and `diploma-vault`; database backups contain Storage metadata, not the object bytes.
+- Record the current live production SHA from `/api/health` and the current symlink target on the VPS.
+- Confirm Caddy validates and `nxttrack-production` is healthy before touching it.
+- Keep `BOOTSTRAP_PLATFORM_OWNER` and its reset flag `false`.
+- Set `RUN_DB_MIGRATIONS=true` only when the reviewed first-install/change set is authorized. Return it to `false` immediately after the successful release.
+- Ensure the SendGrid fallback/provider secret and approved sender pass the foundation audit.
+
+## 3. Dispatch production
+
+Use Actions > Deploy NXTTRACK > Run workflow on `main`:
+
+| Input | Required value |
+| --- | --- |
+| `target` | `production` |
+| `staging_release_sha` | exact `RELEASE_SHA` |
+| `production_confirmation` | `PROMOTE_PRODUCTION` |
+| `production_approval_reference` | immutable approval reference |
+| `production_foundation_run_id` | successful exact-SHA run ID |
+| `production_migration_rehearsal_run_id` | successful exact-SHA run ID |
+
+Watch every step. The workflow checks repository truth, evidence binding, migrations, hardening, build, atomic symlink activation, systemd, Caddy, health, runtime routes and 90-day production release evidence. Do not manually bypass a failed step.
+
+## 4. Immediate verification
+
+Within five minutes:
+
+1. `https://nxttrack.nl/api/health` reports `ok=true`, `env=production`, a passing database probe and `commit=RELEASE_SHA`.
+2. Apex, `www` and `admin` have valid TLS and expected routing.
+3. A controlled tenant hostname resolves through the wildcard route.
+4. Platform-owner login, tenant-admin login and one tenant-isolation denial work.
+5. Send one controlled mail and verify the delivery record plus SendGrid response.
+6. Confirm the production release-evidence artifact is downloadable.
+7. Restore `RUN_DB_MIGRATIONS=false` and reconfirm both bootstrap flags are `false`.
+8. Start the 30-minute observation window and enable production monitoring only as described in the monitoring checklist.
+
+## Runtime rollback
+
+Use runtime rollback for an application regression when the database remains compatible. It does not undo database writes or migrations.
+
+1. Declare the incident and stop further deploys.
+2. Record current health, failing SHA, last known-good SHA and timestamps.
+3. On the VPS, list release directories and resolve the current symlink without changing them.
+4. Select the exact previous release directory already built by the trusted workflow.
+5. Atomically repoint `current`, restart `nxttrack-production`, and reload Caddy only if its configuration changed.
+6. Re-run health, public routes, admin routing, tenant routing and login smoke checks.
+7. Record the active rollback SHA and preserve logs/evidence.
+
+The repository rehearsal command is:
+
+```bash
+scripts/release/rehearse-runtime-rollback.sh production
+```
+
+Do not run SQL down-migrations automatically. If schema or data must be restored, follow the database restore runbook and require separate destructive-action approval.
+
+## Stop conditions
+
+Immediately choose no-go or rollback when any of these occurs:
+
+- live health SHA differs from the approved SHA;
+- database probe, migration or RLS audit fails;
+- apex/admin/tenant routing or TLS is inconsistent;
+- platform owner cannot authenticate or crosses a tenant boundary;
+- controlled mail fails;
+- release evidence cannot be retained;
+- no known-good runtime target or database recovery point is available.

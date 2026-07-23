@@ -1,6 +1,14 @@
 # Phase 22 - Production Readiness And Commercial Launch
 
-Status: launch-readiness foundation in progress under [Sprint 1](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md). Staging is technically healthy; production remains blocked on explicit product-owner approval and provider-side backup confirmation.
+Status: staging release candidate approved and technically healthy. Production-readiness controls are prepared; production remains no-go until the exact-SHA foundation/migration evidence, Pro backup controls, provider mail secret and final go/no-go are complete.
+
+Canonical production procedures:
+
+- [Production configuration audit](PRODUCTION_CONFIGURATION_AUDIT.md)
+- [Production release and runtime rollback](PRODUCTION_RELEASE_RUNBOOK.md)
+- [Production database and Storage restore](PRODUCTION_DATABASE_RESTORE_RUNBOOK.md)
+- [Production incident and monitoring checklist](PRODUCTION_INCIDENT_MONITORING_CHECKLIST.md)
+- [Exact-SHA go/no-go template](PRODUCTION_GO_NO_GO_TEMPLATE.md)
 
 ## Completed Evidence
 
@@ -10,6 +18,8 @@ Status: launch-readiness foundation in progress under [Sprint 1](SPRINT_01_RELEA
 - The previous runtime release was activated, checked and replaced by the original healthy release in the rollback rehearsal.
 - All 56 canonical staging screenshots are captured against the exact deployed SHA.
 - Placeholder instructions and internal Lovable terminology no longer appear as public-facing marketing copy.
+- Product-owner visual approval is recorded with no visual release blocker.
+- The staging release-candidate workflow passes all Phase 15/16 and Sprint 4 gates.
 
 ## Logical Backup/Restore Rehearsal
 
@@ -32,9 +42,11 @@ This proves that an application-level logical export is readable and restorable.
 
 ## Remaining Manual Gates
 
-- Product owner reviews the SHA-bound staging contact sheets and explicitly accepts intentional canon differences before `LOVABLE_VISUAL_CHECK_CONFIRMED=true` is set.
-- Infrastructure owner checks Supabase backup retention and restore options for the staging project before `SUPABASE_BACKUPS_CONFIRMED=true` is set.
-- Production environment, monitoring destinations, support ownership and commercial launch timing are approved separately.
+- Upgrade production Supabase to Pro, record provider backup retention and establish a separate backup for Storage object bytes.
+- Configure a production SendGrid/SMTP provider secret and record a controlled successful delivery.
+- Re-run foundation, migration rehearsal and staging evidence for the final exact SHA.
+- Record production monitoring destinations, incident/support ownership and commercial launch timing.
+- Complete and sign the generated exact-SHA go/no-go form.
 
 ## Production Boundary
 

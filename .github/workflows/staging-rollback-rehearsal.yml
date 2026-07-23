@@ -23,8 +23,7 @@ jobs:
 
     steps:
       - name: Checkout canonical main
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Rehearse previous release and restore current release
         run: scripts/release/rehearse-runtime-rollback.sh
-

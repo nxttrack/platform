@@ -74,6 +74,8 @@ includes(
 
 present("database-secret", process.env.DATABASE_URL, "DATABASE_URL is configured.");
 present("session-secret", process.env.SESSION_SECRET || process.env.JWT_SESSION, "A server-side session secret is configured.");
+present("auth-code-pepper", process.env.AUTH_CODE_PEPPER, "A dedicated AUTH_CODE_PEPPER is configured.");
+present("email-settings-secret", process.env.EMAIL_SETTINGS_SECRET, "A dedicated EMAIL_SETTINGS_SECRET is configured.");
 present("supabase-public-url", process.env.NEXT_PUBLIC_SUPABASE_URL, "The Supabase public URL is configured.");
 present(
   "supabase-public-key",
@@ -85,6 +87,23 @@ present(
   process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY,
   "A Supabase server-only secret is configured."
 );
+present(
+  "mail-provider-secret",
+  process.env.SENDGRID_API_KEY || process.env.SMTP_PASSWORD,
+  "A production SendGrid API key or SMTP password is configured for first-release delivery."
+);
+check(
+  "mail-from-email",
+  normalized(process.env.SMTP_FROM || process.env.SMTP_FROM_EMAIL) === "noreply@nxttrack.nl",
+  "The production fallback sender is noreply@nxttrack.nl."
+);
+present("mail-from-name", process.env.SMTP_FROM_NAME, "The production fallback sender name is configured.");
+check(
+  "mail-timeout",
+  Number(process.env.EMAIL_DELIVERY_TIMEOUT_MS) === 15_000,
+  "Production email delivery uses the approved 15000 ms timeout."
+);
+present("mail-dkim-selector", process.env.EMAIL_DKIM_SELECTOR, "The active SendGrid DKIM selector is recorded.");
 check(
   "supabase-public-reachable",
   await urlReachable(process.env.NEXT_PUBLIC_SUPABASE_URL),
