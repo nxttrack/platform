@@ -14,6 +14,7 @@ import {
   revokeMollieMandate
 } from "./mollie";
 import {
+  isMolliePaymentId,
   normalizeMollieStatus,
   resolveMollieApplicationUrl,
   type MollieMode
@@ -21,6 +22,66 @@ import {
 import { createTenantNotifications } from "./tenant-notifications";
 
 const consentTermsVersion = "nxttrack-sepa-v1-2026-07";
+
+export async function reconcileMolliePaymentAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin/betalingen");
+  const tenant = getActiveTenant(context);
+  const admin = createAdminClient();
+  const paymentSessionId = readRequired(formData, "paymentSessionId");
+  const sessionResult = await admin
+    .from("payment_sessions")
+    .select("id, provider_config_id, provider_session_id, status")
+    .eq("tenant_id", tenant.id)
+    .eq("id", paymentSessionId)
+    .eq("provider", "mollie")
+    .maybeSingle();
+  const session = sessionResult.data;
+  if (sessionResult.error || !session?.provider_config_id || !session.provider_session_id || !isMolliePaymentId(session.provider_session_id)) {
+    redirect("/admin/betalingen?error=incasso-reconcile-session");
+  }
+
+  const configResult = await admin
+    .from("billing_provider_configs")
+    .select("public_config")
+    .eq("tenant_id", tenant.id)
+    .eq("id", session.provider_config_id)
+    .eq("provider", "mollie")
+    .eq("status", "active")
+    .maybeSingle();
+  if (configResult.error || !configResult.data) {
+    redirect("/admin/betalingen?error=incasso-provider");
+  }
+  const publicConfig = (configResult.data.public_config ?? {}) as Record<string, unknown>;
+  const returnUrl = optionalString(publicConfig.return_url);
+  if (!returnUrl) redirect("/admin/betalingen?error=incasso-provider");
+
+  const appUrl = resolveMollieApplicationUrl(returnUrl, process.env.APP_URL);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  try {
+    const response = await fetch(`${appUrl}/api/webhooks/mollie`, {
+      body: new URLSearchParams({ id: session.provider_session_id }),
+      cache: "no-store",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      method: "POST",
+      signal: controller.signal
+    });
+    if (!response.ok) throw new Error(`Reconciliation endpoint returned ${response.status}.`);
+  } catch (error) {
+    await createBillingEvent({
+      message: `Mollie-reconciliatie is mislukt: ${safeErrorMessage(error)}`,
+      paymentSessionId: session.id,
+      tenantId: tenant.id,
+      type: "reconciliation_exception"
+    });
+    redirect("/admin/betalingen?error=incasso-reconcile");
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  revalidateBillingPaths();
+  redirect("/admin/betalingen?saved=incasso-reconciled");
+}
 
 export async function startMollieMandateAction(formData: FormData) {
   const context = await requirePrivateShellContext("/portaal/betalingen");

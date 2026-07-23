@@ -50,6 +50,8 @@ describe("Mollie recurring identifiers and account masking", () => {
     assert.match(actions, /new Date\(attempt\.scheduled_for\)\.getTime\(\) > Date\.now\(\)/);
     assert.match(actions, /sequence_type: "first"/);
     assert.match(actions, /sequence_type: "recurring"/);
+    assert.match(actions, /reconcileMolliePaymentAction/);
+    assert.match(actions, /api\/webhooks\/mollie/);
   });
 
   it("activates mandates and records recurring failures only from verified webhooks", () => {

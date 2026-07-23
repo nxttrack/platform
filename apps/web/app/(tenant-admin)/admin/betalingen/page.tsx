@@ -17,6 +17,7 @@ import {
 } from "@/lib/domain/billing-actions";
 import {
   prenotifyMollieCollectionAction,
+  reconcileMolliePaymentAction,
   startMollieCollectionAction
 } from "@/lib/domain/billing-recurring-actions";
 import { formatMoney, getBillingAdminData, isPaymentOverdue } from "@/lib/domain/billing";
@@ -510,16 +511,26 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                     <StatusPill tone={session.status === "paid" ? "success" : session.status === "failed" ? "danger" : session.status === "pending" ? "warning" : "neutral"}>{session.status}</StatusPill>
                   </div>
                   {session.status !== "failed" && session.status !== "paid" ? (
-                    <form action={recordPaymentSessionFailureAction} className="mt-3 grid gap-3 md:grid-cols-[160px_1fr_auto]">
-                      <input name="paymentSessionId" type="hidden" value={session.id} />
-                      <Field label="Code" name="failureCode" placeholder="provider_failed" />
-                      <Field label="Melding" name="failureMessage" placeholder="Betaling mislukt of verlopen" />
-                      <div className="flex items-end">
-                        <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
-                          Markeer mislukt
-                        </button>
-                      </div>
-                    </form>
+                    <div className="mt-3 grid gap-3 xl:grid-cols-[auto_1fr]">
+                      {session.provider === "mollie" && session.provider_session_id ? (
+                        <form action={reconcileMolliePaymentAction} className="flex items-end">
+                          <input name="paymentSessionId" type="hidden" value={session.id} />
+                          <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
+                            Status met Mollie synchroniseren
+                          </button>
+                        </form>
+                      ) : null}
+                      <form action={recordPaymentSessionFailureAction} className="grid gap-3 md:grid-cols-[160px_1fr_auto]">
+                        <input name="paymentSessionId" type="hidden" value={session.id} />
+                        <Field label="Code" name="failureCode" placeholder="provider_failed" />
+                        <Field label="Melding" name="failureMessage" placeholder="Betaling mislukt of verlopen" />
+                        <div className="flex items-end">
+                          <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
+                            Markeer mislukt
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   ) : null}
                 </article>
               );
