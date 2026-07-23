@@ -41,6 +41,25 @@ describe("Mollie recurring identifiers and account masking", () => {
     assert.equal(getMollieAccountLast4("not-an-account"), null);
     assert.equal(getMollieAccountLast4(null), null);
   });
+
+  it("keeps recurring collection behind consent, pre-notification and an explicit feature switch", () => {
+    const actions = readFileSync("apps/web/lib/domain/billing-recurring-actions.ts", "utf8");
+    assert.match(actions, /consentAccepted"\) !== "accepted"/);
+    assert.match(actions, /recurring_enabled !== true/);
+    assert.match(actions, /prenotification_delivery_status !== "sent"/);
+    assert.match(actions, /new Date\(attempt\.scheduled_for\)\.getTime\(\) > Date\.now\(\)/);
+    assert.match(actions, /sequence_type: "first"/);
+    assert.match(actions, /sequence_type: "recurring"/);
+  });
+
+  it("activates mandates and records recurring failures only from verified webhooks", () => {
+    const webhook = readFileSync("apps/web/app/api/webhooks/mollie/route.ts", "utf8");
+    assert.match(webhook, /validateMolliePaymentSnapshot/);
+    assert.match(webhook, /listMollieMandates/);
+    assert.match(webhook, /type: "mandate_activated"/);
+    assert.match(webhook, /type: "payment_failed"/);
+    assert.match(webhook, /collection_attempt_id/);
+  });
 });
 
 describe("checkout idempotency contract", () => {
