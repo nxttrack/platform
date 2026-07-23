@@ -54,6 +54,9 @@ Provider rehearsals:
 
 - Run `30049435689`: secured scheduler created one €1.43 recurring SEPA test payment. Two webhook calls
   resulted in exactly one paid session, provider event and billing event.
+- Run `30052580245`: a €1.43 recurring SEPA test payment reached provider state `failed`. Two webhook calls
+  resulted in one failure event and exactly one second attempt with one delivered pre-notification,
+  scheduled 48 hours later. The temporary retry policy and subscription provider binding were restored.
 - Run `30049842167`: Mollie accepted one €0.43 partial refund and returned the same refund ID for the
   idempotency replay. Provider and local state both remained `pending`; two webhook calls resulted in one
   provider event and no premature refund booking.
