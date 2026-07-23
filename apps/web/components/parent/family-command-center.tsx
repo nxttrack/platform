@@ -28,7 +28,7 @@ export function FamilyCommandCenter({ children }: { children: FamilyChild[] }) {
       <div className="border-b border-border bg-gradient-to-r from-aqua-soft via-card to-primary/5 p-4 sm:p-5">
         <p className="text-xs font-semibold uppercase tracking-wider text-primary">Familieoverzicht</p>
         <div className="mt-3 flex snap-x gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Kies een kind">
-          {children.map((item) => <button aria-selected={item.id === child.id} className={cn("min-h-12 shrink-0 snap-start rounded-xl border px-4 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", item.id === child.id ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-border bg-background text-foreground hover:bg-muted")} key={item.id} onClick={() => setSelectedId(item.id)} role="tab" type="button">{item.name}<span className={cn("ml-2 text-xs font-normal", item.id === child.id ? "text-primary-foreground/75" : "text-muted-foreground")}>{item.stage}</span></button>)}
+          {children.map((item) => <button aria-selected={item.id === child.id} className={cn("min-h-12 shrink-0 snap-start rounded-xl border px-4 text-left text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", item.id === child.id ? "border-primary bg-primary text-primary-foreground shadow-glow" : "border-border bg-background text-foreground hover:bg-muted")} key={item.id} onClick={() => setSelectedId(item.id)} role="tab" type="button">{item.name}<span className={cn("ml-2 text-xs", item.id === child.id ? "font-semibold text-primary-foreground" : "font-normal text-muted-foreground")}>{item.stage}</span></button>)}
         </div>
       </div>
 
@@ -53,7 +53,7 @@ export function FamilyCommandCenter({ children }: { children: FamilyChild[] }) {
           <ol className="mt-4 grid gap-1">
             {child.timeline.length ? child.timeline.slice(0, 5).map((event, index) => { const Icon = event.kind === "badge" ? Award : event.kind === "progress" ? TrendingUp : CalendarDays; return <li className="relative grid grid-cols-[40px_1fr] gap-3 pb-4" key={`${event.kind}-${event.date}-${index}`}><div className="relative z-10 grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></div>{index < child.timeline.length - 1 ? <span className="absolute bottom-0 left-5 top-10 w-px bg-border" /> : null}<div className="pt-0.5"><div className="flex flex-wrap items-start justify-between gap-2"><p className="font-bold text-foreground">{event.title}</p><time className="text-xs text-muted-foreground">{formatDate(event.date)}</time></div><p className="mt-1 text-sm leading-6 text-muted-foreground">{event.detail}</p></div></li>; }) : <li className="rounded-xl border border-dashed border-border p-5 text-sm text-muted-foreground"><Waves className="mb-3 size-5 text-primary" />De tijdlijn vult zich na de eerste les of beoordeling.</li>}
           </ol>
-          <div className="mt-2 flex items-center gap-2 rounded-xl bg-success/10 px-3 py-2 text-sm font-semibold text-success"><CheckCircle2 className="size-4" />Alle updates staan veilig per kind gescheiden.</div>
+          <div className="mt-2 flex items-center gap-2 rounded-xl bg-success/10 px-3 py-2 text-sm font-semibold text-foreground"><CheckCircle2 className="size-4 text-success" />Alle updates staan veilig per kind gescheiden.</div>
         </div>
       </div>
     </section>
