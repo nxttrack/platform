@@ -80,7 +80,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await assessment.getByLabel("Score").selectOption("4");
-    await assessment.getByLabel("Zichtbaarheid").selectOption("guardian");
+    await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
     await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
     await assessment.getByRole("button", { name: "Score opslaan" }).click();
     await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
