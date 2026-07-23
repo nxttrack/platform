@@ -33,6 +33,8 @@ export type SubscriptionRow = {
   billing_interval: string;
   collection_method: string;
   provider_config_id: string | null;
+  billing_provider_customer_id: string | null;
+  billing_mandate_id: string | null;
   billing_anchor_day: number | null;
   current_period_start: string | null;
   current_period_end: string | null;
@@ -64,6 +66,7 @@ export type BillingEventRow = {
   id: string;
   subscription_id: string | null;
   manual_payment_id: string | null;
+  payment_session_id: string | null;
   participant_id: string | null;
   guardian_user_id: string | null;
   type: string;
@@ -94,6 +97,13 @@ export type PaymentSessionRow = {
   guardian_user_id: string | null;
   provider: string;
   provider_session_id: string | null;
+  sequence_type: string;
+  billing_provider_customer_id: string | null;
+  billing_mandate_id: string | null;
+  collection_attempt_id: string | null;
+  consent_terms_version: string | null;
+  consent_initiated_at: string | null;
+  consent_initiated_by_user_id: string | null;
   idempotency_key: string | null;
   checkout_url: string | null;
   amount_cents: number;
@@ -104,6 +114,65 @@ export type PaymentSessionRow = {
   return_url: string | null;
   webhook_received_at: string | null;
   expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillingProviderCustomerRow = {
+  id: string;
+  provider_config_id: string;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_customer_id: string;
+  status: string;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillingMandateRow = {
+  id: string;
+  provider_config_id: string;
+  provider_customer_id: string;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_mandate_id: string;
+  method: string;
+  status: string;
+  signature_date: string | null;
+  mandate_reference: string | null;
+  account_holder: string | null;
+  account_last4: string | null;
+  consent_source: string;
+  consent_terms_version: string | null;
+  consent_recorded_at: string | null;
+  revoked_at: string | null;
+  last_synced_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BillingCollectionAttemptRow = {
+  id: string;
+  provider_config_id: string;
+  subscription_id: string;
+  manual_payment_id: string;
+  billing_provider_customer_id: string;
+  billing_mandate_id: string;
+  guardian_user_id: string | null;
+  sequence_type: string;
+  attempt_number: number;
+  status: string;
+  scheduled_for: string;
+  prenotified_at: string | null;
+  prenotification_id: string | null;
+  prenotification_delivery_status: string | null;
+  initiated_at: string | null;
+  completed_at: string | null;
+  provider_payment_id: string | null;
+  idempotency_key: string;
+  failure_code: string | null;
+  failure_message: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -175,6 +244,9 @@ export type BillingExportBatchRow = {
 
 export type BillingAdminData = TenantCoreData & {
   providerConfigs: BillingProviderConfigRow[];
+  providerCustomers: BillingProviderCustomerRow[];
+  mandates: BillingMandateRow[];
+  collectionAttempts: BillingCollectionAttemptRow[];
   paymentPlans: PaymentPlanRow[];
   subscriptions: SubscriptionRow[];
   manualPayments: ManualPaymentRow[];
@@ -189,13 +261,29 @@ export type BillingAdminData = TenantCoreData & {
 export async function getBillingAdminData(): Promise<BillingAdminData> {
   const core = await getTenantCoreData();
   const admin = createAdminClient();
-  const [providerConfigsResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, exportBatchesResult] = await Promise.all([
+  const [providerConfigsResult, providerCustomersResult, mandatesResult, collectionAttemptsResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, exportBatchesResult] = await Promise.all([
     admin
       .from("billing_provider_configs")
       .select("id, provider, mode, status, display_name, secret_reference, webhook_secret_reference, public_config, created_at, updated_at")
       .eq("tenant_id", core.tenant.id)
       .order("provider")
       .order("mode"),
+    admin
+      .from("billing_provider_customers")
+      .select("id, provider_config_id, guardian_user_id, provider, provider_customer_id, status, last_synced_at, created_at, updated_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("billing_mandates")
+      .select("id, provider_config_id, provider_customer_id, guardian_user_id, provider, provider_mandate_id, method, status, signature_date, mandate_reference, account_holder, account_last4, consent_source, consent_terms_version, consent_recorded_at, revoked_at, last_synced_at, created_at, updated_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("billing_collection_attempts")
+      .select("id, provider_config_id, subscription_id, manual_payment_id, billing_provider_customer_id, billing_mandate_id, guardian_user_id, sequence_type, attempt_number, status, scheduled_for, prenotified_at, prenotification_id, prenotification_delivery_status, initiated_at, completed_at, provider_payment_id, idempotency_key, failure_code, failure_message, created_at, updated_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("created_at", { ascending: false })
+      .limit(80),
     admin
       .from("payment_plans")
       .select("id, program_id, code, name, description, amount_cents, currency, billing_interval, billing_day, payment_terms_days, status, sort_order")
@@ -204,7 +292,7 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
       .order("name"),
     admin
       .from("subscriptions")
-      .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, collection_method, provider_config_id, billing_anchor_day, current_period_start, current_period_end, lifecycle_status_reason, paused_at, cancelled_at, completed_at, notes")
+      .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, collection_method, provider_config_id, billing_provider_customer_id, billing_mandate_id, billing_anchor_day, current_period_start, current_period_end, lifecycle_status_reason, paused_at, cancelled_at, completed_at, notes")
       .eq("tenant_id", core.tenant.id)
       .order("starts_on", { ascending: false }),
     admin
@@ -214,13 +302,13 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
       .order("due_on", { ascending: false }),
     admin
       .from("billing_events")
-      .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, type, status, occurred_at, message")
+      .select("id, subscription_id, manual_payment_id, payment_session_id, participant_id, guardian_user_id, type, status, occurred_at, message")
       .eq("tenant_id", core.tenant.id)
       .order("occurred_at", { ascending: false })
       .limit(80),
     admin
       .from("payment_sessions")
-      .select("id, provider_config_id, subscription_id, manual_payment_id, participant_id, guardian_user_id, provider, provider_session_id, idempotency_key, checkout_url, amount_cents, currency, status, failure_code, failure_message, return_url, webhook_received_at, expires_at, created_at, updated_at")
+      .select("id, provider_config_id, subscription_id, manual_payment_id, participant_id, guardian_user_id, provider, provider_session_id, sequence_type, billing_provider_customer_id, billing_mandate_id, collection_attempt_id, consent_terms_version, consent_initiated_at, consent_initiated_by_user_id, idempotency_key, checkout_url, amount_cents, currency, status, failure_code, failure_message, return_url, webhook_received_at, expires_at, created_at, updated_at")
       .eq("tenant_id", core.tenant.id)
       .order("created_at", { ascending: false })
       .limit(80),
@@ -244,6 +332,9 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
   ]);
 
   assertBillingResult(providerConfigsResult.error, "billing provider configs");
+  assertBillingResult(providerCustomersResult.error, "billing provider customers");
+  assertBillingResult(mandatesResult.error, "billing mandates");
+  assertBillingResult(collectionAttemptsResult.error, "billing collection attempts");
   assertBillingResult(plansResult.error, "payment plans");
   assertBillingResult(subscriptionsResult.error, "subscriptions");
   assertBillingResult(paymentsResult.error, "manual payments");
@@ -270,6 +361,9 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
   return {
     ...core,
     providerConfigs: (providerConfigsResult.data ?? []) as BillingProviderConfigRow[],
+    providerCustomers: (providerCustomersResult.data ?? []) as BillingProviderCustomerRow[],
+    mandates: (mandatesResult.data ?? []) as BillingMandateRow[],
+    collectionAttempts: (collectionAttemptsResult.data ?? []) as BillingCollectionAttemptRow[],
     paymentPlans: (plansResult.data ?? []) as PaymentPlanRow[],
     subscriptions: (subscriptionsResult.data ?? []) as SubscriptionRow[],
     manualPayments: (paymentsResult.data ?? []) as ManualPaymentRow[],
