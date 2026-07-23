@@ -1,8 +1,9 @@
 # Phase 25 — Premium productization sprint
 
 Datum: 23 juli 2026  
-Status: code complete, stagingmigratie en browservalidatie volgen via deploy  
-Basis-SHA: `34d80da7ec6f190e7265eae04c1cdc93d1045bd1`
+Status: code, migraties en volledige stagingvalidatie compleet
+Gevalideerde staging-SHA: `d0fa414c8deaeea4d74f417e4fb8f1df3b3c707e`
+Stagingrun: `29976973471`
 
 ## Geleverde productlaag
 
@@ -49,6 +50,16 @@ Verplicht vóór productie:
 - keyboard-only controle van command palette, DataTable, detailsheet, wizard en planboard
 - Mollie testbetaling plus herhaalde webhook om idempotency te bewijzen
 - RLS role smoke na de nieuwe migraties
+
+### Uitgevoerd op staging
+
+- De gewone CI-run `29976969702` is volledig groen voor de gevalideerde SHA.
+- Deploy, hardening, build, database-migraties, health en runtime smoke zijn groen.
+- De operationele Phase 16-flow en alle Sprint 4-mutaties zijn groen voor placement, instructor, parent en tenant-admin.
+- Role- en tenantisolatie, alle vier accessibility/performance-budgetcases en de Phase 15 staging/security-truth-check zijn groen.
+- Alle 56 Priority A-screenshots zijn SHA-gebonden gegenereerd en de compacte logfallback is bewaard.
+- GitHub heeft de screenshot- en release-evidence artifacts niet duurzaam geregistreerd omdat de Actions artifact-storagequota nog vol is. Er zijn daarom nul downloadbare artifacts op run `29976973471`; dit blijft een productie-go/no-go-punt en wordt niet opgelost door bestaand bewijs zonder expliciete toestemming te verwijderen.
+- Een echte Mollie-testbetaling en herhaalde webhook zijn niet uitgevoerd zonder een expliciet geconfigureerde testkey en blijven verplicht voordat billing voor een tenant wordt geactiveerd.
 
 ## Volgende productbeslissingen
 
