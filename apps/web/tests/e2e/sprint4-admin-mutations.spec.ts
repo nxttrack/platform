@@ -105,7 +105,8 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await form.getByRole("button", { name: "Les opslaan" }).click();
     await expect(page.getByText("Opgeslagen: 1.")).toBeVisible();
-    await expect(page.locator("article").filter({ hasText: groupName })).toHaveCount(1);
+    const dayPlan = page.locator("section").filter({ has: page.getByRole("heading", { name: "Dag- en weekplan", exact: true }) }).first();
+    await expect(dayPlan.locator("article").filter({ hasText: groupName })).toHaveCount(1);
 
     await page.goto("/admin/betalingen", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Plan opslaan");
