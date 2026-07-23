@@ -1,8 +1,8 @@
 # NXTTRACK Delivery Sprints
 
-Status: Sprint 5 preflight is active. Sprints 1-4 are accepted; staging communications, encrypted Storage
-restore and one-time owner recovery are proven. Production promotion still requires a final exact-SHA
-staging/foundation/migration evidence set, Supabase Pro backup confirmation and explicit production authorization.
+Status: Sprints 1-5 are complete. Production runs the approved SHA
+`08624b16d07bc1536ec4ef3739ff54c48ef7a39e`; health, database, owner access, mail, encrypted Storage backup
+and operational alerting are proven. Sprint 6 is active on staging and does not imply live Mollie activation.
 
 ## Working Agreement
 
@@ -132,9 +132,20 @@ Definition of done:
 - Rollback is executable within the agreed recovery objective.
 - Product, infrastructure and support owners sign off.
 
+Completed evidence on 23 July 2026:
+
+- production install run `30018407060` and configuration-normalization run `30018623241`;
+- post-deploy foundation run `30018907642` and unchanged migration rehearsal `30018909995`;
+- encrypted post-migration Storage backup `30018775132`;
+- owner invitation, first login and password change confirmed by Danny Goldenbelt;
+- database-backed SendGrid delivery and Slack alert receipt confirmed;
+- production monitoring enabled and post-activation probe `30019582728` passed.
+
 ## Sprint 6 - Billing Activation
 
 Goal: activate online payment only if commercial scope requires it.
+
+Detailed execution: [Sprint 6 - Billing Activation](SPRINT_06_BILLING_ACTIVATION.md).
 
 Scope:
 
@@ -148,6 +159,15 @@ Definition of done:
 - Provider sandbox and controlled live transaction evidence exists.
 - Duplicate webhooks cannot duplicate business effects.
 - Manual billing remains a supported fallback.
+
+Current increment:
+
+- preserve one idempotency key across duplicate checkout submissions and safely resume interrupted creation;
+- enforce that test provider configs use `test_` credentials and live configs use `live_` credentials;
+- bound and validate classic Mollie webhook input before retrieving provider state;
+- expose only validated, unexpired Mollie checkout links in the parent portal;
+- add contract tests for status, amount, metadata, mode and duplicate-submit behavior;
+- run a real test payment and repeated-webhook rehearsal on staging before considering activation.
 
 ## Sprint 7 - Intelligence, Insights And Automation
 

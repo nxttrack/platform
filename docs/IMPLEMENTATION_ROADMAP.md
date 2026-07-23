@@ -1,8 +1,10 @@
 # NXTTRACK Implementation Roadmap
 
-Last updated: 2026-07-21
+Last updated: 2026-07-23
 
-Status: historical dependency-based phase roadmap. Phase 0 through Phase 20 implementation is present and live staging evidence now covers migrations, operational seed state, role isolation, browser checks, visual capture and rollback. Remaining execution is managed through [Delivery Sprints](DELIVERY_SPRINTS.md); production remains unapproved.
+Status: historical dependency-based phase roadmap. Phase 0 through Phase 26 implementation is present,
+Sprints 1-5 are complete and the approved SHA is live in production. Remaining execution is managed through
+[Delivery Sprints](DELIVERY_SPRINTS.md); Sprint 6 billing activation is now staging-first.
 
 ## Roadmap Principles
 
@@ -15,17 +17,18 @@ Status: historical dependency-based phase roadmap. Phase 0 through Phase 20 impl
 - Manual payments come before Mollie/iDEAL automation.
 - SendGrid SMTP comes before advanced notification channels.
 
-## Current Execution Focus - Sprint 1 With Sprint 2 Preflight
+## Current Execution Focus - Sprint 6 Billing Activation
 
-The original build phases remain the architecture and dependency history. Active acceptance remains [Sprint 1 - Release Candidate Evidence](SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md). The non-deploying [Sprint 2 - Production Foundation](SPRINT_02_PRODUCTION_FOUNDATION.md) preflight has started in parallel so environment defects can be removed without inferring either open Sprint 1 approval.
+The original build phases remain the architecture and dependency history. Production launch is complete for
+the exact approved SHA. Optional online billing now moves through a separate staging-first safety increment.
 
 Immediate order:
 
-1. Record product-owner acceptance or required fixes for the 56 SHA-bound visual captures.
-2. Record provider-side Supabase backup, Auth/Storage and PITR policy.
-3. Set the two remaining staging confirmations only from those completed records.
-4. Rerun the strict staging gate to `0 failure(s), 0 warning(s)`.
-5. Name the accepted release-candidate SHA and complete the already-started Sprint 2 production foundation audit.
+1. Make checkout creation resistant to double submits and interrupted retries.
+2. Enforce test/live credential separation and strict provider webhook contracts.
+3. Add parent checkout affordance and automated contract tests.
+4. Prove a real Mollie test payment plus repeated webhook on staging.
+5. Add failure, expiry, refund/dispute and reconciliation evidence before any live activation decision.
 
 ## Phase 0 - Repository And Infrastructure Foundation
 

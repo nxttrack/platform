@@ -1,6 +1,7 @@
 # Phase 20 - Billing Automation Boundary
 
-Status: implemented in code and ready for staging validation.
+Status: historical foundation, superseded by the active
+[Sprint 6 billing activation](SPRINT_06_BILLING_ACTIVATION.md) and Phase 25/27 hardening.
 
 Phase 20 prepares online payment automation without turning billing into the source of truth for learning progress, stage movement or lesson placement.
 
@@ -38,9 +39,9 @@ Phase 20 prepares online payment automation without turning billing into the sou
   - provider labels
   - webhook normalization
 
-## Boundary Rules
+## Original Boundary Rules
 
-- No Mollie/iDEAL API calls are made in this phase.
+- This original phase made no Mollie/iDEAL API calls; Phase 25 later added the Mollie adapter.
 - Provider secrets are not stored in database rows.
 - Provider config rows only store `secret_reference` and `webhook_secret_reference`.
 - Manual billing remains intact and remains the MVP fallback path.

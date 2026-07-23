@@ -64,6 +64,13 @@ Verplicht vóór productie:
   artifactquotablokkade is opgeheven. Er is geen historisch releasebewijs verwijderd.
 - Een echte Mollie-testbetaling en herhaalde webhook zijn niet uitgevoerd zonder een expliciet geconfigureerde testkey en blijven verplicht voordat billing voor een tenant wordt geactiveerd.
 
+### Vervolg in Sprint 6 / Phase 27
+
+Checkout-idempotency, één open providerpoging per betaling, test/live-secretcontrole, begrensde klassieke
+webhookinput, exacte providerverificatie, veilige ouder-checkoutlinks en contracttests zijn toegevoegd in
+[Sprint 6](SPRINT_06_BILLING_ACTIVATION.md). De echte Mollie-testbetaling en herhaalde webhook blijven de
+eerstvolgende externe staging-gate.
+
 ## Volgende productbeslissingen
 
 - Import mappingcontracten per ondersteund bronsysteem en welke records na apply automatisch mogen worden aangemaakt.

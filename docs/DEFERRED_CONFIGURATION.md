@@ -1,6 +1,6 @@
 # Deferred Configuration Register
 
-Status: staging configuration activated and proven on 23 July 2026. Production activation remains a launch-window control.
+Status: staging and production configuration activated and proven on 23 July 2026.
 
 ## Monitoring And Communications
 
@@ -14,7 +14,7 @@ passed:
 | `MONITOR_WINDOW_MINUTES` | `15` |
 | `MAIL_FAILURE_THRESHOLD` | `0` |
 | `MAIL_SKIPPED_THRESHOLD` | `0` |
-| `MONITORING_ENABLED` | `true` on staging |
+| `MONITORING_ENABLED` | `true` on staging and production |
 
 Completed staging evidence:
 
@@ -27,7 +27,8 @@ Completed staging evidence:
 - synthetic alert received in `nxttrack-alerts`;
 - scheduled monitoring enabled on staging.
 
-Production must repeat the activation order during the approved launch window. Do not copy the staging webhook,
-provider secret or recipient automatically; use production-scoped settings and record the activation time.
+Production repeated the activation order with production-scoped settings. Slack drill `30018850003` was
+received, database-backed SendGrid delivery was confirmed, monitoring was enabled at approximately
+15:14 UTC and post-activation probe `30019582728` passed.
 
 Canonical activation procedures are [Communication Delivery Runbook](COMMUNICATION_DELIVERY_RUNBOOK.md) and [Operations And Incident Runbook](OPERATIONS_INCIDENT_RUNBOOK.md).

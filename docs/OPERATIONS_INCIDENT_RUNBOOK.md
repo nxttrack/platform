@@ -1,8 +1,8 @@
 # Operations And Incident Runbook
 
-Status: active on staging and prepared for controlled production activation. Danny Goldenbelt is the named
-incident/support owner, log retention is 30 days and each environment's 15-minute schedule is enabled only
-after its own probe and Slack drill have succeeded.
+Status: active on staging and production. Danny Goldenbelt is the named incident/support owner, log retention
+is 30 days and each environment's 15-minute schedule was enabled only after its own probe and Slack drill
+succeeded.
 
 ## Configuration Contract
 
@@ -33,6 +33,14 @@ Staging activation evidence on 23 July 2026:
   foundation checks.
 - [Post-activation probe 30009139430](https://github.com/nxttrack/platform/actions/runs/30009139430) passed all
   16 checks without sending another alert.
+
+Production activation evidence on 23 July 2026:
+
+- [Slack drill 30018850003](https://github.com/nxttrack/platform/actions/runs/30018850003) was accepted and
+  received in `nxttrack-alerts` by Danny Goldenbelt.
+- `MONITORING_ENABLED=true` was set at approximately 15:14 UTC.
+- [Post-activation probe 30019582728](https://github.com/nxttrack/platform/actions/runs/30019582728) passed
+  against production SHA `08624b16d07bc1536ec4ef3739ff54c48ef7a39e`.
 
 ## Activation And Drill
 

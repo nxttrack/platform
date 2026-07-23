@@ -1,8 +1,8 @@
 # Phase 22 - Production Readiness And Commercial Launch
 
-Status: staging release candidate approved and technically healthy. Exact-SHA foundation and migration-rehearsal
-evidence are available for the accepted application candidate; production remains no-go until Pro backup
-controls, database-backed production mail activation, controlled delivery and final go/no-go are complete.
+Status: completed on 23 July 2026. The approved exact SHA
+`08624b16d07bc1536ec4ef3739ff54c48ef7a39e` is live in production with database health, owner access,
+database-backed mail delivery, encrypted Storage backup and monitoring proven.
 
 Canonical production procedures:
 
@@ -48,15 +48,18 @@ Dispatch it from `main` with confirmation `REHEARSE_RESTORE`.
 
 This proves that an application-level logical export is readable and restorable. It deliberately does not claim that Supabase-managed Auth, Storage, provider retention or point-in-time recovery is configured. Those controls remain a separate provider-side check before `SUPABASE_BACKUPS_CONFIRMED=true` may be set.
 
-## Remaining Manual Gates
+## Closed Manual Gates
 
-- Upgrade production Supabase to Pro, record provider backup retention and establish a separate backup for Storage object bytes.
-- Enable the database-backed production SendGrid provider after first install and record a controlled successful
-  delivery. The GitHub first-release/bootstrap secret already passes its non-sending audit.
-- Re-run foundation, migration rehearsal and staging evidence only when the promoted SHA changes.
-- Record production monitoring destinations, incident/support ownership and commercial launch timing.
-- Complete and sign the generated exact-SHA go/no-go form.
+- Production Supabase is Pro and exposes daily physical restore points.
+- Encrypted object backup covers `tenant-documents` and `diploma-vault`; the strict post-migration export
+  records both buckets and zero objects.
+- The database-backed production SendGrid provider delivered a controlled message.
+- The bootstrapped owner received the message, logged in and changed the temporary password.
+- The production Slack drill was received and the post-activation monitor probe passed.
+- The exact-SHA go/no-go record names the release, recovery point, rollback target and human confirmations.
 
-## Production Boundary
+## Production Boundary After Launch
 
-No production deployment, DNS change, data copy or launch approval is part of this phase pass. A green staging gate is necessary evidence, not automatic authorization to promote to production.
+This completion applies only to the named production SHA. A green staging gate for later work is necessary
+evidence, not automatic authorization to promote another SHA. Sprint 6 billing work remains staging-only
+until sandbox payment, duplicate webhook and reconciliation evidence is accepted.

@@ -2,7 +2,10 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: Phase 22 launch-readiness foundation on top of the completed repository, canon, staging and operational-flow passes. Live staging now proves migrations, role isolation, browser workflows, SHA-bound visual capture and runtime rollback. Product-owner visual approval, provider-side Supabase backup confirmation and production authorization remain explicit release gates. Production is not approved.
+Current working mode: controlled production launch completed for
+`08624b16d07bc1536ec4ef3739ff54c48ef7a39e`. Production health, migrations, owner access,
+database-backed SendGrid delivery, encrypted Storage backup and operational alerting are proven. Sprint 6
+now hardens and validates optional Mollie billing on staging before any tenant or live-provider activation.
 
 ## Source of truth
 
@@ -11,7 +14,7 @@ Current working mode: Phase 22 launch-readiness foundation on top of the complet
 - Lovable UI reference repository: `nxttrack/swim-school-pro`
 - Legacy/reference workspace: `nxtdev` or earlier local prototypes, reference only
 - Remote `staging` and `production` branches: historical deployment/reference lines, not implementation sources
-- First deployment target: staging environment
+- Current product-development target: staging first; production only receives separately approved releases
 
 Run `pnpm run release:truth` to verify the repository and release-source invariants and to report local branch divergence.
 
@@ -41,7 +44,10 @@ The repository has moved beyond the original documentation-only phase:
 - Phase 19: parent/instructor communication, tasks, documents and tablet-oriented lesson depth are implemented, staging-visible and covered by Sprint 4 mutation and quality checks.
 - Phase 20: billing-provider configuration, payment-session/event, invoice/export and subscription-lifecycle boundaries are implemented without activating a live payment provider.
 
-The Phase 16 runner proves seeded integration state and authenticated dashboard visibility. Sprint 4 now adds browser-driven mutation, negative-isolation, accessibility, performance and P0/P1 security proof on top. Automatic payment providers, Smart Flow/AI and production promotion follow the dependencies in the delivery sprint plan.
+The Phase 16 runner proves seeded integration state and authenticated dashboard visibility. Sprint 4 adds
+browser-driven mutation, negative-isolation, accessibility, performance and P0/P1 security proof on top.
+Production promotion is complete for the named SHA. Automatic payment-provider activation remains isolated
+behind Sprint 6 sandbox, duplicate-submit, webhook and reconciliation evidence.
 
 ## Canon and planning docs
 
@@ -49,7 +55,8 @@ The Phase 16 runner proves seeded integration state and authenticated dashboard 
 - [Technical Architecture](docs/TECHNICAL_ARCHITECTURE.md)
 - [Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)
 - [Delivery Sprints](docs/DELIVERY_SPRINTS.md)
-- [Active Sprint 1](docs/SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md)
+- [Active Sprint 6 Billing Activation](docs/SPRINT_06_BILLING_ACTIVATION.md)
+- [Completed Sprint 1](docs/SPRINT_01_RELEASE_CANDIDATE_EVIDENCE.md)
 - [Sprint 2 Production Foundation](docs/SPRINT_02_PRODUCTION_FOUNDATION.md)
 - [Sprint 3 Communications And Observability](docs/SPRINT_03_COMMUNICATIONS_OBSERVABILITY.md)
 - [Operations And Incident Runbook](docs/OPERATIONS_INCIDENT_RUNBOOK.md)
@@ -92,6 +99,10 @@ The Phase 16 runner proves seeded integration state and authenticated dashboard 
 
 ## Deployment baseline
 
-`.github/workflows/deploy.yml` is manually dispatched from `main` and targets the selected protected GitHub Environment. Staging runs the strict validation flow. Production additionally requires explicit confirmation and the exact full commit SHA already validated on staging.
+`.github/workflows/deploy.yml` is manually dispatched from `main` and targets the selected protected GitHub
+Environment. Staging runs the strict validation flow. Production additionally requires explicit confirmation
+and the exact full commit SHA already validated on staging.
 
-The staging environment is the only first target. Historical `staging` and `production` branch pushes no longer constitute a release contract. See [Phase 0](docs/PHASE_0_REPO_INFRA.md) for the canonical promotion and recovery policy.
+Every new product increment still starts on staging. Historical `staging` and `production` branch pushes do
+not constitute a release contract. See [Phase 0](docs/PHASE_0_REPO_INFRA.md) for the canonical promotion and
+recovery policy.
