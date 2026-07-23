@@ -61,6 +61,9 @@
     "sprint6:prepare-incasso": "node scripts/staging/prepare-mollie-incasso-sandbox.mjs",
     "sprint6:test-incasso": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-incasso-sandbox.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-incasso": "node scripts/staging/verify-mollie-incasso-sandbox.mjs",
+    "sprint6:prepare-mandate": "node scripts/staging/prepare-mollie-mandate-onboarding.mjs",
+    "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
+    "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
     "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
