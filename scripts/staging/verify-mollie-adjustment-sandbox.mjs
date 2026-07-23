@@ -112,11 +112,12 @@ async function createAndVerifyRefund(sessionRow) {
   });
   if (first.id !== replay.id) throw new Error("Mollie refund idempotency replay created a second provider refund.");
 
-  const providerRefund = await pollProviderRefund(first.id, "refunded");
+  const providerRefund = await getAcceptedProviderRefund(first.id);
   await repeatWebhook();
-  const result = await pollLocalRefund(first.id, amountCents);
+  const result = await pollLocalRefund(first.id, amountCents, providerRefund.status);
   return {
     amountCents,
+    completionDeferred: providerRefund.status !== "refunded",
     currency: sessionRow.currency,
     idempotencyReplayId: replay.id,
     providerRefundId: first.id,
@@ -195,20 +196,18 @@ async function verifyChargeback(sessionRow) {
   throw new Error("Mollie chargeback did not produce the expected exactly-once local state.");
 }
 
-async function pollProviderRefund(refundId, expectedStatus) {
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    const refund = await mollieRequest(
-      `/payments/${encodeURIComponent(state.providerPaymentId)}/refunds/${encodeURIComponent(refundId)}`,
-      { method: "GET" }
-    );
-    if (refund.status === expectedStatus) return refund;
-    if (new Set(["failed", "canceled"]).has(refund.status)) throw new Error(`Mollie refund reached ${refund.status}.`);
-    await wait(1_000);
+async function getAcceptedProviderRefund(refundId) {
+  const refund = await mollieRequest(
+    `/payments/${encodeURIComponent(state.providerPaymentId)}/refunds/${encodeURIComponent(refundId)}`,
+    { method: "GET" }
+  );
+  if (!new Set(["queued", "pending", "processing", "refunded"]).has(refund.status)) {
+    throw new Error(`Mollie refund reached unexpected status ${refund.status}.`);
   }
-  throw new Error(`Mollie refund did not reach ${expectedStatus}.`);
+  return refund;
 }
 
-async function pollLocalRefund(refundId, expectedAmountCents) {
+async function pollLocalRefund(refundId, expectedAmountCents, expectedStatus) {
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const [refund, payment, providerEvents, billingEvents] = await Promise.all([
       admin
@@ -226,7 +225,7 @@ async function pollLocalRefund(refundId, expectedAmountCents) {
         .from("payment_provider_events")
         .select("id", { count: "exact", head: true })
         .eq("tenant_id", state.tenant.id)
-        .eq("provider_event_id", `refund:${refundId}:refunded`),
+        .eq("provider_event_id", `refund:${refundId}:${expectedStatus}`),
       admin
         .from("billing_events")
         .select("id", { count: "exact", head: true })
@@ -238,18 +237,20 @@ async function pollLocalRefund(refundId, expectedAmountCents) {
       if (query.error) throw query.error;
     }
     const local = refund.data?.[0];
+    const completed = expectedStatus === "refunded";
     if (
       refund.count === 1 &&
-      local?.status === "refunded" &&
+      local?.status === expectedStatus &&
       local.amount_cents === expectedAmountCents &&
       payment.data.status === "paid" &&
-      payment.data.refunded_cents === expectedAmountCents &&
+      payment.data.refunded_cents === (completed ? expectedAmountCents : 0) &&
       providerEvents.count === 1 &&
-      billingEvents.count === 1
+      billingEvents.count === (completed ? 1 : 0)
     ) {
       return {
         billingEventCount: billingEvents.count,
         localRefundCount: refund.count,
+        localRefundStatus: local.status,
         manualPaymentStatus: payment.data.status,
         providerEventCount: providerEvents.count,
         refundedCents: payment.data.refunded_cents
@@ -257,7 +258,7 @@ async function pollLocalRefund(refundId, expectedAmountCents) {
     }
     await wait(1_000);
   }
-  throw new Error("Mollie refund did not produce the expected exactly-once local state.");
+  throw new Error(`Mollie refund did not produce the expected exactly-once ${expectedStatus} local state.`);
 }
 
 async function repeatWebhook() {
