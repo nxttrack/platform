@@ -26,6 +26,7 @@
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
     "release:assert-source": "node scripts/release/assert-release-source.mjs",
     "release:audit-production-foundation": "node scripts/release/audit-production-foundation.mjs",
+    "release:audit-production-mail": "node scripts/release/audit-production-mail-config.mjs",
     "release:create-go-no-go": "node scripts/release/create-go-no-go-form.mjs",
     "release:write-artifact-probe": "node scripts/release/write-artifact-storage-probe.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
