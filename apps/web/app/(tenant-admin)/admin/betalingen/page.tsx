@@ -106,6 +106,24 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               <input className="h-4 w-4 accent-primary" name="recurringEnabled" type="checkbox" />
               Terugkerende SEPA-incasso bewust inschakelen
             </label>
+            <div className="grid gap-3 rounded-xl border border-amber-300/70 bg-amber-50/60 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+              <p className="text-sm font-semibold text-foreground">Automatisering met dubbele veiligheidsgrendel</p>
+              <p className="text-xs text-muted-foreground">
+                Deze opties werken alleen wanneer incasso actief is én de beveiligde scheduler op de omgeving is ingericht.
+              </p>
+              <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-foreground">
+                <input className="h-4 w-4 accent-primary" name="automaticCollectionEnabled" type="checkbox" />
+                Aangekondigde incasso's automatisch uitvoeren
+              </label>
+              <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-foreground">
+                <input className="h-4 w-4 accent-primary" name="automaticRetriesEnabled" type="checkbox" />
+                Mislukte incasso's automatisch opnieuw aankondigen
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Maximaal aantal pogingen (1–5)" name="maxCollectionAttempts" type="number" defaultValue={2} />
+                <Field label="Wachttijd retry (dagen, 1–30)" name="retryDelayDays" type="number" defaultValue={3} />
+              </div>
+            </div>
             <TextAreaField label="Checkout omschrijving" name="checkoutDescription" />
             <SubmitButton>Provider opslaan</SubmitButton>
           </form>
@@ -123,9 +141,17 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       {paymentProviderLabel(provider.provider)} - {provider.mode} - secret: {provider.secret_reference ? "referentie gezet" : "geen referentie"}
                     </p>
                     {provider.provider === "mollie" ? (
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Incasso: {provider.public_config.recurring_enabled === true ? "ingeschakeld" : "uit"} · aankondiging {String(provider.public_config.direct_debit_notice_days ?? 7)} dagen
-                      </p>
+                      <>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Incasso: {provider.public_config.recurring_enabled === true ? "ingeschakeld" : "uit"} · aankondiging {String(provider.public_config.direct_debit_notice_days ?? 7)} dagen
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Automatisch uitvoeren: {provider.public_config.automatic_collection_enabled === true ? "aan" : "uit"} · retries:{" "}
+                          {provider.public_config.automatic_retries_enabled === true
+                            ? `aan, max. ${String(provider.public_config.max_collection_attempts ?? 2)}`
+                            : "uit"}
+                        </p>
+                      </>
                     ) : null}
                   </div>
                   <StatusPill tone={provider.status === "active" ? "success" : provider.status === "draft" ? "warning" : "neutral"}>{provider.status}</StatusPill>

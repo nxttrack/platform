@@ -38,6 +38,10 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
   const returnUrl = readOptional(formData, "returnUrl");
   const directDebitNoticeDays = readInteger(formData, "directDebitNoticeDays") ?? 7;
   const recurringEnabled = formData.get("recurringEnabled") === "on";
+  const automaticCollectionEnabled = formData.get("automaticCollectionEnabled") === "on";
+  const automaticRetriesEnabled = formData.get("automaticRetriesEnabled") === "on";
+  const maxCollectionAttempts = readInteger(formData, "maxCollectionAttempts") ?? 2;
+  const retryDelayDays = readInteger(formData, "retryDelayDays") ?? 3;
 
   if (status === "active" && provider !== "manual" && provider !== "mollie") {
     redirect("/admin/betalingen?error=provider-unsupported");
@@ -46,6 +50,12 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
   if (provider === "mollie") {
     if (directDebitNoticeDays < 2 || directDebitNoticeDays > 30) {
       redirect("/admin/betalingen?error=provider-notice-days");
+    }
+    if (maxCollectionAttempts < 1 || maxCollectionAttempts > 5 || retryDelayDays < 1 || retryDelayDays > 30) {
+      redirect("/admin/betalingen?error=provider-retry-policy");
+    }
+    if ((automaticCollectionEnabled || automaticRetriesEnabled) && !recurringEnabled) {
+      redirect("/admin/betalingen?error=provider-automation-requires-incasso");
     }
     if (secretReference && !isMollieSecretReference(secretReference)) {
       redirect("/admin/betalingen?error=provider-secret-reference");
@@ -75,7 +85,11 @@ export async function saveBillingProviderConfigAction(formData: FormData) {
       checkout_description: readOptional(formData, "checkoutDescription"),
       return_url: returnUrl,
       direct_debit_notice_days: directDebitNoticeDays,
-      recurring_enabled: provider === "mollie" && recurringEnabled
+      recurring_enabled: provider === "mollie" && recurringEnabled,
+      automatic_collection_enabled: provider === "mollie" && automaticCollectionEnabled,
+      automatic_retries_enabled: provider === "mollie" && automaticRetriesEnabled,
+      max_collection_attempts: maxCollectionAttempts,
+      retry_delay_days: retryDelayDays
     }
   };
   const { error } = await admin.from("billing_provider_configs").upsert(payload, { onConflict: "tenant_id,provider,mode" });
