@@ -91,32 +91,12 @@ const payment = await one(
 
 const paymentSessionId = randomUUID();
 const idempotencyKey = randomUUID();
-await one(
-  admin
-    .from("payment_sessions")
-    .insert({
-      id: paymentSessionId,
-      tenant_id: tenant.id,
-      provider_config_id: providerConfig.id,
-      subscription_id: subscription.id,
-      manual_payment_id: payment.id,
-      participant_id: subscription.participant_id,
-      guardian_user_id: subscription.guardian_user_id,
-      provider: "mollie",
-      idempotency_key: idempotencyKey,
-      amount_cents: payment.amount_cents,
-      currency: payment.currency,
-      status: "pending",
-      return_url: null,
-      expires_at: null
-    })
-    .select("id")
-    .single(),
-  "sandbox incasso payment session"
-);
 
 let customer;
 let mandate;
+let localCustomer;
+let localMandate;
+let collectionAttempt;
 let providerPayment;
 try {
   customer = await mollieRequest("/customers", {
@@ -138,6 +118,97 @@ try {
       mandateReference: `NXTTRACK-${runId}`.slice(0, 35)
     }
   });
+  localCustomer = await one(
+    admin
+      .from("billing_provider_customers")
+      .insert({
+        tenant_id: tenant.id,
+        provider_config_id: providerConfig.id,
+        guardian_user_id: null,
+        provider: "mollie",
+        provider_customer_id: customer.id,
+        status: "active",
+        last_synced_at: new Date().toISOString()
+      })
+      .select("id")
+      .single(),
+    "local Mollie customer"
+  );
+  localMandate = await one(
+    admin
+      .from("billing_mandates")
+      .insert({
+        tenant_id: tenant.id,
+        provider_config_id: providerConfig.id,
+        provider_customer_id: localCustomer.id,
+        guardian_user_id: subscription.guardian_user_id,
+        provider: "mollie",
+        provider_mandate_id: mandate.id,
+        method: "directdebit",
+        status: "valid",
+        signature_date: mandate.signatureDate ?? new Date().toISOString().slice(0, 10),
+        mandate_reference: mandate.mandateReference ?? null,
+        account_holder: mandate.details?.consumerName ?? "NXTTRACK Incasso Rehearsal",
+        account_last4: "0000",
+        consent_source: "provider_import",
+        consent_terms_version: "bounded-staging-rehearsal",
+        consent_recorded_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString()
+      })
+      .select("id")
+      .single(),
+    "local Mollie mandate"
+  );
+  collectionAttempt = await one(
+    admin
+      .from("billing_collection_attempts")
+      .insert({
+        tenant_id: tenant.id,
+        provider_config_id: providerConfig.id,
+        subscription_id: subscription.id,
+        manual_payment_id: payment.id,
+        billing_provider_customer_id: localCustomer.id,
+        billing_mandate_id: localMandate.id,
+        guardian_user_id: subscription.guardian_user_id,
+        sequence_type: "recurring",
+        attempt_number: 1,
+        status: "prenotified",
+        scheduled_for: new Date(Date.now() - 60_000).toISOString(),
+        prenotified_at: new Date().toISOString(),
+        prenotification_delivery_status: "sent",
+        idempotency_key: idempotencyKey
+      })
+      .select("id")
+      .single(),
+    "local collection attempt"
+  );
+  await one(
+    admin
+      .from("payment_sessions")
+      .insert({
+        id: paymentSessionId,
+        tenant_id: tenant.id,
+        provider_config_id: providerConfig.id,
+        subscription_id: subscription.id,
+        manual_payment_id: payment.id,
+        participant_id: subscription.participant_id,
+        guardian_user_id: subscription.guardian_user_id,
+        provider: "mollie",
+        sequence_type: "recurring",
+        billing_provider_customer_id: localCustomer.id,
+        billing_mandate_id: localMandate.id,
+        collection_attempt_id: collectionAttempt.id,
+        idempotency_key: idempotencyKey,
+        amount_cents: payment.amount_cents,
+        currency: payment.currency,
+        status: "pending",
+        return_url: null,
+        expires_at: null
+      })
+      .select("id")
+      .single(),
+    "sandbox incasso payment session"
+  );
   providerPayment = await mollieRequest("/payments", {
     method: "POST",
     idempotencyKey,
@@ -167,6 +238,18 @@ try {
     })
     .eq("tenant_id", tenant.id)
     .eq("id", paymentSessionId);
+  if (collectionAttempt?.id) {
+    await admin
+      .from("billing_collection_attempts")
+      .update({
+        status: "failed",
+        completed_at: new Date().toISOString(),
+        failure_code: "incasso_rehearsal_prepare",
+        failure_message: error instanceof Error ? error.message.slice(0, 500) : "Mollie incasso preparation failed."
+      })
+      .eq("tenant_id", tenant.id)
+      .eq("id", collectionAttempt.id);
+  }
   throw error;
 }
 
@@ -189,6 +272,17 @@ const sessionUpdate = await admin
   .eq("tenant_id", tenant.id)
   .eq("id", paymentSessionId);
 if (sessionUpdate.error) throw sessionUpdate.error;
+const attemptUpdate = await admin
+  .from("billing_collection_attempts")
+  .update({
+    provider_payment_id: providerPayment.id,
+    status: normalizeProviderStatus(providerPayment.status),
+    initiated_at: new Date().toISOString(),
+    completed_at: ["paid", "failed", "expired", "canceled"].includes(providerPayment.status) ? new Date().toISOString() : null
+  })
+  .eq("tenant_id", tenant.id)
+  .eq("id", collectionAttempt.id);
+if (attemptUpdate.error) throw attemptUpdate.error;
 
 const state = {
   schemaVersion: 1,
@@ -202,6 +296,9 @@ const state = {
   subscriptionId: subscription.id,
   payment,
   paymentSessionId,
+  collectionAttemptId: collectionAttempt.id,
+  localCustomerId: localCustomer.id,
+  localMandateId: localMandate.id,
   customerId: customer.id,
   mandateId: mandate.id,
   mandateStatus: mandate.status,
@@ -210,6 +307,7 @@ const state = {
   changePaymentStateUrl,
   expected: {
     billingEventCount: outcome === "paid" ? 1 : 0,
+    collectionAttemptStatus: outcome,
     finalPaymentStatus: outcome === "paid" ? "paid" : "due",
     finalProviderStatus: outcome,
     finalSessionStatus: outcome,
@@ -252,10 +350,27 @@ async function removePreviousRehearsalRows(tenantId) {
   const payments = checked(paymentsResult, "previous incasso rehearsal payments").map((row) => row.id);
   if (payments.length === 0) return;
 
+  const attemptRows = checked(
+    await admin
+      .from("billing_collection_attempts")
+      .select("id, billing_provider_customer_id, billing_mandate_id")
+      .eq("tenant_id", tenantId)
+      .in("manual_payment_id", payments),
+    "previous collection attempts"
+  );
+  const customerIds = [...new Set(attemptRows.map((row) => row.billing_provider_customer_id))];
+  const mandateIds = [...new Set(attemptRows.map((row) => row.billing_mandate_id))];
   await checkedDelete(admin.from("payment_provider_events").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "provider events");
   await checkedDelete(admin.from("billing_events").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "billing events");
   await checkedDelete(admin.from("payment_sessions").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "payment sessions");
+  await checkedDelete(admin.from("billing_collection_attempts").delete().eq("tenant_id", tenantId).in("manual_payment_id", payments), "collection attempts");
   await checkedDelete(admin.from("manual_payments").delete().eq("tenant_id", tenantId).in("id", payments), "manual payments");
+  if (mandateIds.length > 0) {
+    await checkedDelete(admin.from("billing_mandates").delete().eq("tenant_id", tenantId).in("id", mandateIds), "local mandates");
+  }
+  if (customerIds.length > 0) {
+    await checkedDelete(admin.from("billing_provider_customers").delete().eq("tenant_id", tenantId).in("id", customerIds), "local customers");
+  }
 }
 
 async function checkedDelete(query, label) {

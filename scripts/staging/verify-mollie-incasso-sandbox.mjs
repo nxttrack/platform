@@ -113,19 +113,23 @@ async function pollLocalPaidState() {
 }
 
 async function verifyExactlyOnce() {
-  const [payment, session, sessions, providerEvents, billingEvents] = await Promise.all([
+  const [payment, session, collectionAttempt, sessions, providerEvents, billingEvents, failedBillingEvents] = await Promise.all([
     admin.from("manual_payments").select("status, method, reference").eq("tenant_id", state.tenant.id).eq("id", state.payment.id).single(),
     admin.from("payment_sessions").select("status, provider_session_id, failure_code, failure_message").eq("tenant_id", state.tenant.id).eq("id", state.paymentSessionId).single(),
+    admin.from("billing_collection_attempts").select("status, provider_payment_id, failure_code, failure_message, completed_at").eq("tenant_id", state.tenant.id).eq("id", state.collectionAttemptId).single(),
     admin.from("payment_sessions").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id),
     admin.from("payment_provider_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("provider_event_id", `${state.providerPaymentId}:${state.expected.finalProviderStatus}`),
-    admin.from("billing_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id).eq("type", "payment_paid")
+    admin.from("billing_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id).eq("type", "payment_paid"),
+    admin.from("billing_events").select("id", { count: "exact", head: true }).eq("tenant_id", state.tenant.id).eq("manual_payment_id", state.payment.id).eq("type", "payment_failed")
   ]);
-  for (const query of [payment, session, sessions, providerEvents, billingEvents]) {
+  for (const query of [payment, session, collectionAttempt, sessions, providerEvents, billingEvents, failedBillingEvents]) {
     if (query.error) throw query.error;
   }
 
   const checks = {
     billingEventCount: billingEvents.count ?? 0,
+    collectionAttemptStatus: collectionAttempt.data.status,
+    failedBillingEventCount: failedBillingEvents.count ?? 0,
     failureCode: session.data.failure_code,
     hasFailureMessage: Boolean(session.data.failure_message),
     manualPaymentMethod: payment.data.method,
@@ -137,11 +141,13 @@ async function verifyExactlyOnce() {
   if (
     checks.manualPaymentStatus !== state.expected.finalPaymentStatus ||
     checks.paymentSessionStatus !== state.expected.finalSessionStatus ||
+    checks.collectionAttemptStatus !== state.expected.collectionAttemptStatus ||
     (state.outcome === "failed" && (checks.failureCode !== "provider_failed" || !checks.hasFailureMessage)) ||
     (state.outcome === "paid" && (checks.failureCode !== null || checks.hasFailureMessage)) ||
     checks.sessionCount !== state.expected.sessionCount ||
     checks.providerEventCount !== state.expected.providerEventCount ||
-    checks.billingEventCount !== state.expected.billingEventCount
+    checks.billingEventCount !== state.expected.billingEventCount ||
+    checks.failedBillingEventCount !== (state.outcome === "failed" ? 1 : 0)
   ) {
     throw new Error(`Mollie incasso exactly-once verification failed: ${JSON.stringify(checks)}`);
   }
