@@ -41,6 +41,10 @@ Production activation evidence on 23 July 2026:
 - `MONITORING_ENABLED=true` was set at approximately 15:14 UTC.
 - [Post-activation probe 30019582728](https://github.com/nxttrack/platform/actions/runs/30019582728) passed
   against production SHA `08624b16d07bc1536ec4ef3739ff54c48ef7a39e`.
+- Scheduled matrix run [30018813815, attempt 2](https://github.com/nxttrack/platform/actions/runs/30018813815)
+  ran both environments after activation; production passed all 16 health, route, asset and mail checks.
+- The 30-minute observation closed at `2026-07-23T15:44:12Z` with the same live SHA, a passing database probe
+  and no failed production workflow after activation.
 
 ## Activation And Drill
 
