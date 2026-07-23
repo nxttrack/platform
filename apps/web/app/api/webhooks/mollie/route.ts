@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const sessionUpdate = await admin.from("payment_sessions").update({ status, webhook_received_at: now, failure_code: failure?.code ?? null, failure_message: failure?.message ?? null }).eq("tenant_id", session.tenant_id).eq("id", session.id);
     if (sessionUpdate.error) throw sessionUpdate.error;
     processingStage = "provider_event";
-    const providerEvent = await admin.from("payment_provider_events").upsert({
+    const providerEvent = await admin.from("payment_provider_events").insert({
       tenant_id: session.tenant_id,
       provider_config_id: session.provider_config_id,
       payment_session_id: session.id,
@@ -71,8 +71,8 @@ export async function POST(request: Request) {
       processing_status: "processed",
       payload: { amount: payment.amount, id: payment.id, metadata: payment.metadata, status: payment.status },
       processed_at: now
-    }, { onConflict: "tenant_id,provider,provider_event_id", ignoreDuplicates: true });
-    if (providerEvent.error) throw providerEvent.error;
+    });
+    if (providerEvent.error && providerEvent.error.code !== "23505") throw providerEvent.error;
 
     if (status === "paid") {
       const paidOn = (payment.paidAt ?? now).slice(0, 10);
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ accepted: true });
   } catch (error) {
-    await admin.from("payment_provider_events").upsert({
+    const errorEvent = await admin.from("payment_provider_events").insert({
       tenant_id: session.tenant_id,
       provider_config_id: session.provider_config_id,
       payment_session_id: session.id,
@@ -99,7 +99,10 @@ export async function POST(request: Request) {
       processing_status: "failed",
       payload: { id: paymentId },
       error_message: error instanceof Error ? error.message.slice(0, 500) : "Webhook processing failed"
-    }, { onConflict: "tenant_id,provider,provider_event_id", ignoreDuplicates: true });
+    });
+    if (errorEvent.error && errorEvent.error.code !== "23505") {
+      processingStage = "error_event";
+    }
     return NextResponse.json({ accepted: false, reason: `processing_${processingStage}` }, { status: 503 });
   }
 }

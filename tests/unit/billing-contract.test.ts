@@ -117,6 +117,9 @@ describe("classic Mollie webhook contract", () => {
     assert.match(source, /reason: "session_lookup"/);
     assert.match(source, /reason: "provider_config"/);
     assert.match(source, /reason: `processing_\$\{processingStage\}`/);
+    assert.match(source, /providerEvent\.error\.code !== "23505"/);
+    assert.match(source, /errorEvent\.error\.code !== "23505"/);
+    assert.doesNotMatch(source, /payment_provider_events"\)\.upsert/);
     assert.doesNotMatch(source, /reason: sessionResult\.error/);
     assert.doesNotMatch(source, /reason: configResult\.error/);
   });
