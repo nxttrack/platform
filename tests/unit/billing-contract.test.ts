@@ -59,14 +59,30 @@ describe("Mollie recurring identifiers and account masking", () => {
 
   it("keeps recurring collection behind consent, pre-notification and an explicit feature switch", () => {
     const actions = readFileSync("apps/web/lib/domain/billing-recurring-actions.ts", "utf8");
+    const processor = readFileSync("apps/web/lib/domain/mollie-collection-processor.ts", "utf8");
     assert.match(actions, /consentAccepted"\) !== "accepted"/);
-    assert.match(actions, /recurring_enabled !== true/);
-    assert.match(actions, /prenotification_delivery_status !== "sent"/);
-    assert.match(actions, /new Date\(attempt\.scheduled_for\)\.getTime\(\) > Date\.now\(\)/);
+    assert.match(processor, /publicConfig\.recurring_enabled !== true/);
+    assert.match(processor, /attempt\.prenotification_delivery_status !== "sent"/);
+    assert.match(processor, /new Date\(attempt\.scheduled_for\)\.getTime\(\) > Date\.now\(\)/);
     assert.match(actions, /sequence_type: "first"/);
-    assert.match(actions, /sequence_type: "recurring"/);
+    assert.match(processor, /sequence_type: "recurring"/);
     assert.match(actions, /reconcileMolliePaymentAction/);
     assert.match(actions, /api\/webhooks\/mollie/);
+  });
+
+  it("keeps automated execution and retries behind independent safety controls", () => {
+    const route = readFileSync("apps/web/app/api/internal/billing/collections/route.ts", "utf8");
+    const dunning = readFileSync("apps/web/lib/domain/billing-dunning.ts", "utf8");
+    const workflow = readFileSync(".github/workflows/billing-collection-automation.yml", "utf8");
+    assert.match(route, /BILLING_AUTOMATION_SECRET/);
+    assert.match(route, /timingSafeEqual/);
+    assert.match(route, /automatic_collection_enabled === true/);
+    assert.match(route, /maximumAttemptsPerRun = 25/);
+    assert.match(dunning, /automatic_retries_enabled !== true/);
+    assert.match(dunning, /attempt\.attempt_number >= maxAttempts/);
+    assert.match(dunning, /Math\.max\(noticeDays, retryDelayDays\)/);
+    assert.match(workflow, /RUN_PRODUCTION_COLLECTIONS/);
+    assert.match(workflow, /environment: staging/);
   });
 
   it("activates mandates and records recurring failures only from verified webhooks", () => {
@@ -76,6 +92,7 @@ describe("Mollie recurring identifiers and account masking", () => {
     assert.match(webhook, /type: "mandate_activated"/);
     assert.match(webhook, /type: "payment_failed"/);
     assert.match(webhook, /collection_attempt_id/);
+    assert.match(webhook, /scheduleMollieCollectionRetry/);
   });
 });
 
