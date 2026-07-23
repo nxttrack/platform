@@ -1,9 +1,9 @@
 # Phase 25 — Premium productization sprint
 
 Datum: 23 juli 2026  
-Status: code, migraties en volledige stagingvalidatie compleet
-Gevalideerde staging-SHA: `d0fa414c8deaeea4d74f417e4fb8f1df3b3c707e`
-Stagingrun: `29976973471`
+Status: code, migraties, volledige stagingvalidatie en retained release-evidence compleet
+Gevalideerde staging-SHA: `e9a57c95216e60303a8e3544ee7d2da6df2e5082`
+Stagingrun: `30000489255`
 
 ## Geleverde productlaag
 
@@ -53,12 +53,15 @@ Verplicht vóór productie:
 
 ### Uitgevoerd op staging
 
-- De gewone CI-run `29976969702` is volledig groen voor de gevalideerde SHA.
+- De gewone CI-run `29977470534` is volledig groen voor de gevalideerde SHA.
 - Deploy, hardening, build, database-migraties, health en runtime smoke zijn groen.
 - De operationele Phase 16-flow en alle Sprint 4-mutaties zijn groen voor placement, instructor, parent en tenant-admin.
 - Role- en tenantisolatie, alle vier accessibility/performance-budgetcases en de Phase 15 staging/security-truth-check zijn groen.
-- Alle 56 Priority A-screenshots zijn SHA-gebonden gegenereerd en de compacte logfallback is bewaard.
-- GitHub heeft de screenshot- en release-evidence artifacts niet duurzaam geregistreerd omdat de Actions artifact-storagequota nog vol is. Er zijn daarom nul downloadbare artifacts op run `29976973471`; dit blijft een productie-go/no-go-punt en wordt niet opgelost door bestaand bewijs zonder expliciete toestemming te verwijderen.
+- Alle 56 Priority A-screenshots zijn SHA-gebonden gegenereerd en als 14-daags GitHub Artifact bewaard.
+- `capture.json`, alle 56 PNG's en `release-evidence.json` zijn opnieuw gedownload. Aantallen, bestandsgroottes,
+  PNG-signatures en alle 56 SHA-256 hashes zijn geverifieerd; er zijn nul manifest- of runtimefouten.
+- De aparte artifact-storage probe `30000452486` en volledige stagingrun `30000489255` bewijzen dat de eerdere
+  artifactquotablokkade is opgeheven. Er is geen historisch releasebewijs verwijderd.
 - Een echte Mollie-testbetaling en herhaalde webhook zijn niet uitgevoerd zonder een expliciet geconfigureerde testkey en blijven verplicht voordat billing voor een tenant wordt geactiveerd.
 
 ## Volgende productbeslissingen

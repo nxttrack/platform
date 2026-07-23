@@ -8,6 +8,14 @@ Live production SHA observed at audit start: `ba8932b5ecc5c4148c1b5d6d14b27ba662
 
 Status: production foundation present; release remains no-go until the open controls below pass for the final exact SHA.
 
+Latest read-only candidate audit: <https://github.com/nxttrack/platform/actions/runs/30002149086> for
+`e9a57c95216e60303a8e3544ee7d2da6df2e5082`. All 40 environment/project checks, the production host foundation
+and the transaction-read-only database inventory passed. The production database remains empty with 65 pending
+repository migrations. The workflow's only failure is the absent production SendGrid/SMTP provider secret.
+
+Latest read-only migration rehearsal: <https://github.com/nxttrack/platform/actions/runs/30002255154>. Supabase
+CLI dry-run listed all 65 migrations and the database fingerprints before and after were identical.
+
 ## GitHub production environment
 
 The `production` environment exists. Repository billing currently exposes no GitHub environment protection rules, so the manual confirmation, exact-SHA evidence binding, canonical `main` source and non-automatic production dispatch remain mandatory compensating controls.
@@ -57,6 +65,6 @@ Open blocker: the GitHub production environment has no `SENDGRID_API_KEY`/SMTP p
 - [ ] Implement/test off-platform Storage object backups for both private buckets.
 - [ ] Add a production SendGrid API key or SMTP password and pass a controlled delivery test.
 - [ ] Run foundation audit and migration rehearsal for the final exact SHA.
-- [ ] Confirm screenshots and release evidence persist as downloadable GitHub artifacts.
+- [x] Confirm screenshots and release evidence persist as downloadable GitHub artifacts.
 - [ ] Decide and rehearse the one-time production owner creation path if the production Auth schema remains empty; keep the deploy bootstrap flag disabled by default and remove any temporary password immediately.
 - [ ] Complete the generated exact-SHA go/no-go form.

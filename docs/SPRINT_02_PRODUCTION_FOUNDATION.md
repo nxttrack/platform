@@ -1,6 +1,8 @@
 # Sprint 2 - Production Foundation
 
-Status: preflight in progress. Acceptance remains dependent on Sprint 1's two explicit human confirmations. No production migration or deployment is authorized by this work.
+Status: the core production foundation is technically proven for the accepted application candidate. Production
+mail, provider backup controls and final promotion authorization remain separate go-live gates. No production
+migration or deployment is authorized by this work.
 
 ## Sprint Outcome
 
@@ -69,6 +71,17 @@ Latest evidence: <https://github.com/nxttrack/platform/actions/runs/29870133969>
 - Empty production baseline: 0 public tables, 0 Auth users, 0 Storage objects, no remote migration history and 62 repository migrations pending.
 - No production database or runtime state was changed by the audit.
 
+Current candidate evidence:
+
+- Read-only foundation audit: <https://github.com/nxttrack/platform/actions/runs/30002149086>
+- Audited SHA: `e9a57c95216e60303a8e3544ee7d2da6df2e5082`
+- Environment/project contract: all 40 checks pass; staging and production Supabase identities are different.
+- Host: release/shared directories, systemd, Caddy, apex/`www`/admin/wildcard routes, TLS, DNS and port `3800` pass.
+- Database inventory: PostgreSQL 17.6, 0 public tables, 0 Auth users, 0 Storage objects and 65 pending repository migrations.
+- The overall workflow stops only on the absent production SendGrid/SMTP secret. Sender, timeout, SPF, DMARC and
+  DKIM pass. Provider-secret activation and controlled delivery belong to the communications/go-live gate.
+- No production database or runtime state was changed.
+
 ## Protection And Authority
 
 GitHub currently reports no protection rules for the `production` environment. An attempt to enable environment branch/reviewer protection returned HTTP 422 because the repository billing plan does not support the required protection rule. The accepted technical compensating controls are:
@@ -81,14 +94,15 @@ GitHub currently reports no protection rules for the `production` environment. A
 6. a separate explicit user authorization before Sprint 5 promotion.
 7. successful foundation-audit and migration-rehearsal run IDs bound to the exact production SHA.
 
-Open ownership record:
+Initial-launch ownership record:
 
 ```txt
-Release authority:
-Rollback owner:
-Infrastructure owner:
-Approval record location:
-Environment reviewer limitation/decision:
+Release authority: Danny Goldenbelt
+Rollback owner: Danny Goldenbelt
+Infrastructure owner: Danny Goldenbelt
+Approval record location: generated exact-SHA go/no-go form plus linked GitHub Actions runs
+Environment reviewer limitation/decision: GitHub plan does not expose environment reviewers; accepted
+  compensation is manual main-only dispatch, literal confirmation, exact-SHA evidence and explicit authorization
 ```
 
 ## Remaining Sprint Tasks
@@ -96,10 +110,10 @@ Environment reviewer limitation/decision:
 - [x] Run the read-only audit and record its exact result.
 - [x] Restore or replace the unreachable production Supabase project and update the production-only secret set.
 - [x] Resolve every failed environment, project-isolation or host-foundation check.
-- [ ] Identify the production Supabase project and owner without exposing credentials.
+- [x] Identify the production Supabase project boundary and owner without exposing credentials.
 - [x] Produce a read-only production database inventory; do not run migrations.
 - [x] Confirm DNS/TLS intent for `nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl` and `*.nxttrack.nl`.
-- [ ] Record release authority, rollback owner and infrastructure owner.
+- [x] Record release authority, rollback owner and infrastructure owner.
 - [x] Configure GitHub environment reviewers, or accept and name the SHA-bound evidence/confirmation controls as the billing-plan compensation.
 - [x] Write the migration rehearsal and rollback plan for Sprint 5.
 

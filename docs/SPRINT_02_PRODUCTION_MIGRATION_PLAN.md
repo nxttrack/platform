@@ -10,7 +10,7 @@ Status: read-only rehearsal prepared. This plan does not authorize production mi
 - Auth users: 0.
 - Storage objects: 0.
 - Remote migration history: absent/0.
-- Repository migration files: 62.
+- Repository migration files: 65.
 
 The empty baseline means no legacy production schema repair is expected. All application migrations must be treated as one reviewed first-install sequence.
 
@@ -27,12 +27,16 @@ The manually dispatched `Production migration rehearsal` workflow:
 
 The Supabase CLI contract states that `--dry-run` prints migrations that would be applied without applying them.
 
-Latest successful rehearsal: <https://github.com/nxttrack/platform/actions/runs/29870037253>
+Latest successful rehearsal: <https://github.com/nxttrack/platform/actions/runs/30002255154>
 
-- Supabase CLI 2.109.1 reported dry-run mode and listed all 62 pending migrations.
-- Before and after inventories both reported no remote migration history and 62 pending repository migrations.
+- Supabase CLI 2.109.1 reported dry-run mode and listed all 65 pending migrations.
+- Before and after inventories both reported no remote migration history and 65 pending repository migrations.
 - The database fingerprints were identical.
 - No production database state changed.
+
+The rehearsal ran from accepted application candidate
+`e9a57c95216e60303a8e3544ee7d2da6df2e5082`. The earlier 62-migration count predates the three latest
+repository migrations; the current dry-run enumerates all 65.
 
 ## Actual Migration Boundary
 
@@ -63,11 +67,11 @@ Runtime rollback and database recovery are separate:
 Target recovery records still requiring owner approval:
 
 ```txt
-Migration authority:
-Runtime rollback owner:
-Database restore owner:
+Migration authority: Danny Goldenbelt, only after an explicit production migration authorization
+Runtime rollback owner: Danny Goldenbelt
+Database restore owner: Danny Goldenbelt
 Maintenance window:
-Target RTO:
-Target RPO:
+Target RTO: 8 hours pending final Pro-plan confirmation
+Target RPO: 24 hours pending final Pro-plan confirmation
 Approval reference:
 ```

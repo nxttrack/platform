@@ -1,8 +1,9 @@
 # Sprint 1 - Release Candidate Evidence
 
-Status: in progress.
+Status: accepted on 2026-07-23. The current visual baseline and retained release artifacts have explicit product-owner approval.
 
 Security-maintenance application baseline: `c8bf0a5f8c6b8930a1067f51a55deda0b62af60d`
+Accepted premium application candidate: `e9a57c95216e60303a8e3544ee7d2da6df2e5082`
 
 ## Sprint Outcome
 
@@ -33,6 +34,8 @@ Evidence runs:
 - Security maintenance staging deploy, 56-screen capture and expected manual-gate stop: <https://github.com/nxttrack/platform/actions/runs/29966623671>
 - Logical backup/restore: <https://github.com/nxttrack/platform/actions/runs/29818495140>
 - Runtime rollback rehearsal: recorded by `ROLLBACK_REHEARSAL_CONFIRMED=true` in the staging environment.
+- Final strict staging, 56-screen artifact and release evidence: <https://github.com/nxttrack/platform/actions/runs/30000489255>
+- Artifact-storage probe: <https://github.com/nxttrack/platform/actions/runs/30000452486>
 
 ## Product-Owner Visual Review
 
@@ -75,6 +78,20 @@ Non-blocking follow-ups:
 `LOVABLE_VISUAL_CHECK_CONFIRMED=true` was set for the staging environment after this approval was recorded.
 It must be reset while the Next.js security maintenance candidate is captured and may only be restored after
 the new SHA is shown to be visually equivalent.
+
+The complete premium candidate was reviewed again after artifact storage was restored:
+
+```txt
+Reviewed SHA: e9a57c95216e60303a8e3544ee7d2da6df2e5082
+Product owner: Danny Goldenbelt
+Review date: 2026-07-23
+Decision: approved; the current visuals have no release blocker
+Evidence: 56 retained screenshots, capture.json and release-evidence.json from run 30000489255
+```
+
+This approval includes the existing intentional differences and non-blocking follow-ups above. Documentation-only
+descendants do not change the approved application visuals, but must still pass the repository's exact-SHA
+technical gates before promotion.
 
 ## Infrastructure Backup Review
 
@@ -173,11 +190,13 @@ gh workflow run deploy.yml --ref main -f target=staging
 Acceptance evidence:
 
 ```txt
-Final candidate SHA:
-Strict gate run:
+Final application candidate SHA: e9a57c95216e60303a8e3544ee7d2da6df2e5082
+Strict gate run: 30000489255
 Gate result: 0 failures, 0 warnings
-Sprint accepted by:
-Acceptance date:
+Retained visual artifact: 56/56 screenshots, 14 routes x 4 viewports, 0 manifest/runtime failures
+Retained release evidence: release-evidence.json downloaded and verified
+Sprint accepted by: Danny Goldenbelt
+Acceptance date: 2026-07-23
 ```
 
 ## Remaining Sprint Tasks
@@ -185,7 +204,7 @@ Acceptance date:
 - [x] Complete and record product-owner visual decision.
 - [x] Complete and record Supabase managed-backup decision.
 - [x] Reconstruct and review all 14 compact contact sheets from the artifact-quota fallback.
-- [ ] Recheck GitHub artifact quota after recalculation; this is a non-blocking platform follow-up.
+- [x] Recheck GitHub artifact storage with an isolated upload/download probe.
 - [x] Reconfirm the visual environment gate for the security maintenance SHA.
 - [x] Record the Supabase environment confirmation truthfully.
-- [ ] Rerun staging and record a 0-warning strict gate.
+- [x] Rerun staging and record a 0-warning strict gate.

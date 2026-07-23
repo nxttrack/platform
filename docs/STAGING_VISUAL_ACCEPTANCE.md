@@ -2,7 +2,7 @@
 
 Last updated: 2026-07-23
 
-Status: automated SHA-bound staging capture, engineering review and product-owner approval are complete for release `02fde48a197a72e80c624adee3ccddc836852807`.
+Status: automated SHA-bound staging capture, engineering review and product-owner approval are complete for premium candidate `e9a57c95216e60303a8e3544ee7d2da6df2e5082`.
 
 ## Goal
 
@@ -65,6 +65,13 @@ If GitHub artifact storage is temporarily unavailable, the workflow emits compac
 Danny Goldenbelt approved the 14 Priority A routes across mobile, tablet, desktop and wide viewports on 2026-07-23 for SHA `02fde48a197a72e80c624adee3ccddc836852807`. The review found no visual release blocker. It accepts the richer data-backed parent/admin composition, expanded planning and waitlist workflows, the quiet instructor state and current staging data density as intentional differences. Final photography and copy, more compact mobile admin workflows, better use of wide desktop space and production-ready demo/seed names remain non-blocking follow-ups.
 
 `LOVABLE_VISUAL_CHECK_CONFIRMED=true` was set in the staging environment for this recorded approval.
+
+The product owner reconfirmed the complete current visual set on 2026-07-23 for premium candidate
+`e9a57c95216e60303a8e3544ee7d2da6df2e5082`. Run
+<https://github.com/nxttrack/platform/actions/runs/30000489255> retained all 56 PNG files plus `capture.json`
+and `release-evidence.json`. The downloaded manifest reports 14 routes, four viewports, zero failures and zero
+runtime failures; every PNG byte count and SHA-256 matched its manifest entry. The current visuals are therefore
+accepted without a visual release blocker.
 
 ## Framework Security Revalidation
 
