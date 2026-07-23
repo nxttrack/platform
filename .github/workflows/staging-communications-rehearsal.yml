@@ -1,0 +1,67 @@
+name: Staging communications rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type SEND_CONTROLLED_STAGING_COMMUNICATIONS
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-communications-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: rehearse invite, reset and retry
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      CI: true
+      APP_ENV: staging
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+      E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+      E2E_TENANT_ADMIN_PASSWORD: ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+      CONTROLLED_RECIPIENT_EMAIL: ${{ secrets.CONTROLLED_COMMUNICATIONS_RECIPIENT }}
+      CONTROLLED_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+    steps:
+      - name: Authorize controlled external delivery
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "SEND_CONTROLLED_STAGING_COMMUNICATIONS"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20.19.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Rehearse controlled communications
+        run: >-
+          pnpm --filter @nxttrack/web exec playwright test
+          tests/e2e/controlled-communications.spec.ts
+          --project=chromium-desktop
+          --workers=1
+          --retries=0
