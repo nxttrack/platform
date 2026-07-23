@@ -39,7 +39,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Billing" title="Betalingen en subscriptions" subtitle="Handmatige commerciële basis zonder Mollie/iDEAL-koppeling." />
+      <PageHeader kicker="Billing" title="Betalingen en subscriptions" subtitle="Handmatige billing en idempotente Mollie-checkout met provider-verified webhooks." />
       <Feedback saved={saved} error={error} />
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
@@ -376,7 +376,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       <Field label="Return URL" name="returnUrl" placeholder="https://staging.nxttrack.nl/portaal/betalingen" />
                       <div className="mt-3">
                         <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
-                          Betaalsessie voorbereiden
+                          Checkout aanmaken
                         </button>
                       </div>
                     </form>

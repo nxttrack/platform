@@ -10,6 +10,7 @@ export type PaymentProviderConfigLike = {
   status: string;
   display_name: string;
   secret_reference: string | null;
+  public_config?: Record<string, unknown>;
 };
 
 export type PaymentSessionDraftInput = {

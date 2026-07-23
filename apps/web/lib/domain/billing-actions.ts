@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
+import { createMolliePayment } from "./mollie";
 import { createPaymentSessionDraft, isProviderConfigReady, type PaymentProviderConfigLike } from "./payment-provider";
 import { createTenantNotifications } from "./tenant-notifications";
 
@@ -290,7 +291,7 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
       .maybeSingle(),
     admin
       .from("billing_provider_configs")
-      .select("id, provider, mode, status, display_name, secret_reference")
+      .select("id, provider, mode, status, display_name, secret_reference, public_config")
       .eq("tenant_id", tenant.id)
       .eq("id", providerConfigId)
       .maybeSingle()
@@ -307,7 +308,8 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
   }
 
   const idempotencyKey = randomUUID();
-  const returnUrl = readOptional(formData, "returnUrl");
+  const publicConfig = providerConfig.public_config ?? {};
+  const returnUrl = readOptional(formData, "returnUrl") ?? optionalString(publicConfig.return_url);
   const draft = createPaymentSessionDraft({
     amountCents: paymentResult.data.amount_cents,
     currency: paymentResult.data.currency,
@@ -340,6 +342,38 @@ export async function createPaymentProviderSessionAction(formData: FormData) {
 
   if (sessionResult.error || !sessionResult.data) {
     redirect("/admin/betalingen?error=provider-session");
+  }
+
+  if (draft.provider === "mollie") {
+    if (!providerConfig.secret_reference || !returnUrl) {
+      await admin.from("payment_sessions").update({ status: "failed", failure_code: "configuration", failure_message: "Mollie secret reference or return URL is missing." }).eq("tenant_id", tenant.id).eq("id", sessionResult.data.id);
+      redirect("/admin/betalingen?error=provider-not-ready");
+    }
+
+    try {
+      const appUrl = resolveApplicationUrl(returnUrl);
+      const molliePayment = await createMolliePayment({
+        amountCents: paymentResult.data.amount_cents,
+        currency: paymentResult.data.currency,
+        description: optionalString(publicConfig.checkout_description) ?? `${tenant.name} betaling`,
+        idempotencyKey,
+        metadata: { tenantId: tenant.id, paymentSessionId: sessionResult.data.id, manualPaymentId: paymentResult.data.id },
+        redirectUrl: returnUrl,
+        secretReference: providerConfig.secret_reference,
+        webhookUrl: `${appUrl}/api/webhooks/mollie`
+      });
+      const { error } = await admin.from("payment_sessions").update({
+        provider_session_id: molliePayment.id,
+        checkout_url: molliePayment._links?.checkout?.href ?? null,
+        status: "pending",
+        expires_at: molliePayment.expiresAt ?? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+      }).eq("tenant_id", tenant.id).eq("id", sessionResult.data.id);
+      if (error) throw error;
+    } catch (error) {
+      const message = error instanceof Error ? error.message.slice(0, 500) : "Mollie payment creation failed.";
+      await admin.from("payment_sessions").update({ status: "failed", failure_code: "provider_api", failure_message: message }).eq("tenant_id", tenant.id).eq("id", sessionResult.data.id);
+      redirect("/admin/betalingen?error=provider-api");
+    }
   }
 
   await createBillingEvent({
@@ -616,6 +650,18 @@ async function getActionContext() {
     tenant: getActiveTenant(context),
     user: context.user
   };
+}
+
+function optionalString(value: unknown) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function resolveApplicationUrl(returnUrl: string) {
+  const configured = process.env.APP_URL?.replace(/\/$/, "");
+  if (configured) return configured;
+  const parsed = new URL(returnUrl);
+  if (parsed.protocol !== "https:" && parsed.hostname !== "localhost") throw new Error("Return URL must use HTTPS");
+  return parsed.origin;
 }
 
 async function recordPaymentSignal(input: {
