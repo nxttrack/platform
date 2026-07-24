@@ -31,6 +31,16 @@ test.describe("Journey Simulation Bot staging smoke", () => {
     const newestRun = page.getByRole("row").filter({ hasText: "Volledige reis" }).first();
     await expect(newestRun).toContainText("completed");
     await expect(page.getByText("completed_full_journey", { exact: true }).first()).toBeVisible();
+
+    await page.getByLabel("Scenario").selectOption("stress_mix");
+    await page.getByLabel("Journeys per run").fill("5");
+    await page.getByLabel("Max. tegelijk").fill("5");
+    await page.getByRole("button", { name: "Configuratie opslaan" }).click();
+    await expect(page).toHaveURL(/saved=config/);
+    await page.getByRole("button", { name: "Run now" }).click();
+    await expect(page).toHaveURL(/saved=run/, { timeout: 150_000 });
+    await expect(page.getByText("blocked_until_eligible", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("blocked_no_capacity", { exact: true }).first()).toBeVisible();
     expect(failures()).toEqual([]);
   });
 });

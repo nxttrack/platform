@@ -306,7 +306,10 @@ export async function stopAllJourneyBots(actorUserId: string) {
 async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: number; runId: string }) {
   const admin = createAdminClient();
   const profile = createSyntheticProfile(input.runId, input.ordinal, input.config.scenario_mode);
-  const scenario = resolveScenarioMode(input.config.scenario_mode, profile.scenarioRandom);
+  const scenario =
+    input.config.scenario_mode === "stress_mix" && profile.stressVariant !== "normal"
+      ? "intake_to_placement"
+      : resolveScenarioMode(input.config.scenario_mode, profile.scenarioRandom);
   const program = await selectProgram(input.config);
   const stages = await getProgramStages(input.config.tenant_id, program.id);
   const ageDecision = getMinimumAgeDecision(profile.birthDate);
@@ -370,9 +373,21 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
       await completeJourney(journey, "blocked_until_eligible", `Niet plaatsbaar vóór ${ageDecision.eligibleFrom}; FIFO-prioriteitsdatum blijft behouden.`);
       return "blocked_until_eligible";
     }
+    if (profile.stressVariant === "needs_review") {
+      await createIssue({
+        childJourneyId: journey.id,
+        config: input.config,
+        issueType: "placement_blocked",
+        message: "Watervrees/needs-review scenario vereist eerst een handmatige niveaubeoordeling.",
+        runId: input.runId,
+        severity: "warning"
+      });
+      await completeJourney(journey, "partial", "Plaatsing bewust gepauzeerd voor handmatige beoordeling.");
+      return "partial";
+    }
 
     const placement = await placeInStage({ config: input.config, journey, program, stage: firstStage, waitlist, profile });
-    if (!placement) return "partial";
+    if (!placement) return profile.stressVariant === "no_capacity" ? "blocked_no_capacity" : "partial";
     journey = await updateJourney(journey, {
       current_group_id: placement.group.id,
       enrollment_id: placement.enrollment.id
@@ -631,7 +646,15 @@ async function placeInStage(input: {
   await savePlacementScores(input.config.tenant_id, input.waitlist.id, scores, input.journey.run_id);
 
   if (input.profile.stressVariant === "no_capacity") {
-    await blockJourney(input.journey, input.config, "no_capacity", "Stressscenario simuleert geen beschikbare plaats.", "warning");
+    await createIssue({
+      childJourneyId: input.journey.id,
+      config: input.config,
+      issueType: "no_capacity",
+      message: "Stressscenario simuleert geen beschikbare plaats; leerling blijft veilig op de wachtlijst.",
+      runId: input.journey.run_id,
+      severity: "warning"
+    });
+    await completeJourney(input.journey, "blocked_no_capacity", "Geen capaciteit; geen membership of enrollment aangemaakt.");
     return null;
   }
 
@@ -1274,7 +1297,7 @@ function createSyntheticProfile(runId: string, ordinal: number, scenario: Journe
   const street = streets[(seed * 7) % streets.length]!;
   const district = districts[(seed * 11) % districts.length]!;
   const stamp = `${Date.now()}-${ordinal}`;
-  const stressBucket = seed % 20;
+  const stressBucket = ordinal % 20;
   const stressVariant = scenario === "stress_mix" ? (stressBucket < 2 ? "under_4" : stressBucket < 4 ? "needs_review" : stressBucket === 4 ? "no_capacity" : "normal") : "normal";
   const year = stressVariant === "under_4" ? new Date().getUTCFullYear() - 2 : 2018 + (seed % 4);
   const month = String((seed % 12) + 1).padStart(2, "0");
