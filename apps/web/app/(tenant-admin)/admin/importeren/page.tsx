@@ -8,7 +8,8 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
 import { cancelImportJobAction } from "@/lib/domain/premium-operations-actions";
-import { applyImportAction, dryRunImportAction, getImportFields, rollbackImportAction, saveImportMappingAction, validateImportAction } from "@/lib/domain/import-actions";
+import { applyImportAction, dryRunImportAction, rollbackImportAction, saveImportMappingAction, validateImportAction } from "@/lib/domain/import-actions";
+import { getImportFields } from "@/lib/domain/import-contract";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";

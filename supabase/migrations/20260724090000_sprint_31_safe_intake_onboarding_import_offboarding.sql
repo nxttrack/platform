@@ -9,6 +9,8 @@ create table public.public_intake_rate_limits (
   primary key (tenant_id, fingerprint_hash, window_started_at),
   constraint public_intake_rate_limits_count_check check (request_count > 0)
 );
+create index public_intake_rate_limits_window_idx
+  on public.public_intake_rate_limits (window_started_at);
 
 alter table public.intake_submissions
   add column dedupe_key text,

@@ -1,5 +1,6 @@
 "use server";
 
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -9,26 +10,10 @@ import { findUserIdByEmail } from "@/lib/auth/user-security";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
+import { asImportType, getImportFields, importFieldsByType as fieldsByType, type ImportType } from "./import-contract";
 
-type ImportType = "participants" | "guardians" | "groups" | "enrollments" | "payments" | "mixed";
 type ImportRow = { id: string; row_number: number; source_data: Record<string, unknown>; validation_status: string };
-type ManifestEntry = { table: string; id: string; rowId: string };
-
-const fieldsByType: Record<ImportType, { key: string; label: string; required?: boolean }[]> = {
-  participants: [{ key: "display_name", label: "Naam leerling", required: true }, { key: "birth_date", label: "Geboortedatum" }, { key: "external_reference", label: "Externe referentie" }],
-  guardians: [{ key: "full_name", label: "Naam ouder", required: true }, { key: "email", label: "E-mail", required: true }],
-  groups: [{ key: "name", label: "Groepsnaam", required: true }, { key: "code", label: "Groepscode", required: true }, { key: "program_code", label: "Programmacode", required: true }, { key: "stage_code", label: "Niveaucode" }, { key: "resource_code", label: "Resourcecode" }, { key: "capacity", label: "Capaciteit" }, { key: "weekday", label: "Weekdag" }, { key: "start_time", label: "Starttijd" }, { key: "end_time", label: "Eindtijd" }],
-  enrollments: [{ key: "participant_reference", label: "Leerlingreferentie", required: true }, { key: "program_code", label: "Programmacode", required: true }, { key: "stage_code", label: "Niveaucode" }, { key: "starts_on", label: "Startdatum" }],
-  payments: [{ key: "participant_reference", label: "Leerlingreferentie", required: true }, { key: "amount_eur", label: "Bedrag EUR", required: true }, { key: "due_on", label: "Vervaldatum", required: true }, { key: "status", label: "Status" }],
-  mixed: [{ key: "record_type", label: "Recordtype", required: true }]
-};
-
-export function getImportFields(type: string) {
-  const importType = asImportType(type);
-  if (importType !== "mixed") return fieldsByType[importType];
-  const seen = new Set<string>();
-  return Object.values(fieldsByType).flat().filter((field) => !seen.has(field.key) && Boolean(seen.add(field.key)));
-}
+type ManifestEntry = { table: string; id: string; rowId: string; email?: string };
 
 export async function saveImportMappingAction(formData: FormData) {
   const { tenant, userId } = await requireTenantAdmin();
@@ -55,16 +40,26 @@ export async function validateImportAction(formData: FormData) {
   assertStatus(job.status, ["mapping", "validated", "ready"]);
   const rows = await getRows(tenant.id, jobId, true);
   const references = await loadReferences(tenant.id);
+  const mappedRows = rows.map((row) => {
+    const normalized = mapRow(row.source_data, job.mapping);
+    return { normalized, recordType: resolveRecordType(job.import_type, normalized), row };
+  });
+  const pendingParticipants = mappedRows.filter((item) => item.recordType === "participants").map((item) => ({
+    id: `pending-${item.row.id}`,
+    display_name: stringValue(item.normalized.display_name),
+    birth_date: nullable(item.normalized.birth_date),
+    external_reference: nullable(item.normalized.external_reference),
+    guardian_user_id: null
+  }));
+  const validationReferences = { ...references, participants: [...references.participants, ...pendingParticipants] };
   const seen = new Set<string>();
   let valid = 0;
   let invalid = 0;
   let duplicates = 0;
   const admin = createAdminClient();
 
-  for (const row of rows) {
-    const normalized = mapRow(row.source_data, job.mapping);
-    const recordType = resolveRecordType(job.import_type, normalized);
-    const errors = validateRow(recordType, normalized, references);
+  for (const { normalized, recordType, row } of mappedRows) {
+    const errors = validateRow(recordType, normalized, validationReferences);
     const duplicateKey = buildDuplicateKey(recordType, normalized);
     const duplicate = duplicateKey ? seen.has(duplicateKey) || isExistingDuplicate(recordType, normalized, references) : false;
     if (duplicateKey) seen.add(duplicateKey);
@@ -122,7 +117,8 @@ export async function applyImportAction(formData: FormData) {
       manifest.push(entry);
       await requireWrite(admin.from("import_rows").update({ validation_status: "applied", target_table: entry.table, target_id: entry.id }).eq("tenant_id", tenant.id).eq("id", row.id), "row apply");
     }
-    await requireWrite(admin.from("import_jobs").update({ status: "completed", rollback_manifest: manifest, applied_at: new Date().toISOString() }).eq("tenant_id", tenant.id).eq("id", jobId), "apply complete");
+    const rollbackSignature = signManifest(tenant.id, jobId, manifest);
+    await requireWrite(admin.from("import_jobs").update({ status: "completed", rollback_manifest: manifest, validation_report: { ...job.validation_report, rollbackSignature }, applied_at: new Date().toISOString() }).eq("tenant_id", tenant.id).eq("id", jobId), "apply complete");
     await audit(tenant.id, jobId, context.user.id, "applied", { created: manifest.length });
   } catch (error) {
     await rollbackManifest(tenant.id, manifest);
@@ -140,6 +136,8 @@ export async function rollbackImportAction(formData: FormData) {
   const job = await getJob(tenant.id, jobId);
   assertStatus(job.status, ["completed"]);
   const manifest = Array.isArray(job.rollback_manifest) ? job.rollback_manifest as ManifestEntry[] : [];
+  const signature = typeof job.validation_report.rollbackSignature === "string" ? job.validation_report.rollbackSignature : "";
+  if (!verifyManifest(tenant.id, jobId, manifest, signature)) redirect(`/admin/importeren?job=${jobId}&error=rollback_signature`);
   await rollbackManifest(tenant.id, manifest);
   const admin = createAdminClient();
   await requireWrite(admin.from("import_rows").update({ validation_status: "rolled_back" }).eq("tenant_id", tenant.id).eq("import_job_id", jobId).eq("validation_status", "applied"), "rollback rows");
@@ -153,7 +151,10 @@ async function applyRow(input: { context: Awaited<ReturnType<typeof requirePriva
   const admin = createAdminClient();
   const type = String(input.data.record_type);
   if (type === "participants") {
-    const row = await insertOne(admin.from("participants").insert({ tenant_id: input.tenantId, display_name: stringValue(input.data.display_name), birth_date: nullable(input.data.birth_date), external_reference: nullable(input.data.external_reference), status: "active" }).select("id").single(), "participant");
+    const guardianEmail = nullable(input.data.guardian_email)?.toLowerCase() ?? null;
+    const guardianUserId = guardianEmail ? await findUserIdByEmail(guardianEmail) : null;
+    if (guardianEmail && !guardianUserId) throw new Error(`guardian not found: ${guardianEmail}`);
+    const row = await insertOne(admin.from("participants").insert({ tenant_id: input.tenantId, guardian_user_id: guardianUserId, display_name: stringValue(input.data.display_name), birth_date: nullable(input.data.birth_date), external_reference: nullable(input.data.external_reference), status: "active" }).select("id").single(), "participant");
     return { table: "participants", id: row.id, rowId: input.rowId };
   }
   if (type === "guardians") {
@@ -161,7 +162,7 @@ async function applyRow(input: { context: Awaited<ReturnType<typeof requirePriva
     await createInvitation({ actor: input.context, email, fullName: stringValue(input.data.full_name), loginUrl: `${await getTrustedRequestOrigin()}/login?next=${encodeURIComponent("/portaal")}`, role: "parent", tenantSlug: input.tenantSlug });
     const userId = await findUserIdByEmail(email);
     if (!userId) throw new Error("guardian user missing after invitation");
-    return { table: "tenant_memberships", id: userId, rowId: input.rowId };
+    return { table: "tenant_memberships", id: userId, rowId: input.rowId, email };
   }
   if (type === "groups") {
     const refs = await loadReferences(input.tenantId);
@@ -197,7 +198,10 @@ async function applyRow(input: { context: Awaited<ReturnType<typeof requirePriva
 async function rollbackManifest(tenantId: string, manifest: ManifestEntry[]) {
   const admin = createAdminClient();
   for (const entry of [...manifest].reverse()) {
-    if (entry.table === "tenant_memberships") await admin.from("tenant_memberships").delete().eq("tenant_id", tenantId).eq("user_id", entry.id).eq("role", "parent");
+    if (entry.table === "tenant_memberships") {
+      await admin.from("tenant_memberships").delete().eq("tenant_id", tenantId).eq("user_id", entry.id).eq("role", "parent");
+      await admin.from("auth_invitations").update({ status: "revoked" }).eq("tenant_id", tenantId).eq("invited_user_id", entry.id).eq("status", "pending");
+    }
     else if (["manual_payments", "enrollments", "groups", "participants"].includes(entry.table)) await admin.from(entry.table).delete().eq("tenant_id", tenantId).eq("id", entry.id);
   }
 }
@@ -224,6 +228,7 @@ function validateRow(type: ImportType, data: Record<string, unknown>, refs: Awai
   const required = fieldsByType[type === "mixed" ? "mixed" : type].filter((field) => field.required);
   for (const field of required) if (!nullable(data[field.key])) errors.push(`${field.label} ontbreekt`);
   if (type === "participants" && nullable(data.birth_date) && !isDate(stringValue(data.birth_date))) errors.push("Geboortedatum is ongeldig");
+  if (type === "participants" && nullable(data.guardian_email) && !isEmail(stringValue(data.guardian_email))) errors.push("E-mail ouder is ongeldig");
   if (type === "guardians" && !isEmail(stringValue(data.email))) errors.push("E-mail is ongeldig");
   if (type === "groups" && !refs.programs.some((item) => item.code === stringValue(data.program_code))) errors.push("Programmacode bestaat niet");
   if (type === "enrollments") {
@@ -266,7 +271,6 @@ async function audit(tenantId: string, jobId: string, actor: string, eventType: 
 async function insertOne(operation: PromiseLike<{ data: { id: string } | null; error: { message: string } | null }>, label: string) { const result = await operation; if (result.error || !result.data) throw new Error(`${label}: ${result.error?.message ?? "missing"}`); return result.data; }
 async function requireWrite(operation: PromiseLike<{ error: { message: string } | null }>, label: string) { const result = await operation; if (result.error) throw new Error(`${label}: ${result.error.message}`); }
 function assertStatus(status: string, allowed: string[]) { if (!allowed.includes(status)) throw new Error(`Importstatus ${status} is not allowed`); }
-function asImportType(value: string): ImportType { if (!["participants", "guardians", "groups", "enrollments", "payments", "mixed"].includes(value)) throw new Error("Unknown import type"); return value as ImportType; }
 function readRequired(formData: FormData, field: string) { const value = readOptional(formData, field); if (!value) throw new Error(`${field} is required`); return value; }
 function readOptional(formData: FormData, field: string) { return String(formData.get(field) ?? "").trim() || null; }
 function nullable(value: unknown) { const normalized = String(value ?? "").trim(); return normalized || null; }
@@ -275,3 +279,5 @@ function numberValue(value: unknown, fallback = 0) { const parsed = Number(Strin
 function normalize(value: string) { return value.trim().toLocaleLowerCase("nl").replace(/\s+/g, " "); }
 function isDate(value: string) { return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)); }
 function isEmail(value: string) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value); }
+function signManifest(tenantId: string, jobId: string, manifest: ManifestEntry[]) { const secret = process.env.SESSION_SECRET ?? process.env.JWT_SECRET; if (!secret) throw new Error("Session secret is required for rollback signing"); return createHmac("sha256", secret).update(JSON.stringify({ tenantId, jobId, manifest })).digest("hex"); }
+function verifyManifest(tenantId: string, jobId: string, manifest: ManifestEntry[], signature: string) { const expected = signManifest(tenantId, jobId, manifest); if (!/^[a-f0-9]{64}$/.test(signature)) return false; return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex")); }

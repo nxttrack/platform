@@ -170,12 +170,12 @@ function readColor(formData: FormData, field: string, fallback: string) { const 
 function normalizeHeader(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
 function getCanonicalFields(importType: string) {
   const fields: Record<string, string[]> = {
-    participants: ["display_name", "birth_date", "external_reference"],
+    participants: ["display_name", "birth_date", "external_reference", "guardian_email"],
     guardians: ["full_name", "email"],
     groups: ["name", "code", "program_code", "stage_code", "resource_code", "capacity", "weekday", "start_time", "end_time"],
     enrollments: ["participant_reference", "program_code", "stage_code", "starts_on"],
     payments: ["participant_reference", "amount_eur", "due_on", "status"],
-    mixed: ["record_type", "display_name", "birth_date", "external_reference", "full_name", "email", "name", "code", "program_code", "stage_code", "resource_code", "capacity", "weekday", "start_time", "end_time", "participant_reference", "starts_on", "amount_eur", "due_on", "status"]
+    mixed: ["record_type", "display_name", "birth_date", "external_reference", "guardian_email", "full_name", "email", "name", "code", "program_code", "stage_code", "resource_code", "capacity", "weekday", "start_time", "end_time", "participant_reference", "starts_on", "amount_eur", "due_on", "status"]
   };
   return fields[importType] ?? [];
 }

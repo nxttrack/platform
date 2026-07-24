@@ -16,6 +16,7 @@ export async function provisionTenantAction(formData: FormData) {
   const ownerEmail = normalizeEmail(readRequired(formData, "ownerEmail"));
   const ownerName = readRequired(formData, "ownerName");
   const hostname = readRequired(formData, "hostname").toLowerCase();
+  const customDomain = readOptional(formData, "customDomain")?.toLowerCase() ?? null;
   const programName = readRequired(formData, "programName");
   const stageNames = splitList(readRequired(formData, "stageNames"));
   const locationName = readRequired(formData, "locationName");
@@ -24,7 +25,7 @@ export async function provisionTenantAction(formData: FormData) {
   const staff = splitList(readOptional(formData, "staffEmails") ?? "").map(normalizeEmail);
   const amountCents = Math.round(readPositiveNumber(formData, "monthlyAmount") * 100);
 
-  if (!isEmail(ownerEmail) || staff.some((email) => !isEmail(email)) || stageNames.length === 0) {
+  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || !hostname.endsWith(".nxttrack.nl")) {
     redirect("/platform/onboarding?error=validation");
   }
 
@@ -51,10 +52,13 @@ export async function provisionTenantAction(formData: FormData) {
     await requireWrite(admin.from("tenant_domains").insert({
       tenant_id: tenantId,
       hostname,
-      kind: hostname.endsWith(".nxttrack.nl") ? "subdomain" : "custom_domain",
-      status: hostname.endsWith(".nxttrack.nl") ? "verified" : "pending",
+      kind: "subdomain",
+      status: "verified",
       is_primary: true
     }), "primary domain");
+    if (customDomain && customDomain !== hostname) {
+      await requireWrite(admin.from("tenant_domains").insert({ tenant_id: tenantId, hostname: customDomain, kind: "custom_domain", status: "pending", is_primary: false }), "custom domain");
+    }
     await requireWrite(admin.from("tenant_branding").insert({
       tenant_id: tenantId,
       product_name: readOptional(formData, "productName") ?? name,
@@ -131,13 +135,14 @@ export async function provisionTenantAction(formData: FormData) {
 
     const checklist = {
       branding: true,
-      domain: hostname.endsWith(".nxttrack.nl"),
+      customDomainPending: Boolean(customDomain),
+      domain: true,
       group: true,
       location: true,
       ownerInvited: true,
       paymentPlan: true,
       programAndStages: true,
-      staffInvited: staff.length > 0
+      staffInvited: true
     };
     await requireWrite(admin.from("tenant_onboarding_runs").update({
       status: "opened",
@@ -228,8 +233,14 @@ export async function permanentlyDeleteTenantAction(formData: FormData) {
   ]);
   const documentPaths = (documents.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
   const certificatePaths = (certificates.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
-  if (documentPaths.length) await admin.storage.from("tenant-documents").remove(documentPaths);
-  if (certificatePaths.length) await admin.storage.from("diploma-vault").remove(certificatePaths);
+  if (documentPaths.length) {
+    const { error } = await admin.storage.from("tenant-documents").remove(documentPaths);
+    if (error) redirect("/platform/offboarding?error=storage_documents");
+  }
+  if (certificatePaths.length) {
+    const { error } = await admin.storage.from("diploma-vault").remove(certificatePaths);
+    if (error) redirect("/platform/offboarding?error=storage_certificates");
+  }
 
   await requireWrite(admin.from("tenant_deletion_tombstones").insert({
     former_tenant_id: tenantResult.data.id,
