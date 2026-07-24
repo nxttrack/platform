@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import { getJourneyBotEnvironmentStatus, runDueJourneyBotConfigs } from "@/lib/domain/journey-bot";
+import { summarizeJourneyTick } from "@/lib/domain/journey-bot-contract";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -18,7 +19,9 @@ export async function POST(request: Request) {
 
   try {
     const results = await runDueJourneyBotConfigs();
-    return NextResponse.json({ accepted: true, environment: environment.environment, processed: results.length, results });
+    const completedRuns = results.filter((result) => "healthStatus" in result);
+    const summary = summarizeJourneyTick(completedRuns);
+    return NextResponse.json({ accepted: true, environment: environment.environment, processed: results.length, results, summary });
   } catch (error) {
     return NextResponse.json(
       { accepted: false, reason: "runner_failed", message: error instanceof Error ? error.message : String(error) },

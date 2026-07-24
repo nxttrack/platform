@@ -62,12 +62,12 @@ export function isJourneyBotEnvironmentAllowed(value: string | null | undefined,
 }
 
 export function getMinimumAgeDecision(birthDate: string, today = new Date()): MinimumAgeDecision {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) throw new Error("A valid ISO birth date is required.");
   const [year, month, day] = birthDate.split("-").map(Number);
-
-  if (!year || !month || !day) {
+  const birth = new Date(Date.UTC(year!, month! - 1, day));
+  if (birth.getUTCFullYear() !== year || birth.getUTCMonth() !== month! - 1 || birth.getUTCDate() !== day) {
     throw new Error("A valid ISO birth date is required.");
   }
-
   const eligibleDate = new Date(Date.UTC(year + 4, month - 1, day));
   const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
 
@@ -224,5 +224,10 @@ export function isActiveJourneyWindow(input: {
   const minute = parts.find((part) => part.type === "minute")?.value ?? "00";
   const time = `${hour === "24" ? "00" : hour}:${minute}`;
 
-  return input.activeDays.includes(weekday) && input.activeWindows.some((window) => window.start <= time && time <= window.end);
+  return (
+    input.activeDays.includes(weekday) &&
+    input.activeWindows.some((window) =>
+      window.start <= window.end ? window.start <= time && time <= window.end : time >= window.start || time <= window.end
+    )
+  );
 }

@@ -6,7 +6,13 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { journeyScenarioModes, normalizeJourneyBotEnvironment, type JourneyScenarioMode } from "./journey-bot-contract";
-import { archiveJourneyBotRun, getJourneyBotEnvironmentStatus, runJourneyBotConfig, stopAllJourneyBots } from "./journey-bot";
+import {
+  archiveJourneyBotRun,
+  getJourneyBotEnvironmentStatus,
+  resetJourneyBotTestCycle,
+  runJourneyBotConfig,
+  stopAllJourneyBots
+} from "./journey-bot";
 
 const pagePath = "/platform/test-tools/journey-bot";
 
@@ -29,6 +35,19 @@ export async function saveJourneyBotConfigAction(formData: FormData) {
   const enabled = formData.get("enabled") === "on";
   const paused = formData.get("paused") === "on";
   const now = new Date();
+  const existingResult = await admin
+    .from("journey_bot_configs")
+    .select("id, enabled, scenario_mode, stop_after_journeys, journeys_started_total, budget_started_at")
+    .eq("environment", environmentStatus.environment)
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+  if (existingResult.error) redirect(`${pagePath}?error=config`);
+  const stopAfter = stopAfterJourneys > 0 ? stopAfterJourneys : null;
+  const resetBudget =
+    !existingResult.data ||
+    existingResult.data.scenario_mode !== scenarioMode ||
+    existingResult.data.stop_after_journeys !== stopAfter ||
+    (!existingResult.data.enabled && enabled);
   const result = await admin.from("journey_bot_configs").upsert(
     {
       environment: environmentStatus.environment,
@@ -50,8 +69,10 @@ export async function saveJourneyBotConfigAction(formData: FormData) {
       use_fallback_placement: formData.get("useFallbackPlacement") === "on",
       cleanup_after_days: readInteger(formData, "cleanupAfterDays", 1, 365, 14),
       run_until: runDurationHours > 0 ? new Date(now.getTime() + runDurationHours * 60 * 60_000).toISOString() : null,
-      stop_after_journeys: stopAfterJourneys > 0 ? stopAfterJourneys : null,
+      stop_after_journeys: stopAfter,
       next_run_at: enabled && !paused ? now.toISOString() : null,
+      budget_started_at: resetBudget ? now.toISOString() : existingResult.data?.budget_started_at ?? now.toISOString(),
+      journeys_started_total: resetBudget ? 0 : existingResult.data?.journeys_started_total ?? 0,
       updated_by: context.user.id,
       created_by: context.user.id
     },
@@ -68,7 +89,7 @@ export async function runJourneyBotNowAction(formData: FormData) {
   let runId = "";
   try {
     const result = await runJourneyBotConfig(configId, { ignoreSchedule: true, requestedBy: context.user.id });
-    runId = result.runId ?? "";
+    runId = "runId" in result ? result.runId ?? "" : "";
   } catch {
     redirect(`${pagePath}?error=run`);
   }
@@ -85,6 +106,8 @@ export async function startJourneyBotWindowAction(formData: FormData) {
     .from("journey_bot_configs")
     .update({
       enabled: true,
+      budget_started_at: new Date().toISOString(),
+      journeys_started_total: 0,
       paused: false,
       run_until: new Date(Date.now() + hours * 60 * 60_000).toISOString(),
       next_run_at: new Date().toISOString(),
@@ -99,6 +122,13 @@ export async function startJourneyBotWindowAction(formData: FormData) {
   }
   revalidatePath(pagePath);
   redirect(`${pagePath}?saved=window`);
+}
+
+export async function resetJourneyBotTestCycleAction(formData: FormData) {
+  const context = await requirePlatformAdmin();
+  await resetJourneyBotTestCycle(readRequired(formData, "configId"), context.user.id);
+  revalidatePath(pagePath);
+  redirect(`${pagePath}?saved=reset`);
 }
 
 export async function pauseJourneyBotAction(formData: FormData) {

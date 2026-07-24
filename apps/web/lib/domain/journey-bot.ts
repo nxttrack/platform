@@ -4,14 +4,22 @@ import { randomUUID } from "node:crypto";
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  calculateJourneyRunAllowance,
   chooseNextRunAt,
+  getJourneyConfigStopReason,
   getMinimumAgeDecision,
   isActiveJourneyWindow,
   isJourneyBotEnvironmentAllowed,
   normalizeJourneyBotEnvironment,
   resolveScenarioMode,
+  resolveStressVariant,
+  summarizeJourneyRun,
   type JourneyBotEnvironment,
-  type JourneyScenarioMode
+  type JourneyExecutionOutcome,
+  type JourneyIssueSummary,
+  type JourneyOutcomeClassification,
+  type JourneyScenarioMode,
+  type JourneyStressVariant
 } from "./journey-bot-contract";
 import { computePlacementScores, type WaitlistEntryRow, type WaitlistPreferenceRow } from "./placement";
 import type { GroupMembershipRow, GroupRow } from "./core";
@@ -44,13 +52,20 @@ export type JourneyBotConfigRow = {
   suppress_real_payments: boolean;
   use_fallback_placement: boolean;
   cleanup_after_days: number;
+  journeys_started_total: number;
+  budget_started_at: string;
   run_until: string | null;
   stop_after_journeys: number | null;
   next_run_at: string | null;
   last_run_at: string | null;
   last_status: string | null;
   last_error: string | null;
+  lock_token: string | null;
   locked_at: string | null;
+};
+
+type JourneyExecutionResult = JourneyExecutionOutcome & {
+  journeyId: string;
 };
 
 type ProgramRow = { code: string | null; id: string; name: string };
@@ -133,6 +148,15 @@ export async function runDueJourneyBotConfigs() {
   const results = [];
 
   for (const config of (data ?? []) as JourneyBotConfigRow[]) {
+    const stopReason = getJourneyConfigStopReason({
+      journeysStartedTotal: config.journeys_started_total,
+      runUntil: config.run_until,
+      stopAfterJourneys: config.stop_after_journeys
+    });
+    if (stopReason) {
+      await stopJourneyBotConfig(config, stopReason);
+      continue;
+    }
     if (!isConfigWithinSchedule(config)) continue;
     results.push(await runJourneyBotConfig(config.id, { ignoreSchedule: false, requestedBy: null }));
   }
@@ -167,10 +191,30 @@ export async function runJourneyBotConfig(
   let runId: string | null = null;
 
   try {
-    const allowance = await getRunAllowance(config);
-    if (allowance <= 0) {
-      await releaseConfig(config, lockToken, "limited", null);
-      return { configId, skipped: true, reason: "limit_reached" };
+    const claimedConfig = await getConfig(configId);
+    if (claimedConfig.lock_token !== lockToken) return { configId, skipped: true, reason: "lock_lost" };
+    const stopReason = getJourneyConfigStopReason({
+      journeysStartedTotal: claimedConfig.journeys_started_total,
+      runUntil: claimedConfig.run_until,
+      stopAfterJourneys: claimedConfig.stop_after_journeys
+    });
+    if (stopReason) {
+      await stopJourneyBotConfig(claimedConfig, stopReason, lockToken);
+      return { configId, skipped: true, reason: stopReason };
+    }
+    const allowance = await getRunAllowance(claimedConfig);
+    if (allowance.allowance <= 0) {
+      if (allowance.stopRemaining <= 0) {
+        await stopJourneyBotConfig(claimedConfig, "journey_limit_reached", lockToken);
+      } else {
+        await releaseConfig(claimedConfig, lockToken, "limited", null, 0);
+      }
+      return {
+        configId,
+        limits: allowance,
+        skipped: true,
+        reason: allowance.stopRemaining <= 0 ? "journey_limit_reached" : "limit_reached"
+      };
     }
 
     const runResult = await admin
@@ -184,6 +228,7 @@ export async function runJourneyBotConfig(
         metadata_json: {
           requestedBy: options.requestedBy ?? "cron",
           safeMode: true,
+          sequenceStart: claimedConfig.journeys_started_total,
           suppressExternalNotifications: true,
           suppressRealPayments: true
         }
@@ -194,51 +239,77 @@ export async function runJourneyBotConfig(
     const createdRunId = runResult.data.id as string;
     runId = createdRunId;
 
-    let completed = 0;
-    let failed = 0;
-    for (let ordinal = 0; ordinal < allowance; ordinal += 1) {
+    const outcomes: JourneyExecutionResult[] = [];
+    for (let ordinal = 0; ordinal < allowance.allowance; ordinal += 1) {
       try {
-        const status = await runChildJourney({ config, ordinal, runId: createdRunId });
-        if (!["failed", "partial"].includes(status)) completed += 1;
-        else failed += 1;
+        outcomes.push(
+          await runChildJourney({
+            config: claimedConfig,
+            ordinal,
+            runId: createdRunId,
+            sequence: claimedConfig.journeys_started_total + ordinal
+          })
+        );
       } catch (error) {
-        failed += 1;
         await createIssue({
-          config,
+          config: claimedConfig,
           context: { ordinal },
           issueType: "unexpected_exception",
           message: getErrorMessage(error),
           runId: createdRunId,
-          severity: "error"
+          severity: "error",
+          step: "run_child_journey"
         });
+        outcomes.push({ classification: "technical_failure", journeyId: "unavailable", status: "failed" });
       }
     }
 
-    const issueCount = await countRunIssues(createdRunId);
-    const status = failed === 0 ? "completed" : completed > 0 ? "partial" : "failed";
+    const issueSummary = await getRunIssueSummary(createdRunId);
+    const summary = summarizeJourneyRun(outcomes, issueSummary);
+    const issueCount = issueSummary.info + issueSummary.warning + issueSummary.error + issueSummary.critical;
     await admin
       .from("journey_bot_runs")
       .update({
-        completed_count: completed,
-        failed_count: failed,
+        completed_count: summary.completed,
+        degraded_count: summary.degraded,
+        expected_blocked_count: summary.expectedBlocked,
+        failed_count: summary.failed,
         finished_at: new Date().toISOString(),
+        health_status: summary.healthStatus,
         issue_count: issueCount,
-        started_count: allowance,
-        status
+        issue_summary_json: issueSummary,
+        passed_count: summary.passed,
+        started_count: allowance.allowance,
+        status: summary.status,
+        technical_failure_count: summary.technicalFailures,
+        unexpected_issue_count: issueSummary.unexpected
       })
       .eq("id", createdRunId);
-    await releaseConfig(config, lockToken, status, failed ? `${failed} journey(s) failed.` : null);
+    await releaseConfig(
+      claimedConfig,
+      lockToken,
+      summary.status,
+      summary.technicalFailures ? `${summary.technicalFailures} technische journey-fout(en).` : null,
+      allowance.allowance
+    );
 
-    return { completed, failed, issueCount, runId, skipped: false, status };
+    return {
+      ...summary,
+      configId,
+      issueCount,
+      limits: allowance,
+      runId,
+      skipped: false
+    };
   } catch (error) {
     const message = getErrorMessage(error);
     if (runId) {
       await Promise.all([
         admin.from("journey_bot_runs").update({ error_message: message, finished_at: new Date().toISOString(), status: "failed" }).eq("id", runId),
-        createIssue({ config, issueType: "unexpected_exception", message, runId, severity: "critical" })
+        createIssue({ config, issueType: "unexpected_exception", message, runId, severity: "critical", step: "run_orchestration" })
       ]);
     }
-    await releaseConfig(config, lockToken, "failed", message);
+    await releaseConfig(config, lockToken, "failed", message, 0);
     throw error;
   }
 }
@@ -303,9 +374,67 @@ export async function stopAllJourneyBots(actorUserId: string) {
   ]);
 }
 
-async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: number; runId: string }) {
+export async function resetJourneyBotTestCycle(configId: string, actorUserId: string) {
+  const environment = requireAllowedEnvironment();
   const admin = createAdminClient();
-  const profile = createSyntheticProfile(input.runId, input.ordinal, input.config.scenario_mode);
+  const config = await getConfig(configId);
+  if (config.environment !== environment) throw new Error("Journey Bot config belongs to a different environment.");
+  const archivedAt = new Date().toISOString();
+  const reason = `journey_bot_test_cycle_reset:${actorUserId}`;
+  const [memberships, enrollments, runningJourneys] = await Promise.all([
+    admin
+      .from("group_memberships")
+      .update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" })
+      .eq("tenant_id", config.tenant_id)
+      .eq("is_test", true)
+      .eq("source", SOURCE)
+      .eq("status", "active")
+      .select("id"),
+    admin
+      .from("enrollments")
+      .update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" })
+      .eq("tenant_id", config.tenant_id)
+      .eq("is_test", true)
+      .eq("source", SOURCE)
+      .eq("status", "active")
+      .select("id"),
+    admin
+      .from("journey_bot_child_journeys")
+      .update({ finished_at: archivedAt, journey_status: "stopped" })
+      .eq("tenant_id", config.tenant_id)
+      .eq("journey_status", "running")
+      .select("id")
+  ]);
+  assertNoError(memberships.error, "reset test memberships");
+  assertNoError(enrollments.error, "reset test enrollments");
+  assertNoError(runningJourneys.error, "reset running journeys");
+  const configResult = await admin
+    .from("journey_bot_configs")
+    .update({
+      budget_started_at: archivedAt,
+      enabled: false,
+      journeys_started_total: 0,
+      last_error: null,
+      last_status: "test_cycle_reset",
+      locked_at: null,
+      lock_token: null,
+      next_run_at: null,
+      paused: true,
+      updated_by: actorUserId
+    })
+    .eq("id", config.id);
+  assertNoError(configResult.error, "reset journey bot config");
+
+  return {
+    cancelledEnrollments: enrollments.data?.length ?? 0,
+    releasedMemberships: memberships.data?.length ?? 0,
+    stoppedJourneys: runningJourneys.data?.length ?? 0
+  };
+}
+
+async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: number; runId: string; sequence: number }): Promise<JourneyExecutionResult> {
+  const admin = createAdminClient();
+  const profile = createSyntheticProfile(input.runId, input.ordinal, input.sequence, input.config.scenario_mode);
   const scenario =
     input.config.scenario_mode === "stress_mix" && profile.stressVariant !== "normal"
       ? "intake_to_placement"
@@ -334,6 +463,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
         minimumAge: MINIMUM_AGE,
         resolvedScenario: scenario,
         safeMode: true,
+        sequence: input.sequence,
         stressVariant: profile.stressVariant
       }
     })
@@ -348,8 +478,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
     await appendEvent(journey, "intake_created", "completed", `Intake aangemaakt voor ${program.name}.`, { intakeId: intake.id });
 
     if (scenario === "intake_only") {
-      await completeJourney(journey, "completed_intake", "Intake zichtbaar en veilig als Journey Bot-testdata opgeslagen.");
-      return "completed_intake";
+      return await finishJourney(journey, "completed_intake", "passed", "Intake zichtbaar en veilig als Journey Bot-testdata opgeslagen.");
     }
 
     const guardianId = await createGuardian({ config: input.config, journey, profile });
@@ -358,7 +487,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
     const firstStage = stages[0];
     if (!firstStage) {
       await blockJourney(journey, input.config, "missing_stage", "Programma bevat geen actieve niveaus.", "error");
-      return "failed";
+      return executionResult(journey.id, "failed", "technical_failure");
     }
 
     const waitlist = await createWaitlist({ config: input.config, intakeId: intake.id, journey, profile, program, stage: firstStage, ageDecision });
@@ -370,32 +499,55 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
     });
 
     if (ageDecision.blocked) {
-      await completeJourney(journey, "blocked_until_eligible", `Niet plaatsbaar vóór ${ageDecision.eligibleFrom}; FIFO-prioriteitsdatum blijft behouden.`);
-      return "blocked_until_eligible";
+      return await finishJourney(
+        journey,
+        "blocked_until_eligible",
+        "expected_blocker",
+        `Niet plaatsbaar vóór ${ageDecision.eligibleFrom}; FIFO-prioriteitsdatum blijft behouden.`
+      );
     }
     if (profile.stressVariant === "needs_review") {
       await createIssue({
         childJourneyId: journey.id,
         config: input.config,
+        expected: true,
         issueType: "placement_blocked",
         message: "Watervrees/needs-review scenario vereist eerst een handmatige niveaubeoordeling.",
         runId: input.runId,
-        severity: "warning"
+        severity: "warning",
+        step: "placement_review"
       });
-      await completeJourney(journey, "partial", "Plaatsing bewust gepauzeerd voor handmatige beoordeling.");
-      return "partial";
+      return await finishJourney(journey, "partial", "expected_blocker", "Plaatsing bewust gepauzeerd voor handmatige beoordeling.");
+    }
+    if (profile.stressVariant === "recoverable_issue") {
+      await createIssue({
+        childJourneyId: journey.id,
+        config: input.config,
+        expected: true,
+        issueType: "simulated_recoverable_issue",
+        message: "Gecontroleerd stressscenario heeft een herstelbaar issue gelogd zonder verdere mutaties.",
+        runId: input.runId,
+        severity: "warning",
+        step: "stress_injection"
+      });
+      return await finishJourney(journey, "partial", "expected_blocker", "Herstelbaar issue correct opgeslagen en journey veilig begrensd.");
     }
 
     const placement = await placeInStage({ config: input.config, journey, program, stage: firstStage, waitlist, profile });
-    if (!placement) return profile.stressVariant === "no_capacity" ? "blocked_no_capacity" : "partial";
+    if (!placement) {
+      return executionResult(
+        journey.id,
+        profile.stressVariant === "no_capacity" ? "blocked_no_capacity" : "partial",
+        "expected_blocker"
+      );
+    }
     journey = await updateJourney(journey, {
       current_group_id: placement.group.id,
       enrollment_id: placement.enrollment.id
     });
 
     if (scenario === "intake_to_placement") {
-      await completeJourney(journey, "completed_placement", `Geplaatst in ${firstStage.name}, groep ${placement.group.name}.`);
-      return "completed_placement";
+      return await finishJourney(journey, "completed_placement", "passed", `Geplaatst in ${firstStage.name}, groep ${placement.group.name}.`);
     }
 
     const stagesToRun = scenario === "placement_to_next_stage" ? stages.slice(0, 2) : stages;
@@ -430,8 +582,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
 
       const progressOkay = await simulateStageProgress({ config: input.config, enrollmentId, group: currentGroup, journey, stage: currentStage });
       if (!progressOkay) {
-        await completeJourney(journey, "partial", `Gestopt bij ${currentStage.name}: voortgangsmodules ontbreken.`);
-        return "partial";
+        return await finishJourney(journey, "partial", "degraded", `Gestopt bij ${currentStage.name}: voortgangsmodules ontbreken.`);
       }
 
       const nextStage = stagesToRun[stageIndex + 1];
@@ -447,29 +598,27 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
         profile
       });
       if (!transfer) {
-        await completeJourney(journey, "blocked_no_capacity", `Geen capaciteit beschikbaar voor ${nextStage.name}.`);
-        return "blocked_no_capacity";
+        return await finishJourney(journey, "blocked_no_capacity", "expected_blocker", `Geen capaciteit beschikbaar voor ${nextStage.name}.`);
       }
       currentGroup = transfer.group;
       journey = await updateJourney(journey, { current_group_id: currentGroup.id, current_stage_id: nextStage.id });
     }
 
     if (scenario === "placement_to_next_stage") {
-      await completeJourney(journey, "completed_transfer", `Doorgestroomd van ${firstStage.name} naar ${currentStage.name}.`);
-      return "completed_transfer";
+      return await finishJourney(journey, "completed_transfer", "passed", `Doorgestroomd van ${firstStage.name} naar ${currentStage.name}.`);
     }
 
     const diplomaStage = [...stages].reverse().find((stage) => !isTerminalStage(stage)) ?? currentStage;
     const certificateOkay = await simulateGraduation({ config: input.config, enrollmentId, journey, program, stage: diplomaStage });
     const finalStatus = certificateOkay ? "completed_full_journey" : "partial";
-    await completeJourney(
+    return await finishJourney(
       journey,
       finalStatus,
+      certificateOkay ? "passed" : "degraded",
       certificateOkay
         ? `Volledige reis afgerond; ${diplomaStage.name}-testdiploma uitgegeven.`
         : `Reis afgerond tot afzwem-ready; diplomamodule kon niet worden voltooid.`
     );
-    return finalStatus;
   } catch (error) {
     await createIssue({
       childJourneyId: journey.id,
@@ -477,10 +626,10 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
       issueType: "unexpected_exception",
       message: getErrorMessage(error),
       runId: input.runId,
-      severity: "error"
+      severity: "error",
+      step: "child_journey"
     });
-    await completeJourney(journey, "failed", `Journey afgebroken: ${getErrorMessage(error)}`);
-    return "failed";
+    return await finishJourney(journey, "failed", "technical_failure", `Journey afgebroken: ${getErrorMessage(error)}`);
   }
 }
 
@@ -663,10 +812,12 @@ async function placeInStage(input: {
     await createIssue({
       childJourneyId: input.journey.id,
       config: input.config,
+      expected: true,
       issueType: "no_capacity",
       message: "Stressscenario simuleert geen beschikbare plaats; leerling blijft veilig op de wachtlijst.",
       runId: input.journey.run_id,
-      severity: "warning"
+      severity: "warning",
+      step: "initial_placement"
     });
     await completeJourney(input.journey, "blocked_no_capacity", "Geen capaciteit; geen membership of enrollment aangemaakt.");
     return null;
@@ -772,7 +923,8 @@ async function simulateStageProgress(input: {
       issueType: "progress_modules_missing",
       message: `Geen voortgangsmodule voor ${input.stage.name}; voortgang niet gefaket.`,
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "progress"
     });
     await appendEvent(input.journey, "progress_updated", "blocked", `Voortgang geblokkeerd voor ${input.stage.name}.`);
     return false;
@@ -784,7 +936,8 @@ async function simulateStageProgress(input: {
       issueType: "missing_group",
       message: `Geen sessies gevonden voor ${input.group.name}.`,
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "attendance"
     });
     return false;
   }
@@ -867,10 +1020,12 @@ async function simulateStageProgress(input: {
     await createIssue({
       childJourneyId: input.journey.id,
       config: input.config,
+      expected: true,
       issueType: "badge_engine_missing",
       message: `Geen badge voor ${input.stage.name}; stage kan wel doorgaan.`,
       runId: input.journey.run_id,
-      severity: "info"
+      severity: "info",
+      step: "badge"
     });
   }
   await appendEvent(input.journey, "stage_completed", "completed", `${input.stage.name} volledig afgerond.`);
@@ -898,10 +1053,12 @@ async function transferToStage(input: {
     await createIssue({
       childJourneyId: input.journey.id,
       config: input.config,
+      expected: true,
       issueType: "no_capacity",
       message: `Geen capaciteit in de volgende stage ${input.nextStage.name}; wachtlijst behouden.`,
       runId: input.journey.run_id,
-      severity: "warning"
+      severity: "warning",
+      step: "stage_transfer"
     });
     return null;
   }
@@ -923,7 +1080,8 @@ async function transferToStage(input: {
       issueType: "transfer_failed",
       message: "Actieve oude groepsplek ontbreekt; transfer afgebroken.",
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "stage_transfer"
     });
     return null;
   }
@@ -997,7 +1155,8 @@ async function simulateGraduation(input: {
       issueType: "afzwem_module_missing",
       message: readinessResult.error.message,
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "graduation_readiness"
     });
     return false;
   }
@@ -1031,7 +1190,8 @@ async function simulateGraduation(input: {
       issueType: "afzwem_module_missing",
       message: eventResult.error.message,
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "graduation_event"
     });
     return false;
   }
@@ -1059,7 +1219,18 @@ async function simulateGraduation(input: {
     })
     .select("id")
     .single();
-  if (participantResult.error) return false;
+  if (participantResult.error) {
+    await createIssue({
+      childJourneyId: input.journey.id,
+      config: input.config,
+      issueType: "afzwem_module_missing",
+      message: participantResult.error.message,
+      runId: input.journey.run_id,
+      severity: "error",
+      step: "graduation_result"
+    });
+    return false;
+  }
 
   const certificateResult = await admin.from("certificate_records").insert({
     tenant_id: input.config.tenant_id,
@@ -1085,7 +1256,8 @@ async function simulateGraduation(input: {
       issueType: "certificate_module_missing",
       message: certificateResult.error.message,
       runId: input.journey.run_id,
-      severity: "error"
+      severity: "error",
+      step: "certificate"
     });
     return false;
   }
@@ -1177,9 +1349,15 @@ async function getRunAllowance(config: JourneyBotConfigRow) {
   ]);
   assertNoError(todayResult.error, "daily journey count");
   assertNoError(activeResult.error, "active journey count");
-  const dailyRemaining = Math.max(0, config.max_journeys_per_day - (todayResult.count ?? 0));
-  const activeRemaining = Math.max(0, config.max_active_journeys - (activeResult.count ?? 0));
-  return Math.min(config.max_journeys_per_run, dailyRemaining, activeRemaining);
+  return calculateJourneyRunAllowance({
+    activeJourneys: activeResult.count ?? 0,
+    journeysStartedToday: todayResult.count ?? 0,
+    journeysStartedTotal: config.journeys_started_total,
+    maxActiveJourneys: config.max_active_journeys,
+    maxJourneysPerDay: config.max_journeys_per_day,
+    maxJourneysPerRun: config.max_journeys_per_run,
+    stopAfterJourneys: config.stop_after_journeys
+  });
 }
 
 async function getConfig(configId: string): Promise<JourneyBotConfigRow> {
@@ -1189,8 +1367,14 @@ async function getConfig(configId: string): Promise<JourneyBotConfigRow> {
   return data as JourneyBotConfigRow;
 }
 
-async function releaseConfig(config: JourneyBotConfigRow, lockToken: string, status: string, error: string | null) {
+async function releaseConfig(config: JourneyBotConfigRow, lockToken: string, status: string, error: string | null, startedCount: number) {
   const admin = createAdminClient();
+  const journeysStartedTotal = config.journeys_started_total + startedCount;
+  const stopReason = getJourneyConfigStopReason({
+    journeysStartedTotal,
+    runUntil: config.run_until,
+    stopAfterJourneys: config.stop_after_journeys
+  });
   const schedule = chooseNextRunAt({
     maxIntervalMinutes: config.max_interval_minutes,
     minIntervalMinutes: config.min_interval_minutes
@@ -1203,14 +1387,48 @@ async function releaseConfig(config: JourneyBotConfigRow, lockToken: string, sta
       last_status: status,
       locked_at: null,
       lock_token: null,
-      next_run_at: schedule.nextRunAt
+      enabled: stopReason ? false : config.enabled,
+      paused: stopReason ? true : config.paused,
+      journeys_started_total: journeysStartedTotal,
+      next_run_at: stopReason ? null : schedule.nextRunAt
     })
     .eq("id", config.id)
     .eq("lock_token", lockToken);
 }
 
+async function stopJourneyBotConfig(
+  config: JourneyBotConfigRow,
+  reason: "run_window_ended" | "journey_limit_reached",
+  lockToken?: string
+) {
+  const admin = createAdminClient();
+  let query = admin
+    .from("journey_bot_configs")
+    .update({
+      enabled: false,
+      last_error: null,
+      last_status: reason,
+      locked_at: null,
+      lock_token: null,
+      next_run_at: null,
+      paused: true
+    })
+    .eq("id", config.id);
+  if (lockToken) query = query.eq("lock_token", lockToken);
+  const result = await query;
+  assertNoError(result.error, `stop config: ${reason}`);
+}
+
 function isConfigWithinSchedule(config: JourneyBotConfigRow) {
-  if (config.run_until && new Date(config.run_until).getTime() <= Date.now()) return false;
+  if (
+    getJourneyConfigStopReason({
+      journeysStartedTotal: config.journeys_started_total,
+      runUntil: config.run_until,
+      stopAfterJourneys: config.stop_after_journeys
+    })
+  ) {
+    return false;
+  }
   return isActiveJourneyWindow({
     activeDays: parseNumberArray(config.active_days_json),
     activeWindows: parseWindows(config.active_time_windows_json)
@@ -1244,12 +1462,16 @@ async function createIssue(input: {
   childJourneyId?: string;
   config: JourneyBotConfigRow;
   context?: Record<string, unknown>;
+  expected?: boolean;
   issueType: string;
   message: string;
   runId: string;
   severity: "info" | "warning" | "error" | "critical";
+  step?: string;
 }) {
   const admin = createAdminClient();
+  const expected = input.expected ?? false;
+  const step = input.step ?? "unknown";
   await admin.from("journey_bot_issues").insert({
     tenant_id: input.config.tenant_id,
     run_id: input.runId,
@@ -1257,7 +1479,10 @@ async function createIssue(input: {
     severity: input.severity,
     issue_type: input.issueType,
     message: input.message,
-    context_json: { canContinue: input.severity === "info" || input.severity === "warning", ...(input.context ?? {}) }
+    context_json: { canContinue: input.severity === "info" || input.severity === "warning", expected, step, ...(input.context ?? {}) },
+    expected,
+    fingerprint: `${input.issueType}:${step}`,
+    step
   });
   if (input.childJourneyId) {
     const { data: journey } = await admin.from("journey_bot_child_journeys").select("*").eq("id", input.childJourneyId).single();
@@ -1266,14 +1491,49 @@ async function createIssue(input: {
 }
 
 async function blockJourney(journey: JourneyRow, config: JourneyBotConfigRow, issueType: string, message: string, severity: "warning" | "error") {
-  await createIssue({ childJourneyId: journey.id, config, issueType, message, runId: journey.run_id, severity });
-  await completeJourney(journey, severity === "error" ? "failed" : "partial", message);
+  const expected = severity === "warning" && (issueType === "no_capacity" || issueType === "placement_blocked");
+  await createIssue({ childJourneyId: journey.id, config, expected, issueType, message, runId: journey.run_id, severity, step: "business_rule" });
+  await completeJourney(journey, severity === "error" ? "failed" : "partial", message, expected ? "expected_blocker" : "technical_failure");
 }
 
-async function completeJourney(journey: JourneyRow, status: string, summary: string) {
+async function completeJourney(
+  journey: JourneyRow,
+  status: string,
+  summary: string,
+  classification: JourneyOutcomeClassification = inferOutcomeClassification(status)
+) {
   const admin = createAdminClient();
   await appendEvent(journey, "journey_completed", status === "failed" ? "failed" : status.startsWith("blocked") ? "blocked" : "completed", summary, { status });
-  await admin.from("journey_bot_child_journeys").update({ finished_at: new Date().toISOString(), journey_status: status }).eq("id", journey.id);
+  await admin
+    .from("journey_bot_child_journeys")
+    .update({
+      expected_outcome: classification === "expected_blocker",
+      finished_at: new Date().toISOString(),
+      journey_status: status,
+      outcome_classification: classification
+    })
+    .eq("id", journey.id);
+}
+
+async function finishJourney(
+  journey: JourneyRow,
+  status: string,
+  classification: JourneyOutcomeClassification,
+  summary: string
+): Promise<JourneyExecutionResult> {
+  await completeJourney(journey, status, summary, classification);
+  return executionResult(journey.id, status, classification);
+}
+
+function executionResult(journeyId: string, status: string, classification: JourneyOutcomeClassification): JourneyExecutionResult {
+  return { classification, journeyId, status };
+}
+
+function inferOutcomeClassification(status: string): JourneyOutcomeClassification {
+  if (status.startsWith("completed_")) return "passed";
+  if (status.startsWith("blocked_")) return "expected_blocker";
+  if (status === "failed") return "technical_failure";
+  return "degraded";
 }
 
 async function updateJourney(journey: JourneyRow, values: Record<string, unknown>) {
@@ -1283,11 +1543,18 @@ async function updateJourney(journey: JourneyRow, values: Record<string, unknown
   return result.data as JourneyRow;
 }
 
-async function countRunIssues(runId: string) {
+async function getRunIssueSummary(runId: string): Promise<JourneyIssueSummary> {
   const admin = createAdminClient();
-  const result = await admin.from("journey_bot_issues").select("id", { count: "exact", head: true }).eq("run_id", runId);
-  assertNoError(result.error, "run issue count");
-  return result.count ?? 0;
+  const result = await admin.from("journey_bot_issues").select("severity, expected").eq("run_id", runId);
+  assertNoError(result.error, "run issue summary");
+  const summary: JourneyIssueSummary = { critical: 0, error: 0, expected: 0, info: 0, unexpected: 0, warning: 0 };
+  for (const issue of result.data ?? []) {
+    const severity = issue.severity as "info" | "warning" | "error" | "critical";
+    summary[severity] += 1;
+    if (issue.expected) summary.expected += 1;
+    else summary.unexpected += 1;
+  }
+  return summary;
 }
 
 type SyntheticProfile = {
@@ -1300,19 +1567,18 @@ type SyntheticProfile = {
   phone: string;
   scenarioRandom: number;
   smokeRunId: string;
-  stressVariant: string;
+  stressVariant: JourneyStressVariant;
 };
 
-function createSyntheticProfile(runId: string, ordinal: number, scenario: JourneyScenarioMode): SyntheticProfile {
-  const seed = Number.parseInt(runId.replaceAll("-", "").slice(-8), 16) + ordinal;
+function createSyntheticProfile(runId: string, ordinal: number, sequence: number, scenario: JourneyScenarioMode): SyntheticProfile {
+  const seed = Number.parseInt(runId.replaceAll("-", "").slice(-8), 16) + sequence;
   const firstName = childFirstNames[seed % childFirstNames.length]!;
   const lastName = childLastNames[(seed * 3) % childLastNames.length]!;
   const guardianName = guardianNames[(seed * 5) % guardianNames.length]!;
   const street = streets[(seed * 7) % streets.length]!;
   const district = districts[(seed * 11) % districts.length]!;
   const stamp = `${Date.now()}-${ordinal}`;
-  const stressBucket = ordinal % 20;
-  const stressVariant = scenario === "stress_mix" ? (stressBucket < 2 ? "under_4" : stressBucket < 4 ? "needs_review" : stressBucket === 4 ? "no_capacity" : "normal") : "normal";
+  const stressVariant = scenario === "stress_mix" ? resolveStressVariant(sequence) : "normal";
   const year = stressVariant === "under_4" ? new Date().getUTCFullYear() - 2 : 2018 + (seed % 4);
   const month = String((seed % 12) + 1).padStart(2, "0");
   const day = String((seed % 20) + 5).padStart(2, "0");

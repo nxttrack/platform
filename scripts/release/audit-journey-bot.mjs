@@ -2,11 +2,13 @@ import { readFileSync } from "node:fs";
 
 const root = process.cwd();
 const checks = [
-  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "certificate_records"]],
-  ["apps/web/app/api/internal/journey-bot/tick/route.ts", ["timingSafeEqual", "CRON_SECRET", "runDueJourneyBotConfigs"]],
-  ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Journey logs per kind"]],
+  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "certificate_records", "journeys_started_total", "technical_failure_count", "resetJourneyBotTestCycle"]],
+  ["apps/web/app/api/internal/journey-bot/tick/route.ts", ["timingSafeEqual", "CRON_SECRET", "runDueJourneyBotConfigs", "summarizeJourneyTick"]],
+  ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Testcyclus resetten", "Technische health", "Journey logs per kind"]],
+  ["scripts/staging/assert-journey-bot-tick.mjs", ["release-blocking technical failures", "unexpectedIssues", "criticalIssues"]],
   ["scripts/staging/seed-journey-bot-waterlijn.mjs", ["INSTRUCTIE", "BADJE-1", "BADJE-2", "BADJE-3", "AFZWEM-A", "DIPLOMA-B", "DIPLOMA-C", "KLAAR", "minutesBetween"]],
   ["supabase/migrations/20260724170000_journey_simulation_bot.sql", ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "minimum_age_blocked", "is_test"]],
+  ["supabase/migrations/20260724183000_journey_bot_trustworthy_outcomes.sql", ["journeys_started_total", "health_status", "outcome_classification", "expected", "claim_journey_bot_config"]],
   [".env.example", ["CRON_SECRET=placeholder_add_later", "ALLOW_JOURNEY_BOT_IN_PRODUCTION=false", "JOURNEY_BOT_DEFAULT_ENABLED=false", "JOURNEY_BOT_EMAIL_DOMAIN=nxttrack.test"]]
 ];
 const errors = [];

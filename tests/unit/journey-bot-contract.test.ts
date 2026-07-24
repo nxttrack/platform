@@ -6,6 +6,7 @@ import {
   chooseNextRunAt,
   getJourneyConfigStopReason,
   getMinimumAgeDecision,
+  isActiveJourneyWindow,
   isJourneyBotEnvironmentAllowed,
   resolveScenarioMode,
   resolveStressVariant,
@@ -27,6 +28,11 @@ test("berekent de vierde verjaardag als eerste plaatsingsdag", () => {
     eligibleFrom: "2027-08-12"
   });
   assert.equal(getMinimumAgeDecision("2020-07-24", new Date("2026-07-24T12:00:00Z")).blocked, false);
+  assert.deepEqual(getMinimumAgeDecision("2024-02-29", new Date("2026-07-24T12:00:00Z")), {
+    blocked: true,
+    eligibleFrom: "2028-02-29"
+  });
+  assert.throws(() => getMinimumAgeDecision("2023-02-30"), /valid ISO birth date/);
 });
 
 test("houdt alleen plaatsbare kinderen over en sorteert FIFO", () => {
@@ -50,6 +56,25 @@ test("plant binnen de ingestelde intervalgrenzen", () => {
   assert.equal(
     chooseNextRunAt({ minIntervalMinutes: 3, maxIntervalMinutes: 12, now: new Date("2026-07-24T12:00:00Z"), random: 0.999 }).intervalMinutes,
     12
+  );
+});
+
+test("actieve vensters gebruiken Amsterdam-tijd en ondersteunen een nachtvenster", () => {
+  assert.equal(
+    isActiveJourneyWindow({
+      activeDays: [5],
+      activeWindows: [{ end: "06:00", start: "22:00" }],
+      now: new Date("2026-07-24T21:30:00Z")
+    }),
+    true
+  );
+  assert.equal(
+    isActiveJourneyWindow({
+      activeDays: [5],
+      activeWindows: [{ end: "21:00", start: "08:00" }],
+      now: new Date("2026-07-24T21:30:00Z")
+    }),
+    false
   );
 });
 

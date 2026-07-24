@@ -1,4 +1,4 @@
-import { Archive, Clock3, Pause, Play, ShieldCheck, Square, TriangleAlert } from "lucide-react";
+import { Archive, Clock3, Pause, Play, RotateCcw, ShieldCheck, Square, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 
 import { AdminSection, EmptyState, SubmitButton } from "@/components/admin/domain-ui";
@@ -8,6 +8,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import {
   archiveJourneyBotRunAction,
   pauseJourneyBotAction,
+  resetJourneyBotTestCycleAction,
   resolveJourneyBotIssueAction,
   resumeJourneyBotAction,
   runJourneyBotNowAction,
@@ -38,10 +39,13 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
   const completedJourneys = data.journeys.filter((journey) => String(journey.journey_status).startsWith("completed"));
   const failedJourneys = data.journeys.filter((journey) => journey.journey_status === "failed");
   const openIssues = data.issues.filter((issue) => !issue.resolved);
+  const unexpectedOpenIssues = openIssues.filter((issue) => !issue.expected);
   const issueFilter = getParam(params, "issues") ?? "open";
   const visibleIssues = data.issues.filter((issue) => {
     if (issueFilter === "all") return true;
     if (issueFilter === "open") return !issue.resolved;
+    if (issueFilter === "expected") return issue.expected;
+    if (issueFilter === "unexpected") return !issue.expected;
     return issue.severity === issueFilter;
   });
   const saved = getParam(params, "saved");
@@ -68,13 +72,14 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
       {saved ? <Notice tone="success">Actie uitgevoerd: {savedLabel(saved)}.</Notice> : null}
       {error ? <Notice tone="danger">Actie kon niet veilig worden uitgevoerd ({error}). Controleer configuratie en logs.</Notice> : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-7">
         <Metric label="Botstatus" value={!config?.enabled ? "Uit" : config.paused ? "Gepauzeerd" : "Actief"} tone={!config?.enabled ? "neutral" : config.paused ? "warning" : "success"} />
         <Metric label="Environment" value={data.environment.environment ?? "Onbekend"} tone={data.environment.allowed ? "success" : "danger"} />
         <Metric label="Actief" value={activeJourneys.length.toString()} tone={activeJourneys.length ? "info" : "neutral"} />
         <Metric label="Voltooid" value={completedJourneys.length.toString()} tone="success" />
         <Metric label="Mislukt" value={failedJourneys.length.toString()} tone={failedJourneys.length ? "danger" : "neutral"} />
         <Metric label="Open issues" value={openIssues.length.toString()} tone={openIssues.length ? "warning" : "success"} />
+        <Metric label="Onverwacht" value={unexpectedOpenIssues.length.toString()} tone={unexpectedOpenIssues.length ? "danger" : "success"} />
       </div>
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
@@ -85,6 +90,11 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
             <p className="mt-1 text-sm text-slate-300">
               {config?.last_run_at ? `Laatste run ${formatDateTime(config.last_run_at)} · ${config.last_status ?? "onbekend"}` : "Nog geen run uitgevoerd"}
             </p>
+            {config ? (
+              <p className="mt-1 text-xs text-slate-400">
+                Testbudget: {config.journeys_started_total}/{config.stop_after_journeys ?? "onbegrensd"} journeys
+              </p>
+            ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusPill tone={data.environment.allowed ? "success" : "danger"}>
@@ -206,6 +216,7 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                 <Square className="size-4" /> Alles stoppen
               </button>
             </form>
+            <ActionForm action={resetJourneyBotTestCycleAction} configId={config.id} icon={<RotateCcw className="size-4" />} label="Testcyclus resetten" />
           </div>
         ) : null}
       </section>
@@ -216,14 +227,21 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
                 <thead className="border-b border-border text-xs uppercase tracking-wider text-muted-foreground">
-                  <tr><th className="px-3 py-2">Start</th><th className="px-3 py-2">Scenario</th><th className="px-3 py-2">Resultaat</th><th className="px-3 py-2">Actie</th></tr>
+                  <tr><th className="px-3 py-2">Start</th><th className="px-3 py-2">Scenario</th><th className="px-3 py-2">Resultaat</th><th className="px-3 py-2">Technische health</th><th className="px-3 py-2">Actie</th></tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {data.runs.map((run) => (
                     <tr key={run.id}>
                       <td className="px-3 py-3"><p className="font-semibold">{formatDateTime(run.started_at)}</p><p className="mt-1 font-mono text-[10px] text-muted-foreground">{run.id.slice(0, 8)}</p></td>
                       <td className="px-3 py-3">{scenarioLabel(run.scenario_mode)}</td>
-                      <td className="px-3 py-3"><StatusPill tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "running" ? "info" : "warning"}>{run.status} · {run.completed_count}/{run.started_count}</StatusPill></td>
+                      <td className="px-3 py-3">
+                        <StatusPill tone={run.status === "completed" ? "success" : run.status === "failed" ? "danger" : run.status === "running" ? "info" : "warning"}>{run.status} · {run.completed_count}/{run.started_count}</StatusPill>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{run.passed_count ?? 0} geslaagd · {run.expected_blocked_count ?? 0} verwacht geblokkeerd</p>
+                      </td>
+                      <td className="px-3 py-3">
+                        <StatusPill tone={run.health_status === "healthy" ? "success" : run.health_status === "failed" ? "danger" : "warning"}>{run.health_status ?? "unknown"}</StatusPill>
+                        <p className="mt-1 text-[11px] text-muted-foreground">{run.technical_failure_count ?? 0} technisch · {run.unexpected_issue_count ?? 0} onverwacht</p>
+                      </td>
                       <td className="px-3 py-3">
                         <form action={archiveJourneyBotRunAction}>
                           <input name="runId" type="hidden" value={run.id} />
@@ -240,7 +258,7 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
 
         <AdminSection description="Issues falen nooit stil; context en doorgaanstatus worden per stap opgeslagen." title="Issues">
           <div className="mb-3 flex flex-wrap gap-2">
-            {["open", "warning", "error", "critical", "all"].map((filter) => (
+            {["open", "unexpected", "expected", "warning", "error", "critical", "all"].map((filter) => (
               <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${issueFilter === filter ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`${pagePath}?issues=${filter}`} key={filter}>
                 {filter}
               </Link>
@@ -254,10 +272,11 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusPill tone={issue.severity === "critical" || issue.severity === "error" ? "danger" : issue.severity === "warning" ? "warning" : "info"}>{issue.severity}</StatusPill>
+                        <StatusPill tone={issue.expected ? "info" : "danger"}>{issue.expected ? "verwacht" : "onverwacht"}</StatusPill>
                         <span className="font-mono text-[11px] text-muted-foreground">{issue.issue_type}</span>
                       </div>
                       <p className="mt-2 text-sm font-semibold text-foreground">{issue.message}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(issue.created_at)}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{formatDateTime(issue.created_at)} · stap {issue.step ?? "onbekend"}</p>
                     </div>
                     {!issue.resolved ? (
                       <form action={resolveJourneyBotIssueAction}>
@@ -286,11 +305,18 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                         <p className="font-bold text-foreground">{journey.child_display_name}</p>
                         <p className="mt-1 text-xs text-muted-foreground">{journey.guardian_display_name} · {journey.smoke_run_id}</p>
                       </div>
-                      <StatusPill tone={journey.journey_status === "failed" ? "danger" : String(journey.journey_status).startsWith("blocked") ? "warning" : journey.journey_status === "running" ? "info" : "success"}>{journey.journey_status}</StatusPill>
+                      <div className="flex flex-col items-end gap-1">
+                        <StatusPill tone={journey.journey_status === "failed" ? "danger" : String(journey.journey_status).startsWith("blocked") ? "warning" : journey.journey_status === "running" ? "info" : "success"}>{journey.journey_status}</StatusPill>
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{journey.outcome_classification ?? "unknown"}</span>
+                      </div>
                     </div>
                   </summary>
                   <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-950 p-3 text-xs leading-5 text-slate-200">{journey.summary_log || "Nog geen logregels."}</pre>
-                  {events.length ? <p className="mt-2 text-xs font-semibold text-muted-foreground">{events.length} eventlog(s) bewaard</p> : null}
+                  {events.length ? (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {events.map((event) => <span className="rounded-full bg-muted px-2 py-1 font-mono text-[10px] text-muted-foreground" key={event.id}>{event.event_type}</span>)}
+                    </div>
+                  ) : null}
                 </details>
               );
             })}
@@ -381,6 +407,7 @@ function savedLabel(value: string) {
     paused: "bot gepauzeerd",
     resumed: "bot hervat",
     run: "run voltooid",
+    reset: "testcapaciteit vrijgegeven en teller gereset",
     stopped: "alle bots gestopt",
     window: "runvenster gestart"
   }[value] ?? value;
