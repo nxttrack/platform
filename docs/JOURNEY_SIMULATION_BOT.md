@@ -55,6 +55,16 @@ Een verwachte blocker houdt de run technisch `healthy`. De tickworkflow faalt bi
 
 De stressmix gebruikt een deterministische cyclus van twintig journeys: 70% normaal, 10% onder vier, 10% handmatige review, 5% geen capaciteit en 5% gecontroleerd herstelbaar issue.
 
+De staging-smoke controleert vervolgens in één herstelbare cyclus:
+
+- anonieme toegang tot de tickendpoint geeft `401`;
+- één volledige reis bevat intake, scoring, plaatsing, attendance, progressie, transfers, capaciteitsvrijgave, afzwemmen en certificaat;
+- de volledige 20-delige stressverdeling wordt uitgevoerd;
+- verwachte blockers houden technische health groen;
+- technische en onverwachte issueaantallen blijven nul;
+- `Stop na journeys` schakelt exact bij de twintigste journey uit;
+- de `finally`-cleanup geeft alle actieve testplekken weer vrij.
+
 Geplande runner:
 
 ```bash
