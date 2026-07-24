@@ -74,7 +74,7 @@ test.describe("Journey Simulation Bot staging smoke", () => {
       expect(diplomaAIndex).toBeGreaterThan(-1);
       expect(diplomaBIndex).toBeGreaterThan(diplomaAIndex);
       expect(diplomaCIndex).toBeGreaterThan(diplomaBIndex);
-      expect(journeyLog.match(/8 lessen van .+ bijgewoond\\./g)).toHaveLength(7);
+      expect(journeyLog.match(/8 lessen van .+ bijgewoond\./g)).toHaveLength(7);
 
       await resetTestCycle(page);
       await page.getByLabel("Bot ingeschakeld").check();
