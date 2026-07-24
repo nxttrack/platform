@@ -378,7 +378,7 @@ async function validateProgramAndForm(input: {
 }
 
 function readQuestionAnswer(formData: FormData, question: PublicIntakeQuestion): string | string[] | null {
-  if (question.fieldKey === "swimming_experience") {
+  if (question.fieldKey === "swimming_experience" || question.fieldKey === "swim_experience") {
     return readOptional(formData, "swimmingExperience");
   }
 

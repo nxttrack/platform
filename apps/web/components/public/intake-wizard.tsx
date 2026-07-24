@@ -63,7 +63,7 @@ const optionLabels: Record<IntakeOption, string> = {
   information_request: "Eerst informatie"
 };
 
-const excludedQuestionKeys = new Set(["swimming_experience", "preferred_moment"]);
+const excludedQuestionKeys = new Set(["swimming_experience", "swim_experience", "preferred_moment"]);
 
 export function IntakeWizard(props: IntakeWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
