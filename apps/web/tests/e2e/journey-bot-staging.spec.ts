@@ -64,7 +64,7 @@ test.describe("Journey Simulation Bot staging smoke", () => {
         "certificate_created",
         "journey_completed"
       ]) {
-        await expect(completedJourney.getByText(eventType, { exact: true })).toBeVisible();
+        await expect(completedJourney.getByText(eventType, { exact: true }).first()).toBeVisible();
       }
 
       await resetTestCycle(page);
