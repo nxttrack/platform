@@ -27,11 +27,14 @@ concurrency:
 
 jobs:
   start:
-    name: start bounded Waterlijn journey window
+    name: run bounded Waterlijn journey window
     if: github.ref_name == 'main'
     runs-on: ubuntu-latest
+    timeout-minutes: 135
     environment: staging
     env:
+      APP_URL: ${{ vars.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
       JOURNEY_BOT_WINDOW_CONTROL: true
       JOURNEY_BOT_WINDOW_HOURS: ${{ inputs.duration_hours }}
       JOURNEY_BOT_WINDOW_BUDGET: ${{ inputs.journey_budget }}
@@ -76,12 +79,45 @@ jobs:
       - name: Start controlled journey window
         run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-bot-window-control.spec.ts --project=chromium-desktop --retries=0
 
-      - name: Upload window-start evidence
+      - name: Process and evaluate five-minute ticks
+        run: |
+          set -euo pipefail
+          if [ "${#CRON_SECRET}" -lt 32 ]; then
+            echo "A staging CRON_SECRET of at least 32 characters is required."
+            exit 1
+          fi
+          mkdir -p artifacts/journey-bot-window
+          deadline=$(( $(date +%s) + JOURNEY_BOT_WINDOW_HOURS * 3600 ))
+          iteration=0
+          while true; do
+            remaining=$(( deadline - $(date +%s) ))
+            if [ "$remaining" -le 0 ]; then
+              break
+            fi
+            sleep_for=300
+            if [ "$remaining" -lt "$sleep_for" ]; then
+              sleep_for="$remaining"
+            fi
+            sleep "$sleep_for"
+            iteration=$(( iteration + 1 ))
+            response_file="artifacts/journey-bot-window/tick-$(printf '%03d' "$iteration").json"
+            curl --fail-with-body \
+              --silent \
+              --show-error \
+              --request POST \
+              --header "Authorization: Bearer $CRON_SECRET" \
+              --output "$response_file" \
+              "$APP_URL/api/internal/journey-bot/tick"
+            node scripts/staging/assert-journey-bot-tick.mjs "$response_file"
+          done
+
+      - name: Upload window evidence
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: journey-bot-window-start-${{ github.sha }}
+          name: journey-bot-window-${{ github.sha }}
           path: |
+            artifacts/journey-bot-window
             apps/web/test-results
             apps/web/playwright-report
           if-no-files-found: ignore
