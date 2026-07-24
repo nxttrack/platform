@@ -61,6 +61,7 @@
     "sprint4:test-admin": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-admin-mutations.spec.ts --project=chromium-desktop",
     "sprint4:test-isolation": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-isolation.spec.ts --project=chromium-desktop",
     "sprint4:test-quality": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-quality-budgets.spec.ts --project=chromium-desktop",
+    "journey-bot:test-staging": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-bot-staging.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:prepare-mollie": "node scripts/staging/prepare-mollie-sandbox.mjs",
     "sprint6:test-mollie": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-sandbox.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mollie": "node scripts/staging/verify-mollie-sandbox.mjs",
