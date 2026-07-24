@@ -8,40 +8,50 @@ test.describe("Journey Simulation Bot staging smoke", () => {
   test("platform owner can enable and complete one full Waterlijn journey", async ({ page }) => {
     test.setTimeout(180_000);
     const failures = collectRuntimeFailures(page);
+    let signedIn = false;
     await signIn(
       page,
       requiredEnv("E2E_PLATFORM_OWNER_EMAIL"),
       requiredEnv("E2E_PLATFORM_OWNER_PASSWORD"),
       "/platform/test-tools/journey-bot"
     );
+    signedIn = true;
 
-    await expect(page.getByRole("heading", { name: "Journey Simulation Bot" })).toBeVisible();
-    await expect(page.getByText("Zwemacademie De Waterlijn", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("Environment veilig", { exact: false })).toBeVisible();
-    await page.getByLabel("Bot ingeschakeld").check();
-    await page.getByLabel("Nieuwe runs pauzeren").uncheck();
-    await page.getByLabel("Scenario").selectOption("full_journey_to_diploma");
-    await page.getByLabel("Journeys per run").fill("1");
-    await page.getByRole("button", { name: "Configuratie opslaan" }).click();
-    await expect(page).toHaveURL(/saved=config/);
+    try {
+      await expect(page.getByRole("heading", { name: "Journey Simulation Bot" })).toBeVisible();
+      await expect(page.getByText("Zwemacademie De Waterlijn", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("Environment veilig", { exact: false })).toBeVisible();
+      await page.getByLabel("Bot ingeschakeld").check();
+      await page.getByLabel("Nieuwe runs pauzeren").uncheck();
+      await page.getByLabel("Scenario").selectOption("full_journey_to_diploma");
+      await page.getByLabel("Journeys per run").fill("1");
+      await page.getByRole("button", { name: "Configuratie opslaan" }).click();
+      await expect(page).toHaveURL(/saved=config/);
 
-    await page.getByRole("button", { name: "Run now" }).click();
-    await expect(page).toHaveURL(/saved=run/, { timeout: 150_000 });
-    await expect(page.getByText("Actie uitgevoerd: run voltooid.")).toBeVisible();
-    const newestRun = page.getByRole("row").filter({ hasText: "Volledige reis" }).first();
-    await expect(newestRun).toContainText("completed");
-    await expect(page.getByText("completed_full_journey", { exact: true }).first()).toBeVisible();
+      await page.getByRole("button", { name: "Run now" }).click();
+      await expect(page).toHaveURL(/saved=run/, { timeout: 150_000 });
+      await expect(page.getByText("Actie uitgevoerd: run voltooid.")).toBeVisible();
+      const newestRun = page.getByRole("row").filter({ hasText: "Volledige reis" }).first();
+      await expect(newestRun).toContainText("completed");
+      await expect(page.getByText("completed_full_journey", { exact: true }).first()).toBeVisible();
 
-    await page.getByLabel("Scenario").selectOption("stress_mix");
-    await page.getByLabel("Journeys per run").fill("5");
-    await page.getByLabel("Max. tegelijk").fill("5");
-    await page.getByRole("button", { name: "Configuratie opslaan" }).click();
-    await expect(page).toHaveURL(/saved=config/);
-    await page.getByRole("button", { name: "Run now" }).click();
-    await expect(page).toHaveURL(/saved=run/, { timeout: 150_000 });
-    await expect(page.getByText("blocked_until_eligible", { exact: true }).first()).toBeVisible();
-    await expect(page.getByText("blocked_no_capacity", { exact: true }).first()).toBeVisible();
-    expect(failures()).toEqual([]);
+      await page.getByLabel("Scenario").selectOption("stress_mix");
+      await page.getByLabel("Journeys per run").fill("5");
+      await page.getByLabel("Max. tegelijk").fill("5");
+      await page.getByRole("button", { name: "Configuratie opslaan" }).click();
+      await expect(page).toHaveURL(/saved=config/);
+      await page.getByRole("button", { name: "Run now" }).click();
+      await expect(page).toHaveURL(/saved=run/, { timeout: 150_000 });
+      await expect(page.getByText("blocked_until_eligible", { exact: true }).first()).toBeVisible();
+      await expect(page.getByText("blocked_no_capacity", { exact: true }).first()).toBeVisible();
+      expect(failures()).toEqual([]);
+    } finally {
+      if (signedIn) {
+        await page.goto("/platform/test-tools/journey-bot", { waitUntil: "domcontentloaded" });
+        await page.getByRole("button", { name: "Alles stoppen" }).click();
+        await expect(page).toHaveURL(/saved=stopped/);
+      }
+    }
   });
 });
 
