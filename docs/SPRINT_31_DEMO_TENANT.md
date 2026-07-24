@@ -1,6 +1,6 @@
 # Sprint 31 — beheerde demo-tenant
 
-De canonieke showcase-tenant is **Zwemacademie De Waterlijn** (`waterlijn-demo`). De seed bevat twee programma's, zes niveaus, een locatie met twee baden, zeven groepen, 28 leerlingen, inschrijvingen, groepsbezetting, twee betaalplannen en een realistische wachtlijst.
+De canonieke showcase-tenant is **Zwemacademie De Waterlijn** (`waterlijn-demo`). De seed bevat twee programma's, zes niveaus, een locatie met twee baden, zeven groepen, 28 leerlingen, inschrijvingen, groepsbezetting, recente aanwezigheid, komende lessen, twee betaalplannen en een realistische wachtlijst.
 
 ## Veilig uitvoeren
 

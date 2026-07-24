@@ -79,6 +79,31 @@ for (const [index, displayName] of names.entries()) {
   if (!existingMembership) await insertOne("group_memberships", { tenant_id: tenant.id, group_id: group.id, enrollment_id: enrollment.id, participant_id: participant.id, status: "active", starts_on: "2026-01-08", capacity_weight: 1 });
 }
 
+const { data: oldDemoSessions, error: oldSessionsError } = await admin.from("sessions").select("id").eq("tenant_id", tenant.id).eq("notes", "SPRINT31_DEMO");
+assertNoError(oldSessionsError, "read demo sessions");
+if (oldDemoSessions?.length) {
+  const { error } = await admin.from("sessions").delete().in("id", oldDemoSessions.map((session) => session.id));
+  assertNoError(error, "refresh demo sessions");
+}
+const today = new Date();
+today.setUTCHours(0, 0, 0, 0);
+for (const group of groupByCode.values()) {
+  for (const weekOffset of [-1, 0, 1]) {
+    const startsAt = occurrenceForWeekday(today, group.default_weekday, group.default_start_time, weekOffset);
+    const endsAt = occurrenceForWeekday(today, group.default_weekday, group.default_end_time, weekOffset);
+    const session = await insertOne("sessions", { tenant_id: tenant.id, group_id: group.id, resource_id: group.default_resource_id, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), status: weekOffset < 0 ? "completed" : "scheduled", notes: "SPRINT31_DEMO" });
+    if (weekOffset < 0) {
+      const { data: memberships, error } = await admin.from("group_memberships").select("participant_id, enrollment_id").eq("tenant_id", tenant.id).eq("group_id", group.id).eq("status", "active");
+      assertNoError(error, "read group memberships");
+      if (memberships?.length) {
+        const attendanceRows = memberships.map((membership, index) => ({ tenant_id: tenant.id, session_id: session.id, participant_id: membership.participant_id, enrollment_id: membership.enrollment_id, status: index % 11 === 0 ? "absent" : index % 7 === 0 ? "late" : "present", note: index % 11 === 0 ? "Afwezig gemeld door ouder." : null }));
+        const { error: attendanceError } = await admin.from("session_attendance").insert(attendanceRows);
+        assertNoError(attendanceError, "seed attendance");
+      }
+    }
+  }
+}
+
 await upsert("payment_plans", { tenant_id: tenant.id, program_id: programByCode.get("ZWEM-ABC").id, code: "ABC-MAAND", name: "Zwem-ABC maandabonnement", description: "Inclusief voortgangsrapportage en diploma-events.", amount_cents: 4950, currency: "EUR", billing_interval: "monthly", billing_day: 1, payment_terms_days: 14, status: "active", sort_order: 10 }, "tenant_id,code");
 await upsert("payment_plans", { tenant_id: tenant.id, program_id: programByCode.get("PEUTER").id, code: "PEUTER-10", name: "Peuterkaart · 10 lessen", amount_cents: 12500, currency: "EUR", billing_interval: "one_time", payment_terms_days: 14, status: "active", sort_order: 20 }, "tenant_id,code");
 
@@ -115,4 +140,12 @@ async function maybeOne(table, filters) {
 }
 function assertNoError(error, label) {
   if (error) throw new Error(`${label}: ${error.message}`);
+}
+function occurrenceForWeekday(baseDate, weekday, time, weekOffset) {
+  const date = new Date(baseDate);
+  const currentWeekday = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
+  date.setUTCDate(date.getUTCDate() + (weekday - currentWeekday) + weekOffset * 7);
+  const [hours, minutes] = String(time).split(":").map(Number);
+  date.setUTCHours(hours, minutes, 0, 0);
+  return date;
 }
