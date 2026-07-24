@@ -7,6 +7,8 @@ const checks = [
   ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Testcyclus resetten", "Technische health", "Journey logs per kind"]],
   ["scripts/staging/assert-journey-bot-tick.mjs", ["release-blocking technical failures", "unexpectedIssues", "criticalIssues"]],
   ["apps/web/tests/e2e/journey-bot-staging.spec.ts", ["tick endpoint weigert", "full journey, stressmatrix, stopbudget en cleanup", "Testcyclus resetten", "simulated_recoverable_issue", "20/20"]],
+  ["apps/web/tests/e2e/journey-bot-window-control.spec.ts", ["JOURNEY_BOT_WINDOW_HOURS", "full_journey_to_diploma", "realistic", "Run komende uren", "Botstatus"]],
+  [".github/workflows/journey-bot-staging-window.yml", ["START_WATERLIJN_JOURNEY_WINDOW", "duration_hours", "journey_budget", "staging.nxttrack.nl", "journey-bot-window-start"]],
   ["scripts/staging/seed-journey-bot-waterlijn.mjs", ["INSTRUCTIE", "BADJE-1", "BADJE-2", "BADJE-3", "AFZWEM-A", "DIPLOMA-B", "DIPLOMA-C", "KLAAR", "minutesBetween"]],
   ["supabase/migrations/20260724170000_journey_simulation_bot.sql", ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "minimum_age_blocked", "is_test"]],
   ["supabase/migrations/20260724183000_journey_bot_trustworthy_outcomes.sql", ["journeys_started_total", "health_status", "outcome_classification", "expected", "claim_journey_bot_config"]],

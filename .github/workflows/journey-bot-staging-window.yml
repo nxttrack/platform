@@ -1,0 +1,88 @@
+name: Journey Bot staging window
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type START_WATERLIJN_JOURNEY_WINDOW
+        required: true
+        type: string
+      duration_hours:
+        description: Runtime in hours (hard stop)
+        required: true
+        default: "2"
+        type: string
+      journey_budget:
+        description: Secondary maximum number of journeys
+        required: true
+        default: "30"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-journey-bot-staging-window
+  cancel-in-progress: false
+
+jobs:
+  start:
+    name: start bounded Waterlijn journey window
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      JOURNEY_BOT_WINDOW_CONTROL: true
+      JOURNEY_BOT_WINDOW_HOURS: ${{ inputs.duration_hours }}
+      JOURNEY_BOT_WINDOW_BUDGET: ${{ inputs.journey_budget }}
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+    steps:
+      - name: Authorize bounded staging mutation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = "START_WATERLIJN_JOURNEY_WINDOW"
+          test "$JOURNEY_BOT_WINDOW_HOURS" -ge 1
+          test "$JOURNEY_BOT_WINDOW_HOURS" -le 24
+          test "$JOURNEY_BOT_WINDOW_BUDGET" -ge 1
+          test "$JOURNEY_BOT_WINDOW_BUDGET" -le 100
+          case "$PLAYWRIGHT_BASE_URL" in
+            https://staging.nxttrack.nl|https://*.staging.nxttrack.nl) ;;
+            *) echo "Refusing non-staging URL: $PLAYWRIGHT_BASE_URL"; exit 1 ;;
+          esac
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Start controlled journey window
+        run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-bot-window-control.spec.ts --project=chromium-desktop --retries=0
+
+      - name: Upload window-start evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: journey-bot-window-start-${{ github.sha }}
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14
