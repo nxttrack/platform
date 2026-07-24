@@ -36,6 +36,7 @@
     "staging:gate": "node scripts/staging/check-launch-gates.mjs",
     "staging:health": "node scripts/staging/health-smoke.mjs",
     "staging:runtime-smoke": "node scripts/staging/runtime-smoke.mjs",
+    "staging:seed-demo": "node scripts/staging/seed-sprint31-demo.mjs",
     "operations:audit-communications": "node scripts/operations/audit-communications-foundation.mjs",
     "operations:monitor": "node scripts/operations/monitor-operational-health.mjs",
     "storage:backup": "node scripts/storage/object-backup.mjs export",
