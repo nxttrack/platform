@@ -76,23 +76,23 @@ export function rankIntakeSlots(input: IntakeRecommendationInput): IntakeRecomme
   const preferredDayIndex = new Map(input.preferredDays.map((weekday, index) => [weekday, index]));
 
   return input.slots
-    .filter((slot) => {
-      if (!preferredDayIndex.has(slot.weekday)) {
-        return false;
-      }
-
-      const preferredParts = input.preferredDayparts[slot.weekday] ?? [];
-      return preferredParts.length === 0 || preferredParts.includes(slot.daypart);
-    })
     .map((slot) => {
       const stageDistance =
         targetStageOrder === null || slot.stageSortOrder === null ? 0 : Math.abs(stageOrders.indexOf(slot.stageSortOrder) - targetStageIndex);
       const stageScore = Math.max(0, 34 - stageDistance * 10);
       const waitScore = slot.waitBand === "short" ? 32 : slot.waitBand === "medium" ? 16 : 4;
-      const preferenceScore = Math.max(8, 24 - (preferredDayIndex.get(slot.weekday) ?? 0) * 4);
+      const dayPreferenceIndex = preferredDayIndex.get(slot.weekday);
+      const dayMatches = typeof dayPreferenceIndex === "number";
+      const preferredParts = input.preferredDayparts[slot.weekday] ?? [];
+      const daypartMatches = dayMatches && (preferredParts.length === 0 || preferredParts.includes(slot.daypart));
+      const preferenceScore = daypartMatches ? Math.max(42, 54 - (dayPreferenceIndex ?? 0) * 4) : dayMatches ? 24 : 0;
       const score = stageScore + waitScore + preferenceScore;
       const reasons = [
-        `${slot.weekdayLabel.toLowerCase()} ${daypartLabels[slot.daypart].toLowerCase()} past bij jullie voorkeur`,
+        daypartMatches
+          ? `${slot.weekdayLabel.toLowerCase()} ${daypartLabels[slot.daypart].toLowerCase()} past bij jullie voorkeur`
+          : dayMatches
+            ? `${slot.weekdayLabel.toLowerCase()} is een alternatief dagdeel op een voorkeursdag`
+            : `${slot.weekdayLabel.toLowerCase()} is het best passende alternatieve moment`,
         targetStageOrder !== null && stageDistance === 0
           ? "sluit het beste aan op de opgegeven zwemervaring"
           : "is een passend alternatief voor het vermoedelijke instroomniveau",

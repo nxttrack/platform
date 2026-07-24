@@ -81,17 +81,26 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
 async function submitIntake(page: Page, tenantUrl: string, participantName: string, marker: string) {
   await page.goto(`${tenantUrl}/intake`, { waitUntil: "domcontentloaded" });
-  const waitlistOption = page.locator("label").filter({ hasText: "Ik wil op de wachtlijst komen." });
-  await waitlistOption.click();
-  await expect(page.locator("input[name='selectedOption'][value='waitlist']")).toBeChecked();
-  await page.getByLabel("Naam ouder/verzorger").fill(`Sprint4 Ouder ${marker}`);
-  await page.getByLabel("E-mail").fill(`sprint4-${marker}@example.test`);
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
-  await page.getByLabel("Maandag", { exact: true }).check();
-  await page.getByLabel("Voorkeur of planning").fill("Maandagmiddag, browsergestuurde Sprint 4-test.");
-  await page.getByLabel("Bericht").fill(`sprint4-browser:${marker}`);
-  await page.getByLabel("Heeft je kind al zwemervaring?").fill("Een beetje; graag starten in de eerste actieve groep.");
+  await page.getByText("Wachtlijst", { exact: true }).click();
+  await page.getByRole("button", { name: "Volgende" }).click();
+
+  await page.getByLabel("Naam ouder/verzorger 1").fill(`Sprint4 Ouder ${marker}`);
+  await page.getByLabel("E-mail").fill(`sprint4-${marker}@example.test`);
+  await page.getByRole("button", { name: "Volgende" }).click();
+
+  await page.getByText("Eerder zwemles gehad", { exact: true }).click();
+  await page.getByRole("button", { name: "Volgende" }).click();
+
+  const firstDay = page.getByRole("button", { pressed: false }).filter({ hasText: /dag|Maandag|Dinsdag|Woensdag|Donderdag|Vrijdag|Zaterdag|Zondag/i }).first();
+  await firstDay.click();
+  const firstDaypart = page.getByRole("button", { pressed: false }).filter({ hasText: /Ochtend|Middag|Avond/ }).first();
+  await firstDaypart.click();
+  await page.getByRole("button", { name: "Volgende" }).click();
+
+  await page.getByRole("radio").first().check();
+  await page.getByLabel("Aanvulling voor de planning").fill(`sprint4-browser:${marker}`);
   await page.getByLabel(/Ik geef toestemming/).check();
   await page.getByRole("button", { name: "Aanmelding versturen" }).click();
 

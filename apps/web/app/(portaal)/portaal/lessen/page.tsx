@@ -1,6 +1,7 @@
 import { ArrowRight, CalendarX, Clock, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -83,9 +84,9 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
                           <input name="next" type="hidden" value="/portaal/lessen" />
                           <div>
                             <p className="text-sm font-semibold text-foreground">{formatLessonDate(option.startsAt, option.endsAt)}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              {option.groupName} - {option.available} vrije plek(ken)
-                            </p>
+                            <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                              {option.groupName} <WaitTimeChip band="short" />
+                            </span>
                           </div>
                           <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" type="submit">
                             <RefreshCcw className="h-4 w-4" />

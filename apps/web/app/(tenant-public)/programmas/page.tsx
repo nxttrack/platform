@@ -1,6 +1,7 @@
 import { ArrowRight, Clock, ListChecks, Waves } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/public-site";
 
 export const dynamic = "force-dynamic";
@@ -28,9 +29,7 @@ export default async function ProgramsPage() {
             <article className="flex min-h-[320px] flex-col rounded-xl border border-border bg-card p-5 shadow-soft" key={program.id}>
               <div className="mb-4 flex items-center justify-between gap-3">
                 <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{program.stages.length} badje(s)</span>
-                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${program.capacityStatus === "available" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}>
-                  {program.availablePlaces > 0 ? `${program.availablePlaces} vrij` : "Wachtlijst"}
-                </span>
+                <WaitTimeChip band={program.waitBand} />
               </div>
               <h2 className="text-2xl font-bold text-foreground">{program.name}</h2>
               <p className="mt-3 flex-1 text-sm leading-6 text-muted-foreground">{program.description ?? "Een heldere zwemlesroute met stages, lesgroepen en beschikbare capaciteit."}</p>
