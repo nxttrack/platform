@@ -29,7 +29,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   const intakeSubmissionId = readRequired(formData, "intakeSubmissionId");
   const submissionResult = await admin
     .from("intake_submissions")
-    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes")
+    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, selected_group_id")
     .eq("tenant_id", tenant.id)
     .eq("id", intakeSubmissionId)
     .single();
@@ -48,14 +48,18 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     participant_name: string;
     participant_birth_date: string | null;
     preferred_days: string[];
+    preferred_dayparts: unknown;
     preferred_notes: string | null;
+    selected_group_id: string | null;
   };
 
   if (!submission.program_id) {
     redirect("/admin/wachtlijst?error=program");
   }
 
-  const stage = await getFirstStageForProgram(tenant.id, submission.program_id);
+  const stage = submission.selected_group_id
+    ? await getStageForSelectedGroup(tenant.id, submission.program_id, submission.selected_group_id)
+    : await getFirstStageForProgram(tenant.id, submission.program_id);
   const entryResult = await admin
     .from("waitlist_entries")
     .insert({
@@ -81,19 +85,25 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   }
 
   const entryId = (entryResult.data as { id: string }).id;
+  const dayparts = normalizeStoredDayparts(submission.preferred_dayparts);
   const preferenceRows = submission.preferred_days.flatMap((day) => {
     const weekday = weekdayMap[day.toLowerCase()];
 
-    return weekday
-      ? [
-          {
-            tenant_id: tenant.id,
-            waitlist_entry_id: entryId,
-            weekday,
-            notes: submission.preferred_notes
-          }
-        ]
-      : [];
+    if (!weekday) {
+      return [];
+    }
+
+    const ranges = dayparts[String(weekday)] ?? [];
+
+    return (ranges.length > 0 ? ranges : [null]).map((daypart) => ({
+      tenant_id: tenant.id,
+      waitlist_entry_id: entryId,
+      weekday,
+      starts_after: daypart ? daypartRanges[daypart].startsAfter : null,
+      ends_before: daypart ? daypartRanges[daypart].endsBefore : null,
+      preference_weight: 5,
+      notes: submission.preferred_notes
+    }));
   });
 
   if (preferenceRows.length > 0) {
@@ -106,7 +116,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
       waitlist_entry_id: entryId,
       recommended_stage_id: stage.id,
       score: 50,
-      reasons: ["eerste actieve stage in programma"],
+      reasons: [submission.selected_group_id ? "gekozen slim intakevoorstel" : "eerste actieve stage in programma"],
       created_by_user_id: context.user.id
     });
   }
@@ -134,6 +144,27 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
 
   revalidatePath("/admin/wachtlijst");
   redirect("/admin/wachtlijst?saved=1");
+}
+
+const daypartRanges = {
+  morning: { startsAfter: "06:00", endsBefore: "12:00" },
+  afternoon: { startsAfter: "12:00", endsBefore: "17:00" },
+  evening: { startsAfter: "17:00", endsBefore: "23:59" }
+} as const;
+
+function normalizeStoredDayparts(value: unknown): Record<string, Array<keyof typeof daypartRanges>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([weekday, candidate]) => [
+      weekday,
+      Array.isArray(candidate)
+        ? candidate.filter((part): part is keyof typeof daypartRanges => typeof part === "string" && part in daypartRanges)
+        : []
+    ])
+  );
 }
 
 export async function scoreWaitlistEntryAction(formData: FormData) {
@@ -464,6 +495,33 @@ async function getFirstStageForProgram(tenantId: string, programId: string) {
   }
 
   return (data?.[0] as { id: string; name: string } | undefined) ?? null;
+}
+
+async function getStageForSelectedGroup(tenantId: string, programId: string, groupId: string) {
+  const admin = createAdminClient();
+  const groupResult = await admin
+    .from("groups")
+    .select("stage_id")
+    .eq("tenant_id", tenantId)
+    .eq("program_id", programId)
+    .eq("id", groupId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (groupResult.error || !groupResult.data?.stage_id) {
+    return getFirstStageForProgram(tenantId, programId);
+  }
+
+  const stageResult = await admin
+    .from("program_stages")
+    .select("id, name")
+    .eq("tenant_id", tenantId)
+    .eq("program_id", programId)
+    .eq("id", groupResult.data.stage_id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return (stageResult.data as { id: string; name: string } | null) ?? getFirstStageForProgram(tenantId, programId);
 }
 
 async function getWaitlistEntry(tenantId: string, entryId: string): Promise<WaitlistEntryRow | null> {

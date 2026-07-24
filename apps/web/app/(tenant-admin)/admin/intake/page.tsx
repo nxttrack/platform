@@ -1,9 +1,11 @@
 import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
+import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { Button } from "@/components/ui/button";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
+import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
 
 const optionLabels: Record<IntakeOption, string> = {
   enrollment: "Inschrijving",
@@ -39,6 +41,7 @@ export default async function AdminIntakePage() {
               const program = submission.program_id ? programById.get(submission.program_id) : null;
               const event = eventBySubjectId.get(submission.id);
               const answers = answersBySubmission.get(submission.id) ?? [];
+              const selectedChoice = getSelectedChoice(submission.recommendation_snapshot, submission.selected_group_id);
 
               return (
                 <DataListRow
@@ -50,16 +53,26 @@ export default async function AdminIntakePage() {
                         {submission.parent_name} · {submission.parent_email}
                         {submission.parent_phone ? ` · ${submission.parent_phone}` : ""}
                       </p>
+                      {submission.secondary_parent_name ? (
+                        <p>
+                          Tweede contact: {submission.secondary_parent_name}
+                          {submission.secondary_parent_email ? ` · ${submission.secondary_parent_email}` : ""}
+                          {submission.secondary_parent_phone ? ` · ${submission.secondary_parent_phone}` : ""}
+                        </p>
+                      ) : null}
                       <p>
                         {program?.name ?? "Geen programma"} · {formatDate(submission.received_at)}
                       </p>
                       {submission.preferred_days.length > 0 ? <p>Voorkeur: {submission.preferred_days.join(", ")}</p> : null}
+                      {submission.swimming_experience ? <p>Zwemervaring: {getExperienceLabel(submission.swimming_experience)}</p> : null}
+                      {selectedChoice ? <p>Eerste momentkeuze: {formatChoice(selectedChoice)}</p> : null}
                       {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
                     </div>
                   }
                   aside={
                     <div className="space-y-1">
                       <StatusPill tone={submission.status === "received" ? "info" : "neutral"}>{submission.status}</StatusPill>
+                      {submission.selected_wait_band ? <WaitTimeChip band={submission.selected_wait_band} /> : null}
                       {submission.duplicate_state === "possible_duplicate" ? <StatusPill tone="warning">controleer dubbel</StatusPill> : null}
                       <StatusPill tone={event?.status === "pending" ? "warning" : "success"}>{event ? `event ${event.status}` : "geen event"}</StatusPill>
                       {submission.duplicate_state === "possible_duplicate" ? (
@@ -122,4 +135,43 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+type RecommendationSnapshot = {
+  groupId: string;
+  weekday: number;
+  startsAt: string;
+  endsAt: string;
+  stageId: string | null;
+};
+
+function getSelectedChoice(value: unknown, selectedGroupId: string | null): RecommendationSnapshot | null {
+  if (!selectedGroupId || !Array.isArray(value)) {
+    return null;
+  }
+
+  const selected = value.find(
+    (candidate): candidate is RecommendationSnapshot =>
+      !!candidate &&
+      typeof candidate === "object" &&
+      "groupId" in candidate &&
+      candidate.groupId === selectedGroupId &&
+      "weekday" in candidate &&
+      typeof candidate.weekday === "number" &&
+      "startsAt" in candidate &&
+      typeof candidate.startsAt === "string" &&
+      "endsAt" in candidate &&
+      typeof candidate.endsAt === "string"
+  );
+
+  return selected ?? null;
+}
+
+function getExperienceLabel(value: string) {
+  return swimmingExperienceOptions.find((option) => option.value === value)?.label ?? value;
+}
+
+function formatChoice(choice: RecommendationSnapshot) {
+  const weekdays = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
+  return `${weekdays[choice.weekday] ?? "dag"} ${choice.startsAt}–${choice.endsAt}`;
 }

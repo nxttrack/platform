@@ -7,7 +7,20 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "./core";
-import { getDefaultIntakeForm, getRequestHostname, getTenantSlugFromRequest, type IntakeOption, type PublicIntakeQuestion } from "./public-site";
+import {
+  isIntakeDaypart,
+  isSwimmingExperience,
+  rankIntakeSlots,
+  type IntakeDaypart
+} from "./intake-recommendation-contract";
+import {
+  getDefaultIntakeForm,
+  getPublicTenantSiteDataBySlug,
+  getRequestHostname,
+  getTenantSlugFromRequest,
+  type IntakeOption,
+  type PublicIntakeQuestion
+} from "./public-site";
 
 const intakeOptions = ["enrollment", "trial", "waitlist", "information_request"] as const satisfies readonly IntakeOption[];
 
@@ -77,11 +90,24 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const parentName = readRequired(formData, "parentName");
   const parentEmail = normalizeEmail(readRequired(formData, "parentEmail"));
   const participantName = readRequired(formData, "participantName");
+  const participantBirthDate = readOptional(formData, "participantBirthDate");
+  const secondaryParentName = readOptional(formData, "secondaryParentName");
+  const secondaryParentEmail = normalizeOptionalEmail(readOptional(formData, "secondaryParentEmail"));
+  const swimmingExperience = readOptional(formData, "swimmingExperience");
   const consentGiven = formData.get("consentGiven") === "on";
   const honeypot = readOptional(formData, "companyWebsite");
   const startedAt = Number(readOptional(formData, "formStartedAt"));
 
-  if (!isEmail(parentEmail) || !consentGiven || !parentName || !participantName) {
+  if (
+    !isEmail(parentEmail) ||
+    !consentGiven ||
+    !parentName ||
+    !participantName ||
+    !participantBirthDate ||
+    !isValidBirthDate(participantBirthDate) ||
+    !isSwimmingExperience(swimmingExperience) ||
+    (secondaryParentEmail && !isEmail(secondaryParentEmail))
+  ) {
     return { ok: false, error: "required" };
   }
 
@@ -124,6 +150,31 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     return { ok: false, error: "required" };
   }
 
+  const preferredWeekdays = formData
+    .getAll("preferredWeekdays")
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value) && value >= 1 && value <= 7);
+  const preferredDayparts = parsePreferredDayparts(readOptional(formData, "preferredDayparts"), preferredWeekdays);
+  const publicData = await getPublicTenantSiteDataBySlug(slug);
+  const publicProgram = publicData?.programs.find((program) => program.id === validation.programId) ?? null;
+
+  if (!publicProgram) {
+    return { ok: false, error: "program" };
+  }
+
+  const recommendations = rankIntakeSlots({
+    slots: publicProgram.slots,
+    experience: swimmingExperience,
+    preferredDays: preferredWeekdays,
+    preferredDayparts
+  });
+  const selectedGroupId = readOptional(formData, "selectedGroupId");
+  const selectedRecommendation = recommendations.find((recommendation) => recommendation.groupId === selectedGroupId) ?? null;
+
+  if (publicProgram.slots.length > 0 && (preferredWeekdays.length === 0 || recommendations.length === 0 || !selectedRecommendation)) {
+    return { ok: false, error: "choice" };
+  }
+
   const dedupeKey = createHash("sha256")
     .update([tenant.id, parentEmail, normalizeName(participantName), validation.programId ?? "", selectedOption].join("|"))
     .digest("hex");
@@ -158,11 +209,30 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       parent_name: parentName,
       parent_email: parentEmail,
       parent_phone: readOptional(formData, "parentPhone"),
+      secondary_parent_name: secondaryParentName,
+      secondary_parent_email: secondaryParentEmail,
+      secondary_parent_phone: readOptional(formData, "secondaryParentPhone"),
       participant_name: participantName,
-      participant_birth_date: readOptional(formData, "participantBirthDate"),
+      participant_birth_date: participantBirthDate,
       preferred_days: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
+      preferred_dayparts: preferredDayparts,
       preferred_notes: readOptional(formData, "preferredNotes"),
       message: readOptional(formData, "message"),
+      swimming_experience: swimmingExperience,
+      recommendation_snapshot: recommendations.map((recommendation) => ({
+        groupId: recommendation.groupId,
+        stageId: recommendation.stageId,
+        weekday: recommendation.weekday,
+        daypart: recommendation.daypart,
+        startsAt: recommendation.startsAt,
+        endsAt: recommendation.endsAt,
+        waitBand: recommendation.waitBand,
+        rank: recommendation.rank,
+        reasons: recommendation.reasons
+      })),
+      selected_group_id: selectedRecommendation?.groupId ?? null,
+      selected_wait_band: selectedRecommendation?.waitBand ?? "long",
+      recommendation_version: "intake-v1",
       consent_given: consentGiven,
       source_hostname: await getRequestHostname(),
       dedupe_key: dedupeKey,
@@ -216,7 +286,11 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       participantName,
       programId: validation.programId,
       duplicateState: duplicate ? "possible_duplicate" : "unique",
-      duplicateOfSubmissionId: duplicate?.id ?? null
+      duplicateOfSubmissionId: duplicate?.id ?? null,
+      swimmingExperience,
+      selectedGroupId: selectedRecommendation?.groupId ?? null,
+      selectedWaitBand: selectedRecommendation?.waitBand ?? "long",
+      recommendationVersion: "intake-v1"
     }
   });
 
@@ -304,6 +378,14 @@ async function validateProgramAndForm(input: {
 }
 
 function readQuestionAnswer(formData: FormData, question: PublicIntakeQuestion): string | string[] | null {
+  if (question.fieldKey === "swimming_experience") {
+    return readOptional(formData, "swimmingExperience");
+  }
+
+  if (question.fieldKey === "preferred_moment") {
+    return readOptional(formData, "preferredNotes");
+  }
+
   const fieldName = `answer_${question.fieldKey}`;
 
   if (question.fieldType === "checkbox") {
@@ -335,12 +417,51 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function normalizeOptionalEmail(email: string | null) {
+  return email ? normalizeEmail(email) : null;
+}
+
 function normalizeName(value: string) {
   return value.trim().toLocaleLowerCase("nl").replace(/\s+/g, " ");
 }
 
 function isEmail(value: string) {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+}
+
+function isValidBirthDate(value: string) {
+  const parsed = new Date(`${value}T12:00:00`);
+
+  return !Number.isNaN(parsed.getTime()) && parsed <= new Date() && parsed.getFullYear() >= 1900;
+}
+
+function parsePreferredDayparts(value: string | null, weekdays: number[]): Partial<Record<number, IntakeDaypart[]>> {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      weekdays.flatMap((weekday) => {
+        const values = (parsed as Record<string, unknown>)[String(weekday)];
+
+        if (!Array.isArray(values)) {
+          return [];
+        }
+
+        const dayparts = values.filter((candidate): candidate is IntakeDaypart => typeof candidate === "string" && isIntakeDaypart(candidate));
+        return dayparts.length > 0 ? [[weekday, dayparts] as const] : [];
+      })
+    );
+  } catch {
+    return {};
+  }
 }
 
 async function getAbuseFingerprint(tenantId: string) {
