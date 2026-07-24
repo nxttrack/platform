@@ -51,13 +51,13 @@ export default async function IntakePage({ searchParams }: PageProps) {
 
   return (
     <main>
-      <section className="relative overflow-hidden border-b border-border bg-card px-4 py-10 sm:py-14">
+      <section className="relative overflow-hidden border-b border-border bg-card px-4 py-8 sm:py-14">
         <div aria-hidden="true" className="absolute -right-24 -top-32 size-80 rounded-full bg-aqua/10 blur-3xl" />
         <div className="relative mx-auto max-w-6xl">
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">{data.tenant.name}</p>
-              <h1 className="mt-2 max-w-3xl text-4xl font-bold tracking-tight text-foreground md:text-5xl">Samen vinden we het beste lesmoment</h1>
+              <h1 className="mt-2 max-w-3xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl md:text-5xl">Samen vinden we het beste lesmoment</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
                 Beantwoord de vragen stap voor stap. Op basis van zwemervaring en jullie beschikbaarheid stellen we direct drie passende voorkeuren voor.
               </p>
@@ -74,9 +74,9 @@ export default async function IntakePage({ searchParams }: PageProps) {
         </div>
       </section>
 
-      <section className="px-4 py-8 sm:py-10">
+      <section className="px-4 py-6 sm:py-10">
         <div className="mx-auto grid max-w-6xl gap-6 xl:grid-cols-[220px_minmax(0,1fr)]">
-          <aside className="space-y-4">
+          <aside className="hidden space-y-4 xl:block">
             <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Programma</p>
               <nav aria-label="Kies programma" className="mt-3 space-y-2">
@@ -104,6 +104,27 @@ export default async function IntakePage({ searchParams }: PageProps) {
           </aside>
 
           <div>
+            <div className="mb-4 rounded-2xl border border-border bg-card p-3 shadow-soft xl:hidden">
+              <p className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Kies programma</p>
+              <nav aria-label="Kies programma" className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                {data.programs.map((program) => {
+                  const active = selectedProgram?.id === program.id;
+                  return (
+                    <Link
+                      aria-current={active ? "page" : undefined}
+                      className={`min-w-44 rounded-xl border px-3 py-2.5 transition ${
+                        active ? "border-primary bg-primary/[0.06]" : "border-border bg-white"
+                      }`}
+                      href={`/intake?programma=${program.id}`}
+                      key={program.id}
+                    >
+                      <span className={`block truncate text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>{program.name}</span>
+                      <WaitTimeChip band={program.waitBand} className="mt-1.5" />
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
             {error ? (
               <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800" role="alert">
                 Versturen is niet gelukt. Controleer de gegevens en probeer opnieuw.
