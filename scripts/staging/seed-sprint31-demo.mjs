@@ -1,4 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createRequire } from "node:module";
+
+const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
+const { createClient } = requireFromWeb("@supabase/supabase-js");
 
 const appEnv = String(process.env.APP_ENV ?? "").trim().toLowerCase();
 const allowSeed = String(process.env.ALLOW_SPRINT31_DEMO_SEED ?? "").trim().toLowerCase() === "true";
