@@ -162,6 +162,89 @@ export async function provisionTenantAction(formData: FormData) {
   redirect(`/platform/onboarding?opened=1&run=${runId}`);
 }
 
+export async function startTenantOffboardingAction(formData: FormData) {
+  const context = await requirePlatformAdministrator("/platform/offboarding");
+  const tenantId = readRequired(formData, "tenantId");
+  const retentionDays = Math.max(30, Math.min(365, readPositiveInteger(formData, "retentionDays")));
+  const admin = createAdminClient();
+  const tenantResult = await admin.from("tenants").select("id, slug, name, status").eq("id", tenantId).maybeSingle();
+  if (tenantResult.error || !tenantResult.data || tenantResult.data.status === "suspended") redirect("/platform/offboarding?error=tenant");
+  const { error } = await admin.from("tenant_offboarding_runs").insert({
+    tenant_id: tenantId,
+    status: "requested",
+    reason: readOptional(formData, "reason"),
+    retention_ends_at: new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1_000).toISOString(),
+    export_manifest: { format: "nxttrack-tenant-export-v1", storageBuckets: ["tenant-documents", "diploma-vault"] },
+    requested_by_user_id: context.user.id
+  });
+  if (error) redirect("/platform/offboarding?error=start");
+  revalidatePath("/platform/offboarding");
+  redirect("/platform/offboarding?saved=requested");
+}
+
+export async function closeTenantAccountAction(formData: FormData) {
+  await requirePlatformAdministrator("/platform/offboarding");
+  const runId = readRequired(formData, "runId");
+  const admin = createAdminClient();
+  const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, export_completed_at").eq("id", runId).single();
+  if (runResult.error || !runResult.data || runResult.data.status !== "export_ready" || !runResult.data.export_completed_at) redirect("/platform/offboarding?error=export_required");
+  await requireWrite(admin.from("tenant_memberships").update({ status: "suspended" }).eq("tenant_id", runResult.data.tenant_id), "membership closure");
+  await requireWrite(admin.from("tenants").update({ status: "suspended" }).eq("id", runResult.data.tenant_id), "tenant closure");
+  await requireWrite(admin.from("tenant_offboarding_runs").update({ status: "retention", closed_at: new Date().toISOString() }).eq("id", runId), "retention start");
+  revalidatePath("/platform/offboarding");
+  revalidatePath("/platform");
+  redirect("/platform/offboarding?saved=closed");
+}
+
+export async function approveTenantDeletionAction(formData: FormData) {
+  const context = await requirePlatformAdministrator("/platform/offboarding");
+  if (!context.platform?.roles.includes("platform_owner")) redirect("/platform/offboarding?error=owner_required");
+  const runId = readRequired(formData, "runId");
+  const confirmationSlug = readRequired(formData, "confirmationSlug");
+  const admin = createAdminClient();
+  const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, retention_ends_at").eq("id", runId).single();
+  if (runResult.error || !runResult.data || runResult.data.status !== "retention" || new Date(runResult.data.retention_ends_at).getTime() > Date.now()) redirect("/platform/offboarding?error=retention");
+  const tenantResult = await admin.from("tenants").select("slug").eq("id", runResult.data.tenant_id).single();
+  if (tenantResult.error || tenantResult.data?.slug !== confirmationSlug) redirect("/platform/offboarding?error=confirmation");
+  await requireWrite(admin.from("tenant_offboarding_runs").update({ status: "deletion_approved", deletion_approved_at: new Date().toISOString(), approved_by_user_id: context.user.id }).eq("id", runId), "deletion approval");
+  revalidatePath("/platform/offboarding");
+  redirect("/platform/offboarding?saved=approved");
+}
+
+export async function permanentlyDeleteTenantAction(formData: FormData) {
+  const context = await requirePlatformAdministrator("/platform/offboarding");
+  if (!context.platform?.roles.includes("platform_owner")) redirect("/platform/offboarding?error=owner_required");
+  const runId = readRequired(formData, "runId");
+  const confirmation = readRequired(formData, "confirmation");
+  const admin = createAdminClient();
+  const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, export_manifest, retention_ends_at").eq("id", runId).single();
+  if (runResult.error || !runResult.data || runResult.data.status !== "deletion_approved" || new Date(runResult.data.retention_ends_at).getTime() > Date.now()) redirect("/platform/offboarding?error=not_approved");
+  const tenantResult = await admin.from("tenants").select("id, slug, name, status").eq("id", runResult.data.tenant_id).single();
+  if (tenantResult.error || !tenantResult.data || tenantResult.data.status !== "suspended" || confirmation !== `VERWIJDER ${tenantResult.data.slug}`) redirect("/platform/offboarding?error=confirmation");
+
+  const [documents, certificates] = await Promise.all([
+    admin.from("tenant_documents").select("file_path").eq("tenant_id", tenantResult.data.id).not("file_path", "is", null),
+    admin.from("certificate_records").select("file_path").eq("tenant_id", tenantResult.data.id).not("file_path", "is", null)
+  ]);
+  const documentPaths = (documents.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
+  const certificatePaths = (certificates.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
+  if (documentPaths.length) await admin.storage.from("tenant-documents").remove(documentPaths);
+  if (certificatePaths.length) await admin.storage.from("diploma-vault").remove(certificatePaths);
+
+  await requireWrite(admin.from("tenant_deletion_tombstones").insert({
+    former_tenant_id: tenantResult.data.id,
+    former_slug: tenantResult.data.slug,
+    former_name: tenantResult.data.name,
+    offboarding_run_id: runId,
+    export_manifest: runResult.data.export_manifest,
+    approved_by_user_id: context.user.id
+  }), "deletion tombstone");
+  await requireWrite(admin.from("tenants").delete().eq("id", tenantResult.data.id), "tenant deletion");
+  revalidatePath("/platform/offboarding");
+  revalidatePath("/platform");
+  redirect("/platform/offboarding?saved=deleted");
+}
+
 async function requirePlatformAdministrator(path: `/${string}`) {
   const context = await requirePrivateShellContext(path);
   if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) redirect("/platform?error=forbidden");
