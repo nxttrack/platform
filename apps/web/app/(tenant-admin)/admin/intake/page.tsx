@@ -6,6 +6,7 @@ import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
+import Link from "next/link";
 
 const optionLabels: Record<IntakeOption, string> = {
   enrollment: "Inschrijving",
@@ -16,8 +17,15 @@ const optionLabels: Record<IntakeOption, string> = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminIntakePage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminIntakePage({ searchParams }: PageProps) {
   const inbox = await getTenantIntakeInbox();
+  const params = (await searchParams) ?? {};
+  const testFilter = getParam(params, "testdata") ?? "all";
+  const submissions = inbox.submissions.filter((submission) => testFilter === "only" ? submission.is_test : testFilter === "hide" ? !submission.is_test : true);
   const programById = new Map(inbox.programs.map((program) => [program.id, program]));
   const answersBySubmission = groupAnswers(inbox.answers);
   const eventBySubjectId = new Map(inbox.events.map((event) => [event.subject_id, event]));
@@ -27,17 +35,18 @@ export default async function AdminIntakePage() {
       <PageHeader kicker="Intake" title="Aanmeldingen" subtitle={`Nieuwe oudervragen voor ${inbox.tenant.name}.`} />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Metric label="Ontvangen" value={inbox.submissions.length} />
-        <Metric label="Nieuwe status" value={inbox.submissions.filter((submission) => submission.status === "received").length} />
-        <Metric label="Mogelijk dubbel" value={inbox.submissions.filter((submission) => submission.duplicate_state === "possible_duplicate").length} />
+        <Metric label="Ontvangen" value={submissions.length} />
+        <Metric label="Nieuwe status" value={submissions.filter((submission) => submission.status === "received").length} />
+        <Metric label="Journey Bot" value={inbox.submissions.filter((submission) => submission.is_test).length} />
       </div>
 
       <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
-        {inbox.submissions.length === 0 ? (
+        <TestDataFilter current={testFilter} />
+        {submissions.length === 0 ? (
           <EmptyState>Nog geen intake-aanmeldingen.</EmptyState>
         ) : (
           <DataList>
-            {inbox.submissions.map((submission) => {
+            {submissions.map((submission) => {
               const program = submission.program_id ? programById.get(submission.program_id) : null;
               const event = eventBySubjectId.get(submission.id);
               const answers = answersBySubmission.get(submission.id) ?? [];
@@ -66,12 +75,14 @@ export default async function AdminIntakePage() {
                       {submission.preferred_days.length > 0 ? <p>Voorkeur: {submission.preferred_days.join(", ")}</p> : null}
                       {submission.swimming_experience ? <p>Zwemervaring: {getExperienceLabel(submission.swimming_experience)}</p> : null}
                       {selectedChoice ? <p>Eerste momentkeuze: {formatChoice(selectedChoice)}</p> : null}
+                      {submission.is_test ? <p className="font-mono">Journey run: {submission.journey_run_id?.slice(0, 8) ?? "onbekend"} · veilig te archiveren</p> : null}
                       {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
                     </div>
                   }
                   aside={
                     <div className="space-y-1">
                       <StatusPill tone={submission.status === "received" ? "info" : "neutral"}>{submission.status}</StatusPill>
+                      {submission.is_test ? <StatusPill tone="info">Journey Bot · testdata</StatusPill> : null}
                       {submission.selected_wait_band ? <WaitTimeChip band={submission.selected_wait_band} /> : null}
                       {submission.duplicate_state === "possible_duplicate" ? <StatusPill tone="warning">controleer dubbel</StatusPill> : null}
                       <StatusPill tone={event?.status === "pending" ? "warning" : "success"}>{event ? `event ${event.status}` : "geen event"}</StatusPill>
@@ -89,6 +100,16 @@ export default async function AdminIntakePage() {
           </DataList>
         )}
       </AdminSection>
+    </div>
+  );
+}
+
+function TestDataFilter({ current }: { current: string }) {
+  return (
+    <div className="mb-4 flex flex-wrap gap-2">
+      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
+        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/intake?testdata=${value}`} key={value}>{label}</Link>
+      ))}
     </div>
   );
 }
@@ -174,4 +195,9 @@ function getExperienceLabel(value: string) {
 function formatChoice(choice: RecommendationSnapshot) {
   const weekdays = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
   return `${weekdays[choice.weekday] ?? "dag"} ${choice.startsAt}–${choice.endsAt}`;
+}
+
+function getParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] : value;
 }

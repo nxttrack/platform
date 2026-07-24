@@ -2,6 +2,7 @@ import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, Su
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { createGroupMembershipAction, createParticipantEnrollmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import Link from "next/link";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -14,6 +15,8 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
+  const testFilter = getParam(params, "testdata") ?? "all";
+  const enrollments = data.enrollments.filter((enrollment) => testFilter === "only" ? enrollment.is_test : testFilter === "hide" ? !enrollment.is_test : true);
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
@@ -23,6 +26,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <PageHeader kicker="Core domeinmodel" title="Leerlingen en inschrijvingen" subtitle="Maak een parent-mediated leerling aan, schrijf die in op een programma en plaats die in een groep." />
       <Feedback saved={saved} error={error} />
+      <TestDataFilter current={testFilter} />
 
       <div className="grid gap-5 xl:grid-cols-2">
         <AdminSection title="Leerling + inschrijving" description="Nog geen intake/wachtlijst: dit is handmatig beheer voor het operationele model.">
@@ -98,11 +102,11 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
       </div>
 
       <AdminSection title="Inschrijvingen en plaatsingen">
-        {data.enrollments.length === 0 ? (
+        {enrollments.length === 0 ? (
           <EmptyState>Nog geen inschrijvingen.</EmptyState>
         ) : (
           <DataList>
-            {data.enrollments.map((enrollment) => {
+            {enrollments.map((enrollment) => {
               const participant = participantById.get(enrollment.participant_id);
               const memberships = data.groupMemberships.filter((membership) => membership.enrollment_id === enrollment.id && (membership.status === "active" || membership.status === "trial"));
               const groupNames = memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Onbekende groep");
@@ -117,13 +121,23 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                       {groupNames.length > 0 ? groupNames.join(", ") : "nog niet geplaatst"}
                     </span>
                   }
-                  aside={<StatusPill tone={enrollment.status === "active" ? "success" : "neutral"}>{enrollment.status}</StatusPill>}
+                  aside={<div className="space-y-1"><StatusPill tone={enrollment.status === "active" ? "success" : "neutral"}>{enrollment.status}</StatusPill>{enrollment.is_test ? <StatusPill tone="info">Journey Bot · testdata</StatusPill> : null}</div>}
                 />
               );
             })}
           </DataList>
         )}
       </AdminSection>
+    </div>
+  );
+}
+
+function TestDataFilter({ current }: { current: string }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
+        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/leerlingen?testdata=${value}`} key={value}>{label}</Link>
+      ))}
     </div>
   );
 }

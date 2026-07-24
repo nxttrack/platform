@@ -3,6 +3,7 @@ import { PlacementCockpit, type PlacementCockpitRow } from "@/components/admin/p
 import { PageHeader } from "@/components/shell/ui";
 import { createWaitlistEntryFromIntakeAction } from "@/lib/domain/placement-actions";
 import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
+import Link from "next/link";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -16,15 +17,17 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
   const offerLink = getParam(params, "aanbod");
+  const testFilter = getParam(params, "testdata") ?? "all";
   const waitlistIntakeIds = new Set(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [entry.intake_submission_id] : [])));
-  const pendingIntakes = data.intakeSubmissions.filter((submission) => submission.program_id && !waitlistIntakeIds.has(submission.id));
+  const pendingIntakes = data.intakeSubmissions.filter((submission) => submission.program_id && !waitlistIntakeIds.has(submission.id) && matchesTestFilter(submission.is_test, testFilter));
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const preferencesByEntry = groupBy(data.waitlistPreferences, "waitlist_entry_id");
   const scoresByEntry = groupBy(data.placementScores, "waitlist_entry_id");
   const offersByEntry = groupBy(data.slotOffers, "waitlist_entry_id");
-  const cockpitRows: PlacementCockpitRow[] = data.waitlistEntries.map((entry) => {
+  const visibleWaitlist = data.waitlistEntries.filter((entry) => matchesTestFilter(entry.is_test, testFilter));
+  const cockpitRows: PlacementCockpitRow[] = visibleWaitlist.map((entry) => {
     const stored = scoresByEntry.get(entry.id) ?? [];
     const computed = computePlacementScores({ entry, preferences: preferencesByEntry.get(entry.id) ?? [], groups: data.groups, memberships: data.groupMemberships });
     const proposals = stored.length ? stored.map((score) => ({ capacity: score.capacity_available, groupId: score.group_id, groupName: groupById.get(score.group_id)?.name ?? "Groep", reasons: score.reasons, score: Number(score.score) })) : computed.map((score) => ({ capacity: score.capacityAvailable, groupId: score.group.id, groupName: score.group.name, reasons: score.reasons, score: score.score }));
@@ -37,6 +40,10 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       stage: entry.recommended_stage_id ? stageById.get(entry.recommended_stage_id)?.name ?? null : null,
       status: entry.status,
       priorityDate: entry.priority_date,
+      isTest: entry.is_test,
+      journeyRunId: entry.journey_run_id,
+      minimumAgeBlocked: entry.minimum_age_blocked,
+      eligibleFrom: entry.eligible_from,
       proposals,
       offerGroups: getOfferGroups(entry.program_id, proposals.map((proposal) => proposal.groupId), data.groups),
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
@@ -47,12 +54,13 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <PageHeader kicker="Placement assistant" title="Wachtlijst en plaatsing" subtitle="Zet intake om naar wachtlijst, score beschikbare groepen en verstuur een aanbodlink." />
       <Feedback saved={saved} error={error} offerLink={offerLink} />
+      <TestDataFilter current={testFilter} />
 
       <div className="grid gap-4 md:grid-cols-4">
         <Metric label="Nieuwe intakes" value={pendingIntakes.length} />
-        <Metric label="Wachtlijst" value={data.waitlistEntries.filter((entry) => entry.status === "waiting").length} />
+        <Metric label="Wachtlijst" value={visibleWaitlist.filter((entry) => entry.status === "waiting").length} />
         <Metric label="Aanbiedingen" value={data.slotOffers.filter((offer) => offer.status === "sent").length} />
-        <Metric label="Geplaatst" value={data.waitlistEntries.filter((entry) => entry.status === "placed").length} />
+        <Metric label="Journey Bot" value={data.waitlistEntries.filter((entry) => entry.is_test).length} />
       </div>
 
       <AdminSection title="Intake naar wachtlijst">
@@ -78,7 +86,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       </AdminSection>
 
       <AdminSection title="Smart Placement & Capacity Cockpit" description="Vergelijk verklaarbare voorstellen, bewaar rolgerichte filters en keur een plaatsing handmatig goed.">
-        {data.waitlistEntries.length === 0 ? (
+        {visibleWaitlist.length === 0 ? (
           <EmptyState>Nog geen wachtlijstentries.</EmptyState>
         ) : (
           <PlacementCockpit rows={cockpitRows} />
@@ -86,6 +94,20 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       </AdminSection>
     </div>
   );
+}
+
+function TestDataFilter({ current }: { current: string }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
+        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/wachtlijst?testdata=${value}`} key={value}>{label}</Link>
+      ))}
+    </div>
+  );
+}
+
+function matchesTestFilter(isTest: boolean, filter: string) {
+  return filter === "only" ? isTest : filter === "hide" ? !isTest : true;
 }
 
 function getOfferGroups(programId: string, scoredGroupIds: string[], groups: { id: string; name: string; program_id: string; status: string }[]) {

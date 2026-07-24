@@ -31,6 +31,9 @@ export type IntakeSubmissionRow = {
   received_at: string;
   duplicate_state: "unique" | "possible_duplicate" | "confirmed_duplicate" | "dismissed";
   duplicate_of_submission_id: string | null;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
 };
 
 export type IntakeAnswerRow = {
@@ -69,7 +72,7 @@ export async function getTenantIntakeInbox(): Promise<TenantIntakeInbox> {
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).order("sort_order").order("name"),
     admin
       .from("intake_submissions")
-      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, secondary_parent_name, secondary_parent_email, secondary_parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, message, swimming_experience, recommendation_snapshot, selected_group_id, selected_wait_band, recommendation_version, status, received_at, duplicate_state, duplicate_of_submission_id")
+      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, secondary_parent_name, secondary_parent_email, secondary_parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, message, swimming_experience, recommendation_snapshot, selected_group_id, selected_wait_band, recommendation_version, status, received_at, duplicate_state, duplicate_of_submission_id, source, is_test, journey_run_id")
       .eq("tenant_id", tenant.id)
       .order("received_at", { ascending: false }),
     admin.from("intake_answers").select("id, submission_id, field_key, answer_text, answer_json").eq("tenant_id", tenant.id),

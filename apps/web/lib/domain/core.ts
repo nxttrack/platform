@@ -66,6 +66,9 @@ export type ParticipantRow = {
   display_name: string;
   birth_date: string | null;
   status: string;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
 };
 
 export type EnrollmentRow = {
@@ -77,6 +80,8 @@ export type EnrollmentRow = {
   status: string;
   source: string;
   starts_on: string;
+  is_test: boolean;
+  journey_run_id: string | null;
 };
 
 export type GroupMembershipRow = {
@@ -86,6 +91,9 @@ export type GroupMembershipRow = {
   participant_id: string;
   status: string;
   capacity_weight: number;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
 };
 
 export type InstructorAssignmentRow = {
@@ -166,9 +174,9 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
       .eq("tenant_id", tenant.id)
       .order("name"),
     admin.from("sessions").select("id, group_id, resource_id, starts_at, ends_at, status, capacity_override, notes").eq("tenant_id", tenant.id).order("starts_at"),
-    admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status").eq("tenant_id", tenant.id).order("display_name"),
-    admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on").eq("tenant_id", tenant.id).order("starts_on", { ascending: false }),
-    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id),
+    admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).order("display_name"),
+    admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on, is_test, journey_run_id").eq("tenant_id", tenant.id).order("starts_on", { ascending: false }),
+    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight, source, is_test, journey_run_id").eq("tenant_id", tenant.id),
     admin.from("group_instructor_assignments").select("id, group_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),
     admin.from("session_instructor_assignments").select("id, session_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),
     admin.from("tenant_memberships").select("user_id, role").eq("tenant_id", tenant.id).eq("status", "active")

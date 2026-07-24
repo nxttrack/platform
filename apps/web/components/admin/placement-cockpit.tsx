@@ -18,6 +18,10 @@ export type PlacementCockpitRow = {
   stage: string | null;
   status: string;
   priorityDate: string;
+  isTest: boolean;
+  journeyRunId: string | null;
+  minimumAgeBlocked: boolean;
+  eligibleFrom: string | null;
   proposals: Array<{ capacity: number; groupId: string; groupName: string; reasons: string[]; score: number }>;
   offerGroups: Array<{ id: string; name: string }>;
   offers: Array<{ deliveryStatus: string; groupName: string; status: string }>;
@@ -27,7 +31,7 @@ const columns: ColumnDef<PlacementCockpitRow, unknown>[] = [
   {
     accessorKey: "participantName",
     header: "Deelnemer",
-    cell: ({ row }) => <div><p className="font-semibold text-foreground">{row.original.participantName}</p><p className="text-xs text-muted-foreground">{row.original.parentName}</p></div>,
+    cell: ({ row }) => <div><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-foreground">{row.original.participantName}</p>{row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}</div><p className="text-xs text-muted-foreground">{row.original.parentName}</p></div>,
     filterFn: dataTableTextFilter
   },
   { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
@@ -72,6 +76,8 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
         <DetailStat icon={Clock3} label="Wacht sinds" value={new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(row.priorityDate))} />
         <DetailStat icon={Users} label="Alternatieven" value={String(Math.max(0, row.proposals.length - 1))} />
       </section>
+      {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · veilig te archiveren</p> : null}
+      {row.minimumAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
 
       <section>
         <div className="mb-3 flex items-center justify-between gap-3">

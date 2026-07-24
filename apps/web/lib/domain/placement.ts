@@ -19,6 +19,12 @@ export type WaitlistEntryRow = {
   status: string;
   priority_date: string;
   admin_notes: string | null;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
+  eligible_from: string | null;
+  minimum_age_blocked: boolean;
+  waitlist_reason: string | null;
 };
 
 export type WaitlistPreferenceRow = {
@@ -100,12 +106,12 @@ export async function getPlacementDashboardData(): Promise<PlacementDashboardDat
     admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id),
     admin
       .from("intake_submissions")
-      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes, message, status, received_at")
+      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes, message, status, received_at, source, is_test, journey_run_id")
       .eq("tenant_id", tenant.id)
       .order("received_at", { ascending: false }),
     admin
       .from("waitlist_entries")
-      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, admin_notes")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, admin_notes, source, is_test, journey_run_id, eligible_from, minimum_age_blocked, waitlist_reason")
       .eq("tenant_id", tenant.id)
       .order("priority_date"),
     admin.from("waitlist_preferences").select("id, waitlist_entry_id, weekday, starts_after, ends_before, preference_weight").eq("tenant_id", tenant.id),

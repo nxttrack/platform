@@ -50,6 +50,7 @@ export const platformNav: NavItem[] = [
   { href: "/platform", label: "Overzicht", icon: "home" },
   { href: "/platform/onboarding", label: "Onboarding", icon: "waves" },
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
+  { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
   { href: "/platform/instellingen", label: "Instellingen", icon: "settings" }
 ];
