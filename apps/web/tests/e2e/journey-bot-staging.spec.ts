@@ -49,7 +49,9 @@ test.describe("Journey Simulation Bot staging smoke", () => {
       await expect(newestRun).toContainText("healthy");
       await expect(newestRun).toContainText("1 geslaagd");
       await expect(newestRun).toContainText("0 technisch");
-      await expect(page.getByText("completed_full_journey", { exact: true }).first()).toBeVisible();
+      const completedJourney = page.locator("details").filter({ hasText: "completed_full_journey" }).first();
+      await expect(completedJourney).toBeVisible();
+      await completedJourney.locator("summary").click();
       for (const eventType of [
         "intake_created",
         "placement_suggested",
@@ -62,7 +64,7 @@ test.describe("Journey Simulation Bot staging smoke", () => {
         "certificate_created",
         "journey_completed"
       ]) {
-        await expect(page.getByText(eventType, { exact: true }).first()).toBeVisible();
+        await expect(completedJourney.getByText(eventType, { exact: true })).toBeVisible();
       }
 
       await resetTestCycle(page);
