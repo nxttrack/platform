@@ -6,7 +6,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   calculateJourneyRunAllowance,
   chooseNextRunAt,
+  getJourneyAttendanceLessonCount,
   getJourneyConfigStopReason,
+  getJourneyDiplomaMilestone,
   getMinimumAgeDecision,
   isActiveJourneyWindow,
   isJourneyBotEnvironmentAllowed,
@@ -554,6 +556,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
     let currentGroup = placement.group;
     let currentStage = firstStage;
     const enrollmentId = placement.enrollment.id;
+    const issuedDiplomas: string[] = [];
 
     for (let stageIndex = 0; stageIndex < stagesToRun.length; stageIndex += 1) {
       currentStage = stagesToRun[stageIndex]!;
@@ -585,6 +588,22 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
         return await finishJourney(journey, "partial", "degraded", `Gestopt bij ${currentStage.name}: voortgangsmodules ontbreken.`);
       }
 
+      const diploma = getJourneyDiplomaMilestone(currentStage);
+      if (scenario === "full_journey_to_diploma" && diploma) {
+        const certificateOkay = await simulateGraduation({
+          config: input.config,
+          diploma,
+          enrollmentId,
+          journey,
+          program,
+          stage: currentStage
+        });
+        if (!certificateOkay) {
+          return await finishJourney(journey, "partial", "degraded", `${diploma.label} kon niet veilig worden uitgegeven.`);
+        }
+        issuedDiplomas.push(diploma.label);
+      }
+
       const nextStage = stagesToRun[stageIndex + 1];
       if (!nextStage || isTerminalStage(nextStage)) continue;
       const transfer = await transferToStage({
@@ -608,16 +627,16 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
       return await finishJourney(journey, "completed_transfer", "passed", `Doorgestroomd van ${firstStage.name} naar ${currentStage.name}.`);
     }
 
-    const diplomaStage = [...stages].reverse().find((stage) => !isTerminalStage(stage)) ?? currentStage;
-    const certificateOkay = await simulateGraduation({ config: input.config, enrollmentId, journey, program, stage: diplomaStage });
+    const expectedDiplomas = stagesToRun.map(getJourneyDiplomaMilestone).filter((diploma) => diploma !== null);
+    const certificateOkay = expectedDiplomas.length === 3 && issuedDiplomas.length === expectedDiplomas.length;
     const finalStatus = certificateOkay ? "completed_full_journey" : "partial";
     return await finishJourney(
       journey,
       finalStatus,
       certificateOkay ? "passed" : "degraded",
       certificateOkay
-        ? `Volledige reis afgerond; ${diplomaStage.name}-testdiploma uitgegeven.`
-        : `Reis afgerond tot afzwem-ready; diplomamodule kon niet worden voltooid.`
+        ? `Volledige reis afgerond; ${formatDutchList(issuedDiplomas)} als testdiploma uitgegeven.`
+        : `Reis afgerond, maar de vereiste Diploma A-, B- en C-keten is niet volledig.`
     );
   } catch (error) {
     await createIssue({
@@ -894,7 +913,7 @@ async function simulateStageProgress(input: {
       .eq("tenant_id", input.config.tenant_id)
       .eq("group_id", input.group.id)
       .order("starts_at")
-      .limit(8),
+      .limit(12),
     admin
       .from("progress_modules")
       .select("id, name")
@@ -942,7 +961,8 @@ async function simulateStageProgress(input: {
     return false;
   }
 
-  const attendanceSessions = sessions.slice(0, Math.min(6, sessions.length));
+  const lessonCount = getJourneyAttendanceLessonCount(input.config.run_speed);
+  const attendanceSessions = sessions.slice(0, Math.min(lessonCount, sessions.length));
   await admin.from("session_attendance").upsert(
     attendanceSessions.map((session, index) => ({
       tenant_id: input.config.tenant_id,
@@ -1120,6 +1140,7 @@ async function transferToStage(input: {
 
 async function simulateGraduation(input: {
   config: JourneyBotConfigRow;
+  diploma: { code: "DIPLOMA-A" | "DIPLOMA-B" | "DIPLOMA-C"; label: "Diploma A" | "Diploma B" | "Diploma C" };
   enrollmentId: string;
   journey: JourneyRow;
   program: ProgramRow;
@@ -1137,12 +1158,12 @@ async function simulateGraduation(input: {
         stage_id: input.stage.id,
         status: "ready",
         readiness_score: 100,
-        checklist_summary: "Journey Bot: attendance en alle voortgangsitems afgerond.",
+        checklist_summary: `Journey Bot: attendance en alle voortgangsitems voor ${input.diploma.label} afgerond.`,
         reviewed_at: new Date().toISOString(),
         source: SOURCE,
         is_test: true,
         journey_run_id: input.journey.run_id,
-        test_metadata_json: testMetadata(input.journey)
+        test_metadata_json: testMetadata(input.journey, { diplomaCode: input.diploma.code })
       },
       { onConflict: "tenant_id,enrollment_id,stage_id" }
     )
@@ -1160,7 +1181,9 @@ async function simulateGraduation(input: {
     });
     return false;
   }
-  await appendEvent(input.journey, "afzwem_ready", "completed", `${input.stage.name}: afzwem-ready met score 100.`);
+  await appendEvent(input.journey, "afzwem_ready", "completed", `${input.diploma.label}: afzwem-ready met score 100.`, {
+    diplomaCode: input.diploma.code
+  });
 
   const startsAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   startsAt.setUTCHours(17, 0, 0, 0);
@@ -1170,7 +1193,7 @@ async function simulateGraduation(input: {
       tenant_id: input.config.tenant_id,
       program_id: input.program.id,
       stage_id: input.stage.id,
-      title: `Journey Bot afzwemmen · ${input.journey.smoke_run_id}`,
+      title: `Journey Bot afzwemmen ${input.diploma.label} · ${input.journey.smoke_run_id}`,
       status: "completed",
       starts_at: startsAt.toISOString(),
       ends_at: new Date(startsAt.getTime() + 90 * 60_000).toISOString(),
@@ -1179,7 +1202,7 @@ async function simulateGraduation(input: {
       source: SOURCE,
       is_test: true,
       journey_run_id: input.journey.run_id,
-      test_metadata_json: testMetadata(input.journey)
+      test_metadata_json: testMetadata(input.journey, { diplomaCode: input.diploma.code })
     })
     .select("id")
     .single();
@@ -1195,7 +1218,10 @@ async function simulateGraduation(input: {
     });
     return false;
   }
-  await appendEvent(input.journey, "afzwem_event_created", "completed", "Test-afzwemmoment aangemaakt.", { eventId: eventResult.data.id });
+  await appendEvent(input.journey, "afzwem_event_created", "completed", `Test-afzwemmoment voor ${input.diploma.label} aangemaakt.`, {
+    diplomaCode: input.diploma.code,
+    eventId: eventResult.data.id
+  });
 
   const participantResult = await admin
     .from("graduation_event_participants")
@@ -1211,11 +1237,11 @@ async function simulateGraduation(input: {
       responded_at: new Date().toISOString(),
       result: "passed",
       result_registered_at: new Date().toISOString(),
-      result_notes: "Journey Bot testresultaat",
+      result_notes: `Journey Bot testresultaat voor ${input.diploma.label}`,
       source: SOURCE,
       is_test: true,
       journey_run_id: input.journey.run_id,
-      test_metadata_json: testMetadata(input.journey)
+      test_metadata_json: testMetadata(input.journey, { diplomaCode: input.diploma.code })
     })
     .select("id")
     .single();
@@ -1239,15 +1265,15 @@ async function simulateGraduation(input: {
     program_id: input.program.id,
     stage_id: input.stage.id,
     event_participant_id: participantResult.data.id,
-    certificate_number: `TEST-${input.journey.smoke_run_id}`,
-    title: `${input.stage.name} · testdiploma`,
+    certificate_number: `TEST-${input.journey.smoke_run_id}-${input.diploma.code}`,
+    title: `${input.diploma.label} · testdiploma`,
     status: "issued",
     issued_on: new Date().toISOString().slice(0, 10),
     notes: "Journey Simulation Bot · niet geldig als officieel diploma.",
     source: SOURCE,
     is_test: true,
     journey_run_id: input.journey.run_id,
-    test_metadata_json: testMetadata(input.journey)
+    test_metadata_json: testMetadata(input.journey, { diplomaCode: input.diploma.code })
   });
   if (certificateResult.error) {
     await createIssue({
@@ -1262,7 +1288,9 @@ async function simulateGraduation(input: {
     return false;
   }
   await admin.from("graduation_readiness").update({ status: "completed" }).eq("id", readinessResult.data.id);
-  await appendEvent(input.journey, "certificate_created", "completed", `${input.stage.name}-testdiploma aangemaakt.`);
+  await appendEvent(input.journey, "certificate_created", "completed", `${input.diploma.label}-testdiploma aangemaakt.`, {
+    diplomaCode: input.diploma.code
+  });
   return true;
 }
 
@@ -1611,6 +1639,12 @@ function testMetadata(journey: JourneyRow, extra: Record<string, unknown> = {}) 
 
 function isTerminalStage(stage: StageRow) {
   return stage.code?.toUpperCase() === "KLAAR" || stage.name.trim().toLowerCase() === "klaar";
+}
+
+function formatDutchList(values: readonly string[]) {
+  if (values.length < 2) return values[0] ?? "";
+
+  return `${values.slice(0, -1).join(", ")} en ${values.at(-1)}`;
 }
 
 function requireAllowedEnvironment() {

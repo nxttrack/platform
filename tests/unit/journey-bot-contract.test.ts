@@ -4,7 +4,9 @@ import test from "node:test";
 import {
   calculateJourneyRunAllowance,
   chooseNextRunAt,
+  getJourneyAttendanceLessonCount,
   getJourneyConfigStopReason,
+  getJourneyDiplomaMilestone,
   getMinimumAgeDecision,
   isActiveJourneyWindow,
   isJourneyBotEnvironmentAllowed,
@@ -14,6 +16,28 @@ import {
   summarizeJourneyTick,
   sortEligibleFifo
 } from "../../apps/web/lib/domain/journey-bot-contract";
+
+test("modelleert de A-, B- en C-diplomaketen op de juiste niveaus", () => {
+  assert.deepEqual(getJourneyDiplomaMilestone({ code: "AFZWEM-A", name: "Afzwemmen A" }), {
+    code: "DIPLOMA-A",
+    label: "Diploma A"
+  });
+  assert.deepEqual(getJourneyDiplomaMilestone({ code: "DIPLOMA-B", name: "Diploma B" }), {
+    code: "DIPLOMA-B",
+    label: "Diploma B"
+  });
+  assert.deepEqual(getJourneyDiplomaMilestone({ code: "DIPLOMA-C", name: "Diploma C" }), {
+    code: "DIPLOMA-C",
+    label: "Diploma C"
+  });
+  assert.equal(getJourneyDiplomaMilestone({ code: "BADJE-3", name: "Badje 3" }), null);
+});
+
+test("simuleert per snelheidsprofiel acht tot twaalf lessen per niveau", () => {
+  assert.equal(getJourneyAttendanceLessonCount("fast"), 8);
+  assert.equal(getJourneyAttendanceLessonCount("balanced"), 10);
+  assert.equal(getJourneyAttendanceLessonCount("realistic"), 12);
+});
 
 test("blokkeert productie standaard en staat dev/staging toe", () => {
   assert.equal(isJourneyBotEnvironmentAllowed("staging"), true);

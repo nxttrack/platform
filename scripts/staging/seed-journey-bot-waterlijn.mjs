@@ -26,7 +26,7 @@ const stageSpecs = [
   ["BADJE-1", "Badje 1", "#0ea5e9"],
   ["BADJE-2", "Badje 2", "#06b6d4"],
   ["BADJE-3", "Badje 3", "#14b8a6"],
-  ["AFZWEM-A", "Afzwemmen", "#22c55e"],
+  ["AFZWEM-A", "Afzwemmen A", "#22c55e"],
   ["DIPLOMA-B", "Diploma B", "#84cc16"],
   ["DIPLOMA-C", "Diploma C", "#eab308"],
   ["KLAAR", "Klaar", "#64748b"]
@@ -116,7 +116,7 @@ const groupSpecs = [
   ["JB-B1-MA-1630", "Badje 1 · maandag 16:30", "BADJE-1", "JB-BADJE-1", 1, "16:30", "17:15"],
   ["JB-B2-DI-1600", "Badje 2 · dinsdag 16:00", "BADJE-2", "JB-BADJE-2", 2, "16:00", "16:45"],
   ["JB-B3-WO-1600", "Badje 3 · woensdag 16:00", "BADJE-3", "JB-BADJE-3", 3, "16:00", "16:45"],
-  ["JB-AF-DO-1700", "Afzwemmen · donderdag 17:00", "AFZWEM-A", "JB-AFZWEM", 4, "17:00", "17:45"],
+  ["JB-AF-DO-1700", "Afzwemmen A · donderdag 17:00", "AFZWEM-A", "JB-AFZWEM", 4, "17:00", "17:45"],
   ["JB-B-DO-1800", "Diploma B · donderdag 18:00", "DIPLOMA-B", "JB-AFZWEM", 4, "18:00", "18:45"],
   ["JB-C-VR-1600", "Diploma C · vrijdag 16:00", "DIPLOMA-C", "JB-AFZWEM", 5, "16:00", "16:45"],
   ["JB-B1-VR-1700", "Badje 1 · vrijdag 17:00", "BADJE-1", "JB-BADJE-1", 5, "17:00", "17:45"]
@@ -159,7 +159,7 @@ for (const [index, [code, name, stageCode, resourceCode, weekday, start, end]] o
 const baseMonday = startOfIsoWeek(new Date());
 let sessionCount = 0;
 for (const group of groupByCode.values()) {
-  for (const weekOffset of [-3, -2, -1, 0, 1, 2]) {
+  for (const weekOffset of [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]) {
     const startsAt = occurrenceForWeek(baseMonday, group.default_weekday, group.default_start_time, weekOffset);
     const endsAt = new Date(startsAt.getTime() + 45 * 60_000);
     const existing = await maybeOne("sessions", {

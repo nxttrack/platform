@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 const root = process.cwd();
 const checks = [
-  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "certificate_records", "journeys_started_total", "technical_failure_count", "resetJourneyBotTestCycle"]],
+  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "getJourneyDiplomaMilestone", "DIPLOMA-A", "certificate_records", "journeys_started_total", "technical_failure_count", "resetJourneyBotTestCycle"]],
   ["apps/web/app/api/internal/journey-bot/tick/route.ts", ["timingSafeEqual", "CRON_SECRET", "runDueJourneyBotConfigs", "summarizeJourneyTick"]],
   ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Testcyclus resetten", "Technische health", "Journey logs per kind"]],
   ["scripts/staging/assert-journey-bot-tick.mjs", ["release-blocking technical failures", "unexpectedIssues", "criticalIssues"]],
@@ -27,6 +27,9 @@ const groupCodes = [...groupSection.matchAll(/\["JB-[A-Z0-9-]+",\s*"/g)];
 if (groupCodes.length !== 8) errors.push(`Waterlijn seed must define exactly 8 Journey Bot groups; found ${groupCodes.length}.`);
 if (!seed.includes("weekdays.size !== 5") || !seed.includes("minutesBetween(group[5], group[6]) !== 45")) {
   errors.push("Waterlijn seed must enforce five weekdays and 45-minute lessons.");
+}
+if (!seed.includes("[-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]")) {
+  errors.push("Waterlijn seed must provide twelve lessons per group.");
 }
 
 if (errors.length) {

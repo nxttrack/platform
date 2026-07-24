@@ -66,6 +66,15 @@ test.describe("Journey Simulation Bot staging smoke", () => {
       ]) {
         await expect(completedJourney.getByText(eventType, { exact: true }).first()).toBeVisible();
       }
+      await expect(completedJourney.getByText("certificate_created", { exact: true })).toHaveCount(3);
+      const journeyLog = (await completedJourney.locator("pre").textContent()) ?? "";
+      const diplomaAIndex = journeyLog.indexOf("Diploma A-testdiploma aangemaakt.");
+      const diplomaBIndex = journeyLog.indexOf("Diploma B-testdiploma aangemaakt.");
+      const diplomaCIndex = journeyLog.indexOf("Diploma C-testdiploma aangemaakt.");
+      expect(diplomaAIndex).toBeGreaterThan(-1);
+      expect(diplomaBIndex).toBeGreaterThan(diplomaAIndex);
+      expect(diplomaCIndex).toBeGreaterThan(diplomaBIndex);
+      expect(journeyLog.match(/8 lessen van .+ bijgewoond\\./g)).toHaveLength(7);
 
       await resetTestCycle(page);
       await page.getByLabel("Bot ingeschakeld").check();

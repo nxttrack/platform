@@ -47,6 +47,29 @@ export type JourneyRunSummary = {
   technicalFailures: number;
 };
 
+export type JourneyDiplomaMilestone = {
+  code: "DIPLOMA-A" | "DIPLOMA-B" | "DIPLOMA-C";
+  label: "Diploma A" | "Diploma B" | "Diploma C";
+};
+
+export function getJourneyDiplomaMilestone(stage: { code: string | null; name: string }): JourneyDiplomaMilestone | null {
+  const code = stage.code?.trim().toUpperCase();
+  const name = stage.name.trim().toLowerCase();
+
+  if (code === "AFZWEM-A" || name === "afzwemmen a") return { code: "DIPLOMA-A", label: "Diploma A" };
+  if (code === "DIPLOMA-B" || name === "diploma b") return { code: "DIPLOMA-B", label: "Diploma B" };
+  if (code === "DIPLOMA-C" || name === "diploma c") return { code: "DIPLOMA-C", label: "Diploma C" };
+
+  return null;
+}
+
+export function getJourneyAttendanceLessonCount(runSpeed: string) {
+  if (runSpeed === "realistic") return 12;
+  if (runSpeed === "balanced") return 10;
+
+  return 8;
+}
+
 export function normalizeJourneyBotEnvironment(value: string | null | undefined): JourneyBotEnvironment | null {
   const normalized = String(value ?? "")
     .trim()
