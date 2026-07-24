@@ -37,7 +37,7 @@ export default function SwimSchoolsPage() {
         visual={
           <>
             <HeroVisual caption="Live · 24 lessen vandaag">
-              <Photo label="Kinderen tijdens de zwemles" hint="Persoonlijke begeleiding" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
+              <Photo label="Kinderen tijdens de zwemles" hint="Persoonlijke begeleiding" promptId="IMG-31-06" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
             </HeroVisual>
             <FloatCard className="absolute -bottom-6 -left-4 hidden w-[230px] sm:block">
               <p className="text-[10px] font-semibold uppercase text-slate-500">Bezetting vandaag</p>
@@ -72,7 +72,7 @@ export default function SwimSchoolsPage() {
 
       <PageSection kicker="Praktijk" title="Hoe het werkt aan de badrand">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-          <Photo label="Instructeur met tablet aan de badrand" hint="1600×1200 · landschap" ratio="aspect-[4/3]" />
+          <Photo label="Instructeur met tablet aan de badrand" hint="1600×1200 · landschap" promptId="IMG-31-07" ratio="aspect-[4/3]" />
           <div>
             <CheckList
               items={[

@@ -129,7 +129,8 @@ export function Photo({
   alt,
   width = 1200,
   height = 900,
-  priority = false
+  priority = false,
+  promptId
 }: {
   label: string;
   hint?: string;
@@ -140,6 +141,7 @@ export function Photo({
   width?: number;
   height?: number;
   priority?: boolean;
+  promptId?: string;
 }) {
   const sceneLabel = label.replace(/^foto:\s*/i, "");
 
@@ -162,6 +164,7 @@ export function Photo({
       <div className="absolute left-5 top-5 flex h-11 w-11 items-center justify-center rounded-2xl bg-white/90 text-[#1D4ED8] shadow-lg ring-1 ring-white/80 backdrop-blur">
         <Waves className="h-5 w-5" />
       </div>
+      {promptId ? <span className="absolute right-4 top-4 rounded-full border border-white/50 bg-slate-950/55 px-2.5 py-1 text-[10px] font-bold tracking-wider text-white backdrop-blur" data-image-prompt-id={promptId}>{promptId}</span> : null}
       <div className="absolute inset-x-0 bottom-0 p-5 text-white md:p-6">
         <p className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
           <Sparkles className="h-3 w-3" /> NXTTRACK in de praktijk

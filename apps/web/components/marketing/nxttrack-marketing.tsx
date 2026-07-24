@@ -150,7 +150,7 @@ function Hero() {
           </div>
           <div className="relative">
             <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-slate-900/10">
-              <Photo label="Foto: kind leert zwemmen met persoonlijke begeleiding" hint="1536x1024 · hero" ratio="aspect-[5/6] md:aspect-[4/5]" className="w-full rounded-none border-0 shadow-none" />
+              <Photo label="Foto: kind leert zwemmen met persoonlijke begeleiding" hint="1536x1024 · hero" promptId="IMG-31-01" ratio="aspect-[5/6] md:aspect-[4/5]" className="w-full rounded-none border-0 shadow-none" />
               <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/40 via-transparent to-transparent" />
               <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
@@ -362,12 +362,12 @@ function Moments() {
   return (
     <Section kicker="Momenten" title="Echte momenten. Echte mensen." sub="Een instructeur die complimenten geeft. Een kind dat zijn diploma toont. Een ouder die de app opent.">
       <div className="grid gap-4 md:grid-cols-3">
-        <Photo label="Foto: kind toont diploma" hint="1200x1500" ratio="aspect-[4/5]" />
+        <Photo label="Foto: kind toont diploma" hint="1200x1500" promptId="IMG-31-02" ratio="aspect-[4/5]" />
         <div className="grid gap-4">
-          <Photo label="Foto: instructeur op badrand" hint="1200x900" ratio="aspect-[4/3]" />
-          <Photo label="Foto: ouder bekijkt app" hint="1200x900" ratio="aspect-[4/3]" />
+          <Photo label="Foto: instructeur op badrand" hint="1200x900" promptId="IMG-31-03" ratio="aspect-[4/3]" />
+          <Photo label="Foto: ouder bekijkt app" hint="1200x900" promptId="IMG-31-04" ratio="aspect-[4/3]" />
         </div>
-        <Photo label="Foto: groep kinderen in bad" hint="1200x1500" ratio="aspect-[4/5]" />
+        <Photo label="Foto: groep kinderen in bad" hint="1200x1500" promptId="IMG-31-05" ratio="aspect-[4/5]" />
       </div>
     </Section>
   );

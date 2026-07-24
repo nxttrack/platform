@@ -1,6 +1,7 @@
 import { CheckCircle2 } from "lucide-react";
 
 import { TenantOnboardingWizard } from "@/components/platform/tenant-onboarding-wizard";
+import { Photo } from "@/components/lovable/page-kit";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -19,6 +20,7 @@ export default async function PlatformOnboardingPage({ searchParams }: PageProps
       <PageHeader kicker="Tenant lifecycle" title="Nieuwe zwemschool onboarden" subtitle="Van lege tenant naar gecontroleerd geopende organisatie in één herhaalbare flow." />
       {opened ? <div className="flex items-center gap-3 rounded-xl border border-success/30 bg-success/10 p-4 text-sm font-semibold text-success"><CheckCircle2 className="size-5" />Tenant geopend en eigenaar uitgenodigd.</div> : null}
       {error ? <div className="rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm font-semibold text-danger">Provisioning is veilig gestopt. De tenant blijft inactief; controleer de run hieronder.</div> : null}
+      <Photo className="max-h-56" label="Zwemschoolteam start de onboarding samen aan een lichte werktafel" promptId="IMG-31-11" ratio="aspect-[16/5]" />
       <TenantOnboardingWizard />
       <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
         <h2 className="text-lg font-bold">Recente onboardingruns</h2>

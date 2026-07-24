@@ -71,7 +71,7 @@ function ParentPortalPage() {
         visual={
           <>
             <HeroVisual caption="Emma · Diploma A · 75%">
-              <Photo label="Ouder bekijkt de zwemapp op telefoon" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
+              <Photo label="Ouder bekijkt de zwemapp op telefoon" promptId="IMG-31-08" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
             </HeroVisual>
             <FloatCard className="absolute -bottom-6 -left-4 hidden w-[240px] sm:block">
               <p className="text-[10px] font-semibold uppercase text-slate-500">Volgende les</p>
@@ -123,7 +123,7 @@ function TrainerAppPage() {
         visual={
           <>
             <HeroVisual caption="Groep Zeesterren · Bad 2">
-              <Photo label="Instructeur met tablet aan de badrand" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
+              <Photo label="Instructeur met tablet aan de badrand" promptId="IMG-31-09" ratio="aspect-[4/5]" className="rounded-none border-0 shadow-none" priority />
             </HeroVisual>
             <FloatCard className="absolute -bottom-6 -left-4 hidden w-[230px] sm:block">
               <p className="text-[10px] font-semibold uppercase text-slate-500">Aanwezigheid</p>
@@ -197,7 +197,7 @@ function BackofficePage() {
       </PageSection>
       <PageSection title="Een dashboard dat rust geeft">
         <div className="grid gap-8 lg:grid-cols-2 lg:items-center">
-          <Photo label="Coördinator gebruikt de backoffice" ratio="aspect-[4/3]" />
+          <Photo label="Coördinator gebruikt de backoffice" promptId="IMG-31-10" ratio="aspect-[4/3]" />
           <CheckList items={["Actueel overzicht van lessen, conflicten en capaciteit", "Instroom en wachtlijst in één flow", "Berichten, nieuws en templates centraal", "AVG-bewust met rollen en audit-log"]} />
         </div>
       </PageSection>
