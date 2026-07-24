@@ -1,0 +1,52 @@
+name: Staging demo tenant seed
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type SEED_WATERLIJN_STAGING
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-demo-tenant-seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: seed managed Waterlijn showcase
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      APP_ENV: staging
+      ALLOW_SPRINT31_DEMO_SEED: true
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Authorize managed demo mutation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "SEED_WATERLIJN_STAGING"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Seed showcase tenant
+        run: pnpm run staging:seed-demo

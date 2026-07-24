@@ -12,6 +12,8 @@ APP_ENV=staging ALLOW_SPRINT31_DEMO_SEED=true pnpm run staging:seed-demo
 
 De Supabase serverconfiguratie komt uit `NEXT_PUBLIC_SUPABASE_URL` en `SUPABASE_SECRET_KEY` (of de service-role fallback). De seed is idempotent op tenant-slug, domein, codes en leerlingreferenties. Hij verwijdert geen bestaande data en maakt geen auth-gebruikers aan.
 
+De normale uitvoering loopt via de GitHub Action **Staging demo tenant seed** met bevestiging `SEED_WATERLIJN_STAGING`. Die gebruikt uitsluitend het staging-environment en bewaart de run als mutatiebewijs.
+
 Het publieke stagingdomein is `waterlijn-demo.staging.nxttrack.nl`. Koppel alleen bewust een tenant-owner via de normale uitnodigingsflow; de seed wijzigt geen bestaande E2E-rollen of RLS-isolatieverwachtingen.
 
 ## Onderhoud
