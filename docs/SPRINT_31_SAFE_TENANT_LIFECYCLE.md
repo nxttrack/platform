@@ -19,7 +19,7 @@ Sprint 31 verbindt publieke intake, tenant-onboarding, gegevensimport, offboardi
 ## Publieke intake
 
 - Honeypot: `companyWebsite`.
-- Minimum invultijd: twee seconden.
+- Minimum invultijd: 250 milliseconden als aanvullend direct-POST-signaal; honeypot en rate limit blijven primair.
 - Limiet: vijf submissions per tenant/fingerprint per vijftien minuten.
 - Exacte retry: idempotent gedurende tien minuten.
 - Mogelijk dubbel: gelijke genormaliseerde oudermail + leerlingnaam + programma + intaketype binnen dertig dagen.

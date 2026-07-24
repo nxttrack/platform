@@ -86,7 +86,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   // Bots get the same calm success path as real visitors, without learning which trap fired.
-  if (honeypot || !Number.isFinite(startedAt) || Date.now() - startedAt < 2_000) {
+  if (honeypot || !Number.isFinite(startedAt) || Date.now() - startedAt < 250) {
     return { ok: true, reference: "ONTVANGEN" };
   }
 
