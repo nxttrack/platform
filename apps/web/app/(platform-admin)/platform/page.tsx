@@ -57,8 +57,8 @@ export default async function PlatformPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Link className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" href="/platform/uitnodigingen">
-            Uitnodiging sturen
+          <Link className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" href="/platform/onboarding">
+            Zwemschool onboarden
           </Link>
         }
         kicker="Platformbeheer"
