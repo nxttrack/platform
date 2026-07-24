@@ -46,6 +46,12 @@ jobs:
       - name: Test billing provider contracts
         run: pnpm run test:billing-contract
 
+      - name: Test Journey Bot safety contracts
+        run: pnpm run test:journey-bot
+
+      - name: Audit Journey Bot foundation
+        run: pnpm run release:audit-journey-bot
+
       - name: Audit auth boundaries
         run: pnpm run auth:audit
 
