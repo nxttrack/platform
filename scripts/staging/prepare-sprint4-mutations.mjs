@@ -35,7 +35,7 @@ const submissionsResult = await admin
   .from("intake_submissions")
   .select("id")
   .eq("tenant_id", tenantId)
-  .like("message", "sprint4-browser:%");
+  .or("preferred_notes.like.sprint4-browser:%,message.like.sprint4-browser:%");
 
 if (submissionsResult.error) {
   throw new Error(`Could not inventory prior Sprint 4 fixtures: ${submissionsResult.error.message}`);
