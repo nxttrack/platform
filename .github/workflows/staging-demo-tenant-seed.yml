@@ -24,6 +24,7 @@ jobs:
     env:
       APP_ENV: staging
       ALLOW_SPRINT31_DEMO_SEED: true
+      ALLOW_JOURNEY_BOT_SEED: true
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
@@ -50,3 +51,6 @@ jobs:
 
       - name: Seed showcase tenant
         run: pnpm run staging:seed-demo
+
+      - name: Seed Journey Bot foundation
+        run: pnpm run staging:seed-journey-bot
