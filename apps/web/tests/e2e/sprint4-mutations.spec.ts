@@ -106,7 +106,7 @@ async function submitIntake(page: Page, tenantUrl: string, participantName: stri
   await page.getByRole("button", { name: "Aanmelding versturen" }).click();
 
   await expect(page).toHaveURL(/\/intake\?ontvangen=1&referentie=/);
-  await expect(page.getByText("Aanmelding ontvangen.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Aanmelding ontvangen" })).toBeVisible();
 }
 
 async function convertIntake(page: Page, participantName: string) {

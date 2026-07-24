@@ -230,7 +230,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
         </ol>
       </div>
 
-      <div className="grid min-h-[590px] lg:grid-cols-[minmax(0,1fr)_270px]">
+      <div className="grid lg:min-h-[590px] lg:grid-cols-[minmax(0,1fr)_270px]">
         <section aria-labelledby={`step-${currentStep.id}`} className="p-5 sm:p-7">
           {currentStep.id === "child" ? (
             <ChildStep
