@@ -100,7 +100,7 @@ export default async function AdminHomePage() {
 }
 
 function Metric({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "success" | "warning" | "danger" | "neutral" }) {
-  const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
+  const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : "text-foreground";
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
@@ -114,7 +114,7 @@ function MiniMetric({ label, value, tone = "neutral" }: { label: string; value: 
   return (
     <div className="rounded-lg border border-border bg-white p-3">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${tone === "warning" ? "text-warning" : "text-foreground"}`}>{value}</p>
+      <p className={`mt-1 text-2xl font-bold ${tone === "warning" ? "text-warning-foreground" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }
