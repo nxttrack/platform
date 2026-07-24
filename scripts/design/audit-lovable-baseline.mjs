@@ -20,6 +20,8 @@ const requiredFiles = [
   "apps/web/components/ui/native-select.tsx",
   "apps/web/components/ui/table.tsx",
   "apps/web/components/ui/textarea.tsx",
+  "apps/web/components/public/intake-wizard.tsx",
+  "apps/web/components/public/wait-time-chip.tsx",
   "apps/web/scripts/capture-production-baseline.mjs",
   "apps/web/components/admin/operational-charts.tsx",
   "apps/web/components/shell/app-shell-client.tsx",
@@ -108,7 +110,10 @@ requireText("apps/web/components/ui/native-select.tsx", "appearance-none", "Nati
 requireText("apps/web/components/ui/table.tsx", "overflow-x-auto", "Responsive Table primitive is missing.");
 requireText("apps/web/components/admin/domain-ui.tsx", 'from "@/components/ui/input"', "Admin forms do not use the shared Input primitive.");
 requireText("apps/web/app/(tenant-public)/login/page.tsx", 'from "@/components/ui/field"', "Login form is not composed from shared field primitives.");
-requireText("apps/web/app/(tenant-public)/intake/page.tsx", 'from "@/components/ui/native-select"', "Public intake is not composed from shared select primitives.");
+requireText("apps/web/app/(tenant-public)/intake/page.tsx", "IntakeWizard", "Public intake does not delegate to the adaptive wizard.");
+requireText("apps/web/components/public/intake-wizard.tsx", 'from "@/components/ui/native-select"', "Public intake wizard is not composed from shared select primitives.");
+requireText("apps/web/components/public/intake-wizard.tsx", "rankIntakeSlots", "Public intake wizard is missing explainable slot ranking.");
+requireText("apps/web/components/public/wait-time-chip.tsx", "waitTimeLabels", "Public wait-time statuses are not composed from one shared contract.");
 requireText("apps/web/app/(tenant-admin)/admin/rapportages/page.tsx", "TableCaption", "Report snapshots do not use the semantic Table primitive.");
 requireText("apps/web/components/auth/password-strength-meter.tsx", 'role="progressbar"', "Password strength is not exposed as an accessible progressbar.");
 requireText("apps/web/components/admin/operational-charts.tsx", "accessibilityLayer", "Operational charts must enable the Recharts accessibility layer.");
