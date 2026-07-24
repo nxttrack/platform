@@ -53,7 +53,6 @@ export async function createImportJobAction(formData: FormData) {
 
   const seen = new Set<string>();
   let duplicateCount = 0;
-  let invalidCount = 0;
   const rows = parsed.rows.map((values, index) => {
     const sourceData = Object.fromEntries(parsed.headers.map((header, column) => [header, values[column]?.trim() ?? ""]));
     const duplicateKey = JSON.stringify(sourceData).toLocaleLowerCase("nl");
@@ -61,22 +60,24 @@ export async function createImportJobAction(formData: FormData) {
     seen.add(duplicateKey);
     const empty = Object.values(sourceData).every((value) => !value);
     if (duplicate) duplicateCount += 1;
-    if (empty) invalidCount += 1;
-    return { rowNumber: index + 2, sourceData, duplicateKey, status: duplicate ? "duplicate" : empty ? "invalid" : "valid", errors: empty ? ["Lege rij"] : [] };
+    return { rowNumber: index + 2, sourceData, duplicateKey, status: duplicate ? "duplicate" : empty ? "invalid" : "pending", errors: empty ? ["Lege rij"] : [] };
   });
 
-  const validCount = rows.filter((row) => row.status === "valid").length;
   const admin = createAdminClient();
+  const initialMapping = Object.fromEntries(getCanonicalFields(importType).map((field) => {
+    const matchedHeader = parsed.headers.find((header) => normalizeHeader(header) === normalizeHeader(field));
+    return [field, matchedHeader ?? null];
+  }));
   const jobResult = await admin.from("import_jobs").insert({
     tenant_id: tenant.id,
     import_type: importType,
     source_name: file.name,
-    status: "validated",
-    mapping: Object.fromEntries(parsed.headers.map((header) => [header, null])),
+    status: "mapping",
+    mapping: initialMapping,
     summary: { delimiter: parsed.delimiter, headers: parsed.headers },
     row_count: rows.length,
-    valid_count: validCount,
-    invalid_count: invalidCount,
+    valid_count: 0,
+    invalid_count: rows.filter((row) => row.status === "invalid").length,
     duplicate_count: duplicateCount,
     created_by_user_id: userId
   }).select("id").single();
@@ -91,6 +92,7 @@ export async function createImportJobAction(formData: FormData) {
     }
   }
 
+  await admin.from("import_job_events").insert({ tenant_id: tenant.id, import_job_id: jobResult.data.id, event_type: "uploaded", actor_user_id: userId, details: { sourceName: file.name, rowCount: rows.length } });
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?saved=1&job=${jobResult.data.id}`);
 }
@@ -165,3 +167,15 @@ function readRequired(formData: FormData, field: string) {
 function readOptional(formData: FormData, field: string) { return String(formData.get(field) ?? "").trim() || null; }
 function readEnum(formData: FormData, field: string, values: Set<string>) { const value = readRequired(formData, field); if (!values.has(value)) throw new Error(`${field} is invalid`); return value; }
 function readColor(formData: FormData, field: string, fallback: string) { const value = String(formData.get(field) ?? fallback); return /^#[0-9a-f]{6}$/i.test(value) ? value : fallback; }
+function normalizeHeader(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
+function getCanonicalFields(importType: string) {
+  const fields: Record<string, string[]> = {
+    participants: ["display_name", "birth_date", "external_reference"],
+    guardians: ["full_name", "email"],
+    groups: ["name", "code", "program_code", "stage_code", "resource_code", "capacity", "weekday", "start_time", "end_time"],
+    enrollments: ["participant_reference", "program_code", "stage_code", "starts_on"],
+    payments: ["participant_reference", "amount_eur", "due_on", "status"],
+    mixed: ["record_type", "display_name", "birth_date", "external_reference", "full_name", "email", "name", "code", "program_code", "stage_code", "resource_code", "capacity", "weekday", "start_time", "end_time", "participant_reference", "starts_on", "amount_eur", "due_on", "status"]
+  };
+  return fields[importType] ?? [];
+}
