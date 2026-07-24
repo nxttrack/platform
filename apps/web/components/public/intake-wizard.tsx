@@ -13,7 +13,7 @@ import {
   UserRound,
   Waves
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { Button } from "@/components/ui/button";
@@ -66,6 +66,7 @@ const optionLabels: Record<IntakeOption, string> = {
 const excludedQuestionKeys = new Set(["swimming_experience", "swim_experience", "preferred_moment"]);
 
 export function IntakeWizard(props: IntakeWizardProps) {
+  const [hydrated, setHydrated] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [participantName, setParticipantName] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -130,6 +131,10 @@ export function IntakeWizard(props: IntakeWizardProps) {
     slotsAvailable: props.slots.length > 0
   });
 
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   function goForward() {
     if (!canContinue) {
       return;
@@ -164,7 +169,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
   }
 
   return (
-    <form action={props.action} className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+    <form action={props.action} className="overflow-hidden rounded-3xl border border-border bg-card shadow-card" data-hydrated={hydrated ? "true" : "false"} data-intake-wizard>
       <input name="programId" type="hidden" value={props.programId ?? ""} />
       <input name="formId" type="hidden" value={props.formId ?? ""} />
       <input name="formStartedAt" type="hidden" value={props.formStartedAt} />

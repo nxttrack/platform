@@ -81,6 +81,7 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
 async function submitIntake(page: Page, tenantUrl: string, participantName: string, marker: string) {
   await page.goto(`${tenantUrl}/intake`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("form[data-intake-wizard]")).toHaveAttribute("data-hydrated", "true");
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
   await page.getByText("Wachtlijst", { exact: true }).click();
