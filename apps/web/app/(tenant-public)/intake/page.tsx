@@ -80,6 +80,11 @@ export default async function IntakePage({ searchParams }: PageProps) {
           <form action={submitIntakeAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
             <input name="programId" type="hidden" value={selectedProgram?.id ?? ""} />
             <input name="formId" type="hidden" value={form.id ?? ""} />
+            <input name="formStartedAt" type="hidden" value={Date.now()} />
+            <div aria-hidden="true" className="absolute -left-[10000px] top-auto size-px overflow-hidden">
+              <label htmlFor="companyWebsite">Bedrijfswebsite</label>
+              <input autoComplete="off" id="companyWebsite" name="companyWebsite" tabIndex={-1} type="text" />
+            </div>
 
             <div className="mb-6">
               <h2 className="text-lg font-bold text-foreground">Waarvoor meld je je aan?</h2>

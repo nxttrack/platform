@@ -1,5 +1,7 @@
 import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
+import { Button } from "@/components/ui/button";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 
@@ -25,7 +27,7 @@ export default async function AdminIntakePage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Metric label="Ontvangen" value={inbox.submissions.length} />
         <Metric label="Nieuwe status" value={inbox.submissions.filter((submission) => submission.status === "received").length} />
-        <Metric label="Events pending" value={inbox.events.filter((event) => event.status === "pending").length} />
+        <Metric label="Mogelijk dubbel" value={inbox.submissions.filter((submission) => submission.duplicate_state === "possible_duplicate").length} />
       </div>
 
       <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
@@ -58,7 +60,14 @@ export default async function AdminIntakePage() {
                   aside={
                     <div className="space-y-1">
                       <StatusPill tone={submission.status === "received" ? "info" : "neutral"}>{submission.status}</StatusPill>
+                      {submission.duplicate_state === "possible_duplicate" ? <StatusPill tone="warning">controleer dubbel</StatusPill> : null}
                       <StatusPill tone={event?.status === "pending" ? "warning" : "success"}>{event ? `event ${event.status}` : "geen event"}</StatusPill>
+                      {submission.duplicate_state === "possible_duplicate" ? (
+                        <div className="flex gap-1">
+                          <DuplicateAction id={submission.id} label="Dubbel" state="confirmed_duplicate" />
+                          <DuplicateAction id={submission.id} label="Uniek" state="dismissed" />
+                        </div>
+                      ) : null}
                     </div>
                   }
                 />
@@ -68,6 +77,16 @@ export default async function AdminIntakePage() {
         )}
       </AdminSection>
     </div>
+  );
+}
+
+function DuplicateAction({ id, label, state }: { id: string; label: string; state: "confirmed_duplicate" | "dismissed" }) {
+  return (
+    <form action={updateIntakeDuplicateStateAction}>
+      <input name="submissionId" type="hidden" value={id} />
+      <input name="duplicateState" type="hidden" value={state} />
+      <Button size="sm" type="submit" variant="outline">{label}</Button>
+    </form>
   );
 }
 

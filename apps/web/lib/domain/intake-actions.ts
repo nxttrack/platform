@@ -1,8 +1,12 @@
 "use server";
 
+import { createHash, createHmac } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { getActiveTenant } from "./core";
 import { getDefaultIntakeForm, getRequestHostname, getTenantSlugFromRequest, type IntakeOption, type PublicIntakeQuestion } from "./public-site";
 
 const intakeOptions = ["enrollment", "trial", "waitlist", "information_request"] as const satisfies readonly IntakeOption[];
@@ -16,6 +20,45 @@ export async function submitIntakeAction(formData: FormData) {
 
   revalidatePath("/admin/intake");
   redirect(`/intake?ontvangen=1&referentie=${encodeURIComponent(result.reference)}`);
+}
+
+export async function updateIntakeDuplicateStateAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin/intake");
+  const tenant = getActiveTenant(context);
+
+  if (!context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")) {
+    redirect("/admin/intake?error=forbidden");
+  }
+
+  const submissionId = readRequired(formData, "submissionId");
+  const duplicateState = readRequired(formData, "duplicateState");
+
+  if (!["confirmed_duplicate", "dismissed"].includes(duplicateState)) {
+    redirect("/admin/intake?error=state");
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("intake_submissions")
+    .update({ duplicate_state: duplicateState })
+    .eq("tenant_id", tenant.id)
+    .eq("id", submissionId)
+    .eq("duplicate_state", "possible_duplicate");
+
+  if (error) {
+    redirect("/admin/intake?error=write");
+  }
+
+  await admin.from("tenant_events").insert({
+    tenant_id: tenant.id,
+    event_type: `intake.duplicate_${duplicateState === "dismissed" ? "dismissed" : "confirmed"}`,
+    subject_type: "intake_submission",
+    subject_id: submissionId,
+    payload: { reviewedByUserId: context.user.id }
+  });
+
+  revalidatePath("/admin/intake");
+  redirect("/admin/intake?saved=duplicate");
 }
 
 async function submitIntake(formData: FormData): Promise<{ ok: true; reference: string } | { ok: false; error: string }> {
@@ -35,9 +78,16 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const parentEmail = normalizeEmail(readRequired(formData, "parentEmail"));
   const participantName = readRequired(formData, "participantName");
   const consentGiven = formData.get("consentGiven") === "on";
+  const honeypot = readOptional(formData, "companyWebsite");
+  const startedAt = Number(readOptional(formData, "formStartedAt"));
 
   if (!isEmail(parentEmail) || !consentGiven || !parentName || !participantName) {
     return { ok: false, error: "required" };
+  }
+
+  // Bots get the same calm success path as real visitors, without learning which trap fired.
+  if (honeypot || !Number.isFinite(startedAt) || Date.now() - startedAt < 2_000) {
+    return { ok: true, reference: "ONTVANGEN" };
   }
 
   const admin = createAdminClient();
@@ -48,6 +98,18 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   const tenant = tenantResult.data as { id: string; slug: string; name: string };
+  const abuseFingerprint = await getAbuseFingerprint(tenant.id);
+  const rateLimitResult = await admin.rpc("consume_public_intake_rate_limit", {
+    target_tenant_id: tenant.id,
+    target_fingerprint_hash: abuseFingerprint,
+    target_window_started_at: getRateLimitWindowStart(),
+    target_limit: 5
+  });
+
+  if (rateLimitResult.error || rateLimitResult.data !== true) {
+    return { ok: false, error: "busy" };
+  }
+
   const programId = readOptional(formData, "programId");
   const formId = readOptional(formData, "formId");
   const validation = await validateProgramAndForm({ tenantId: tenant.id, programId, formId, selectedOption });
@@ -60,6 +122,30 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
 
   if (relevantQuestions.some((question) => question.required && !readQuestionAnswer(formData, question))) {
     return { ok: false, error: "required" };
+  }
+
+  const dedupeKey = createHash("sha256")
+    .update([tenant.id, parentEmail, normalizeName(participantName), validation.programId ?? "", selectedOption].join("|"))
+    .digest("hex");
+  const duplicateResult = await admin
+    .from("intake_submissions")
+    .select("id, received_at")
+    .eq("tenant_id", tenant.id)
+    .eq("dedupe_key", dedupeKey)
+    .gte("received_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1_000).toISOString())
+    .order("received_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateResult.error) {
+    return { ok: false, error: "write" };
+  }
+
+  const duplicate = duplicateResult.data as { id: string; received_at: string } | null;
+
+  // Double-clicks and browser retries are idempotent for ten minutes.
+  if (duplicate && Date.now() - new Date(duplicate.received_at).getTime() < 10 * 60 * 1_000) {
+    return { ok: true, reference: duplicate.id.slice(0, 8) };
   }
 
   const submissionResult = await admin
@@ -78,7 +164,11 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       preferred_notes: readOptional(formData, "preferredNotes"),
       message: readOptional(formData, "message"),
       consent_given: consentGiven,
-      source_hostname: await getRequestHostname()
+      source_hostname: await getRequestHostname(),
+      dedupe_key: dedupeKey,
+      duplicate_state: duplicate ? "possible_duplicate" : "unique",
+      duplicate_of_submission_id: duplicate?.id ?? null,
+      abuse_fingerprint: abuseFingerprint
     })
     .select("id")
     .single();
@@ -124,7 +214,9 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       selectedOption,
       parentEmail,
       participantName,
-      programId: validation.programId
+      programId: validation.programId,
+      duplicateState: duplicate ? "possible_duplicate" : "unique",
+      duplicateOfSubmissionId: duplicate?.id ?? null
     }
   });
 
@@ -243,6 +335,27 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function normalizeName(value: string) {
+  return value.trim().toLocaleLowerCase("nl").replace(/\s+/g, " ");
+}
+
 function isEmail(value: string) {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+}
+
+async function getAbuseFingerprint(tenantId: string) {
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const address = forwardedFor || requestHeaders.get("x-real-ip") || "unknown";
+  const userAgent = requestHeaders.get("user-agent")?.slice(0, 240) || "unknown";
+  const secret = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
+  const input = `${tenantId}|${address}|${userAgent}`;
+
+  return secret ? createHmac("sha256", secret).update(input).digest("hex") : createHash("sha256").update(input).digest("hex");
+}
+
+function getRateLimitWindowStart() {
+  const windowSize = 15 * 60 * 1_000;
+
+  return new Date(Math.floor(Date.now() / windowSize) * windowSize).toISOString();
 }
