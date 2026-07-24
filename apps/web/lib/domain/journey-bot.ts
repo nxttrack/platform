@@ -109,7 +109,7 @@ export async function getJourneyBotDashboardData() {
     admin.from("journey_bot_configs").select("*").order("updated_at", { ascending: false }),
     admin.from("journey_bot_runs").select("*").order("started_at", { ascending: false }).limit(10),
     admin.from("journey_bot_child_journeys").select("*").order("started_at", { ascending: false }).limit(20),
-    admin.from("journey_bot_child_events").select("*").order("created_at", { ascending: false }).limit(60),
+    admin.from("journey_bot_child_events").select("*").order("created_at", { ascending: false }).limit(1200),
     admin.from("journey_bot_issues").select("*").order("created_at", { ascending: false }).limit(100)
   ]);
 
