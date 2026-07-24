@@ -28,6 +28,7 @@
     "release:audit-production-foundation": "node scripts/release/audit-production-foundation.mjs",
     "release:audit-production-mail": "node scripts/release/audit-production-mail-config.mjs",
     "release:audit-premium": "node scripts/release/audit-premium-productization.mjs",
+    "release:audit-sprint31": "node scripts/release/audit-sprint31.mjs",
     "release:create-go-no-go": "node scripts/release/create-go-no-go-form.mjs",
     "release:write-artifact-probe": "node scripts/release/write-artifact-storage-probe.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
@@ -68,7 +69,7 @@
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
-    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
+    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
