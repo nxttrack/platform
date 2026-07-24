@@ -683,6 +683,7 @@ function ChoiceStep(props: {
           {props.recommendations.map((recommendation) => (
             <label
               className="block cursor-pointer rounded-2xl border border-border bg-white p-4 transition hover:border-primary/40 has-[:checked]:border-primary has-[:checked]:bg-primary/[0.04] has-[:checked]:shadow-card sm:p-5"
+              data-intake-recommendation
               key={recommendation.groupId}
             >
               <input checked={props.selectedGroupId === recommendation.groupId} className="sr-only" onChange={() => props.onSelect(recommendation.groupId)} type="radio" />

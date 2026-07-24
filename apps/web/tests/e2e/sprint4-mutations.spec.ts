@@ -100,7 +100,7 @@ async function submitIntake(page: Page, tenantUrl: string, participantName: stri
   await firstDaypart.click();
   await page.getByRole("button", { name: "Volgende" }).click();
 
-  await page.getByRole("radio").first().check();
+  await page.locator("label[data-intake-recommendation]").first().click();
   await page.getByLabel("Aanvulling voor de planning").fill(`sprint4-browser:${marker}`);
   await page.getByLabel(/Ik geef toestemming/).check();
   await page.getByRole("button", { name: "Aanmelding versturen" }).click();
