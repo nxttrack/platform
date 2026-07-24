@@ -408,8 +408,22 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
       const isTerminal = isTerminalStage(currentStage);
 
       if (isTerminal) {
-        await admin.from("enrollments").update({ current_stage_id: currentStage.id, status: "completed", ends_on: new Date().toISOString().slice(0, 10) }).eq("id", enrollmentId);
+        const completionDate = new Date().toISOString().slice(0, 10);
+        const releasedMemberships = await admin
+          .from("group_memberships")
+          .update({ ends_on: completionDate, status: "completed" })
+          .eq("tenant_id", input.config.tenant_id)
+          .eq("enrollment_id", enrollmentId)
+          .eq("status", "active")
+          .select("id, group_id");
+        assertNoError(releasedMemberships.error, "release final group capacity");
+        await admin.from("enrollments").update({ current_stage_id: currentStage.id, status: "completed", ends_on: completionDate }).eq("id", enrollmentId);
         journey = await updateJourney(journey, { current_stage_id: currentStage.id, current_group_id: null });
+        if (releasedMemberships.data?.length) {
+          await appendEvent(journey, "old_capacity_released", "completed", "Laatste actieve groepsplek vrijgegeven na afronding van diploma C.", {
+            memberships: releasedMemberships.data
+          });
+        }
         await appendEvent(journey, "stage_completed", "completed", `${currentStage.name}: leerlijn afgerond.`);
         break;
       }
