@@ -12,9 +12,10 @@ Sprint 31 verbindt publieke intake, tenant-onboarding, gegevensimport, offboardi
 4. **Onboarding is fail-closed.** Bij een fout blijft de tenant `inactive`; de run bewaart stap en fout. Uitnodigingen kunnen niet stil als “gelukt” gelden.
 5. **CSV-import is create-only.** Apply overschrijft nooit bestaande records. Duplicaten worden overgeslagen. Rollback gebruikt een server-ondertekend manifest om manipulatie via clientrechten te voorkomen.
 6. **Ouderimport verstuurt echte uitnodigingen.** Een rollback trekt de pending uitnodiging en tenantrol in, maar verwijdert een eenmaal aangemaakte globale auth-identiteit niet; die identiteit kan ook bij andere tenants horen.
-7. **Offboarding scheidt data-export en objectback-up.** De JSON-export bevat alle tenanttabellen, tellingen, SHA-256 en storagepaden. Private objecten blijven via het bestaande versleutelde storage-backuprunbook lopen en moeten vóór sluiting aantoonbaar zijn veiliggesteld.
-8. **Definitieve verwijdering is nooit automatisch.** Minimaal dertig dagen retentie, platform-owner autorisatie, twee tekstbevestigingen en een blijvende niet-PII tombstone zijn verplicht.
-9. **Er is precies één showcase-tenant.** `waterlijn-demo` is idempotent te onderhouden en raakt geen E2E-authrollen.
+7. **Offboarding is fail-closed.** De JSON-export wordt dynamisch opgebouwd uit alle publieke tabellen met `tenant_id`, bevat Auth-accountinventaris, Storage-inventaris, tellingen en SHA-256 en wordt bij één tabelfout niet vrijgegeven. Een versleutelde objectback-up met artifactreferentie en checksum is verplicht vóór sluiting.
+8. **Definitieve verwijdering is een bewijsbare keten.** Minimaal dertig dagen actieve retentie, platform-owner autorisatie en twee tekstbevestigingen zijn verplicht. Daarna worden Mollie-klanten, alle objecten onder de tenantprefix (ook verweesde objecten), exclusieve Auth-accounts en de tenantdata gewist. Gedeelde Auth-accounts blijven bestaan zonder tenantkoppeling.
+9. **Providerback-ups sluiten de lifecycle af.** De tombstone en offboardingrun blijven zonder PII bestaan. De run blijft in `backup_retention` tot de vastgelegde maximale back-upuitloop is verstreken en een platform owner dit als afzonderlijke stap bevestigt.
+10. **Er is precies één showcase-tenant.** `waterlijn-demo` is idempotent te onderhouden en raakt geen E2E-authrollen.
 
 ## Publieke intake
 
@@ -56,13 +57,15 @@ Voor gemengde bestanden is de applyvolgorde: ouders → leerlingen → groepen �
 ## Offboarding
 
 1. Start de run in `/platform/offboarding` met reden en bewaartermijn.
-2. Download de JSON-export; bewaar de responseheader `X-Content-SHA256`.
-3. Exporteer de genoemde storagepaden via `docs/STORAGE_BACKUP_RUNBOOK.md`.
+2. Download de JSON-export en verifieer de responseheader `X-Content-SHA256`. Bij `export_failed` is er bewust geen gedeeltelijke download.
+3. Maak en verifieer de versleutelde Storage-back-up via `docs/STORAGE_BACKUP_RUNBOOK.md`; leg artifactreferentie en manifest-SHA-256 vast in de run.
 4. Sluit het account; tenant en memberships worden suspended.
 5. Bewaar data tot `retention_ends_at`.
 6. Platform owner typt eerst de tenant-slug om verwijdering goed te keuren.
-7. Platform owner typt daarna `VERWIJDER <slug>` om objecten en tenantdata definitief te verwijderen.
-8. Controleer de tombstone en leg het offboardingbewijs vast in het incident-/klantdossier.
+7. Platform owner typt daarna `VERWIJDER <slug>`. De run wist Mollie-klanten, de volledige tenantprefix in beide private buckets, exclusieve Auth-accounts en vervolgens tenantdata. Iedere fout zet de run op `erasure_attention_required`.
+8. Controleer de blijvende niet-PII tombstone. De status is nu `backup_retention`, niet voltooid.
+9. Wacht tot de vastgelegde providerback-upuitloop is verstreken, verifieer dit bij de provider en bevestig `BACK-UPS VERSTREKEN <slug>`.
+10. Archiveer exportchecksum, Storage-backupchecksum, erasuremanifest en voltooiingsbewijs in het incident-/klantdossier.
 
 ## Validatie
 

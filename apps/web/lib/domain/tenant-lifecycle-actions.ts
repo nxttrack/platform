@@ -7,6 +7,9 @@ import { createInvitation } from "@/lib/auth/invitations";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { deleteMollieCustomer, MollieApiError } from "./mollie";
+import type { MollieMode } from "./mollie-contract";
+import { eraseTenantStorageObjects } from "@/lib/storage/tenant-erasure";
 
 export async function provisionTenantAction(formData: FormData) {
   const context = await requirePlatformAdministrator("/platform/onboarding");
@@ -171,6 +174,7 @@ export async function startTenantOffboardingAction(formData: FormData) {
   const context = await requirePlatformAdministrator("/platform/offboarding");
   const tenantId = readRequired(formData, "tenantId");
   const retentionDays = Math.max(30, Math.min(365, readPositiveInteger(formData, "retentionDays")));
+  const backupRetentionDays = Math.max(7, Math.min(90, readPositiveInteger(formData, "backupRetentionDays")));
   const admin = createAdminClient();
   const tenantResult = await admin.from("tenants").select("id, slug, name, status").eq("id", tenantId).maybeSingle();
   if (tenantResult.error || !tenantResult.data || tenantResult.data.status === "suspended") redirect("/platform/offboarding?error=tenant");
@@ -179,7 +183,10 @@ export async function startTenantOffboardingAction(formData: FormData) {
     status: "requested",
     reason: readOptional(formData, "reason"),
     retention_ends_at: new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1_000).toISOString(),
+    backup_retention_days: backupRetentionDays,
     export_manifest: { format: "nxttrack-tenant-export-v1", storageBuckets: ["tenant-documents", "diploma-vault"] },
+    tenant_name_snapshot: tenantResult.data.name,
+    tenant_slug_snapshot: tenantResult.data.slug,
     requested_by_user_id: context.user.id
   });
   if (error) redirect("/platform/offboarding?error=start");
@@ -187,12 +194,63 @@ export async function startTenantOffboardingAction(formData: FormData) {
   redirect("/platform/offboarding?saved=requested");
 }
 
+export async function recordTenantStorageBackupAction(formData: FormData) {
+  await requirePlatformAdministrator("/platform/offboarding");
+  const runId = readRequired(formData, "runId");
+  const reference = readRequired(formData, "backupReference");
+  const checksum = readRequired(formData, "backupChecksum").toLowerCase();
+
+  if (reference.length < 8 || !/^[a-f0-9]{64}$/.test(checksum)) {
+    redirect("/platform/offboarding?error=backup_evidence");
+  }
+
+  const admin = createAdminClient();
+  const runResult = await admin
+    .from("tenant_offboarding_runs")
+    .select("id, status")
+    .eq("id", runId)
+    .maybeSingle();
+
+  if (!runResult.data || !["requested", "export_failed", "export_ready"].includes(runResult.data.status)) {
+    redirect("/platform/offboarding?error=backup_state");
+  }
+
+  await requireWrite(
+    admin
+      .from("tenant_offboarding_runs")
+      .update({
+        storage_backup_checksum: checksum,
+        storage_backup_completed_at: new Date().toISOString(),
+        storage_backup_reference: reference.slice(0, 500)
+      })
+      .eq("id", runId),
+    "storage backup evidence"
+  );
+  revalidatePath("/platform/offboarding");
+  redirect("/platform/offboarding?saved=backup");
+}
+
 export async function closeTenantAccountAction(formData: FormData) {
   await requirePlatformAdministrator("/platform/offboarding");
   const runId = readRequired(formData, "runId");
   const admin = createAdminClient();
-  const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, export_completed_at").eq("id", runId).single();
-  if (runResult.error || !runResult.data || runResult.data.status !== "export_ready" || !runResult.data.export_completed_at) redirect("/platform/offboarding?error=export_required");
+  const runResult = await admin
+    .from("tenant_offboarding_runs")
+    .select("id, tenant_id, status, export_completed_at, export_errors, storage_backup_completed_at, storage_backup_checksum, storage_backup_reference")
+    .eq("id", runId)
+    .single();
+  if (
+    runResult.error ||
+    !runResult.data?.tenant_id ||
+    runResult.data.status !== "export_ready" ||
+    !runResult.data.export_completed_at ||
+    (Array.isArray(runResult.data.export_errors) && runResult.data.export_errors.length > 0) ||
+    !runResult.data.storage_backup_completed_at ||
+    !runResult.data.storage_backup_checksum ||
+    !runResult.data.storage_backup_reference
+  ) {
+    redirect("/platform/offboarding?error=export_and_backup_required");
+  }
   await requireWrite(admin.from("tenant_memberships").update({ status: "suspended" }).eq("tenant_id", runResult.data.tenant_id), "membership closure");
   await requireWrite(admin.from("tenants").update({ status: "suspended" }).eq("id", runResult.data.tenant_id), "tenant closure");
   await requireWrite(admin.from("tenant_offboarding_runs").update({ status: "retention", closed_at: new Date().toISOString() }).eq("id", runId), "retention start");
@@ -222,38 +280,266 @@ export async function permanentlyDeleteTenantAction(formData: FormData) {
   const runId = readRequired(formData, "runId");
   const confirmation = readRequired(formData, "confirmation");
   const admin = createAdminClient();
-  const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, export_manifest, retention_ends_at").eq("id", runId).single();
-  if (runResult.error || !runResult.data || runResult.data.status !== "deletion_approved" || new Date(runResult.data.retention_ends_at).getTime() > Date.now()) redirect("/platform/offboarding?error=not_approved");
+  const runResult = await admin
+    .from("tenant_offboarding_runs")
+    .select("id, tenant_id, status, export_manifest, retention_ends_at, backup_retention_days, storage_backup_completed_at, storage_backup_checksum, storage_backup_reference")
+    .eq("id", runId)
+    .single();
+  if (
+    runResult.error ||
+    !runResult.data ||
+    !["deletion_approved", "erasure_attention_required"].includes(runResult.data.status) ||
+    new Date(runResult.data.retention_ends_at).getTime() > Date.now()
+  ) {
+    redirect("/platform/offboarding?error=not_approved");
+  }
+  if (!runResult.data.tenant_id || !runResult.data.storage_backup_completed_at || !runResult.data.storage_backup_checksum || !runResult.data.storage_backup_reference) {
+    redirect("/platform/offboarding?error=backup_required");
+  }
   const tenantResult = await admin.from("tenants").select("id, slug, name, status").eq("id", runResult.data.tenant_id).single();
   if (tenantResult.error || !tenantResult.data || tenantResult.data.status !== "suspended" || confirmation !== `VERWIJDER ${tenantResult.data.slug}`) redirect("/platform/offboarding?error=confirmation");
 
-  const [documents, certificates] = await Promise.all([
-    admin.from("tenant_documents").select("file_path").eq("tenant_id", tenantResult.data.id).not("file_path", "is", null),
-    admin.from("certificate_records").select("file_path").eq("tenant_id", tenantResult.data.id).not("file_path", "is", null)
-  ]);
-  const documentPaths = (documents.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
-  const certificatePaths = (certificates.data ?? []).map((row) => row.file_path).filter((value): value is string => Boolean(value));
-  if (documentPaths.length) {
-    const { error } = await admin.storage.from("tenant-documents").remove(documentPaths);
-    if (error) redirect("/platform/offboarding?error=storage_documents");
-  }
-  if (certificatePaths.length) {
-    const { error } = await admin.storage.from("diploma-vault").remove(certificatePaths);
-    if (error) redirect("/platform/offboarding?error=storage_certificates");
+  const manifest: Record<string, unknown> = {
+    startedAt: new Date().toISOString(),
+    storageBackup: {
+      checksum: runResult.data.storage_backup_checksum,
+      completedAt: runResult.data.storage_backup_completed_at,
+      reference: runResult.data.storage_backup_reference
+    }
+  };
+  await requireWrite(
+    admin.from("tenant_offboarding_runs").update({ status: "erasure_in_progress", erasure_error: null, erasure_manifest: manifest }).eq("id", runId),
+    "erasure start"
+  );
+
+  try {
+    manifest.externalProviders = await eraseExternalTenantProviderData(tenantResult.data.id);
+    await persistErasureManifest(runId, manifest);
+
+    manifest.storage = await eraseTenantStorageObjects(tenantResult.data.id);
+    await persistErasureManifest(runId, manifest);
+
+    const tenantUserIds = await collectTenantAuthUserIds(tenantResult.data.id);
+    manifest.auth = await eraseExclusiveTenantAuthAccounts(tenantResult.data.id, tenantUserIds);
+    await persistErasureManifest(runId, manifest);
+
+    const backupErasureDueAt = new Date(
+      Date.now() + Number(runResult.data.backup_retention_days ?? 30) * 24 * 60 * 60 * 1_000
+    ).toISOString();
+    manifest.database = { tenantRowDeleted: true };
+    manifest.completedAt = new Date().toISOString();
+
+    await requireWrite(
+      admin.from("tenant_deletion_tombstones").upsert({
+        former_tenant_id: tenantResult.data.id,
+        former_slug: tenantResult.data.slug,
+        former_name: tenantResult.data.name,
+        offboarding_run_id: runId,
+        export_manifest: runResult.data.export_manifest,
+        erasure_manifest: manifest,
+        backup_erasure_due_at: backupErasureDueAt,
+        approved_by_user_id: context.user.id
+      }, { onConflict: "former_tenant_id" }),
+      "deletion tombstone"
+    );
+    await requireWrite(admin.from("tenants").delete().eq("id", tenantResult.data.id), "tenant deletion");
+    await requireWrite(
+      admin
+        .from("tenant_offboarding_runs")
+        .update({
+          status: "backup_retention",
+          backup_erasure_due_at: backupErasureDueAt,
+          backup_erasure_status: "retained",
+          erased_at: new Date().toISOString(),
+          erasure_error: null,
+          erasure_manifest: manifest
+        })
+        .eq("id", runId),
+      "backup retention start"
+    );
+  } catch (error) {
+    await admin
+      .from("tenant_offboarding_runs")
+      .update({
+        status: "erasure_attention_required",
+        erasure_error: safeErrorMessage(error),
+        erasure_manifest: manifest
+      })
+      .eq("id", runId);
+    redirect("/platform/offboarding?error=erasure_attention_required");
   }
 
-  await requireWrite(admin.from("tenant_deletion_tombstones").insert({
-    former_tenant_id: tenantResult.data.id,
-    former_slug: tenantResult.data.slug,
-    former_name: tenantResult.data.name,
-    offboarding_run_id: runId,
-    export_manifest: runResult.data.export_manifest,
-    approved_by_user_id: context.user.id
-  }), "deletion tombstone");
-  await requireWrite(admin.from("tenants").delete().eq("id", tenantResult.data.id), "tenant deletion");
   revalidatePath("/platform/offboarding");
   revalidatePath("/platform");
-  redirect("/platform/offboarding?saved=deleted");
+  redirect("/platform/offboarding?saved=erased_backup_retained");
+}
+
+export async function finalizeTenantBackupErasureAction(formData: FormData) {
+  const context = await requirePlatformAdministrator("/platform/offboarding");
+  if (!context.platform?.roles.includes("platform_owner")) redirect("/platform/offboarding?error=owner_required");
+  const runId = readRequired(formData, "runId");
+  const confirmation = readRequired(formData, "confirmation");
+  const admin = createAdminClient();
+  const runResult = await admin
+    .from("tenant_offboarding_runs")
+    .select("id, status, tenant_slug_snapshot, backup_erasure_due_at")
+    .eq("id", runId)
+    .single();
+
+  if (
+    runResult.error ||
+    !runResult.data ||
+    runResult.data.status !== "backup_retention" ||
+    !runResult.data.backup_erasure_due_at ||
+    new Date(runResult.data.backup_erasure_due_at).getTime() > Date.now() ||
+    confirmation !== `BACK-UPS VERSTREKEN ${runResult.data.tenant_slug_snapshot}`
+  ) {
+    redirect("/platform/offboarding?error=backup_retention");
+  }
+
+  const completedAt = new Date().toISOString();
+  await requireWrite(
+    admin
+      .from("tenant_offboarding_runs")
+      .update({
+        status: "completed",
+        backup_erasure_completed_at: completedAt,
+        backup_erasure_status: "expired_confirmed"
+      })
+      .eq("id", runId),
+    "backup erasure completion"
+  );
+  await requireWrite(
+    admin
+      .from("tenant_deletion_tombstones")
+      .update({ backup_erasure_completed_at: completedAt })
+      .eq("offboarding_run_id", runId),
+    "tombstone backup erasure completion"
+  );
+  revalidatePath("/platform/offboarding");
+  redirect("/platform/offboarding?saved=completed");
+}
+
+async function eraseExternalTenantProviderData(tenantId: string) {
+  const admin = createAdminClient();
+  const [configsResult, customersResult] = await Promise.all([
+    admin
+      .from("billing_provider_configs")
+      .select("id, provider, mode, secret_reference")
+      .eq("tenant_id", tenantId),
+    admin
+      .from("billing_provider_customers")
+      .select("id, provider_config_id, provider_customer_id")
+      .eq("tenant_id", tenantId)
+  ]);
+
+  if (configsResult.error || customersResult.error) {
+    throw new Error(`Provider inventory failed: ${configsResult.error?.message ?? customersResult.error?.message}`);
+  }
+
+  const configs = new Map((configsResult.data ?? []).map((config) => [config.id, config]));
+  let deletedCustomers = 0;
+
+  for (const customer of customersResult.data ?? []) {
+    const config = configs.get(customer.provider_config_id);
+    if (!config || config.provider !== "mollie" || !config.secret_reference) {
+      throw new Error(`Unsupported or incomplete provider cleanup for customer ${customer.id}.`);
+    }
+
+    try {
+      await deleteMollieCustomer(
+        customer.provider_customer_id,
+        config.secret_reference,
+        config.mode as MollieMode
+      );
+      deletedCustomers += 1;
+    } catch (error) {
+      if (!(error instanceof MollieApiError) || error.status !== 404) throw error;
+    }
+  }
+
+  return {
+    mollieCustomersDeleted: deletedCustomers,
+    sendGrid: "tenant mail logs deleted with tenant; provider retention governed by the processor agreement"
+  };
+}
+
+async function collectTenantAuthUserIds(tenantId: string) {
+  const admin = createAdminClient();
+  const results = await Promise.all([
+    admin.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId),
+    admin.from("participants").select("guardian_user_id").eq("tenant_id", tenantId).not("guardian_user_id", "is", null),
+    admin.from("participant_guardians").select("guardian_user_id").eq("tenant_id", tenantId),
+    admin.from("group_instructor_assignments").select("instructor_user_id").eq("tenant_id", tenantId),
+    admin.from("session_instructor_assignments").select("instructor_user_id").eq("tenant_id", tenantId)
+  ]);
+  const error = results.find((result) => result.error)?.error;
+  if (error) throw new Error(`Auth inventory failed: ${error.message}`);
+
+  const ids = new Set<string>();
+  for (const result of results) {
+    for (const row of result.data ?? []) {
+      for (const value of Object.values(row)) {
+        if (typeof value === "string") ids.add(value);
+      }
+    }
+  }
+  return [...ids];
+}
+
+async function eraseExclusiveTenantAuthAccounts(tenantId: string, userIds: string[]) {
+  const admin = createAdminClient();
+  let deleted = 0;
+  let retainedShared = 0;
+
+  for (const userId of userIds) {
+    const [tenantMemberships, platformMemberships, participants, guardians, groupAssignments, sessionAssignments] = await Promise.all([
+      admin.from("tenant_memberships").select("tenant_id").eq("user_id", userId).neq("tenant_id", tenantId).limit(1),
+      admin.from("platform_memberships").select("user_id").eq("user_id", userId).limit(1),
+      admin.from("participants").select("tenant_id").eq("guardian_user_id", userId).neq("tenant_id", tenantId).limit(1),
+      admin.from("participant_guardians").select("tenant_id").eq("guardian_user_id", userId).neq("tenant_id", tenantId).limit(1),
+      admin.from("group_instructor_assignments").select("tenant_id").eq("instructor_user_id", userId).neq("tenant_id", tenantId).limit(1),
+      admin.from("session_instructor_assignments").select("tenant_id").eq("instructor_user_id", userId).neq("tenant_id", tenantId).limit(1)
+    ]);
+    const results = [tenantMemberships, platformMemberships, participants, guardians, groupAssignments, sessionAssignments];
+    const error = results.find((result) => result.error)?.error;
+    if (error) throw new Error(`Shared Auth reference check failed for ${userId}: ${error.message}`);
+
+    if (results.some((result) => (result.data ?? []).length > 0)) {
+      retainedShared += 1;
+      continue;
+    }
+
+    const lookup = await admin.auth.admin.getUserById(userId);
+    if (lookup.error && !isMissingAuthUserError(lookup.error.message)) {
+      throw new Error(`Auth lookup failed for ${userId}: ${lookup.error.message}`);
+    }
+    if (!lookup.data.user) continue;
+
+    const deletion = await admin.auth.admin.deleteUser(userId);
+    if (deletion.error && !isMissingAuthUserError(deletion.error.message)) {
+      throw new Error(`Auth deletion failed for ${userId}: ${deletion.error.message}`);
+    }
+    deleted += 1;
+  }
+
+  return { deletedExclusiveAccounts: deleted, retainedSharedAccounts: retainedShared };
+}
+
+async function persistErasureManifest(runId: string, manifest: Record<string, unknown>) {
+  const admin = createAdminClient();
+  await requireWrite(
+    admin.from("tenant_offboarding_runs").update({ erasure_manifest: manifest }).eq("id", runId),
+    "erasure progress"
+  );
+}
+
+function isMissingAuthUserError(message: string) {
+  return /not found|does not exist/i.test(message);
+}
+
+function safeErrorMessage(error: unknown) {
+  return (error instanceof Error ? error.message : String(error)).slice(0, 2_000);
 }
 
 async function requirePlatformAdministrator(path: `/${string}`) {

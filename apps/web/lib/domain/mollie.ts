@@ -192,6 +192,16 @@ export async function revokeMollieMandate(customerId: string, mandateId: string,
   );
 }
 
+export async function deleteMollieCustomer(customerId: string, secretReference: string, mode: MollieMode) {
+  if (!isMollieCustomerId(customerId)) throw new Error("Invalid Mollie customer id");
+  await mollieRequest<void>(
+    `/customers/${encodeURIComponent(customerId)}`,
+    secretReference,
+    mode,
+    { method: "DELETE" }
+  );
+}
+
 export async function createMollieRefund(input: {
   amountCents: number;
   currency: string;
