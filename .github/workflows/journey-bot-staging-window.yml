@@ -17,6 +17,11 @@ on:
         required: true
         default: "30"
         type: string
+      batch_size:
+        description: Full journeys processed per tick (maximum 25)
+        required: true
+        default: "1"
+        type: string
 
 permissions:
   contents: read
@@ -38,6 +43,7 @@ jobs:
       JOURNEY_BOT_WINDOW_CONTROL: true
       JOURNEY_BOT_WINDOW_HOURS: ${{ inputs.duration_hours }}
       JOURNEY_BOT_WINDOW_BUDGET: ${{ inputs.journey_budget }}
+      JOURNEY_BOT_WINDOW_BATCH_SIZE: ${{ inputs.batch_size }}
       PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
       E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
       E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
@@ -52,6 +58,8 @@ jobs:
           test "$JOURNEY_BOT_WINDOW_HOURS" -le 24
           test "$JOURNEY_BOT_WINDOW_BUDGET" -ge 1
           test "$JOURNEY_BOT_WINDOW_BUDGET" -le 100
+          test "$JOURNEY_BOT_WINDOW_BATCH_SIZE" -ge 1
+          test "$JOURNEY_BOT_WINDOW_BATCH_SIZE" -le 25
           case "$PLAYWRIGHT_BASE_URL" in
             https://staging.nxttrack.nl|https://*.staging.nxttrack.nl) ;;
             *) echo "Refusing non-staging URL: $PLAYWRIGHT_BASE_URL"; exit 1 ;;

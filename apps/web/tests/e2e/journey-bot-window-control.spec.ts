@@ -6,9 +6,10 @@ test.describe("Journey Simulation Bot controlled staging window", () => {
   test.skip(!enabled, "Enable only through the guarded staging window workflow.");
 
   test("starts a bounded full ABC journey window", async ({ page }) => {
-    test.setTimeout(360_000);
+    test.setTimeout(900_000);
     const durationHours = readIntegerEnv("JOURNEY_BOT_WINDOW_HOURS", 1, 24);
     const stopAfterJourneys = readIntegerEnv("JOURNEY_BOT_WINDOW_BUDGET", 1, 100);
+    const journeysPerTick = readIntegerEnv("JOURNEY_BOT_WINDOW_BATCH_SIZE", 1, 25);
 
     await signIn(
       page,
@@ -28,8 +29,8 @@ test.describe("Journey Simulation Bot controlled staging window", () => {
     await page.getByLabel("Snelheid").selectOption("realistic");
     await page.getByLabel("Min. interval (min)").fill("5");
     await page.getByLabel("Max. interval (min)").fill("5");
-    await page.getByLabel("Journeys per run").fill("1");
-    await page.getByLabel("Max. tegelijk").fill("3");
+    await page.getByLabel("Journeys per run").fill(String(journeysPerTick));
+    await page.getByLabel("Max. tegelijk").fill(String(Math.max(3, journeysPerTick)));
     await page.getByLabel("Max. per dag").fill("1000");
     await page.getByLabel("Stop na journeys").fill(String(stopAfterJourneys));
     await page.getByRole("button", { name: "Configuratie opslaan" }).click();
@@ -37,15 +38,15 @@ test.describe("Journey Simulation Bot controlled staging window", () => {
 
     await page.getByLabel("Aantal uren").fill(String(durationHours));
     await page.getByRole("button", { name: "Run komende uren" }).click();
-    await expect(page).toHaveURL(/saved=window/, { timeout: 300_000 });
+    await expect(page).toHaveURL(/saved=window/, { timeout: 840_000 });
     await expect(page.getByText("Actie uitgevoerd: runvenster gestart.")).toBeVisible();
     await expect(metric(page, "Botstatus")).toContainText("Actief");
-    await expect(page.getByText(new RegExp(`Testbudget: 1/${stopAfterJourneys} journeys`))).toBeVisible();
+    await expect(page.getByText(new RegExp(`Testbudget: ${journeysPerTick}/${stopAfterJourneys} journeys`))).toBeVisible();
 
     const newestRun = page.getByRole("row").filter({ hasText: "Volledige reis" }).first();
     await expect(newestRun).toContainText("completed");
     await expect(newestRun).toContainText("healthy");
-    await expect(newestRun).toContainText("1 geslaagd");
+    await expect(newestRun).toContainText(`${journeysPerTick} geslaagd`);
     await expect(newestRun).toContainText("0 technisch");
   });
 });
