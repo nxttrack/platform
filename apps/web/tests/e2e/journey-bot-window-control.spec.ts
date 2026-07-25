@@ -21,7 +21,7 @@ test.describe("Journey Simulation Bot controlled staging window", () => {
     await expect(page.getByText("Zwemacademie De Waterlijn", { exact: true }).first()).toBeVisible();
     await expect(page.getByText("Environment veilig", { exact: false })).toBeVisible();
 
-    await page.getByRole("button", { name: "Testcyclus resetten" }).click();
+    await page.getByRole("button", { name: "Alle botdata opschonen" }).click();
     await expect(page).toHaveURL(/saved=reset/);
     await page.getByLabel("Bot ingeschakeld").check();
     await page.getByLabel("Nieuwe runs pauzeren").uncheck();

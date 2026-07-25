@@ -37,8 +37,9 @@ Platform admins openen `/platform/test-tools/journey-bot`.
 - `Run komende uren` activeert een tijdelijk runvenster.
 - `Pauzeren` stopt nieuwe ticks zonder actieve data te verwijderen.
 - `Alles stoppen` schakelt configs uit en markeert actieve runs als gestopt.
-- `Testcyclus resetten` geeft uitsluitend actieve Journey Bot-testplekken vrij, stopt testjourneys en zet het journeybudget terug op nul.
-- `Archiveren` raakt uitsluitend records met `is_test=true` en `source=journey_simulation_bot`.
+- `Alle botdata opschonen` stopt eerst veilig, verwijdert daarna alle runs, productrecords en synthetische ouderaccounts en zet het journeybudget terug op nul.
+- `Volledig verwijderen` verwijdert één afgeronde run fail-closed. De database weigert een gedeeltelijk resultaat zodra een gekoppeld productrecord of Authaccount achterblijft.
+- `Volledig verwijderen na dagen` is de bewaartermijn. De beveiligde stagingtick voert verlopen runs automatisch volledig af.
 
 `Stop na journeys` is een harde budgetgrens. De teller wordt opnieuw gestart bij een nieuwe scenario-configuratie, een nieuwe inschakeling of `Run komende uren`. Zodra de grens is bereikt, wordt de config automatisch uitgeschakeld en gepauzeerd.
 
@@ -63,7 +64,7 @@ De staging-smoke controleert vervolgens in één herstelbare cyclus:
 - verwachte blockers houden technische health groen;
 - technische en onverwachte issueaantallen blijven nul;
 - `Stop na journeys` schakelt exact bij de twintigste journey uit;
-- de `finally`-cleanup geeft alle actieve testplekken weer vrij.
+- de `finally`-cleanup verwijdert alle botrecords en synthetische ouderaccounts en bewaart alleen een persoonsgegevensvrije purge-receipt.
 
 Geplande runner:
 

@@ -111,7 +111,7 @@ test.describe("Journey Simulation Bot staging smoke", () => {
 });
 
 async function resetTestCycle(page: Page) {
-  await page.getByRole("button", { name: "Testcyclus resetten" }).click();
+  await page.getByRole("button", { name: "Alle botdata opschonen" }).click();
   await expect(page).toHaveURL(/saved=reset/);
   await expect(metric(page, "Botstatus")).toContainText("Uit");
 }

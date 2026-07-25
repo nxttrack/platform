@@ -2,15 +2,16 @@ import { readFileSync } from "node:fs";
 
 const root = process.cwd();
 const checks = [
-  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "getJourneyDiplomaMilestone", "DIPLOMA-A", "certificate_records", "journeys_started_total", "technical_failure_count", "resetJourneyBotTestCycle"]],
+  ["apps/web/lib/domain/journey-bot.ts", ["isJourneyBotEnvironmentAllowed", "suppress_external_notifications", "suppress_real_payments", "claim_journey_bot_config", "computePlacementScores", "blocked_until_eligible", "getJourneyDiplomaMilestone", "DIPLOMA-A", "certificate_records", "journeys_started_total", "technical_failure_count", "resetJourneyBotTestCycle", "purgeJourneyBotRun", "deleteSyntheticJourneyGuardian", "purgeExpiredJourneyBotRuns"]],
   ["apps/web/app/api/internal/journey-bot/tick/route.ts", ["timingSafeEqual", "CRON_SECRET", "runDueJourneyBotConfigs", "summarizeJourneyTick"]],
-  ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Testcyclus resetten", "Technische health", "Journey logs per kind"]],
+  ["apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx", ["Run now", "Run komende uren", "Alles stoppen", "Alle botdata opschonen", "Volledig verwijderen", "Technische health", "Journey logs per kind"]],
   ["scripts/staging/assert-journey-bot-tick.mjs", ["release-blocking technical failures", "unexpectedIssues", "criticalIssues"]],
-  ["apps/web/tests/e2e/journey-bot-staging.spec.ts", ["tick endpoint weigert", "full journey, stressmatrix, stopbudget en cleanup", "Testcyclus resetten", "simulated_recoverable_issue", "20/20"]],
+  ["apps/web/tests/e2e/journey-bot-staging.spec.ts", ["tick endpoint weigert", "full journey, stressmatrix, stopbudget en cleanup", "Alle botdata opschonen", "simulated_recoverable_issue", "20/20"]],
   ["apps/web/tests/e2e/journey-bot-window-control.spec.ts", ["JOURNEY_BOT_WINDOW_HOURS", "full_journey_to_diploma", "realistic", "Run komende uren", "Botstatus"]],
   ["scripts/staging/seed-journey-bot-waterlijn.mjs", ["INSTRUCTIE", "BADJE-1", "BADJE-2", "BADJE-3", "AFZWEM-A", "DIPLOMA-B", "DIPLOMA-C", "KLAAR", "minutesBetween"]],
   ["supabase/migrations/20260724170000_journey_simulation_bot.sql", ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "minimum_age_blocked", "is_test"]],
   ["supabase/migrations/20260724183000_journey_bot_trustworthy_outcomes.sql", ["journeys_started_total", "health_status", "outcome_classification", "expected", "claim_journey_bot_config"]],
+  ["supabase/migrations/20260725201000_journey_bot_complete_purge.sql", ["journey_bot_purge_receipts", "pending_auth_user_ids", "purge_journey_bot_run", "auth.users", "refused partial completion"]],
   [".env.example", ["CRON_SECRET=placeholder_add_later", "JOURNEY_BOT_DEFAULT_ENABLED=false", "JOURNEY_BOT_EMAIL_DOMAIN=nxttrack.test"]]
 ];
 const errors = [];

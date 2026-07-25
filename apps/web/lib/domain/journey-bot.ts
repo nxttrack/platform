@@ -147,6 +147,7 @@ export async function getJourneyBotDashboardData() {
 export async function runDueJourneyBotConfigs() {
   const environment = requireAllowedEnvironment();
   const admin = createAdminClient();
+  await purgeExpiredJourneyBotRuns();
   const now = new Date().toISOString();
   const { data, error } = await admin
     .from("journey_bot_configs")
@@ -327,52 +328,107 @@ export async function runJourneyBotConfig(
   }
 }
 
-export async function archiveJourneyBotRun(runId: string, actorUserId: string) {
-  requireAllowedEnvironment();
+export async function purgeJourneyBotRun(runId: string, actorUserId: string | null) {
+  const environment = requireAllowedEnvironment();
   const admin = createAdminClient();
-  const { data: journeys, error } = await admin
+  const [runResult, journeysResult, receiptResult] = await Promise.all([
+    admin
+      .from("journey_bot_runs")
+      .select("id, config_id, tenant_id, environment, status")
+      .eq("id", runId)
+      .maybeSingle(),
+    admin
     .from("journey_bot_child_journeys")
-    .select("id, tenant_id, participant_id, intake_submission_id, waitlist_entry_id, enrollment_id")
-    .eq("run_id", runId);
-  assertNoError(error, "journeys for archive");
-  const archivedAt = new Date().toISOString();
-  const reason = `journey_bot_cleanup:${actorUserId}`;
+      .select("guardian_id")
+      .eq("run_id", runId),
+    admin
+      .from("journey_bot_purge_receipts")
+      .select("status, pending_auth_user_ids")
+      .eq("run_id", runId)
+      .maybeSingle()
+  ]);
+  assertNoError(runResult.error, "journey run for purge");
+  assertNoError(journeysResult.error, "journey guardians for purge");
+  assertNoError(receiptResult.error, "journey purge receipt");
+  if (!runResult.data) throw new Error("Journey Bot run does not exist or was already purged.");
+  if (runResult.data.environment !== environment) throw new Error("Journey Bot run belongs to a different environment.");
+  if (runResult.data.status === "running") throw new Error("Stop the active Journey Bot run before purging it.");
+  if (receiptResult.data?.status === "completed") throw new Error("Journey Bot run was already purged.");
 
-  for (const journey of journeys ?? []) {
-    await Promise.all([
-      journey.intake_submission_id
-        ? admin.from("intake_submissions").update({ archived_at: archivedAt, archived_reason: reason, status: "closed" }).eq("id", journey.intake_submission_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.waitlist_entry_id
-        ? admin.from("waitlist_entries").update({ archived_at: archivedAt, archived_reason: reason, status: "closed" }).eq("id", journey.waitlist_entry_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.enrollment_id
-        ? admin.from("enrollments").update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" }).eq("id", journey.enrollment_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.participant_id
-        ? admin.from("participants").update({ archived_at: archivedAt, archived_reason: reason, status: "archived" }).eq("id", journey.participant_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.participant_id
-        ? admin.from("group_memberships").update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" }).eq("participant_id", journey.participant_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.participant_id
-        ? admin.from("participant_progress_scores").update({ status: "archived" }).eq("participant_id", journey.participant_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.participant_id
-        ? admin.from("participant_badge_awards").update({ status: "revoked" }).eq("participant_id", journey.participant_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve(),
-      journey.participant_id
-        ? admin.from("certificate_records").update({ status: "revoked" }).eq("participant_id", journey.participant_id).eq("is_test", true).eq("source", SOURCE)
-        : Promise.resolve()
-    ]);
+  const guardianIds = [
+    ...new Set(
+      [
+        ...parseStringArray(receiptResult.data?.pending_auth_user_ids),
+        ...(journeysResult.data ?? []).map((journey) => journey.guardian_id).filter((value): value is string => Boolean(value))
+      ]
+    )
+  ];
+
+  if (!receiptResult.data) {
+    const receiptInsert = await admin.from("journey_bot_purge_receipts").insert({
+      run_id: runId,
+      config_id: runResult.data.config_id,
+      tenant_id: runResult.data.tenant_id,
+      environment,
+      status: "pending",
+      pending_auth_user_ids: guardianIds,
+      purged_by: actorUserId
+    });
+    assertNoError(receiptInsert.error, "prepare journey purge receipt");
+  } else {
+    const receiptUpdate = await admin
+      .from("journey_bot_purge_receipts")
+      .update({ pending_auth_user_ids: guardianIds, purged_by: actorUserId })
+      .eq("run_id", runId)
+      .eq("status", "pending");
+    assertNoError(receiptUpdate.error, "refresh journey purge receipt");
   }
 
-  await admin
-    .from("journey_bot_child_journeys")
-    .update({ archived_at: archivedAt, archived_reason: reason, journey_status: "archived" })
-    .eq("run_id", runId);
+  for (const guardianId of guardianIds) {
+    await deleteSyntheticJourneyGuardian({
+      expectedTenantId: runResult.data.tenant_id,
+      guardianId,
+      runId
+    });
+  }
 
-  return { archivedJourneys: journeys?.length ?? 0 };
+  const purgeResult = await admin.rpc("purge_journey_bot_run", {
+    actor_user_id: actorUserId,
+    target_run_id: runId
+  });
+  assertNoError(purgeResult.error, "purge journey bot run");
+
+  return purgeResult.data;
+}
+
+export async function purgeExpiredJourneyBotRuns() {
+  const environment = requireAllowedEnvironment();
+  const admin = createAdminClient();
+  const configsResult = await admin
+    .from("journey_bot_configs")
+    .select("id, cleanup_after_days")
+    .eq("environment", environment);
+  assertNoError(configsResult.error, "journey configs for retention purge");
+
+  let purgedRuns = 0;
+  for (const config of configsResult.data ?? []) {
+    const cutoff = new Date(Date.now() - config.cleanup_after_days * 24 * 60 * 60_000).toISOString();
+    const runsResult = await admin
+      .from("journey_bot_runs")
+      .select("id")
+      .eq("config_id", config.id)
+      .neq("status", "running")
+      .lt("finished_at", cutoff)
+      .order("finished_at");
+    assertNoError(runsResult.error, "expired journey runs");
+
+    for (const run of runsResult.data ?? []) {
+      await purgeJourneyBotRun(run.id, null);
+      purgedRuns += 1;
+    }
+  }
+
+  return { purgedRuns };
 }
 
 export async function stopAllJourneyBots(actorUserId: string) {
@@ -381,7 +437,7 @@ export async function stopAllJourneyBots(actorUserId: string) {
   const now = new Date().toISOString();
 
   await Promise.all([
-    admin.from("journey_bot_configs").update({ enabled: false, paused: true, updated_by: actorUserId, lock_token: null, locked_at: null }).eq("environment", environment),
+    admin.from("journey_bot_configs").update({ enabled: false, paused: true, updated_by: actorUserId }).eq("environment", environment),
     admin.from("journey_bot_runs").update({ finished_at: now, status: "stopped" }).eq("environment", environment).eq("status", "running"),
     admin.from("journey_bot_child_journeys").update({ finished_at: now, journey_status: "stopped" }).eq("environment", environment).eq("journey_status", "running")
   ]);
@@ -390,45 +446,62 @@ export async function stopAllJourneyBots(actorUserId: string) {
 export async function resetJourneyBotTestCycle(configId: string, actorUserId: string) {
   const environment = requireAllowedEnvironment();
   const admin = createAdminClient();
-  const config = await getConfig(configId);
+  const disableResult = await admin
+    .from("journey_bot_configs")
+    .update({ enabled: false, paused: true, updated_by: actorUserId })
+    .eq("id", configId)
+    .eq("environment", environment);
+  assertNoError(disableResult.error, "disable journey bot before reset");
+
+  let config = await getConfig(configId);
   if (config.environment !== environment) throw new Error("Journey Bot config belongs to a different environment.");
-  const archivedAt = new Date().toISOString();
-  const reason = `journey_bot_test_cycle_reset:${actorUserId}`;
-  const [memberships, enrollments, runningJourneys] = await Promise.all([
+  const lockAge = config.locked_at ? Date.now() - new Date(config.locked_at).getTime() : Number.POSITIVE_INFINITY;
+  if (config.lock_token && lockAge < 15 * 60_000) {
+    throw new Error("Journey Bot is still finishing an active run. Wait for it to stop before cleanup.");
+  }
+  if (config.lock_token) {
+    const staleLockResult = await admin
+      .from("journey_bot_configs")
+      .update({ lock_token: null, locked_at: null })
+      .eq("id", config.id)
+      .eq("lock_token", config.lock_token);
+    assertNoError(staleLockResult.error, "release stale journey bot lock");
+    config = await getConfig(configId);
+  }
+
+  const stoppedAt = new Date().toISOString();
+  const [runsResult, stopRunsResult, stopJourneysResult] = await Promise.all([
+    admin.from("journey_bot_runs").select("id").eq("config_id", config.id).order("started_at"),
     admin
-      .from("group_memberships")
-      .update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" })
-      .eq("tenant_id", config.tenant_id)
-      .eq("is_test", true)
-      .eq("source", SOURCE)
-      .eq("status", "active")
-      .select("id"),
-    admin
-      .from("enrollments")
-      .update({ archived_at: archivedAt, archived_reason: reason, ends_on: archivedAt.slice(0, 10), status: "cancelled" })
-      .eq("tenant_id", config.tenant_id)
-      .eq("is_test", true)
-      .eq("source", SOURCE)
-      .eq("status", "active")
-      .select("id"),
+      .from("journey_bot_runs")
+      .update({ finished_at: stoppedAt, status: "stopped" })
+      .eq("config_id", config.id)
+      .eq("status", "running"),
     admin
       .from("journey_bot_child_journeys")
-      .update({ finished_at: archivedAt, journey_status: "stopped" })
+      .update({ finished_at: stoppedAt, journey_status: "stopped" })
       .eq("tenant_id", config.tenant_id)
+      .eq("environment", environment)
       .eq("journey_status", "running")
-      .select("id")
   ]);
-  assertNoError(memberships.error, "reset test memberships");
-  assertNoError(enrollments.error, "reset test enrollments");
-  assertNoError(runningJourneys.error, "reset running journeys");
+  assertNoError(runsResult.error, "journey runs for complete reset");
+  assertNoError(stopRunsResult.error, "stop journey runs before reset");
+  assertNoError(stopJourneysResult.error, "stop child journeys before reset");
+
+  let purgedRuns = 0;
+  for (const run of runsResult.data ?? []) {
+    await purgeJourneyBotRun(run.id, actorUserId);
+    purgedRuns += 1;
+  }
+
   const configResult = await admin
     .from("journey_bot_configs")
     .update({
-      budget_started_at: archivedAt,
+      budget_started_at: stoppedAt,
       enabled: false,
       journeys_started_total: 0,
       last_error: null,
-      last_status: "test_cycle_reset",
+      last_status: "test_cycle_purged",
       locked_at: null,
       lock_token: null,
       next_run_at: null,
@@ -439,9 +512,7 @@ export async function resetJourneyBotTestCycle(configId: string, actorUserId: st
   assertNoError(configResult.error, "reset journey bot config");
 
   return {
-    cancelledEnrollments: enrollments.data?.length ?? 0,
-    releasedMemberships: memberships.data?.length ?? 0,
-    stoppedJourneys: runningJourneys.data?.length ?? 0
+    purgedRuns
   };
 }
 
@@ -1641,7 +1712,7 @@ function testMetadata(journey: JourneyRow, extra: Record<string, unknown> = {}) 
     isTest: true,
     journeyChildId: journey.id,
     journeyRunId: journey.run_id,
-    safeToArchive: true,
+    safeToPurge: true,
     smokeRunId: journey.smoke_run_id,
     source: SOURCE,
     ...extra
@@ -1656,6 +1727,67 @@ function formatDutchList(values: readonly string[]) {
   if (values.length < 2) return values[0] ?? "";
 
   return `${values.slice(0, -1).join(", ")} en ${values.at(-1)}`;
+}
+
+async function deleteSyntheticJourneyGuardian(input: { expectedTenantId: string; guardianId: string; runId: string }) {
+  const admin = createAdminClient();
+  const userResult = await admin.auth.admin.getUserById(input.guardianId);
+  if (userResult.error) {
+    const missingUser = userResult.error.status === 404 || /not found/i.test(userResult.error.message);
+    if (missingUser) return;
+    throw new Error(`Inspect Journey Bot Auth user failed: ${userResult.error.message}`);
+  }
+  const user = userResult.data.user;
+  if (!user) return;
+
+  const expectedDomain = (process.env.JOURNEY_BOT_EMAIL_DOMAIN || "nxttrack.test")
+    .trim()
+    .replace(/^@/, "")
+    .toLowerCase();
+  const metadata = user.app_metadata ?? {};
+  const isExpectedSyntheticUser =
+    user.email?.toLowerCase().endsWith(`@${expectedDomain}`) &&
+    metadata.is_test === true &&
+    metadata.source === SOURCE &&
+    metadata.journey_run_id === input.runId &&
+    metadata.tenant_id === input.expectedTenantId;
+  if (!isExpectedSyntheticUser) {
+    throw new Error(`Refusing to delete Auth user ${input.guardianId}: Journey Bot ownership could not be proven.`);
+  }
+
+  const [platformMemberships, tenantMemberships, participants] = await Promise.all([
+    admin.from("platform_memberships").select("id").eq("user_id", input.guardianId).limit(1),
+    admin.from("tenant_memberships").select("tenant_id, role").eq("user_id", input.guardianId),
+    admin.from("participants").select("tenant_id, source, is_test, journey_run_id").eq("guardian_user_id", input.guardianId)
+  ]);
+  assertNoError(platformMemberships.error, "validate Journey Bot platform memberships");
+  assertNoError(tenantMemberships.error, "validate Journey Bot tenant memberships");
+  assertNoError(participants.error, "validate Journey Bot participants");
+
+  if (platformMemberships.data?.length) {
+    throw new Error(`Refusing to delete Auth user ${input.guardianId}: platform access exists.`);
+  }
+  if (
+    (tenantMemberships.data ?? []).some(
+      (membership) => membership.tenant_id !== input.expectedTenantId || membership.role !== "parent"
+    )
+  ) {
+    throw new Error(`Refusing to delete Auth user ${input.guardianId}: unrelated tenant access exists.`);
+  }
+  if (
+    (participants.data ?? []).some(
+      (participant) =>
+        participant.tenant_id !== input.expectedTenantId ||
+        participant.source !== SOURCE ||
+        participant.is_test !== true ||
+        participant.journey_run_id !== input.runId
+    )
+  ) {
+    throw new Error(`Refusing to delete Auth user ${input.guardianId}: unrelated participant data exists.`);
+  }
+
+  const deleteResult = await admin.auth.admin.deleteUser(input.guardianId, false);
+  if (deleteResult.error) throw new Error(`Delete Journey Bot Auth user failed: ${deleteResult.error.message}`);
 }
 
 function requireAllowedEnvironment() {

@@ -80,7 +80,7 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
                         Herkomst: {attributionChannelLabel(submission.attribution_channel)} · {submission.attribution_source}
                         {submission.attribution_campaign ? ` · campagne ${submission.attribution_campaign}` : ""}
                       </p>
-                      {submission.is_test ? <p className="font-mono">Journey run: {submission.journey_run_id?.slice(0, 8) ?? "onbekend"} · veilig te archiveren</p> : null}
+                      {submission.is_test ? <p className="font-mono">Journey run: {submission.journey_run_id?.slice(0, 8) ?? "onbekend"} · volledig op te schonen via platformbeheer</p> : null}
                       {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
                     </div>
                   }

@@ -7,8 +7,8 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { journeyScenarioModes, normalizeJourneyBotEnvironment, type JourneyScenarioMode } from "./journey-bot-contract";
 import {
-  archiveJourneyBotRun,
   getJourneyBotEnvironmentStatus,
+  purgeJourneyBotRun,
   resetJourneyBotTestCycle,
   runJourneyBotConfig,
   stopAllJourneyBots
@@ -126,7 +126,11 @@ export async function startJourneyBotWindowAction(formData: FormData) {
 
 export async function resetJourneyBotTestCycleAction(formData: FormData) {
   const context = await requirePlatformAdmin();
-  await resetJourneyBotTestCycle(readRequired(formData, "configId"), context.user.id);
+  try {
+    await resetJourneyBotTestCycle(readRequired(formData, "configId"), context.user.id);
+  } catch {
+    redirect(`${pagePath}?error=cleanup`);
+  }
   revalidatePath(pagePath);
   redirect(`${pagePath}?saved=reset`);
 }
@@ -155,11 +159,15 @@ export async function stopAllJourneyBotsAction() {
   redirect(`${pagePath}?saved=stopped`);
 }
 
-export async function archiveJourneyBotRunAction(formData: FormData) {
+export async function purgeJourneyBotRunAction(formData: FormData) {
   const context = await requirePlatformAdmin();
-  await archiveJourneyBotRun(readRequired(formData, "runId"), context.user.id);
+  try {
+    await purgeJourneyBotRun(readRequired(formData, "runId"), context.user.id);
+  } catch {
+    redirect(`${pagePath}?error=cleanup`);
+  }
   revalidatePath(pagePath);
-  redirect(`${pagePath}?saved=archived`);
+  redirect(`${pagePath}?saved=purged`);
 }
 
 export async function resolveJourneyBotIssueAction(formData: FormData) {

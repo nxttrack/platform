@@ -76,7 +76,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
         <DetailStat icon={Clock3} label="Wacht sinds" value={new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(row.priorityDate))} />
         <DetailStat icon={Users} label="Alternatieven" value={String(Math.max(0, row.proposals.length - 1))} />
       </section>
-      {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · veilig te archiveren</p> : null}
+      {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · volledig op te schonen via platformbeheer</p> : null}
       {row.minimumAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
 
       <section>

@@ -6,8 +6,8 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
-  archiveJourneyBotRunAction,
   pauseJourneyBotAction,
+  purgeJourneyBotRunAction,
   resetJourneyBotTestCycleAction,
   resolveJourneyBotIssueAction,
   resumeJourneyBotAction,
@@ -131,7 +131,7 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                   <option value="realistic">Realistisch</option>
                 </NativeSelect>
               </Field>
-              <Field label="Archiveren na dagen">
+              <Field label="Volledig verwijderen na dagen">
                 <Input defaultValue={config?.cleanup_after_days ?? 14} max={365} min={1} name="cleanupAfterDays" type="number" />
               </Field>
             </div>
@@ -216,13 +216,13 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                 <Square className="size-4" /> Alles stoppen
               </button>
             </form>
-            <ActionForm action={resetJourneyBotTestCycleAction} configId={config.id} icon={<RotateCcw className="size-4" />} label="Testcyclus resetten" />
+            <ActionForm action={resetJourneyBotTestCycleAction} configId={config.id} icon={<RotateCcw className="size-4" />} label="Alle botdata opschonen" />
           </div>
         ) : null}
       </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
-        <AdminSection description="De laatste tien runs, inclusief aantallen en bewaard releasebewijs." title="Recente runs">
+        <AdminSection description="De laatste tien runs en hun technische bewijs, beschikbaar tot de ingestelde bewaartermijn." title="Recente runs">
           {data.runs.length ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
@@ -243,9 +243,9 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
                         <p className="mt-1 text-[11px] text-muted-foreground">{run.technical_failure_count ?? 0} technisch · {run.unexpected_issue_count ?? 0} onverwacht</p>
                       </td>
                       <td className="px-3 py-3">
-                        <form action={archiveJourneyBotRunAction}>
+                        <form action={purgeJourneyBotRunAction}>
                           <input name="runId" type="hidden" value={run.id} />
-                          <button className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline" type="submit"><Archive className="size-3.5" /> Archiveren</button>
+                          <button className="inline-flex items-center gap-1 text-xs font-semibold text-red-700 hover:underline disabled:cursor-not-allowed disabled:opacity-50" disabled={run.status === "running"} type="submit"><Archive className="size-3.5" /> Volledig verwijderen</button>
                         </form>
                       </td>
                     </tr>
@@ -401,13 +401,13 @@ function scenarioLabel(value: string) {
 
 function savedLabel(value: string) {
   return {
-    archived: "testdata gearchiveerd",
     config: "configuratie opgeslagen",
     issue: "issue gemarkeerd",
     paused: "bot gepauzeerd",
     resumed: "bot hervat",
     run: "run voltooid",
-    reset: "testcapaciteit vrijgegeven en teller gereset",
+    purged: "run, productdata en testaccounts volledig verwijderd",
+    reset: "alle botruns, productdata en testaccounts verwijderd; teller gereset",
     stopped: "alle bots gestopt",
     window: "runvenster gestart"
   }[value] ?? value;
