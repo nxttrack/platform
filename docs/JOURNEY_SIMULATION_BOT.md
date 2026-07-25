@@ -78,3 +78,19 @@ curl --request POST \
 De simulation adapter roept bestaande placement scoring aan en respecteert capaciteit, stage en voorkeursdag. Bestaande mutaties voor attendance/progress/graduation zijn server actions met redirects en sessie-auth; de bot schrijft daarom via één afgeschermde service-adapter naar dezelfde domeintabellen en valideert elk resultaat. Externe delivery- en paymentservices worden niet aangeroepen.
 
 GitHub `schedule` is best-effort en kan ticks vertragen. De engine bewaakt daarom zelf `next_run_at`, actieve vensters, locks, daglimieten, actieve limieten, eindtijd en journeybudget. Voor een harde minuutcadans hoort de bestaande beveiligde endpoint uiteindelijk door een VPS/systemd-timer te worden aangeroepen.
+
+## 100-journey stressbewijs
+
+De verhoogde éénuursrun is op 25 juli 2026 volledig afgerond:
+
+- GitHub Actions-run: `30135878938`;
+- geteste SHA: `955017ea8661574ab7011912055909ddbc4d635d`;
+- resultaat: `100/100` journeys healthy en passed;
+- technische fouten: `0`;
+- degraded runs: `0`;
+- onverwachte issues: `0`;
+- critical issues: `0`;
+- gesimuleerde aanwezigheidsregistraties: `8.400`;
+- gesimuleerde testdiploma's: `300`.
+
+Na twintig journeys in de startcontrole voerden vier ticks ieder twintig journeys uit. De resterende ticks verwerkten nul journeys, omdat de harde grens van honderd correct was bereikt en de config automatisch was uitgeschakeld. Het bewijsartifact `journey-bot-window-955017ea8661574ab7011912055909ddbc4d635d` is tot en met 8 augustus 2026 beschikbaar bij de Actions-run.
