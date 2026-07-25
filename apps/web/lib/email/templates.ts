@@ -57,16 +57,19 @@ export function renderPasswordResetEmail(input: { code: string; organizationName
   });
 }
 
-export function renderSlotOfferEmail(input: { offerLink: string; organizationName: string; parentName: string; participantName: string }): EmailTemplate {
+export function renderSlotOfferEmail(input: { offerCode: string; offerLink: string; organizationName: string; parentName: string; participantName: string }): EmailTemplate {
   return renderTemplate({
     actionLabel: "Aanbod bekijken",
     actionUrl: input.offerLink,
     organizationName: input.organizationName,
     preheader: `Er is een plek beschikbaar voor ${input.participantName}.`,
-    rows: [{ label: "Link", value: input.offerLink }],
+    rows: [
+      { label: "Beveiligingscode", value: input.offerCode },
+      { label: "Link", value: input.offerLink }
+    ],
     subject: `Er is een plek beschikbaar bij ${input.organizationName}`,
     title: "Er is een plek beschikbaar",
-    message: `Beste ${input.parentName}, er is een plek beschikbaar voor ${input.participantName}. Bekijk en bevestig het aanbod binnen 7 dagen.`
+    message: `Beste ${input.parentName}, er is een plek beschikbaar voor ${input.participantName}. Open de link en vul de 8-cijferige code in. Het aanbod verloopt na 7 dagen.`
   });
 }
 

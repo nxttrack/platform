@@ -120,15 +120,13 @@ test.describe("phase 16 operational happy path", () => {
     expect(failures()).toEqual([]);
   });
 
-  test("slot offer links resolve to final accepted and declined states", async ({ page }) => {
-    const phase = requireState();
+  test("legacy slot offer capabilities reveal no offer data", async ({ page }) => {
+    requireState();
     const failures = collectRuntimeFailures(page);
 
-    await page.goto(`/plaatsing-aanbod?token=${encodeURIComponent(phase.offer.acceptedToken)}`, { waitUntil: "domcontentloaded" });
-    await expectBodyToContain(page, "al verwerkt");
-
-    await page.goto(`/plaatsing-aanbod?token=${encodeURIComponent(phase.offer.declinedToken)}`, { waitUntil: "domcontentloaded" });
-    await expectBodyToContain(page, "al verwerkt");
+    await page.goto("/plaatsing-aanbod?token=legacy-capability-must-be-ignored", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("8-cijferige beveiligingscode")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Plek accepteren" })).toHaveCount(0);
 
     expect(failures()).toEqual([]);
   });

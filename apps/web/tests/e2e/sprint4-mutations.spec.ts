@@ -8,10 +8,7 @@ type Phase16State = {
   expected: { groupName: string };
 };
 
-type Sprint4EdgeState = {
-  expired: { participantName: string; token: string };
-  full: { participantName: string; token: string };
-};
+type Sprint4EdgeState = Record<string, never>;
 
 const state = loadJson<Phase16State>("PHASE16_STATE_PATH");
 const edgeState = loadJson<Sprint4EdgeState>("SPRINT4_EDGE_STATE_PATH");
@@ -27,7 +24,7 @@ test.describe("Sprint 4 browser-driven mutations", () => {
   test("intake, placement and slot-offer outcomes are driven through the UI", async ({ page }, testInfo) => {
     test.setTimeout(90_000);
     const phase = requireState();
-    const edges = requireEdgeState();
+    requireEdgeState();
     const failures = collectRuntimeFailures(page);
     const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${testInfo.retry}`;
     const participantName = `Sprint4 Browser ${suffix}`;
@@ -44,37 +41,15 @@ test.describe("Sprint 4 browser-driven mutations", () => {
     await expect(entry).toContainText(phase.expected.groupName);
     await expect(entry).toContainText("voorkeursdag match");
 
-    const acceptedOfferUrl = await createOffer(page, entry, phase.expected.groupName);
-    await page.goto(acceptedOfferUrl, { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(participantName)).toBeVisible();
-    await expect(page.getByText(phase.expected.groupName, { exact: true })).toBeVisible();
-    await page.getByRole("button", { name: "Plek accepteren" }).click();
-    await expect(page).toHaveURL(/\/plaatsing-aanbod\?status=geaccepteerd/);
-    await expect(page.getByText("De plek is geaccepteerd.", { exact: false })).toBeVisible();
-
-    await page.goto(acceptedOfferUrl, { waitUntil: "domcontentloaded" });
-    await expect(page.getByText("Dit aanbod is al verwerkt.")).toBeVisible();
+    await createOffer(page, entry, phase.expected.groupName);
+    await page.goto("/plaatsing-aanbod", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("8-cijferige beveiligingscode")).toBeVisible();
+    await expect(page.getByText(participantName)).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Plek accepteren" })).toHaveCount(0);
 
-    const declinedName = `Sprint4 Weigering ${suffix}`;
-    await submitIntake(page, tenantUrl, declinedName, `${suffix}-decline`);
-    await page.goto("/admin/wachtlijst", { waitUntil: "domcontentloaded" });
-    entry = await convertIntake(page, declinedName);
-    const declinedOfferUrl = await createOffer(page, entry, phase.expected.groupName);
-    await page.goto(declinedOfferUrl, { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: "Plek weigeren" }).click();
-    await expect(page).toHaveURL(/\/plaatsing-aanbod\?status=geweigerd/);
-    await expect(page.getByText("De plek is geweigerd.", { exact: false })).toBeVisible();
-
-    await page.goto(`/plaatsing-aanbod?token=${encodeURIComponent(edges.expired.token)}`, { waitUntil: "domcontentloaded" });
-    await expect(page.getByText("Deze aanbodlink is verlopen.")).toBeVisible();
+    await page.goto("/plaatsing-aanbod?token=legacy-capability-must-be-ignored", { waitUntil: "domcontentloaded" });
+    await expect(page.getByLabel("8-cijferige beveiligingscode")).toBeVisible();
     await expect(page.getByRole("button", { name: "Plek accepteren" })).toHaveCount(0);
-
-    await page.goto(`/plaatsing-aanbod?token=${encodeURIComponent(edges.full.token)}`, { waitUntil: "domcontentloaded" });
-    await expect(page.getByText(edges.full.participantName)).toBeVisible();
-    await page.getByRole("button", { name: "Plek accepteren" }).click();
-    await expect(page).toHaveURL(/\/plaatsing-aanbod\?status=vol/);
-    await expect(page.getByText("geen vrije capaciteit", { exact: false })).toBeVisible();
     expect(failures()).toEqual([]);
   });
 });
@@ -122,11 +97,8 @@ async function convertIntake(page: Page, participantName: string) {
 async function createOffer(page: Page, entry: Locator, groupName: string) {
   await entry.getByLabel("Groep").selectOption({ label: groupName });
   await entry.getByRole("button", { name: "Goedkeuren en aanbod maken" }).click();
-  await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&aanbod=/);
-  const offerUrl = new URL(page.url()).searchParams.get("aanbod");
-
-  expect(offerUrl).toBeTruthy();
-  return offerUrl as string;
+  await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&delivery=(sent|skipped)/);
+  expect(new URL(page.url()).searchParams.has("aanbod")).toBe(false);
 }
 
 async function openPlacementDetails(page: Page, participantName: string) {

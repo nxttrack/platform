@@ -40,6 +40,7 @@ for (const scanRoot of scanRoots) {
 
 auditEmailSecretPreservation();
 auditProtectedApiRoutes();
+auditPublicCapabilityUrls();
 
 if (failures.length > 0) {
   console.error("Auth boundary audit failed:");
@@ -132,6 +133,20 @@ function auditProtectedApiRoutes() {
       "requireApiAuthenticatedContext",
       `${route} must enforce the centralized API password-change boundary`
     );
+  }
+}
+
+function auditPublicCapabilityUrls() {
+  const placementActions = readFileSync(join(root, "apps/web/lib/domain/placement-actions.ts"), "utf8");
+  const placementPage = readFileSync(join(root, "apps/web/app/(tenant-public)/plaatsing-aanbod/page.tsx"), "utf8");
+  const reset = readFileSync(join(root, "apps/web/lib/auth/password-reset.ts"), "utf8");
+
+  if (placementActions.includes("plaatsing-aanbod?token=") || placementPage.includes('getParam(params, "token")')) {
+    failures.push("public capability URL contract: slot-offer bearer tokens must not be read from or written to URLs.");
+  }
+
+  if (/wachtwoord-resetten[^\\n]*[?&]email=/.test(reset)) {
+    failures.push("public capability URL contract: password-reset email addresses must not be written to URLs.");
   }
 }
 

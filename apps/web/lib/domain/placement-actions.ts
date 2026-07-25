@@ -9,7 +9,15 @@ import { renderSlotOfferEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant, summarizeGroupCapacity, type GroupMembershipRow, type GroupRow } from "./core";
 import { computePlacementScores, type WaitlistEntryRow, type WaitlistPreferenceRow } from "./placement";
-import { generateOfferToken, hashOfferToken } from "./placement-token";
+import {
+  generateOfferSessionToken,
+  generateOfferVerificationCode,
+  hashOfferSessionToken,
+  hashOfferVerificationCode,
+  slotOfferCookieName
+} from "./placement-token";
+import { cookies } from "next/headers";
+import { timingSafeEqual } from "node:crypto";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 
 const weekdayMap: Record<string, number> = {
@@ -222,15 +230,15 @@ export async function createSlotOfferAction(formData: FormData) {
     redirect("/admin/wachtlijst?error=group");
   }
 
-  const token = generateOfferToken();
-  const offerLink = `${await getTrustedRequestOrigin()}/plaatsing-aanbod?token=${encodeURIComponent(token)}`;
+  const offerCode = generateOfferVerificationCode();
+  const offerLink = `${await getTrustedRequestOrigin()}/plaatsing-aanbod`;
   const offerResult = await admin
     .from("slot_offers")
     .insert({
       tenant_id: tenant.id,
       waitlist_entry_id: waitlistEntryId,
       group_id: groupId,
-      token_hash: hashOfferToken(token),
+      verification_code_hash: hashOfferVerificationCode(offerCode, entry.parent_email),
       parent_email: entry.parent_email,
       status: "sent",
       offered_at: new Date().toISOString(),
@@ -245,6 +253,7 @@ export async function createSlotOfferAction(formData: FormData) {
 
   const offerId = (offerResult.data as { id: string }).id;
   const template = renderSlotOfferEmail({
+    offerCode,
     offerLink,
     organizationName: tenant.name,
     parentName: entry.parent_name,
@@ -291,22 +300,90 @@ export async function createSlotOfferAction(formData: FormData) {
   ]);
 
   revalidatePath("/admin/wachtlijst");
-  redirect(`/admin/wachtlijst?saved=1&aanbod=${encodeURIComponent(offerLink)}`);
+  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.delivered ? "sent" : "skipped"}`);
+}
+
+export async function verifySlotOfferAction(formData: FormData) {
+  const email = readRequired(formData, "email").trim().toLowerCase();
+  const code = readRequired(formData, "code");
+
+  if (!/^[0-9]{8}$/.test(code)) {
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("slot_offers")
+    .select("id, expires_at, verification_attempts, verification_code_hash")
+    .ilike("parent_email", email)
+    .eq("status", "sent")
+    .order("offered_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data || !data.verification_code_hash) {
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  if (new Date(data.expires_at).getTime() <= Date.now() || data.verification_attempts >= 5) {
+    await admin.from("slot_offers").update({ status: "expired" }).eq("id", data.id).eq("status", "sent");
+    redirect("/plaatsing-aanbod?status=verlopen");
+  }
+
+  if (!safeEqualHash(data.verification_code_hash, hashOfferVerificationCode(code, email))) {
+    const attempts = data.verification_attempts + 1;
+    await admin
+      .from("slot_offers")
+      .update({
+        verification_attempts: attempts,
+        status: attempts >= 5 ? "expired" : "sent"
+      })
+      .eq("id", data.id)
+      .eq("status", "sent");
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  const sessionToken = generateOfferSessionToken();
+  const sessionExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const update = await admin
+    .from("slot_offers")
+    .update({
+      verified_session_expires_at: sessionExpiresAt.toISOString(),
+      verified_session_hash: hashOfferSessionToken(sessionToken),
+      verification_attempts: 0
+    })
+    .eq("id", data.id)
+    .eq("status", "sent");
+
+  if (update.error) {
+    redirect("/plaatsing-aanbod?status=fout");
+  }
+
+  (await cookies()).set(slotOfferCookieName, sessionToken, {
+    httpOnly: true,
+    maxAge: 15 * 60,
+    path: "/plaatsing-aanbod",
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  });
+  redirect("/plaatsing-aanbod");
 }
 
 export async function acceptSlotOfferAction(formData: FormData) {
-  await respondToSlotOffer(readRequired(formData, "token"), "accepted");
+  await respondToSlotOffer("accepted");
 }
 
 export async function declineSlotOfferAction(formData: FormData) {
-  await respondToSlotOffer(readRequired(formData, "token"), "declined");
+  await respondToSlotOffer("declined");
 }
 
-async function respondToSlotOffer(token: string, response: "accepted" | "declined") {
+async function respondToSlotOffer(response: "accepted" | "declined") {
   const admin = createAdminClient();
-  const offer = await getOfferByToken(token);
+  const token = (await cookies()).get(slotOfferCookieName)?.value;
+  const offer = token ? await getOfferBySession(token) : null;
 
   if (!offer) {
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=ongeldig");
   }
 
@@ -321,10 +398,12 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
         message: "Offer token is verlopen."
       })
     ]);
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=verlopen");
   }
 
   if (offer.status !== "sent") {
+    await clearOfferSession();
     redirect(`/plaatsing-aanbod?status=${offer.status}`);
   }
 
@@ -347,6 +426,7 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
         message: "Ouder heeft het aanbod geweigerd."
       })
     ]);
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=geweigerd");
   }
 
@@ -464,6 +544,7 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
     })
   ]);
 
+  await clearOfferSession();
   redirect("/plaatsing-aanbod?status=geaccepteerd");
 }
 
@@ -547,12 +628,13 @@ async function getWaitlistEntry(tenantId: string, entryId: string): Promise<Wait
   return (data as WaitlistEntryRow | null) ?? null;
 }
 
-async function getOfferByToken(token: string) {
+async function getOfferBySession(token: string) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("slot_offers")
     .select("id, tenant_id, waitlist_entry_id, group_id, parent_email, status, expires_at")
-    .eq("token_hash", hashOfferToken(token))
+    .eq("verified_session_hash", hashOfferSessionToken(token))
+    .gt("verified_session_expires_at", new Date().toISOString())
     .maybeSingle();
 
   if (error || !data) {
@@ -568,6 +650,18 @@ async function getOfferByToken(token: string) {
     status: string;
     expires_at: string;
   };
+}
+
+async function clearOfferSession() {
+  (await cookies()).delete(slotOfferCookieName);
+}
+
+function safeEqualHash(left: string, right: string) {
+  if (!/^[a-f0-9]{64}$/i.test(left) || !/^[a-f0-9]{64}$/i.test(right)) {
+    return false;
+  }
+
+  return timingSafeEqual(Buffer.from(left, "hex"), Buffer.from(right, "hex"));
 }
 
 async function findTenantGuardianUserId(tenantId: string, email: string) {
