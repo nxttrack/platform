@@ -227,30 +227,46 @@ async function optionalRest(accessToken, path, label) {
 }
 
 async function fetchRest(accessToken, path) {
-  const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
-    headers: {
-      ...baseHeaders(),
-      authorization: `Bearer ${accessToken}`
-    }
-  });
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
+      headers: {
+        ...baseHeaders(),
+        authorization: `Bearer ${accessToken}`
+      }
+    });
 
-  if (!response.ok) {
-    return {
-      ok: false,
-      status: response.status,
-      bodyText: await response.text(),
-      rows: []
-    };
+    if (response.ok) {
+      const body = await response.json();
+
+      return {
+        ok: true,
+        status: response.status,
+        bodyText: "",
+        rows: Array.isArray(body) ? body : []
+      };
+    }
+
+    const bodyText = await response.text();
+    const transientClockSkew =
+      response.status === 401 &&
+      bodyText.includes('"code":"PGRST303"') &&
+      bodyText.includes("JWT issued at future");
+
+    if (!transientClockSkew || attempt === 3) {
+      return {
+        ok: false,
+        status: response.status,
+        bodyText,
+        rows: []
+      };
+    }
+
+    const delayMs = (attempt + 1) * 1_000;
+    console.log(`[db:rls-role-smoke] Supabase clock skew detected; retrying REST query in ${delayMs}ms.`);
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
-  const body = await response.json();
-
-  return {
-    ok: true,
-    status: response.status,
-    bodyText: "",
-    rows: Array.isArray(body) ? body : []
-  };
+  throw new Error("Unreachable REST retry state.");
 }
 
 function baseHeaders() {
