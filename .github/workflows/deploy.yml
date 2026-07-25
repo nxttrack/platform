@@ -137,9 +137,12 @@ jobs:
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
       BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
-      ALLOW_JOURNEY_BOT_IN_PRODUCTION: ${{ vars.ALLOW_JOURNEY_BOT_IN_PRODUCTION || 'false' }}
       JOURNEY_BOT_DEFAULT_ENABLED: ${{ vars.JOURNEY_BOT_DEFAULT_ENABLED || 'false' }}
       JOURNEY_BOT_EMAIL_DOMAIN: ${{ vars.JOURNEY_BOT_EMAIL_DOMAIN || 'nxttrack.test' }}
+      UPLOAD_MALWARE_SCAN_MODE: ${{ vars.UPLOAD_MALWARE_SCAN_MODE || 'required' }}
+      CLAMAV_SOCKET_PATH: ${{ vars.CLAMAV_SOCKET_PATH || '/run/clamav/clamd.ctl' }}
+      CLAMAV_HOST: ${{ vars.CLAMAV_HOST }}
+      CLAMAV_PORT: ${{ vars.CLAMAV_PORT || '3310' }}
       SMTP_HOST: ${{ vars.SMTP_HOST }}
       SMTP_PORT: ${{ vars.SMTP_PORT }}
       SMTP_USER: ${{ vars.SMTP_USER }}
@@ -248,9 +251,12 @@ jobs:
             printf 'MOLLIE_API_KEY=%s\n' "$MOLLIE_API_KEY"
             printf 'BILLING_AUTOMATION_SECRET=%s\n' "$BILLING_AUTOMATION_SECRET"
             printf 'CRON_SECRET=%s\n' "$CRON_SECRET"
-            printf 'ALLOW_JOURNEY_BOT_IN_PRODUCTION=%s\n' "$ALLOW_JOURNEY_BOT_IN_PRODUCTION"
             printf 'JOURNEY_BOT_DEFAULT_ENABLED=%s\n' "$JOURNEY_BOT_DEFAULT_ENABLED"
             printf 'JOURNEY_BOT_EMAIL_DOMAIN=%s\n' "$JOURNEY_BOT_EMAIL_DOMAIN"
+            printf 'UPLOAD_MALWARE_SCAN_MODE=%s\n' "$UPLOAD_MALWARE_SCAN_MODE"
+            printf 'CLAMAV_SOCKET_PATH=%s\n' "$CLAMAV_SOCKET_PATH"
+            printf 'CLAMAV_HOST=%s\n' "$CLAMAV_HOST"
+            printf 'CLAMAV_PORT=%s\n' "$CLAMAV_PORT"
             printf 'SMTP_HOST=%s\n' "$SMTP_HOST"
             printf 'SMTP_PORT=%s\n' "$SMTP_PORT"
             printf 'SMTP_USER=%s\n' "$SMTP_USER"

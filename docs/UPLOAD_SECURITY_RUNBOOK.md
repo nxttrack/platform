@@ -14,29 +14,135 @@ Status: verplicht voor staging en productie voordat document-, diploma- of CSV-u
 De implementatie volgt het officiële ClamD-protocol. ClamD kan via een lokale Unix-socket of een private TCP-socket luisteren en `INSTREAM` ontvangt de bestandsbytes via diezelfde verbinding:
 <https://docs.clamav.net/manual/Usage/ClamdProtocol.html>.
 
-## VPS-voorbereiding
+## VPS-voorbereiding voor Ubuntu/Debian
 
-1. Installeer een onderhouden ClamAV- en ClamD-pakket. Voor Debian/Ubuntu noemt de officiële documentatie `clamav` en `clamav-daemon`:
-   <https://docs.clamav.net/manual/Installing/Packages.html>.
-2. Zorg dat signatures automatisch door FreshClam worden bijgewerkt en dat ClamD actief is.
-3. Kies bij voorkeur een Unix-socket. Controleer het werkelijke `LocalSocket`-pad in `clamd.conf`; neem geen voorbeeldpad blind over.
-4. Geef de systemd-servicegebruiker van NXTTRACK uitsluitend connectierecht op deze socket. Maak de socket niet publiek toegankelijk.
-5. Zet in de gedeelde environment:
+Voer dit uit op de NXTTRACK VPS met een account dat `sudo` mag gebruiken.
+
+1. Installeer ClamAV, ClamD en FreshClam:
+
+   ```bash
+   sudo apt-get update
+   sudo DEBIAN_FRONTEND=noninteractive apt-get install -y clamav clamav-daemon clamav-freshclam
+   ```
+
+2. Stop de automatische updater kort, haal de nieuwste signatures op en activeer hem opnieuw:
+
+   ```bash
+   sudo systemctl stop clamav-freshclam
+   sudo freshclam
+   sudo systemctl enable --now clamav-freshclam
+   ```
+
+3. Maak eerst een herstelbare kopie van de daemonconfig:
+
+   ```bash
+   sudo cp --archive /etc/clamav/clamd.conf "/etc/clamav/clamd.conf.before-nxttrack-$(date -u +%Y%m%dT%H%M%SZ)"
+   sudoedit /etc/clamav/clamd.conf
+   ```
+
+   Zorg dat deze regels precies één keer actief voorkomen. Verwijder of becommentarieer een eventuele `TCPSocket` en `TCPAddr`; NXTTRACK gebruikt lokaal uitsluitend de Unix-socket:
+
+   ```ini
+   LocalSocket /run/clamav/clamd.ctl
+   LocalSocketGroup clamav
+   LocalSocketMode 660
+   FixStaleSocket true
+   StreamMaxLength 25M
+   ```
+
+4. Controleer welke niet-rootgebruiker de NXTTRACK-services uitvoert en geef alleen die gebruiker toegang tot de groep `clamav`:
+
+   ```bash
+   STAGING_APP_USER="$(sudo systemctl show nxttrack-staging --property=User --value)"
+   PRODUCTION_APP_USER="$(sudo systemctl show nxttrack-production --property=User --value)"
+
+   test -n "$STAGING_APP_USER" && test "$STAGING_APP_USER" != root
+   test -n "$PRODUCTION_APP_USER" && test "$PRODUCTION_APP_USER" != root
+
+   sudo usermod --append --groups clamav "$STAGING_APP_USER"
+   sudo usermod --append --groups clamav "$PRODUCTION_APP_USER"
+   ```
+
+   Stop als een van de twee `test`-regels faalt. Controleer dan eerst de systemd-unit; de applicatie hoort niet als root te draaien. Wanneer beide services bewust dezelfde gebruiker gebruiken, is de tweede `usermod` veilig en idempotent.
+
+5. Valideer de ClamD-config en start de daemon:
+
+   ```bash
+   sudo clamconf --config-dir=/etc/clamav --non-default
+   sudo systemctl enable --now clamav-daemon
+   sudo systemctl restart clamav-daemon
+   sudo systemctl is-active --quiet clamav-daemon
+   sudo test -S /run/clamav/clamd.ctl
+   sudo stat --format='%A %U:%G %n' /run/clamav/clamd.ctl
+   ```
+
+   Verwacht voor de socket een eigenaar/groep `clamav:clamav` en groepsrechten om te verbinden, normaal `srw-rw----`.
+
+6. Stel de runtimevariabelen in bij GitHub → repository `nxttrack/platform` → Environments → zowel `staging` als `production` → Environment variables:
 
    ```dotenv
    UPLOAD_MALWARE_SCAN_MODE=required
-   CLAMAV_SOCKET_PATH=/werkelijk/pad/naar/clamd.ctl
+   CLAMAV_SOCKET_PATH=/run/clamav/clamd.ctl
    CLAMAV_HOST=
    CLAMAV_PORT=3310
    ```
 
-   Gebruik voor een private TCP-opstelling `CLAMAV_HOST` en `CLAMAV_PORT` en laat `CLAMAV_SOCKET_PATH` leeg.
-6. Herstart ClamD en daarna `nxttrack-staging` of `nxttrack-production`.
+   De deployworkflow schrijft deze waarden naar `/var/www/nxttrack/{staging|production}/shared/.env`. Bewerk dat bestand daarom niet als permanente configuratiebron; een volgende deploy overschrijft het.
+
+7. Herstart de applicaties zodat hun nieuwe groepslidmaatschap en environment actief worden:
+
+   ```bash
+   sudo systemctl restart nxttrack-staging
+   sudo systemctl restart nxttrack-production
+   sudo systemctl is-active --quiet nxttrack-staging
+   sudo systemctl is-active --quiet nxttrack-production
+   ```
+
+8. Bewijs dat beide applicatiegebruikers de socket kunnen gebruiken:
+
+   ```bash
+   printf 'NXTTRACK ClamAV clean test\n' | sudo tee /tmp/nxttrack-clamav-clean.txt >/dev/null
+   sudo chmod 644 /tmp/nxttrack-clamav-clean.txt
+   sudo -u "$STAGING_APP_USER" clamdscan --fdpass /tmp/nxttrack-clamav-clean.txt
+   sudo -u "$PRODUCTION_APP_USER" clamdscan --fdpass /tmp/nxttrack-clamav-clean.txt
+   sudo rm /tmp/nxttrack-clamav-clean.txt
+   ```
+
+   Beide scans moeten `OK` en `Infected files: 0` tonen.
 
 ## Validatie
 
-1. Upload een geldige kleine PDF; het record moet `clean`, `clamav-instream`, een scantijd en SHA-256 krijgen.
-2. Controleer dat een HTML-, SVG-, executable of bestand met een vervalst MIME-type wordt geweigerd.
-3. Voer in een geïsoleerde testtenant de standaard antivirus-testfile uit volgens het interne securityproces; verwacht afwijzing en geen Storage-object.
-4. Stop ClamD tijdelijk in staging en controleer dat een upload fail-closed wordt geweigerd.
-5. Start ClamD opnieuw en controleer de signature-update- en servicedashboards.
+1. Deploy eerst de actuele `main`-SHA naar staging.
+2. Upload in een geïsoleerde stagingtenant een geldige kleine PDF. Het record moet `clean`, `clamav-instream`, een scantijd en SHA-256 krijgen.
+3. Controleer dat een HTML-, SVG-, executable of bestand met een vervalst MIME-type wordt geweigerd.
+4. Download uitsluitend voor deze geïsoleerde stagingtest het officiële EICAR-testbestand, geef het een `.csv`-naam en bied het via de CSV-import aan:
+
+   ```bash
+   curl --fail --show-error --location https://secure.eicar.org/eicar.com.txt --output /tmp/eicar.csv
+   sudo clamdscan --fdpass /tmp/eicar.csv
+   rm /tmp/eicar.csv
+   ```
+
+   De lokale controle hoort `FOUND` en exitcode `1` te geven. De stagingupload moet vervolgens worden afgewezen en mag geen Storage-object of toegepaste import opleveren.
+5. Test de fail-closed grens uitsluitend op staging:
+
+   ```bash
+   sudo systemctl stop clamav-daemon
+   ```
+
+   Een geldige upload moet nu met een malware-scanfout worden geweigerd. Herstel direct daarna:
+
+   ```bash
+   sudo systemctl start clamav-daemon
+   sudo systemctl is-active --quiet clamav-daemon
+   ```
+
+6. Controleer tot slot:
+
+   ```bash
+   sudo systemctl --no-pager --full status clamav-daemon clamav-freshclam
+   sudo journalctl --unit=clamav-daemon --unit=clamav-freshclam --since='30 minutes ago' --no-pager
+   sudo freshclam --version
+   ```
+
+Voer de EICAR- en fail-closed uploadtest niet op productie uit. Productie krijgt dezelfde configuratie pas na groen stagingbewijs.

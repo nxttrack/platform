@@ -10,6 +10,8 @@ const checks = [
   ["apps/web/lib/storage/tenant-erasure.ts", ["listTenantStorageObjects", "eraseTenantStorageObjects", "verifiedRemainingObjects"]],
   ["supabase/migrations/20260725180000_offboarding_erasure_lifecycle.sql", ["export_tenant_dataset", "export_failed", "erasure_attention_required", "backup_retention", "on delete set null"]],
   ["apps/web/lib/security/malware-scanner.ts", ["UPLOAD_MALWARE_SCAN_MODE", "Production uploads require malware scanning", "clamav-instream", "validateFileSignature"]],
+  [".github/workflows/deploy.yml", ["UPLOAD_MALWARE_SCAN_MODE", "CLAMAV_SOCKET_PATH", "CLAMAV_HOST", "CLAMAV_PORT"]],
+  ["docs/UPLOAD_SECURITY_RUNBOOK.md", ["LocalSocketMode 660", "clamav-daemon", "clamdscan --fdpass", "nxttrack-staging", "nxttrack-production"]],
   ["apps/web/lib/security/content-classification.ts", ["operational", "personal", "sensitive", "restricted", "sanitizeImportedCell"]],
   ["supabase/migrations/20260725190000_content_classification_and_malware.sql", ["content_classification", "malware_scan_status", "legacy_sensitive_keyword"]],
   ["docs/SPRINT_31_IMAGE_PROMPTS.md", ["IMG-31-01", "IMG-31-11", "Vervangingscontract"]],
