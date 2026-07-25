@@ -5,11 +5,11 @@
 ```txt
 Possible now: yes
 Missing critical pieces: geen voor de volledige testreis
-Safe implementation mode: development/dev/staging, service-side orchestration, testmarkers, job lock, notificaties/betalingen onderdrukt
+Safe implementation mode: uitsluitend staging, service-side orchestration, testmarkers, job lock, notificaties/betalingen database-side onderdrukt
 Recommended fallback: alleen expliciet geconfigureerde deterministische placement fallback; standaard uit
 ```
 
-De bestaande domeinen ondersteunen intake, wachtlijst, placement scoring, capaciteit, enrollment, groepsmembership, sessies, aanwezigheid, voortgang, badges, afzwem-readiness, afzwemevents en certificaten. De bot gebruikt deze tabellen en dezelfde placement-scorefunctie. Ontbrekende modules worden als issue opgeslagen; een diploma wordt dan niet gefaket.
+De bestaande domeinen ondersteunen intake, wachtlijst, placement scoring, capaciteit, enrollment, groepsmembership, sessies, aanwezigheid, voortgang, badges, afzwem-readiness, afzwemevents en certificaten. De bot gebruikt deze tabellen en dezelfde placement-scorefunctie. Ontbrekende modules worden als issue opgeslagen; een diploma wordt dan niet gefaket. Zowel de applicatie als database accepteert uitsluitend `APP_ENV=staging`; er bestaat geen productieoverride.
 
 ## De Waterlijn seed
 

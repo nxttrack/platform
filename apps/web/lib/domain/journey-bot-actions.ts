@@ -188,6 +188,9 @@ async function requirePlatformAdmin() {
   if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) {
     redirect("/platform?error=forbidden");
   }
+  if (!getJourneyBotEnvironmentStatus().allowed) {
+    redirect(`${pagePath}?error=environment`);
+  }
   return context;
 }
 

@@ -92,16 +92,27 @@ type JourneyRow = {
 
 export function getJourneyBotEnvironmentStatus() {
   const environment = normalizeJourneyBotEnvironment(process.env.APP_ENV);
-  const allowProduction = process.env.ALLOW_JOURNEY_BOT_IN_PRODUCTION === "true";
 
   return {
-    allowProduction,
-    allowed: isJourneyBotEnvironmentAllowed(environment, allowProduction),
+    allowed: isJourneyBotEnvironmentAllowed(environment),
     environment
   };
 }
 
 export async function getJourneyBotDashboardData() {
+  const environment = getJourneyBotEnvironmentStatus();
+  if (!environment.allowed) {
+    return {
+      configs: [],
+      environment,
+      events: [],
+      issues: [],
+      journeys: [],
+      programs: [],
+      runs: [],
+      tenants: []
+    };
+  }
   const admin = createAdminClient();
   const [tenantsResult, programsResult, configsResult, runsResult, journeysResult, eventsResult, issuesResult] = await Promise.all([
     admin.from("tenants").select("id, name, slug, status").eq("status", "active").order("name"),
@@ -122,7 +133,7 @@ export async function getJourneyBotDashboardData() {
   assertNoError(issuesResult.error, "journey bot issues");
 
   return {
-    environment: getJourneyBotEnvironmentStatus(),
+    environment,
     tenants: tenantsResult.data ?? [],
     programs: programsResult.data ?? [],
     configs: (configsResult.data ?? []) as JourneyBotConfigRow[],

@@ -11,7 +11,7 @@ const checks = [
   ["scripts/staging/seed-journey-bot-waterlijn.mjs", ["INSTRUCTIE", "BADJE-1", "BADJE-2", "BADJE-3", "AFZWEM-A", "DIPLOMA-B", "DIPLOMA-C", "KLAAR", "minutesBetween"]],
   ["supabase/migrations/20260724170000_journey_simulation_bot.sql", ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "minimum_age_blocked", "is_test"]],
   ["supabase/migrations/20260724183000_journey_bot_trustworthy_outcomes.sql", ["journeys_started_total", "health_status", "outcome_classification", "expected", "claim_journey_bot_config"]],
-  [".env.example", ["CRON_SECRET=placeholder_add_later", "ALLOW_JOURNEY_BOT_IN_PRODUCTION=false", "JOURNEY_BOT_DEFAULT_ENABLED=false", "JOURNEY_BOT_EMAIL_DOMAIN=nxttrack.test"]]
+  [".env.example", ["CRON_SECRET=placeholder_add_later", "JOURNEY_BOT_DEFAULT_ENABLED=false", "JOURNEY_BOT_EMAIL_DOMAIN=nxttrack.test"]]
 ];
 const errors = [];
 
@@ -23,6 +23,14 @@ for (const [path, needles] of checks) {
 }
 
 const seed = readFileSync(`${root}/scripts/staging/seed-journey-bot-waterlijn.mjs`, "utf8");
+const contract = readFileSync(`${root}/apps/web/lib/domain/journey-bot-contract.ts`, "utf8");
+const environmentExample = readFileSync(`${root}/.env.example`, "utf8");
+if (!contract.includes('export type JourneyBotEnvironment = "staging"')) {
+  errors.push("Journey Bot contract must only admit staging.");
+}
+if (contract.includes("allowProduction") || environmentExample.includes("ALLOW_JOURNEY_BOT_IN_PRODUCTION")) {
+  errors.push("Journey Bot must not expose a production override.");
+}
 const groupSection = seed.split("const groupSpecs = [")[1]?.split("];")[0] ?? "";
 const groupCodes = [...groupSection.matchAll(/\["JB-[A-Z0-9-]+",\s*"/g)];
 if (groupCodes.length !== 8) errors.push(`Waterlijn seed must define exactly 8 Journey Bot groups; found ${groupCodes.length}.`);

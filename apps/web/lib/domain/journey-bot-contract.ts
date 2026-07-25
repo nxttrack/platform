@@ -8,7 +8,7 @@ export const journeyScenarioModes = [
 
 export type JourneyScenarioMode = (typeof journeyScenarioModes)[number];
 
-export type JourneyBotEnvironment = "development" | "dev" | "staging" | "production";
+export type JourneyBotEnvironment = "staging";
 
 export const journeyOutcomeClassifications = ["passed", "expected_blocker", "degraded", "technical_failure"] as const;
 export type JourneyOutcomeClassification = (typeof journeyOutcomeClassifications)[number];
@@ -75,13 +75,11 @@ export function normalizeJourneyBotEnvironment(value: string | null | undefined)
     .trim()
     .toLowerCase();
 
-  return normalized === "development" || normalized === "dev" || normalized === "staging" || normalized === "production" ? normalized : null;
+  return normalized === "staging" ? normalized : null;
 }
 
-export function isJourneyBotEnvironmentAllowed(value: string | null | undefined, allowProduction = false) {
-  const environment = normalizeJourneyBotEnvironment(value);
-
-  return environment === "development" || environment === "dev" || environment === "staging" || (environment === "production" && allowProduction);
+export function isJourneyBotEnvironmentAllowed(value: string | null | undefined) {
+  return normalizeJourneyBotEnvironment(value) === "staging";
 }
 
 export function getMinimumAgeDecision(birthDate: string, today = new Date()): MinimumAgeDecision {

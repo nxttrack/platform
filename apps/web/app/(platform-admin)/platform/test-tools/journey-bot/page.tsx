@@ -55,7 +55,7 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <PageHeader
         kicker="Platform test tools"
-        subtitle="Versnel de volledige zwemschoolreis met herkenbare, archiveerbare testdata. Externe notificaties en betalingen blijven altijd onderdrukt."
+        subtitle="Versnel op staging de volledige zwemschoolreis met herkenbare, volledig verwijderbare testdata. Externe notificaties en betalingen blijven altijd onderdrukt."
         title="Journey Simulation Bot"
       />
 
@@ -63,8 +63,8 @@ export default async function JourneyBotPage({ searchParams }: PageProps) {
         <div className="flex items-start gap-3">
           <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-amber-700" />
           <div>
-            <p className="font-bold">Uitsluitend voor dev/staging testdata</p>
-            <p className="mt-1 text-amber-900/80">De bot is in productie standaard hard geblokkeerd. Testrecords krijgen bron, run-id en archiveringsmarkering.</p>
+            <p className="font-bold">Uitsluitend voor staging</p>
+            <p className="mt-1 text-amber-900/80">Development en productie zijn hard geblokkeerd en kennen geen override. Testrecords krijgen bron en run-id voor volledige opschoning.</p>
           </div>
         </div>
       </div>

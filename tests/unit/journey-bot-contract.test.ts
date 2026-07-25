@@ -39,11 +39,13 @@ test("simuleert per snelheidsprofiel acht tot twaalf lessen per niveau", () => {
   assert.equal(getJourneyAttendanceLessonCount("realistic"), 12);
 });
 
-test("blokkeert productie standaard en staat dev/staging toe", () => {
+test("staat uitsluitend staging toe zonder override", () => {
   assert.equal(isJourneyBotEnvironmentAllowed("staging"), true);
-  assert.equal(isJourneyBotEnvironmentAllowed("development"), true);
+  assert.equal(isJourneyBotEnvironmentAllowed("development"), false);
+  assert.equal(isJourneyBotEnvironmentAllowed("dev"), false);
   assert.equal(isJourneyBotEnvironmentAllowed("production"), false);
-  assert.equal(isJourneyBotEnvironmentAllowed("production", true), true);
+  assert.equal(isJourneyBotEnvironmentAllowed("STAGING"), true);
+  assert.equal(isJourneyBotEnvironmentAllowed(undefined), false);
 });
 
 test("berekent de vierde verjaardag als eerste plaatsingsdag", () => {
