@@ -11,7 +11,7 @@ const checks = [
   ["scripts/staging/seed-journey-bot-waterlijn.mjs", ["INSTRUCTIE", "BADJE-1", "BADJE-2", "BADJE-3", "AFZWEM-A", "DIPLOMA-B", "DIPLOMA-C", "KLAAR", "minutesBetween"]],
   ["supabase/migrations/20260724170000_journey_simulation_bot.sql", ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "minimum_age_blocked", "is_test"]],
   ["supabase/migrations/20260724183000_journey_bot_trustworthy_outcomes.sql", ["journeys_started_total", "health_status", "outcome_classification", "expected", "claim_journey_bot_config"]],
-  ["supabase/migrations/20260725201000_journey_bot_complete_purge.sql", ["journey_bot_purge_receipts", "pending_auth_user_ids", "purge_journey_bot_run", "auth.users", "refused partial completion"]],
+  ["supabase/migrations/20260725201000_journey_bot_complete_purge.sql", ["journey_bot_purge_receipts", "pending_auth_user_ids", "purge_journey_bot_run", "auth.users", "refused partial completion", "current_user_has_platform_role"]],
   [".env.example", ["CRON_SECRET=placeholder_add_later", "JOURNEY_BOT_DEFAULT_ENABLED=false", "JOURNEY_BOT_EMAIL_DOMAIN=nxttrack.test"]]
 ];
 const errors = [];

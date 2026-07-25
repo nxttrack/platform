@@ -32,7 +32,7 @@ create policy journey_bot_purge_receipts_platform_select
   on public.journey_bot_purge_receipts
   for select
   to authenticated
-  using (app_private.has_platform_role(array['platform_owner', 'platform_admin']));
+  using (app_private.current_user_has_platform_role(array['platform_owner', 'platform_admin']));
 
 create or replace function app_private.purge_journey_bot_run(
   target_run_id uuid,
