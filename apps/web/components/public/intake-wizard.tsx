@@ -24,6 +24,16 @@ import { Progress } from "@/components/ui/progress";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  getClientAttribution,
+  readAnalyticsConsent,
+  subscribeToAnalyticsConsent,
+  subscribeToAttribution
+} from "@/lib/analytics/client";
+import type {
+  AnalyticsConsent,
+  AttributionSnapshot
+} from "@/lib/analytics/attribution";
+import {
   daypartLabels,
   rankIntakeSlots,
   swimmingExperienceOptions,
@@ -85,6 +95,8 @@ export function IntakeWizard(props: IntakeWizardProps) {
   const [selectedGroupId, setSelectedGroupId] = useState("");
   const [consent, setConsent] = useState(false);
   const [preferredNotes, setPreferredNotes] = useState("");
+  const [attribution, setAttribution] = useState<AttributionSnapshot | null>(null);
+  const [analyticsConsent, setAnalyticsConsent] = useState<AnalyticsConsent>("unknown");
 
   const currentStep = steps[stepIndex] ?? steps[0];
   const customQuestions = props.questions
@@ -133,6 +145,16 @@ export function IntakeWizard(props: IntakeWizardProps) {
 
   useEffect(() => {
     setHydrated(true);
+    setAttribution(getClientAttribution());
+    setAnalyticsConsent(readAnalyticsConsent());
+
+    const unsubscribeAttribution = subscribeToAttribution(setAttribution);
+    const unsubscribeConsent = subscribeToAnalyticsConsent(setAnalyticsConsent);
+
+    return () => {
+      unsubscribeAttribution();
+      unsubscribeConsent();
+    };
   }, []);
 
   function goForward() {
@@ -186,6 +208,16 @@ export function IntakeWizard(props: IntakeWizardProps) {
       <input name="preferredDayparts" type="hidden" value={JSON.stringify(preferredDayparts)} />
       <input name="selectedGroupId" type="hidden" value={selectedGroupId} />
       <input name="preferredNotes" type="hidden" value={preferredNotes} />
+      <input name="attributionSource" type="hidden" value={attribution?.source ?? "direct"} />
+      <input name="attributionMedium" type="hidden" value={attribution?.medium ?? ""} />
+      <input name="attributionCampaign" type="hidden" value={attribution?.campaign ?? ""} />
+      <input name="attributionContent" type="hidden" value={attribution?.content ?? ""} />
+      <input name="attributionTerm" type="hidden" value={attribution?.term ?? ""} />
+      <input name="attributionReferrerHost" type="hidden" value={attribution?.referrerHost ?? ""} />
+      <input name="attributionLandingPath" type="hidden" value={attribution?.landingPath ?? "/intake"} />
+      <input name="attributionHasAdClickId" type="hidden" value={attribution?.hasAdClickId ? "true" : "false"} />
+      <input name="attributionCapturedAt" type="hidden" value={attribution?.capturedAt ?? ""} />
+      <input name="analyticsConsent" type="hidden" value={analyticsConsent} />
       {preferredDays.map((weekday) => (
         <input key={weekday} name="preferredWeekdays" type="hidden" value={weekday} />
       ))}

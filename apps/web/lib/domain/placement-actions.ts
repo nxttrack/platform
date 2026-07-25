@@ -447,6 +447,13 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
       .eq("tenant_id", offer.tenant_id)
       .eq("id", offer.id),
     admin.from("waitlist_entries").update({ status: "placed" }).eq("tenant_id", offer.tenant_id).eq("id", offer.waitlist_entry_id),
+    entry.intake_submission_id
+      ? admin
+          .from("intake_submissions")
+          .update({ status: "converted", reviewed_at: new Date().toISOString() })
+          .eq("tenant_id", offer.tenant_id)
+          .eq("id", entry.intake_submission_id)
+      : Promise.resolve(),
     writeAudit({
       tenantId: offer.tenant_id,
       waitlistEntryId: offer.waitlist_entry_id,

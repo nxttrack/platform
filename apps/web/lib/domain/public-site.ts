@@ -48,6 +48,7 @@ export type PublicProgram = ProgramRow & {
 
 export type PublicTenantSiteData = {
   tenant: PublicTenant;
+  analyticsMeasurementId: string | null;
   programs: PublicProgram[];
   defaultForm: PublicIntakeForm;
 };
@@ -78,6 +79,11 @@ type WaitlistPressureRow = {
   recommended_stage_id: string | null;
 };
 
+type PublicAnalyticsSettingsRow = {
+  analytics_enabled: boolean;
+  google_analytics_measurement_id: string | null;
+};
+
 export async function getPublicTenantSiteData(): Promise<PublicTenantSiteData | null> {
   const slug = await getTenantSlugFromRequest();
 
@@ -101,7 +107,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   }
 
   const tenant = tenantResult.data as PublicTenant;
-  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult] = await Promise.all([
+  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult, settingsResult] = await Promise.all([
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("program_stages").select("id, program_id, name, code, badge_label, color_hex, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("groups").select("id, program_id, stage_id, default_resource_id, name, code, status, capacity, default_weekday, default_start_time, default_end_time").eq("tenant_id", tenant.id).eq("status", "active"),
@@ -116,7 +122,12 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       .from("intake_questions")
       .select("id, form_id, field_key, label, help_text, field_type, required, options, applies_to_options, sort_order")
       .eq("tenant_id", tenant.id)
-      .order("sort_order")
+      .order("sort_order"),
+    admin
+      .from("tenant_settings")
+      .select("analytics_enabled, google_analytics_measurement_id")
+      .eq("tenant_id", tenant.id)
+      .maybeSingle()
   ]);
 
   assertPublicResult(programsResult.error, "programs");
@@ -126,6 +137,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   assertPublicResult(waitlistResult.error, "waitlist pressure");
   assertPublicResult(formsResult.error, "intake forms");
   assertPublicResult(questionsResult.error, "intake questions");
+  assertPublicResult(settingsResult.error, "analytics settings");
 
   const programs = (programsResult.data ?? []) as ProgramRow[];
   const stages = (stagesResult.data ?? []) as ProgramStageRow[];
@@ -134,12 +146,14 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   const waitlist = (waitlistResult.data ?? []) as WaitlistPressureRow[];
   const forms = (formsResult.data ?? []) as IntakeFormRow[];
   const questions = (questionsResult.data ?? []) as IntakeQuestionRow[];
+  const analyticsSettings = settingsResult.data as PublicAnalyticsSettingsRow | null;
   const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
   const formsByProgramId = new Map(forms.filter((form) => form.program_id).map((form) => [form.program_id as string, normalizeForm(form, questions)]));
   const defaultForm = normalizeForm(forms.find((form) => !form.program_id) ?? null, questions);
 
   return {
     tenant,
+    analyticsMeasurementId: analyticsSettings?.analytics_enabled ? analyticsSettings.google_analytics_measurement_id : null,
     defaultForm,
     programs: programs.map((program) => {
       const programGroups = groups.filter((group) => group.program_id === program.id);

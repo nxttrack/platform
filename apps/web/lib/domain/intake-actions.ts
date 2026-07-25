@@ -4,6 +4,7 @@ import { createHash, createHmac } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { normalizeAttribution, type AnalyticsConsent } from "@/lib/analytics/attribution";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "./core";
@@ -95,6 +96,18 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const secondaryParentEmail = normalizeOptionalEmail(readOptional(formData, "secondaryParentEmail"));
   const swimmingExperience = readOptional(formData, "swimmingExperience");
   const consentGiven = formData.get("consentGiven") === "on";
+  const analyticsConsent = readAnalyticsConsent(formData);
+  const attribution = normalizeAttribution({
+    source: readOptional(formData, "attributionSource"),
+    medium: readOptional(formData, "attributionMedium"),
+    campaign: readOptional(formData, "attributionCampaign"),
+    content: readOptional(formData, "attributionContent"),
+    term: readOptional(formData, "attributionTerm"),
+    referrerHost: readOptional(formData, "attributionReferrerHost"),
+    landingPath: readOptional(formData, "attributionLandingPath"),
+    hasAdClickId: readOptional(formData, "attributionHasAdClickId") === "true",
+    capturedAt: readOptional(formData, "attributionCapturedAt")
+  });
   const honeypot = readOptional(formData, "companyWebsite");
   const startedAt = Number(readOptional(formData, "formStartedAt"));
 
@@ -238,7 +251,19 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       dedupe_key: dedupeKey,
       duplicate_state: duplicate ? "possible_duplicate" : "unique",
       duplicate_of_submission_id: duplicate?.id ?? null,
-      abuse_fingerprint: abuseFingerprint
+      abuse_fingerprint: abuseFingerprint,
+      attribution_channel: attribution.channel,
+      attribution_source: attribution.source,
+      attribution_medium: attribution.medium,
+      attribution_campaign: attribution.campaign,
+      attribution_content: attribution.content,
+      attribution_term: attribution.term,
+      attribution_referrer_host: attribution.referrerHost,
+      attribution_landing_path: attribution.landingPath,
+      attribution_has_ad_click_id: attribution.hasAdClickId,
+      attribution_captured_at: attribution.capturedAt,
+      analytics_consent: analyticsConsent,
+      analytics_consent_version: "analytics-v1"
     })
     .select("id")
     .single();
@@ -290,7 +315,11 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       swimmingExperience,
       selectedGroupId: selectedRecommendation?.groupId ?? null,
       selectedWaitBand: selectedRecommendation?.waitBand ?? "long",
-      recommendationVersion: "intake-v1"
+      recommendationVersion: "intake-v1",
+      attributionChannel: attribution.channel,
+      attributionSource: attribution.source,
+      attributionCampaign: attribution.campaign,
+      analyticsConsent
     }
   });
 
@@ -299,6 +328,12 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   return { ok: true, reference: submissionId.slice(0, 8) };
+}
+
+function readAnalyticsConsent(formData: FormData): AnalyticsConsent {
+  const value = readOptional(formData, "analyticsConsent");
+
+  return value === "granted" || value === "denied" ? value : "unknown";
 }
 
 async function validateProgramAndForm(input: {

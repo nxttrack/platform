@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { normalizeAnalyticsMeasurementId } from "@/lib/analytics/attribution";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 
@@ -26,6 +27,13 @@ export async function saveTenantSettingsAction(formData: FormData) {
   const cutoffHours = readInt(formData, "lessonCancellationCutoffHours", 12, 0, 168);
   const creditWindowDays = readInt(formData, "lessonCancellationCreditWindowDays", 60, 1, 365);
   const grantsCredit = formData.get("lessonCancellationGrantsCredit") === "on";
+  const analyticsEnabled = formData.get("analyticsEnabled") === "on";
+  const analyticsMeasurementIdInput = readOptionalText(formData, "googleAnalyticsMeasurementId");
+  const analyticsMeasurementId = normalizeAnalyticsMeasurementId(analyticsMeasurementIdInput);
+
+  if ((analyticsMeasurementIdInput && !analyticsMeasurementId) || (analyticsEnabled && !analyticsMeasurementId)) {
+    redirect(`${settingsPath}?error=analytics_id`);
+  }
 
   const { error } = await admin.from("tenant_settings").upsert(
     {
@@ -35,7 +43,9 @@ export async function saveTenantSettingsAction(formData: FormData) {
       timezone,
       lesson_cancellation_cutoff_hours: cutoffHours,
       lesson_cancellation_credit_window_days: creditWindowDays,
-      lesson_cancellation_grants_credit: grantsCredit
+      lesson_cancellation_grants_credit: grantsCredit,
+      analytics_enabled: analyticsEnabled,
+      google_analytics_measurement_id: analyticsMeasurementId
     },
     { onConflict: "tenant_id" }
   );
@@ -47,6 +57,7 @@ export async function saveTenantSettingsAction(formData: FormData) {
   revalidatePath(settingsPath);
   revalidatePath("/portaal/profiel");
   revalidatePath("/portaal/lessen");
+  revalidatePath("/");
   redirect(`${settingsPath}?saved=1`);
 }
 
@@ -66,6 +77,12 @@ function readText(formData: FormData, key: string, fallback: string) {
   const trimmed = value.trim();
 
   return trimmed || fallback;
+}
+
+function readOptionalText(formData: FormData, key: string) {
+  const value = formData.get(key);
+
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function readInt(formData: FormData, key: string, fallback: number, min: number, max: number) {

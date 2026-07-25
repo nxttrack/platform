@@ -218,7 +218,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
       .limit(40),
     admin
       .from("intake_submissions")
-      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes, message, status, received_at")
+      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, secondary_parent_name, secondary_parent_email, secondary_parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, message, swimming_experience, recommendation_snapshot, selected_group_id, selected_wait_band, recommendation_version, status, received_at, duplicate_state, duplicate_of_submission_id, source, is_test, journey_run_id, attribution_channel, attribution_source, attribution_medium, attribution_campaign, attribution_content, attribution_term, attribution_referrer_host, attribution_landing_path, attribution_has_ad_click_id, attribution_captured_at, analytics_consent, analytics_consent_version")
       .eq("tenant_id", core.tenant.id)
       .order("received_at", { ascending: false }),
     admin
