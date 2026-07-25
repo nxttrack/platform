@@ -72,8 +72,8 @@ Tenantadmin- en tenantownerchecks dekken veel operationele acties gezamenlijk. `
 ## White-label en PWA
 
 - Tenantbranding bewaart productnaam, logo-URL, primaire/accentkleur, e-mailnaam/-footer,
-  portalwelkomsttekst, `custom_css`, PWA-toggle en status. UI schrijft een deel hiervan; actief gebruik
-  van `custom_css` is niet gevonden. `OBSERVED/INFERRED` `[E009]`
+  portalwelkomsttekst, `custom_css`, PWA-toggle en status. UI schrijft een deel hiervan, maar actief
+  gebruik van `custom_css` is niet gevonden. `CONFLICT` `[E009]`
 - Tenantdomeinen ondersteunen subdomein en custom domain met pending/verified/disabled status.
   Provisioning markeert alleen een `*.nxttrack.nl`-hoofddomein direct verified; een custom domain wordt
   pending aangemaakt. `OBSERVED` `[E005]`
@@ -145,4 +145,3 @@ flowchart LR
 
 Hostingprovider, fysieke VPS-locatie en contractuele leveranciersketen zijn niet uit code vastgesteld.
 `UNKNOWN` `[E013]`
-

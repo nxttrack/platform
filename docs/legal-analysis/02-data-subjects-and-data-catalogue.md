@@ -7,11 +7,11 @@
 | Minderjarige/deelnemer | Intakekandidaat, wachtlijst, leerling, examenkandidaat | Naam, geboortedatum, externe referentie, zwemervaring, programma/niveau/groep, leshistorie, aanwezigheid, voortgang, notities, badges, diploma’s, betaalrelaties. | `OBSERVED` `[E025]`, `[E026]`, `[E031]`, `[E032]` |
 | Ouder/verzorger | Intakecontact, account, vertegenwoordiger/betaler | Naam, e-mail, telefoon, Auth-ID, profiel/avatar, kindrelaties, voorkeuren, communicatie, annuleringen, betalingen/provider-ID’s. | `OBSERVED` `[E024]`, `[E025]`, `[E035]` |
 | Tweede verzorger | Optioneel intakecontact | Naam, e-mail en telefoon. Wordt bij live plaatsing niet automatisch als account of guardianlink verwerkt. | `CONFLICT` `[E026]` |
-| Zelfstandige leerling/athlete | Schema- en shellrol | Auth- en tenantlidmaatschapsgegevens zijn technisch mogelijk; geen normale uitnodigings- of participantkoppelflow gevonden. | `PLANNED/INFERRED` `[E006]` |
+| Zelfstandige leerling/athlete | Schema- en shellrol | Auth- en tenantlidmaatschapsgegevens zijn technisch mogelijk; geen normale uitnodigings- of participantkoppelflow gevonden. | `INFERRED` `[E006]` |
 | Instructeur | Medewerker die lessen en voortgang verwerkt | Naam, e-mail, telefoon/avatar, rollen, groeps-/sessietoewijzing, availability, actor-ID’s in presentie, voortgang en beoordelingen. | `OBSERVED` `[E024]`, `[E030]`, `[E031]` |
 | Tenantowner/admin/staff | Zwemschoolbeheer en operationele medewerkers | Account/profiel/rollen; actor-ID’s; ingevoerde berichten, taken, documenten, exports, imports, plaatsing, billing en configuratie. | `OBSERVED` `[E024]`, `[E033]`, `[E037]` |
 | Platformowner/admin/support | NXTTRACK-control-plane | Account/profiel/platformrol; actor-ID’s voor onboarding/offboarding/invites; technisch brede platform- en deels tenantinzage. | `OBSERVED` `[E006]`, `[E022]` |
-| Potentiële zakelijke klant | Demo/contact | Marketing-CTA opent `mailto:`; geen intern leadrecord uit dit formulier. De mailboxprovider en ontvangen inhoud zijn onbekend. | `OBSERVED/UNKNOWN` `[E063]` |
+| Potentiële zakelijke klant | Demo/contact | Marketing-CTA opent `mailto:`; geen intern leadrecord uit dit formulier. De mailboxprovider en ontvangen inhoud zijn `UNKNOWN`. | `OBSERVED` `[E063]` |
 | Financieel contact/betaler | Via guardian/billing | Bedragen, facturen, termijnen, provider customer/payment/mandate/refund/chargeback-ID’s en beperkte bankrekeningweergave. | `OBSERVED` `[E035]`, `[E036]` |
 | Synthetische testpersoon | Journey Bot/seed/E2E | Realistisch ogende maar gemarkeerde testnaam, DOB, telefoon, adres, `.test`-e-mail en volledige leer-/betaalreis zonder echte verzending/betaling. | `OBSERVED` `[E041]` |
 
@@ -82,7 +82,7 @@ app-storegebruiker is niet als actieve productcategorie aangetroffen.
 Gezondheid/medische gegevens, allergieën, noodcontacten, geslacht/aanspreekvorm, religie/etniciteit,
 beperkingen, biometrie, BSN/nationaal identificatienummer, precieze GPS, zelfreflectie, leerwensen,
 supporttickets en klachten zijn niet als gerichte productvelden of actieve flows gevonden.
-`OBSERVED absence` `[E042]`
+`OBSERVED` (afwezigheid in de onderzochte actieve velden en flows) `[E042]`
 
 Dit sluit invoer in vrije tekst, bestanden of externe provideraccounts niet uit.
 
@@ -97,4 +97,3 @@ Dit sluit invoer in vrije tekst, bestanden of externe provideraccounts niet uit.
    tenant of gebruiker gebonden en heeft geen verval/verwijderknop. `[E053]`
 5. Juridische classificatie, verplichte/optionele velden, doeleinden en termijnen per categorie zijn
    `OWNER DECISION REQUIRED`.
-

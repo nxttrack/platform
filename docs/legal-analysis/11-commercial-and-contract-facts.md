@@ -10,7 +10,7 @@ De prijskaart toont drie redactionele labels:
 | Groei | Start + wachtrijbeheer, diplomakluis, communicatiehub, websitemodules, rapportages, rollen/rechten | `Op aanvraag`; “Meest gekozen” |
 | Pro | Multi-location, geavanceerde planning, custom rollen, audit-log, priority support, integraties op roadmap, custom onboarding | `Op aanvraag` |
 
-`OBSERVED editorial` `[E061]`
+`OBSERVED` als redactionele content `[E061]`
 
 Er is geen SaaS-plan-/entitlementtabel of runtimegate gevonden die Start/Groei/Pro afdwingt. Geen
 NXTTRACK-klantfacturering, trial, automatische renewal, upgrade/downgrade of SaaS-refundlogica is
@@ -110,4 +110,3 @@ planhandhaving of usagebilling is gevonden.
 - aansprakelijkheid, vrijwaring, verzekering, overmacht, toepasselijk recht en geschillen.
 
 Er is geen `LICENSE`, `COPYING` of `NOTICE` met klantgerichte licentievoorwaarden aangetroffen.
-

@@ -36,8 +36,8 @@ en cross-domainconfig zijn `UNKNOWN`.
 | `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `utm_term` | First-touch en intakeattributie | Wordt gesanitized; waarden met e-mail/telefoonpatroon worden geweigerd, maar campagnevelden kunnen indirect identificerend zijn | `OBSERVED` `[E028]` |
 | `gclid`, `dclid`, `wbraid`, `gbraid`, `msclkid` | Kanaalclassificatie | Alleen aanwezigheid als boolean; waarde niet opgeslagen | `OBSERVED` `[E028]` |
 | `/intake?ontvangen=1&referentie=<8 tekens>` | Successstate en GA lead-dedupe | Referentie is korte intake-ID-prefix en kan binnen NXTTRACK koppelbaar zijn; URL kan in historie/logs staan | `OBSERVED` `[E052]` |
-| Wachtwoordreset-URL met `email=` | Resetformulier vooraf invullen | E-mailadres staat in URL/browserhistorie/referrercontext | `OBSERVED risk` `[E078]` |
-| Plaatsingsaanbod-token in URL | Ouder accepteert/weigert zonder login | Bearer secret staat plaintext in e-maillink; adminredirect nestelt de volledige link in query | `OBSERVED risk` `[E067]` |
+| Wachtwoordreset-URL met `email=` | Resetformulier vooraf invullen | E-mailadres staat in URL/browserhistorie/referrercontext | `OBSERVED` risico `[E078]` |
+| Plaatsingsaanbod-token in URL | Ouder accepteert/weigert zonder login | Bearer secret staat plaintext in e-maillink; adminredirect nestelt de volledige link in query | `OBSERVED` risico `[E067]` |
 | Mollie checkout/return URLs | Providercheckout en terugkeer | Provider/sessionlink en statuscontext; exacte providerquery door Mollie bepaald | `OBSERVED` `[E036]` |
 | `next=` | Veilige relatieve post-loginredirect | Pad, geen formdata; sanitizer beperkt externe redirect | `OBSERVED` `[E045]` |
 
@@ -67,4 +67,3 @@ en cross-domainconfig zijn `UNKNOWN`.
 3. Bepaal bewaartermijn en grondslag voor first-party leadattributie los van GA-consent.
 4. Scope saved views aan gebruiker én tenant, maak wissen mogelijk en voorkom persistente PII-filters.
 5. Verwijder e-mail/bearer secrets uit URLs waar mogelijk en stel referrer/cacheheaders expliciet in.
-

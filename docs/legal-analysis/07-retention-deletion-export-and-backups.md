@@ -11,13 +11,13 @@
 | Slot offer | Standaard 7 dagen | Applicatie beoordeelt expiry/status; geen purge gevonden | Expiry, geen retentie. `OBSERVED` `[E067]` |
 | Payment session | Appfallback circa 24 uur | Provider/checkoutexpiry en status; geen purge | Expiry, geen retentie. `OBSERVED` `[E036]` |
 | Inhaalcredit | Tenantinstelling 1–365 dagen, standaard 60 | `expires_on` en status mogelijk; record blijft bestaan | Configurabele businessexpiry. `OBSERVED` `[E064]` |
-| Journey Bot cleanup | Config 1–365 dagen, standaard 14 | Geen automatische scheduler voor cleanup gevonden; handmatige actie soft-archiveert data | `PLANNED/CONFLICT` `[E069]` |
+| Journey Bot cleanup | Config 1–365 dagen, standaard 14 | Geen automatische scheduler voor cleanup gevonden; handmatige actie soft-archiveert data | `CONFLICT` `[E069]` |
 | Tenantoffboarding | Operator kiest 30–365 dagen | Na export schorsing; na afloop owner approval + bevestigde delete | Geïmplementeerde minimale wachttermijn. `OBSERVED` `[E038]` |
 | GitHub staging/releasebewijs | Vaak 14 dagen | Artifactplatform verwijdert na workflowretentie | Geconfigureerd. `OBSERVED` `[E058]` |
 | GitHub productiereleasebewijs | 90 dagen | Artifactretentie in deployworkflow | Geconfigureerd. `OBSERVED` `[E058]` |
 | Versleutelde Storage-back-up | 30 dagen | Handmatig gemaakte GitHub artifact | Geconfigureerd, workflow niet scheduled. `OBSERVED` `[E058]` |
 | Operationele logs | `LOG_RETENTION_DAYS` wordt gevalideerd/gedocumenteerd | Geen app-, DB-, journald- of Caddy-pruning door deze variabele gevonden | `CONFLICT` `[E071]` |
-| Supabase managed DB-back-up | Bestaande docs noemen verschillende momentopnames/planvoorwaarden | Huidige providerinstelling, frequentie, PITR en Auth-dekking niet uit repo bewezen | `UNKNOWN/CONFLICT` `[E080]` |
+| Supabase managed DB-back-up | Bestaande docs noemen verschillende momentopnames/planvoorwaarden | Huidige providerinstelling, frequentie, PITR en Auth-dekking niet uit repo bewezen | `CONFLICT` `[E080]` |
 
 ## Categorieën zonder aangetroffen bewaartermijn
 
@@ -75,7 +75,7 @@ de botgemaakte Authuser, profiel en securityrow worden niet verwijderd. `[E069]`
 - Tombstone bewaart voormalige tenantnaam/slug zonder eigen expiry; de naam kan bij een eenmanszaak
   persoonsgegeven zijn.
 
-`CONFLICT / immediate lifecycle risk` `[E070]`
+`CONFLICT` met een direct lifecycle-risico `[E070]`
 
 ## Individuele verwijdering
 
@@ -119,7 +119,7 @@ zonder dashboardbewijs `UNKNOWN`. `[E080]`
 - Het runbook noemt 30 dagen GitHubretentie als eerste route en vereist nog een goedgekeurde immutable
   lange-termijnbestemming, schedule en RPO.
 
-`OBSERVED manual / PLANNED operational schedule` `[E058]`
+De handmatige workflow is `OBSERVED`; een operationeel schema is `PLANNED`. `[E058]`
 
 ### Verwijdering uit back-ups
 
@@ -132,4 +132,3 @@ Geen policy of code is gevonden voor:
 - bewijs dat externe providerback-ups hetzelfde volgen.
 
 `OWNER DECISION REQUIRED`.
-

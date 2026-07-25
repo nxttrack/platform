@@ -21,16 +21,16 @@ Dit is geen formele DPIA en geen oordeel dat een DPIA wel of niet verplicht is.
 
 | Proces | Input | Output/gevolg | Menselijke stap/override | Logging | Echte of synthetische data | Status |
 |---|---|---|---|---|---|---|
-| Publieke top-3 intakeaanbeveling | Zwemervaring, voorkeursdagen/dagdelen, niveaus, slots, kwalitatieve wait band | Maximaal drie tijd-/niveauopties met rank/reasons; ouder kiest | Ouder kiest; staff moet later converteren/plaatsen | Snapshot, versie en redenen in intake | Echt bij live intake | `OBSERVED advisory` `[E066]` |
+| Publieke top-3 intakeaanbeveling | Zwemervaring, voorkeursdagen/dagdelen, niveaus, slots, kwalitatieve wait band | Maximaal drie tijd-/niveauopties met rank/reasons; ouder kiest | Ouder kiest; staff moet later converteren/plaatsen | Snapshot, versie en redenen in intake | Echt bij live intake | `OBSERVED` advies `[E066]` |
 | Wait-bandberekening | Groepscapaciteit + actieve memberships/wachtlijstdruk | `short`, `medium`, `long`; geen publiek aantal | Staff beheert groep/capaciteit | Geselecteerde band/snapshot | Echt | `OBSERVED` `[E029]` |
-| Backoffice placement score | Beschikbare capaciteit, niveau-match, dagvoorkeur | Scores/redenen per groep | Staff start scoring, kiest groep en verstuurt aanbod | `placement_scores` + audit event | Echt | `OBSERVED advisory` `[E029]` |
+| Backoffice placement score | Beschikbare capaciteit, niveau-match, dagvoorkeur | Scores/redenen per groep | Staff start scoring, kiest groep en verstuurt aanbod | `placement_scores` + audit event | Echt | `OBSERVED` advies `[E029]` |
 | Dedupe/rate-limit intake | E-mail, genormaliseerde kindnaam, programma/optie; IP+UA hash | Existing reference, possible duplicate of busy response | Staff kan duplicate bevestigen/dismissen | Dedupe state + event | Echt | `OBSERVED` `[E027]` |
-| Aanbodacceptatie | Bearer token, offer/group capacity/status | Participant, enrollment, membership en guardianlink | Ouder klikt; staff maakte aanbod | Offer/audit/status | Echt | `OBSERVED consequential` `[E067]` |
+| Aanbodacceptatie | Bearer token, offer/group capacity/status | Participant, enrollment, membership en guardianlink | Ouder klikt; staff maakte aanbod | Offer/audit/status | Echt | `OBSERVED` met operationele gevolgen `[E067]` |
 | Lescredit | Annuleringstijd t.o.v. tenantcutoff | Eligible/late en eventueel credit met expiry | Ouder initieert; staff kan beheer uitvoeren | Cancellation/credit rows | Echt | `OBSERVED` `[E064]` |
-| Diplomacertificaat | Menselijk ingevoerd readiness/eventresultaat `passed` | Certificaatrecord/notificatie | Instructeur/staff beoordeelt en registreert; geen AI | Graduation/certificate/notificatie | Echt | `OBSERVED human-led` `[E032]` |
-| Mollie checkout/incasso | Abonnement, bedrag, providerconfig, mandate, prenotice, flags | Providerpayment en lokale status; retries/refunds/chargebacks mogelijk | Tenant configureert; ouder mandate/first payment; admin refund; automatische incasso kan gevolgen hebben | Uitgebreide provider/billingevents/idempotency | Echt indien provider live | `OBSERVED config-dependent` `[E036]` |
-| Automation builder | Regel event/action/config/status | Alleen regelconfig; geen aangetroffen executor/run | Admin kan status wijzigen | `automation_rules`; runmodel ongebruikt | Potentieel echt | `PLANNED/CONFLICT` `[E040]` |
-| Journey Bot | Synthetisch profiel, scenario, programma/rooster, randomseed | Volledige geautomatiseerde intake→diploma A/B/C testjourney en issues | Platformtestoperator start/stop/reset | Run/child/events/issues + producttestmarkers | Synthetisch | `OBSERVED test-only intent` `[E041]` |
+| Diplomacertificaat | Menselijk ingevoerd readiness/eventresultaat `passed` | Certificaatrecord/notificatie | Instructeur/staff beoordeelt en registreert; geen AI | Graduation/certificate/notificatie | Echt | `OBSERVED` en menselijk gestuurd `[E032]` |
+| Mollie checkout/incasso | Abonnement, bedrag, providerconfig, mandate, prenotice, flags | Providerpayment en lokale status; retries/refunds/chargebacks mogelijk | Tenant configureert; ouder mandate/first payment; admin refund; automatische incasso kan gevolgen hebben | Uitgebreide provider/billingevents/idempotency | Echt indien provider live | `OBSERVED` en configuratie-afhankelijk `[E036]` |
+| Automation builder | Regel event/action/config/status | Alleen regelconfig; geen aangetroffen executor/run | Admin kan status wijzigen | `automation_rules`; runmodel ongebruikt | Potentieel echt | `CONFLICT` tussen UI/schema en ontbrekende executor `[E040]` |
+| Journey Bot | Synthetisch profiel, scenario, programma/rooster, randomseed | Volledige geautomatiseerde intake→diploma A/B/C testjourney en issues | Platformtestoperator start/stop/reset | Run/child/events/issues + producttestmarkers | Synthetisch | `OBSERVED` met test-only intent `[E041]` |
 
 ## Uitlegbaarheid en correctie
 
@@ -84,4 +84,3 @@ Dit is geen formele DPIA en geen oordeel dat een DPIA wel of niet verplicht is.
 5. Termijnen, toegangsmatrix, training en toetsing van instructorvrije tekst.
 6. Klacht-/bezwaar-/correctieroute voor ouders en passende informatie voor kinderen.
 7. Besluit of media, production Journey Bot, automation executor of nieuwe AI vóór launch actief mag zijn.
-

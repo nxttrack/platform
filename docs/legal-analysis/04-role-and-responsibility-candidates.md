@@ -8,11 +8,11 @@ recht zijn niet onderzocht; geen rij is een juridisch oordeel.
 | Actor | Technisch waargenomen handelingen | Status |
 |---|---|---|
 | Zwemschool/tenant | Bepaalt programma’s, intakevragen, groepen, medewerkers, ouder-/kinddossiers, beoordelingen, communicatie, documenten, betaalplannen, Mollieconfig en tenant-GA4. | `OBSERVED` `[E072]` |
-| DG Webservices/NXTTRACK | Bouwt/host de app, beheert control-plane, globale mailconfig, onboarding/offboarding, deploy, monitoring, back-upcode en platform-GA4. Exacte juridische entiteit is onbekend. | `OBSERVED/UNKNOWN` `[E073]` |
+| DG Webservices/NXTTRACK | Bouwt/host de app, beheert control-plane, globale mailconfig, onboarding/offboarding, deploy, monitoring, back-upcode en platform-GA4. De exacte juridische entiteit is `UNKNOWN`. | `OBSERVED` `[E073]` |
 | Ouder/verzorger | Levert intakegegevens, kan aanbod accepteren, profiel aanpassen, les annuleren en betaal-/mandaatinteracties uitvoeren. | `OBSERVED` `[E074]` |
 | Instructeur/medewerker | Registreert aanwezigheid, notities, scores, badges en readiness/resultaten binnen toegewezen of tenantbrede rechten. | `OBSERVED` `[E075]` |
 | Platformsupport | Heeft een platformrol en kan technisch via UI/RLS brede metadata en delen van tenantdata zien; geen impersonatie of JIT-goedkeuring gevonden. | `OBSERVED` `[E022]` |
-| Leveranciers | Ontvangen gegevens via de in hoofdstuk 05 bewezen integratiepunten; contractuele rol en keten zijn onbekend. | `OBSERVED/UNKNOWN` `[E054]`–`[E058]` |
+| Leveranciers | Ontvangen gegevens via de in hoofdstuk 05 bewezen integratiepunten; contractuele rol en keten zijn `UNKNOWN`. | `OBSERVED` `[E054]`–`[E058]` |
 
 ## Kandidaten per verwerking
 
@@ -56,4 +56,3 @@ De volgende feiten vragen expliciete contractuele duiding:
   webhookaccounts.
 - Geen bewijs dat de zwemschool of NXTTRACK voor ieder proces definitief
   verwerkingsverantwoordelijke/verwerker is.
-

@@ -23,7 +23,7 @@ gecertificeerd compliant is.
 | Back-up | Storage encrypt-before-upload, checksummanifest, no-overwrite restore | `OBSERVED` `[E058]` |
 | CI | Typecheck/build, dependency audit high, auth/RLS/migration audits, E2E/axe/smokes en exact-SHA releasebewijs | `OBSERVED` `[E084]` |
 | Deploy | GitHub Environment, handmatige targetkeuze, standalone release, atomic symlink, systemd/Caddy health en rollbackrunbooks | `OBSERVED` `[E004]` |
-| Monitoring | 15-min schedulecode voor health/routes/assets/mail/billing; read-only aggregates; secrets in errors geredigeerd | `OBSERVED capability` `[E071]` |
+| Monitoring | 15-min schedulecode voor health/routes/assets/mail/billing; read-only aggregates; secrets in errors geredigeerd | `OBSERVED` capability `[E071]` |
 
 Encryptie-at-rest voor Supabase, GitHub en VPS is niet vanuit applicatiecode bewezen. Alleen
 mailsecret- en Storage-back-upencryptie zijn concreet aangetroffen.
@@ -49,8 +49,8 @@ mailsecret- en Storage-back-upencryptie zijn concreet aangetroffen.
 Nieuwe users zijn direct e-mailbevestigd, krijgen een actieve membership en ontvangen een tijdelijk
 wachtwoord per e-mail. `mustChangePassword` wordt alleen door de private-pageguard afgedwongen; directe
 GET-API’s voor private bestanden en offboardingexport gebruiken een authcontext zonder die check.
-Uitnodigingsexpiry wordt niet in access/login afgedwongen. `OBSERVED + INFERRED exploitability`
-`[E048]`
+Dat uitnodigingsexpiry niet in access/login wordt afgedwongen is `OBSERVED`; de misbruikbaarheid
+daarvan is `INFERRED`. `[E048]`
 
 ### 2. Sessiebeheer
 
@@ -132,4 +132,3 @@ Repositorycode bewijst niet:
 - periodieke pentests of vulnerabilitymanagement buiten dependency audit;
 - provideraccount-MFA en sleutelrotatie;
 - datalekregister, oefenfrequentie of formele meldprocedure.
-

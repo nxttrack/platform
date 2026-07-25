@@ -5,7 +5,7 @@
 | Toestemming/keuze | Vastlegging | Intrekken/wijzigen | Tekortkoming | Status |
 |---|---|---|---|---|
 | Publieke intake “contact en planning” | Vereiste checkbox; DB `consent_given` boolean | Geen self-service withdrawal of wijziging | Geen tekst-/purposeversion, timestamp of immutable history; checkbox is geen juridische conclusie | `OBSERVED` `[E087]` |
-| Analytics | localStorage `granted/denied`; intake bewaart status + `analytics-v1` | Cookievoorkeur opent opnieuw; deny wist bereikbare GA-cookies | Browserkeuze heeft geen timestamp/expiry/serverreceipt; first-touch sessionStorage wordt bij revoke niet gewist | `OBSERVED/CONFLICT` `[E052]` |
+| Analytics | localStorage `granted/denied`; intake bewaart status + `analytics-v1` | Cookievoorkeur opent opnieuw; deny wist bereikbare GA-cookies | Browserkeuze heeft geen timestamp/expiry/serverreceipt; first-touch sessionStorage wordt bij revoke niet gewist | `CONFLICT` tussen gedeeltelijke intrekking en achterblijvende attributie `[E052]` |
 | First-party leadattributie | Werkelijke intake bewaart bron ook bij denied/unknown GA | Geen aparte opt-out/withdrawalflow | Doel, grondslag, disclosure en retentie los van GA `OWNER DECISION REQUIRED` | `OBSERVED` `[E028]` |
 | Media/foto/video | Schema met purpose, status, granted/withdrawn/expiry en evidence | Schema kan withdrawn bevatten | Geen UI/action/runtimecontrole; geen immutable versiegeschiedenis; tenantadmin kan wijzigen | `PLANNED` `[E039]` |
 | Mollie incasso | Consenttermsversion, initiated/recorded timestamps, source; provider mandate | Ouder kan eigen mandate met expliciete bevestiging revoken | Contracttekst/versionbeheer en externe providerretentie onbekend | `OBSERVED` `[E088]` |
@@ -35,7 +35,7 @@ Geen juridisch oordeel wordt gegeven over de geldigheid of noodzaak van toestemm
 | Correctie kinddossier | Niet aangetroffen | Staff kan operationele gegevens in hun schermen muteren | Geen rights workflow | Handmatig/productafhankelijk, geen verzoektracking |
 | Gegevensdownload/portabiliteit | Niet aangetroffen | Geen subjectexport | Platformadmin kan hele tenant-JSON downloaden | Tenantoffboarding is geen individueel recht. `[E059]`, `[E070]` |
 | Verwijdering persoon/account | Niet aangetroffen | Geen complete cascadeflow | Alleen gehele tenant na offboarding | Niet ondersteund als individueel proces. `[E059]` |
-| Beperking/bezwaar | Niet aangetroffen | Statussen/archief bestaan, niet als rightsproces | Niet aangetroffen | `UNKNOWN/ABSENT` |
+| Beperking/bezwaar | Niet aangetroffen | Statussen/archief bestaan, niet als rightsproces | Niet aangetroffen | `UNKNOWN` |
 | Intrekken analytics | Publieke cookievoorkeur | — | — | Ondersteund voor GA; first-party attributie blijft |
 | Intrekken media | Geen runtimeflow | Schema/policy zou guardian/adminmutatie toelaten | — | Schema-only |
 | Verwijderen foto/video | Geen specifieke kindmediaflow | Generic documentdelete mogelijk voor staff | — | Geen rightsproces |
@@ -68,4 +68,3 @@ Procesaudits bestaan, maar vormen geen DSAR-register. `OWNER DECISION REQUIRED`.
    leveranciers afdekt.
 5. Bepaal of tenant of NXTTRACK eerste aanspreekpunt is per verzoek en hoe identiteit/deadlines/escalatie
    worden beheerd.
-
