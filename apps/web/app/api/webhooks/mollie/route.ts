@@ -326,6 +326,8 @@ async function recordCollectionFailure(input: {
     related_participant_id: input.session.participant_id,
     title: "Mislukte incasso opvolgen",
     description: `${message} De betaling blijft openstaan; controleer de machtiging en plan zo nodig een nieuwe poging.`,
+    content_classification: "personal",
+    classification_reasons: ["financial_participant_follow_up"],
     priority: "high",
     status: "open",
     due_on: new Date().toISOString().slice(0, 10)

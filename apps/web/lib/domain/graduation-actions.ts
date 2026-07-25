@@ -238,6 +238,12 @@ export async function uploadCertificateFileAction(formData: FormData) {
     redirect("/admin/afzwemmen?error=certificate");
   }
 
+  await admin
+    .from("certificate_records")
+    .update({ malware_scan_status: "pending" })
+    .eq("tenant_id", tenant.id)
+    .eq("id", certificateId);
+
   let upload: Awaited<ReturnType<typeof uploadCertificateFile>>;
 
   try {
@@ -247,6 +253,11 @@ export async function uploadCertificateFileAction(formData: FormData) {
       tenantId: tenant.id
     });
   } catch {
+    await admin
+      .from("certificate_records")
+      .update({ malware_scan_status: "failed" })
+      .eq("tenant_id", tenant.id)
+      .eq("id", certificateId);
     redirect("/admin/afzwemmen?error=file_upload");
   }
 
@@ -259,6 +270,12 @@ export async function uploadCertificateFileAction(formData: FormData) {
       size_bytes: upload.sizeBytes,
       storage_bucket: upload.storageBucket,
       storage_status: "stored",
+      content_classification: "personal",
+      classification_reasons: ["certificate_record"],
+      file_sha256: upload.scan.sha256,
+      malware_scan_engine: upload.scan.engine,
+      malware_scan_status: upload.scan.status,
+      malware_scanned_at: upload.scan.scannedAt,
       uploaded_at: new Date().toISOString()
     })
     .eq("tenant_id", tenant.id)

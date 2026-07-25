@@ -201,6 +201,8 @@ async function syncChargeback(session: FinancialSession, expectedPaymentId: stri
       related_participant_id: session.participant_id,
       title: "Stornering opvolgen",
       description: `Mollie-chargeback ${chargeback.id} van ${formatMoney(amountCents, chargeback.amount.currency)} controleren en administratief verwerken.`,
+      content_classification: "personal",
+      classification_reasons: ["financial_participant_follow_up"],
       priority: "urgent",
       status: "open",
       due_on: new Date().toISOString().slice(0, 10)

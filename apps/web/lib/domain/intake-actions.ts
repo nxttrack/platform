@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { normalizeAttribution, type AnalyticsConsent } from "@/lib/analytics/attribution";
+import { classifyContent } from "@/lib/security/content-classification";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "./core";
@@ -68,6 +69,8 @@ export async function updateIntakeDuplicateStateAction(formData: FormData) {
     event_type: `intake.duplicate_${duplicateState === "dismissed" ? "dismissed" : "confirmed"}`,
     subject_type: "intake_submission",
     subject_id: submissionId,
+    content_classification: "personal",
+    classification_reasons: ["intake_review_actor"],
     payload: { reviewedByUserId: context.user.id }
   });
 
@@ -183,6 +186,22 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   });
   const selectedGroupId = readOptional(formData, "selectedGroupId");
   const selectedRecommendation = recommendations.find((recommendation) => recommendation.groupId === selectedGroupId) ?? null;
+  const preferredNotes = readOptional(formData, "preferredNotes");
+  const message = readOptional(formData, "message");
+  const classification = classifyContent(
+    {
+      parentName,
+      parentEmail,
+      participantName,
+      participantBirthDate,
+      preferredNotes,
+      message,
+      secondaryParentEmail,
+      secondaryParentName,
+      swimmingExperience
+    },
+    "personal"
+  );
 
   if (publicProgram.slots.length > 0 && (preferredWeekdays.length === 0 || recommendations.length === 0 || !selectedRecommendation)) {
     return { ok: false, error: "choice" };
@@ -229,8 +248,10 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       participant_birth_date: participantBirthDate,
       preferred_days: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
       preferred_dayparts: preferredDayparts,
-      preferred_notes: readOptional(formData, "preferredNotes"),
-      message: readOptional(formData, "message"),
+      preferred_notes: preferredNotes,
+      message,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
       swimming_experience: swimmingExperience,
       recommendation_snapshot: recommendations.map((recommendation) => ({
         groupId: recommendation.groupId,
@@ -282,6 +303,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
 
     return [
       {
+        ...classificationColumns(answer),
         tenant_id: tenant.id,
         submission_id: submissionId,
         question_id: question.id,
@@ -305,6 +327,8 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     event_type: "intake.received",
     subject_type: "intake_submission",
     subject_id: submissionId,
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
     payload: {
       selectedOption,
       parentEmail,
@@ -328,6 +352,15 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   return { ok: true, reference: submissionId.slice(0, 8) };
+}
+
+function classificationColumns(value: unknown) {
+  const classification = classifyContent(value, "personal");
+
+  return {
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons
+  };
 }
 
 function readAnalyticsConsent(formData: FormData): AnalyticsConsent {

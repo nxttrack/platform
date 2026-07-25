@@ -15,6 +15,7 @@ type CertificateDownloadRow = {
   status: string;
   storage_bucket: string | null;
   tenant_id: string;
+  malware_scan_status: string;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -29,7 +30,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("certificate_records")
-    .select("id, tenant_id, participant_id, status, file_path, storage_bucket")
+    .select("id, tenant_id, participant_id, status, file_path, storage_bucket, malware_scan_status")
     .eq("id", id)
     .maybeSingle();
 
@@ -57,6 +58,9 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!certificate.file_path) {
     return NextResponse.json({ error: "file_missing" }, { status: 404 });
   }
+  if (!hasDownloadableScan(certificate.malware_scan_status)) {
+    return NextResponse.json({ error: "file_scan_required" }, { status: 423 });
+  }
 
   const signedUrl = await createPrivateFileSignedUrl({
     bucket: certificate.storage_bucket ?? DIPLOMA_VAULT_BUCKET,
@@ -64,4 +68,8 @@ export async function GET(_request: Request, context: RouteContext) {
   });
 
   return NextResponse.redirect(signedUrl, { status: 302 });
+}
+
+function hasDownloadableScan(status: string) {
+  return status === "clean" || (process.env.NODE_ENV !== "production" && status === "not_required");
 }

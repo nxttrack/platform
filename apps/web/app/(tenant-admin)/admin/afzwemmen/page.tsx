@@ -251,7 +251,7 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
                                 <input name="certificateId" type="hidden" value={certificate.id} />
                                 <label className="space-y-2 text-sm font-semibold text-foreground">
                                   <span>Bestand</span>
-                                  <input className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" required type="file" />
+                                  <input accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" required type="file" />
                                 </label>
                                 <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
                                   <UploadCloud className="h-4 w-4" />

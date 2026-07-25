@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { classifyContent } from "@/lib/security/content-classification";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
 import { createTenantNotifications } from "./tenant-notifications";
@@ -239,6 +240,7 @@ export async function saveProgressNoteAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
+  const classification = classifyContent(note, "personal");
   const { error } = await admin.from("progress_notes").insert({
     tenant_id: tenant.id,
     participant_id: participantId,
@@ -247,6 +249,8 @@ export async function saveProgressNoteAction(formData: FormData) {
     instructor_user_id: context.user.id,
     visibility,
     note,
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
     status: "active"
   });
 

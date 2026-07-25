@@ -1,6 +1,7 @@
 import "server-only";
 
 import { Buffer } from "node:buffer";
+import { scanUpload, type MalwareScanEvidence } from "@/lib/security/malware-scanner";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const TENANT_DOCUMENTS_BUCKET = "tenant-documents";
@@ -13,6 +14,7 @@ export type PrivateFileUpload = {
   mimeType: string;
   sizeBytes: number;
   storageBucket: string;
+  scan: MalwareScanEvidence;
 };
 
 export async function uploadTenantDocumentFile(input: { documentId: string; file: File; tenantId: string }): Promise<PrivateFileUpload> {
@@ -66,6 +68,7 @@ function validatePrivateFile(file: File) {
 
 async function uploadPrivateFile(input: { bucket: string; file: File; path: string }): Promise<PrivateFileUpload> {
   validatePrivateFile(input.file);
+  const scan = await scanUpload(input.file, "private_document");
 
   const admin = createAdminClient();
   const { error } = await admin.storage.from(input.bucket).upload(input.path, Buffer.from(await input.file.arrayBuffer()), {
@@ -82,7 +85,8 @@ async function uploadPrivateFile(input: { bucket: string; file: File; path: stri
     filePath: input.path,
     mimeType: input.file.type,
     sizeBytes: input.file.size,
-    storageBucket: input.bucket
+    storageBucket: input.bucket,
+    scan
   };
 }
 

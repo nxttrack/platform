@@ -28,7 +28,7 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
           <form action={createAdminDocumentAction} className="grid gap-4" encType="multipart/form-data">
             <Field label="Titel" name="title" required placeholder="Lesvoorwaarden seizoen 2026" />
             <TextAreaField label="Omschrijving" name="description" />
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <SelectField label="Doelgroep" name="audience">
                 <option value="tenant_staff">Team</option>
                 <option value="instructors">Instructeurs</option>
@@ -43,10 +43,17 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
                 <option value="active">Actief</option>
                 <option value="archived">Archief</option>
               </SelectField>
+              <SelectField label="Dataclassificatie" name="contentClassification">
+                <option value="personal">Persoonsgegevens</option>
+                <option value="sensitive">Gevoelig</option>
+                <option value="restricted">Strikt beperkt</option>
+                <option value="operational">Operationeel</option>
+              </SelectField>
             </div>
             <label className="space-y-2 text-sm font-semibold text-foreground">
               <span>Bestand</span>
-              <input className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" type="file" />
+              <input accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" type="file" />
+              <span className="block text-xs font-normal text-muted-foreground">PDF, PNG, JPG, DOCX of XLSX. Publicatie volgt alleen na een schone malwarecontrole.</span>
             </label>
             <SubmitButton>
               <span className="inline-flex items-center gap-2">
@@ -76,13 +83,15 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
                       </p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      {document.file_path ? (
+                      {document.file_path && (document.malware_scan_status === "clean" || (process.env.NODE_ENV !== "production" && document.malware_scan_status === "not_required")) ? (
                         <Link className="inline-flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted" href={`/api/files/tenant-document/${document.id}`}>
                           <Download className="h-3.5 w-3.5" />
                           Download
                         </Link>
                       ) : null}
                       <StatusPill tone={document.storage_status === "stored" ? "success" : document.storage_status === "missing" ? "danger" : "neutral"}>{document.storage_status}</StatusPill>
+                      <StatusPill tone={document.malware_scan_status === "clean" ? "success" : "warning"}>{document.malware_scan_status}</StatusPill>
+                      <StatusPill tone={document.content_classification === "operational" ? "neutral" : document.content_classification === "personal" ? "info" : "warning"}>{document.content_classification}</StatusPill>
                       <StatusPill tone={document.visibility === "portal" ? "success" : "neutral"}>{document.visibility}</StatusPill>
                     </div>
                   </div>

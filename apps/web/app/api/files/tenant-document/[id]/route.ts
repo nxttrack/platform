@@ -17,6 +17,7 @@ type TenantDocumentDownloadRow = {
   storage_bucket: string | null;
   tenant_id: string;
   visibility: string;
+  malware_scan_status: string;
 };
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -31,7 +32,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("tenant_documents")
-    .select("id, tenant_id, audience, visibility, status, file_path, storage_bucket")
+    .select("id, tenant_id, audience, visibility, status, file_path, storage_bucket, malware_scan_status")
     .eq("id", id)
     .maybeSingle();
 
@@ -48,6 +49,9 @@ export async function GET(_request: Request, context: RouteContext) {
   if (!document.file_path) {
     return NextResponse.json({ error: "file_missing" }, { status: 404 });
   }
+  if (!hasDownloadableScan(document.malware_scan_status)) {
+    return NextResponse.json({ error: "file_scan_required" }, { status: 423 });
+  }
 
   const signedUrl = await createPrivateFileSignedUrl({
     bucket: document.storage_bucket ?? TENANT_DOCUMENTS_BUCKET,
@@ -55,6 +59,10 @@ export async function GET(_request: Request, context: RouteContext) {
   });
 
   return NextResponse.redirect(signedUrl, { status: 302 });
+}
+
+function hasDownloadableScan(status: string) {
+  return status === "clean" || (process.env.NODE_ENV !== "production" && status === "not_required");
 }
 
 function canDownloadDocument(auth: AuthenticatedTrustedAuthContext, document: TenantDocumentDownloadRow) {

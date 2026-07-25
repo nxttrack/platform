@@ -847,6 +847,8 @@ async function createBillingFollowUpTask(input: { description: string; participa
     related_participant_id: input.participantId,
     title: input.title,
     description: input.description,
+    content_classification: "personal",
+    classification_reasons: ["financial_participant_follow_up"],
     priority: input.priority,
     status: "open",
     due_on: new Date().toISOString().slice(0, 10)

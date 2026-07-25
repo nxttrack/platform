@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { classifyContent, sanitizeImportedCell, type ContentClassification } from "@/lib/security/content-classification";
+import { scanUpload } from "@/lib/security/malware-scanner";
 import { getActiveTenant } from "./core";
 
 const automationEvents = new Set(["no_show", "birthday", "milestone", "offer_expiring", "payment_failed", "long_absence", "graduation_ready"]);
@@ -15,13 +17,18 @@ export async function createAutomationRuleAction(formData: FormData) {
   const { tenant, userId } = await requireTenantAdmin("/admin/automatisering");
   const eventKey = readEnum(formData, "eventKey", automationEvents);
   const actionKey = readEnum(formData, "actionKey", automationActions);
+  const name = readRequired(formData, "name");
+  const message = readOptional(formData, "message");
+  const classification = classifyContent({ name, message });
   const admin = createAdminClient();
   const { error } = await admin.from("automation_rules").insert({
     tenant_id: tenant.id,
-    name: readRequired(formData, "name"),
+    name,
     event_key: eventKey,
     action_key: actionKey,
-    action_config: { message: readOptional(formData, "message") },
+    action_config: { message },
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
     status: formData.get("active") === "on" ? "active" : "draft",
     created_by_user_id: userId
   });
@@ -45,16 +52,25 @@ export async function createImportJobAction(formData: FormData) {
   const { tenant, userId } = await requireTenantAdmin("/admin/importeren");
   const file = formData.get("file");
   const importType = readEnum(formData, "importType", importTypes);
-  if (!(file instanceof File) || !file.name || file.size === 0 || file.size > 2_000_000) redirect("/admin/importeren?error=file");
+  if (!(file instanceof File) || !file.name.toLowerCase().endsWith(".csv") || file.size === 0 || file.size > 2_000_000) redirect("/admin/importeren?error=file");
+
+  let scan: Awaited<ReturnType<typeof scanUpload>>;
+  try {
+    scan = await scanUpload(file, "csv");
+  } catch {
+    redirect("/admin/importeren?error=malware_scan");
+  }
 
   const text = await file.text();
   const parsed = parseCsv(text);
   if (parsed.headers.length < 2 || parsed.rows.length === 0 || parsed.rows.length > 5_000) redirect("/admin/importeren?error=content");
+  const safeHeaders = parsed.headers.map((header) => sanitizeImportedCell(header, 120));
+  if (new Set(safeHeaders.map(normalizeHeader)).size !== safeHeaders.length) redirect("/admin/importeren?error=headers");
 
   const seen = new Set<string>();
   let duplicateCount = 0;
   const rows = parsed.rows.map((values, index) => {
-    const sourceData = Object.fromEntries(parsed.headers.map((header, column) => [header, values[column]?.trim() ?? ""]));
+    const sourceData = Object.fromEntries(safeHeaders.map((header, column) => [header, sanitizeImportedCell(values[column] ?? "")]));
     const duplicateKey = JSON.stringify(sourceData).toLocaleLowerCase("nl");
     const duplicate = seen.has(duplicateKey);
     seen.add(duplicateKey);
@@ -62,10 +78,12 @@ export async function createImportJobAction(formData: FormData) {
     if (duplicate) duplicateCount += 1;
     return { rowNumber: index + 2, sourceData, duplicateKey, status: duplicate ? "duplicate" : empty ? "invalid" : "pending", errors: empty ? ["Lege rij"] : [] };
   });
+  const baseline = importBaseline(importType);
+  const classification = classifyContent(rows.map((row) => row.sourceData), baseline);
 
   const admin = createAdminClient();
   const initialMapping = Object.fromEntries(getCanonicalFields(importType).map((field) => {
-    const matchedHeader = parsed.headers.find((header) => normalizeHeader(header) === normalizeHeader(field));
+    const matchedHeader = safeHeaders.find((header) => normalizeHeader(header) === normalizeHeader(field));
     return [field, matchedHeader ?? null];
   }));
   const jobResult = await admin.from("import_jobs").insert({
@@ -73,8 +91,14 @@ export async function createImportJobAction(formData: FormData) {
     import_type: importType,
     source_name: file.name,
     status: "mapping",
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
+    file_sha256: scan.sha256,
+    malware_scan_engine: scan.engine,
+    malware_scan_status: scan.status,
+    malware_scanned_at: scan.scannedAt,
     mapping: initialMapping,
-    summary: { delimiter: parsed.delimiter, headers: parsed.headers },
+    summary: { delimiter: parsed.delimiter, headers: safeHeaders },
     row_count: rows.length,
     valid_count: 0,
     invalid_count: rows.filter((row) => row.status === "invalid").length,
@@ -84,7 +108,21 @@ export async function createImportJobAction(formData: FormData) {
   if (jobResult.error || !jobResult.data) redirect("/admin/importeren?error=save");
 
   for (let index = 0; index < rows.length; index += 500) {
-    const chunk = rows.slice(index, index + 500).map((row) => ({ tenant_id: tenant.id, import_job_id: jobResult.data.id, row_number: row.rowNumber, source_data: row.sourceData, normalized_data: row.sourceData, validation_status: row.status, validation_errors: row.errors, duplicate_key: row.duplicateKey }));
+    const chunk = rows.slice(index, index + 500).map((row) => {
+      const rowClassification = classifyContent(row.sourceData, baseline);
+      return {
+        tenant_id: tenant.id,
+        import_job_id: jobResult.data.id,
+        row_number: row.rowNumber,
+        source_data: row.sourceData,
+        normalized_data: row.sourceData,
+        content_classification: rowClassification.classification,
+        classification_reasons: rowClassification.reasons,
+        validation_status: row.status,
+        validation_errors: row.errors,
+        duplicate_key: row.duplicateKey
+      };
+    });
     const { error } = await admin.from("import_rows").insert(chunk);
     if (error) {
       await admin.from("import_jobs").update({ status: "failed", summary: { error: "rows_not_saved" } }).eq("tenant_id", tenant.id).eq("id", jobResult.data.id);
@@ -95,6 +133,10 @@ export async function createImportJobAction(formData: FormData) {
   await admin.from("import_job_events").insert({ tenant_id: tenant.id, import_job_id: jobResult.data.id, event_type: "uploaded", actor_user_id: userId, details: { sourceName: file.name, rowCount: rows.length } });
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?saved=1&job=${jobResult.data.id}`);
+}
+
+function importBaseline(importType: string): ContentClassification {
+  return importType === "groups" ? "operational" : "personal";
 }
 
 export async function cancelImportJobAction(formData: FormData) {

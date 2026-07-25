@@ -48,6 +48,8 @@ export type AdminDocumentRow = {
   size_bytes: number | null;
   storage_bucket: string;
   storage_status: string;
+  content_classification: string;
+  malware_scan_status: string;
   uploaded_at: string | null;
   created_at: string;
   updated_at: string;
@@ -207,7 +209,7 @@ export async function getAdminOperationsData(): Promise<AdminOperationsData> {
       .order("created_at", { ascending: false }),
     admin
       .from("tenant_documents")
-      .select("id, uploaded_by_user_id, title, description, audience, visibility, status, file_name, file_path, mime_type, size_bytes, storage_bucket, storage_status, uploaded_at, created_at, updated_at")
+      .select("id, uploaded_by_user_id, title, description, audience, visibility, status, file_name, file_path, mime_type, size_bytes, storage_bucket, storage_status, content_classification, malware_scan_status, uploaded_at, created_at, updated_at")
       .eq("tenant_id", core.tenant.id)
       .order("created_at", { ascending: false }),
     admin

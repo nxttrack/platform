@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { sendTransactionalEmail } from "@/lib/email/transactional";
 import { renderNotificationEmail } from "@/lib/email/templates";
+import { classifyContent, parseContentClassification } from "@/lib/security/content-classification";
 import { getFileFromFormData, TENANT_DOCUMENTS_BUCKET, uploadTenantDocumentFile } from "@/lib/storage/private-files";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReportMetricsSnapshot, getAdminOperationsData } from "./admin-operations";
@@ -25,13 +26,18 @@ export async function createAdminMessageAction(formData: FormData) {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
   const status = readEnum(formData, "status", messageStatuses, "draft");
+  const title = readRequired(formData, "title");
+  const body = readRequired(formData, "body");
+  const classification = classifyContent({ title, body });
   const messageResult = await admin
     .from("tenant_messages")
     .insert({
       tenant_id: tenant.id,
       author_user_id: user.id,
-      title: readRequired(formData, "title"),
-      body: readRequired(formData, "body"),
+      title,
+      body,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
       audience: readEnum(formData, "audience", messageAudiences, "tenant_staff"),
       visibility: readEnum(formData, "visibility", messageVisibilities, "internal"),
       status,
@@ -63,15 +69,21 @@ export async function createAdminTaskAction(formData: FormData) {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
   const status = readEnum(formData, "status", taskStatuses, "open");
+  const title = readRequired(formData, "title");
+  const description = readOptional(formData, "description");
+  const relatedParticipantId = readOptional(formData, "relatedParticipantId");
+  const classification = classifyContent({ title, description }, relatedParticipantId ? "personal" : "operational");
   const taskResult = await admin
     .from("tenant_tasks")
     .insert({
       tenant_id: tenant.id,
       created_by_user_id: user.id,
       assigned_to_user_id: readOptional(formData, "assignedToUserId"),
-      related_participant_id: readOptional(formData, "relatedParticipantId"),
-      title: readRequired(formData, "title"),
-      description: readOptional(formData, "description"),
+      related_participant_id: relatedParticipantId,
+      title,
+      description,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
       priority: readEnum(formData, "priority", taskPriorities, "normal"),
       status,
       due_on: readOptional(formData, "dueOn"),
@@ -124,6 +136,10 @@ export async function createAdminDocumentAction(formData: FormData) {
   const admin = createAdminClient();
   const status = readEnum(formData, "status", documentStatuses, "active");
   const visibility = readEnum(formData, "visibility", documentVisibilities, "internal");
+  const title = readRequired(formData, "title");
+  const description = readOptional(formData, "description");
+  const requestedClassification = parseContentClassification(formData.get("contentClassification"), "personal");
+  const classification = classifyContent({ title, description }, requestedClassification);
   let file: File | null = null;
 
   try {
@@ -137,8 +153,10 @@ export async function createAdminDocumentAction(formData: FormData) {
     .insert({
       tenant_id: tenant.id,
       uploaded_by_user_id: user.id,
-      title: readRequired(formData, "title"),
-      description: readOptional(formData, "description"),
+      title,
+      description,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
       audience: readEnum(formData, "audience", documentAudiences, "tenant_staff"),
       visibility,
       status,
@@ -148,6 +166,7 @@ export async function createAdminDocumentAction(formData: FormData) {
       size_bytes: file?.size ?? readInteger(formData, "sizeBytes"),
       storage_bucket: TENANT_DOCUMENTS_BUCKET,
       storage_status: file ? "missing" : readOptional(formData, "filePath") ? "stored" : "metadata",
+      malware_scan_status: file ? "pending" : "not_required",
       uploaded_at: file ? new Date().toISOString() : null
     })
     .select("id, title, audience, visibility, status")
@@ -173,6 +192,10 @@ export async function createAdminDocumentAction(formData: FormData) {
           size_bytes: upload.sizeBytes,
           storage_bucket: upload.storageBucket,
           storage_status: "stored",
+          file_sha256: upload.scan.sha256,
+          malware_scan_engine: upload.scan.engine,
+          malware_scan_status: upload.scan.status,
+          malware_scanned_at: upload.scan.scannedAt,
           uploaded_at: new Date().toISOString()
         })
         .eq("tenant_id", tenant.id)
@@ -182,6 +205,11 @@ export async function createAdminDocumentAction(formData: FormData) {
         redirect("/admin/documenten?error=file_update");
       }
     } catch {
+      await admin
+        .from("tenant_documents")
+        .update({ malware_scan_status: "failed", storage_status: "missing" })
+        .eq("tenant_id", tenant.id)
+        .eq("id", documentResult.data.id);
       redirect("/admin/documenten?error=file_upload");
     }
   }
@@ -208,6 +236,7 @@ export async function createReportSnapshotAction(formData: FormData) {
   const reportKey = readEnum(formData, "reportKey", reportKeys, "operations");
   const snapshot = buildReportMetricsSnapshot(data, reportKey);
   const title = readOptional(formData, "title") ?? `${snapshot.key} snapshot`;
+  const classification = classifyContent({ title, metrics: snapshot.metrics });
   const snapshotResult = await admin
     .from("tenant_report_snapshots")
     .insert({
@@ -217,6 +246,8 @@ export async function createReportSnapshotAction(formData: FormData) {
       period_start: readOptional(formData, "periodStart"),
       period_end: readOptional(formData, "periodEnd"),
       metrics: snapshot.metrics,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
       generated_by_user_id: user.id,
       status: "active"
     })
