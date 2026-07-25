@@ -1,0 +1,304 @@
+{
+  "schema_version": "nxttrack-legal-facts-v1",
+  "generated_on": "2026-07-25",
+  "source": {
+    "branch": "docs/nxttrack-legal-facts-inventory",
+    "commit": "76f0a3f8cc28abab59fba06ff40e03fbea7c6a5f",
+    "scope": "repository-only, no production records or external account state",
+    "evidence_index": "docs/legal-analysis/13-evidence-index.csv"
+  },
+  "product": {
+    "id": "product-nxttrack",
+    "name": "NXTTRACK",
+    "description": "Multi-tenant SaaS-platform for swim-school intake, planning, family portal, instruction, progress, graduation, communication and billing.",
+    "status": "OBSERVED",
+    "confidence": "high",
+    "evidence": ["E001", "E002", "E003"]
+  },
+  "legal_entities_unknown": [
+    {
+      "id": "unknown-legal-supplier",
+      "question": "Which legal entity supplies NXTTRACK and what are its registration, address, privacy and security contact details?",
+      "status": "UNKNOWN",
+      "evidence": ["E073"]
+    },
+    {
+      "id": "unknown-provider-account-owners",
+      "question": "Which legal entity owns each Supabase, SendGrid/SMTP, Mollie, Google, GitHub, hosting and alert account?",
+      "status": "UNKNOWN",
+      "evidence": ["E054", "E055", "E036", "E056", "E057", "E058"]
+    }
+  ],
+  "applications": [
+    {
+      "id": "app-web",
+      "path": "apps/web",
+      "type": "Next.js App Router web application",
+      "portals": ["marketing", "tenant_public", "parent", "instructor", "tenant_admin", "platform_admin"],
+      "status": "OBSERVED",
+      "evidence": ["E001", "E002"]
+    }
+  ],
+  "environments": [
+    {
+      "id": "env-development",
+      "name": "development",
+      "runtime_state": "UNKNOWN",
+      "evidence": ["E011"]
+    },
+    {
+      "id": "env-staging",
+      "name": "staging",
+      "purpose": ["release validation", "synthetic seeds", "Journey Bot", "provider rehearsals"],
+      "runtime_state": "not externally inspected",
+      "evidence": ["E004", "E011", "E012"]
+    },
+    {
+      "id": "env-production",
+      "name": "production",
+      "purpose": ["customer runtime"],
+      "runtime_state": "current SHA, database contents and enabled provider flags UNKNOWN",
+      "evidence": ["E011", "E013"]
+    }
+  ],
+  "tenants": {
+    "model": "hostname-resolved tenant with UUID tenant_id, tenant domains, memberships and RLS",
+    "domain_kinds": ["subdomain", "custom_domain"],
+    "isolation_measures": ["tenant_id", "composite foreign keys", "RLS", "FORCE RLS", "server guards"],
+    "server_admin_bypass": true,
+    "custom_domain_end_to_end_status": "CONFLICT",
+    "evidence": ["E005", "E008", "E021", "E091"]
+  },
+  "roles": [
+    {"id": "role-platform-owner", "name": "platform_owner", "scope": "platform", "evidence": ["E006"]},
+    {"id": "role-platform-admin", "name": "platform_admin", "scope": "platform", "evidence": ["E006"]},
+    {"id": "role-platform-support", "name": "platform_support", "scope": "platform and broad read paths", "evidence": ["E006", "E022"]},
+    {"id": "role-tenant-owner", "name": "tenant_owner", "scope": "tenant admin", "evidence": ["E006"]},
+    {"id": "role-tenant-admin", "name": "tenant_admin", "scope": "tenant admin", "evidence": ["E006"]},
+    {"id": "role-tenant-staff", "name": "tenant_staff", "scope": "full admin shell and instructor shell", "evidence": ["E006", "E022"]},
+    {"id": "role-instructor", "name": "instructor", "scope": "assigned instruction", "evidence": ["E006", "E075"]},
+    {"id": "role-parent", "name": "parent", "scope": "linked participant portal", "evidence": ["E006", "E074"]},
+    {"id": "role-athlete", "name": "athlete", "scope": "parent portal technically allowed; normal invite lifecycle incomplete", "status": "INFERRED", "evidence": ["E006"]}
+  ],
+  "data_subjects": [
+    {"id": "subject-child", "name": "minor participant or intake candidate", "evidence": ["E025", "E026"]},
+    {"id": "subject-guardian", "name": "parent or guardian", "evidence": ["E024", "E025"]},
+    {"id": "subject-second-guardian", "name": "optional secondary intake guardian", "status": "CONFLICT", "evidence": ["E026"]},
+    {"id": "subject-instructor", "name": "instructor", "evidence": ["E024", "E075"]},
+    {"id": "subject-tenant-worker", "name": "tenant owner, admin or staff", "evidence": ["E006", "E072"]},
+    {"id": "subject-platform-worker", "name": "platform owner, admin or support", "evidence": ["E006", "E073"]},
+    {"id": "subject-prospect", "name": "business demo/contact prospect", "evidence": ["E063"]},
+    {"id": "subject-payer", "name": "guardian or financial payer", "evidence": ["E035", "E036"]},
+    {"id": "subject-synthetic", "name": "synthetic test identity", "status": "OBSERVED_TEST_ONLY", "evidence": ["E041", "E069"]}
+  ],
+  "personal_data_categories": [
+    {"id": "data-identity", "name": "names, user IDs, email, phone, avatar URL", "evidence": ["E024"]},
+    {"id": "data-child-demographics", "name": "child name and full birth date", "evidence": ["E025", "E026"]},
+    {"id": "data-family", "name": "guardian-child relationship and access level", "evidence": ["E025", "E046"]},
+    {"id": "data-intake", "name": "swimming experience, preferences, messages and dynamic answers", "evidence": ["E026"]},
+    {"id": "data-attribution", "name": "UTM values, referrer host, landing path, channel and consent", "evidence": ["E028", "E052"]},
+    {"id": "data-abuse", "name": "hashed IP and user-agent fingerprint", "evidence": ["E027"]},
+    {"id": "data-lesson", "name": "program, group, schedule and instructor assignment", "evidence": ["E030"]},
+    {"id": "data-attendance-progress", "name": "attendance, scores, notes, skills and badges", "evidence": ["E031"]},
+    {"id": "data-graduation", "name": "readiness, results and certificates", "evidence": ["E032"]},
+    {"id": "data-communications", "name": "messages, notifications and email delivery diagnostics", "evidence": ["E033"]},
+    {"id": "data-files", "name": "private file content and metadata", "evidence": ["E034"]},
+    {"id": "data-financial", "name": "plans, amounts, invoices, payment and provider identifiers, mandate last4 and payloads", "evidence": ["E035", "E036"]},
+    {"id": "data-import", "name": "raw and normalized CSV rows, validation and actor logs", "evidence": ["E037"]},
+    {"id": "data-audit", "name": "actors, event types, free JSON payloads and timestamps", "evidence": ["E044", "E086"]},
+    {"id": "data-browser", "name": "consent, attribution, GA dedupe and saved view filters", "evidence": ["E052", "E053"]}
+  ],
+  "special_category_candidates": [
+    {
+      "id": "special-free-text-files",
+      "name": "sensitive information entered in free text, JSON, imports or files",
+      "status": "INFERRED",
+      "structured_field_found": false,
+      "evidence": ["E042"]
+    },
+    {
+      "id": "risk-child-development",
+      "name": "child development and performance observations",
+      "status": "RISK_SIGNAL_NOT_LEGAL_CLASSIFICATION",
+      "evidence": ["E031", "E032"]
+    },
+    {
+      "id": "special-not-found",
+      "name": "no structured medical, allergy, biometric, national ID or precise GPS fields found",
+      "status": "OBSERVED_ABSENCE",
+      "evidence": ["E042"]
+    }
+  ],
+  "processing_activities": [
+    {"id": "process-business-contact", "name": "business demo/contact by mailto", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E063"]},
+    {"id": "process-tenant-onboarding", "name": "tenant provisioning and owner/staff invitations", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E065"]},
+    {"id": "process-auth", "name": "account invitation, authentication and password reset", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E045", "E048"]},
+    {"id": "process-intake", "name": "public child and guardian intake", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E026", "E027", "E087"]},
+    {"id": "process-attribution", "name": "first-party acquisition attribution and optional GA4", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E028", "E052", "E056"]},
+    {"id": "process-placement", "name": "waitlist, recommendation and slot offer", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E029", "E066", "E067"]},
+    {"id": "process-lessons", "name": "enrollment, planning, attendance and cancellation", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E030", "E031", "E064"]},
+    {"id": "process-progress", "name": "progress notes, scoring and badges", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E031"]},
+    {"id": "process-graduation", "name": "readiness, event results and diploma records", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E032"]},
+    {"id": "process-communications", "name": "tenant messages, notifications and transactional email", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E033", "E055"]},
+    {"id": "process-files", "name": "private tenant documents and certificate files", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E034"]},
+    {"id": "process-billing", "name": "tenant-to-parent billing and optional Mollie processing", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E035", "E036", "E077"]},
+    {"id": "process-import", "name": "CSV migration and rollback", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E037", "E068"]},
+    {"id": "process-monitoring", "name": "availability, email and billing monitoring", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E057", "E071"]},
+    {"id": "process-backup", "name": "database recovery and encrypted private object backup", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E058", "E080"]},
+    {"id": "process-offboarding", "name": "tenant export, suspension, retention and deletion", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E038", "E070"]},
+    {"id": "process-journey-bot", "name": "synthetic journey simulation", "legal_basis": "OWNER DECISION REQUIRED", "evidence": ["E041", "E069"]}
+  ],
+  "vendors": [
+    {"id": "vendor-supabase", "service": "Database, Auth and Storage", "role": "ROLE CANDIDATE", "active": true, "evidence": ["E054"]},
+    {"id": "vendor-sendgrid", "service": "transactional email API", "role": "ROLE CANDIDATE", "active_when_configured": true, "evidence": ["E055"]},
+    {"id": "vendor-smtp-unknown", "service": "configurable SMTP", "role": "ROLE CANDIDATE", "active_provider": "UNKNOWN", "evidence": ["E055"]},
+    {"id": "vendor-mollie", "service": "payments, mandates, refunds and chargebacks", "role": "ROLE CANDIDATE", "active_when_configured": true, "evidence": ["E036"]},
+    {"id": "vendor-google-analytics", "service": "public analytics", "role": "ROLE CANDIDATE", "active_after_consent_and_config": true, "evidence": ["E056"]},
+    {"id": "vendor-github", "service": "CI/CD and encrypted artifacts", "role": "ROLE CANDIDATE", "active": true, "evidence": ["E058"]},
+    {"id": "vendor-hosting-unknown", "service": "VPS, Caddy and systemd runtime", "role": "ROLE CANDIDATE", "provider": "UNKNOWN", "evidence": ["E013"]},
+    {"id": "vendor-alert-unknown", "service": "Slack/Teams/Discord/generic webhook", "role": "ROLE CANDIDATE", "active_endpoint": "UNKNOWN", "evidence": ["E057"]},
+    {"id": "vendor-mailbox-unknown", "service": "business email inbox", "role": "ROLE CANDIDATE", "provider": "UNKNOWN", "evidence": ["E063"]}
+  ],
+  "cookies": [
+    {"id": "cookie-supabase-auth", "name": "SDK-generated Supabase auth cookie(s)", "purpose": "session", "lifetime": "UNKNOWN", "required": true, "evidence": ["E049"]},
+    {"id": "cookie-ga", "name": "_ga and _ga_*", "purpose": "optional analytics", "lifetime": "Google-controlled/UNKNOWN", "before_consent": false, "evidence": ["E052", "E056"]}
+  ],
+  "browser_storage": [
+    {"id": "storage-analytics-consent", "type": "localStorage", "key": "nxttrack.analytics-consent.v1", "expiry": "none in code", "evidence": ["E052"]},
+    {"id": "storage-attribution", "type": "sessionStorage", "key": "nxttrack.first-touch-attribution.v1", "expiry": "browser session", "evidence": ["E052"]},
+    {"id": "storage-ga-dedupe", "type": "sessionStorage", "key_pattern": "nxttrack.ga-lead-sent.<reference>", "expiry": "browser session", "evidence": ["E052"]},
+    {"id": "storage-saved-view", "type": "localStorage", "key_pattern": "nxttrack.views.<storageKey>", "expiry": "none in code", "risk": "may contain personal-name filters and is not tenant/user scoped", "evidence": ["E053"]},
+    {"id": "storage-pwa-cache", "type": "Cache Storage", "key": "nxttrack-static-v1", "contents": "local logo and same-origin static build assets", "evidence": ["E010"]}
+  ],
+  "retention_rules": [
+    {"id": "retention-rate-limit", "period": "2 days", "mechanism": "opportunistic hard delete", "evidence": ["E027"]},
+    {"id": "retention-reset-expiry", "period": "15 minutes", "mechanism": "expiry/status, no purge", "evidence": ["E045"]},
+    {"id": "retention-invite-expiry", "period": "14 days", "mechanism": "field only; not enforced for access", "status": "CONFLICT", "evidence": ["E048"]},
+    {"id": "retention-offer-expiry", "period": "7 days", "mechanism": "business expiry, no purge", "evidence": ["E067"]},
+    {"id": "retention-offboarding", "period": "30 to 365 days", "mechanism": "operator-selected before owner-approved tenant deletion", "evidence": ["E038"]},
+    {"id": "retention-storage-artifact", "period": "30 days", "mechanism": "GitHub artifact retention", "evidence": ["E058"]},
+    {"id": "retention-core-unknown", "period": "OWNER DECISION REQUIRED", "scope": "most account, child, communications, finance, audit and file data", "evidence": ["E080", "E081"]}
+  ],
+  "deletion_flows": [
+    {"id": "delete-tenant", "type": "tenant cascade after export/retention/owner approval", "status": "OBSERVED_INCOMPLETE", "gaps": ["Auth users", "profiles", "external providers", "orphan Storage", "backups"], "evidence": ["E038", "E070"]},
+    {"id": "delete-individual", "type": "individual data-subject deletion", "status": "NOT_FOUND", "evidence": ["E059"]},
+    {"id": "delete-journey", "type": "synthetic journey cleanup", "status": "SOFT_ARCHIVE_INCOMPLETE", "evidence": ["E069"]},
+    {"id": "delete-import-rollback", "type": "rollback created domain rows", "status": "INCOMPLETE", "evidence": ["E068"]}
+  ],
+  "exports": [
+    {"id": "export-tenant-json", "format": "nxttrack-tenant-export-v1 JSON", "access": "platform owner/admin", "status": "CONFLICT_INCOMPLETE", "evidence": ["E038", "E070"]},
+    {"id": "export-storage-backup", "format": "GPG-encrypted archive plus checksums", "access": "GitHub workflow operators", "status": "OBSERVED_MANUAL", "evidence": ["E058"]},
+    {"id": "export-data-subject", "status": "NOT_FOUND", "evidence": ["E059"]}
+  ],
+  "security_measures": [
+    {"id": "security-rls", "measure": "RLS, FORCE RLS, tenant foreign keys and live/static role checks", "evidence": ["E008", "E083"]},
+    {"id": "security-auth", "measure": "server-verified Supabase user, DB memberships, strong password policy and reset limiting", "evidence": ["E045"]},
+    {"id": "security-headers", "measure": "HSTS, anti-framing, referrer and permissions headers", "limitation": "CSP lacks resource allowlists", "evidence": ["E082"]},
+    {"id": "security-secrets", "measure": "server-only provider secrets and AES-256-GCM email secret storage", "evidence": ["E021", "E055"]},
+    {"id": "security-intake", "measure": "honeypot, timing trap, fingerprint rate limit and dedupe", "limitation": "unsalted fallback", "evidence": ["E027"]},
+    {"id": "security-files", "measure": "private buckets, scoped RLS, size/MIME limits and short signed URLs", "limitation": "no scanning/sniffing/sanitization", "evidence": ["E034"]},
+    {"id": "security-ci", "measure": "type, dependency, auth, RLS, migration, browser and release checks", "evidence": ["E084"]},
+    {"id": "security-monitoring", "measure": "scheduled availability, email and billing checks", "limitation": "runtime enablement and security-event coverage unresolved", "evidence": ["E071"]}
+  ],
+  "automated_decisions": [
+    {"id": "auto-intake-recommendation", "type": "deterministic advisory", "human_review": true, "inputs": ["swimming experience", "preferred days/dayparts", "stage order", "wait band"], "evidence": ["E066", "E090"]},
+    {"id": "auto-placement-score", "type": "deterministic advisory", "human_review": true, "inputs": ["capacity", "stage match", "day match"], "evidence": ["E029"]},
+    {"id": "auto-intake-abuse", "type": "automated rate-limit/dedupe response", "human_review": "duplicate review available", "evidence": ["E027"]},
+    {"id": "auto-billing-collection", "type": "automated provider action when enabled", "human_configuration": true, "evidence": ["E036", "E077"]},
+    {"id": "auto-graduation", "type": "not autonomous; certificate follows human passed result", "evidence": ["E032"]},
+    {"id": "auto-automation-builder", "type": "rule configuration without found executor", "status": "PLANNED", "evidence": ["E040"]}
+  ],
+  "ai_features": {
+    "active_generative_ai": false,
+    "external_ai_api_found": false,
+    "machine_learning_model_found": false,
+    "smart_features": "deterministic local formulas",
+    "evidence": ["E060", "E066"]
+  },
+  "minors": {
+    "systematic_processing": true,
+    "full_birth_date": true,
+    "multiple_guardians": true,
+    "authority_verification": false,
+    "guardian_conflict_workflow": false,
+    "age_dependent_consent": false,
+    "media_consent_runtime": false,
+    "risk_data": ["attendance", "progress scores", "instructor notes", "readiness", "graduation results", "billing linkage"],
+    "evidence": ["E025", "E031", "E032", "E039", "E046", "E047"]
+  },
+  "rights_workflows": [
+    {"id": "right-profile-correction", "support": "self-service name and phone only", "evidence": ["E089"]},
+    {"id": "right-functional-access", "support": "portal views linked operational data, not complete privacy export", "evidence": ["E089"]},
+    {"id": "right-analytics-withdrawal", "support": "cookie preference and GA cookie cleanup", "limitation": "first-party attribution remains", "evidence": ["E052"]},
+    {"id": "right-mandate-revoke", "support": "self-service Mollie mandate revoke", "evidence": ["E088"]},
+    {"id": "right-dsar-case", "support": "NOT_FOUND", "evidence": ["E059"]},
+    {"id": "right-individual-export-delete", "support": "NOT_FOUND", "evidence": ["E059", "E070"]}
+  ],
+  "commercial_facts": [
+    {"id": "commercial-plans", "fact": "Start, Groei and Pro labels are editorial; all prices are on request", "runtime_entitlements": false, "evidence": ["E061"]},
+    {"id": "commercial-parent-billing", "fact": "tenant-to-parent billing exists and is distinct from NXTTRACK SaaS billing", "evidence": ["E035"]},
+    {"id": "commercial-saas-billing", "fact": "no SaaS customer plan billing, renewal or upgrade/downgrade model found", "status": "NOT_FOUND", "evidence": ["E061"]},
+    {"id": "commercial-white-label", "fact": "configuration exists but runtime application is partial", "evidence": ["E062", "E091"]},
+    {"id": "commercial-crm", "fact": "lead attribution report exists; full sales CRM is planned", "evidence": ["E092"]},
+    {"id": "commercial-pwa", "fact": "installable static PWA, no native app, push or offline writes", "evidence": ["E079"]},
+    {"id": "commercial-support", "fact": "marketing mentions email/priority support and one-business-day demo response without defined SLA", "evidence": ["E061", "E063"]},
+    {"id": "commercial-noindex", "fact": "global robots metadata disables indexing", "evidence": ["E093"]}
+  ],
+  "unknowns": [
+    {"id": "unknown-legal-roles", "question": "Contractual controller/processor and vendor roles per processing activity", "evidence": ["E073"]},
+    {"id": "unknown-retention", "question": "Retention for all core data categories and provider data", "evidence": ["E080", "E081"]},
+    {"id": "unknown-provider-contracts", "question": "DPA, regions, subprocessors and transfers for all vendors", "evidence": ["E054", "E055", "E036", "E056", "E058"]},
+    {"id": "unknown-production-state", "question": "Current production SHA, migrations, flags, provider activation and managed backups", "evidence": ["E011", "E013", "E080"]},
+    {"id": "unknown-cookie-metadata", "question": "Exact Supabase and Google cookie attributes in deployed browsers", "evidence": ["E049", "E052"]},
+    {"id": "unknown-rights-governance", "question": "DSAR channel, verification, ownership, deadlines and evidence", "evidence": ["E059"]},
+    {"id": "unknown-guardian-authority", "question": "Custody and conflicting guardian process", "evidence": ["E047"]}
+  ],
+  "conflicts": [
+    {"id": "conflict-invite-access", "summary": "Invitation expiry and must-change-password are not uniformly enforced", "evidence": ["E048"]},
+    {"id": "conflict-abuse-hash", "summary": "HMAC fingerprint can fall back to unsalted SHA-256", "evidence": ["E027"]},
+    {"id": "conflict-analytics-withdrawal", "summary": "GA revoke does not clear first-party attribution session state", "evidence": ["E052"]},
+    {"id": "conflict-automation", "summary": "rules can be active without a found executor", "evidence": ["E040"]},
+    {"id": "conflict-journey-production", "summary": "staging-only intent has production override", "evidence": ["E069"]},
+    {"id": "conflict-offboarding", "summary": "export can be marked ready despite omissions or table errors", "evidence": ["E070"]},
+    {"id": "conflict-monitoring", "summary": "workflow/docs/runtime enablement and log retention claims differ", "evidence": ["E071"]},
+    {"id": "conflict-pwa", "summary": "offline copy exceeds static-cache implementation", "evidence": ["E079"]},
+    {"id": "conflict-custom-domain", "summary": "custom domain data exists but tenant slug propagation is incomplete", "evidence": ["E091"]},
+    {"id": "conflict-age-matching", "summary": "age data exists but live matching formulas do not use age", "evidence": ["E090"]}
+  ],
+  "owner_decisions_required": [
+    {"id": "decision-entity", "topic": "legal entity and contacts"},
+    {"id": "decision-roles", "topic": "controller, processor and vendor roles per process"},
+    {"id": "decision-legal-bases", "topic": "purpose and legal basis per processing activity"},
+    {"id": "decision-retention", "topic": "retention, archive, delete and backup erasure per category"},
+    {"id": "decision-minors", "topic": "age, parental authority, guardian conflict and child information policy"},
+    {"id": "decision-consent", "topic": "versioned intake, analytics, media and mandate consent/withdrawal"},
+    {"id": "decision-rights", "topic": "DSAR channel, verification, roles, deadlines and implementation"},
+    {"id": "decision-vendors", "topic": "DPA, regions, transfers, subprocessors and exit per supplier"},
+    {"id": "decision-security", "topic": "support access, MFA/session, audit, CSP, file scanning and monitoring"},
+    {"id": "decision-dpia", "topic": "formal DPIA necessity based on actual scale and provider countries"},
+    {"id": "decision-commercial", "topic": "SaaS plans, prices, term, renewal, termination, support and SLA"},
+    {"id": "decision-testing", "topic": "hard production prohibition and retention for Journey Bot"}
+  ],
+  "evidence_references": [
+    {"id": "E001", "category": "product"},
+    {"id": "E005", "category": "tenant-isolation"},
+    {"id": "E008", "category": "RLS"},
+    {"id": "E025", "category": "minors"},
+    {"id": "E026", "category": "intake"},
+    {"id": "E027", "category": "abuse-prevention"},
+    {"id": "E031", "category": "progress"},
+    {"id": "E036", "category": "Mollie"},
+    {"id": "E048", "category": "auth-risk"},
+    {"id": "E052", "category": "browser-storage"},
+    {"id": "E054", "category": "Supabase"},
+    {"id": "E055", "category": "email"},
+    {"id": "E056", "category": "analytics"},
+    {"id": "E058", "category": "backup"},
+    {"id": "E059", "category": "rights"},
+    {"id": "E069", "category": "Journey Bot"},
+    {"id": "E070", "category": "offboarding-risk"},
+    {"id": "E071", "category": "monitoring"},
+    {"id": "E082", "category": "security-headers"},
+    {"id": "E091", "category": "custom-domain"}
+  ]
+}
