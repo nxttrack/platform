@@ -71,6 +71,7 @@ jobs:
       PORT: ${{ vars.PORT }}
       APP_URL: ${{ vars.APP_URL }}
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
       PLATFORM_ADMIN_URL: ${{ vars.PLATFORM_ADMIN_URL }}
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
       PLATFORM_HOSTNAMES: ${{ vars.PLATFORM_HOSTNAMES }}
@@ -213,6 +214,7 @@ jobs:
             printf 'PORT=%s\n' "$PORT"
             printf 'APP_URL=%s\n' "$APP_URL"
             printf 'NEXT_PUBLIC_APP_URL=%s\n' "$NEXT_PUBLIC_APP_URL"
+            printf 'NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=%s\n' "$NEXT_PUBLIC_GOOGLE_ANALYTICS_ID"
             printf 'PLATFORM_ADMIN_URL=%s\n' "$PLATFORM_ADMIN_URL"
             printf 'TENANT_DOMAIN_SUFFIX=%s\n' "$TENANT_DOMAIN_SUFFIX"
             printf 'PLATFORM_HOSTNAMES=%s\n' "$PLATFORM_HOSTNAMES"

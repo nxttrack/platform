@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { PublicAnalytics } from "@/components/analytics/public-analytics";
 import { MarketingSiteFooter, MarketingSiteHeader } from "@/components/marketing/site-chrome";
 
 export default function NxttrackMarketingLayout({ children }: { children: ReactNode }) {
@@ -8,6 +9,7 @@ export default function NxttrackMarketingLayout({ children }: { children: ReactN
       <MarketingSiteHeader />
       <main>{children}</main>
       <MarketingSiteFooter />
+      <PublicAnalytics measurementId={process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID} />
     </div>
   );
 }

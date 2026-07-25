@@ -10,6 +10,8 @@ type PageProps = {
 };
 
 type TenantSettingsRow = {
+  analytics_enabled: boolean | null;
+  google_analytics_measurement_id: string | null;
   lesson_cancellation_credit_window_days: number | null;
   lesson_cancellation_cutoff_hours: number | null;
   lesson_cancellation_grants_credit: boolean | null;
@@ -90,6 +92,43 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
               </div>
             </div>
 
+            <div className="rounded-lg border border-border bg-white p-4">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-bold text-foreground">Google Analytics 4</h2>
+                  <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+                    Meet alleen publieke websitebezoeken na expliciete toestemming. Leadherkomst wordt daarnaast first-party in NXTTRACK opgeslagen.
+                  </p>
+                </div>
+                <StatusPill tone={settings.analytics_enabled ? "success" : "neutral"}>
+                  {settings.analytics_enabled ? "analytics actief" : "uitgeschakeld"}
+                </StatusPill>
+              </div>
+              <div className="grid gap-4">
+                <Field
+                  defaultValue={settings.google_analytics_measurement_id ?? ""}
+                  label="GA4-meet-ID"
+                  name="googleAnalyticsMeasurementId"
+                  placeholder="G-XXXXXXXXXX"
+                />
+                <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-sm font-semibold text-foreground">
+                  <input
+                    className="mt-0.5 size-4 rounded border-border"
+                    defaultChecked={settings.analytics_enabled}
+                    disabled={!canManage}
+                    name="analyticsEnabled"
+                    type="checkbox"
+                  />
+                  <span>
+                    Analytics inschakelen op de publieke organisatiesite
+                    <span className="mt-1 block text-xs font-normal leading-5 text-muted-foreground">
+                      De Google-tag wordt pas geladen nadat de bezoeker analytics toestaat. Deel nooit namen, e-mailadressen of kindgegevens via campagneparameters.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+
             {canManage ? <SubmitButton>Instellingen opslaan</SubmitButton> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
           </form>
         </AdminSection>
@@ -97,7 +136,7 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
         <AdminSection description="Deze punten horen bij de volgende productization-subtaken." title="Nog te productiseren">
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="rounded-lg bg-muted px-3 py-2">Logo en publieke branding per organisatie.</li>
-            <li className="rounded-lg bg-muted px-3 py-2">Publieke site contentblokken, nieuws en agenda.</li>
+            <li className="rounded-lg bg-muted px-3 py-2">Volwaardige CRM-pijplijn met eigenaar, opvolgtaak en verloren-redenen.</li>
             <li className="rounded-lg bg-muted px-3 py-2">Document- en diplomabestanden via private storage.</li>
             <li className="rounded-lg bg-muted px-3 py-2">Mailtemplates en afzender per organisatie waar passend.</li>
           </ul>
@@ -111,7 +150,7 @@ async function loadSettings(tenantId: string) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("tenant_settings")
-    .select("terminology_sector, locale, timezone, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit")
+    .select("terminology_sector, locale, timezone, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit, analytics_enabled, google_analytics_measurement_id")
     .eq("tenant_id", tenantId)
     .maybeSingle();
 
@@ -122,6 +161,8 @@ async function loadSettings(tenantId: string) {
   const row = (data as TenantSettingsRow | null) ?? null;
 
   return {
+    analytics_enabled: row?.analytics_enabled ?? false,
+    google_analytics_measurement_id: row?.google_analytics_measurement_id ?? null,
     lesson_cancellation_credit_window_days: row?.lesson_cancellation_credit_window_days ?? 60,
     lesson_cancellation_cutoff_hours: row?.lesson_cancellation_cutoff_hours ?? 12,
     lesson_cancellation_grants_credit: row?.lesson_cancellation_grants_credit ?? true,
@@ -149,6 +190,7 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
 function errorMessage(error: string) {
   const messages: Record<string, string> = {
     forbidden: "Je hebt geen rechten om deze instellingen te wijzigen.",
+    analytics_id: "Vul een geldig GA4-meet-ID in, bijvoorbeeld G-XXXXXXXXXX, of schakel analytics uit.",
     save_failed: "Instellingen opslaan is niet gelukt."
   };
 

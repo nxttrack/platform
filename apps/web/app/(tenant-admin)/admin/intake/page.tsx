@@ -6,6 +6,7 @@ import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
+import { attributionChannelLabel } from "@/lib/analytics/attribution";
 import Link from "next/link";
 
 const optionLabels: Record<IntakeOption, string> = {
@@ -75,6 +76,10 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
                       {submission.preferred_days.length > 0 ? <p>Voorkeur: {submission.preferred_days.join(", ")}</p> : null}
                       {submission.swimming_experience ? <p>Zwemervaring: {getExperienceLabel(submission.swimming_experience)}</p> : null}
                       {selectedChoice ? <p>Eerste momentkeuze: {formatChoice(selectedChoice)}</p> : null}
+                      <p>
+                        Herkomst: {attributionChannelLabel(submission.attribution_channel)} · {submission.attribution_source}
+                        {submission.attribution_campaign ? ` · campagne ${submission.attribution_campaign}` : ""}
+                      </p>
                       {submission.is_test ? <p className="font-mono">Journey run: {submission.journey_run_id?.slice(0, 8) ?? "onbekend"} · veilig te archiveren</p> : null}
                       {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
                     </div>

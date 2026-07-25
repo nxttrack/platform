@@ -1,5 +1,11 @@
 # Vereiste environmentvariabelen
 
+## Analytics
+
+| Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |
+| --- | --- | --- | --- | --- | --- | --- |
+| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | GA4 voor de publieke NXTTRACK-marketingsite | Consent-aware marketing analytics | Optioneel voor staging, nodig vóór commerciële marketingmeting | leeg | GitHub environment variable per environment | Alleen een meet-ID zoals `G-XXXXXXXXXX`; dit is geen secret. De tag blijft geblokkeerd tot toestemming. Tenantwebsites gebruiken hun eigen meet-ID in Organisatie → Instellingen. |
+
 ## Journey Simulation Bot
 
 | Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |

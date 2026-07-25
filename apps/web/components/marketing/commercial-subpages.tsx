@@ -120,6 +120,12 @@ function PrivacyPage() {
         <p>Alleen gegevens die nodig zijn voor de zwemschoolworkflow, zoals contactgegevens, gezinsrelaties, voortgang en aanwezigheid. De definitieve privacyverklaring en grondslagen worden vóór commerciële livegang juridisch gevalideerd.</p>
         <h2 className="text-xl font-bold text-slate-900">Rollen, rechten en herleidbaarheid</h2>
         <p>Backoffice, instructeurs en ouders hebben een eigen toegangscontext. Belangrijke beheersacties kunnen in een audit-log worden vastgelegd.</p>
+        <h2 className="text-xl font-bold text-slate-900">Analytics en leadherkomst</h2>
+        <p>
+          Google Analytics wordt alleen geladen nadat een bezoeker analytics toestaat. NXTTRACK stuurt geen namen, e-mailadressen of kindgegevens naar Google.
+          Bij een daadwerkelijk verstuurde intake kan de zwemschool in NXTTRACK zelf beperkte herkomstgegevens zien, zoals campagne, kanaal, verwijzende website en landingspad.
+          Advertentie-click-ID&apos;s worden niet inhoudelijk opgeslagen; alleen de aanwezigheid ervan kan worden gebruikt om het kanaal te classificeren.
+        </p>
         <h2 className="text-xl font-bold text-slate-900">Verwerkersafspraken en hosting</h2>
         <p>Verwerkersovereenkomsten, subverwerkers, bewaartermijnen en hostingclaims worden als releasegate vastgelegd. Deze pagina doet daarom geen onbevestigde juridische beloftes.</p>
         <p className="border-t border-slate-200 pt-6 text-xs text-slate-500">Vragen? <Link href="/nxttrack/contact" className="font-semibold text-primary">Neem contact op</Link>.</p>
