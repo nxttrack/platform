@@ -72,24 +72,6 @@ export async function syncProfileEmail(input: { userId: string; email: string; f
   }
 }
 
-export async function markAcceptedInvitations(input: { userId: string; email: string }) {
-  const admin = createAdminClient();
-  const now = new Date().toISOString();
-  const { error } = await admin
-    .from("auth_invitations")
-    .update({
-      status: "accepted",
-      accepted_at: now,
-      invited_user_id: input.userId
-    })
-    .eq("status", "pending")
-    .eq("email", normalizeEmail(input.email));
-
-  if (error) {
-    throw new Error(`Could not mark invitations as accepted: ${error.message}`);
-  }
-}
-
 export async function findUserIdByEmail(email: string): Promise<string | null> {
   const normalizedEmail = normalizeEmail(email);
   const admin = createAdminClient();

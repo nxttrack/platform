@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getTrustedAuthContextForRequest } from "@/lib/auth/server-guard";
+import { requireApiAuthenticatedContext } from "@/lib/auth/server-guard";
 import { canInstructParticipantFile, canManageTenantFiles, canViewParticipantFile } from "@/lib/domain/private-file-access";
 import { createPrivateFileSignedUrl, DIPLOMA_VAULT_BUCKET } from "@/lib/storage/private-files";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -18,12 +18,13 @@ type CertificateDownloadRow = {
 };
 
 export async function GET(_request: Request, context: RouteContext) {
-  const auth = await getTrustedAuthContextForRequest();
+  const guard = await requireApiAuthenticatedContext();
 
-  if (auth.status === "anonymous") {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!guard.ok) {
+    return guard.response;
   }
 
+  const auth = guard.context;
   const { id } = await context.params;
   const admin = createAdminClient();
   const { data, error } = await admin

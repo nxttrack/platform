@@ -39,6 +39,7 @@ for (const scanRoot of scanRoots) {
 }
 
 auditEmailSecretPreservation();
+auditProtectedApiRoutes();
 
 if (failures.length > 0) {
   console.error("Auth boundary audit failed:");
@@ -114,6 +115,23 @@ function auditEmailSecretPreservation() {
 
   if (actions.includes("getExistingPlatformEmailSecrets")) {
     failures.push("apps/web/lib/email/actions.ts: unchanged email secrets must not be decrypted and rewritten during a settings save.");
+  }
+}
+
+function auditProtectedApiRoutes() {
+  const protectedRoutes = [
+    "apps/web/app/api/files/tenant-document/[id]/route.ts",
+    "apps/web/app/api/files/certificate/[id]/route.ts",
+    "apps/web/app/api/platform/offboarding/[id]/export/route.ts"
+  ];
+
+  for (const route of protectedRoutes) {
+    const source = readFileSync(join(root, route), "utf8");
+    requireContract(
+      source,
+      "requireApiAuthenticatedContext",
+      `${route} must enforce the centralized API password-change boundary`
+    );
   }
 }
 

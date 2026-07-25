@@ -9,6 +9,7 @@ type Props = {
   name?: string;
   label?: string;
   autoComplete?: string;
+  required?: boolean;
 };
 
 const labelMap = {
@@ -17,7 +18,7 @@ const labelMap = {
   sterk: "Sterk"
 };
 
-export function PasswordStrengthMeter({ name = "password", label = "Nieuw wachtwoord", autoComplete = "new-password" }: Props) {
+export function PasswordStrengthMeter({ name = "password", label = "Nieuw wachtwoord", autoComplete = "new-password", required = true }: Props) {
   const [password, setPassword] = useState("");
   const strength = useMemo(() => getPasswordStrength(password), [password]);
   const width = `${Math.min(100, Math.round((strength.score / 6) * 100))}%`;
@@ -35,7 +36,7 @@ export function PasswordStrengthMeter({ name = "password", label = "Nieuw wachtw
         id={name}
         name={name}
         onChange={(event) => setPassword(event.target.value)}
-        required
+        required={required}
         type="password"
       />
       <div className="h-2 overflow-hidden rounded-full bg-muted" role="progressbar" aria-label="Wachtwoordsterkte" aria-valuemin={0} aria-valuemax={100} aria-valuenow={scorePercent}>

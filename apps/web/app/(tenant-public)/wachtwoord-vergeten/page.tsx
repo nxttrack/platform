@@ -11,7 +11,6 @@ type PageProps = {
 export default async function ForgotPasswordPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const sent = getParam(params, "sent") === "1";
-  const email = getParam(params, "email") ?? "";
   const error = getParam(params, "error");
 
   return (
@@ -30,7 +29,6 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
             <Input
               autoComplete="email"
               className="h-11"
-              defaultValue={email}
               id="email"
               name="email"
               required
@@ -43,7 +41,7 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
         </form>
 
         <div className="mt-5 flex items-center justify-between text-sm">
-          <Link className="font-semibold text-primary hover:underline" href={`/wachtwoord-resetten${email ? `?email=${encodeURIComponent(email)}` : ""}`}>
+          <Link className="font-semibold text-primary hover:underline" href="/wachtwoord-resetten">
             Ik heb een code
           </Link>
           <Link className="text-muted-foreground hover:text-foreground" href="/login">

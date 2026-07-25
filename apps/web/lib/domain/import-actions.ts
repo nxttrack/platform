@@ -159,7 +159,7 @@ async function applyRow(input: { context: Awaited<ReturnType<typeof requirePriva
   }
   if (type === "guardians") {
     const email = stringValue(input.data.email).toLowerCase();
-    await createInvitation({ actor: input.context, email, fullName: stringValue(input.data.full_name), loginUrl: `${await getTrustedRequestOrigin()}/login?next=${encodeURIComponent("/portaal")}`, role: "parent", tenantSlug: input.tenantSlug });
+    await createInvitation({ actor: input.context, email, fullName: stringValue(input.data.full_name), acceptUrl: `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`, role: "parent", tenantSlug: input.tenantSlug });
     const userId = await findUserIdByEmail(email);
     if (!userId) throw new Error("guardian user missing after invitation");
     return { table: "tenant_memberships", id: userId, rowId: input.rowId, email };

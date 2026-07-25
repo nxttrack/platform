@@ -12,34 +12,32 @@ type KeyValue = {
 };
 
 export function renderInvitationEmail(input: {
-  loginUrl: string;
+  acceptUrl: string;
+  invitationCode: string;
+  isNewAccount: boolean;
   organizationName: string;
   roleLabel: string;
-  temporaryPassword: string | null;
   tenantSlug?: string | null;
 }): EmailTemplate {
   const environment = input.tenantSlug ? `${input.organizationName} (${input.tenantSlug})` : input.organizationName;
   const rows: KeyValue[] = [
     { label: "Omgeving", value: environment },
     { label: "Rol", value: input.roleLabel },
-    { label: "Login", value: input.loginUrl }
+    { label: "Eenmalige code", value: input.invitationCode },
+    { label: "Uitnodiging openen", value: input.acceptUrl }
   ];
 
-  if (input.temporaryPassword) {
-    rows.push({ label: "Tijdelijk wachtwoord", value: input.temporaryPassword });
-  }
-
   return renderTemplate({
-    actionLabel: "Inloggen",
-    actionUrl: input.loginUrl,
+    actionLabel: "Uitnodiging accepteren",
+    actionUrl: input.acceptUrl,
     organizationName: input.organizationName,
     preheader: `Je bent uitgenodigd voor ${input.organizationName}.`,
     rows,
     subject: `Je uitnodiging voor ${input.organizationName}`,
     title: "Je uitnodiging staat klaar",
-    message: input.temporaryPassword
-      ? "Log in met je tijdelijke wachtwoord. Na je eerste login moet je direct een nieuw wachtwoord kiezen."
-      : "Je bestaande account heeft extra toegang gekregen. Je kunt inloggen met je bestaande wachtwoord."
+    message: input.isNewAccount
+      ? "Open de uitnodiging, vul je e-mailadres en de eenmalige code in en kies je eigen wachtwoord. De code verloopt automatisch."
+      : "Open de uitnodiging en bevestig de extra toegang met je e-mailadres en de eenmalige code. Je bestaande wachtwoord blijft ongewijzigd."
   });
 }
 

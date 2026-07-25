@@ -39,8 +39,7 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
     throw new Error(`Could not create password reset challenge: ${insertError.message}`);
   }
 
-  const resetLink = appendQuery(input.resetUrl, { email });
-  const template = renderPasswordResetEmail({ code, resetLink });
+  const template = renderPasswordResetEmail({ code, resetLink: input.resetUrl });
   const mail = await sendTransactionalEmail({
     ...template,
     relatedType: "password_reset_challenge",
@@ -176,14 +175,4 @@ async function getLatestPendingChallenge(email: string): Promise<PasswordResetCh
   }
 
   return (data?.[0] as PasswordResetChallengeRow | undefined) ?? null;
-}
-
-function appendQuery(url: string, params: Record<string, string>) {
-  const parsed = new URL(url);
-
-  for (const [key, value] of Object.entries(params)) {
-    parsed.searchParams.set(key, value);
-  }
-
-  return parsed.toString();
 }

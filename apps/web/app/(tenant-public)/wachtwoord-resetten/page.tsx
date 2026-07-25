@@ -11,7 +11,6 @@ type PageProps = {
 
 export default async function ResetPasswordPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const email = getParam(params, "email") ?? "";
   const error = getParam(params, "error");
 
   return (
@@ -29,7 +28,6 @@ export default async function ResetPasswordPage({ searchParams }: PageProps) {
             <Input
               autoComplete="email"
               className="h-11"
-              defaultValue={email}
               id="email"
               name="email"
               required

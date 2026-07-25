@@ -125,12 +125,12 @@ export async function provisionTenantAction(formData: FormData) {
 
     await requireWrite(admin.from("tenants").update({ status: "active" }).eq("id", tenantId), "tenant activation");
     await admin.from("tenant_onboarding_runs").update({ current_step: "owner" }).eq("id", runId);
-    const loginUrl = `${await getTrustedRequestOrigin()}/login?next=${encodeURIComponent("/admin")}`;
-    await createInvitation({ actor: context, email: ownerEmail, fullName: ownerName, loginUrl, role: "tenant_owner", tenantSlug: slug });
+    const acceptUrl = `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`;
+    await createInvitation({ actor: context, email: ownerEmail, fullName: ownerName, acceptUrl, role: "tenant_owner", tenantSlug: slug });
 
     await admin.from("tenant_onboarding_runs").update({ current_step: "staff" }).eq("id", runId);
     for (const email of staff) {
-      await createInvitation({ actor: context, email, loginUrl, role: "instructor", tenantSlug: slug });
+      await createInvitation({ actor: context, email, acceptUrl, role: "instructor", tenantSlug: slug });
     }
 
     const checklist = {

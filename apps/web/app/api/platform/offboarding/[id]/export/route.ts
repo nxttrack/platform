@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 
-import { getTrustedAuthContextForRequest } from "@/lib/auth/server-guard";
+import { requireApiAuthenticatedContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const tenantTables = [
@@ -22,8 +22,10 @@ const tenantTables = [
 ] as const;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const context = await getTrustedAuthContextForRequest();
-  if (context.status === "anonymous" || !context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  const guard = await requireApiAuthenticatedContext();
+  if (!guard.ok) return guard.response;
+  const context = guard.context;
+  if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) return NextResponse.json({ error: "forbidden" }, { status: 403 });
   const { id } = await params;
   const admin = createAdminClient();
   const runResult = await admin.from("tenant_offboarding_runs").select("id, tenant_id, status, retention_ends_at, created_at").eq("id", id).single();

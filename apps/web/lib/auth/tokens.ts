@@ -6,7 +6,11 @@ export function generateSixDigitCode() {
   return randomInt(0, 1_000_000).toString().padStart(6, "0");
 }
 
-export function generateTemporaryPassword() {
+export function generateInvitationCode() {
+  return randomInt(0, 100_000_000).toString().padStart(8, "0");
+}
+
+export function generateUncommunicatedBootstrapPassword() {
   const prefix = randomBytes(9).toString("base64url");
   const suffix = randomInt(10, 99).toString();
 
@@ -25,4 +29,8 @@ export function hashAuthCode(code: string, email: string) {
 
 export function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
+}
+
+export function isEightDigitCode(value: string) {
+  return /^\d{8}$/.test(value);
 }
