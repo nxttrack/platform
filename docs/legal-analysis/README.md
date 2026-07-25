@@ -77,4 +77,3 @@ staat.
    contractueel bevestigd?
 5. Hoe worden verzoeken van betrokkenen, ouderlijk gezag, conflicterende verzorgers, intrekking,
    supporttoegang, incidenten en datalekken organisatorisch ontvangen, geverifieerd en afgehandeld?
-

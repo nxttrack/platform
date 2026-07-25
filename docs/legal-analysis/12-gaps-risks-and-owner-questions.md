@@ -112,4 +112,3 @@
 6. Automationstatus `active` versus geen executor.
 7. Marketing white-label/audit/custom roles/CRM versus gedeeltelijke runtime.
 8. Offboardingexportstatus “ready” versus mogelijk embedded table errors.
-
