@@ -403,6 +403,7 @@ export type ParentPortalData = {
   profile: ParentProfileRow | null;
   settings: ParentPortalSettings;
   accessLinks: ParentAccessRow[];
+  mutableParticipantIds: string[];
   participants: ParticipantRow[];
   enrollments: EnrollmentRow[];
   groupMemberships: GroupMembershipRow[];
@@ -757,6 +758,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     profile: (profileResult.data as ParentProfileRow | null) ?? null,
     settings: normalizeSettings(settingsResult.data),
     accessLinks: access.links,
+    mutableParticipantIds: access.mutableParticipantIds,
     participants,
     enrollments,
     groupMemberships: memberships,
@@ -791,7 +793,10 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   };
 }
 
-export async function loadParentParticipantAccess(tenantId: string, userId: string): Promise<{ participantIds: string[]; links: ParentAccessRow[] }> {
+export async function loadParentParticipantAccess(
+  tenantId: string,
+  userId: string
+): Promise<{ mutableParticipantIds: string[]; participantIds: string[]; links: ParentAccessRow[] }> {
   const admin = createAdminClient();
   const [directParticipantsResult, guardianLinksResult] = await Promise.all([
     admin.from("participants").select("id").eq("tenant_id", tenantId).eq("guardian_user_id", userId),
@@ -805,9 +810,19 @@ export async function loadParentParticipantAccess(tenantId: string, userId: stri
   const links = (guardianLinksResult.data ?? []) as ParentAccessRow[];
 
   return {
+    mutableParticipantIds: unique([
+      ...directIds,
+      ...links
+        .filter((link) => link.access_level === "primary" || link.access_level === "secondary")
+        .map((link) => link.participant_id)
+    ]),
     participantIds: unique([...directIds, ...links.map((link) => link.participant_id)]),
     links
   };
+}
+
+export function canParentMutateParticipant(data: Pick<ParentPortalData, "mutableParticipantIds">, participantId: string) {
+  return data.mutableParticipantIds.includes(participantId);
 }
 
 export function getNextLesson(data: ParentPortalData, participantId?: string) {

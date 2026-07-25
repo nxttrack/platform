@@ -40,7 +40,7 @@ export async function cancelLessonAction(formData: FormData) {
   const reason = readOptional(formData, "reason");
   const access = await loadParentParticipantAccess(tenant.id, context.user.id);
 
-  if (!access.participantIds.includes(participantId)) {
+  if (!access.mutableParticipantIds.includes(participantId)) {
     redirectWithStatus(nextPath, "error", "access");
   }
 
@@ -155,7 +155,7 @@ export async function requestCatchUpSessionAction(formData: FormData) {
   const credit = creditResult.data as { enrollment_id: string; expires_on: string | null; id: string; participant_id: string; status: string };
   const session = sessionResult.data as { capacity_override: number | null; group_id: string; id: string; starts_at: string; status: string };
 
-  if (!access.participantIds.includes(credit.participant_id) || credit.status !== "available") {
+  if (!access.mutableParticipantIds.includes(credit.participant_id) || credit.status !== "available") {
     redirectWithStatus(nextPath, "error", "access");
   }
 
@@ -256,7 +256,7 @@ export async function respondGraduationInviteAction(formData: FormData) {
 
   const access = await loadParentParticipantAccess(tenant.id, context.user.id);
 
-  if (!access.participantIds.includes(eventParticipantResult.data.participant_id)) {
+  if (!access.mutableParticipantIds.includes(eventParticipantResult.data.participant_id)) {
     redirectWithStatus(nextPath, "error", "access");
   }
 

@@ -8,7 +8,7 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { getParentCatchUpData } from "@/lib/domain/catch-up";
 import { cancelLessonAction, requestCatchUpSessionAction } from "@/lib/domain/parent-portal-actions";
-import { canCancelSession, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
+import { canCancelSession, canParentMutateParticipant, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
 import type { SessionRow } from "@/lib/domain/core";
 
 type PageProps = {
@@ -60,6 +60,7 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
               const participant = participantById.get(credit.participant_id);
               const request = catchUpData.requests.find((item) => item.credit_id === credit.id && (item.status === "requested" || item.status === "approved"));
               const options = catchUpData.options.filter((option) => option.creditId === credit.id).slice(0, 4);
+              const canMutate = canParentMutateParticipant(data, credit.participant_id);
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={credit.id}>
@@ -71,7 +72,9 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
                     </div>
                     <StatusPill tone={credit.status === "available" ? "success" : "warning"}>{request?.status ?? credit.status}</StatusPill>
                   </div>
-                  {request ? (
+                  {!canMutate ? (
+                    <p className="mt-3 text-sm font-semibold text-muted-foreground">Alleen-lezen toegang: een primaire of secundaire verzorger kan deze credit gebruiken.</p>
+                  ) : request ? (
                     <p className="mt-3 text-sm font-semibold text-muted-foreground">Aanvraag ingediend. Status: {request.status}.</p>
                   ) : options.length === 0 ? (
                     <p className="mt-3 text-sm text-muted-foreground">Geen passende les met vrije capaciteit binnen de boekingsperiode.</p>
@@ -113,6 +116,7 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
             const cancellation = cancellationBySessionParticipant.get(`${session.id}:${membership.participant_id}`);
             const future = new Date(session.starts_at).getTime() > Date.now();
             const onTime = canCancelSession(data.settings, session.starts_at);
+            const canMutate = canParentMutateParticipant(data, membership.participant_id);
 
             return (
               <article className="rounded-xl border border-border bg-card p-4 shadow-soft" key={`${session.id}:${membership.participant_id}`}>
@@ -132,7 +136,7 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
                   <Link className="inline-flex items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-semibold hover:bg-muted" href={`/portaal/lessen/${session.id}`}>
                     Details <ArrowRight className="h-4 w-4" />
                   </Link>
-                  {future && session.status === "scheduled" && !cancellation ? <CancelForm participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
+                  {future && session.status === "scheduled" && !cancellation && canMutate ? <CancelForm participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
                   {cancellation ? <p className="text-sm font-semibold text-muted-foreground">Geannuleerd op {formatShortDate(cancellation.requested_at)}</p> : null}
                 </div>
               </article>

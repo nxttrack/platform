@@ -6,7 +6,7 @@ import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cancelLessonAction } from "@/lib/domain/parent-portal-actions";
-import { canCancelSession, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
+import { canCancelSession, canParentMutateParticipant, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
 import type { SessionRow } from "@/lib/domain/core";
 
 type PageProps = {
@@ -64,7 +64,7 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
                   {cancellation ? <StatusPill tone={cancellation.eligible_for_credit ? "success" : "warning"}>{cancellation.policy_status}</StatusPill> : <StatusPill tone="info">gepland</StatusPill>}
                 </div>
                 <div className="mt-4">
-                  {future && session.status === "scheduled" && !cancellation ? <CancelForm participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
+                  {future && session.status === "scheduled" && !cancellation && canParentMutateParticipant(data, membership.participant_id) ? <CancelForm participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
                   {cancellation ? <p className="text-sm font-semibold text-muted-foreground">Geannuleerd op {formatShortDate(cancellation.requested_at)}</p> : null}
                 </div>
               </article>

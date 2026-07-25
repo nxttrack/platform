@@ -20,6 +20,7 @@ import {
   type MollieMode
 } from "./mollie-contract";
 import { createTenantNotifications } from "./tenant-notifications";
+import { loadParentParticipantAccess } from "./parent-portal";
 
 const consentTermsVersion = "nxttrack-sepa-v1-2026-07";
 
@@ -129,6 +130,11 @@ export async function startMollieMandateAction(formData: FormData) {
     !profileResult.data.email
   ) {
     redirect("/portaal/betalingen?error=incasso-not-ready");
+  }
+
+  const access = await loadParentParticipantAccess(tenant.id, context.user.id);
+  if (!access.mutableParticipantIds.includes(subscriptionResult.data.participant_id)) {
+    redirect("/portaal/betalingen?error=access");
   }
 
   const configResult = await admin
@@ -278,7 +284,7 @@ export async function revokeMollieMandateAction(formData: FormData) {
     redirect("/portaal/betalingen?error=mandate");
   }
 
-  const [customerResult, configResult] = await Promise.all([
+  const [customerResult, configResult, subscriptionsResult, access] = await Promise.all([
     admin
       .from("billing_provider_customers")
       .select("id, provider_customer_id")
@@ -292,10 +298,28 @@ export async function revokeMollieMandateAction(formData: FormData) {
       .eq("tenant_id", tenant.id)
       .eq("id", mandateResult.data.provider_config_id)
       .eq("provider", "mollie")
-      .maybeSingle()
+      .maybeSingle(),
+    admin
+      .from("subscriptions")
+      .select("id, participant_id, guardian_user_id")
+      .eq("tenant_id", tenant.id)
+      .eq("billing_mandate_id", mandateResult.data.id),
+    loadParentParticipantAccess(tenant.id, context.user.id)
   ]);
-  if (customerResult.error || configResult.error || !customerResult.data || !configResult.data?.secret_reference) {
+  if (
+    customerResult.error ||
+    configResult.error ||
+    subscriptionsResult.error ||
+    !customerResult.data ||
+    !configResult.data?.secret_reference
+  ) {
     redirect("/portaal/betalingen?error=mandate-provider");
+  }
+  if (
+    !subscriptionsResult.data?.length ||
+    subscriptionsResult.data.some((subscription) => !access.mutableParticipantIds.includes(subscription.participant_id))
+  ) {
+    redirect("/portaal/betalingen?error=access");
   }
 
   try {
@@ -308,13 +332,6 @@ export async function revokeMollieMandateAction(formData: FormData) {
   } catch {
     redirect("/portaal/betalingen?error=mandate-provider-api");
   }
-
-  const subscriptionsResult = await admin
-    .from("subscriptions")
-    .select("id, participant_id, guardian_user_id")
-    .eq("tenant_id", tenant.id)
-    .eq("billing_mandate_id", mandateResult.data.id);
-  if (subscriptionsResult.error) redirect("/portaal/betalingen?error=mandate-update");
 
   const now = new Date().toISOString();
   const mandateUpdate = await admin

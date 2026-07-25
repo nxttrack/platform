@@ -3,7 +3,7 @@ import { CalendarCheck, CheckCircle2, Download, FileBadge, XCircle } from "lucid
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
-import { getParentPortalData } from "@/lib/domain/parent-portal";
+import { canParentMutateParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -50,7 +50,7 @@ export default async function ParentDiplomaVaultPage({ searchParams }: PageProps
                     <StatusPill tone={invite.invite_status === "confirmed" ? "success" : invite.invite_status === "declined" ? "danger" : "info"}>{invite.invite_status}</StatusPill>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">Status: {invite.status}. Resultaat: {invite.result === "pending" ? "nog niet bekend" : invite.result}.</p>
-                  {invite.invite_status === "sent" ? (
+                  {invite.invite_status === "sent" && canParentMutateParticipant(data, invite.participant_id) ? (
                     <div className="mt-4 flex flex-wrap gap-2">
                       <form action={respondGraduationInviteAction}>
                         <input name="eventParticipantId" type="hidden" value={invite.id} />

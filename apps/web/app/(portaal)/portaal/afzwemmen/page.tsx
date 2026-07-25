@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
-import { getParentPortalData } from "@/lib/domain/parent-portal";
+import { canParentMutateParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -62,7 +62,7 @@ export default async function ParentGraduationPage({ searchParams }: PageProps) 
                     <Detail icon={<CheckCircle2 className="h-4 w-4" />} label="Resultaat" value={invite.result === "pending" ? "Nog niet bekend" : invite.result} />
                   </div>
 
-                  {invite.invite_status === "sent" ? (
+                  {invite.invite_status === "sent" && canParentMutateParticipant(data, invite.participant_id) ? (
                     <div className="mt-5 flex flex-wrap gap-2">
                       <ResponseForm eventParticipantId={invite.id} response="confirmed">
                         <CheckCircle2 className="h-4 w-4" /> Bevestigen

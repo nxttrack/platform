@@ -5,7 +5,7 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatMoney, isPaymentOverdue } from "@/lib/domain/billing";
 import { revokeMollieMandateAction, startMollieMandateAction } from "@/lib/domain/billing-recurring-actions";
 import { getSafeMollieCheckoutUrl } from "@/lib/domain/mollie-contract";
-import { getParentPortalData } from "@/lib/domain/parent-portal";
+import { canParentMutateParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
 
 export const dynamic = "force-dynamic";
 
@@ -57,6 +57,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
               const pendingFirstSession = data.paymentSessions.find(
                 (session) => session.subscription_id === subscription.id && session.sequence_type === "first" && ["pending", "authorized"].includes(session.status)
               );
+              const canMutate = canParentMutateParticipant(data, subscription.participant_id);
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={subscription.id}>
@@ -74,7 +75,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                     <Detail label="Start" value={formatDate(subscription.starts_on)} />
                     <Detail label="Volgende vervaldatum" value={subscription.next_due_on ? formatDate(subscription.next_due_on) : "Niet gezet"} />
                   </div>
-                  {mandate?.status === "valid" ? (
+                  {mandate?.status === "valid" && canMutate ? (
                     <div className="mt-4 rounded-lg border border-success/20 bg-success/5 p-3">
                       <p className="text-sm font-bold text-foreground">SEPA-machtiging actief · •••• {mandate.account_last4 ?? "onbekend"}</p>
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
@@ -91,7 +92,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                         </button>
                       </form>
                     </div>
-                  ) : subscription.collection_method === "provider" && openPayment ? (
+                  ) : subscription.collection_method === "provider" && openPayment && canMutate ? (
                     <form action={startMollieMandateAction} className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
                       <input name="subscriptionId" type="hidden" value={subscription.id} />
                       <input name="paymentId" type="hidden" value={openPayment.id} />
@@ -271,6 +272,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                 provider: session.provider,
                 status: session.status
               });
+              const canMutate = Boolean(session.participant_id && canParentMutateParticipant(data, session.participant_id));
 
               return (
                 <article className="rounded-lg border border-border bg-white p-4" key={session.id}>
@@ -285,7 +287,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                     <StatusPill tone={session.status === "paid" ? "success" : session.status === "failed" ? "danger" : session.status === "pending" ? "warning" : "neutral"}>{session.status}</StatusPill>
                   </div>
                   {session.failure_message ? <p className="mt-3 text-sm leading-6 text-danger">{session.failure_message}</p> : null}
-                  {checkoutUrl ? (
+                  {checkoutUrl && canMutate ? (
                     <a
                       className="mt-4 inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground hover:bg-primary/90"
                       href={checkoutUrl}
