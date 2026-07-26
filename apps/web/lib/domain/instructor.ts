@@ -240,7 +240,7 @@ export async function getInstructorData(): Promise<InstructorData> {
   const participantIds = unique(groupMemberships.map((membership) => membership.participant_id).concat(catchUpRequests.map((request) => request.participant_id)));
   const enrollmentIds = unique(groupMemberships.map((membership) => membership.enrollment_id).concat(catchUpRequests.map((request) => request.enrollment_id)));
   const [participantsResult, enrollmentsResult, notesResult, badgeAwardsResult, progressScoresResult] = await Promise.all([
-    participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
+    participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
     enrollmentIds.length > 0
       ? admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on").eq("tenant_id", tenant.id).in("id", enrollmentIds)
       : Promise.resolve({ data: [], error: null }),

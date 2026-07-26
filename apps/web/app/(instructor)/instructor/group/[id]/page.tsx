@@ -1,10 +1,12 @@
-import { ArrowRight, CheckCircle2, ClipboardCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCheck, MessageSquarePlus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { completeSessionAction, markAttendanceAction, markRosterPresentAction } from "@/lib/domain/instructor-actions";
+import { completeSessionAction, markAttendanceAction, markRosterPresentAction, saveProgressNoteAction } from "@/lib/domain/instructor-actions";
 import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
+import { markLessonFocusTreatedAction } from "@/lib/domain/learning-intelligence-actions";
+import { generateLessonFocusCards } from "@/lib/domain/learning-intelligence";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -35,6 +37,16 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
   const groupSessions = data.sessions.filter((session) => session.group_id === group.id);
   const selectedSession = groupSessions.find((session) => session.id === selectedSessionId) ?? groupSessions.find((session) => isToday(session.starts_at)) ?? groupSessions.find((session) => new Date(session.starts_at).getTime() >= Date.now()) ?? groupSessions[0] ?? null;
   const roster = selectedSession ? getSessionRoster(data, selectedSession.id) : [];
+  const focusCards = selectedSession ? await generateLessonFocusCards({
+    tenantId: data.tenant.id,
+    sessionId: selectedSession.id,
+    includeTestData: roster.some(({ participant }) => participant.is_test)
+  }) : [];
+  const groupFocus = [...new Map(
+    focusCards.flatMap((card) => card.points)
+      .filter((point) => point.source_type === "group_bottleneck")
+      .map((point) => [point.fingerprint, point])
+  ).values()].slice(0, 3);
   const attendanceByParticipant = new Map(data.attendance.filter((attendance) => attendance.session_id === selectedSession?.id).map((attendance) => [attendance.participant_id, attendance]));
   const registeredCount = attendanceByParticipant.size;
   const presentCount = [...attendanceByParticipant.values()].filter((attendance) => attendance.status === "present" || attendance.status === "trial" || attendance.status === "late").length;
@@ -92,6 +104,67 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
               <SessionMetric label="Geregistreerd" value={registeredCount} />
               <SessionMetric label="Nog open" value={openCount} tone={openCount > 0 ? "warning" : "success"} />
             </div>
+            {focusCards.length > 0 ? (
+              <section aria-labelledby="today-focus" className="rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/5 via-card to-aqua/10 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><Sparkles className="size-4" />Voor de les</p>
+                    <h3 className="mt-1 text-lg font-bold text-foreground" id="today-focus">Vandaag focus</h3>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">Maximaal drie positieve aandachtspunten per kind; geen gevoelige dossierdetails.</p>
+                  </div>
+                  <StatusPill tone="info">{focusCards.length} focuskaarten</StatusPill>
+                </div>
+                {groupFocus.length ? (
+                  <div className="mt-4 rounded-xl border border-border bg-card/80 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Groepsfocus · maximaal 3</p>
+                    <ol className="mt-2 grid gap-2 md:grid-cols-3">
+                      {groupFocus.map((point) => <li className="rounded-lg bg-muted/50 px-3 py-2 text-sm font-medium text-foreground" key={point.fingerprint}>{point.label}</li>)}
+                    </ol>
+                  </div>
+                ) : null}
+                <div className="mt-4 grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+                  {focusCards.map((card) => (
+                    <article className="rounded-xl border border-border bg-card p-4 shadow-soft" key={card.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-foreground">{card.participant_name}</h4>
+                          {card.is_test ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+                        </div>
+                        <StatusPill tone={card.status === "treated" ? "success" : "neutral"}>{card.status === "treated" ? "Behandeld" : "Open"}</StatusPill>
+                      </div>
+                      <ol className="mt-3 space-y-2">
+                        {card.points.slice(0, 3).map((point, index) => (
+                          <li className="grid grid-cols-[1.5rem_1fr] gap-2 text-sm leading-6 text-foreground" key={point.fingerprint}>
+                            <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{index + 1}</span>
+                            <span>{point.label}<span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">{point.explanation}</span></span>
+                          </li>
+                        ))}
+                      </ol>
+                      <div className="mt-4 grid gap-2">
+                        {card.status !== "treated" ? (
+                          <form action={markLessonFocusTreatedAction}>
+                            <input name="cardId" type="hidden" value={card.id} />
+                            <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                            <button className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold hover:bg-muted" type="submit"><CheckCircle2 className="size-4" />Markeer behandeld</button>
+                          </form>
+                        ) : null}
+                        <form action={saveProgressNoteAction} className="grid gap-2">
+                          <input name="participantId" type="hidden" value={card.participant_id} />
+                          <input name="sessionId" type="hidden" value={selectedSession.id} />
+                          <input name="visibility" type="hidden" value="internal" />
+                          <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                          <label className="sr-only" htmlFor={`focus-note-${card.id}`}>Interne notitie voor {card.participant_name}</label>
+                          <div className="grid grid-cols-[1fr_auto] gap-2">
+                            <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm" id={`focus-note-${card.id}`} name="note" placeholder="Korte interne notitie" required />
+                            <button aria-label={`Notitie toevoegen voor ${card.participant_name}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground" type="submit"><MessageSquarePlus className="size-4" /></button>
+                          </div>
+                        </form>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
             {roster.map(({ enrollment, participant }) => {
               const attendance = attendanceByParticipant.get(participant.id);
 

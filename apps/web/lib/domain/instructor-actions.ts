@@ -156,12 +156,24 @@ export async function markRosterPresentAction(formData: FormData) {
     .eq("tenant_id", tenant.id)
     .eq("group_id", access.session.group_id)
     .in("status", ["active", "trial"]);
+  const catchUpResult = await admin
+    .from("catch_up_requests")
+    .select("participant_id, enrollment_id")
+    .eq("tenant_id", tenant.id)
+    .eq("assigned_session_id", sessionId)
+    .eq("status", "approved");
 
-  if (membershipsResult.error) {
+  if (membershipsResult.error || catchUpResult.error) {
     redirectWithStatus(nextPath, "error", "attendance");
   }
 
-  const memberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  const regularMemberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  const memberships = [
+    ...regularMemberships,
+    ...((catchUpResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>).filter(
+      (row) => !regularMemberships.some((membership) => membership.participant_id === row.participant_id)
+    )
+  ];
   if (memberships.length) {
     const markedAt = new Date().toISOString();
     const { error } = await admin.from("session_attendance").upsert(
@@ -487,7 +499,25 @@ async function getSessionMembership(input: { tenantId: string; userId: string; c
     return null;
   }
 
-  return ((data ?? []) as { enrollment_id: string; participant_id: string; group_id: string; status: string }[])[0] ?? null;
+  const membership = ((data ?? []) as { enrollment_id: string; participant_id: string; group_id: string; status: string }[])[0] ?? null;
+  if (membership) return membership;
+
+  const catchUpResult = await admin
+    .from("catch_up_requests")
+    .select("enrollment_id, participant_id, status")
+    .eq("tenant_id", input.tenantId)
+    .eq("assigned_session_id", input.sessionId)
+    .eq("participant_id", input.participantId)
+    .eq("status", "approved")
+    .limit(1)
+    .maybeSingle();
+  if (catchUpResult.error || !catchUpResult.data) return null;
+  return {
+    enrollment_id: catchUpResult.data.enrollment_id,
+    participant_id: catchUpResult.data.participant_id,
+    group_id: access.session.group_id,
+    status: "active"
+  };
 }
 
 async function getInstructorMembershipForParticipant(input: { tenantId: string; userId: string; canManageTenant: boolean; participantId: string }) {
