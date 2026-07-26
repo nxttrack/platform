@@ -135,6 +135,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await expect(page.getByText("Opgeslagen: subscription.")).toBeVisible();
     await expect(page.locator("article").filter({ hasText: participantName }).filter({ hasText: planName })).toHaveCount(1);
 
+    await openAction(page, "Betaling toevoegen");
     form = formWithButton(page, "Betaling opslaan");
     await selectOptionByText(form.getByLabel("Subscription"), participantName);
     await form.getByLabel("Vervaldatum").fill(dateValue(14));

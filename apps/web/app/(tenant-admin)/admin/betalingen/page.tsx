@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { CreditCard, ReceiptText } from "lucide-react";
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PaymentsTable } from "@/components/admin/resource-tables";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -53,7 +54,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Billing" title="Betalingen en subscriptions" subtitle="Handmatige billing en idempotente Mollie-checkout met provider-verified webhooks." />
+      <PageHeader action={<AdminActionDrawer description="Maak een openstaande of reeds betaalde handmatige betaling voor een abonnement." title="Betaling toevoegen" triggerLabel="Betaling toevoegen"><ManualPaymentForm data={data} /></AdminActionDrawer>} kicker="Financieel" title="Betalingen en abonnementen" subtitle="Handmatige billing en idempotente Mollie-checkout met provider-verified webhooks." />
       <RouteFeedback success={saved ? successMessage(saved) : null} error={error ? errorMessage(error) : null} />
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
@@ -185,7 +186,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
         </div>
       </AdminSection>
 
-      <div className="grid gap-5 xl:grid-cols-3">
+      <div className="grid gap-5 xl:grid-cols-2">
         <AdminSection title="Payment plan" description="Maak een handmatig tariefplan aan.">
           <DirtyForm action={createPaymentPlanAction} className="grid gap-4">
             <Field label="Naam" name="name" required placeholder="Maandabonnement zwemles" />
@@ -294,41 +295,6 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
           </DirtyForm>
         </AdminSection>
 
-        <AdminSection title="Handmatige betaling" description="Maak een openstaande of betaalde handmatige betaling aan.">
-          <DirtyForm action={createManualPaymentAction} className="grid gap-4">
-            <SelectField label="Subscription" name="subscriptionId" required>
-              <option value="">Kies subscription</option>
-              {data.subscriptions.map((subscription) => {
-                const participant = participantById.get(subscription.participant_id);
-                const plan = planById.get(subscription.payment_plan_id);
-
-                return (
-                  <option key={subscription.id} value={subscription.id}>
-                    {participant?.display_name ?? "Leerling"} - {plan?.name ?? "Plan"}
-                  </option>
-                );
-              })}
-            </SelectField>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Bedrag" name="amount" placeholder="Leeg = subscription" />
-              <Field label="Vervaldatum" name="dueOn" required type="date" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SelectField label="Status" name="status">
-                <option value="due">Open</option>
-                <option value="overdue">Overdue</option>
-                <option value="paid">Betaald</option>
-                <option value="waived">Kwijtgescholden</option>
-                <option value="cancelled">Geannuleerd</option>
-              </SelectField>
-              <Field label="Betaaldatum" name="paidOn" type="date" />
-            </div>
-            <Field label="Referentie" name="reference" placeholder="Bijvoorbeeld factuurnummer" />
-            <Field label="Methode" name="method" placeholder="Bank, contant, pin" />
-            <TextAreaField label="Notities" name="notes" />
-            <SubmitButton>Betaling opslaan</SubmitButton>
-          </DirtyForm>
-        </AdminSection>
       </div>
 
       <AdminSection title="Subscription lifecycle" description="Pauzeren, annuleren of afronden verandert alleen billingstatus; programma, badje en zwemvoortgang blijven onafhankelijk.">
@@ -766,6 +732,25 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
         )}
       </AdminSection>
     </div>
+  );
+}
+
+function ManualPaymentForm({ data }: { data: Awaited<ReturnType<typeof getBillingAdminData>> }) {
+  const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
+  const planById = new Map(data.paymentPlans.map((plan) => [plan.id, plan]));
+  return (
+    <DirtyForm action={createManualPaymentAction} className="grid gap-4">
+      <SelectField label="Abonnement" name="subscriptionId" required>
+        <option value="">Kies abonnement</option>
+        {data.subscriptions.map((subscription) => <option key={subscription.id} value={subscription.id}>{participantById.get(subscription.participant_id)?.display_name ?? "Leerling"} · {planById.get(subscription.payment_plan_id)?.name ?? "Plan"}</option>)}
+      </SelectField>
+      <div className="grid gap-3 sm:grid-cols-2"><Field label="Bedrag" name="amount" placeholder="Leeg = abonnement" /><Field label="Vervaldatum" name="dueOn" required type="date" /></div>
+      <div className="grid gap-3 sm:grid-cols-2"><SelectField label="Status" name="status"><option value="due">Open</option><option value="overdue">Achterstallig</option><option value="paid">Betaald</option><option value="waived">Kwijtgescholden</option><option value="cancelled">Geannuleerd</option></SelectField><Field label="Betaaldatum" name="paidOn" type="date" /></div>
+      <Field label="Referentie" name="reference" placeholder="Bijvoorbeeld factuurnummer" />
+      <Field label="Methode" name="method" placeholder="Bank, contant, pin" />
+      <TextAreaField label="Notities" name="notes" />
+      <SubmitButton>Betaling opslaan</SubmitButton>
+    </DirtyForm>
   );
 }
 
