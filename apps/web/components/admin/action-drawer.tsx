@@ -35,7 +35,8 @@ export function AdminActionDrawer({
       <SheetContent
         className={cn(
           "w-screen max-w-none overflow-y-auto p-0 sm:w-[min(94vw,560px)]",
-          width === "wide" && "sm:w-[min(94vw,720px)]"
+          "!w-screen sm:!w-[min(94vw,560px)]",
+          width === "wide" && "sm:!w-[min(94vw,720px)]"
         )}
         side="right"
       >

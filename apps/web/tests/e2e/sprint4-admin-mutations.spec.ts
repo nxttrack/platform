@@ -40,6 +40,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
 
     await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
 
+    await openAction(page, "Programma toevoegen");
     let form = formWithButton(page, "Programma opslaan");
     await form.getByLabel("Naam").fill(programName);
     await form.getByLabel("Code").fill(programCode);
@@ -48,6 +49,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(page.getByRole("listitem").filter({ hasText: programName })).toHaveCount(1);
 
     await page.goto("/admin/programma", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Niveau toevoegen");
     form = formWithButton(page, "Stage opslaan");
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await form.getByLabel("Naam").fill(stageName);
@@ -57,11 +59,12 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(page.getByRole("listitem").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Nieuwe groep");
     form = formWithButton(page, "Lesgroep opslaan");
     await form.getByLabel("Naam").fill(groupName);
     await form.getByLabel("Code").fill(groupCode);
     await selectOptionByText(form.getByLabel("Programma"), programName);
-    await selectOptionByText(form.getByLabel("Badje/stage"), stageName);
+    await selectOptionByText(form.getByLabel("Niveau"), stageName);
     await form.getByLabel("Capaciteit").fill("6");
     await form.getByLabel("Vaste dag").selectOption("3");
     await form.getByLabel("Starttijd").fill("17:00");
@@ -71,6 +74,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Instructeur koppelen");
     form = formWithButton(page, "Instructeur koppelen");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await selectOptionByText(form.getByLabel("Instructeur"), state.users.instructor.fullName);
@@ -80,17 +84,19 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
 
     await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Leerling toevoegen");
     form = formWithButton(page, "Leerling inschrijven");
     await form.getByLabel("Leerlingnaam").fill(participantName);
     await form.getByLabel("Geboortedatum").fill("2019-04-12");
     await form.getByLabel("Startdatum").fill(today);
     await selectOptionByText(form.getByLabel("Programma"), programName);
-    await selectOptionByText(form.getByLabel("Huidig badje/stage"), stageName);
+    await selectOptionByText(form.getByLabel("Huidig niveau"), stageName);
     await submitAndWaitForSaved(page, form, "Leerling inschrijven", "/admin/leerlingen", "1");
     await filterResourceTable(page, "Zoek leerling of ouder…", participantName);
     await mutationExpect(resourceRow(page, participantName)).toHaveCount(1);
 
     await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Plaatsen");
     form = formWithButton(page, "In groep plaatsen");
     await selectOptionByText(form.getByLabel("Inschrijving"), participantName);
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
@@ -100,6 +106,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(resourceRow(page, participantName).getByText(groupName, { exact: true })).toBeVisible();
 
     await page.goto("/admin/agenda", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Les plannen");
     form = formWithButton(page, "Les opslaan");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await form.getByLabel("Start").fill(dateTimeValue(5, 17, 0));
@@ -107,8 +114,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
     await expect(page.getByText("Opgeslagen: 1.")).toBeVisible();
-    const dayPlan = page.locator("section").filter({ has: page.getByRole("heading", { name: "Dag- en weekplan", exact: true }) }).first();
-    await expect(dayPlan.locator("article").filter({ hasText: groupName })).toHaveCount(1);
+    await expect(page.getByRole("button").filter({ hasText: groupName })).toHaveCount(1);
 
     await page.goto("/admin/betalingen", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Plan opslaan");
@@ -146,6 +152,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await expect(payment.getByText("paid", { exact: true })).toBeVisible();
 
     await page.goto("/admin/documenten", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Document toevoegen");
     form = formWithButton(page, "Document opslaan");
     await form.getByLabel("Titel").fill(documentTitle);
     await form.getByLabel("Omschrijving").fill("Metadata-only browserbewijs; geen extern bestand.");
@@ -155,6 +162,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await expect(resourceRow(page, documentTitle)).toHaveCount(1);
 
     await page.goto("/admin/berichten", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Bericht opstellen");
     form = formWithButton(page, "Bericht opslaan");
     await form.getByLabel("Titel").fill(messageTitle);
     await form.getByLabel("Bericht").fill("Interne conceptcommunicatie uit de Sprint 4 browserjourney.");
@@ -168,6 +176,10 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
 
 function formWithButton(page: Page, name: string) {
   return page.locator("form").filter({ has: page.getByRole("button", { name, exact: true }) });
+}
+
+async function openAction(page: Page, name: string) {
+  await page.getByRole("button", { name, exact: true }).click();
 }
 
 function resourceRow(page: Page, text: string) {

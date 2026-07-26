@@ -38,7 +38,7 @@ export function DetailsSheet({ children, description, onOpenChange, open, title 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-[94vw] max-w-none overflow-y-auto p-0 md:w-[var(--details-width)]" side="right" style={{ "--details-width": `${width}px` } as CSSProperties}>
+      <SheetContent className="!w-screen max-w-none overflow-y-auto p-0 md:!w-[var(--details-width)]" side="right" style={{ "--details-width": `${width}px` } as CSSProperties}>
         <button
           aria-label="Breedte detailpaneel aanpassen"
           className="absolute inset-y-0 left-0 z-20 hidden w-6 -translate-x-1/2 cursor-col-resize items-center justify-center text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:flex"

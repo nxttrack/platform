@@ -1,4 +1,7 @@
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
+import { AdminListSurface } from "@/components/admin/admin-patterns";
 import { InvitationsTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
 import { Button } from "@/components/ui/button";
 import { DirtyForm } from "@/components/ui/dirty-form";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -30,45 +33,13 @@ export default async function TenantInvitationsPage({ searchParams }: PageProps)
     : { data: [] };
 
   return (
-    <section className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-wider text-primary">Backoffice</p>
-        <h1 className="mt-2 text-2xl font-bold text-foreground">Uitnodigingen</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Nodig instructeurs, teamleden en ouders uit voor {context.activeTenant?.name ?? "deze organisatie"}.</p>
-      </div>
+    <section className="space-y-5">
+      <PageHeader action={<AdminActionDrawer description="De ontvanger krijgt een tijdgebonden code en kiest bij een nieuw account een eigen wachtwoord." title="Account uitnodigen" triggerLabel="Uitnodiging sturen"><InvitationForm tenantSlug={tenantSlug} /></AdminActionDrawer>} kicker="Leerlingen" title="Uitnodigingen" subtitle={`Nodig instructeurs, teamleden en ouders uit voor ${context.activeTenant?.name ?? "deze organisatie"}.`} />
 
       <RouteFeedback success={sent ? delivery === "sent" ? "Uitnodiging is verzonden." : "Uitnodiging is aangemaakt; mailprovider is nog niet geconfigureerd." : null} error={error ? "Uitnodiging aanmaken is niet gelukt." : null} />
 
-      <div className="grid gap-5 2xl:grid-cols-[minmax(320px,0.65fr)_minmax(0,1.85fr)]">
-      <DirtyForm action={createInvitationAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <input name="next" type="hidden" value="/admin/uitnodigingen" />
-        <input name="tenantSlug" type="hidden" value={tenantSlug} />
-        <div className="grid gap-4 md:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor="fullName">Naam</FieldLabel>
-            <Input className="h-11" autoComplete="name" id="fullName" name="fullName" type="text" />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor="email">E-mail</FieldLabel>
-            <Input className="h-11" autoComplete="email" id="email" name="email" required type="email" />
-          </Field>
-          <Field className="md:col-span-2">
-            <FieldLabel htmlFor="role">Rol</FieldLabel>
-            <NativeSelect className="h-11" id="role" name="role" required>
-              {tenantInviteRoles.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabels[role]}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-        </div>
-        <Button className="mt-5" size="lg" type="submit">
-          Uitnodiging sturen
-        </Button>
-      </DirtyForm>
-      <div className="min-w-0 rounded-xl border border-border bg-card p-5 shadow-card">
-        <h2 className="mb-4 text-lg font-bold">Verzonden uitnodigingen</h2>
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">Verzonden uitnodigingen</h2><p className="text-[13px] text-muted-foreground">Controleer bezorging, status en vervaldatum vanuit het detailpaneel.</p></div>
         <InvitationsTable rows={(invitationsResult.data ?? []).map((row) => ({
           createdAt: row.created_at,
           deliveryStatus: row.delivery_status,
@@ -79,9 +50,21 @@ export default async function TenantInvitationsPage({ searchParams }: PageProps)
           status: row.status,
           tenant: context.activeTenant?.name ?? tenantSlug
         }))} />
-      </div>
-      </div>
+      </AdminListSurface>
     </section>
+  );
+}
+
+function InvitationForm({ tenantSlug }: { tenantSlug: string }) {
+  return (
+    <DirtyForm action={createInvitationAction} className="grid gap-4">
+      <input name="next" type="hidden" value="/admin/uitnodigingen" />
+      <input name="tenantSlug" type="hidden" value={tenantSlug} />
+      <Field><FieldLabel htmlFor="fullName">Naam</FieldLabel><Input autoComplete="name" id="fullName" name="fullName" type="text" /></Field>
+      <Field><FieldLabel htmlFor="email">E-mail</FieldLabel><Input autoComplete="email" id="email" name="email" required type="email" /></Field>
+      <Field><FieldLabel htmlFor="role">Rol</FieldLabel><NativeSelect id="role" name="role" required>{tenantInviteRoles.map((role) => <option key={role} value={role}>{roleLabels[role]}</option>)}</NativeSelect></Field>
+      <Button type="submit">Uitnodiging sturen</Button>
+    </DirtyForm>
   );
 }
 
