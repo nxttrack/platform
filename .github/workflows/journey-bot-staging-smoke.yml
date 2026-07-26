@@ -1,0 +1,66 @@
+name: Journey Bot staging smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type RUN_WATERLIJN_JOURNEY
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-journey-bot-staging-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: run one full Waterlijn journey
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      JOURNEY_BOT_STAGING_SMOKE: true
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+    steps:
+      - name: Authorize staging journey mutation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "RUN_WATERLIJN_JOURNEY"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Run full Journey Bot smoke
+        run: pnpm run journey-bot:test-staging
+
+      - name: Upload Journey Bot evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: journey-bot-staging-${{ github.sha }}
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: ignore
+          retention-days: 14

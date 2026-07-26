@@ -1,15 +1,14 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createInvitation } from "./invitations";
+import { acceptInvitation, createInvitation } from "./invitations";
 import { confirmPasswordReset, changeAuthenticatedPassword, requestPasswordResetCode } from "./password-reset";
 import { buildLoginRedirect, getDefaultRedirectForRoles, sanitizeRelativePath } from "./redirects";
 import { isPlatformRole, isTenantRole, type AppRole } from "./roles";
 import { createClient } from "@/lib/supabase/server";
 import { getTrustedAuthContextForRequest, requireAuthenticatedContext, requirePrivateShellContext } from "./server-guard";
 import { normalizeEmail } from "./tokens";
-import { markAcceptedInvitations } from "./user-security";
+import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 
 export async function loginAction(formData: FormData) {
   const nextPath = sanitizeRelativePath(formData.get("next"), "/portaal");
@@ -39,14 +38,6 @@ export async function loginAction(formData: FormData) {
     redirect(buildLoginRedirect(nextPath, "invalid_credentials"));
   }
 
-  if (context.user.email) {
-    try {
-      await markAcceptedInvitations({ userId: context.user.id, email: context.user.email });
-    } catch {
-      // Invitation state is bookkeeping; a valid login must continue.
-    }
-  }
-
   if (context.security.mustChangePassword) {
     redirect(`/auth/wachtwoord-wijzigen?next=${encodeURIComponent(nextPath)}`);
   }
@@ -56,7 +47,7 @@ export async function loginAction(formData: FormData) {
 
 export async function requestPasswordResetAction(formData: FormData) {
   const email = readString(formData, "email");
-  const baseUrl = await getRequestBaseUrl();
+  const baseUrl = await getTrustedRequestOrigin();
 
   try {
     await requestPasswordResetCode({
@@ -67,7 +58,7 @@ export async function requestPasswordResetAction(formData: FormData) {
     redirect("/wachtwoord-vergeten?error=unavailable");
   }
 
-  redirect(`/wachtwoord-vergeten?sent=1&email=${encodeURIComponent(normalizeEmail(email))}`);
+  redirect("/wachtwoord-vergeten?sent=1");
 }
 
 export async function confirmPasswordResetAction(formData: FormData) {
@@ -84,10 +75,30 @@ export async function confirmPasswordResetAction(formData: FormData) {
       confirmPassword
     });
   } catch {
-    redirect(`/wachtwoord-resetten?email=${encodeURIComponent(normalizeEmail(email))}&error=invalid_code`);
+    redirect("/wachtwoord-resetten?error=invalid_code");
   }
 
   redirect("/login?reset=done");
+}
+
+export async function acceptInvitationAction(formData: FormData) {
+  const email = readString(formData, "email");
+  const code = readString(formData, "code");
+  const password = optionalString(formData, "password");
+  const confirmPassword = optionalString(formData, "confirmPassword");
+
+  try {
+    await acceptInvitation({
+      code,
+      confirmPassword,
+      email,
+      password
+    });
+  } catch {
+    redirect("/uitnodiging-accepteren?error=invalid");
+  }
+
+  redirect("/login?invitation=accepted");
 }
 
 export async function changePasswordAction(formData: FormData) {
@@ -127,11 +138,11 @@ export async function createInvitationAction(formData: FormData) {
 
   try {
     const result = await createInvitation({
+      acceptUrl: `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`,
       email,
       fullName,
       role,
       tenantSlug,
-      loginUrl: `${await getRequestBaseUrl()}/login?next=${encodeURIComponent(getInviteNextPath(role))}`,
       actor
     });
 
@@ -153,32 +164,4 @@ function optionalString(formData: FormData, field: string) {
   const value = readString(formData, field);
 
   return value === "" ? null : value;
-}
-
-async function getRequestBaseUrl() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "https";
-
-  if (host) {
-    return `${protocol}://${host}`;
-  }
-
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-}
-
-function getInviteNextPath(role: AppRole): `/${string}` {
-  if (isPlatformRole(role)) {
-    return "/platform";
-  }
-
-  if (role === "instructor") {
-    return "/instructor";
-  }
-
-  if (role === "parent") {
-    return "/portaal";
-  }
-
-  return "/admin";
 }

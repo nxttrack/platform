@@ -1,0 +1,109 @@
+# Sprint 6 - Billing Activation
+
+Status: active, staging-first. Checkout, mandate, recurring SEPA, refund, chargeback and guarded scheduler
+increments are implemented. The Phase 29 exact-SHA staging rehearsals remain required before live activation.
+
+## Outcome
+
+Optional online payment works without making billing the source of truth for enrollment, placement or learning
+progress. Manual billing remains available at every stage.
+
+## Increment A - Checkout And Webhook Safety
+
+Delivered:
+
+- one browser-rendered UUID v4 is reused across duplicate form submissions;
+- the database permits only one unfinished provider attempt per manual payment and provider config;
+- retries are accepted only when provider, payment, amount and currency match exactly;
+- a paid or otherwise closed manual payment cannot start another checkout;
+- test provider configs require a `test_` key and live configs require a `live_` key;
+- active provider configuration validates the environment reference and same-origin HTTPS return URL;
+- classic Mollie webhooks accept only bounded form-urlencoded input;
+- provider metadata, exact decimal amount and currency are verified after retrieving the payment from Mollie;
+- repeated provider and webhook-error events have deterministic database idempotency keys;
+- only valid, unexpired HTTPS Mollie checkout links appear in the parent portal;
+- failed, expired and cancelled attempts show distinct operational messages;
+- unfinished `ideal` and `other` provider adapters cannot be activated accidentally;
+- Node contract tests run in CI and the local hardening command.
+
+Relevant migration:
+`20260723153000_phase_27_billing_activation_hardening.sql`.
+
+## Increment B - Staging Sandbox Evidence
+
+Prerequisite:
+
+- add a staging-only GitHub Environment secret such as `MOLLIE_API_KEY` containing a Mollie `test_...` key;
+- do not add a live key and do not configure production yet.
+
+Execution:
+
+1. Deploy the exact Sprint 6 candidate to staging and apply all migrations.
+2. Save an active Mollie `test` provider config with `ENV:MOLLIE_API_KEY`.
+3. Create one open manual payment and start checkout from the admin screen.
+4. Complete the Mollie hosted test checkout from the parent journey.
+5. Confirm the webhook returns `200`, the session and manual payment are `paid`, and exactly one
+   `payment_paid` billing event exists.
+6. Submit the same classic webhook at least twice and confirm no second business effect appears.
+7. Double-submit checkout creation and confirm only one unfinished provider attempt exists.
+8. Exercise failed, cancelled and expired test states and confirm the parent/admin status plus fallback path.
+9. Reconcile the provider payment ID, amount, currency and local records.
+10. Retain the exact SHA, workflow logs and redacted database assertions as release evidence.
+
+Mollie caches an idempotent request by `Idempotency-Key`, and classic payment webhooks contain a payment ID
+that must be retrieved and verified through the API. Follow the
+[Mollie idempotency contract](https://docs.mollie.com/reference/api-idempotency) and
+[classic webhook contract](https://docs.mollie.com/reference/webhooks-new).
+
+## Increment C - Financial Operations
+
+Implemented in [Phase 29](PHASE_29_MOLLIE_FINANCIAL_OPERATIONS.md):
+
+- explicit partial/full refund creation with atomic reservation and authorization;
+- chargeback intake, reversal state, urgent tasking and guardian communication;
+- reconciliation of provider refunds/chargebacks with exactly-once effects;
+- retry policy for interrupted creation and failed recurring payments;
+- guarded scheduled collection with independent tenant featureflags.
+
+Still required:
+
+- invoice numbering/tax/accounting decisions;
+- finance approval of retry and customer-communication policy;
+- controlled live transaction, refund and settlement evidence.
+
+### Bounded recurring SEPA rehearsal
+
+The staging-only `Staging Mollie incasso rehearsal` workflow proves the provider contract without activating
+recurring collection for production tenants. It creates an isolated Mollie test customer and direct-debit
+mandate, creates a €1.43 `sequenceType: recurring` payment without a customer checkout URL, moves the payment
+to `paid` or `failed` through Mollie's test-only `changePaymentState` page, and verifies the existing
+provider-verified webhook path plus exactly-once local effects. A failed debit must leave the manual payment
+open and mark only the provider session as failed.
+
+The workflow requires the literal confirmation `REHEARSE_MOLLIE_INCASSO_TEST`, an exact SHA already deployed
+to staging, and a `test_` credential. Its artifact is redacted and deliberately excludes the test-state URL.
+This rehearsal is evidence for the technical incasso path only. Consent capture, mandate lifecycle,
+advance notice, retries, refunds, chargebacks and reconciliation are implemented in later increments but
+retain their own exact-SHA staging evidence. Live activation remains separate release work.
+
+First successful incasso evidence:
+
+- harness SHA `f83fdefcac0ab337e8508628ce59448f990fec4b`;
+- staging application SHA `16694b6062b7b89d58866e1487bb15cdac77348f`;
+- workflow run `30038823927`, artifact `8576396852`;
+- valid direct-debit mandate, `sequenceType: recurring`, paid local state, one provider event, one billing
+  event and no duplicate effects after two repeated webhooks.
+
+Failed incasso evidence:
+
+- harness SHA `52f42ed20f9a5f2c61bfa5dc5256245c8e3c5218`;
+- staging application SHA `16694b6062b7b89d58866e1487bb15cdac77348f`;
+- workflow run `30039371945`, artifact `8576610204`;
+- valid direct-debit mandate, provider and session status `failed`, failure code `provider_failed`, manual
+  payment still `due`, zero paid billing events and no duplicate effects after two repeated webhooks.
+
+## Go/No-Go Boundary
+
+No live key, production provider row, real charge or recurring mandate is authorized by this sprint document.
+Production activation needs a separately approved exact SHA, sandbox evidence, finance ownership, refund and
+reconciliation procedure, and a controlled live transaction.

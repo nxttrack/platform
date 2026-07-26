@@ -1,4 +1,10 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
+
+import { Field as FieldRoot, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { SubmitButton as PendingSubmitButton } from "@/components/ui/submit-button";
+import { Textarea } from "@/components/ui/textarea";
 
 export function AdminSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
@@ -18,7 +24,10 @@ export function Field({
   type = "text",
   required = false,
   placeholder,
-  defaultValue
+  defaultValue,
+  description,
+  disabled = false,
+  autoComplete
 }: {
   label: string;
   name: string;
@@ -26,32 +35,40 @@ export function Field({
   required?: boolean;
   placeholder?: string;
   defaultValue?: string | number;
+  description?: string;
+  disabled?: boolean;
+  autoComplete?: string;
 }) {
+  const id = useId();
+  const descriptionId = description ? `${id}-description` : undefined;
+
   return (
-    <label className="space-y-2 text-sm font-semibold text-foreground">
-      <span>{label}</span>
-      <input
-        className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+    <FieldRoot>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input
+        aria-describedby={descriptionId}
+        autoComplete={autoComplete}
         defaultValue={defaultValue}
+        disabled={disabled}
+        id={id}
         name={name}
         placeholder={placeholder}
         required={required}
         type={type}
       />
-    </label>
+      {description ? <FieldDescription id={descriptionId}>{description}</FieldDescription> : null}
+    </FieldRoot>
   );
 }
 
 export function TextAreaField({ label, name, placeholder }: { label: string; name: string; placeholder?: string }) {
+  const id = useId();
+
   return (
-    <label className="space-y-2 text-sm font-semibold text-foreground">
-      <span>{label}</span>
-      <textarea
-        className="min-h-24 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-        name={name}
-        placeholder={placeholder}
-      />
-    </label>
+    <FieldRoot>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Textarea id={id} name={name} placeholder={placeholder} />
+    </FieldRoot>
   );
 }
 
@@ -59,29 +76,29 @@ export function SelectField({
   label,
   name,
   required = false,
+  defaultValue,
   children
 }: {
   label: string;
   name: string;
   required?: boolean;
+  defaultValue?: string;
   children: ReactNode;
 }) {
+  const id = useId();
+
   return (
-    <label className="space-y-2 text-sm font-semibold text-foreground">
-      <span>{label}</span>
-      <select className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20" name={name} required={required}>
+    <FieldRoot>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <NativeSelect defaultValue={defaultValue} id={id} name={name} required={required}>
         {children}
-      </select>
-    </label>
+      </NativeSelect>
+    </FieldRoot>
   );
 }
 
 export function SubmitButton({ children = "Opslaan" }: { children?: ReactNode }) {
-  return (
-    <button className="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
-      {children}
-    </button>
-  );
+  return <PendingSubmitButton>{children}</PendingSubmitButton>;
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
@@ -89,12 +106,12 @@ export function EmptyState({ children }: { children: ReactNode }) {
 }
 
 export function DataList({ children }: { children: ReactNode }) {
-  return <div className="divide-y divide-border rounded-lg border border-border">{children}</div>;
+  return <div role="list" className="divide-y divide-border rounded-lg border border-border">{children}</div>;
 }
 
 export function DataListRow({ title, meta, aside }: { title: string; meta?: ReactNode; aside?: ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+    <div role="listitem" className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-foreground">{title}</p>
         {meta ? <div className="mt-1 text-xs text-muted-foreground">{meta}</div> : null}

@@ -1,9 +1,28 @@
 "use server";
 
+import { createHash, createHmac } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { normalizeAttribution, type AnalyticsConsent } from "@/lib/analytics/attribution";
+import { classifyContent } from "@/lib/security/content-classification";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getDefaultIntakeForm, getRequestHostname, getTenantSlugFromRequest, type IntakeOption, type PublicIntakeQuestion } from "./public-site";
+import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { getActiveTenant } from "./core";
+import {
+  isIntakeDaypart,
+  isSwimmingExperience,
+  rankIntakeSlots,
+  type IntakeDaypart
+} from "./intake-recommendation-contract";
+import {
+  getDefaultIntakeForm,
+  getPublicTenantSiteDataBySlug,
+  getRequestHostname,
+  getTenantSlugFromRequest,
+  type IntakeOption,
+  type PublicIntakeQuestion
+} from "./public-site";
 
 const intakeOptions = ["enrollment", "trial", "waitlist", "information_request"] as const satisfies readonly IntakeOption[];
 
@@ -16,6 +35,47 @@ export async function submitIntakeAction(formData: FormData) {
 
   revalidatePath("/admin/intake");
   redirect(`/intake?ontvangen=1&referentie=${encodeURIComponent(result.reference)}`);
+}
+
+export async function updateIntakeDuplicateStateAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin/intake");
+  const tenant = getActiveTenant(context);
+
+  if (!context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")) {
+    redirect("/admin/intake?error=forbidden");
+  }
+
+  const submissionId = readRequired(formData, "submissionId");
+  const duplicateState = readRequired(formData, "duplicateState");
+
+  if (!["confirmed_duplicate", "dismissed"].includes(duplicateState)) {
+    redirect("/admin/intake?error=state");
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .from("intake_submissions")
+    .update({ duplicate_state: duplicateState })
+    .eq("tenant_id", tenant.id)
+    .eq("id", submissionId)
+    .eq("duplicate_state", "possible_duplicate");
+
+  if (error) {
+    redirect("/admin/intake?error=write");
+  }
+
+  await admin.from("tenant_events").insert({
+    tenant_id: tenant.id,
+    event_type: `intake.duplicate_${duplicateState === "dismissed" ? "dismissed" : "confirmed"}`,
+    subject_type: "intake_submission",
+    subject_id: submissionId,
+    content_classification: "personal",
+    classification_reasons: ["intake_review_actor"],
+    payload: { reviewedByUserId: context.user.id }
+  });
+
+  revalidatePath("/admin/intake");
+  redirect("/admin/intake?saved=duplicate");
 }
 
 async function submitIntake(formData: FormData): Promise<{ ok: true; reference: string } | { ok: false; error: string }> {
@@ -34,10 +94,42 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const parentName = readRequired(formData, "parentName");
   const parentEmail = normalizeEmail(readRequired(formData, "parentEmail"));
   const participantName = readRequired(formData, "participantName");
+  const participantBirthDate = readOptional(formData, "participantBirthDate");
+  const secondaryParentName = readOptional(formData, "secondaryParentName");
+  const secondaryParentEmail = normalizeOptionalEmail(readOptional(formData, "secondaryParentEmail"));
+  const swimmingExperience = readOptional(formData, "swimmingExperience");
   const consentGiven = formData.get("consentGiven") === "on";
+  const analyticsConsent = readAnalyticsConsent(formData);
+  const attribution = normalizeAttribution({
+    source: readOptional(formData, "attributionSource"),
+    medium: readOptional(formData, "attributionMedium"),
+    campaign: readOptional(formData, "attributionCampaign"),
+    content: readOptional(formData, "attributionContent"),
+    term: readOptional(formData, "attributionTerm"),
+    referrerHost: readOptional(formData, "attributionReferrerHost"),
+    landingPath: readOptional(formData, "attributionLandingPath"),
+    hasAdClickId: readOptional(formData, "attributionHasAdClickId") === "true",
+    capturedAt: readOptional(formData, "attributionCapturedAt")
+  });
+  const honeypot = readOptional(formData, "companyWebsite");
+  const startedAt = Number(readOptional(formData, "formStartedAt"));
 
-  if (!isEmail(parentEmail) || !consentGiven || !parentName || !participantName) {
+  if (
+    !isEmail(parentEmail) ||
+    !consentGiven ||
+    !parentName ||
+    !participantName ||
+    !participantBirthDate ||
+    !isValidBirthDate(participantBirthDate) ||
+    !isSwimmingExperience(swimmingExperience) ||
+    (secondaryParentEmail && !isEmail(secondaryParentEmail))
+  ) {
     return { ok: false, error: "required" };
+  }
+
+  // Bots get the same calm success path as real visitors, without learning which trap fired.
+  if (honeypot || !Number.isFinite(startedAt) || Date.now() - startedAt < 250) {
+    return { ok: true, reference: "ONTVANGEN" };
   }
 
   const admin = createAdminClient();
@@ -48,6 +140,18 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   const tenant = tenantResult.data as { id: string; slug: string; name: string };
+  const abuseFingerprint = await getAbuseFingerprint(tenant.id);
+  const rateLimitResult = await admin.rpc("consume_public_intake_rate_limit", {
+    target_tenant_id: tenant.id,
+    target_fingerprint_hash: abuseFingerprint,
+    target_window_started_at: getRateLimitWindowStart(),
+    target_limit: 5
+  });
+
+  if (rateLimitResult.error || rateLimitResult.data !== true) {
+    return { ok: false, error: "busy" };
+  }
+
   const programId = readOptional(formData, "programId");
   const formId = readOptional(formData, "formId");
   const validation = await validateProgramAndForm({ tenantId: tenant.id, programId, formId, selectedOption });
@@ -62,6 +166,71 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     return { ok: false, error: "required" };
   }
 
+  const preferredWeekdays = formData
+    .getAll("preferredWeekdays")
+    .map((value) => Number(value))
+    .filter((value) => Number.isInteger(value) && value >= 1 && value <= 7);
+  const preferredDayparts = parsePreferredDayparts(readOptional(formData, "preferredDayparts"), preferredWeekdays);
+  const publicData = await getPublicTenantSiteDataBySlug(slug);
+  const publicProgram = publicData?.programs.find((program) => program.id === validation.programId) ?? null;
+
+  if (!publicProgram) {
+    return { ok: false, error: "program" };
+  }
+
+  const recommendations = rankIntakeSlots({
+    slots: publicProgram.slots,
+    experience: swimmingExperience,
+    preferredDays: preferredWeekdays,
+    preferredDayparts
+  });
+  const selectedGroupId = readOptional(formData, "selectedGroupId");
+  const selectedRecommendation = recommendations.find((recommendation) => recommendation.groupId === selectedGroupId) ?? null;
+  const preferredNotes = readOptional(formData, "preferredNotes");
+  const message = readOptional(formData, "message");
+  const classification = classifyContent(
+    {
+      parentName,
+      parentEmail,
+      participantName,
+      participantBirthDate,
+      preferredNotes,
+      message,
+      secondaryParentEmail,
+      secondaryParentName,
+      swimmingExperience
+    },
+    "personal"
+  );
+
+  if (publicProgram.slots.length > 0 && (preferredWeekdays.length === 0 || recommendations.length === 0 || !selectedRecommendation)) {
+    return { ok: false, error: "choice" };
+  }
+
+  const dedupeKey = createHash("sha256")
+    .update([tenant.id, parentEmail, normalizeName(participantName), validation.programId ?? "", selectedOption].join("|"))
+    .digest("hex");
+  const duplicateResult = await admin
+    .from("intake_submissions")
+    .select("id, received_at")
+    .eq("tenant_id", tenant.id)
+    .eq("dedupe_key", dedupeKey)
+    .gte("received_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1_000).toISOString())
+    .order("received_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (duplicateResult.error) {
+    return { ok: false, error: "write" };
+  }
+
+  const duplicate = duplicateResult.data as { id: string; received_at: string } | null;
+
+  // Double-clicks and browser retries are idempotent for ten minutes.
+  if (duplicate && Date.now() - new Date(duplicate.received_at).getTime() < 10 * 60 * 1_000) {
+    return { ok: true, reference: duplicate.id.slice(0, 8) };
+  }
+
   const submissionResult = await admin
     .from("intake_submissions")
     .insert({
@@ -72,13 +241,50 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       parent_name: parentName,
       parent_email: parentEmail,
       parent_phone: readOptional(formData, "parentPhone"),
+      secondary_parent_name: secondaryParentName,
+      secondary_parent_email: secondaryParentEmail,
+      secondary_parent_phone: readOptional(formData, "secondaryParentPhone"),
       participant_name: participantName,
-      participant_birth_date: readOptional(formData, "participantBirthDate"),
+      participant_birth_date: participantBirthDate,
       preferred_days: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
-      preferred_notes: readOptional(formData, "preferredNotes"),
-      message: readOptional(formData, "message"),
+      preferred_dayparts: preferredDayparts,
+      preferred_notes: preferredNotes,
+      message,
+      content_classification: classification.classification,
+      classification_reasons: classification.reasons,
+      swimming_experience: swimmingExperience,
+      recommendation_snapshot: recommendations.map((recommendation) => ({
+        groupId: recommendation.groupId,
+        stageId: recommendation.stageId,
+        weekday: recommendation.weekday,
+        daypart: recommendation.daypart,
+        startsAt: recommendation.startsAt,
+        endsAt: recommendation.endsAt,
+        waitBand: recommendation.waitBand,
+        rank: recommendation.rank,
+        reasons: recommendation.reasons
+      })),
+      selected_group_id: selectedRecommendation?.groupId ?? null,
+      selected_wait_band: selectedRecommendation?.waitBand ?? "long",
+      recommendation_version: "intake-v1",
       consent_given: consentGiven,
-      source_hostname: await getRequestHostname()
+      source_hostname: await getRequestHostname(),
+      dedupe_key: dedupeKey,
+      duplicate_state: duplicate ? "possible_duplicate" : "unique",
+      duplicate_of_submission_id: duplicate?.id ?? null,
+      abuse_fingerprint: abuseFingerprint,
+      attribution_channel: attribution.channel,
+      attribution_source: attribution.source,
+      attribution_medium: attribution.medium,
+      attribution_campaign: attribution.campaign,
+      attribution_content: attribution.content,
+      attribution_term: attribution.term,
+      attribution_referrer_host: attribution.referrerHost,
+      attribution_landing_path: attribution.landingPath,
+      attribution_has_ad_click_id: attribution.hasAdClickId,
+      attribution_captured_at: attribution.capturedAt,
+      analytics_consent: analyticsConsent,
+      analytics_consent_version: "analytics-v1"
     })
     .select("id")
     .single();
@@ -97,6 +303,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
 
     return [
       {
+        ...classificationColumns(answer),
         tenant_id: tenant.id,
         submission_id: submissionId,
         question_id: question.id,
@@ -120,11 +327,23 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     event_type: "intake.received",
     subject_type: "intake_submission",
     subject_id: submissionId,
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
     payload: {
       selectedOption,
       parentEmail,
       participantName,
-      programId: validation.programId
+      programId: validation.programId,
+      duplicateState: duplicate ? "possible_duplicate" : "unique",
+      duplicateOfSubmissionId: duplicate?.id ?? null,
+      swimmingExperience,
+      selectedGroupId: selectedRecommendation?.groupId ?? null,
+      selectedWaitBand: selectedRecommendation?.waitBand ?? "long",
+      recommendationVersion: "intake-v1",
+      attributionChannel: attribution.channel,
+      attributionSource: attribution.source,
+      attributionCampaign: attribution.campaign,
+      analyticsConsent
     }
   });
 
@@ -133,6 +352,21 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   }
 
   return { ok: true, reference: submissionId.slice(0, 8) };
+}
+
+function classificationColumns(value: unknown) {
+  const classification = classifyContent(value, "personal");
+
+  return {
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons
+  };
+}
+
+function readAnalyticsConsent(formData: FormData): AnalyticsConsent {
+  const value = readOptional(formData, "analyticsConsent");
+
+  return value === "granted" || value === "denied" ? value : "unknown";
 }
 
 async function validateProgramAndForm(input: {
@@ -212,6 +446,14 @@ async function validateProgramAndForm(input: {
 }
 
 function readQuestionAnswer(formData: FormData, question: PublicIntakeQuestion): string | string[] | null {
+  if (question.fieldKey === "swimming_experience" || question.fieldKey === "swim_experience") {
+    return readOptional(formData, "swimmingExperience");
+  }
+
+  if (question.fieldKey === "preferred_moment") {
+    return readOptional(formData, "preferredNotes");
+  }
+
   const fieldName = `answer_${question.fieldKey}`;
 
   if (question.fieldType === "checkbox") {
@@ -243,6 +485,66 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
+function normalizeOptionalEmail(email: string | null) {
+  return email ? normalizeEmail(email) : null;
+}
+
+function normalizeName(value: string) {
+  return value.trim().toLocaleLowerCase("nl").replace(/\s+/g, " ");
+}
+
 function isEmail(value: string) {
   return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
+}
+
+function isValidBirthDate(value: string) {
+  const parsed = new Date(`${value}T12:00:00`);
+
+  return !Number.isNaN(parsed.getTime()) && parsed <= new Date() && parsed.getFullYear() >= 1900;
+}
+
+function parsePreferredDayparts(value: string | null, weekdays: number[]): Partial<Record<number, IntakeDaypart[]>> {
+  if (!value) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      weekdays.flatMap((weekday) => {
+        const values = (parsed as Record<string, unknown>)[String(weekday)];
+
+        if (!Array.isArray(values)) {
+          return [];
+        }
+
+        const dayparts = values.filter((candidate): candidate is IntakeDaypart => typeof candidate === "string" && isIntakeDaypart(candidate));
+        return dayparts.length > 0 ? [[weekday, dayparts] as const] : [];
+      })
+    );
+  } catch {
+    return {};
+  }
+}
+
+async function getAbuseFingerprint(tenantId: string) {
+  const requestHeaders = await headers();
+  const forwardedFor = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim();
+  const address = forwardedFor || requestHeaders.get("x-real-ip") || "unknown";
+  const userAgent = requestHeaders.get("user-agent")?.slice(0, 240) || "unknown";
+  const secret = process.env.SESSION_SECRET ?? process.env.JWT_SECRET;
+  const input = `${tenantId}|${address}|${userAgent}`;
+
+  return secret ? createHmac("sha256", secret).update(input).digest("hex") : createHash("sha256").update(input).digest("hex");
+}
+
+function getRateLimitWindowStart() {
+  const windowSize = 15 * 60 * 1_000;
+
+  return new Date(Math.floor(Date.now() / windowSize) * windowSize).toISOString();
 }

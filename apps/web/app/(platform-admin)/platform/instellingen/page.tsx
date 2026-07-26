@@ -1,5 +1,5 @@
 import { savePlatformEmailSettingsAction, sendPlatformEmailTestAction } from "@/lib/email/actions";
-import { getPlatformEmailSettingsView, type EmailProvider } from "@/lib/email/platform-settings";
+import { getPlatformEmailSettingsView, getPlatformEmailTestAttempts, type EmailProvider } from "@/lib/email/platform-settings";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 
 type PageProps = {
@@ -12,6 +12,8 @@ const errorMessages: Record<string, string> = {
   missing_from: "Vul een geldig afzenderadres in.",
   missing_sendgrid: "Vul een SendGrid API key in voordat je SendGrid API activeert.",
   missing_smtp: "Vul host, gebruiker en wachtwoord in voordat je SMTP activeert.",
+  missing_secret_value: "Vul de nieuwe geheime waarde in, of zet vervangen uit.",
+  conflicting_secret_action: "Kies voor een geheim óf vervangen óf wissen.",
   save_failed: "Instellingen opslaan is niet gelukt."
 };
 
@@ -27,7 +29,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
   const test = getParam(params, "test");
-  const settings = isPlatformOwner ? await getPlatformEmailSettingsView() : null;
+  const [settings, testAttempts] = isPlatformOwner ? await Promise.all([getPlatformEmailSettingsView(), getPlatformEmailTestAttempts()]) : [null, []];
 
   if (!isPlatformOwner) {
     return (
@@ -87,10 +89,15 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SendGrid API</h3>
             <p className="mt-1 text-sm text-muted-foreground">API key: {settings?.hasSendGridApiKey ? "ingesteld" : "niet ingesteld"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">De bestaande key blijft altijd behouden, tenzij je expliciet vervangen of wissen kiest.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <Field label="SendGrid API key" name="sendGridApiKey" placeholder={settings?.hasSendGridApiKey ? "Ongewijzigd laten" : "SG..."} type="password" />
-            <div className="flex items-end pb-3">
+            <Field autoComplete="new-password" label="Nieuwe SendGrid API key" name="sendGridApiKey" placeholder="SG..." type="password" />
+            <div className="flex flex-col justify-end gap-3 pb-3">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                <input className="size-4 rounded border-border" defaultChecked={settings?.provider === "sendgrid_api" && !settings.hasSendGridApiKey} name="replaceSendGridApiKey" type="checkbox" />
+                API key vervangen
+              </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                 <input className="size-4 rounded border-border" name="clearSendGridApiKey" type="checkbox" />
                 API key wissen
@@ -103,6 +110,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
           <div>
             <h3 className="text-base font-bold text-foreground">SMTP</h3>
             <p className="mt-1 text-sm text-muted-foreground">Wachtwoord: {settings?.hasSmtpPassword ? "ingesteld" : "niet ingesteld"}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Het bestaande wachtwoord blijft altijd behouden, tenzij je expliciet vervangen of wissen kiest.</p>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2">
             <Field label="SMTP host" name="smtpHost" defaultValue={settings?.smtpHost} placeholder="smtp.sendgrid.net" />
@@ -117,8 +125,12 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
               </select>
             </div>
             <Field label="SMTP gebruiker" name="smtpUser" defaultValue={settings?.smtpUser} placeholder="apikey" />
-            <Field label="SMTP wachtwoord" name="smtpPassword" placeholder={settings?.hasSmtpPassword ? "Ongewijzigd laten" : ""} type="password" />
-            <div className="flex items-end pb-3">
+            <Field autoComplete="new-password" label="Nieuw SMTP wachtwoord" name="smtpPassword" type="password" />
+            <div className="flex flex-col justify-end gap-3 pb-3">
+              <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
+                <input className="size-4 rounded border-border" defaultChecked={settings?.provider === "smtp" && !settings.hasSmtpPassword} name="replaceSmtpPassword" type="checkbox" />
+                SMTP wachtwoord vervangen
+              </label>
               <label className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                 <input className="size-4 rounded border-border" name="clearSmtpPassword" type="checkbox" />
                 SMTP wachtwoord wissen
@@ -134,13 +146,40 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
 
       <form action={sendPlatformEmailTestAction} className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h2 className="text-lg font-bold text-foreground">Testmail</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Gebruik uitsluitend een gecontroleerde externe inbox. Iedere poging wordt vastgelegd voor delivery-diagnostiek.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
           <Field label="Ontvanger" name="testEmail" defaultValue={context.user.email ?? ""} type="email" />
-          <button className="h-11 rounded-lg border border-border bg-white px-5 text-sm font-semibold text-foreground transition hover:bg-muted" type="submit">
+          <button className="h-11 rounded-lg border border-border bg-white px-5 text-sm font-semibold text-foreground transition hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60" disabled={!settings?.enabled || !settings.settingsAvailable} type="submit">
             Test versturen
           </button>
         </div>
       </form>
+
+      <section className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <h2 className="text-lg font-bold text-foreground">Testhistorie</h2>
+        <p className="mt-1 text-sm text-muted-foreground">De laatste tien gecontroleerde platformtests, inclusief providerreferentie en foutdiagnostiek.</p>
+        {testAttempts.length === 0 ? (
+          <p className="mt-4 rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">Nog geen gecontroleerde testmail geregistreerd.</p>
+        ) : (
+          <div className="mt-4 divide-y divide-border overflow-hidden rounded-lg border border-border">
+            {testAttempts.map((attempt) => (
+              <div className="flex flex-wrap items-start justify-between gap-3 bg-white px-4 py-3" key={attempt.id}>
+                <div className="min-w-0">
+                  <p className="font-semibold text-foreground">{attempt.recipientEmail}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {attempt.provider} - {formatDateTime(attempt.attemptedAt)}
+                    {attempt.providerMessageId ? ` - provider-id ${attempt.providerMessageId}` : ""}
+                  </p>
+                  {attempt.errorMessage ? <p className="mt-1 text-xs font-medium text-danger">{attempt.errorMessage}</p> : null}
+                </div>
+                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${attempt.status === "sent" ? "bg-success/10 text-success" : attempt.status === "failed" ? "bg-danger/10 text-danger" : "bg-warning/10 text-warning"}`}>
+                  {attempt.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
     </section>
   );
 }
@@ -158,6 +197,7 @@ function ProviderOption(props: { checked: boolean; description: string; label: s
 }
 
 function Field(props: {
+  autoComplete?: string;
   defaultValue?: string;
   inputMode?: "numeric";
   label: string;
@@ -172,6 +212,7 @@ function Field(props: {
       </label>
       <input
         className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+        autoComplete={props.autoComplete}
         defaultValue={props.defaultValue}
         id={props.name}
         inputMode={props.inputMode}
@@ -187,4 +228,8 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   const value = params[key];
 
   return Array.isArray(value) ? value[0] : value;
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }

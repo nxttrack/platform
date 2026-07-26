@@ -1,8 +1,8 @@
 # NXTTRACK Technical Architecture
 
-Last updated: 2026-06-23
+Last updated: 2026-07-20
 
-Status: technical planning draft. No production features are implemented by this document.
+Status: active target architecture. The staging MVP is implemented through the Phase 20 boundary; repository truth, live staging proof and production hardening remain in progress.
 
 ## 1. Tech Stack
 
@@ -248,6 +248,18 @@ Policy:
 - Do not replace Lovable with default starter UI.
 - Tenant branding overrides must sit on top of the NXTTRACK base language.
 - Any visual simplification requires documented technical reason and approval.
+
+Phase 1 implementation contract:
+
+- Configure shadcn ownership for `apps/web/components/ui`; generated components remain repository-owned code.
+- Use Radix for behavior-heavy primitives such as Sheet/Dialog, DropdownMenu, Tabs, Select, Tooltip, Popover and accessible form controls.
+- Keep exact Lovable OKLCH tokens, radius and shadow semantics in `globals.css`; do not accept registry defaults over them.
+- Use a shared `cn` helper and class-variance-authority for deliberate variants instead of page-local class concatenation.
+- Keep authentication, tenant resolution and data loading in server components; isolate pathname, drawer, modal and optimistic interaction state in small client components.
+- Restore `ProgressRing`, `WaitlistDot`, `Photo`/`ImagePlaceholder` and `FloatCard` before creating more page-specific visual components.
+- Add Framer Motion only for reference-backed transitions and respect reduced-motion preferences.
+- Add Recharts behind typed chart wrappers with explicit empty, loading and error states.
+- Treat the pinned manifest in `docs/lovable-baseline/manifest.json` as the viewport and route contract for visual comparisons.
 
 ## 7. Supabase Schema Direction
 
@@ -556,10 +568,13 @@ Workflow target:
 - Restart systemd service from `SERVICE_NAME`.
 - Reload Caddy.
 
-Important current gap:
+Current release baseline:
 
-- App scaffold does not exist yet.
-- `pnpm build` and `pnpm run db:migrate` are target commands, not currently proven.
+- The Next.js scaffold and release commands exist and pass local build/audit validation.
+- `main` is the only canonical implementation and release source.
+- Staging and production releases are manually dispatched from `main` into protected GitHub Environments.
+- Production promotion requires the exact commit SHA already validated on staging.
+- Live staging migration, RLS, browser, visual, backup/restore and rollback evidence remain required.
 
 ## 16. Environment / Secrets Strategy
 

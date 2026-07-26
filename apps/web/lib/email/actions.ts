@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { sendTransactionalEmail } from "./transactional";
-import { getExistingPlatformEmailSecrets, savePlatformEmailSettings, type EmailProvider } from "./platform-settings";
+import { getPlatformEmailSettingsView, savePlatformEmailSettings, type EmailProvider } from "./platform-settings";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 
 const settingsPath = "/platform/instellingen";
@@ -21,9 +21,23 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
   const submittedSendGridApiKey = nullableString(formData, "sendGridApiKey");
   const clearSmtpPassword = formData.get("clearSmtpPassword") === "on";
   const clearSendGridApiKey = formData.get("clearSendGridApiKey") === "on";
-  const existingSecrets = await getExistingPlatformEmailSecrets();
-  const smtpPassword = clearSmtpPassword ? null : submittedSmtpPassword ?? existingSecrets.smtpPassword;
-  const sendGridApiKey = clearSendGridApiKey ? null : submittedSendGridApiKey ?? existingSecrets.sendGridApiKey;
+  const replaceSmtpPasswordRequested = formData.get("replaceSmtpPassword") === "on";
+  const replaceSendGridApiKeyRequested = formData.get("replaceSendGridApiKey") === "on";
+  const replaceSmtpPassword = replaceSmtpPasswordRequested && Boolean(submittedSmtpPassword);
+  const replaceSendGridApiKey = replaceSendGridApiKeyRequested && Boolean(submittedSendGridApiKey);
+  const existingSettings = await getPlatformEmailSettingsView();
+  const smtpPassword = clearSmtpPassword ? null : replaceSmtpPassword ? submittedSmtpPassword : undefined;
+  const sendGridApiKey = clearSendGridApiKey ? null : replaceSendGridApiKey ? submittedSendGridApiKey : undefined;
+  const willHaveSmtpPassword = !clearSmtpPassword && Boolean((replaceSmtpPassword ? submittedSmtpPassword : null) || existingSettings.hasSmtpPassword);
+  const willHaveSendGridApiKey = !clearSendGridApiKey && Boolean((replaceSendGridApiKey ? submittedSendGridApiKey : null) || existingSettings.hasSendGridApiKey);
+
+  if ((clearSmtpPassword && replaceSmtpPasswordRequested) || (clearSendGridApiKey && replaceSendGridApiKeyRequested)) {
+    redirect(`${settingsPath}?error=conflicting_secret_action`);
+  }
+
+  if ((provider === "smtp" && replaceSmtpPasswordRequested && !submittedSmtpPassword) || (provider === "sendgrid_api" && replaceSendGridApiKeyRequested && !submittedSendGridApiKey)) {
+    redirect(`${settingsPath}?error=missing_secret_value`);
+  }
 
   if (!smtpPort || smtpPort < 1 || smtpPort > 65535) {
     redirect(`${settingsPath}?error=invalid_port`);
@@ -37,11 +51,11 @@ export async function savePlatformEmailSettingsAction(formData: FormData) {
     redirect(`${settingsPath}?error=missing_from`);
   }
 
-  if (enabled && provider === "sendgrid_api" && !sendGridApiKey) {
+  if (enabled && provider === "sendgrid_api" && !willHaveSendGridApiKey) {
     redirect(`${settingsPath}?error=missing_sendgrid`);
   }
 
-  if (enabled && provider === "smtp" && (!smtpHost || !smtpUser || !smtpPassword)) {
+  if (enabled && provider === "smtp" && (!smtpHost || !smtpUser || !willHaveSmtpPassword)) {
     redirect(`${settingsPath}?error=missing_smtp`);
   }
 
@@ -78,7 +92,9 @@ export async function sendPlatformEmailTestAction(formData: FormData) {
     to,
     subject: "NXTTRACK mail test",
     text: "Dit is een testmail vanuit de NXTTRACK platform admin instellingen.",
-    html: "<p>Dit is een testmail vanuit de NXTTRACK platform admin instellingen.</p>"
+    html: "<p>Dit is een testmail vanuit de NXTTRACK platform admin instellingen.</p>",
+    metadata: { kind: "controlled_delivery_test" },
+    templateKey: "platform_delivery_test"
   });
 
   redirect(`${settingsPath}?test=${result.delivered ? "sent" : "failed"}`);

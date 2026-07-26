@@ -1,6 +1,9 @@
-import { FileText, UploadCloud } from "lucide-react";
-import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { UploadCloud } from "lucide-react";
+import { AdminSection, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { DocumentsTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createAdminDocumentAction } from "@/lib/domain/admin-operations-actions";
 import { formatDateTime, getAdminOperationsData } from "@/lib/domain/admin-operations";
 
@@ -14,20 +17,19 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
   const [data, params] = await Promise.all([getAdminOperationsData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
-  const activeDocuments = data.documents.filter((document) => document.status === "active");
-  const archivedDocuments = data.documents.filter((document) => document.status === "archived");
+  const query = getParam(params, "q");
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Operations" title="Documenten" subtitle="Documentregister voor backoffice, instructeurs en ouderportaal." />
-      <Feedback saved={saved} error={error} />
+      <RouteFeedback success={saved ? `Documentactie opgeslagen: ${saved}.` : null} error={error ? `Documentactie is niet gelukt: ${error}.` : null} />
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <AdminSection title="Document registreren" description="MVP registreert metadata en pad; opslagbucket en virus-scan horen bij hardening/productie.">
-          <form action={createAdminDocumentAction} className="grid gap-4">
+      <div className="grid gap-5 2xl:grid-cols-[minmax(320px,0.7fr)_minmax(0,1.8fr)]">
+        <AdminSection title="Document uploaden" description="Bestanden worden opgeslagen in een private Supabase Storage bucket en alleen via rolchecks gedownload.">
+          <DirtyForm action={createAdminDocumentAction} className="grid gap-4" encType="multipart/form-data">
             <Field label="Titel" name="title" required placeholder="Lesvoorwaarden seizoen 2026" />
             <TextAreaField label="Omschrijving" name="description" />
-            <div className="grid gap-3 sm:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-4">
               <SelectField label="Doelgroep" name="audience">
                 <option value="tenant_staff">Team</option>
                 <option value="instructors">Instructeurs</option>
@@ -42,82 +44,58 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
                 <option value="active">Actief</option>
                 <option value="archived">Archief</option>
               </SelectField>
+              <SelectField label="Dataclassificatie" name="contentClassification">
+                <option value="personal">Persoonsgegevens</option>
+                <option value="sensitive">Gevoelig</option>
+                <option value="restricted">Strikt beperkt</option>
+                <option value="operational">Operationeel</option>
+              </SelectField>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Bestandsnaam" name="fileName" placeholder="voorwaarden.pdf" />
-              <Field label="Bestandspad" name="filePath" placeholder="organisaties/aquaswim/docs/voorwaarden.pdf" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="MIME type" name="mimeType" placeholder="application/pdf" />
-              <Field label="Grootte bytes" name="sizeBytes" type="number" />
-            </div>
+            <label className="space-y-2 text-sm font-semibold text-foreground">
+              <span>Bestand</span>
+              <input accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" type="file" />
+              <span className="block text-xs font-normal text-muted-foreground">PDF, PNG, JPG, DOCX of XLSX. Publicatie volgt alleen na een schone malwarecontrole.</span>
+            </label>
             <SubmitButton>
               <span className="inline-flex items-center gap-2">
                 <UploadCloud className="h-4 w-4" />
                 Document opslaan
               </span>
             </SubmitButton>
-          </form>
+          </DirtyForm>
         </AdminSection>
 
-        <AdminSection title="Actieve documenten">
-          {activeDocuments.length === 0 ? (
-            <EmptyState>Nog geen actieve documenten.</EmptyState>
-          ) : (
-            <DataList>
-              {activeDocuments.map((document) => (
-                <div className="px-3 py-3" key={document.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        <p className="font-semibold text-foreground">{document.title}</p>
-                      </div>
-                      {document.description ? <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">{document.description}</p> : null}
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {document.audience} - {document.visibility} - {document.file_name ?? "geen bestand"} - {formatDateTime(document.created_at)}
-                      </p>
-                    </div>
-                    <StatusPill tone={document.visibility === "portal" ? "success" : "neutral"}>{document.visibility}</StatusPill>
-                  </div>
-                </div>
-              ))}
-            </DataList>
-          )}
+        <AdminSection title="Documentregister" description="Filter actieve en gearchiveerde documenten, pas kolommen aan en open details zonder de lijst te verlaten.">
+          <DocumentsTable initialSearch={query} rows={data.documents.map((document) => ({
+            audience: document.audience,
+            classification: document.content_classification,
+            createdAt: document.created_at,
+            description: document.description ?? "",
+            fileName: document.file_name ?? "Geen bestand",
+            id: document.id,
+            malwareStatus: document.malware_scan_status,
+            sizeLabel: formatBytes(document.size_bytes),
+            status: document.status,
+            storageStatus: document.storage_status,
+            title: document.title,
+            visibility: document.visibility
+          }))} />
         </AdminSection>
       </div>
-
-      <AdminSection title="Archief">
-        {archivedDocuments.length === 0 ? (
-          <EmptyState>Nog geen gearchiveerde documenten.</EmptyState>
-        ) : (
-          <DataList>
-            {archivedDocuments.map((document) => (
-              <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={document.id}>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">{document.title}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{document.file_path ?? "geen bestandspad"}</p>
-                </div>
-                <StatusPill tone="neutral">{document.status}</StatusPill>
-              </div>
-            ))}
-          </DataList>
-        )}
-      </AdminSection>
     </div>
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
-  if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+function formatBytes(value: number | null) {
+  if (!value) {
+    return "geen grootte";
   }
 
-  if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Actie is niet gelukt: {error}.</p>;
+  if (value < 1024 * 1024) {
+    return `${Math.round(value / 1024)} KB`;
   }
 
-  return null;
+  return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

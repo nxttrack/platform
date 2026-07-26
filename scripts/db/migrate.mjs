@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from "node:child_process";
-import { createRequire } from "node:module";
+import { readdirSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const cli = process.env.SUPABASE_CLI_BIN || "supabase";
 const baseOptions = {
@@ -12,17 +13,28 @@ const baseOptions = {
   }
 };
 
+const migrationsDirectory = fileURLToPath(new URL("../../supabase/migrations/", import.meta.url));
+const legacyRemoteHistoryVersions = readdirSync(migrationsDirectory)
+  .filter((file) => file.endsWith("_legacy_remote_history.sql"))
+  .map((file) => file.slice(0, 14))
+  .filter((version) => /^\d{14}$/.test(version));
+
 const stagingExistingSchemaRepairCandidates = [
-  { version: "20260707152802", table: "user_security", label: "phase 3 auth flows" },
-  { version: "20260707160455", table: "programs", label: "phase 4 core domain model" },
-  { version: "20260707162139", table: "intake_forms", label: "phase 5 public tenant intake" },
-  { version: "20260707163627", table: "waitlist_entries", label: "phase 6 waitlist placement" },
-  { version: "20260707165845", table: "participant_guardians", label: "phase 7 parent portal" },
-  { version: "20260707171704", table: "session_attendance", label: "phase 8 instructor shell" },
-  { version: "20260707173644", table: "progress_modules", label: "phase 9 progress badges" },
-  { version: "20260707180102", table: "graduation_readiness", label: "phase 10 graduation vault" },
-  { version: "20260707181731", table: "payment_plans", label: "phase 11 payments" },
-  { version: "20260707195442", table: "tenant_messages", label: "phase 12 admin operations" }
+  { versions: ["20260623222604"], table: "profiles", label: "identity boundary", includeLegacyHistory: true },
+  { versions: ["20260707152802"], table: "user_security", label: "phase 3 auth flows" },
+  { versions: ["20260707160455"], table: "programs", label: "phase 4 core domain model" },
+  { versions: ["20260707162139"], table: "intake_forms", label: "phase 5 public tenant intake" },
+  { versions: ["20260707163627"], table: "waitlist_entries", label: "phase 6 waitlist placement" },
+  { versions: ["20260707165845"], table: "participant_guardians", label: "phase 7 parent portal" },
+  { versions: ["20260707171704"], table: "session_attendance", label: "phase 8 instructor shell" },
+  { versions: ["20260707173644"], table: "progress_modules", label: "phase 9 progress badges" },
+  { versions: ["20260707180102"], table: "graduation_readiness", label: "phase 10 graduation vault" },
+  { versions: ["20260707181731"], table: "payment_plans", label: "phase 11 payments" },
+  { versions: ["20260707195442"], table: "tenant_messages", label: "phase 12 admin operations" },
+  { versions: ["20260707202417", "20260707232548"], table: "platform_email_settings", label: "phase 13 hardening and platform email settings" },
+  { versions: ["20260708235317"], table: "email_delivery_attempts", label: "phase 17 communication and storage" },
+  { versions: ["20260709002203"], table: "instructor_availability", label: "phase 18 planning and catch-up" },
+  { versions: ["20260709005834"], table: "billing_provider_configs", label: "phase 20 billing boundary" }
 ];
 
 console.log("[db:migrate] Supabase migrations are present in the repository.");
@@ -66,11 +78,17 @@ if (process.env.DB_MIGRATE_DRY_RUN !== "true") {
 
 const args = ["db", "push", "--db-url", process.env.DATABASE_URL, "--yes"];
 
+if (process.env.DB_MIGRATE_INCLUDE_ALL === "true") {
+  args.push("--include-all");
+}
+
 if (process.env.DB_MIGRATE_DRY_RUN === "true") {
   args.push("--dry-run");
 }
 
-console.log("[db:migrate] Running Supabase migrations with explicit opt-in.");
+console.log(
+  `[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=${process.env.DB_MIGRATE_INCLUDE_ALL === "true"} dryRun=${process.env.DB_MIGRATE_DRY_RUN === "true"}`
+);
 
 const result = spawnSync(cli, args, {
   ...baseOptions,
@@ -101,28 +119,32 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
     return;
   }
 
-  const admin = createSupabaseAdminClient();
+  const remoteAppliedVersions = getRemoteAppliedMigrationVersions();
+  const existingAnchorTables = getExistingDatabaseAnchorTables();
 
-  if (!admin) {
-    console.warn("[db:migrate] Skipping staging schema history repair because Supabase admin client config is unavailable.");
+  if (existingAnchorTables.size === 0 && remoteAppliedVersions?.size > 0) {
+    console.warn(
+      `[db:migrate] Database has no NXTTRACK schema anchors but migration history contains ${remoteAppliedVersions.size} applied version(s). Reverting stale history before first-run migration.`
+    );
+    repairMigrationHistory([...remoteAppliedVersions], "reverted");
     return;
   }
 
-  const remoteAppliedVersions = getRemoteAppliedMigrationVersions();
   const repairs = [];
 
   console.log("[db:migrate] Checking staging schema for migration history drift.");
 
   for (const candidate of stagingExistingSchemaRepairCandidates) {
-    if (remoteAppliedVersions?.has(candidate.version)) {
+    const candidateVersions = candidate.includeLegacyHistory ? [...candidate.versions, ...legacyRemoteHistoryVersions] : candidate.versions;
+    const missingVersions = candidateVersions.filter((version) => !remoteAppliedVersions?.has(version));
+
+    if (missingVersions.length === 0) {
       continue;
     }
 
-    const exists = await publicTableExists(admin, candidate.table);
-
-    if (exists) {
-      repairs.push(candidate.version);
-      console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${candidate.version} as applied.`);
+    if (existingAnchorTables.has(candidate.table)) {
+      repairs.push(...missingVersions);
+      console.log(`[db:migrate] ${candidate.label} already exists in schema; will mark ${missingVersions.length} migration history entry(s) as applied.`);
     }
   }
 
@@ -134,53 +156,42 @@ async function repairAppliedMigrationHistoryWhenNeeded() {
   repairMigrationHistory(repairs);
 }
 
-function createSupabaseAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !secretKey) {
-    return null;
-  }
-
-  const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
-  const { createClient } = requireFromWeb("@supabase/supabase-js");
-
-  return createClient(supabaseUrl, secretKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+function getExistingDatabaseAnchorTables() {
+  const tableNames = stagingExistingSchemaRepairCandidates.map((candidate) => candidate.table);
+  const quotedTableNames = tableNames.map((table) => `'${table.replaceAll("'", "''")}'`).join(", ");
+  const sql = `select relname as table_name from pg_catalog.pg_class c join pg_catalog.pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind in ('r', 'p') and c.relname in (${quotedTableNames}) order by c.relname;`;
+  const query = spawnSync(
+    cli,
+    ["db", "query", "--db-url", process.env.DATABASE_URL, "--output-format", "json", sql],
+    {
+      ...baseOptions,
+      encoding: "utf8"
     }
-  });
-}
-
-async function publicTableExists(admin, table) {
-  const { error } = await admin.from(table).select("*", { head: true, count: "exact" }).limit(1);
-
-  if (!error) {
-    return true;
-  }
-
-  if (isMissingTableError(error)) {
-    return false;
-  }
-
-  console.error(`[db:migrate] Could not inspect public.${table}: ${error.message}`);
-  process.exit(1);
-}
-
-function isMissingTableError(error) {
-  const code = error.code ?? "";
-  const message = (error.message ?? "").toLowerCase();
-
-  return (
-    code === "42P01" ||
-    code === "PGRST106" ||
-    code === "PGRST202" ||
-    code === "PGRST205" ||
-    message.includes("could not find the table") ||
-    message.includes("does not exist") ||
-    message.includes("schema cache")
   );
+
+  if (query.error) {
+    console.error(`[db:migrate] Could not inspect schema through DATABASE_URL: ${query.error.message}`);
+    process.exit(1);
+  }
+
+  if (query.status !== 0) {
+    const stderr = query.stderr?.trim();
+    console.error(`[db:migrate] DATABASE_URL schema inspection failed with exit code ${query.status ?? 1}.`);
+    if (stderr) console.error(stderr);
+    process.exit(query.status ?? 1);
+  }
+
+  const rows = parseJsonOutput(query.stdout ?? "");
+
+  if (!rows) {
+    console.error("[db:migrate] Could not parse DATABASE_URL schema inspection output.");
+    process.exit(1);
+  }
+
+  const existingTables = new Set();
+  collectValuesForKey(rows, "table_name", existingTables);
+  console.log(`[db:migrate] DATABASE_URL schema inspection found ${existingTables.size} NXTTRACK anchor table(s).`);
+  return existingTables;
 }
 
 function getRemoteAppliedMigrationVersions() {
@@ -246,20 +257,15 @@ function parseRemoteMigrationVersions(output) {
 }
 
 function parseRemoteMigrationVersionsFromJson(output) {
-  const jsonStart = Math.min(...["[", "{"].map((token) => output.indexOf(token)).filter((index) => index >= 0));
+  const parsed = parseJsonOutput(output);
 
-  if (!Number.isFinite(jsonStart)) {
+  if (!parsed) {
     return null;
   }
 
-  try {
-    const parsed = JSON.parse(output.slice(jsonStart));
-    const versions = new Set();
-    collectRemoteVersions(parsed, versions);
-    return versions.size > 0 ? versions : null;
-  } catch {
-    return null;
-  }
+  const versions = new Set();
+  collectRemoteVersions(parsed, versions);
+  return versions.size > 0 ? versions : null;
 }
 
 function collectRemoteVersions(value, versions, parentKey = "") {
@@ -290,11 +296,46 @@ function collectRemoteVersions(value, versions, parentKey = "") {
   }
 }
 
-function repairMigrationHistory(versions) {
+function parseJsonOutput(output) {
+  const jsonStart = Math.min(...["[", "{"].map((token) => output.indexOf(token)).filter((index) => index >= 0));
+
+  if (!Number.isFinite(jsonStart)) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(output.slice(jsonStart));
+  } catch {
+    return null;
+  }
+}
+
+function collectValuesForKey(value, expectedKey, values) {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectValuesForKey(item, expectedKey, values);
+    }
+    return;
+  }
+
+  if (!value || typeof value !== "object") {
+    return;
+  }
+
+  for (const [key, nestedValue] of Object.entries(value)) {
+    if (key === expectedKey && typeof nestedValue === "string") {
+      values.add(nestedValue);
+    } else {
+      collectValuesForKey(nestedValue, expectedKey, values);
+    }
+  }
+}
+
+function repairMigrationHistory(versions, status = "applied") {
   const uniqueVersions = [...new Set(versions)];
   const repair = spawnSync(
     cli,
-    ["migration", "repair", "--status", "applied", "--db-url", process.env.DATABASE_URL, "--yes", ...uniqueVersions],
+    ["migration", "repair", "--status", status, "--db-url", process.env.DATABASE_URL, "--yes", ...uniqueVersions],
     {
       ...baseOptions,
       stdio: "inherit"

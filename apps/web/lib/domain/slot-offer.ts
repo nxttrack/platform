@@ -1,8 +1,9 @@
 import "server-only";
 
+import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { GroupRow, ProgramRow, ProgramStageRow } from "./core";
-import { hashOfferToken } from "./placement-token";
+import { hashOfferSessionToken, slotOfferCookieName } from "./placement-token";
 import type { WaitlistEntryRow } from "./placement";
 
 export type PublicSlotOffer = {
@@ -18,13 +19,20 @@ export type PublicSlotOffer = {
   stage: ProgramStageRow | null;
 };
 
-export async function getPublicSlotOffer(token: string | null | undefined): Promise<PublicSlotOffer> {
+export async function getPublicSlotOffer(): Promise<PublicSlotOffer> {
+  const token = (await cookies()).get(slotOfferCookieName)?.value;
+
   if (!token) {
     return emptyOffer("missing");
   }
 
   const admin = createAdminClient();
-  const offerResult = await admin.from("slot_offers").select("id, tenant_id, waitlist_entry_id, group_id, status, expires_at").eq("token_hash", hashOfferToken(token)).maybeSingle();
+  const offerResult = await admin
+    .from("slot_offers")
+    .select("id, tenant_id, waitlist_entry_id, group_id, status, expires_at")
+    .eq("verified_session_hash", hashOfferSessionToken(token))
+    .gt("verified_session_expires_at", new Date().toISOString())
+    .maybeSingle();
 
   if (offerResult.error || !offerResult.data) {
     return emptyOffer("invalid");

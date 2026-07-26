@@ -1,0 +1,47 @@
+name: Journey Bot staging tick
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-journey-bot-staging-tick
+  cancel-in-progress: false
+
+jobs:
+  tick:
+    name: process due staging journeys
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      APP_URL: ${{ vars.APP_URL }}
+    steps:
+      - name: Checkout evaluator
+        uses: actions/checkout@v6
+
+      - name: Call protected staging runner
+        run: |
+          set -euo pipefail
+          if [ "${#CRON_SECRET}" -lt 32 ]; then
+            echo "Journey Bot tick skipped: staging CRON_SECRET is not configured."
+            exit 0
+          fi
+          case "$APP_URL" in
+            https://staging.nxttrack.nl|https://*.staging.nxttrack.nl) ;;
+            *) echo "Refusing non-staging APP_URL: $APP_URL"; exit 1 ;;
+          esac
+          response_file="$RUNNER_TEMP/journey-bot-tick.json"
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --output "$response_file" \
+            "$APP_URL/api/internal/journey-bot/tick"
+          cat "$response_file"
+          node scripts/staging/assert-journey-bot-tick.mjs "$response_file"

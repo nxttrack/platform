@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 
 const root = process.cwd();
 const scanRoots = ["apps/web"];
-const ignoredFiles = new Set([normalizePath("scripts/auth/audit-auth-boundary.mjs")]);
+const ignoredFiles = new Set([normalizePath("scripts/auth/audit-auth-boundary.mjs"), normalizePath("apps/web/lib/http/trusted-request-origin.ts")]);
 
 const forbiddenPatterns = [
   {
@@ -21,6 +21,10 @@ const forbiddenPatterns = [
   {
     pattern: /\bSUPABASE_SERVICE_ROLE_KEY\b|\bservice_role_key\b/i,
     message: "service-role credentials must not be used in the web app boundary"
+  },
+  {
+    pattern: /["']x-forwarded-host["']/,
+    message: "forwarded hosts must only be read through getTrustedRequestOrigin()"
   }
 ];
 
@@ -33,6 +37,10 @@ for (const scanRoot of scanRoots) {
     scanDirectory(absoluteRoot);
   }
 }
+
+auditEmailSecretPreservation();
+auditProtectedApiRoutes();
+auditPublicCapabilityUrls();
 
 if (failures.length > 0) {
   console.error("Auth boundary audit failed:");
@@ -81,4 +89,69 @@ function scanDirectory(directory) {
 
 function normalizePath(value) {
   return value.replaceAll("\\", "/");
+}
+
+function auditEmailSecretPreservation() {
+  const actionsPath = join(root, "apps/web/lib/email/actions.ts");
+  const settingsPath = join(root, "apps/web/lib/email/platform-settings.ts");
+  const transactionalPath = join(root, "apps/web/lib/email/transactional.ts");
+  const settingsPagePath = join(root, "apps/web/app/(platform-admin)/platform/instellingen/page.tsx");
+  const actions = readFileSync(actionsPath, "utf8");
+  const settings = readFileSync(settingsPath, "utf8");
+  const transactional = readFileSync(transactionalPath, "utf8");
+  const settingsPage = readFileSync(settingsPagePath, "utf8");
+
+  requireContract(actions, 'formData.get("replaceSendGridApiKey") === "on"', "SendGrid replacement must require explicit user intent");
+  requireContract(actions, 'formData.get("replaceSmtpPassword") === "on"', "SMTP password replacement must require explicit user intent");
+  requireContract(actions, "replaceSendGridApiKeyRequested && Boolean(submittedSendGridApiKey)", "SendGrid replacement must combine explicit intent with a submitted value");
+  requireContract(actions, "replaceSmtpPasswordRequested && Boolean(submittedSmtpPassword)", "SMTP password replacement must combine explicit intent with a submitted value");
+  requireContract(actions, "replaceSendGridApiKey ? submittedSendGridApiKey : undefined", "an unconfirmed SendGrid field must resolve to an omitted secret update");
+  requireContract(actions, "replaceSmtpPassword ? submittedSmtpPassword : undefined", "an unconfirmed SMTP password must resolve to an omitted secret update");
+  requireContract(settings, "if (input.sendGridApiKey !== undefined)", "SendGrid storage must only change for replace or clear requests");
+  requireContract(settings, "if (input.smtpPassword !== undefined)", "SMTP password storage must only change for replace or clear requests");
+  requireContract(settings, '.update(values).eq("id", SETTINGS_ID)', "email settings must preserve omitted database columns during updates");
+  requireContract(transactional, "if (isReservedTestRecipient(input.to))", "reserved .test recipients must be intercepted before provider delivery");
+  requireContract(settingsPage, 'settings?.provider === "sendgrid_api" && !settings.hasSendGridApiKey', "SendGrid replacement must only default on for an active unconfigured provider");
+  requireContract(settingsPage, 'settings?.provider === "smtp" && !settings.hasSmtpPassword', "SMTP replacement must only default on for an active unconfigured provider");
+
+  if (actions.includes("getExistingPlatformEmailSecrets")) {
+    failures.push("apps/web/lib/email/actions.ts: unchanged email secrets must not be decrypted and rewritten during a settings save.");
+  }
+}
+
+function auditProtectedApiRoutes() {
+  const protectedRoutes = [
+    "apps/web/app/api/files/tenant-document/[id]/route.ts",
+    "apps/web/app/api/files/certificate/[id]/route.ts",
+    "apps/web/app/api/platform/offboarding/[id]/export/route.ts"
+  ];
+
+  for (const route of protectedRoutes) {
+    const source = readFileSync(join(root, route), "utf8");
+    requireContract(
+      source,
+      "requireApiAuthenticatedContext",
+      `${route} must enforce the centralized API password-change boundary`
+    );
+  }
+}
+
+function auditPublicCapabilityUrls() {
+  const placementActions = readFileSync(join(root, "apps/web/lib/domain/placement-actions.ts"), "utf8");
+  const placementPage = readFileSync(join(root, "apps/web/app/(tenant-public)/plaatsing-aanbod/page.tsx"), "utf8");
+  const reset = readFileSync(join(root, "apps/web/lib/auth/password-reset.ts"), "utf8");
+
+  if (placementActions.includes("plaatsing-aanbod?token=") || placementPage.includes('getParam(params, "token")')) {
+    failures.push("public capability URL contract: slot-offer bearer tokens must not be read from or written to URLs.");
+  }
+
+  if (/wachtwoord-resetten[^\\n]*[?&]email=/.test(reset)) {
+    failures.push("public capability URL contract: password-reset email addresses must not be written to URLs.");
+  }
+}
+
+function requireContract(source, expected, message) {
+  if (!source.includes(expected)) {
+    failures.push(`email settings secret contract: ${message}.`);
+  }
 }

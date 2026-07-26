@@ -3,8 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { completeSessionAction, markAttendanceAction } from "@/lib/domain/instructor-actions";
-import { formatSessionTime, getInstructorData, getRosterForGroup } from "@/lib/domain/instructor";
+import { completeSessionAction, markAttendanceAction, markRosterPresentAction } from "@/lib/domain/instructor-actions";
+import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -34,8 +34,11 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
   const error = getParam(rawParams, "error");
   const groupSessions = data.sessions.filter((session) => session.group_id === group.id);
   const selectedSession = groupSessions.find((session) => session.id === selectedSessionId) ?? groupSessions.find((session) => isToday(session.starts_at)) ?? groupSessions.find((session) => new Date(session.starts_at).getTime() >= Date.now()) ?? groupSessions[0] ?? null;
-  const roster = getRosterForGroup(data, group.id);
+  const roster = selectedSession ? getSessionRoster(data, selectedSession.id) : [];
   const attendanceByParticipant = new Map(data.attendance.filter((attendance) => attendance.session_id === selectedSession?.id).map((attendance) => [attendance.participant_id, attendance]));
+  const registeredCount = attendanceByParticipant.size;
+  const presentCount = [...attendanceByParticipant.values()].filter((attendance) => attendance.status === "present" || attendance.status === "trial" || attendance.status === "late").length;
+  const openCount = Math.max(0, roster.length - registeredCount);
 
   return (
     <div className="space-y-6">
@@ -60,7 +63,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
         ) : (
           <div className="flex flex-wrap gap-2">
             {groupSessions.map((session) => (
-              <Link className={`rounded-lg border px-3 py-2 text-sm font-semibold ${session.id === selectedSession?.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-white text-foreground hover:bg-muted"}`} href={`/instructor/group/${group.id}?session=${session.id}`} key={session.id}>
+              <Link className={`inline-flex min-h-11 items-center rounded-lg border px-3 py-2 text-sm font-semibold ${session.id === selectedSession?.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-white text-foreground hover:bg-muted"}`} href={`/instructor/group/${group.id}?session=${session.id}`} key={session.id}>
                 {new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(session.starts_at))}
               </Link>
             ))}
@@ -83,6 +86,12 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
           <EmptyState>Geen actieve leerlingen in deze groep.</EmptyState>
         ) : (
           <div className="space-y-3">
+            <div className="grid gap-3 md:grid-cols-4">
+              <SessionMetric label="Roster" value={roster.length} />
+              <SessionMetric label="Aanwezig" value={presentCount} tone="success" />
+              <SessionMetric label="Geregistreerd" value={registeredCount} />
+              <SessionMetric label="Nog open" value={openCount} tone={openCount > 0 ? "warning" : "success"} />
+            </div>
             {roster.map(({ enrollment, participant }) => {
               const attendance = attendanceByParticipant.get(participant.id);
 
@@ -97,19 +106,24 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                     </div>
                     <StatusPill tone={attendance ? "success" : "neutral"}>{attendance ? attendanceLabels[attendance.status as keyof typeof attendanceLabels] ?? attendance.status : "open"}</StatusPill>
                   </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="present" label="Aanwezig" />
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="absent" label="Afwezig" />
+                    <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="late" label="Laat" />
+                  </div>
                   <form action={markAttendanceAction} className="mt-3 grid gap-2 md:grid-cols-[180px_1fr_auto]">
                     <input name="sessionId" type="hidden" value={selectedSession.id} />
                     <input name="participantId" type="hidden" value={participant.id} />
                     <input name="enrollmentId" type="hidden" value={enrollment.id} />
                     <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
-                    <select className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.status ?? "present"} name="status">
+                    <select aria-label={`Aanwezigheidsstatus van ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.status ?? "present"} name="status">
                       {Object.entries(attendanceLabels).map(([value, label]) => (
                         <option key={value} value={value}>
                           {label}
                         </option>
                       ))}
                     </select>
-                    <input className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.note ?? ""} name="note" placeholder="Korte lesnotitie" />
+                    <input aria-label={`Lesnotitie voor ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.note ?? ""} name="note" placeholder="Korte lesnotitie" />
                     <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
                       <ClipboardCheck className="h-4 w-4" />
                       Opslaan
@@ -118,6 +132,28 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                 </article>
               );
             })}
+            {selectedSession.status === "scheduled" ? (
+              <div className="sticky bottom-3 z-20 flex flex-col gap-3 rounded-2xl border border-primary/20 bg-card/95 p-3 shadow-card backdrop-blur sm:flex-row sm:items-center">
+                <div className="mr-auto">
+                  <p className="text-sm font-bold text-foreground">Poolside acties</p>
+                  <p className="text-xs text-muted-foreground">Grote touch targets · controleer uitzonderingen na de batch.</p>
+                </div>
+                <form action={markRosterPresentAction}>
+                  <input name="sessionId" type="hidden" value={selectedSession.id} />
+                  <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                  <button className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold transition hover:bg-muted sm:w-auto" type="submit">
+                    <ClipboardCheck className="size-5 text-primary" /> Iedereen aanwezig
+                  </button>
+                </form>
+                <form action={completeSessionAction}>
+                  <input name="sessionId" type="hidden" value={selectedSession.id} />
+                  <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
+                  <button className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-glow sm:w-auto" type="submit">
+                    <CheckCircle2 className="size-5" /> Les afronden
+                  </button>
+                </form>
+              </div>
+            ) : null}
           </div>
         )}
       </section>
@@ -125,9 +161,39 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
   );
 }
 
+function SessionMetric({ label, tone = "neutral", value }: { label: string; tone?: "success" | "warning" | "neutral"; value: number }) {
+  const toneClass = tone === "success" ? "text-success" : tone === "warning" ? "text-warning" : "text-foreground";
+
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 px-3 py-3">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-1 text-2xl font-bold ${toneClass}`}>{value}</p>
+    </div>
+  );
+}
+
+function QuickAttendanceButton({ enrollmentId, groupId, label, participantId, sessionId, status }: { enrollmentId: string; groupId: string; label: string; participantId: string; sessionId: string; status: string }) {
+  return (
+    <form action={markAttendanceAction}>
+      <input name="sessionId" type="hidden" value={sessionId} />
+      <input name="participantId" type="hidden" value={participantId} />
+      <input name="enrollmentId" type="hidden" value={enrollmentId} />
+      <input name="status" type="hidden" value={status} />
+      <input name="next" type="hidden" value={`/instructor/group/${groupId}?session=${sessionId}`} />
+      <button className="inline-flex h-10 min-w-24 items-center justify-center rounded-lg border border-border bg-white px-3 text-sm font-semibold hover:bg-muted" type="submit">
+        {label}
+      </button>
+    </form>
+  );
+}
+
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved === "attendance") {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Attendance opgeslagen.</p>;
+  }
+
+  if (saved === "roster") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Het volledige roster is als aanwezig geregistreerd. Uitzonderingen kunnen direct worden aangepast.</p>;
   }
 
   if (saved === "completed") {

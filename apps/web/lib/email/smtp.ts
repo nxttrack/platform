@@ -39,11 +39,13 @@ export async function sendSmtpEmail(config: SmtpEmailConfig, input: Transactiona
 async function connect(config: SmtpEmailConfig) {
   if (config.secure) {
     const socket = tls.connect({ host: config.host, port: config.port, servername: config.host });
+    configureTimeout(socket);
     await once(socket, "secureConnect");
     return socket;
   }
 
   const socket = net.connect({ host: config.host, port: config.port });
+  configureTimeout(socket);
   await once(socket, "connect");
   return socket;
 }
@@ -86,11 +88,13 @@ class SmtpSession {
   async upgradeToTls(host: string) {
     const previousSocket = this.socket;
 
+    previousSocket.setTimeout(0);
     previousSocket.removeAllListeners("data");
     previousSocket.removeAllListeners("error");
     previousSocket.removeAllListeners("close");
 
     const secureSocket = tls.connect({ socket: previousSocket, servername: host });
+    configureTimeout(secureSocket);
     await once(secureSocket, "secureConnect");
     this.socket = secureSocket;
     this.attach(secureSocket);
@@ -204,6 +208,13 @@ function sanitizeHeader(value: string) {
 
 function smtpHostname() {
   return process.env.SMTP_EHLO_HOSTNAME || "nxttrack.nl";
+}
+
+function configureTimeout(socket: net.Socket | tls.TLSSocket) {
+  const parsed = Number.parseInt(process.env.EMAIL_DELIVERY_TIMEOUT_MS ?? "15000", 10);
+  const timeoutMs = Number.isInteger(parsed) && parsed >= 1_000 && parsed <= 60_000 ? parsed : 15_000;
+
+  socket.setTimeout(timeoutMs, () => socket.destroy(new Error(`SMTP operation timed out after ${timeoutMs}ms.`)));
 }
 
 function once(socket: net.Socket | tls.TLSSocket, event: "connect" | "secureConnect") {

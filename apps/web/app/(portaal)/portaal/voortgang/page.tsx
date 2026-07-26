@@ -1,6 +1,6 @@
 import { Award, Bell, Star, TrendingUp, Waves } from "lucide-react";
 import type { ReactNode } from "react";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { PageHeader, ProgressRing, StatusPill } from "@/components/shell/ui";
 import { getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getPositiveScoreLabel } from "@/lib/domain/progress-template";
 
@@ -14,10 +14,18 @@ export default async function ParentProgressPage() {
   const badgeDefinitionById = new Map(data.badgeDefinitions.map((badge) => [badge.id, badge]));
   const itemsByModuleId = new Map(data.progressModules.map((module) => [module.id, data.progressItems.filter((item) => item.module_id === module.id)]));
   const scoreByParticipantItem = new Map(data.progressScores.map((score) => [`${score.participant_id}:${score.item_id}`, score]));
+  const averageScore = data.progressScores.length > 0 ? Math.round((data.progressScores.reduce((total, score) => total + score.score, 0) / data.progressScores.length) * 10) / 10 : null;
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Voortgang" title="Zwemgroei en badges" subtitle="Bekijk de huidige route, positieve scores, badges en updates van de zwemschool." />
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Summary icon={<Waves className="h-5 w-5" />} label="Kinderen" value={data.participants.length.toString()} />
+        <Summary icon={<TrendingUp className="h-5 w-5" />} label="Vaardigheden" value={data.progressScores.length.toString()} />
+        <Summary icon={<Star className="h-5 w-5" />} label="Gemiddelde" value={averageScore ? averageScore.toString() : "n.v.t."} />
+        <Summary icon={<Award className="h-5 w-5" />} label="Badges" value={data.badgeAwards.length.toString()} />
+      </div>
 
       {data.notifications.length > 0 ? (
         <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -56,24 +64,41 @@ export default async function ParentProgressPage() {
             });
             const participantScores = data.progressScores.filter((score) => score.participant_id === participant.id);
             const participantBadges = data.badgeAwards.filter((badge) => badge.participant_id === participant.id);
+            const participantAverage = participantScores.length > 0 ? participantScores.reduce((total, score) => total + score.score, 0) / participantScores.length : 0;
+            const progressPercent = Math.round((participantAverage / 5) * 100);
+            const latestScore = participantScores[0] ?? null;
 
             return (
-              <article className="rounded-xl border border-border bg-card p-5 shadow-soft" key={participant.id}>
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">Athlete</p>
-                    <h2 className="mt-1 text-xl font-bold text-foreground">{participant.display_name}</h2>
+              <article className="overflow-hidden rounded-3xl border border-border bg-card shadow-card" key={participant.id}>
+                <div className="grid gap-5 bg-gradient-to-br from-aqua-soft via-card to-primary/10 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+                  <div className="flex items-center gap-4">
+                    <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-lg font-bold text-primary-foreground shadow-glow">{getInitials(participant.display_name)}</div>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">Mijn zwemroute</p>
+                      <h2 className="mt-1 text-2xl font-bold text-foreground">{participant.display_name}</h2>
+                      <p className="mt-1 text-sm text-muted-foreground">{stage?.badge_label ?? stage?.name ?? "De zwemreis is gestart"}</p>
+                    </div>
                   </div>
-                  <StatusPill tone={enrollment?.status === "active" ? "success" : "neutral"}>{enrollment?.status ?? "geen inschrijving"}</StatusPill>
+                  <div className="flex items-center gap-3 sm:justify-end">
+                    <ProgressRing label="groei" size={94} value={progressPercent} />
+                    <StatusPill tone={enrollment?.status === "active" ? "success" : "neutral"}>{enrollment?.status === "active" ? "actief" : enrollment?.status ?? "geen inschrijving"}</StatusPill>
+                  </div>
                 </div>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 p-5 sm:grid-cols-2">
                   <Detail icon={<Waves className="h-4 w-4" />} label="Programma" value={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Niet actief"} />
                   <Detail icon={<TrendingUp className="h-4 w-4" />} label="Badje" value={stage?.badge_label ?? stage?.name ?? "Nog niet gezet"} />
                   <Detail icon={<Waves className="h-4 w-4" />} label="Lesgroep" value={memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst"} />
                   <Detail icon={<TrendingUp className="h-4 w-4" />} label="Startdatum" value={enrollment?.starts_on ? formatDate(enrollment.starts_on) : "Onbekend"} />
                 </div>
 
-                <section className="mt-5 space-y-3">
+                {latestScore?.note ? (
+                  <div className="mx-5 rounded-2xl border border-primary/15 bg-primary/5 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">Laatste compliment</p>
+                    <p className="mt-2 text-sm leading-6 text-foreground">“{latestScore.note}”</p>
+                  </div>
+                ) : null}
+
+                <section className="space-y-3 p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-bold text-foreground">Progress</h3>
                     <StatusPill tone={participantScores.length > 0 ? "success" : "neutral"}>{participantScores.length} scores</StatusPill>
@@ -90,6 +115,8 @@ export default async function ParentProgressPage() {
                           {items.map((item) => {
                             const score = scoreByParticipantItem.get(`${participant.id}:${item.id}`);
 
+                            const itemProgress = score ? Math.round((score.score / 5) * 100) : 0;
+
                             return (
                               <div className="rounded-lg border border-border bg-muted/30 px-3 py-3" key={item.id}>
                                 <div className="flex flex-wrap items-start justify-between gap-2">
@@ -98,6 +125,9 @@ export default async function ParentProgressPage() {
                                     {item.positive_goal ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.positive_goal}</p> : null}
                                   </div>
                                   {score ? <StatusPill tone={scoreTone(score.score)}>{getPositiveScoreLabel(score.score)}</StatusPill> : <StatusPill>Nog onderweg</StatusPill>}
+                                </div>
+                                <div aria-label={`${item.name}: ${itemProgress}%`} className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted" role="img">
+                                  <div className="h-full rounded-full bg-gradient-to-r from-aqua to-primary" style={{ width: `${itemProgress}%` }} />
                                 </div>
                                 {score?.note ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{score.note}</p> : null}
                               </div>
@@ -109,7 +139,7 @@ export default async function ParentProgressPage() {
                   })}
                 </section>
 
-                <section className="mt-5 space-y-3">
+                <section className="space-y-3 border-t border-border p-5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="font-bold text-foreground">Badges</h3>
                     <StatusPill tone={participantBadges.length > 0 ? "success" : "neutral"}>{participantBadges.length} badges</StatusPill>
@@ -159,6 +189,18 @@ function Detail({ icon, label, value }: { icon: ReactNode; label: string; value:
   );
 }
 
+function Summary({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <span className="text-primary">{icon}</span>
+      </div>
+      <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+    </section>
+  );
+}
+
 function EmptyState({ children }: { children: ReactNode }) {
   return <p className="rounded-lg border border-dashed border-border bg-muted/50 px-3 py-3 text-sm text-muted-foreground">{children}</p>;
 }
@@ -185,4 +227,14 @@ function scoreTone(score: number): "success" | "warning" | "info" | "neutral" {
   }
 
   return "neutral";
+}
+
+function getInitials(name: string) {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 }

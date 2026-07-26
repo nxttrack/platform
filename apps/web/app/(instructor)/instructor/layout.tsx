@@ -16,7 +16,7 @@ export default async function InstructorLayout({ children }: { children: React.R
 
   return (
     <AppShell brand={{ title: tenant?.name ?? "Tenant", subtitle: "Instructeur" }} nav={instructorNav} user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }} accent="instructor">
-      {children}
+      <div className="[&_button]:min-h-11 [&_input]:min-h-11 [&_select]:min-h-11">{children}</div>
     </AppShell>
   );
 }

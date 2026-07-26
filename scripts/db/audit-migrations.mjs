@@ -8,6 +8,7 @@ const rootDir = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = join(rootDir, "supabase", "migrations");
 
 const failures = [];
+const normalizedMigrations = [];
 
 if (!existsSync(migrationsDir)) {
   console.log("[db:audit] No migrations directory found.");
@@ -22,12 +23,15 @@ for (const file of migrationFiles) {
   const filePath = join(migrationsDir, file);
   const sql = readFileSync(filePath, "utf8");
   const normalizedSql = normalizeSql(sql);
+  normalizedMigrations.push({ file, sql: normalizedSql });
 
   checkForbiddenPatterns(file, normalizedSql);
   checkSecurityDefinerFunctions(file, normalizedSql);
   checkPolicies(file, normalizedSql);
   checkPublicTables(file, normalizedSql);
 }
+
+checkCompositeForeignKeyTargets(normalizedMigrations);
 
 if (failures.length > 0) {
   console.error("[db:audit] Migration audit failed:");
@@ -100,6 +104,62 @@ function checkPublicTables(file, sql) {
       failures.push(`${file}: public.${table} is missing an explicit service_role grant.`);
     }
   }
+}
+
+function checkCompositeForeignKeyTargets(migrations) {
+  const uniqueColumnSetsByTable = new Map();
+
+  for (const { sql } of migrations) {
+    for (const match of sql.matchAll(/create\s+table\s+(?:if\s+not\s+exists\s+)?public\.([a-z_][a-z0-9_]*)\s*\(([\s\S]*?)\)\s*;/g)) {
+      const [, table, definition] = match;
+
+      for (const uniqueMatch of definition.matchAll(/(?:primary\s+key|unique)\s*\(([^)]+)\)/g)) {
+        addUniqueColumnSet(uniqueColumnSetsByTable, table, uniqueMatch[1]);
+      }
+    }
+
+    for (const match of sql.matchAll(/alter\s+table\s+(?:if\s+exists\s+)?public\.([a-z_][a-z0-9_]*)\s+([^;]*);/g)) {
+      const uniqueMatch = match[2].match(/add\s+constraint\s+[a-z_][a-z0-9_]*\s+unique\s*\(([^)]+)\)/);
+
+      if (uniqueMatch) {
+        addUniqueColumnSet(uniqueColumnSetsByTable, match[1], uniqueMatch[1]);
+      }
+    }
+  }
+
+  for (const { file, sql } of migrations) {
+    for (const match of sql.matchAll(/foreign\s+key\s*\(([^)]+)\)\s+references\s+public\.([a-z_][a-z0-9_]*)\s*\(([^)]+)\)/g)) {
+      const sourceColumns = parseColumnList(match[1]);
+
+      if (sourceColumns.length < 2) {
+        continue;
+      }
+
+      const referencedTable = match[2];
+      const referencedColumns = parseColumnList(match[3]);
+      const referencedKey = referencedColumns.join(",");
+
+      if (!uniqueColumnSetsByTable.get(referencedTable)?.has(referencedKey)) {
+        failures.push(
+          `${file}: composite foreign key references public.${referencedTable} (${referencedColumns.join(", ")}) without a matching primary or unique constraint.`
+        );
+      }
+    }
+  }
+}
+
+function addUniqueColumnSet(uniqueColumnSetsByTable, table, columns) {
+  const key = parseColumnList(columns).join(",");
+  const existing = uniqueColumnSetsByTable.get(table) ?? new Set();
+  existing.add(key);
+  uniqueColumnSetsByTable.set(table, existing);
+}
+
+function parseColumnList(columns) {
+  return columns
+    .split(",")
+    .map((column) => column.trim().replaceAll('"', ""))
+    .filter(Boolean);
 }
 
 function normalizeSql(sql) {

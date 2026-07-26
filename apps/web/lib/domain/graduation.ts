@@ -60,6 +60,12 @@ export type CertificateRecordRow = {
   issued_on: string;
   issued_by_user_id: string | null;
   file_path: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  storage_bucket: string;
+  storage_status: string;
+  uploaded_at: string | null;
   notes: string | null;
 };
 
@@ -91,7 +97,7 @@ export async function getGraduationAdminData(): Promise<GraduationAdminData> {
       .order("created_at", { ascending: false }),
     admin
       .from("certificate_records")
-      .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, issued_by_user_id, file_path, notes")
+      .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, issued_by_user_id, file_path, file_name, mime_type, size_bytes, storage_bucket, storage_status, uploaded_at, notes")
       .eq("tenant_id", core.tenant.id)
       .order("issued_on", { ascending: false })
   ]);

@@ -35,8 +35,19 @@ const authCases: AuthCase[] = [
 ];
 
 const configuredCases = authCases.filter((authCase) => authCase.username && authCase.password);
+const requireAuthenticatedWorkflows = process.env.E2E_REQUIRE_AUTHENTICATED_WORKFLOWS === "true";
 
 test.describe("authenticated role workflows", () => {
+  test.beforeAll(() => {
+    if (!requireAuthenticatedWorkflows) {
+      return;
+    }
+
+    const missingCases = authCases.filter((authCase) => !authCase.username || !authCase.password).map((authCase) => authCase.label);
+
+    expect(missingCases, `Missing E2E credentials for: ${missingCases.join(", ")}`).toEqual([]);
+  });
+
   test.skip(configuredCases.length === 0, "Set E2E_* credentials to run authenticated staging workflows.");
 
   for (const authCase of authCases) {
@@ -82,7 +93,7 @@ function collectRuntimeFailures(page: Page) {
   });
 
   page.on("response", (response) => {
-    if (response.status() >= 500) {
+    if (response.status() >= 500 || (response.status() >= 400 && response.url().includes("/_next/static/"))) {
       failures.push(`response ${response.status()}: ${response.url()}`);
     }
   });
@@ -91,5 +102,5 @@ function collectRuntimeFailures(page: Page) {
 }
 
 function isExpectedBrowserResourceNoise(message: string) {
-  return message.includes("Failed to load resource: the server responded with a status of 404") || message.includes("favicon");
+  return message.includes("favicon");
 }

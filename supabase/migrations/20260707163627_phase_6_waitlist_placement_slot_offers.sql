@@ -109,7 +109,8 @@ create table public.slot_offers (
   constraint slot_offers_group_membership_fk foreign key (tenant_id, accepted_group_membership_id) references public.group_memberships (tenant_id, id) on delete restrict,
   constraint slot_offers_status_check check (status in ('draft', 'sent', 'accepted', 'declined', 'expired', 'revoked')),
   constraint slot_offers_delivery_status_check check (delivery_status in ('pending', 'sent', 'failed', 'skipped')),
-  constraint slot_offers_email_check check (parent_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$')
+  constraint slot_offers_email_check check (parent_email ~* '^[^@\s]+@[^@\s]+\.[^@\s]+$'),
+  constraint slot_offers_tenant_id_id_unique unique (tenant_id, id)
 );
 
 create table public.placement_audit_events (

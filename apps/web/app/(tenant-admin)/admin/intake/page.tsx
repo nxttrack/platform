@@ -1,7 +1,12 @@
-import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { AdminSection } from "@/components/admin/domain-ui";
+import { IntakeTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
+import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
+import { attributionChannelLabel } from "@/lib/analytics/attribution";
+import Link from "next/link";
 
 const optionLabels: Record<IntakeOption, string> = {
   enrollment: "Inschrijving",
@@ -12,8 +17,18 @@ const optionLabels: Record<IntakeOption, string> = {
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminIntakePage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function AdminIntakePage({ searchParams }: PageProps) {
   const inbox = await getTenantIntakeInbox();
+  const params = (await searchParams) ?? {};
+  const testFilter = getParam(params, "testdata") ?? "all";
+  const query = getParam(params, "q");
+  const saved = getParam(params, "saved");
+  const error = getParam(params, "error");
+  const submissions = inbox.submissions.filter((submission) => testFilter === "only" ? submission.is_test : testFilter === "hide" ? !submission.is_test : true);
   const programById = new Map(inbox.programs.map((program) => [program.id, program]));
   const answersBySubmission = groupAnswers(inbox.answers);
   const eventBySubjectId = new Map(inbox.events.map((event) => [event.subject_id, event]));
@@ -21,52 +36,53 @@ export default async function AdminIntakePage() {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Intake" title="Aanmeldingen" subtitle={`Nieuwe oudervragen voor ${inbox.tenant.name}.`} />
+      <RouteFeedback success={saved ? "Intake-aanmelding is bijgewerkt." : null} error={error ? `Intake-actie is niet gelukt: ${error}.` : null} />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Metric label="Ontvangen" value={inbox.submissions.length} />
-        <Metric label="Nieuwe status" value={inbox.submissions.filter((submission) => submission.status === "received").length} />
-        <Metric label="Events pending" value={inbox.events.filter((event) => event.status === "pending").length} />
+        <Metric label="Ontvangen" value={submissions.length} />
+        <Metric label="Nieuwe status" value={submissions.filter((submission) => submission.status === "received").length} />
+        <Metric label="Journey Bot" value={inbox.submissions.filter((submission) => submission.is_test).length} />
       </div>
 
       <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
-        {inbox.submissions.length === 0 ? (
-          <EmptyState>Nog geen intake-aanmeldingen.</EmptyState>
-        ) : (
-          <DataList>
-            {inbox.submissions.map((submission) => {
-              const program = submission.program_id ? programById.get(submission.program_id) : null;
-              const event = eventBySubjectId.get(submission.id);
-              const answers = answersBySubmission.get(submission.id) ?? [];
-
-              return (
-                <DataListRow
-                  key={submission.id}
-                  title={`${submission.participant_name} · ${optionLabels[submission.selected_option]}`}
-                  meta={
-                    <div className="space-y-1">
-                      <p>
-                        {submission.parent_name} · {submission.parent_email}
-                        {submission.parent_phone ? ` · ${submission.parent_phone}` : ""}
-                      </p>
-                      <p>
-                        {program?.name ?? "Geen programma"} · {formatDate(submission.received_at)}
-                      </p>
-                      {submission.preferred_days.length > 0 ? <p>Voorkeur: {submission.preferred_days.join(", ")}</p> : null}
-                      {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
-                    </div>
-                  }
-                  aside={
-                    <div className="space-y-1">
-                      <StatusPill tone={submission.status === "received" ? "info" : "neutral"}>{submission.status}</StatusPill>
-                      <StatusPill tone={event?.status === "pending" ? "warning" : "success"}>{event ? `event ${event.status}` : "geen event"}</StatusPill>
-                    </div>
-                  }
-                />
-              );
-            })}
-          </DataList>
-        )}
+        <TestDataFilter current={testFilter} />
+        <IntakeTable
+          initialSearch={query}
+          rows={submissions.map((submission) => {
+            const selectedChoice = getSelectedChoice(submission.recommendation_snapshot, submission.selected_group_id);
+            const answers = answersBySubmission.get(submission.id) ?? [];
+            const event = eventBySubjectId.get(submission.id);
+            return {
+              choice: selectedChoice ? formatChoice(selectedChoice) : "",
+              duplicateState: submission.duplicate_state,
+              email: submission.parent_email,
+              experience: [submission.swimming_experience ? getExperienceLabel(submission.swimming_experience) : "", answers.length ? answers.map(formatAnswer).join(" · ") : ""].filter(Boolean).join(" · "),
+              id: submission.id,
+              isTest: submission.is_test,
+              option: optionLabels[submission.selected_option],
+              parent: submission.parent_name,
+              participant: submission.participant_name,
+              phone: submission.parent_phone ?? "",
+              preferredDays: submission.preferred_days.join(", "),
+              program: submission.program_id ? programById.get(submission.program_id)?.name ?? "Programma onbekend" : "Geen programma",
+              receivedAt: submission.received_at,
+              source: `${attributionChannelLabel(submission.attribution_channel)} · ${submission.attribution_source}${submission.attribution_campaign ? ` · ${submission.attribution_campaign}` : ""}${event ? ` · event ${event.status}` : ""}`,
+              status: submission.status,
+              waitBand: submission.selected_wait_band
+            };
+          })}
+        />
       </AdminSection>
+    </div>
+  );
+}
+
+function TestDataFilter({ current }: { current: string }) {
+  return (
+    <div className="mb-4 flex flex-wrap gap-2">
+      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
+        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/intake?testdata=${value}`} key={value}>{label}</Link>
+      ))}
     </div>
   );
 }
@@ -103,4 +119,48 @@ function formatDate(value: string) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+type RecommendationSnapshot = {
+  groupId: string;
+  weekday: number;
+  startsAt: string;
+  endsAt: string;
+  stageId: string | null;
+};
+
+function getSelectedChoice(value: unknown, selectedGroupId: string | null): RecommendationSnapshot | null {
+  if (!selectedGroupId || !Array.isArray(value)) {
+    return null;
+  }
+
+  const selected = value.find(
+    (candidate): candidate is RecommendationSnapshot =>
+      !!candidate &&
+      typeof candidate === "object" &&
+      "groupId" in candidate &&
+      candidate.groupId === selectedGroupId &&
+      "weekday" in candidate &&
+      typeof candidate.weekday === "number" &&
+      "startsAt" in candidate &&
+      typeof candidate.startsAt === "string" &&
+      "endsAt" in candidate &&
+      typeof candidate.endsAt === "string"
+  );
+
+  return selected ?? null;
+}
+
+function getExperienceLabel(value: string) {
+  return swimmingExperienceOptions.find((option) => option.value === value)?.label ?? value;
+}
+
+function formatChoice(choice: RecommendationSnapshot) {
+  const weekdays = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
+  return `${weekdays[choice.weekday] ?? "dag"} ${choice.startsAt}–${choice.endsAt}`;
+}
+
+function getParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] : value;
 }

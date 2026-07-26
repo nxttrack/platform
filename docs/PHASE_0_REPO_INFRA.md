@@ -1,323 +1,142 @@
-# Phase 0 - Repo and Infrastructure Foundation
+# Phase 0 - Repository Truth And Release Baseline
 
-Last updated: 2026-06-23
+Last updated: 2026-07-20
 
-## Status
+Status: implemented locally; canonical-branch promotion and live staging proof remain external completion gates.
 
-Phase 0 is documentation and foundation work only. The goal is to lock the final repository, deployment direction, environment strategy, secrets strategy, migration approach, and operational assumptions before product implementation starts.
+## Goal
 
-No product features are allowed in this phase.
+Create one trustworthy implementation and release lineage before adding product scope. Phase 0 makes branch ownership, deploy origin, environment promotion, repository status and remaining validation work explicit and enforceable.
 
 ## Decisions Locked
 
-- `nxttrack/platform` is the final rebuild repository.
-- `nxtdev` and earlier prototypes are reference only.
-- `nxttrack/swim-school-pro` is the Lovable UI source of truth.
-- The first target is staging, not a commercial launch tenant.
-- Deployment direction is VPS plus Caddy plus systemd plus self-hosted GitHub runner.
-- Email provider direction is SendGrid, using SMTP first.
-- Payments are manual first, with a fast path prepared for Mollie/iDEAL.
-- Core product architecture remains multi-tenant and sector-flexible.
-- Swimming labels may appear in tenant-facing UI, but core models must stay generic.
+- Canonical implementation branch: `main`.
+- `main` is also the only valid source for staging and production releases.
+- Remote `staging` and `production` branches are historical deployment/reference lines, not implementation sources and not safe wholesale merge targets.
+- Staging remains the first release target.
+- Production is a manual promotion of the exact commit SHA already validated on staging.
+- The Lovable repository remains the visual source of truth; missing screenshot baselines are an open validation item, not an implicit approval.
+- Phase 15 through Phase 20 being present in code does not mean their live staging acceptance has passed.
 
-## Current Repository State
+## Audited Repository State
 
-Repository: `nxttrack/platform`
+The audit that started this phase found:
 
-Default branch: `main`
+- `main` and `origin/staging` diverged after Phase 14.
+- `main` contains the Phase 15 through Phase 20 implementation line.
+- `origin/staging` has a large side history with smart-flow, automation, AI, SEPA, helpdesk and UX work, but much of that work is absent from the final branch tree.
+- `origin/production` diverged earlier and represents another incompatible application snapshot.
+- Historical feature commits remain useful as design and recovery references, but must be audited and selectively reimplemented or cherry-picked after the canonical baseline is stable.
 
-Current known production files:
+Run the repeatable audit with:
 
-- `.github/workflows/deploy.yml`
-
-The existing deploy workflow already defines the intended deploy skeleton:
-
-- Trigger on pushes to `staging` and `production`.
-- Run on a self-hosted runner with labels `[self-hosted, linux, x64, nxttrack]`.
-- Select the GitHub Environment from the branch name.
-- Prepare release directories under `/var/www/nxttrack/{staging|production}`.
-- Write a shared `.env` file from GitHub environment variables and secrets.
-- Run `pnpm install --frozen-lockfile`.
-- Run `pnpm build`.
-- Run `pnpm run db:migrate`.
-- Activate the release via a `current` symlink.
-- Restart the systemd service from `SERVICE_NAME`.
-- Reload Caddy.
-- Keep the five newest releases.
-
-Important: the app scaffold and package scripts do not exist yet. The workflow is a target shape, not yet a proven deploy.
-
-## Planned Repository Structure
-
-This is the structure to implement when app scaffolding is approved:
-
-```txt
-.github/workflows/
-  deploy.yml
-apps/
-  web/
-    app/
-      (marketing)/
-      (tenant-public)/
-      (portaal)/
-      (instructor)/
-      (tenant-admin)/
-      (platform-admin)/
-    components/
-      lovable/
-      shell/
-      ui/
-    lib/
-      auth/
-      domain/
-      supabase/
-      tenants/
-      terminology/
-    styles/
-    public/
-supabase/
-  migrations/
-  seed/
-  policies/
-scripts/
-  db/
-  deploy/
-docs/
+```bash
+pnpm run release:truth
 ```
 
-Notes:
+The audit verifies repository invariants and reports current divergence without treating the historical branches as merge sources.
 
-- `apps/web` is the production Next.js app target.
-- `components/lovable` is the first landing zone for carefully ported Lovable UI building blocks.
-- `lib/domain` should hold generic concepts such as program, stage, group, session, resource, enrollment, membership, progress, badge, certificate, and payment plan.
-- `lib/terminology` should translate generic domain concepts into swim-school labels per tenant/sector.
-- `supabase/migrations` is the only place for database schema changes after approval.
+## Release Contract
 
-## Environment Strategy
+Deployments are manually dispatched from `.github/workflows/deploy.yml` while viewing the workflow on `main`.
 
-Use GitHub Environments for `staging` and later `production`.
+Staging release:
 
-Staging variables expected by the current workflow:
+1. Select target `staging`.
+2. Deploy the current full `main` commit SHA.
+3. Run migrations, advisors, RLS role smoke, authenticated Playwright and Phase 16 validation.
+4. Record the deployed commit SHA and validation evidence.
 
-```txt
-APP_ENV=staging
-NODE_ENV=production
-PORT=<staging app port>
-APP_URL=<staging public URL>
-NEXT_PUBLIC_APP_URL=<staging public URL>
-PLATFORM_ADMIN_URL=<staging platform admin URL>
-TENANT_DOMAIN_SUFFIX=<staging tenant suffix>
-PLATFORM_HOSTNAMES=localhost,127.0.0.1,::1,staging.nxttrack.nl
-PLATFORM_MARKETING_HOSTNAMES=www.nxttrack.nl,nxttrack.nl
-PLATFORM_ADMIN_HOSTNAMES=admin.nxttrack.nl
-STAGING_HOSTNAMES=staging.nxttrack.nl
-TENANT_BASE_DOMAINS=nxttrack.nl,localhost
-RESERVED_TENANT_SUBDOMAINS=admin,api,app,platform,staging,www
-BASE_PATH=/
-SERVICE_NAME=nxttrack-staging
-RUN_DB_MIGRATIONS=false
-DB_MIGRATE_DRY_RUN=false
+Production promotion:
+
+1. Select target `production` while dispatching the workflow from `main`.
+2. Enter the full commit SHA that passed staging as `staging_release_sha`.
+3. Enter `PROMOTE_PRODUCTION` as explicit confirmation.
+4. Enter a link or identifier for the recorded approval as `production_approval_reference`.
+5. Enter the successful foundation-audit and migration-rehearsal run IDs for the exact SHA.
+6. The workflow refuses promotion when the current source SHA differs from the staged SHA or either evidence run is missing, unsuccessful or belongs to another SHA.
+7. GitHub's `production` Environment must still provide protected secrets; recorded approval and SHA-bound evidence compensate for reviewer rules when the repository billing plan does not support them.
+
+The source contract can be tested independently:
+
+```bash
+RELEASE_TARGET=staging pnpm run release:assert-source
 ```
 
-Recommended staging defaults to confirm with infra owner:
+Production example, only after live staging acceptance:
 
-```txt
-APP_URL=https://staging.nxttrack.nl
-NEXT_PUBLIC_APP_URL=https://staging.nxttrack.nl
-PLATFORM_ADMIN_URL=https://admin.nxttrack.nl
-TENANT_DOMAIN_SUFFIX=nxttrack.nl
-SERVICE_NAME=nxttrack-staging
+```bash
+RELEASE_TARGET=production \
+STAGING_RELEASE_SHA=<full-validated-sha> \
+PRODUCTION_RELEASE_CONFIRMATION=PROMOTE_PRODUCTION \
+PRODUCTION_APPROVAL_REFERENCE=<recorded-approval-link-or-id> \
+PRODUCTION_FOUNDATION_RUN_ID=<successful-run-id-for-this-sha> \
+PRODUCTION_MIGRATION_REHEARSAL_RUN_ID=<successful-run-id-for-this-sha> \
+pnpm run release:assert-source
 ```
 
-Production variables should remain unset or protected until production is approved.
+## CI Baseline
 
-## Secrets Strategy
+Pull requests and `main` now run:
 
-Secrets expected by the current workflow:
+- repository-truth audit;
+- TypeScript;
+- auth boundary audit;
+- production build;
+- migration audit;
+- RLS coverage audit;
+- migration command guard;
+- standalone asset packaging;
+- Chromium browser smoke tests.
 
-```txt
-DATABASE_URL
-SESSION_SECRET
-JWT_SECRET
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SECRET_KEY
-SUPABASE_SERVICE_ROLE_KEY
-```
+Static Next.js asset failures are release failures. Browser smoke no longer treats all resource 404 responses as harmless noise.
 
-Email secrets to add when notification code is approved:
+## Current Product Truth
 
-```txt
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_USER=apikey
-SMTP_PASS=<sendgrid api key>
-SMTP_FROM_EMAIL=<verified sender>
-SMTP_FROM_NAME=NXTTRACK
-```
+- Phase 3 through Phase 14: broad implementation foundation exists.
+- Phase 15: strict live-staging validation runner exists; a current passing run must still be recorded.
+- Phase 16: service-role seeded integration journey plus authenticated dashboard verification exists; a true UI mutation journey remains follow-up work.
+- Phase 17: communication, email delivery tracking and private storage code exists; live provider/storage validation remains.
+- Phase 18: planning, conflict and catch-up depth exists; operational staging validation remains.
+- Phase 19: parent and instructor communication/lesson depth exists; tablet/mobile validation remains.
+- Phase 20: provider boundary and billing lifecycle preparation exists; no live Mollie/iDEAL integration is claimed.
+- Production readiness is not approved.
 
-Mollie/iDEAL secrets to reserve for later payment integration:
+## External Completion Gates
 
-```txt
-MOLLIE_API_KEY
-MOLLIE_WEBHOOK_SECRET
-MOLLIE_PROFILE_ID
-```
+Phase 0 can only be marked fully complete after:
 
-Rules:
+- [ ] These repository-truth changes are merged into `main`.
+- [ ] Branch protections identify `main` as the canonical implementation branch.
+- [ ] Direct pushes to historical `staging` and `production` branches cannot deploy.
+- [ ] The staging workflow is dispatched from `main` and succeeds.
+- [ ] The deployed staging commit SHA is recorded.
+- [ ] Phase 15 and Phase 16 evidence is retained as workflow artifacts or a release record.
+- [ ] Phase 17 through Phase 20 staging checklists are executed.
+- [ ] Lovable visual comparison is recorded.
+- [ ] Backup/restore policy is confirmed.
+- [ ] VPS rollback is rehearsed against the canonical release lineage.
+- [ ] Production remains protected until the production-readiness phase is approved.
 
-- Never commit `.env` files.
-- Do not expose service-role Supabase keys to client code.
-- Keep staging and production secrets separate.
-- Add new secrets to GitHub Environments only when the consuming code exists.
-- Extend `.github/workflows/deploy.yml` before expecting newly added secrets to be available on the VPS.
+## Recovery Policy For Historical Work
 
-## Migration Approach
+Do not merge `origin/staging` or `origin/production` wholesale.
 
-Target approach after approval:
+For every historical feature considered for recovery:
 
-- Database migrations live in `supabase/migrations`.
-- Migrations are append-only after merge.
-- Staging runs migrations automatically during deploy via `pnpm run db:migrate`.
-- Migration commands must be idempotent enough to fail safely when already applied.
-- Destructive changes require a documented expand/contract migration plan.
-- Production migration policy is separate and must be approved before production launch.
+1. Identify its commit and dependencies.
+2. Compare its schema with the Phase 20 canonical schema.
+3. Re-run tenant, RLS and service-boundary review.
+4. Reconcile its UX with the current route and terminology canon.
+5. Add tests before promotion.
+6. Prefer a clean reimplementation when cherry-picking would reintroduce an obsolete architecture.
 
-Open implementation decision:
+Priority candidates for later recovery audit include Smart Flow decision records, capacity/waitlist intelligence, active shell navigation, mobile shell behavior, observability and visual regression work.
 
-- Choose exact migration runner when the Next.js/Supabase scaffold is created. Options are Supabase CLI, direct SQL runner, or a controlled Postgres migration tool.
+## Non-Goals
 
-Current blocker:
-
-- `pnpm run db:migrate` is referenced by the existing workflow but does not exist yet because the app scaffold is not created.
-
-## Deployment Flow
-
-The target staging flow is:
-
-1. Developer merges approved code into `staging`.
-2. GitHub Actions runs on the self-hosted runner.
-3. The workflow writes `/var/www/nxttrack/staging/shared/.env` from GitHub Environment variables/secrets.
-4. The workflow creates a timestamped release directory.
-5. Dependencies are installed with pnpm.
-6. The app is built.
-7. Database migrations run against the staging database.
-8. The `current` symlink is switched atomically.
-9. systemd restarts `nxttrack-staging`.
-10. Caddy reloads its config.
-11. Old releases are cleaned up.
-
-VPS prerequisites:
-
-```txt
-Linux VPS
-Caddy installed and managed by systemd
-Node.js LTS installed
-pnpm installed
-rsync installed
-self-hosted GitHub runner installed with label nxttrack
-deploy user/group present, including nxttrack-deploy
-/var/www/nxttrack/staging/releases present
-/var/www/nxttrack/staging/shared present
-systemd service nxttrack-staging present
-Caddy route for staging domain to localhost PORT
-```
-
-Systemd target shape:
-
-```txt
-WorkingDirectory=/var/www/nxttrack/staging/current
-EnvironmentFile=/var/www/nxttrack/staging/shared/.env
-ExecStart=<approved Next.js production start command>
-Restart=always
-```
-
-The exact `ExecStart` depends on the approved Next.js package scripts.
-
-## Caddy Strategy
-
-Staging should route public traffic to the local app port behind Caddy.
-
-Target shape:
-
-```txt
-staging.nxttrack.nl {
-  reverse_proxy 127.0.0.1:<PORT>
-}
-
-www.nxttrack.nl {
-  reverse_proxy 127.0.0.1:<PORT>
-}
-
-admin.nxttrack.nl {
-  reverse_proxy 127.0.0.1:<PORT>
-}
-
-*.nxttrack.nl {
-  reverse_proxy 127.0.0.1:<PORT>
-}
-```
-
-Tenant routing uses `<slug>.nxttrack.nl`. Do not use `*.staging.nxttrack.nl` for tenants.
-
-## Security Hardening
-
-Minimum staging baseline:
-
-- Firewall only allows SSH, HTTP, and HTTPS.
-- SSH uses key auth only.
-- GitHub runner runs with least practical privileges.
-- systemd service runs as a non-root app user.
-- Shared `.env` file mode stays restricted.
-- Supabase service-role key is server-only.
-- Caddy terminates TLS.
-- Deploy logs must not print secrets.
-- Staging domains should not be indexed if they contain demo or test data.
-
-## Backups, Monitoring, Rollback
-
-Backups:
-
-- Supabase database backups must be enabled for staging before real customer-like data enters staging.
-- File/storage backup policy must be decided before documents/diplomas are generated.
-
-Monitoring:
-
-- Start with systemd/journald logs, Caddy access/error logs, and a simple uptime check.
-- Add application-level error tracking before production.
-
-Rollback:
-
-- Current workflow keeps previous release directories.
-- Manual rollback can repoint `/var/www/nxttrack/staging/current` to a previous release and restart `nxttrack-staging`.
-- Automated rollback should wait until smoke tests exist.
-- Database rollback is not automatic; use forward fixes or explicit rollback migrations.
-
-## Phase 0 Acceptance Criteria
-
-- Final repo is confirmed as `nxttrack/platform`.
-- Staging-first deploy direction is documented.
-- Current deploy workflow assumptions are documented.
-- Planned repo structure is documented.
-- Environment variables and secrets are documented.
-- Migration approach is documented.
-- No product features have been implemented.
-
-## What Not To Do In Phase 0
-
-- Do not scaffold the production app yet without approval.
-- Do not connect Supabase yet.
-- Do not add database migrations yet.
-- Do not implement auth, roles, payments, notifications, or tenant routing.
-- Do not change the deploy workflow unless the app scaffold and scripts are approved.
-- Do not use `nxtdev` as the active codebase.
-
-## Open Questions
-
-1. Which VPS IP should receive `staging.nxttrack.nl`, `www.nxttrack.nl`, `admin.nxttrack.nl`, and tenant `<slug>.nxttrack.nl` traffic?
-2. Which Supabase project is staging?
-3. Should the self-hosted runner deploy only from protected `staging`, or also from manual dispatch on selected branches?
-4. Which Next.js deployment mode should be used: standalone output, custom server, or standard `next start`?
-5. Should staging have basic auth or IP allowlisting before public demos?
-6. When should production branch/environment be created and protected?
+- No new business modules in Phase 0.
+- No AI activation.
+- No Mollie, SEPA or external communication provider activation.
+- No production deployment.
+- No destructive branch deletion until the historical work inventory is accepted.

@@ -1,0 +1,74 @@
+name: Staging demo tenant seed
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type SEED_WATERLIJN_STAGING
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-demo-tenant-seed
+  cancel-in-progress: false
+
+jobs:
+  seed:
+    name: restore managed Waterlijn showcase
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      APP_ENV: staging
+      ALLOW_SPRINT31_DEMO_SEED: true
+      ALLOW_JOURNEY_BOT_SEED: true
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Authorize managed demo mutation
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "SEED_WATERLIJN_STAGING"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Seed showcase tenant
+        run: pnpm run staging:seed-demo
+
+      - name: Seed Journey Bot foundation
+        run: pnpm run staging:seed-journey-bot
+
+      - name: Verify canonical showcase state
+        run: pnpm run staging:verify-demo
+
+      - name: Record restore summary
+        run: |
+          {
+            echo "## De Waterlijn showcase restored"
+            echo
+            echo "- Environment: staging"
+            echo "- Schedule: daily at 04:17 UTC"
+            echo "- Canonical tenant: waterlijn-demo"
+            echo "- Verification: passed"
+            echo "- Commit: $GITHUB_SHA"
+          } >> "$GITHUB_STEP_SUMMARY"

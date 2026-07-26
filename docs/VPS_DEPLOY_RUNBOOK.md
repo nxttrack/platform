@@ -1,8 +1,8 @@
 # VPS Deployment Runbook
 
-Last updated: 2026-06-23
+Last updated: 2026-07-21
 
-Status: operational runbook draft. Do not execute infrastructure changes without explicit approval.
+Status: staging-operational runbook with a read-only production-foundation audit. Do not execute production infrastructure changes without explicit approval.
 
 ## Purpose
 
@@ -16,12 +16,10 @@ Existing file:
 .github/workflows/deploy.yml
 ```
 
-Current triggers:
+Current trigger:
 
 ```txt
-push to staging
-push to production
-workflow_dispatch
+manual workflow_dispatch from main
 ```
 
 Current runner labels:
@@ -66,8 +64,8 @@ Rules:
 
 Target flow from the existing workflow:
 
-1. Push approved changes to `staging`.
-2. GitHub Actions selects environment `staging`.
+1. Push the approved implementation to canonical branch `main`.
+2. Manually dispatch the workflow from `main` and select environment `staging`.
 3. Self-hosted runner checks out repo.
 4. Workflow prints runtime versions.
 5. Workflow creates timestamped release directory.
@@ -82,8 +80,10 @@ Target flow from the existing workflow:
 14. Workflow restarts `SERVICE_NAME`.
 15. Workflow reloads Caddy.
 16. Workflow runs `pnpm run staging:health` against `APP_URL`.
-17. Optional: workflow runs Playwright staging smoke when `RUN_PLAYWRIGHT_SMOKE=true`.
+17. The staging validation job runs the operational flow, visual capture/fallback, Supabase advisors, four-role RLS smoke and authenticated Playwright checks.
 18. Workflow removes old releases beyond retention.
+
+Before any production deployment, run the separate `Production foundation audit`. It only reads GitHub environment configuration and host state; it does not migrate, restart, reload or deploy anything.
 
 ## Pre-Deploy Checks
 
@@ -191,6 +191,10 @@ ls -1dt /var/www/nxttrack/staging/releases/*
 ## Manual Rollback
 
 Use only after confirming the target previous release. For Phase 13, rehearse this once on staging and then switch back to the current release.
+
+The canonical rehearsal is the manually dispatched `Staging rollback rehearsal` GitHub Action on `main`. It serializes with staging deploys, selects the newest release other than `current`, verifies database-aware health on that release, and always restores and verifies the original release. Its implementation is `scripts/release/rehearse-runtime-rollback.sh`.
+
+The steps below remain the break-glass manual procedure.
 
 1. List releases:
 

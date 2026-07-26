@@ -1,0 +1,53 @@
+name: Staging platform-owner bootstrap rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_EXISTING_PLATFORM_OWNER
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-platform-owner-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: verify idempotent owner repair without password reset
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      BOOTSTRAP_PLATFORM_OWNER_EXPECT_EXISTING: true
+      BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD: false
+    steps:
+      - name: Authorize non-resetting rehearsal
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "REHEARSE_EXISTING_PLATFORM_OWNER"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Rehearse idempotent platform-owner repair
+        run: pnpm run auth:bootstrap-platform-owner

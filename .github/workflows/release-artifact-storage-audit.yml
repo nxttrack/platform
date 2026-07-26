@@ -1,0 +1,51 @@
+name: Release artifact storage audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type AUDIT_RELEASE_ARTIFACT_STORAGE to test artifact persistence
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: upload non-sensitive artifact probe
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "AUDIT_RELEASE_ARTIFACT_STORAGE"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Write non-sensitive artifact probe
+        run: node scripts/release/write-artifact-storage-probe.mjs
+
+      - name: Upload artifact probe
+        id: upload
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-artifact-storage-audit-${{ github.sha }}
+          path: artifacts/artifact-storage-audit.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Verify persisted artifact reference
+        env:
+          ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+        run: |
+          test -n "$ARTIFACT_ID"
+          test -n "$ARTIFACT_URL"
+          echo "Artifact persistence probe passed with artifact id $ARTIFACT_ID."

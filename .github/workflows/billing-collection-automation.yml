@@ -1,0 +1,76 @@
+name: Billing collection automation
+
+on:
+  schedule:
+    - cron: "30 5 * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to process
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      production_confirmation:
+        description: Type RUN_PRODUCTION_COLLECTIONS for production
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: billing-collection-${{ github.event_name == 'schedule' && 'staging' || inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  scheduled-staging:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
+    steps:
+      - name: Process due staging collections
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL"
+          test "${#BILLING_AUTOMATION_SECRET}" -ge 32
+          HTTP_STATUS="$(curl --silent --show-error --output response.json --write-out '%{http_code}' \
+            --request POST \
+            --header "Authorization: Bearer $BILLING_AUTOMATION_SECRET" \
+            --header "Content-Type: application/json" \
+            "${APP_URL%/}/api/internal/billing/collections")"
+          test "$HTTP_STATUS" = "200"
+          node -e 'const r=require("./response.json"); if (!r.accepted || r.failed > 0) { console.error(r); process.exit(1); } console.log({processed:r.processed, skipped:r.skipped});'
+
+  manual:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    timeout-minutes: 10
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
+      TARGET: ${{ inputs.target }}
+      PRODUCTION_CONFIRMATION: ${{ inputs.production_confirmation }}
+    steps:
+      - name: Enforce production confirmation
+        if: inputs.target == 'production'
+        run: test "$PRODUCTION_CONFIRMATION" = "RUN_PRODUCTION_COLLECTIONS"
+
+      - name: Process due collections
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL"
+          test "${#BILLING_AUTOMATION_SECRET}" -ge 32
+          HTTP_STATUS="$(curl --silent --show-error --output response.json --write-out '%{http_code}' \
+            --request POST \
+            --header "Authorization: Bearer $BILLING_AUTOMATION_SECRET" \
+            --header "Content-Type: application/json" \
+            "${APP_URL%/}/api/internal/billing/collections")"
+          test "$HTTP_STATUS" = "200"
+          node -e 'const r=require("./response.json"); if (!r.accepted || r.failed > 0) { console.error(r); process.exit(1); } console.log({processed:r.processed, skipped:r.skipped});'

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { acceptSlotOfferAction, declineSlotOfferAction } from "@/lib/domain/placement-actions";
+import { acceptSlotOfferAction, declineSlotOfferAction, verifySlotOfferAction } from "@/lib/domain/placement-actions";
 import { getPublicSlotOffer, type PublicSlotOffer } from "@/lib/domain/slot-offer";
 
 type PageProps = {
@@ -21,9 +21,8 @@ export const dynamic = "force-dynamic";
 
 export default async function PlacementOfferPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const token = getParam(params, "token");
   const responseStatus = getParam(params, "status");
-  const data = await getPublicSlotOffer(token);
+  const data = await getPublicSlotOffer();
 
   return (
     <main>
@@ -39,6 +38,21 @@ export default async function PlacementOfferPage({ searchParams }: PageProps) {
         <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[1fr_0.75fr]">
           <article className="rounded-xl border border-border bg-card p-5 shadow-card">
             <StatusNotice data={data} responseStatus={responseStatus} />
+            {data.status === "missing" || data.status === "invalid" ? (
+              <form action={verifySlotOfferAction} className="mt-6 space-y-4">
+                <label className="block text-sm font-semibold text-foreground">
+                  E-mailadres
+                  <input autoComplete="email" className="mt-1 h-11 w-full rounded-lg border border-border bg-white px-3" name="email" required type="email" />
+                </label>
+                <label className="block text-sm font-semibold text-foreground">
+                  8-cijferige beveiligingscode
+                  <input autoComplete="one-time-code" className="mt-1 h-11 w-full rounded-lg border border-border bg-white px-3 tracking-[0.2em]" inputMode="numeric" maxLength={8} minLength={8} name="code" pattern="[0-9]{8}" required />
+                </label>
+                <button className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground" type="submit">
+                  Aanbod veilig openen
+                </button>
+              </form>
+            ) : null}
             {data.status === "open" && data.entry && data.group ? (
               <div className="mt-6 space-y-5">
                 <div>
@@ -56,13 +70,11 @@ export default async function PlacementOfferPage({ searchParams }: PageProps) {
 
                 <div className="flex flex-wrap gap-3">
                   <form action={acceptSlotOfferAction}>
-                    <input name="token" type="hidden" value={token ?? ""} />
                     <button className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground" type="submit">
                       Plek accepteren
                     </button>
                   </form>
                   <form action={declineSlotOfferAction}>
-                    <input name="token" type="hidden" value={token ?? ""} />
                     <button className="rounded-lg border border-border bg-white px-5 py-3 text-sm font-semibold text-foreground hover:bg-muted" type="submit">
                       Plek weigeren
                     </button>
@@ -98,7 +110,7 @@ function StatusNotice({ data, responseStatus }: { data: PublicSlotOffer; respons
   }
 
   if (data.status === "missing") {
-    return <Notice tone="warning">Deze pagina heeft een aanbodtoken nodig.</Notice>;
+    return <Notice tone="warning">Vul de beveiligingscode uit de e-mail in om het aanbod te bekijken.</Notice>;
   }
 
   if (data.status === "invalid") {

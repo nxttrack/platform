@@ -179,6 +179,10 @@ export type ParentCertificateRecordRow = {
   status: string;
   issued_on: string;
   file_path: string | null;
+  file_name: string | null;
+  mime_type: string | null;
+  size_bytes: number | null;
+  storage_status: string;
   notes: string | null;
 };
 
@@ -209,6 +213,17 @@ export type ParentSubscriptionRow = {
   amount_cents: number;
   currency: string;
   billing_interval: string;
+  collection_method: string;
+  provider_config_id: string | null;
+  billing_provider_customer_id: string | null;
+  billing_mandate_id: string | null;
+  billing_anchor_day: number | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  lifecycle_status_reason: string | null;
+  paused_at: string | null;
+  cancelled_at: string | null;
+  completed_at: string | null;
   notes: string | null;
 };
 
@@ -219,6 +234,8 @@ export type ParentManualPaymentRow = {
   enrollment_id: string;
   guardian_user_id: string | null;
   amount_cents: number;
+  refunded_cents: number;
+  chargeback_cents: number;
   currency: string;
   due_on: string;
   paid_on: string | null;
@@ -232,12 +249,148 @@ export type ParentBillingEventRow = {
   id: string;
   subscription_id: string | null;
   manual_payment_id: string | null;
+  payment_session_id: string | null;
   participant_id: string | null;
   guardian_user_id: string | null;
   type: string;
   status: string;
   occurred_at: string;
   message: string;
+};
+
+export type ParentPaymentSessionRow = {
+  id: string;
+  provider_config_id: string | null;
+  subscription_id: string | null;
+  manual_payment_id: string | null;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_session_id: string | null;
+  sequence_type: string;
+  billing_provider_customer_id: string | null;
+  billing_mandate_id: string | null;
+  collection_attempt_id: string | null;
+  consent_terms_version: string | null;
+  consent_initiated_at: string | null;
+  checkout_url: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  failure_code: string | null;
+  failure_message: string | null;
+  expires_at: string | null;
+  created_at: string;
+};
+
+export type ParentBillingProviderCustomerRow = {
+  id: string;
+  provider_config_id: string;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_customer_id: string;
+  status: string;
+  last_synced_at: string | null;
+};
+
+export type ParentBillingMandateRow = {
+  id: string;
+  provider_config_id: string;
+  provider_customer_id: string;
+  guardian_user_id: string | null;
+  provider: string;
+  provider_mandate_id: string;
+  method: string;
+  status: string;
+  signature_date: string | null;
+  mandate_reference: string | null;
+  account_holder: string | null;
+  account_last4: string | null;
+  consent_source: string;
+  consent_terms_version: string | null;
+  consent_recorded_at: string | null;
+  revoked_at: string | null;
+  last_synced_at: string | null;
+};
+
+export type ParentBillingCollectionAttemptRow = {
+  id: string;
+  provider_config_id: string;
+  subscription_id: string;
+  manual_payment_id: string;
+  billing_provider_customer_id: string;
+  billing_mandate_id: string;
+  guardian_user_id: string | null;
+  sequence_type: string;
+  attempt_number: number;
+  status: string;
+  scheduled_for: string;
+  prenotified_at: string | null;
+  prenotification_delivery_status: string | null;
+  initiated_at: string | null;
+  completed_at: string | null;
+  provider_payment_id: string | null;
+  failure_code: string | null;
+  failure_message: string | null;
+};
+
+export type ParentBillingRefundRow = {
+  id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  description: string;
+  requested_at: string;
+  completed_at: string | null;
+  failure_message: string | null;
+};
+
+export type ParentBillingChargebackRow = {
+  id: string;
+  payment_session_id: string;
+  manual_payment_id: string;
+  participant_id: string | null;
+  amount_cents: number;
+  currency: string;
+  status: string;
+  reason_code: string | null;
+  occurred_at: string;
+  reversed_at: string | null;
+};
+
+export type ParentBillingInvoiceRow = {
+  id: string;
+  subscription_id: string | null;
+  manual_payment_id: string | null;
+  participant_id: string | null;
+  guardian_user_id: string | null;
+  invoice_number: string | null;
+  status: string;
+  issued_on: string | null;
+  due_on: string | null;
+  paid_on: string | null;
+  subtotal_cents: number;
+  tax_cents: number;
+  total_cents: number;
+  currency: string;
+  export_status: string;
+  notes: string | null;
+  created_at: string;
+};
+
+export type ParentBillingInvoiceLineRow = {
+  id: string;
+  invoice_id: string;
+  manual_payment_id: string | null;
+  description: string;
+  quantity: number;
+  unit_amount_cents: number;
+  tax_rate_basis_points: number;
+  total_cents: number;
+  sort_order: number;
 };
 
 export type ParentPortalData = {
@@ -250,6 +403,7 @@ export type ParentPortalData = {
   profile: ParentProfileRow | null;
   settings: ParentPortalSettings;
   accessLinks: ParentAccessRow[];
+  mutableParticipantIds: string[];
   participants: ParticipantRow[];
   enrollments: EnrollmentRow[];
   groupMemberships: GroupMembershipRow[];
@@ -273,6 +427,14 @@ export type ParentPortalData = {
   subscriptions: ParentSubscriptionRow[];
   manualPayments: ParentManualPaymentRow[];
   billingEvents: ParentBillingEventRow[];
+  paymentSessions: ParentPaymentSessionRow[];
+  providerCustomers: ParentBillingProviderCustomerRow[];
+  mandates: ParentBillingMandateRow[];
+  collectionAttempts: ParentBillingCollectionAttemptRow[];
+  refunds: ParentBillingRefundRow[];
+  chargebacks: ParentBillingChargebackRow[];
+  invoices: ParentBillingInvoiceRow[];
+  invoiceLines: ParentBillingInvoiceLineRow[];
 };
 
 export async function getParentPortalData(): Promise<ParentPortalData> {
@@ -315,7 +477,14 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     certificatesResult,
     subscriptionsResult,
     manualPaymentsResult,
-    billingEventsResult
+    billingEventsResult,
+    paymentSessionsResult,
+    providerCustomersResult,
+    mandatesResult,
+    collectionAttemptsResult,
+    refundsResult,
+    chargebacksResult,
+    invoicesResult
   ] = await Promise.all([
     loadedParticipantIds.length > 0
       ? admin
@@ -382,7 +551,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("certificate_records")
-          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, notes")
+          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, file_name, mime_type, size_bytes, storage_status, notes")
           .eq("tenant_id", tenant.id)
           .eq("status", "issued")
           .in("participant_id", loadedParticipantIds)
@@ -391,7 +560,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("subscriptions")
-          .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, notes")
+          .select("id, participant_id, enrollment_id, guardian_user_id, payment_plan_id, status, starts_on, ends_on, next_due_on, amount_cents, currency, billing_interval, collection_method, provider_config_id, billing_provider_customer_id, billing_mandate_id, billing_anchor_day, current_period_start, current_period_end, lifecycle_status_reason, paused_at, cancelled_at, completed_at, notes")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("starts_on", { ascending: false })
@@ -399,7 +568,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("manual_payments")
-          .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, currency, due_on, paid_on, status, reference, method, notes")
+          .select("id, subscription_id, participant_id, enrollment_id, guardian_user_id, amount_cents, refunded_cents, chargeback_cents, currency, due_on, paid_on, status, reference, method, notes")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("due_on", { ascending: false })
@@ -407,11 +576,61 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("billing_events")
-          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, type, status, occurred_at, message")
+          .select("id, subscription_id, manual_payment_id, payment_session_id, participant_id, guardian_user_id, type, status, occurred_at, message")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("occurred_at", { ascending: false })
           .limit(40)
+      : Promise.resolve({ data: [], error: null }),
+    loadedParticipantIds.length > 0
+      ? admin
+          .from("payment_sessions")
+          .select("id, provider_config_id, subscription_id, manual_payment_id, participant_id, guardian_user_id, provider, provider_session_id, sequence_type, billing_provider_customer_id, billing_mandate_id, collection_attempt_id, consent_terms_version, consent_initiated_at, checkout_url, amount_cents, currency, status, failure_code, failure_message, expires_at, created_at")
+          .eq("tenant_id", tenant.id)
+          .in("participant_id", loadedParticipantIds)
+          .order("created_at", { ascending: false })
+          .limit(40)
+      : Promise.resolve({ data: [], error: null }),
+    admin
+      .from("billing_provider_customers")
+      .select("id, provider_config_id, guardian_user_id, provider, provider_customer_id, status, last_synced_at")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("billing_mandates")
+      .select("id, provider_config_id, provider_customer_id, guardian_user_id, provider, provider_mandate_id, method, status, signature_date, mandate_reference, account_holder, account_last4, consent_source, consent_terms_version, consent_recorded_at, revoked_at, last_synced_at")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("billing_collection_attempts")
+      .select("id, provider_config_id, subscription_id, manual_payment_id, billing_provider_customer_id, billing_mandate_id, guardian_user_id, sequence_type, attempt_number, status, scheduled_for, prenotified_at, prenotification_delivery_status, initiated_at, completed_at, provider_payment_id, failure_code, failure_message")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    admin
+      .from("billing_refunds")
+      .select("id, payment_session_id, manual_payment_id, participant_id, amount_cents, currency, status, description, requested_at, completed_at, failure_message")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("created_at", { ascending: false })
+      .limit(40),
+    admin
+      .from("billing_chargebacks")
+      .select("id, payment_session_id, manual_payment_id, participant_id, amount_cents, currency, status, reason_code, occurred_at, reversed_at")
+      .eq("tenant_id", tenant.id)
+      .eq("guardian_user_id", context.user.id)
+      .order("occurred_at", { ascending: false })
+      .limit(40),
+    loadedParticipantIds.length > 0
+      ? admin
+          .from("billing_invoices")
+          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, created_at")
+          .eq("tenant_id", tenant.id)
+          .in("participant_id", loadedParticipantIds)
+          .order("created_at", { ascending: false })
       : Promise.resolve({ data: [], error: null })
   ]);
 
@@ -427,6 +646,13 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   assertParentPortalResult(subscriptionsResult.error, "subscriptions");
   assertParentPortalResult(manualPaymentsResult.error, "manual payments");
   assertParentPortalResult(billingEventsResult.error, "billing events");
+  assertParentPortalResult(paymentSessionsResult.error, "payment sessions");
+  assertParentPortalResult(providerCustomersResult.error, "billing provider customers");
+  assertParentPortalResult(mandatesResult.error, "billing mandates");
+  assertParentPortalResult(collectionAttemptsResult.error, "billing collection attempts");
+  assertParentPortalResult(refundsResult.error, "billing refunds");
+  assertParentPortalResult(chargebacksResult.error, "billing chargebacks");
+  assertParentPortalResult(invoicesResult.error, "billing invoices");
 
   const enrollments = (enrollmentsResult.data ?? []) as EnrollmentRow[];
   const memberships = (membershipsResult.data ?? []) as GroupMembershipRow[];
@@ -435,6 +661,25 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   const subscriptions = (subscriptionsResult.data ?? []) as ParentSubscriptionRow[];
   const manualPayments = (manualPaymentsResult.data ?? []) as ParentManualPaymentRow[];
   const billingEvents = (billingEventsResult.data ?? []) as ParentBillingEventRow[];
+  const paymentSessions = (paymentSessionsResult.data ?? []) as ParentPaymentSessionRow[];
+  const providerCustomers = (providerCustomersResult.data ?? []) as ParentBillingProviderCustomerRow[];
+  const mandates = (mandatesResult.data ?? []) as ParentBillingMandateRow[];
+  const collectionAttempts = (collectionAttemptsResult.data ?? []) as ParentBillingCollectionAttemptRow[];
+  const refunds = (refundsResult.data ?? []) as ParentBillingRefundRow[];
+  const chargebacks = (chargebacksResult.data ?? []) as ParentBillingChargebackRow[];
+  const invoices = (invoicesResult.data ?? []) as ParentBillingInvoiceRow[];
+  const invoiceIds = invoices.map((invoice) => invoice.id);
+  const invoiceLinesResult =
+    invoiceIds.length > 0
+      ? await admin
+          .from("billing_invoice_lines")
+          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, sort_order")
+          .eq("tenant_id", tenant.id)
+          .in("invoice_id", invoiceIds)
+          .order("sort_order")
+      : { data: [], error: null };
+
+  assertParentPortalResult(invoiceLinesResult.error, "billing invoice lines");
   const groupIds = unique(memberships.filter((membership) => membership.status === "active" || membership.status === "trial").map((membership) => membership.group_id));
   const graduationEventIds = unique(graduationParticipants.map((participant) => participant.event_id));
   const paymentPlanIds = unique(subscriptions.map((subscription) => subscription.payment_plan_id));
@@ -513,6 +758,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     profile: (profileResult.data as ParentProfileRow | null) ?? null,
     settings: normalizeSettings(settingsResult.data),
     accessLinks: access.links,
+    mutableParticipantIds: access.mutableParticipantIds,
     participants,
     enrollments,
     groupMemberships: memberships,
@@ -535,11 +781,22 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     paymentPlans: (paymentPlansResult.data ?? []) as ParentPaymentPlanRow[],
     subscriptions,
     manualPayments,
-    billingEvents
+    billingEvents,
+    paymentSessions,
+    providerCustomers,
+    mandates,
+    collectionAttempts,
+    refunds,
+    chargebacks,
+    invoices,
+    invoiceLines: (invoiceLinesResult.data ?? []) as ParentBillingInvoiceLineRow[]
   };
 }
 
-export async function loadParentParticipantAccess(tenantId: string, userId: string): Promise<{ participantIds: string[]; links: ParentAccessRow[] }> {
+export async function loadParentParticipantAccess(
+  tenantId: string,
+  userId: string
+): Promise<{ mutableParticipantIds: string[]; participantIds: string[]; links: ParentAccessRow[] }> {
   const admin = createAdminClient();
   const [directParticipantsResult, guardianLinksResult] = await Promise.all([
     admin.from("participants").select("id").eq("tenant_id", tenantId).eq("guardian_user_id", userId),
@@ -553,9 +810,19 @@ export async function loadParentParticipantAccess(tenantId: string, userId: stri
   const links = (guardianLinksResult.data ?? []) as ParentAccessRow[];
 
   return {
+    mutableParticipantIds: unique([
+      ...directIds,
+      ...links
+        .filter((link) => link.access_level === "primary" || link.access_level === "secondary")
+        .map((link) => link.participant_id)
+    ]),
     participantIds: unique([...directIds, ...links.map((link) => link.participant_id)]),
     links
   };
+}
+
+export function canParentMutateParticipant(data: Pick<ParentPortalData, "mutableParticipantIds">, participantId: string) {
+  return data.mutableParticipantIds.includes(participantId);
 }
 
 export function getNextLesson(data: ParentPortalData, participantId?: string) {

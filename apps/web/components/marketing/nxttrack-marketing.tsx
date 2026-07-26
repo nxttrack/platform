@@ -6,16 +6,13 @@ import {
   BarChart3,
   Bell,
   CalendarCheck,
-  Camera,
   CheckCircle2,
   Compass,
   FileText,
   GraduationCap,
-  ImageIcon,
   Layers,
   ListChecks,
   LockKeyhole,
-  Menu,
   MessageSquare,
   Newspaper,
   Play,
@@ -27,22 +24,15 @@ import {
   UserCheck,
   Users,
   Waves,
-  X,
   Zap
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
+
+import { Photo } from "@/components/lovable/page-kit";
+import { cn } from "@/lib/utils";
 
 const logoPath = "/lovable/nxttrack-logo.svg";
-
-const nav = [
-  { href: "/nxttrack/zwemscholen", label: "Zwemscholen" },
-  { href: "/nxttrack/ouderportaal", label: "Ouderportaal" },
-  { href: "/nxttrack/trainer-app", label: "Trainer app" },
-  { href: "/nxttrack/backoffice", label: "Backoffice" },
-  { href: "/nxttrack/prijzen", label: "Prijzen" }
-];
 
 const chips = ["Ouderportaal", "Trainer app", "Backoffice", "Diploma kluis", "Wachtrijbeheer", "Badges & complimenten", "PWA / mobiel"];
 const trustLogos = ["AquaSport", "Zwemschool De Golf", "AquaPro", "ZVZ Zwemmen", "Ocean Kids"];
@@ -101,109 +91,24 @@ const security = [
   { i: FileText, t: "Privacy-first ontwerp", d: "Minimale data, duidelijke toestemming en Nederlandse uitgangspunten." }
 ];
 
-const footerCols = [
-  {
-    title: "Platform",
-    links: [
-      { href: "/nxttrack/zwemscholen", label: "Voor zwemscholen" },
-      { href: "/nxttrack/ouderportaal", label: "Ouderportaal" },
-      { href: "/nxttrack/trainer-app", label: "Trainer app" },
-      { href: "/nxttrack/backoffice", label: "Backoffice" },
-      { href: "/nxttrack/wachtrij-planning", label: "Wachtrij & planning" },
-      { href: "/nxttrack/badges-diplomas", label: "Badges & diploma's" }
-    ]
-  },
-  {
-    title: "Bedrijf",
-    links: [
-      { href: "/nxttrack/prijzen", label: "Prijzen" },
-      { href: "/nxttrack/demo", label: "Plan demo" },
-      { href: "/nxttrack/contact", label: "Contact" },
-      { href: "/nxttrack/privacy", label: "Privacy & AVG" }
-    ]
-  },
-  {
-    title: "Demo omgevingen",
-    links: [
-      { href: "/", label: "Organisatiesite" },
-      { href: "/portaal", label: "Ouder omgeving" },
-      { href: "/instructor", label: "Trainer omgeving" },
-      { href: "/admin", label: "Backoffice" }
-    ]
-  }
-];
-
 export function NxttrackMarketingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 antialiased [font-feature-settings:'cv11']">
-      <SiteHeader />
-      <main>
-        <Hero />
-        <ProductPreview />
-        <Problem />
-        <Modules />
-        <ParentExperience />
-        <TrainerExperience />
-        <Backoffice />
-        <WaitlistFlow />
-        <BadgeSection />
-        <TenantSites />
-        <Sports />
-        <Security />
-        <Moments />
-        <FinalCTA />
-      </main>
-      <SiteFooter />
-    </div>
-  );
-}
-
-function SiteHeader() {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-  return (
-    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 md:h-18 md:px-8">
-        <Link href="/nxttrack" className="flex items-center" aria-label="NXTTRACK homepage">
-          <img src={logoPath} alt="NXTTRACK" className="h-7 w-auto" />
-        </Link>
-        <nav className="ml-6 hidden items-center gap-1 lg:flex">
-          {nav.map((n) => (
-            <Link key={n.href} href={n.href} className={cn("rounded-lg px-3 py-2 text-sm font-medium transition-colors", pathname === n.href ? "bg-slate-900/5 text-slate-900" : "text-slate-600 hover:bg-slate-50 hover:text-slate-900")}>
-              {n.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <Link href="/nxttrack/login" className="hidden rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 md:inline-flex">
-            Inloggen
-          </Link>
-          <Link href="/nxttrack/demo" className="hidden items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-800 md:inline-flex">
-            Plan demo <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-          <button className="rounded-lg p-2 hover:bg-slate-100 lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-      {open ? (
-        <div className="border-t border-slate-200 bg-white lg:hidden">
-          <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-3">
-            {nav.map((n) => (
-              <Link key={n.href} href={n.href} onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                {n.label}
-              </Link>
-            ))}
-            <Link href="/nxttrack/login" onClick={() => setOpen(false)} className="rounded-lg px-3 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
-              Inloggen
-            </Link>
-            <Link href="/nxttrack/demo" onClick={() => setOpen(false)} className="mt-2 rounded-lg bg-slate-900 px-3 py-2.5 text-center text-sm font-semibold text-white">
-              Plan demo
-            </Link>
-          </div>
-        </div>
-      ) : null}
-    </header>
+    <>
+      <Hero />
+      <ProductPreview />
+      <Problem />
+      <Modules />
+      <ParentExperience />
+      <TrainerExperience />
+      <Backoffice />
+      <WaitlistFlow />
+      <BadgeSection />
+      <TenantSites />
+      <Sports />
+      <Security />
+      <Moments />
+      <FinalCTA />
+    </>
   );
 }
 
@@ -245,7 +150,7 @@ function Hero() {
           </div>
           <div className="relative">
             <div className="relative overflow-hidden rounded-[2rem] shadow-2xl ring-1 ring-slate-900/10">
-              <Photo label="Foto: kind leert zwemmen met persoonlijke begeleiding" hint="1536x1024 · hero" ratio="aspect-[5/6] md:aspect-[4/5]" className="w-full rounded-none border-0 shadow-none" />
+              <Photo label="Foto: kind leert zwemmen met persoonlijke begeleiding" hint="1536x1024 · hero" promptId="IMG-31-01" ratio="aspect-[5/6] md:aspect-[4/5]" className="w-full rounded-none border-0 shadow-none" />
               <div className="absolute inset-0 bg-gradient-to-tr from-slate-950/40 via-transparent to-transparent" />
               <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold text-slate-700 backdrop-blur">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
@@ -457,14 +362,13 @@ function Moments() {
   return (
     <Section kicker="Momenten" title="Echte momenten. Echte mensen." sub="Een instructeur die complimenten geeft. Een kind dat zijn diploma toont. Een ouder die de app opent.">
       <div className="grid gap-4 md:grid-cols-3">
-        <Photo label="Foto: kind toont diploma" hint="1200x1500" ratio="aspect-[4/5]" />
+        <Photo label="Foto: kind toont diploma" hint="1200x1500" promptId="IMG-31-02" ratio="aspect-[4/5]" />
         <div className="grid gap-4">
-          <Photo label="Foto: instructeur op badrand" hint="1200x900" ratio="aspect-[4/3]" />
-          <Photo label="Foto: ouder bekijkt app" hint="1200x900" ratio="aspect-[4/3]" />
+          <Photo label="Foto: instructeur op badrand" hint="1200x900" promptId="IMG-31-03" ratio="aspect-[4/3]" />
+          <Photo label="Foto: ouder bekijkt app" hint="1200x900" promptId="IMG-31-04" ratio="aspect-[4/3]" />
         </div>
-        <Photo label="Foto: groep kinderen in bad" hint="1200x1500" ratio="aspect-[4/5]" />
+        <Photo label="Foto: groep kinderen in bad" hint="1200x1500" promptId="IMG-31-05" ratio="aspect-[4/5]" />
       </div>
-      <p className="mt-6 text-center text-xs text-slate-500">Tip: gebruik warme, natuurlijke beelden — geen stockfoto's.</p>
     </Section>
   );
 }
@@ -497,39 +401,6 @@ function FinalCTA() {
   );
 }
 
-function SiteFooter() {
-  return (
-    <footer className="mt-24 border-t border-slate-200 bg-slate-50">
-      <div className="mx-auto max-w-7xl px-4 py-14 md:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
-          <div>
-            <img src={logoPath} alt="NXTTRACK" className="h-7 w-auto" />
-            <p className="mt-4 max-w-sm text-sm text-slate-600">Het next-gen platform voor moderne zwemscholen. Ouderportaal, trainer app, backoffice, planning en diploma kluis in één platform.</p>
-            <p className="mt-4 text-xs text-slate-500">Gebouwd in Nederland · AVG-bewust</p>
-          </div>
-          {footerCols.map((c) => (
-            <div key={c.title}>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{c.title}</p>
-              <ul className="mt-4 space-y-2.5">
-                {c.links.map((l) => (
-                  <li key={l.href + l.label}>
-                    <Link href={l.href} className="text-sm text-slate-700 hover:text-slate-950">
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-slate-200 pt-6 text-xs text-slate-500 md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} NXTTRACK. Alle rechten voorbehouden.</p>
-          <p>Eerst gebouwd voor zwemscholen. Klaar voor andere sporten.</p>
-        </div>
-      </div>
-    </footer>
-  );
-}
 
 function SplitSection({ kicker, title, sub, imageLabel, tinted, reverse, children }: { kicker: string; title: string; sub: string; imageLabel: string; tinted?: boolean; reverse?: boolean; children: ReactNode }) {
   return (
@@ -630,7 +501,7 @@ function DashboardMock({ compact }: { compact?: boolean }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-slate-500">Goedemorgen, Lisa</p>
-              <p className="text-lg font-bold text-slate-900">Vandaag bij AquaSwim</p>
+              <p className="text-lg font-bold text-slate-900">Vandaag bij De Waterlijn</p>
             </div>
             <Bell className="h-4 w-4 text-slate-400" />
           </div>
@@ -710,33 +581,15 @@ function TrainerMock({ className = "" }: { className?: string }) {
 function TenantSiteMock() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-      <div className="border-b bg-slate-50 px-4 py-2 text-[10px] text-slate-400">aquaswim.nl</div>
+      <div className="border-b bg-slate-50 px-4 py-2 text-[10px] text-slate-400">dewaterlijn.example</div>
       <div className="bg-gradient-to-br from-sky-100 via-white to-white p-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#1D4ED8]">AquaSwim Academy Den Haag</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#1D4ED8]">Zwemacademie De Waterlijn</p>
         <h3 className="mt-2 text-xl font-bold text-slate-900">Zwemles met vertrouwen</h3>
         <p className="mt-1 text-xs text-slate-600">Programma's · Wachtlijst · Intake · Nieuws</p>
         <div className="mt-4 flex gap-2">
           <span className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white">Plan intake</span>
           <span className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">Wachttijd: 2-4 wk</span>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Photo({ label, hint, ratio = "aspect-[4/3]", className = "" }: { label: string; hint?: string; ratio?: string; className?: string }) {
-  return (
-    <div className={`relative ${ratio} ${className} overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-sm`}>
-      <div className="absolute inset-0 [background-image:radial-gradient(circle_at_1px_1px,rgba(15,23,42,0.08)_1px,transparent_0)] [background-size:14px_14px]" />
-      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-5 text-center">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[#1D4ED8] shadow-sm ring-1 ring-slate-200">
-          <ImageIcon className="h-5 w-5" />
-        </div>
-        <p className="max-w-[80%] text-xs font-semibold text-slate-700">{label}</p>
-        {hint ? <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400">{hint}</p> : null}
-        <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">
-          <Camera className="h-3 w-3" /> plaats hier je foto
-        </span>
       </div>
     </div>
   );
@@ -759,8 +612,4 @@ function Stat({ v, l, small }: { v: string; l: string; small?: boolean }) {
       <p className="text-xs font-medium text-slate-500">{l}</p>
     </div>
   );
-}
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
 }

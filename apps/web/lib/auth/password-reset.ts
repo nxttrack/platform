@@ -1,6 +1,7 @@
 import "server-only";
 
 import { sendTransactionalEmail } from "@/lib/email/transactional";
+import { renderPasswordResetEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { assertStrongPassword, isSixDigitCode } from "./password-policy";
 import { generateSixDigitCode, hashAuthCode, normalizeEmail } from "./tokens";
@@ -23,6 +24,10 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
     return { requested: true, delivered: false };
   }
 
+  if (await isPasswordResetRateLimited(admin, email)) {
+    return { requested: true, delivered: false };
+  }
+
   const code = generateSixDigitCode();
   const { error: insertError } = await admin.from("password_reset_challenges").insert({
     email,
@@ -34,21 +39,36 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
     throw new Error(`Could not create password reset challenge: ${insertError.message}`);
   }
 
-  const resetLink = appendQuery(input.resetUrl, { email });
+  const template = renderPasswordResetEmail({ code, resetLink: input.resetUrl });
   const mail = await sendTransactionalEmail({
+    ...template,
+    relatedType: "password_reset_challenge",
+    templateKey: "auth_password_reset",
     to: email,
-    subject: "NXTTRACK wachtwoord wijzigen",
-    text: [
-      "Je hebt een code aangevraagd om je NXTTRACK wachtwoord te wijzigen.",
-      "",
-      `Code: ${code}`,
-      `Link: ${resetLink}`,
-      "",
-      "Deze code verloopt na 15 minuten."
-    ].join("\n")
   });
 
   return { requested: true, delivered: mail.delivered };
+}
+
+async function isPasswordResetRateLimited(admin: ReturnType<typeof createAdminClient>, email: string) {
+  const now = Date.now();
+  const oneHourAgo = new Date(now - 60 * 60 * 1000).toISOString();
+  const oneMinuteAgo = new Date(now - 60 * 1000).toISOString();
+  const recentResult = await admin
+    .from("password_reset_challenges")
+    .select("id, created_at", { count: "exact" })
+    .eq("email", email)
+    .gte("created_at", oneHourAgo)
+    .order("created_at", { ascending: false })
+    .limit(5);
+
+  if (recentResult.error) {
+    throw new Error(`Could not enforce password reset rate limit: ${recentResult.error.message}`);
+  }
+
+  const latestCreatedAt = (recentResult.data?.[0] as { created_at?: string } | undefined)?.created_at;
+
+  return (recentResult.count ?? 0) >= 5 || Boolean(latestCreatedAt && latestCreatedAt >= oneMinuteAgo);
 }
 
 export async function confirmPasswordReset(input: { email: string; code: string; password: string; confirmPassword: string }) {
@@ -155,14 +175,4 @@ async function getLatestPendingChallenge(email: string): Promise<PasswordResetCh
   }
 
   return (data?.[0] as PasswordResetChallengeRow | undefined) ?? null;
-}
-
-function appendQuery(url: string, params: Record<string, string>) {
-  const parsed = new URL(url);
-
-  for (const [key, value] of Object.entries(params)) {
-    parsed.searchParams.set(key, value);
-  }
-
-  return parsed.toString();
 }

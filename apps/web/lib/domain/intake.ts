@@ -3,6 +3,8 @@ import "server-only";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant, type ProgramRow } from "./core";
+import type { AnalyticsConsent, AttributionChannel } from "@/lib/analytics/attribution";
+import type { WaitTimeBand } from "./intake-recommendation-contract";
 import type { IntakeOption } from "./public-site";
 
 export type IntakeSubmissionRow = {
@@ -12,13 +14,39 @@ export type IntakeSubmissionRow = {
   parent_name: string;
   parent_email: string;
   parent_phone: string | null;
+  secondary_parent_name: string | null;
+  secondary_parent_email: string | null;
+  secondary_parent_phone: string | null;
   participant_name: string;
   participant_birth_date: string | null;
   preferred_days: string[];
+  preferred_dayparts: unknown;
   preferred_notes: string | null;
   message: string | null;
+  swimming_experience: string | null;
+  recommendation_snapshot: unknown;
+  selected_group_id: string | null;
+  selected_wait_band: WaitTimeBand | null;
+  recommendation_version: string | null;
   status: string;
   received_at: string;
+  duplicate_state: "unique" | "possible_duplicate" | "confirmed_duplicate" | "dismissed";
+  duplicate_of_submission_id: string | null;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
+  attribution_channel: AttributionChannel;
+  attribution_source: string;
+  attribution_medium: string | null;
+  attribution_campaign: string | null;
+  attribution_content: string | null;
+  attribution_term: string | null;
+  attribution_referrer_host: string | null;
+  attribution_landing_path: string;
+  attribution_has_ad_click_id: boolean;
+  attribution_captured_at: string | null;
+  analytics_consent: AnalyticsConsent;
+  analytics_consent_version: string | null;
 };
 
 export type IntakeAnswerRow = {
@@ -57,7 +85,7 @@ export async function getTenantIntakeInbox(): Promise<TenantIntakeInbox> {
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).order("sort_order").order("name"),
     admin
       .from("intake_submissions")
-      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes, message, status, received_at")
+      .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, secondary_parent_name, secondary_parent_email, secondary_parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, message, swimming_experience, recommendation_snapshot, selected_group_id, selected_wait_band, recommendation_version, status, received_at, duplicate_state, duplicate_of_submission_id, source, is_test, journey_run_id, attribution_channel, attribution_source, attribution_medium, attribution_campaign, attribution_content, attribution_term, attribution_referrer_host, attribution_landing_path, attribution_has_ad_click_id, attribution_captured_at, analytics_consent, analytics_consent_version")
       .eq("tenant_id", tenant.id)
       .order("received_at", { ascending: false }),
     admin.from("intake_answers").select("id, submission_id, field_key, answer_text, answer_json").eq("tenant_id", tenant.id),

@@ -40,7 +40,7 @@ export default async function InstructorStudentsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill tone="info">{noteCountByParticipant.get(participant.id) ?? 0} notes</StatusPill>
                     <StatusPill tone="success">{badgeCountByParticipant.get(participant.id) ?? 0} badges</StatusPill>
-                    <Link className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/student/${participant.id}`}>
+                    <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/student/${participant.id}`}>
                       Open <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>

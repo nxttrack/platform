@@ -3,6 +3,9 @@ node_modules
 out
 dist
 coverage
+artifacts
+playwright-report
+test-results
 .env
 .env.*
 !.env.example

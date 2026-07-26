@@ -1,4 +1,6 @@
+import { Activity, AlertTriangle, CheckCircle2, Database, Globe2, Mail } from "lucide-react";
 import Link from "next/link";
+import { PlatformTenantsTable } from "@/components/admin/resource-tables";
 import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -37,20 +39,32 @@ type PlatformMembershipRow = {
 
 export const dynamic = "force-dynamic";
 
-export default async function PlatformPage() {
+type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function PlatformPage({ searchParams }: PageProps) {
   const context = await requirePrivateShellContext("/platform");
   const data = await getPlatformOverviewData();
+  const params = (await searchParams) ?? {};
+  const queryValue = params.q;
+  const query = Array.isArray(queryValue) ? queryValue[0] : queryValue;
   const activeOrganizations = data.organizations.filter((organization) => organization.status === "active");
   const verifiedDomains = data.domains.filter((domain) => domain.status === "verified");
   const activeMembers = data.memberships.filter((membership) => membership.status === "active");
   const platformOwners = data.platformMemberships.filter((membership) => membership.status === "active" && membership.role === "platform_owner");
+  const tenantsWithoutVerifiedDomain = activeOrganizations.filter((organization) => !data.domains.some((domain) => domain.tenant_id === organization.id && domain.status === "verified"));
+  const healthSignals = [
+    { detail: `${activeOrganizations.length} actieve tenants leesbaar`, icon: Database, label: "Tenant registry", ok: true },
+    { detail: data.email.enabled && data.email.hasSendGridApiKey ? data.email.providerLabel : "Providerconfiguratie controleren", icon: Mail, label: "Mail delivery", ok: data.email.enabled && data.email.hasSendGridApiKey },
+    { detail: tenantsWithoutVerifiedDomain.length ? `${tenantsWithoutVerifiedDomain.length} tenant(s) zonder verified domein` : "Alle actieve tenants hebben een verified domein", icon: Globe2, label: "Configuratiedrift", ok: tenantsWithoutVerifiedDomain.length === 0 },
+    { detail: platformOwners.length === 1 ? "Één actieve platform owner" : `${platformOwners.length} actieve platform owners`, icon: Activity, label: "Owner governance", ok: platformOwners.length === 1 }
+  ];
 
   return (
     <div className="space-y-6">
       <PageHeader
         action={
-          <Link className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" href="/platform/uitnodigingen">
-            Uitnodiging sturen
+          <Link className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" href="/platform/onboarding">
+            Zwemschool onboarden
           </Link>
         }
         kicker="Platformbeheer"
@@ -65,27 +79,28 @@ export default async function PlatformPage() {
         <Metric label="Platform owners" value={platformOwners.length.toString()} />
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[1.4fr_0.9fr]">
-        <AdminSection description="Staging gebruikt deze lijst als operationele bron voor subdomeinen, status en organisatiebeheer." title="Organisaties">
-          {data.organizations.length === 0 ? (
-            <EmptyState>Nog geen organisaties gevonden.</EmptyState>
-          ) : (
-            <DataList>
-              {data.organizations.map((organization) => {
-                const primaryDomain = data.domains.find((domain) => domain.tenant_id === organization.id && domain.is_primary);
-                const memberCount = activeMembers.filter((membership) => membership.tenant_id === organization.id).length;
+      <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-gradient-to-r from-slate-950 to-blue-950 px-5 py-4 text-white">
+          <div><p className="text-xs font-semibold uppercase tracking-wider text-aqua">Control plane</p><h2 className="mt-1 text-xl font-bold">Platform health & configuratiedrift</h2></div>
+          <StatusPill tone={healthSignals.every((signal) => signal.ok) ? "success" : "warning"}>{healthSignals.filter((signal) => signal.ok).length}/{healthSignals.length} gezond</StatusPill>
+        </div>
+        <div className="grid gap-px bg-border md:grid-cols-2 xl:grid-cols-4">
+          {healthSignals.map((signal) => { const Icon = signal.icon; return <div className="bg-card p-4" key={signal.label}><div className="flex items-center justify-between gap-3"><span className={`grid size-9 place-items-center rounded-xl ${signal.ok ? "bg-success/10 text-success" : "bg-warning/10 text-warning"}`}><Icon className="size-5" /></span>{signal.ok ? <CheckCircle2 className="size-5 text-success" /> : <AlertTriangle className="size-5 text-warning" />}</div><p className="mt-4 font-bold text-foreground">{signal.label}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{signal.detail}</p></div>; })}
+        </div>
+      </section>
 
-                return (
-                  <DataListRow
-                    aside={<StatusPill tone={organization.status === "active" ? "success" : organization.status === "suspended" ? "danger" : "warning"}>{organization.status}</StatusPill>}
-                    key={organization.id}
-                    meta={`${primaryDomain?.hostname ?? `${organization.slug}.nxttrack.nl`} - ${memberCount} actieve gebruiker(s) - ${sectorLabel(organization.sector)}`}
-                    title={organization.name}
-                  />
-                );
-              })}
-            </DataList>
-          )}
+      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1.8fr)_minmax(300px,0.7fr)]">
+        <AdminSection description="Filter, sorteer en open een tenant zonder het control-plane overzicht te verlaten." title="Organisaties">
+          <PlatformTenantsTable initialSearch={query} rows={data.organizations.map((organization) => ({
+            createdAt: organization.created_at,
+            domain: data.domains.find((domain) => domain.tenant_id === organization.id && domain.is_primary)?.hostname ?? `${organization.slug}.nxttrack.nl`,
+            id: organization.id,
+            memberCount: activeMembers.filter((membership) => membership.tenant_id === organization.id).length,
+            name: organization.name,
+            sector: sectorLabel(organization.sector),
+            slug: organization.slug,
+            status: organization.status
+          }))} />
         </AdminSection>
 
         <AdminSection description="Deze signalen bepalen of invites, resets en notificaties betrouwbaar uit de stagingomgeving komen." title="Mailprovider">

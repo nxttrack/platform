@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { loginAction } from "@/lib/auth/actions";
 import { sanitizeRelativePath } from "@/lib/auth/redirects";
 
@@ -16,6 +19,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const error = getParam(params, "error");
   const nextPath = sanitizeRelativePath(getParam(params, "next"), "/portaal");
   const resetDone = getParam(params, "reset") === "done";
+  const invitationAccepted = getParam(params, "invitation") === "accepted";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -28,38 +32,35 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
         {error ? <p className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessages[error] ?? "Inloggen is niet gelukt."}</p> : null}
         {resetDone ? <p className="mb-4 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Je wachtwoord is gewijzigd. Log opnieuw in.</p> : null}
+        {invitationAccepted ? <p className="mb-4 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Je uitnodiging is geaccepteerd. Je kunt nu inloggen.</p> : null}
 
         <form action={loginAction} className="space-y-4">
           <input name="next" type="hidden" value={nextPath} />
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="email">
-              E-mail
-            </label>
-            <input
+          <Field>
+            <FieldLabel htmlFor="email">E-mail</FieldLabel>
+            <Input
               autoComplete="email"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="email"
               name="email"
               required
               type="email"
             />
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-semibold text-foreground" htmlFor="password">
-              Wachtwoord
-            </label>
-            <input
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="password">Wachtwoord</FieldLabel>
+            <Input
               autoComplete="current-password"
-              className="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-11"
               id="password"
               name="password"
               required
               type="password"
             />
-          </div>
-          <button className="h-11 w-full rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90" type="submit">
+          </Field>
+          <Button className="w-full" size="lg" type="submit">
             Inloggen
-          </button>
+          </Button>
         </form>
 
         <div className="mt-5 flex items-center justify-between text-sm">

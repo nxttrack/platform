@@ -16,10 +16,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20.19.0"
 
@@ -32,11 +34,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit repository truth
+        run: pnpm run release:truth
+
+      - name: Audit Lovable baseline contract
+        run: pnpm run design:audit
+
       - name: Typecheck
         run: pnpm typecheck
 
+      - name: Test billing provider contracts
+        run: pnpm run test:billing-contract
+
+      - name: Test Journey Bot safety contracts
+        run: pnpm run test:journey-bot
+
+      - name: Audit Journey Bot foundation
+        run: pnpm run release:audit-journey-bot
+
       - name: Audit auth boundaries
         run: pnpm run auth:audit
+
+      - name: Audit production dependencies
+        run: pnpm run security:audit-dependencies
 
       - name: Build
         run: pnpm build
@@ -44,5 +64,17 @@ jobs:
       - name: Audit migrations
         run: pnpm run db:audit
 
+      - name: Audit RLS coverage
+        run: pnpm run db:rls-audit
+
       - name: Check migration command
         run: pnpm run db:migrate
+
+      - name: Package standalone runtime assets
+        run: pnpm run deploy:package-standalone-assets
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Run browser smoke tests
+        run: pnpm run test:e2e

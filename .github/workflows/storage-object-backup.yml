@@ -1,0 +1,105 @@
+name: Storage object backup
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to export
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      confirmation:
+        description: Type BACKUP_STAGING_STORAGE or BACKUP_PRODUCTION_STORAGE
+        required: true
+        type: string
+      first_install_empty_project:
+        description: Allow both required buckets to be absent before the first production migration only
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-${{ inputs.target }}-storage-object-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: export and encrypt private Storage objects
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    env:
+      APP_ENV: ${{ inputs.target }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+      STORAGE_BACKUP_ALLOW_EMPTY_FIRST_INSTALL: ${{ inputs.first_install_empty_project && 'true' || 'false' }}
+    steps:
+      - name: Authorize scoped export
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          FIRST_INSTALL_EMPTY_PROJECT: ${{ inputs.first_install_empty_project }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          if [[ "$TARGET" == "production" ]]; then
+            test "$CONFIRMATION" = "BACKUP_PRODUCTION_STORAGE"
+          else
+            test "$CONFIRMATION" = "BACKUP_STAGING_STORAGE"
+            test "$FIRST_INSTALL_EMPTY_PROJECT" != "true"
+          fi
+
+      - name: Require independently retained encryption secret
+        run: test -n "$STORAGE_BACKUP_PASSPHRASE"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Prepare isolated backup directory
+        run: echo "STORAGE_BACKUP_DIR=${RUNNER_TEMP}/storage-backup" >> "$GITHUB_ENV"
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Export and verify both private buckets
+        run: |
+          pnpm run storage:backup
+          pnpm run storage:verify-local
+          node scripts/storage/object-backup.mjs summary > "${RUNNER_TEMP}/storage-backup-summary.json"
+
+      - name: Encrypt backup before retention
+        run: |
+          umask 077
+          printf '%s' "$STORAGE_BACKUP_PASSPHRASE" > "${RUNNER_TEMP}/storage-backup-passphrase"
+          tar -C "$STORAGE_BACKUP_DIR" -czf "${RUNNER_TEMP}/storage-backup.tar.gz" .
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file "${RUNNER_TEMP}/storage-backup-passphrase" \
+            --symmetric --cipher-algo AES256 \
+            --output "${RUNNER_TEMP}/storage-backup.tar.gz.gpg" \
+            "${RUNNER_TEMP}/storage-backup.tar.gz"
+
+      - name: Retain encrypted backup
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ inputs.target }}-storage-object-backup-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/storage-backup.tar.gz.gpg
+            ${{ runner.temp }}/storage-backup-summary.json
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 0

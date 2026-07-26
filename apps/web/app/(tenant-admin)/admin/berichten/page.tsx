@@ -1,7 +1,7 @@
-import { MessageSquare, Send } from "lucide-react";
+import { MailWarning, MessageSquare, RotateCcw, Send } from "lucide-react";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { createAdminMessageAction } from "@/lib/domain/admin-operations-actions";
+import { createAdminMessageAction, retryEmailDeliveryAttemptAction } from "@/lib/domain/admin-operations-actions";
 import { formatDateTime, getAdminOperationsData } from "@/lib/domain/admin-operations";
 
 type PageProps = {
@@ -77,6 +77,42 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
           )}
         </AdminSection>
       </div>
+
+      <AdminSection title="Maildelivery diagnostics" description="Laatste mailpogingen via SendGrid API of SMTP. Notificatiemails kunnen opnieuw worden geprobeerd.">
+        {data.emailDeliveryAttempts.length === 0 ? (
+          <EmptyState>Nog geen mailpogingen geregistreerd.</EmptyState>
+        ) : (
+          <DataList>
+            {data.emailDeliveryAttempts.map((attempt) => (
+              <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={attempt.id}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <MailWarning className="h-4 w-4 text-primary" />
+                    <p className="font-semibold text-foreground">{attempt.subject}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {attempt.recipient_email} - {attempt.template_key} - {attempt.provider}
+                    {attempt.provider_source ? ` (${attempt.provider_source})` : ""} - {formatDateTime(attempt.attempted_at)}
+                  </p>
+                  {attempt.error_message ? <p className="mt-1 text-xs text-danger">{attempt.error_message}</p> : null}
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {(attempt.status === "failed" || attempt.status === "skipped") && attempt.related_type === "tenant_notification" ? (
+                    <form action={retryEmailDeliveryAttemptAction}>
+                      <input name="attemptId" type="hidden" value={attempt.id} />
+                      <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Retry
+                      </button>
+                    </form>
+                  ) : null}
+                  <StatusPill tone={attempt.status === "sent" ? "success" : attempt.status === "failed" ? "danger" : "warning"}>{attempt.status}</StatusPill>
+                </div>
+              </div>
+            ))}
+          </DataList>
+        )}
+      </AdminSection>
     </div>
   );
 }

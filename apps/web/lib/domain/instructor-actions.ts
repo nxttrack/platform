@@ -4,8 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { classifyContent } from "@/lib/security/content-classification";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
+import { createTenantNotifications } from "./tenant-notifications";
 
 const attendanceStatuses = new Set(["present", "absent", "late", "excused", "trial"]);
 const noteVisibilities = new Set(["internal", "parent_visible"]);
@@ -131,6 +133,57 @@ export async function markAttendanceAction(formData: FormData) {
   redirectWithStatus(nextPath, "saved", "attendance");
 }
 
+export async function markRosterPresentAction(formData: FormData) {
+  const nextPath = getFormNextPath(formData, "/instructor");
+  const context = await requirePrivateShellContext("/instructor");
+  const tenant = getActiveTenant(context);
+  const sessionId = readRequired(formData, "sessionId");
+  const access = await canAccessSession({
+    tenantId: tenant.id,
+    userId: context.user.id,
+    canManageTenant: isTenantOperator(context.activeTenant?.roles ?? []),
+    sessionId
+  });
+
+  if (!access.allowed || !access.session) {
+    redirectWithStatus(nextPath, "error", "access");
+  }
+
+  const admin = createAdminClient();
+  const membershipsResult = await admin
+    .from("group_memberships")
+    .select("participant_id, enrollment_id")
+    .eq("tenant_id", tenant.id)
+    .eq("group_id", access.session.group_id)
+    .in("status", ["active", "trial"]);
+
+  if (membershipsResult.error) {
+    redirectWithStatus(nextPath, "error", "attendance");
+  }
+
+  const memberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  if (memberships.length) {
+    const markedAt = new Date().toISOString();
+    const { error } = await admin.from("session_attendance").upsert(
+      memberships.map((membership) => ({
+        tenant_id: tenant.id,
+        session_id: sessionId,
+        participant_id: membership.participant_id,
+        enrollment_id: membership.enrollment_id,
+        status: "present",
+        marked_by_user_id: context.user.id,
+        marked_at: markedAt
+      })),
+      { onConflict: "tenant_id,session_id,participant_id" }
+    );
+
+    if (error) redirectWithStatus(nextPath, "error", "attendance");
+  }
+
+  revalidateInstructorPaths(nextPath);
+  redirectWithStatus(nextPath, "saved", "roster");
+}
+
 export async function completeSessionAction(formData: FormData) {
   const nextPath = getFormNextPath(formData, "/instructor");
   const context = await requirePrivateShellContext("/instructor");
@@ -187,6 +240,7 @@ export async function saveProgressNoteAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
+  const classification = classifyContent(note, "personal");
   const { error } = await admin.from("progress_notes").insert({
     tenant_id: tenant.id,
     participant_id: participantId,
@@ -195,6 +249,8 @@ export async function saveProgressNoteAction(formData: FormData) {
     instructor_user_id: context.user.id,
     visibility,
     note,
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons,
     status: "active"
   });
 
@@ -277,6 +333,7 @@ export async function scoreProgressItemAction(formData: FormData) {
   if (visibility === "parent_visible") {
     await createParentNotificationsForParticipant({
       tenantId: tenant.id,
+      organizationName: tenant.name,
       participantId,
       type: "progress_score",
       title: "Nieuwe voortgang",
@@ -353,6 +410,7 @@ export async function awardBadgeAction(formData: FormData) {
   if (visibility === "parent_visible") {
     await createParentNotificationsForParticipant({
       tenantId: tenant.id,
+      organizationName: tenant.name,
       participantId,
       type: "badge_award",
       title: "Nieuwe badge",
@@ -366,6 +424,7 @@ export async function awardBadgeAction(formData: FormData) {
 
 async function createParentNotificationsForParticipant(input: {
   tenantId: string;
+  organizationName: string;
   participantId: string;
   type: "progress_score" | "badge_award";
   title: string;
@@ -391,19 +450,17 @@ async function createParentNotificationsForParticipant(input: {
     return;
   }
 
-  await admin.from("tenant_notifications").insert(
-    recipientIds.map((recipientId) => ({
-      tenant_id: input.tenantId,
-      recipient_user_id: recipientId,
-      participant_id: input.participantId,
-      type: input.type,
-      title: input.title,
-      message: `${participant.display_name}: ${input.message}`,
-      status: "unread",
-      related_progress_score_id: input.relatedProgressScoreId ?? null,
-      related_badge_award_id: input.relatedBadgeAwardId ?? null
-    }))
-  );
+  await createTenantNotifications({
+    message: `${participant.display_name}: ${input.message}`,
+    organizationName: input.organizationName,
+    participantId: input.participantId,
+    recipientIds,
+    relatedBadgeAwardId: input.relatedBadgeAwardId ?? null,
+    relatedProgressScoreId: input.relatedProgressScoreId ?? null,
+    tenantId: input.tenantId,
+    title: input.title,
+    type: input.type
+  });
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/voortgang");

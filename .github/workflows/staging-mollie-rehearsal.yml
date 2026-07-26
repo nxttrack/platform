@@ -1,0 +1,114 @@
+name: Staging Mollie sandbox rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type REHEARSE_MOLLIE_TEST
+        required: true
+        type: string
+      release_sha:
+        description: Exact SHA currently deployed to staging
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-mollie-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  rehearse:
+    name: paid checkout and idempotent webhook
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    environment: staging
+
+    env:
+      CI: true
+      APP_ENV: staging
+      APP_URL: ${{ vars.APP_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
+      PLAYWRIGHT_BASE_URL: ${{ vars.APP_URL }}
+      STAGING_RELEASE_SHA: ${{ inputs.release_sha }}
+      MOLLIE_REHEARSAL_STATE_PATH: ${{ github.workspace }}/artifacts/mollie-rehearsal-state.json
+      MOLLIE_REHEARSAL_DIAGNOSTIC_PATH: ${{ github.workspace }}/artifacts/mollie-checkout-diagnostic
+      PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+      E2E_TENANT_ADMIN_PASSWORD: ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+      E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
+      E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+      MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
+      MOLLIE_SANDBOX_REHEARSAL: "true"
+
+    steps:
+      - name: Authorize bounded sandbox rehearsal
+        run: |
+          set -euo pipefail
+          test "${{ inputs.confirmation }}" = "REHEARSE_MOLLIE_TEST"
+          node -e 'if (!/^[0-9a-f]{40}$/.test(process.env.STAGING_RELEASE_SHA ?? "")) throw new Error("release_sha must be a full commit SHA.")'
+          node -e 'if (!process.env.MOLLIE_API_KEY?.startsWith("test_")) throw new Error("Staging MOLLIE_API_KEY must be a test_ credential.")'
+
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify exact staging SHA
+        run: |
+          set -euo pipefail
+          node -e '
+            const response = await fetch(`${process.env.APP_URL}/api/health`, { cache: "no-store" });
+            const body = await response.json();
+            if (!response.ok || !body.ok || body.commitSha !== process.env.STAGING_RELEASE_SHA || body.checks?.database?.status !== "pass") {
+              throw new Error(`Staging health does not expose ${process.env.STAGING_RELEASE_SHA}.`);
+            }
+          '
+
+      - name: Prepare bounded sandbox payment
+        run: pnpm run sprint6:prepare-mollie
+
+      - name: Install Playwright Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Run paid checkout and duplicate webhook rehearsal
+        run: pnpm run sprint6:test-mollie
+
+      - name: Verify duplicate webhook and exactly-once effects
+        run: pnpm run sprint6:verify-mollie
+
+      - name: Upload checkout diagnostic after a failure
+        if: failure()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mollie-checkout-diagnostic-${{ github.run_id }}
+          path: artifacts/mollie-checkout-diagnostic.*
+          if-no-files-found: ignore
+          retention-days: 1
+
+      - name: Upload redacted rehearsal evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: mollie-staging-${{ github.sha }}-${{ github.run_id }}
+          path: artifacts/mollie-rehearsal-state.json
+          if-no-files-found: warn
+          retention-days: 30

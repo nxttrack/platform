@@ -1,0 +1,110 @@
+name: Operational monitor
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment to monitor
+        required: true
+        default: staging
+        type: choice
+        options:
+          - staging
+          - production
+      mode:
+        description: Probe without alerts, or send a synthetic alert
+        required: true
+        default: probe
+        type: choice
+        options:
+          - probe
+          - drill
+      confirmation:
+        description: Type RUN_OPERATIONAL_PROBE or SEND_SYNTHETIC_ALERT
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    name: monitor ${{ matrix.target }} operations
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ github.event_name == 'schedule' && fromJSON('["staging","production"]') || fromJSON(format('["{0}"]', inputs.target)) }}
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: ${{ matrix.target }}
+    concurrency:
+      group: nxttrack-${{ matrix.target }}-operational-monitor
+      cancel-in-progress: false
+    env:
+      APP_ENV: ${{ matrix.target }}
+      APP_URL: ${{ vars.APP_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+      ALERT_WEBHOOK_FORMAT: ${{ vars.ALERT_WEBHOOK_FORMAT }}
+      INCIDENT_OWNER: ${{ vars.INCIDENT_OWNER }}
+      SUPPORT_OWNER: ${{ vars.SUPPORT_OWNER }}
+      MONITORING_ENABLED: ${{ vars.MONITORING_ENABLED }}
+      MONITOR_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'probe' }}
+      MONITOR_ALERTS_ENABLED: ${{ github.event_name == 'schedule' || inputs.mode == 'drill' }}
+      MONITOR_TIMEOUT_MS: ${{ vars.MONITOR_TIMEOUT_MS }}
+      MONITOR_WINDOW_MINUTES: ${{ vars.MONITOR_WINDOW_MINUTES }}
+      MAIL_FAILURE_THRESHOLD: ${{ vars.MAIL_FAILURE_THRESHOLD }}
+      MAIL_SKIPPED_THRESHOLD: ${{ vars.MAIL_SKIPPED_THRESHOLD }}
+      BILLING_FAILURE_THRESHOLD: ${{ vars.BILLING_FAILURE_THRESHOLD }}
+      BILLING_CHARGEBACK_THRESHOLD: ${{ vars.BILLING_CHARGEBACK_THRESHOLD }}
+      BILLING_STUCK_MINUTES: ${{ vars.BILLING_STUCK_MINUTES }}
+      RUNTIME_SMOKE_ROUTES: ${{ vars.RUNTIME_SMOKE_ROUTES }}
+    steps:
+      - name: Resolve monitoring gate
+        id: gate
+        env:
+          SCHEDULE_ENABLED: ${{ vars.MONITORING_ENABLED }}
+        run: |
+          enabled=false
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" || "$SCHEDULE_ENABLED" == "true" ]]; then
+            enabled=true
+          fi
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          echo "target=$APP_ENV event=$GITHUB_EVENT_NAME enabled=$enabled"
+
+      - name: Authorize manual execution
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          REQUESTED_MODE: ${{ inputs.mode }}
+        run: |
+          if [[ "$REQUESTED_MODE" == "drill" ]]; then
+            test "$CONFIRMATION" = "SEND_SYNTHETIC_ALERT"
+          else
+            test "$CONFIRMATION" = "RUN_OPERATIONAL_PROBE"
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        if: steps.gate.outputs.enabled == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20.19.0"
+
+      - name: Setup pnpm
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        if: steps.gate.outputs.enabled == 'true'
+        run: pnpm install --frozen-lockfile
+
+      - name: Run operational monitor
+        if: steps.gate.outputs.enabled == 'true'
+        run: pnpm run operations:monitor

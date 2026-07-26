@@ -2,7 +2,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { formatSessionTime, getInstructorData, getRosterForGroup } from "@/lib/domain/instructor";
+import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export default async function InstructorAgendaPage() {
           {futureSessions.map((session) => {
             const group = groupById.get(session.group_id);
             const resource = session.resource_id ? resourceById.get(session.resource_id) : null;
-            const rosterSize = getRosterForGroup(data, session.group_id).length;
+            const rosterSize = getSessionRoster(data, session.id).length;
 
             return (
               <article className="rounded-xl border border-border bg-card p-4 shadow-soft" key={session.id}>
@@ -42,7 +42,7 @@ export default async function InstructorAgendaPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill tone={session.status === "scheduled" ? "info" : session.status === "completed" ? "success" : "neutral"}>{session.status}</StatusPill>
-                    <Link className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
+                    <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
                       Open <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>

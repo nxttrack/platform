@@ -1,8 +1,10 @@
 # NXTTRACK Implementation Roadmap
 
-Last updated: 2026-06-23
+Last updated: 2026-07-23
 
-Status: dependency-based roadmap. Implementation starts only after product owner approval.
+Status: historical dependency-based phase roadmap. Phase 0 through Phase 26 implementation is present,
+Sprints 1-5 are complete and the approved SHA is live in production. Remaining execution is managed through
+[Delivery Sprints](DELIVERY_SPRINTS.md); Sprint 6 billing activation is now staging-first.
 
 ## Roadmap Principles
 
@@ -14,6 +16,19 @@ Status: dependency-based roadmap. Implementation starts only after product owner
 - Staging is the first target.
 - Manual payments come before Mollie/iDEAL automation.
 - SendGrid SMTP comes before advanced notification channels.
+
+## Current Execution Focus - Sprint 6 Billing Activation
+
+The original build phases remain the architecture and dependency history. Production launch is complete for
+the exact approved SHA. Optional online billing now moves through a separate staging-first safety increment.
+
+Immediate order:
+
+1. Make checkout creation resistant to double submits and interrupted retries.
+2. Enforce test/live credential separation and strict provider webhook contracts.
+3. Add parent checkout affordance and automated contract tests.
+4. Prove a real Mollie test payment plus repeated webhook on staging.
+5. Add failure, expiry, refund/dispute and reconciliation evidence before any live activation decision.
 
 ## Phase 0 - Repository And Infrastructure Foundation
 
@@ -1100,12 +1115,10 @@ Acceptance criteria:
 14. Phase 16 because the complete swim-school journey must work without database intervention.
 15. Phase 17 through Phase 22 because communication, planning depth, experience polish, billing automation, intelligence and production launch depend on a stable staging MVP.
 
-## Immediate Next Proposal After PR Approval
+## Immediate Next Proposal After Phase 0 Lands
 
-After Phase 14 starts:
-
-1. Remove runtime scaffold copy.
-2. Build the platform overview.
-3. Add tenant admin settings.
-4. Re-run typecheck/build.
-5. Resume Phase 15 staging validation.
+1. Dispatch staging from the canonical `main` commit.
+2. Retain Phase 15 migration, advisor, RLS and authenticated Playwright evidence.
+3. Run the Phase 16 seeded integration proof and add a separate browser-driven mutation journey.
+4. Execute Phase 17 through Phase 20 staging checklists.
+5. Start Swim Start integrity and the Lovable-preserving shadcn/Radix design-system phase.

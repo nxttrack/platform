@@ -42,9 +42,15 @@ export type SmtpEmailConfig = {
 
 export type EmailDeliveryConfig = SendGridApiEmailConfig | SmtpEmailConfig;
 
-export type PlatformEmailSecrets = {
-  sendGridApiKey: string | null;
-  smtpPassword: string | null;
+export type PlatformEmailTestAttemptView = {
+  attemptedAt: string;
+  deliveredAt: string | null;
+  errorMessage: string | null;
+  id: string;
+  provider: string;
+  providerMessageId: string | null;
+  recipientEmail: string;
+  status: string;
 };
 
 type PlatformEmailSettingsRow = {
@@ -70,50 +76,100 @@ export async function getPlatformEmailSettingsView(): Promise<PlatformEmailSetti
   return toView(row ?? defaultRow(), settingsAvailable);
 }
 
+export async function getPlatformEmailTestAttempts(): Promise<PlatformEmailTestAttemptView[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("email_delivery_attempts")
+    .select("id, recipient_email, provider, status, error_message, metadata, attempted_at, delivered_at")
+    .is("tenant_id", null)
+    .eq("template_key", "platform_delivery_test")
+    .order("attempted_at", { ascending: false })
+    .limit(10);
+
+  if (error) {
+    return [];
+  }
+
+  return (data ?? []).map((row) => {
+    const metadata = isRecord(row.metadata) ? row.metadata : {};
+
+    return {
+      attemptedAt: row.attempted_at,
+      deliveredAt: row.delivered_at,
+      errorMessage: row.error_message,
+      id: row.id,
+      provider: row.provider,
+      providerMessageId: typeof metadata.providerMessageId === "string" ? metadata.providerMessageId : null,
+      recipientEmail: row.recipient_email,
+      status: row.status
+    };
+  });
+}
+
 export async function savePlatformEmailSettings(input: {
   enabled: boolean;
   fromEmail: string | null;
   fromName: string | null;
   provider: EmailProvider;
-  sendGridApiKey: string | null;
+  sendGridApiKey: string | null | undefined;
   smtpHost: string | null;
-  smtpPassword: string | null;
+  smtpPassword: string | null | undefined;
   smtpPort: number;
   smtpSecure: boolean;
   smtpUser: string | null;
   updatedByUserId: string;
 }) {
   const admin = createAdminClient();
-  const { error } = await admin.from("platform_email_settings").upsert(
-    {
-      id: SETTINGS_ID,
-      enabled: input.enabled,
-      from_email: input.fromEmail,
-      from_name: input.fromName || "NXTTRACK",
-      provider: input.provider,
-      sendgrid_api_key_encrypted: input.sendGridApiKey ? encryptSecret(input.sendGridApiKey) : null,
-      smtp_host: input.smtpHost,
-      smtp_password_encrypted: input.smtpPassword ? encryptSecret(input.smtpPassword) : null,
-      smtp_port: input.smtpPort,
-      smtp_secure: input.smtpSecure,
-      smtp_user: input.smtpUser,
-      updated_by_user_id: input.updatedByUserId
-    },
-    { onConflict: "id" }
-  );
+  const values: {
+    enabled: boolean;
+    from_email: string | null;
+    from_name: string;
+    provider: EmailProvider;
+    sendgrid_api_key_encrypted?: string | null;
+    smtp_host: string | null;
+    smtp_password_encrypted?: string | null;
+    smtp_port: number;
+    smtp_secure: boolean;
+    smtp_user: string | null;
+    updated_by_user_id: string;
+  } = {
+    enabled: input.enabled,
+    from_email: input.fromEmail,
+    from_name: input.fromName || "NXTTRACK",
+    provider: input.provider,
+    smtp_host: input.smtpHost,
+    smtp_port: input.smtpPort,
+    smtp_secure: input.smtpSecure,
+    smtp_user: input.smtpUser,
+    updated_by_user_id: input.updatedByUserId
+  };
+
+  if (input.sendGridApiKey !== undefined) {
+    values.sendgrid_api_key_encrypted = input.sendGridApiKey ? encryptSecret(input.sendGridApiKey) : null;
+  }
+
+  if (input.smtpPassword !== undefined) {
+    values.smtp_password_encrypted = input.smtpPassword ? encryptSecret(input.smtpPassword) : null;
+  }
+
+  const { data, error } = await admin.from("platform_email_settings").update(values).eq("id", SETTINGS_ID).select("id").maybeSingle();
 
   if (error) {
     throw new Error(`Could not save platform email settings: ${error.message}`);
   }
-}
 
-export async function getExistingPlatformEmailSecrets(): Promise<PlatformEmailSecrets> {
-  const { row } = await getPlatformEmailSettingsState();
+  if (!data) {
+    const { error: insertError } = await admin.from("platform_email_settings").insert({
+      id: SETTINGS_ID,
+      ...values,
+      sendgrid_api_key_encrypted: values.sendgrid_api_key_encrypted ?? null,
+      smtp_password_encrypted: values.smtp_password_encrypted ?? null
+    });
 
-  return {
-    sendGridApiKey: row?.sendgrid_api_key_encrypted ? decryptSecret(row.sendgrid_api_key_encrypted) : null,
-    smtpPassword: row?.smtp_password_encrypted ? decryptSecret(row.smtp_password_encrypted) : null
-  };
+    if (insertError) {
+      throw new Error(`Could not create platform email settings: ${insertError.message}`);
+    }
+  }
 }
 
 export async function getConfiguredEmailDeliveryConfig(): Promise<EmailDeliveryConfig | null> {
@@ -303,4 +359,8 @@ function secretKey() {
   }
 
   return createHash("sha256").update(secret).digest();
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

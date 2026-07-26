@@ -1,5 +1,7 @@
 import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
+import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { buildAdminChartData } from "@/lib/domain/admin-chart-data";
 import { formatMoney, getAdminOperationsData, isTaskOverdue } from "@/lib/domain/admin-operations";
 
 export const dynamic = "force-dynamic";
@@ -9,6 +11,7 @@ export default async function AdminHomePage() {
   const activeGroups = data.groups.filter((group) => group.status === "active").length;
   const urgentTasks = data.tasks.filter((task) => task.priority === "urgent" && task.status !== "done" && task.status !== "cancelled");
   const recentEvents = [...data.tenantEvents, ...data.billingEvents.map((event) => ({ id: event.id, event_type: event.type, subject_type: "billing", subject_id: event.id, status: event.status, created_at: event.occurred_at }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8);
+  const charts = buildAdminChartData(data);
 
   return (
     <div className="space-y-6">
@@ -19,6 +22,11 @@ export default async function AdminHomePage() {
         <Metric label="Geplande lessen" value={data.kpis.scheduledSessions.toString()} />
         <Metric label="Nieuwe intake" tone={data.kpis.receivedIntake > 0 ? "warning" : "neutral"} value={data.kpis.receivedIntake.toString()} />
         <Metric label="Overdue" tone={data.kpis.overdueAmountCents > 0 ? "danger" : "success"} value={formatMoney(data.kpis.overdueAmountCents)} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
+        <section className="rounded-xl border border-border bg-card p-5 shadow-soft"><CapacityChart data={charts.capacity} /></section>
+        <section className="rounded-xl border border-border bg-card p-5 shadow-soft"><StatusDonutChart data={charts.intake} title="Intakestatus" description="Actuele verdeling van alle intake-aanvragen." /></section>
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
@@ -92,7 +100,7 @@ export default async function AdminHomePage() {
 }
 
 function Metric({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "success" | "warning" | "danger" | "neutral" }) {
-  const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
+  const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning-foreground" : tone === "success" ? "text-success" : "text-foreground";
 
   return (
     <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
@@ -106,7 +114,7 @@ function MiniMetric({ label, value, tone = "neutral" }: { label: string; value: 
   return (
     <div className="rounded-lg border border-border bg-white p-3">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-1 text-2xl font-bold ${tone === "warning" ? "text-warning" : "text-foreground"}`}>{value}</p>
+      <p className={`mt-1 text-2xl font-bold ${tone === "warning" ? "text-warning-foreground" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }

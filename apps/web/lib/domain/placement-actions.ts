@@ -1,15 +1,24 @@
 "use server";
 
-import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { findUserIdByEmail } from "@/lib/auth/user-security";
 import { sendTransactionalEmail } from "@/lib/email/transactional";
+import { renderSlotOfferEmail } from "@/lib/email/templates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant, summarizeGroupCapacity, type GroupMembershipRow, type GroupRow } from "./core";
 import { computePlacementScores, type WaitlistEntryRow, type WaitlistPreferenceRow } from "./placement";
-import { generateOfferToken, hashOfferToken } from "./placement-token";
+import {
+  generateOfferSessionToken,
+  generateOfferVerificationCode,
+  hashOfferSessionToken,
+  hashOfferVerificationCode,
+  slotOfferCookieName
+} from "./placement-token";
+import { cookies } from "next/headers";
+import { timingSafeEqual } from "node:crypto";
+import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 
 const weekdayMap: Record<string, number> = {
   maandag: 1,
@@ -28,7 +37,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   const intakeSubmissionId = readRequired(formData, "intakeSubmissionId");
   const submissionResult = await admin
     .from("intake_submissions")
-    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_notes")
+    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, selected_group_id")
     .eq("tenant_id", tenant.id)
     .eq("id", intakeSubmissionId)
     .single();
@@ -47,14 +56,18 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     participant_name: string;
     participant_birth_date: string | null;
     preferred_days: string[];
+    preferred_dayparts: unknown;
     preferred_notes: string | null;
+    selected_group_id: string | null;
   };
 
   if (!submission.program_id) {
     redirect("/admin/wachtlijst?error=program");
   }
 
-  const stage = await getFirstStageForProgram(tenant.id, submission.program_id);
+  const stage = submission.selected_group_id
+    ? await getStageForSelectedGroup(tenant.id, submission.program_id, submission.selected_group_id)
+    : await getFirstStageForProgram(tenant.id, submission.program_id);
   const entryResult = await admin
     .from("waitlist_entries")
     .insert({
@@ -80,19 +93,25 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   }
 
   const entryId = (entryResult.data as { id: string }).id;
+  const dayparts = normalizeStoredDayparts(submission.preferred_dayparts);
   const preferenceRows = submission.preferred_days.flatMap((day) => {
     const weekday = weekdayMap[day.toLowerCase()];
 
-    return weekday
-      ? [
-          {
-            tenant_id: tenant.id,
-            waitlist_entry_id: entryId,
-            weekday,
-            notes: submission.preferred_notes
-          }
-        ]
-      : [];
+    if (!weekday) {
+      return [];
+    }
+
+    const ranges = dayparts[String(weekday)] ?? [];
+
+    return (ranges.length > 0 ? ranges : [null]).map((daypart) => ({
+      tenant_id: tenant.id,
+      waitlist_entry_id: entryId,
+      weekday,
+      starts_after: daypart ? daypartRanges[daypart].startsAfter : null,
+      ends_before: daypart ? daypartRanges[daypart].endsBefore : null,
+      preference_weight: 5,
+      notes: submission.preferred_notes
+    }));
   });
 
   if (preferenceRows.length > 0) {
@@ -105,7 +124,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
       waitlist_entry_id: entryId,
       recommended_stage_id: stage.id,
       score: 50,
-      reasons: ["eerste actieve stage in programma"],
+      reasons: [submission.selected_group_id ? "gekozen slim intakevoorstel" : "eerste actieve stage in programma"],
       created_by_user_id: context.user.id
     });
   }
@@ -133,6 +152,27 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
 
   revalidatePath("/admin/wachtlijst");
   redirect("/admin/wachtlijst?saved=1");
+}
+
+const daypartRanges = {
+  morning: { startsAfter: "06:00", endsBefore: "12:00" },
+  afternoon: { startsAfter: "12:00", endsBefore: "17:00" },
+  evening: { startsAfter: "17:00", endsBefore: "23:59" }
+} as const;
+
+function normalizeStoredDayparts(value: unknown): Record<string, Array<keyof typeof daypartRanges>> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).map(([weekday, candidate]) => [
+      weekday,
+      Array.isArray(candidate)
+        ? candidate.filter((part): part is keyof typeof daypartRanges => typeof part === "string" && part in daypartRanges)
+        : []
+    ])
+  );
 }
 
 export async function scoreWaitlistEntryAction(formData: FormData) {
@@ -190,15 +230,15 @@ export async function createSlotOfferAction(formData: FormData) {
     redirect("/admin/wachtlijst?error=group");
   }
 
-  const token = generateOfferToken();
-  const offerLink = `${await getRequestBaseUrl()}/plaatsing-aanbod?token=${encodeURIComponent(token)}`;
+  const offerCode = generateOfferVerificationCode();
+  const offerLink = `${await getTrustedRequestOrigin()}/plaatsing-aanbod`;
   const offerResult = await admin
     .from("slot_offers")
     .insert({
       tenant_id: tenant.id,
       waitlist_entry_id: waitlistEntryId,
       group_id: groupId,
-      token_hash: hashOfferToken(token),
+      verification_code_hash: hashOfferVerificationCode(offerCode, entry.parent_email),
       parent_email: entry.parent_email,
       status: "sent",
       offered_at: new Date().toISOString(),
@@ -212,17 +252,21 @@ export async function createSlotOfferAction(formData: FormData) {
   }
 
   const offerId = (offerResult.data as { id: string }).id;
+  const template = renderSlotOfferEmail({
+    offerCode,
+    offerLink,
+    organizationName: tenant.name,
+    parentName: entry.parent_name,
+    participantName: entry.participant_name
+  });
   const mail = await sendTransactionalEmail({
+    ...template,
+    organizationName: tenant.name,
+    relatedId: offerId,
+    relatedType: "slot_offer",
+    templateKey: "slot_offer",
+    tenantId: tenant.id,
     to: entry.parent_email,
-    subject: "Er is een plek beschikbaar",
-    text: [
-      `Beste ${entry.parent_name},`,
-      "",
-      `Er is een plek beschikbaar voor ${entry.participant_name}.`,
-      `Bekijk en bevestig het aanbod via: ${offerLink}`,
-      "",
-      "Deze link verloopt na 7 dagen."
-    ].join("\n")
   });
 
   await Promise.all([
@@ -256,22 +300,90 @@ export async function createSlotOfferAction(formData: FormData) {
   ]);
 
   revalidatePath("/admin/wachtlijst");
-  redirect(`/admin/wachtlijst?saved=1&aanbod=${encodeURIComponent(offerLink)}`);
+  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.delivered ? "sent" : "skipped"}`);
+}
+
+export async function verifySlotOfferAction(formData: FormData) {
+  const email = readRequired(formData, "email").trim().toLowerCase();
+  const code = readRequired(formData, "code");
+
+  if (!/^[0-9]{8}$/.test(code)) {
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("slot_offers")
+    .select("id, expires_at, verification_attempts, verification_code_hash")
+    .ilike("parent_email", email)
+    .eq("status", "sent")
+    .order("offered_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data || !data.verification_code_hash) {
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  if (new Date(data.expires_at).getTime() <= Date.now() || data.verification_attempts >= 5) {
+    await admin.from("slot_offers").update({ status: "expired" }).eq("id", data.id).eq("status", "sent");
+    redirect("/plaatsing-aanbod?status=verlopen");
+  }
+
+  if (!safeEqualHash(data.verification_code_hash, hashOfferVerificationCode(code, email))) {
+    const attempts = data.verification_attempts + 1;
+    await admin
+      .from("slot_offers")
+      .update({
+        verification_attempts: attempts,
+        status: attempts >= 5 ? "expired" : "sent"
+      })
+      .eq("id", data.id)
+      .eq("status", "sent");
+    redirect("/plaatsing-aanbod?status=ongeldig");
+  }
+
+  const sessionToken = generateOfferSessionToken();
+  const sessionExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const update = await admin
+    .from("slot_offers")
+    .update({
+      verified_session_expires_at: sessionExpiresAt.toISOString(),
+      verified_session_hash: hashOfferSessionToken(sessionToken),
+      verification_attempts: 0
+    })
+    .eq("id", data.id)
+    .eq("status", "sent");
+
+  if (update.error) {
+    redirect("/plaatsing-aanbod?status=fout");
+  }
+
+  (await cookies()).set(slotOfferCookieName, sessionToken, {
+    httpOnly: true,
+    maxAge: 15 * 60,
+    path: "/plaatsing-aanbod",
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production"
+  });
+  redirect("/plaatsing-aanbod");
 }
 
 export async function acceptSlotOfferAction(formData: FormData) {
-  await respondToSlotOffer(readRequired(formData, "token"), "accepted");
+  await respondToSlotOffer("accepted");
 }
 
 export async function declineSlotOfferAction(formData: FormData) {
-  await respondToSlotOffer(readRequired(formData, "token"), "declined");
+  await respondToSlotOffer("declined");
 }
 
-async function respondToSlotOffer(token: string, response: "accepted" | "declined") {
+async function respondToSlotOffer(response: "accepted" | "declined") {
   const admin = createAdminClient();
-  const offer = await getOfferByToken(token);
+  const token = (await cookies()).get(slotOfferCookieName)?.value;
+  const offer = token ? await getOfferBySession(token) : null;
 
   if (!offer) {
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=ongeldig");
   }
 
@@ -286,10 +398,12 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
         message: "Offer token is verlopen."
       })
     ]);
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=verlopen");
   }
 
   if (offer.status !== "sent") {
+    await clearOfferSession();
     redirect(`/plaatsing-aanbod?status=${offer.status}`);
   }
 
@@ -312,6 +426,7 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
         message: "Ouder heeft het aanbod geweigerd."
       })
     ]);
+    await clearOfferSession();
     redirect("/plaatsing-aanbod?status=geweigerd");
   }
 
@@ -412,6 +527,13 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
       .eq("tenant_id", offer.tenant_id)
       .eq("id", offer.id),
     admin.from("waitlist_entries").update({ status: "placed" }).eq("tenant_id", offer.tenant_id).eq("id", offer.waitlist_entry_id),
+    entry.intake_submission_id
+      ? admin
+          .from("intake_submissions")
+          .update({ status: "converted", reviewed_at: new Date().toISOString() })
+          .eq("tenant_id", offer.tenant_id)
+          .eq("id", entry.intake_submission_id)
+      : Promise.resolve(),
     writeAudit({
       tenantId: offer.tenant_id,
       waitlistEntryId: offer.waitlist_entry_id,
@@ -422,6 +544,7 @@ async function respondToSlotOffer(token: string, response: "accepted" | "decline
     })
   ]);
 
+  await clearOfferSession();
   redirect("/plaatsing-aanbod?status=geaccepteerd");
 }
 
@@ -462,6 +585,33 @@ async function getFirstStageForProgram(tenantId: string, programId: string) {
   return (data?.[0] as { id: string; name: string } | undefined) ?? null;
 }
 
+async function getStageForSelectedGroup(tenantId: string, programId: string, groupId: string) {
+  const admin = createAdminClient();
+  const groupResult = await admin
+    .from("groups")
+    .select("stage_id")
+    .eq("tenant_id", tenantId)
+    .eq("program_id", programId)
+    .eq("id", groupId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (groupResult.error || !groupResult.data?.stage_id) {
+    return getFirstStageForProgram(tenantId, programId);
+  }
+
+  const stageResult = await admin
+    .from("program_stages")
+    .select("id, name")
+    .eq("tenant_id", tenantId)
+    .eq("program_id", programId)
+    .eq("id", groupResult.data.stage_id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  return (stageResult.data as { id: string; name: string } | null) ?? getFirstStageForProgram(tenantId, programId);
+}
+
 async function getWaitlistEntry(tenantId: string, entryId: string): Promise<WaitlistEntryRow | null> {
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -478,12 +628,13 @@ async function getWaitlistEntry(tenantId: string, entryId: string): Promise<Wait
   return (data as WaitlistEntryRow | null) ?? null;
 }
 
-async function getOfferByToken(token: string) {
+async function getOfferBySession(token: string) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("slot_offers")
     .select("id, tenant_id, waitlist_entry_id, group_id, parent_email, status, expires_at")
-    .eq("token_hash", hashOfferToken(token))
+    .eq("verified_session_hash", hashOfferSessionToken(token))
+    .gt("verified_session_expires_at", new Date().toISOString())
     .maybeSingle();
 
   if (error || !data) {
@@ -499,6 +650,18 @@ async function getOfferByToken(token: string) {
     status: string;
     expires_at: string;
   };
+}
+
+async function clearOfferSession() {
+  (await cookies()).delete(slotOfferCookieName);
+}
+
+function safeEqualHash(left: string, right: string) {
+  if (!/^[a-f0-9]{64}$/i.test(left) || !/^[a-f0-9]{64}$/i.test(right)) {
+    return false;
+  }
+
+  return timingSafeEqual(Buffer.from(left, "hex"), Buffer.from(right, "hex"));
 }
 
 async function findTenantGuardianUserId(tenantId: string, email: string) {
@@ -573,18 +736,6 @@ async function writeAudit(input: {
     message: input.message ?? null,
     payload: input.payload ?? {}
   });
-}
-
-async function getRequestBaseUrl() {
-  const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "https";
-
-  if (host) {
-    return `${protocol}://${host}`;
-  }
-
-  return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 function readRequired(formData: FormData, field: string) {

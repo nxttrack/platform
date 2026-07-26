@@ -1,8 +1,8 @@
 # NXTTRACK Canon
 
-Last updated: 2026-07-07
+Last updated: 2026-07-20
 
-Status: definitive product canon. Phase 3 through Phase 11 MVP implementation is represented in code, with staging migration/RLS validation still required before production readiness.
+Status: definitive product canon. Phase 3 through Phase 20 implementation is represented in code. Live staging acceptance, complete UI-driven workflow proof, visual baseline approval and production-readiness evidence remain required.
 
 ## 0. Sources And Scope
 
@@ -154,6 +154,8 @@ Lovable confirms these route groups through:
 - Instructor routes: `/instructor/*`.
 - Admin routes: `/admin/*`.
 - NXTTRACK marketing routes: `/nxttrack/*`.
+
+Phase 1/2 re-audit note: production correctly localizes `/parent/*` to `/portaal/*`; direct badges and afzwem routes, shared mobile drawers, path-aware active navigation, progress/waitlist primitives and all canonical marketing compositions are now restored. Marketing demo/contact intentionally hand off to real e-mail until protected lead ingestion exists, and marketing login delegates to the real role-aware auth flow. Typed Recharts v3 charts now visualize real capacity, intake and payment data with accessible tabular fallbacks; fabricated Lovable time series remain reference-only. Shared form primitives now cover core admin, intake, invitation and auth flows while preserving native server-action submission. The instructor dossier uses the canonical four-tab workflow, and lesson cancellation confirms the credit outcome before mutation. Full visual parity still requires approved photography and production comparison against the pinned Lovable reference.
 
 ## 8. Public UserShell
 

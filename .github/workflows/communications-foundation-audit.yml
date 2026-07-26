@@ -1,0 +1,56 @@
+name: Communications foundation audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type AUDIT_COMMUNICATIONS_FOUNDATION to run the non-sending audit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  authorize:
+    name: authorize non-sending audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify confirmation
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "AUDIT_COMMUNICATIONS_FOUNDATION"
+
+  audit:
+    name: audit mail and observability without sending
+    needs: authorize
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      EMAIL_DKIM_SELECTOR: ${{ vars.EMAIL_DKIM_SELECTOR }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+      MONITORING_ENABLED: ${{ vars.MONITORING_ENABLED }}
+      INCIDENT_OWNER: ${{ vars.INCIDENT_OWNER }}
+      SUPPORT_OWNER: ${{ vars.SUPPORT_OWNER }}
+      LOG_RETENTION_DAYS: ${{ vars.LOG_RETENTION_DAYS }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20.19.0"
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Audit without sending mail or alerts
+        run: pnpm run operations:audit-communications
