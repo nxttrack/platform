@@ -12,9 +12,10 @@ import { getActiveTenant } from "./core";
 const automationEvents = new Set(["no_show", "birthday", "milestone", "offer_expiring", "payment_failed", "long_absence", "graduation_ready"]);
 const automationActions = new Set(["send_email", "create_task", "notify_parent", "notify_admin", "add_tag"]);
 const importTypes = new Set(["participants", "guardians", "groups", "enrollments", "payments", "mixed"]);
+const legacyAutomationPath = "/admin/automatisering/regels";
 
 export async function createAutomationRuleAction(formData: FormData) {
-  const { tenant, userId } = await requireTenantAdmin("/admin/automatisering");
+  const { tenant, userId } = await requireTenantAdmin(legacyAutomationPath);
   const eventKey = readEnum(formData, "eventKey", automationEvents);
   const actionKey = readEnum(formData, "actionKey", automationActions);
   const name = readRequired(formData, "name");
@@ -32,20 +33,20 @@ export async function createAutomationRuleAction(formData: FormData) {
     status: formData.get("active") === "on" ? "active" : "draft",
     created_by_user_id: userId
   });
-  if (error) redirect("/admin/automatisering?error=save");
-  revalidatePath("/admin/automatisering");
-  redirect("/admin/automatisering?saved=1");
+  if (error) redirect(`${legacyAutomationPath}?error=save`);
+  revalidatePath(legacyAutomationPath);
+  redirect(`${legacyAutomationPath}?saved=1`);
 }
 
 export async function setAutomationRuleStatusAction(formData: FormData) {
-  const { tenant } = await requireTenantAdmin("/admin/automatisering");
+  const { tenant } = await requireTenantAdmin(legacyAutomationPath);
   const ruleId = readRequired(formData, "ruleId");
   const status = readEnum(formData, "status", new Set(["active", "paused", "archived"]));
   const admin = createAdminClient();
   const { error } = await admin.from("automation_rules").update({ status }).eq("tenant_id", tenant.id).eq("id", ruleId);
-  if (error) redirect("/admin/automatisering?error=status");
-  revalidatePath("/admin/automatisering");
-  redirect("/admin/automatisering?saved=1");
+  if (error) redirect(`${legacyAutomationPath}?error=status`);
+  revalidatePath(legacyAutomationPath);
+  redirect(`${legacyAutomationPath}?saved=1`);
 }
 
 export async function createImportJobAction(formData: FormData) {
