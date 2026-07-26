@@ -13,7 +13,10 @@ export const nextBestActionTypes = [
   "waitlist_candidate_became_eligible",
   "data_quality_issue",
   "afzwem_ready_waiting",
-  "makeup_credit_expiring"
+  "makeup_credit_expiring",
+  "attendance_follow_up",
+  "progress_bottleneck_review",
+  "forecast_capacity_review"
 ] as const;
 
 export type NextBestActionType = (typeof nextBestActionTypes)[number];
@@ -32,7 +35,10 @@ export const nextBestActionTypeLabels: Record<NextBestActionType, string> = {
   waitlist_candidate_became_eligible: "Plaatsbaar geworden",
   data_quality_issue: "Datakwaliteit",
   afzwem_ready_waiting: "Afzwemklaar",
-  makeup_credit_expiring: "Inhaalcredit"
+  makeup_credit_expiring: "Inhaalcredit",
+  attendance_follow_up: "Aanwezigheidscheck",
+  progress_bottleneck_review: "Leskwaliteit",
+  forecast_capacity_review: "Capaciteitsforecast"
 };
 
 export type NextBestActionReason = {
@@ -153,6 +159,40 @@ export type NextBestActionInput = {
     id: string;
     participantId: string;
     expiresOn: string;
+    isTest: boolean;
+    journeyRunId: string | null;
+  }>;
+  capacityForecasts?: Array<{
+    groupId: string;
+    groupName: string;
+    programId: string;
+    riskLevel: "healthy" | "watch" | "bottleneck" | "critical";
+    expectedBottlenecks: number;
+    confidence: "laag" | "middel" | "hoog";
+    evidence: string[];
+    isTest: boolean;
+  }>;
+  attendanceRisks?: Array<{
+    participantId: string;
+    groupId: string;
+    signalType: string;
+    riskLevel: "watch" | "elevated" | "high";
+    reason: string;
+    evidence: string[];
+    confidence: "laag" | "middel" | "hoog";
+    isTest: boolean;
+    journeyRunId: string | null;
+  }>;
+  progressBottlenecks?: Array<{
+    groupId: string | null;
+    programId: string | null;
+    skillId: string;
+    skillLabel: string;
+    affectedCount: number;
+    totalCount: number;
+    stagnationRate: number;
+    confidence: "laag" | "middel" | "hoog";
+    suggestedFocus: string;
     isTest: boolean;
     journeyRunId: string | null;
   }>;
@@ -428,6 +468,84 @@ export function detectNextBestActions(input: NextBestActionInput): NextBestActio
     }));
   }
 
+  for (const forecast of input.capacityForecasts ?? []) {
+    if (!["bottleneck", "critical"].includes(forecast.riskLevel)) continue;
+    actions.push(candidate({
+      actionType: "forecast_capacity_review",
+      fingerprint: `forecast_capacity_review:${forecast.groupId}:${forecast.isTest ? "test" : "live"}`,
+      title: `Capaciteitsforecast vraagt aandacht bij ${forecast.groupName}`,
+      description: "De 4–12-wekenforecast verwacht druk. Beoordeel planning, doorstroom en alternatieven voordat er iets wijzigt.",
+      priority: forecast.riskLevel === "critical" ? "high" : "medium",
+      entityType: "group",
+      entityId: forecast.groupId,
+      groupId: forecast.groupId,
+      programId: forecast.programId,
+      reasons: [
+        reason("Verwacht knelpunt", "Vraag, huidige bezetting en voorzichtige uitstroom zijn gecombineerd.", `${forecast.expectedBottlenecks} onvervulde verwachte vraag`),
+        ...forecast.evidence.slice(0, 3).map((evidence) =>
+          reason("Brondata", "Uitlegbaar onderdeel van de forecast.", evidence)
+        )
+      ],
+      suggestedActions: [
+        { label: "Open capaciteitsvoorspelling", href: "/admin/rapportages/capaciteit" },
+        { label: "Open What-if planning", href: `/admin/agenda?group=${forecast.groupId}` }
+      ],
+      sourceHref: "/admin/rapportages/capaciteit",
+      confidence: confidenceValue(forecast.confidence),
+      isTest: forecast.isTest
+    }));
+  }
+
+  for (const risk of input.attendanceRisks ?? []) {
+    if (!["elevated", "high"].includes(risk.riskLevel)) continue;
+    actions.push(candidate({
+      actionType: "attendance_follow_up",
+      fingerprint: `attendance_follow_up:${risk.participantId}:${risk.groupId}:${risk.signalType}`,
+      title: "Warme aanwezigheidscheck voorgesteld",
+      description: risk.reason,
+      priority: risk.riskLevel === "high" ? "high" : "medium",
+      entityType: "participant",
+      entityId: risk.participantId,
+      participantId: risk.participantId,
+      groupId: risk.groupId,
+      reasons: risk.evidence.map((evidence) =>
+        reason("Aanwezigheidsbron", "Neutraal signaal; dit leidt nooit automatisch tot uitschrijven of plaatsverlies.", evidence)
+      ),
+      suggestedActions: [
+        { label: "Beoordeel begeleiding", href: "/admin/rapportages/leskwaliteit" }
+      ],
+      sourceHref: "/admin/rapportages/leskwaliteit",
+      confidence: confidenceValue(risk.confidence),
+      isTest: risk.isTest,
+      journeyRunId: risk.journeyRunId
+    }));
+  }
+
+  for (const bottleneck of input.progressBottlenecks ?? []) {
+    actions.push(candidate({
+      actionType: "progress_bottleneck_review",
+      fingerprint: `progress_bottleneck_review:${bottleneck.groupId ?? "all"}:${bottleneck.skillId}:${bottleneck.isTest ? "test" : "live"}`,
+      title: `Lesfocus beoordelen: ${bottleneck.skillLabel}`,
+      description: "Een voldoende groot groepssignaal wijst op extra oefenruimte. Het signaal gaat over leskwaliteit, niet over een individueel kind.",
+      priority: bottleneck.stagnationRate >= 0.6 ? "high" : "medium",
+      entityType: bottleneck.groupId ? "group" : "progress_item",
+      entityId: bottleneck.groupId ?? bottleneck.skillId,
+      groupId: bottleneck.groupId,
+      programId: bottleneck.programId,
+      reasons: [
+        reason("Steekproef", "Alleen voldoende grote groepssignalen worden aangeboden.", `${bottleneck.affectedCount} van ${bottleneck.totalCount} observaties`),
+        reason("Positieve lesfocus", "De instructeur beslist of dit in de les past.", bottleneck.suggestedFocus)
+      ],
+      suggestedActions: [
+        { label: "Open leskwaliteit", href: "/admin/rapportages/leskwaliteit" }
+      ],
+      sourceHref: "/admin/rapportages/leskwaliteit",
+      confidence: confidenceValue(bottleneck.confidence),
+      isTest: bottleneck.isTest,
+      journeyRunId: bottleneck.journeyRunId
+    }));
+  }
+
   return actions
     .sort((left, right) =>
       priorityRank(left.priority) - priorityRank(right.priority) ||
@@ -488,6 +606,10 @@ function priorityRank(priority: NextBestActionPriority) {
 
 function weekdayLabel(day: number) {
   return ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"][day] ?? "een passende dag";
+}
+
+function confidenceValue(confidence: "laag" | "middel" | "hoog") {
+  return { laag: 0.45, middel: 0.7, hoog: 0.9 }[confidence];
 }
 
 const hourMs = 60 * 60 * 1000;

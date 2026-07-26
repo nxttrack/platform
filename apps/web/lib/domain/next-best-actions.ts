@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
+import { forecastCapacity } from "./capacity-forecast";
 import { deriveDaypart, type IntakeDaypart } from "./intake-recommendation-contract";
 import {
   detectNextBestActions,
@@ -10,6 +11,7 @@ import {
   type NextBestActionType
 } from "./next-best-actions-contract";
 import { calculateWaitTimeBands } from "./wait-time";
+import { detectAttendanceRisks, detectProgressBottlenecks } from "./learning-intelligence";
 import type { WaitTimeQuery } from "./wait-time-contract";
 
 export type NextBestActionRow = {
@@ -399,6 +401,20 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
       journeyRunId: singleJourneyRun(scopeEntries)
     };
   });
+  const intelligencePeriodStart = new Date(now.getTime() - 84 * dayMs).toISOString();
+  const [capacityForecastRows, attendanceRiskRows, progressBottleneckRows] = await Promise.all([
+    forecastCapacity({
+      tenantId,
+      horizonWeeks: 8,
+      includeTestData
+    }),
+    detectAttendanceRisks(tenantId, { includeTestData }),
+    detectProgressBottlenecks({
+      tenantId,
+      includeTestData,
+      period: { from: intelligencePeriodStart, to: now.toISOString() }
+    })
+  ]);
 
   return {
     now: now.toISOString(),
@@ -485,7 +501,41 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
         isTest: participant?.is_test ?? false,
         journeyRunId: participant?.journey_run_id ?? null
       }];
-    })
+    }),
+    capacityForecasts: capacityForecastRows.map((forecast) => ({
+      groupId: forecast.group_id,
+      groupName: forecast.group_name,
+      programId: forecast.program_id,
+      riskLevel: forecast.risk_level,
+      expectedBottlenecks: forecast.expected_bottlenecks,
+      confidence: forecast.confidence,
+      evidence: forecast.reasons.map((reason) => reason.evidence),
+      isTest: forecast.is_test
+    })),
+    attendanceRisks: attendanceRiskRows.map((risk) => ({
+      participantId: risk.participant_id,
+      groupId: risk.group_id,
+      signalType: risk.signal_type,
+      riskLevel: risk.risk_level,
+      reason: risk.reason,
+      evidence: risk.evidence,
+      confidence: risk.confidence,
+      isTest: risk.is_test,
+      journeyRunId: risk.journey_run_id
+    })),
+    progressBottlenecks: progressBottleneckRows.map((bottleneck) => ({
+      groupId: bottleneck.group_id,
+      programId: bottleneck.program_id,
+      skillId: bottleneck.skill_id,
+      skillLabel: bottleneck.skill_label,
+      affectedCount: bottleneck.affected_count,
+      totalCount: bottleneck.total_count,
+      stagnationRate: bottleneck.stagnation_rate,
+      confidence: bottleneck.confidence,
+      suggestedFocus: bottleneck.suggested_lesson_focus,
+      isTest: bottleneck.is_test,
+      journeyRunId: bottleneck.journey_run_id
+    }))
   };
 }
 
