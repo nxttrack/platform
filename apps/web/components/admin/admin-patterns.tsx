@@ -21,7 +21,7 @@ export function AdminMetricCard({
     neutral: "bg-slate-500/8 text-slate-700",
     info: "bg-sky-500/10 text-sky-700",
     success: "bg-emerald-500/10 text-emerald-700",
-    warning: "bg-amber-500/10 text-amber-700"
+    warning: "bg-amber-500/10 text-amber-800"
   }[tone];
 
   return (

@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { Children, useId, type ReactNode } from "react";
 
 import { Field as FieldRoot, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -106,12 +106,16 @@ export function EmptyState({ children }: { children: ReactNode }) {
 }
 
 export function DataList({ children }: { children: ReactNode }) {
-  return <div role="list" className="divide-y divide-border rounded-lg border border-border">{children}</div>;
+  return (
+    <div role="list" className="divide-y divide-border rounded-lg border border-border">
+      {Children.map(children, (child) => <div role="listitem">{child}</div>)}
+    </div>
+  );
 }
 
 export function DataListRow({ title, meta, aside }: { title: string; meta?: ReactNode; aside?: ReactNode }) {
   return (
-    <div role="listitem" className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
+    <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-foreground">{title}</p>
         {meta ? <div className="mt-1 text-xs text-muted-foreground">{meta}</div> : null}
