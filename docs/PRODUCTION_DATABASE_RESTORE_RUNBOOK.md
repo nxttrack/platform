@@ -12,7 +12,7 @@ The object-level implementation passed its controlled staging rehearsal in
 - Target RTO: record the operational target and owner before launch.
 - Supabase Pro daily backups retain seven days. PITR is a separate paid add-on and must be enabled before an incident if second-level recovery is required.
 - Supabase database backups cover database schemas and data, including Auth database records, but not the actual objects stored through the Storage API.
-- `tenant-documents` and `diploma-vault` therefore require their own versioned off-platform object copy plus an inventory that can be reconciled with `storage.objects`.
+- `tenant-documents`, `diploma-vault` and `participant-media` therefore require their own versioned off-platform object copy plus an inventory that can be reconciled with `storage.objects`.
 
 ## Before production launch
 
@@ -49,7 +49,7 @@ Stop application writes before choosing a recovery point. Preserve logs and, whe
 
 ## Storage object restore
 
-1. Recreate/verify the private `tenant-documents` and `diploma-vault` buckets and their policies through reviewed migrations/configuration.
+1. Recreate/verify the private `tenant-documents`, `diploma-vault` and `participant-media` buckets and their policies through reviewed migrations/configuration.
 2. Decrypt and locally verify the selected manifest as defined in
    [Private Storage Backup And Restore](STORAGE_BACKUP_RUNBOOK.md).
 3. Restore object bytes through `pnpm run storage:restore`, which uses the Storage API with overwrite disabled;

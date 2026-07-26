@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const TENANT_DOCUMENTS_BUCKET = "tenant-documents";
 export const DIPLOMA_VAULT_BUCKET = "diploma-vault";
+export const PARTICIPANT_MEDIA_BUCKET = "participant-media";
 export const PRIVATE_FILE_MAX_BYTES = 20 * 1024 * 1024;
 
 export type PrivateFileUpload = {
@@ -30,6 +31,23 @@ export async function uploadCertificateFile(input: { certificateId: string; file
     bucket: DIPLOMA_VAULT_BUCKET,
     file: input.file,
     path: `${input.tenantId}/certificates/${input.certificateId}/${normalizeStorageFileName(input.file.name)}`
+  });
+}
+
+export async function uploadParticipantMediaFile(input: {
+  file: File;
+  mediaId: string;
+  participantId: string;
+  tenantId: string;
+}): Promise<PrivateFileUpload> {
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
+
+  return uploadPrivateFile({
+    bucket: PARTICIPANT_MEDIA_BUCKET,
+    file: input.file,
+    path: `${input.tenantId}/participants/${input.participantId}/${input.mediaId}.${extension}`,
+    purpose: "participant_media",
+    upsert: false
   });
 }
 
@@ -66,14 +84,20 @@ function validatePrivateFile(file: File) {
   }
 }
 
-async function uploadPrivateFile(input: { bucket: string; file: File; path: string }): Promise<PrivateFileUpload> {
+async function uploadPrivateFile(input: {
+  bucket: string;
+  file: File;
+  path: string;
+  purpose?: "participant_media" | "private_document";
+  upsert?: boolean;
+}): Promise<PrivateFileUpload> {
   validatePrivateFile(input.file);
-  const scan = await scanUpload(input.file, "private_document");
+  const scan = await scanUpload(input.file, input.purpose ?? "private_document");
 
   const admin = createAdminClient();
   const { error } = await admin.storage.from(input.bucket).upload(input.path, Buffer.from(await input.file.arrayBuffer()), {
     contentType: input.file.type,
-    upsert: true
+    upsert: input.upsert ?? true
   });
 
   if (error) {

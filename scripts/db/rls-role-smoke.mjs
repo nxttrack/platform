@@ -54,7 +54,10 @@ const tenantScopedTables = parseTableList(
       "manual_payments",
       "tenant_messages",
       "tenant_tasks",
-      "tenant_documents"
+      "tenant_documents",
+      "participant_media",
+      "media_consent_events",
+      "media_access_logs"
     ].join(",")
 );
 

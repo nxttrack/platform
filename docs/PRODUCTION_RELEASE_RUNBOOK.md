@@ -48,7 +48,7 @@ Complete the generated file under `artifacts/production-go-no-go/` and store the
 ## 2. Pre-deploy controls
 
 - Upgrade the production Supabase project to Pro and record the visible backup retention.
-- Confirm an object-backup route for `tenant-documents` and `diploma-vault`; database backups contain Storage metadata, not the object bytes.
+- Confirm an object-backup route for `tenant-documents`, `diploma-vault` and `participant-media`; database backups contain Storage metadata, not the object bytes.
 - Complete [Upload security](UPLOAD_SECURITY_RUNBOOK.md): ClamD is current and reachable by the production service, `UPLOAD_MALWARE_SCAN_MODE=required`, and clean/fail-closed upload probes pass.
 - Record the current live production SHA from `/api/health` and the current symlink target on the VPS.
 - Confirm Caddy validates and `nxttrack-production` is healthy before touching it.

@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       first_install_empty_project:
-        description: Allow both required buckets to be absent before the first production migration only
+        description: Allow all required buckets to be absent before the first production migration only
         required: false
         default: false
         type: boolean
@@ -76,7 +76,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Export and verify both private buckets
+      - name: Export and verify all private buckets
         run: |
           pnpm run storage:backup
           pnpm run storage:verify-local

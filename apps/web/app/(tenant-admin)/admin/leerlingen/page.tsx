@@ -110,6 +110,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
               isTest: enrollment.is_test,
               lesson: groups.map(formatGroupTime).join(", ") || "Nog niet gepland",
               name: participant?.display_name ?? "Onbekende leerling",
+              participantId: participant?.id ?? enrollment.participant_id,
               program: programById.get(enrollment.program_id)?.name ?? "Programma onbekend",
               stage: enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau onbekend" : "Nog geen niveau",
               startsOn: enrollment.starts_on,

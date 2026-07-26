@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Download, Mail, Phone, SearchCheck, Users } from "lucide-react";
+import { CheckCircle2, Download, Images, Mail, Phone, SearchCheck, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -32,6 +32,7 @@ export type StudentTableRow = {
   instructors: string;
   lesson: string;
   name: string;
+  participantId: string;
   program: string;
   stage: string;
   startsOn: string;
@@ -48,7 +49,7 @@ export function StudentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getParticipantStatusMeta(String(getValue()))} /> },
     { accessorKey: "startsOn", header: "Start", meta: { label: "Startdatum" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Begeleiding", value: "guidance", content: <GuidanceSignals signals={row.attendanceSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs footer={<Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/leerlingen/${row.participantId}/media`}><Images className="size-4" />Privacyveilige media openen</Link>} tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Begeleiding", value: "guidance", content: <GuidanceSignals signals={row.attendanceSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
 }
 
 export type GroupTableRow = {

@@ -53,6 +53,8 @@ This proves that an application-level logical export is readable and restorable.
 - Production Supabase is Pro and exposes daily physical restore points.
 - Encrypted object backup covers `tenant-documents` and `diploma-vault`; the strict post-migration export
   records both buckets and zero objects.
+- `participant-media` was added later and requires a new three-bucket backup/restore rehearsal before its
+  release gate may be closed.
 - The database-backed production SendGrid provider delivered a controlled message.
 - The bootstrapped owner received the message, logged in and changed the temporary password.
 - The production Slack drill was received and the post-activation monitor probe passed.
