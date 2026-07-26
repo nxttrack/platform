@@ -99,7 +99,7 @@ export function AppShellClient({ brand, nav, user, children, accent = "parent", 
         <header className="sticky top-0 z-40 flex h-16 items-center gap-3 border-b border-border bg-card/75 px-4 backdrop-blur md:px-8">
           <Sheet>
             <SheetTrigger asChild>
-              <button className="rounded-lg p-2 text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" type="button" aria-label="Navigatie openen">
+              <button className="grid size-11 place-items-center rounded-lg text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" type="button" aria-label="Navigatie openen">
                 <Menu className="h-5 w-5" />
               </button>
             </SheetTrigger>
@@ -116,7 +116,7 @@ export function AppShellClient({ brand, nav, user, children, accent = "parent", 
           <div className="ml-auto flex items-center gap-2">
             <GlobalCommandPalette items={searchItems} nav={nav} />
             {messagesHref ? (
-              <Link className="relative rounded-xl border border-border bg-background p-2 transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={messagesHref} aria-label="Berichten en meldingen">
+              <Link className="relative grid size-11 place-items-center rounded-xl border border-border bg-background transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={messagesHref} aria-label="Berichten en meldingen">
                 <Bell className="h-4 w-4" />
               </Link>
             ) : null}
@@ -169,7 +169,7 @@ function NavigationItem({ item, active, mobile, reduceMotion }: { item: ShellNav
     <Link
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group relative flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         active ? "bg-gradient-to-r from-primary/10 to-transparent text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"
       )}
       href={item.href}
