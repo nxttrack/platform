@@ -211,7 +211,7 @@ export function DataTable<TData>({
           {filters.map((filter) => {
             const column = table.getColumn(filter.column);
             if (!column) return null;
-            return <Select key={filter.column} value={(column.getFilterValue() as string) || "__all"} onValueChange={(value) => column.setFilterValue(value === "__all" ? undefined : value)}><SelectTrigger className="w-auto min-w-40"><SelectValue placeholder={filter.label} /></SelectTrigger><SelectContent><SelectItem value="__all">Alle {filter.label.toLowerCase()}</SelectItem>{filter.options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>;
+            return <Select key={filter.column} value={(column.getFilterValue() as string) || "__all"} onValueChange={(value) => column.setFilterValue(value === "__all" ? undefined : value)}><SelectTrigger aria-label={`Filter op ${filter.label}`} className="w-auto min-w-40"><SelectValue placeholder={filter.label} /></SelectTrigger><SelectContent><SelectItem value="__all">Alle {filter.label.toLowerCase()}</SelectItem>{filter.options.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>;
           })}
           {hasFilters ? <Button onClick={() => table.resetColumnFilters()} size="sm" variant="ghost"><FilterX className="size-4" />Wis filters</Button> : null}
         </div>
@@ -250,7 +250,7 @@ export function DataTable<TData>({
 
       <div className="flex flex-col gap-3 text-sm text-muted-foreground sm:flex-row sm:items-center">
         <p className="flex-1">{table.getFilteredRowModel().rows.length} resultaten · pagina {table.getState().pagination.pageIndex + 1} van {Math.max(table.getPageCount(), 1)}</p>
-        <Select value={String(pagination.pageSize)} onValueChange={(value) => table.setPageSize(Number(value))}><SelectTrigger className="w-36"><SelectValue /></SelectTrigger><SelectContent>{[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size} per pagina</SelectItem>)}</SelectContent></Select>
+        <Select value={String(pagination.pageSize)} onValueChange={(value) => table.setPageSize(Number(value))}><SelectTrigger aria-label="Aantal resultaten per pagina" className="w-36"><SelectValue /></SelectTrigger><SelectContent>{[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size} per pagina</SelectItem>)}</SelectContent></Select>
         <div className="flex gap-1"><Button aria-label="Vorige pagina" disabled={!table.getCanPreviousPage()} onClick={() => table.previousPage()} size="icon" variant="outline"><ChevronLeft className="size-4" /></Button><Button aria-label="Volgende pagina" disabled={!table.getCanNextPage()} onClick={() => table.nextPage()} size="icon" variant="outline"><ChevronRight className="size-4" /></Button></div>
       </div>
 
