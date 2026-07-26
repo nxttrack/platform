@@ -26,24 +26,24 @@ export const instructorNav: NavItem[] = [
 
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "home" },
-  { href: "/admin/agenda", label: "Planboard", icon: "calendar" },
-  { href: "/admin/resources", label: "Resources", icon: "location" },
-  { href: "/admin/leerlingen", label: "Leerlingen", icon: "users" },
-  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award" },
-  { href: "/admin/betalingen", label: "Betalingen", icon: "card" },
-  { href: "/admin/rapportages", label: "Rapportages", icon: "chart" },
-  { href: "/admin/automatisering", label: "Automatisering", icon: "bot" },
-  { href: "/admin/berichten", label: "Berichten", icon: "message" },
-  { href: "/admin/taken", label: "Taken", icon: "tasks" },
-  { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
-  { href: "/admin/groepen", label: "Groepen", icon: "users" },
-  { href: "/admin/documenten", label: "Documenten", icon: "file" },
-  { href: "/admin/programma", label: "Programma's", icon: "waves" },
-  { href: "/admin/intake", label: "Intake", icon: "inbox" },
-  { href: "/admin/importeren", label: "Importeren", icon: "upload" },
-  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: "tasks" },
-  { href: "/admin/branding", label: "Branding", icon: "palette" },
-  { href: "/admin/instellingen", label: "Instellingen", icon: "settings" }
+  { href: "/admin/agenda", label: "Planbord", icon: "calendar", section: "Planning" },
+  { href: "/admin/groepen", label: "Groepen", icon: "users", section: "Planning" },
+  { href: "/admin/resources", label: "Resources", icon: "location", section: "Planning" },
+  { href: "/admin/intake", label: "Intake", icon: "inbox", section: "Leerlingen" },
+  { href: "/admin/wachtlijst", label: "Wachtlijst", icon: "tasks", section: "Leerlingen" },
+  { href: "/admin/leerlingen", label: "Leerlingen", icon: "users", section: "Leerlingen" },
+  { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: "userPlus", section: "Leerlingen" },
+  { href: "/admin/programma", label: "Programma's", icon: "waves", section: "Lesproces" },
+  { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award", section: "Lesproces" },
+  { href: "/admin/documenten", label: "Documenten", icon: "file", section: "Lesproces" },
+  { href: "/admin/berichten", label: "Berichten", icon: "message", section: "Communicatie" },
+  { href: "/admin/taken", label: "Taken", icon: "tasks", section: "Communicatie" },
+  { href: "/admin/betalingen", label: "Betalingen", icon: "card", section: "Financieel" },
+  { href: "/admin/rapportages", label: "Rapportages", icon: "chart", section: "Financieel" },
+  { href: "/admin/automatisering", label: "Automatisering", icon: "bot", section: "Automatisering" },
+  { href: "/admin/branding", label: "Branding", icon: "palette", section: "Beheer" },
+  { href: "/admin/instellingen", label: "Instellingen", icon: "settings", section: "Beheer" },
+  { href: "/admin/importeren", label: "Importeren", icon: "upload", section: "Beheer" }
 ];
 
 export const platformNav: NavItem[] = [
