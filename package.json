@@ -49,6 +49,7 @@
     "storage:verify-remote": "node scripts/storage/object-backup.mjs verify-remote",
     "test:billing-contract": "tsx --test tests/unit/billing-contract.test.ts",
     "test:intake-recommendations": "tsx --test tests/unit/intake-recommendations.test.ts",
+    "test:predictive-operations": "tsx --test tests/unit/wait-time-contract.test.ts tests/unit/placement-contract.test.ts tests/unit/next-best-actions-contract.test.ts tests/unit/predictive-operations-schema.test.ts",
     "test:data-quality": "tsx --test tests/unit/data-quality.test.ts",
     "test:smart-signals": "tsx --test tests/unit/smart-signals.test.ts",
     "test:analytics": "tsx --test tests/unit/analytics-attribution.test.ts",
@@ -81,7 +82,7 @@
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
-    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:analytics && pnpm run test:content-security && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
+    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:content-security && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {

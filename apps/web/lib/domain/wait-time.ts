@@ -222,7 +222,7 @@ async function loadWaitTimeModel(tenantId: string, includeTestData: boolean) {
   const demand: CurrentWaitlistDemand[] = waitlistRows
     .filter((entry) =>
       ["waiting", "reviewing", "offered"].includes(entry.status) &&
-      !entry.minimum_age_blocked &&
+      (!entry.minimum_age_blocked || (!!entry.eligible_from && entry.eligible_from <= today)) &&
       (!entry.eligible_from || entry.eligible_from <= today)
     )
     .map((entry) => {

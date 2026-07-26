@@ -10,7 +10,7 @@
 
 | Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |
 | --- | --- | --- | --- | --- | --- | --- |
-| `CRON_SECRET` | Beveiligt `POST /api/internal/journey-bot/tick` | Journey Bot runner | Nodig voor geplande runs | `placeholder_add_later` | GitHub environment secret en VPS runtime-env | Gebruik minimaal 32 willekeurige tekens. Nooit committen. |
+| `CRON_SECRET` | Beveiligt `POST /api/internal/journey-bot/tick` en `POST /api/internal/next-best-actions` | Journey Bot runner en dagelijkse Next Best Action-generator | Nodig voor geplande runs | `placeholder_add_later` | GitHub environment secret en VPS runtime-env | Gebruik minimaal 32 willekeurige tekens. Nooit committen. |
 | `JOURNEY_BOT_DEFAULT_ENABLED` | Documenteert de gewenste defaultstatus | Control plane | Later | `false` | GitHub environment variable | Een databaseconfig moet daarnaast expliciet enabled zijn. |
 | `JOURNEY_BOT_EMAIL_DOMAIN` | Domein voor herkenbare testaccounts | Testdatagenerator | Nu | `nxttrack.test` | GitHub environment variable | Gebruik een niet-bezorgbaar testdomein. |
 | `ALLOW_JOURNEY_BOT_SEED` | Eenmalige mutatieguard voor De Waterlijn-seed | Staging seed script | Alleen tijdens seed | `false` | Alleen als job-env in de staging seedworkflow | Nooit in de permanente runtime-env inschakelen. |

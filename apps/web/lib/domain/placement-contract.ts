@@ -109,7 +109,11 @@ function scoreGroup(
 
   reasons.push(reason("program_match", "Programma past", "De groep hoort bij het gevraagde programma.", group.programId, 15));
 
-  if (entry.minimumAgeBlocked || (entry.eligibleFrom && entry.eligibleFrom > nowValue.slice(0, 10)) || (age !== null && age < 4)) {
+  if (
+    (entry.minimumAgeBlocked && (!entry.eligibleFrom || entry.eligibleFrom > nowValue.slice(0, 10))) ||
+    (entry.eligibleFrom && entry.eligibleFrom > nowValue.slice(0, 10)) ||
+    (age !== null && age < 4)
+  ) {
     blockers.push(blocker(
       "under_minimum_age",
       "Minimumleeftijd nog niet bereikt",
