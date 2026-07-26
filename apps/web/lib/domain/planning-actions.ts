@@ -41,86 +41,26 @@ export async function decideCatchUpRequestAction(formData: FormData) {
   const admin = createAdminClient();
   const requestId = readRequired(formData, "requestId");
   const decision = readRequired(formData, "decision");
-  const requestResult = await admin
-    .from("catch_up_requests")
-    .select("id, credit_id, preferred_session_id, status")
-    .eq("tenant_id", tenant.id)
-    .eq("id", requestId)
-    .maybeSingle();
-
-  if (requestResult.error || !requestResult.data || requestResult.data.status !== "requested") {
-    redirect("/admin/agenda?error=catchup");
+  if (!["approved", "declined"].includes(decision) || formData.get("humanConfirmation") !== "confirmed") {
+    redirect("/admin/agenda?error=confirmation");
   }
-
-  if (decision === "approved") {
-    const capacityOk = await sessionHasCatchUpCapacity({
+  const decisionResult = await admin.rpc("decide_makeup_marketplace_request", {
+    target_tenant_id: tenant.id,
+    target_request_id: requestId,
+    actor_user_id: context.user.id,
+    requested_decision: decision,
+    decision_notes: readOptional(formData, "adminNotes"),
+    human_confirmation: true
+  });
+  if (decisionResult.error) {
+    console.error("[makeup-marketplace] decision failed", {
       tenantId: tenant.id,
-      sessionId: requestResult.data.preferred_session_id,
-      excludingRequestId: requestResult.data.id
+      requestId,
+      decision,
+      code: decisionResult.error.code,
+      message: decisionResult.error.message
     });
-
-    if (!capacityOk) {
-      redirect("/admin/agenda?error=capacity");
-    }
-
-    const { error: updateRequestError } = await admin
-      .from("catch_up_requests")
-      .update({
-        assigned_session_id: requestResult.data.preferred_session_id,
-        status: "approved",
-        decided_at: new Date().toISOString(),
-        decided_by_user_id: context.user.id,
-        admin_notes: readOptional(formData, "adminNotes")
-      })
-      .eq("tenant_id", tenant.id)
-      .eq("id", requestResult.data.id);
-
-    if (updateRequestError) {
-      redirect("/admin/agenda?error=catchup");
-    }
-
-    const { error: creditError } = await admin
-      .from("catch_up_credits")
-      .update({
-        status: "reserved",
-        used_session_id: requestResult.data.preferred_session_id,
-        notes: readOptional(formData, "adminNotes")
-      })
-      .eq("tenant_id", tenant.id)
-      .eq("id", requestResult.data.credit_id);
-
-    if (creditError) {
-      redirect("/admin/agenda?error=credit");
-    }
-  } else {
-    const { error: updateRequestError } = await admin
-      .from("catch_up_requests")
-      .update({
-        assigned_session_id: null,
-        status: "declined",
-        decided_at: new Date().toISOString(),
-        decided_by_user_id: context.user.id,
-        admin_notes: readOptional(formData, "adminNotes")
-      })
-      .eq("tenant_id", tenant.id)
-      .eq("id", requestResult.data.id);
-
-    if (updateRequestError) {
-      redirect("/admin/agenda?error=catchup");
-    }
-
-    const { error: creditError } = await admin
-      .from("catch_up_credits")
-      .update({
-        status: "available",
-        used_session_id: null
-      })
-      .eq("tenant_id", tenant.id)
-      .eq("id", requestResult.data.credit_id);
-
-    if (creditError) {
-      redirect("/admin/agenda?error=credit");
-    }
+    redirect(`/admin/agenda?error=${decisionResult.error.message === "makeup_no_capacity" ? "capacity" : "catchup"}`);
   }
 
   revalidatePath("/admin/agenda");
@@ -164,43 +104,6 @@ export async function undoPlanningChangeAction(formData: FormData) {
   await admin.from("planning_change_events").update({ status: "undone", undone_at: new Date().toISOString(), undone_by_user_id: context.user.id }).eq("tenant_id", tenant.id).eq("id", changeId);
   revalidatePath("/admin/agenda");
   redirect("/admin/agenda?saved=undone");
-}
-
-async function sessionHasCatchUpCapacity(input: { excludingRequestId?: string; sessionId: string; tenantId: string }) {
-  const admin = createAdminClient();
-  const sessionResult = await admin
-    .from("sessions")
-    .select("id, group_id, capacity_override, status")
-    .eq("tenant_id", input.tenantId)
-    .eq("id", input.sessionId)
-    .maybeSingle();
-
-  if (sessionResult.error || !sessionResult.data || sessionResult.data.status !== "scheduled") {
-    return false;
-  }
-
-  const [groupResult, membershipsResult, requestsResult] = await Promise.all([
-    admin.from("groups").select("capacity").eq("tenant_id", input.tenantId).eq("id", sessionResult.data.group_id).maybeSingle(),
-    admin.from("group_memberships").select("capacity_weight, status").eq("tenant_id", input.tenantId).eq("group_id", sessionResult.data.group_id),
-    admin
-      .from("catch_up_requests")
-      .select("id, status")
-      .eq("tenant_id", input.tenantId)
-      .or(`preferred_session_id.eq.${input.sessionId},assigned_session_id.eq.${input.sessionId}`)
-      .in("status", ["requested", "approved"])
-  ]);
-
-  if (groupResult.error || !groupResult.data || membershipsResult.error || requestsResult.error) {
-    return false;
-  }
-
-  const capacity = Number(sessionResult.data.capacity_override ?? groupResult.data.capacity ?? 0);
-  const used = ((membershipsResult.data ?? []) as { capacity_weight: number; status: string }[])
-    .filter((membership) => membership.status === "active" || membership.status === "trial")
-    .reduce((total, membership) => total + Number(membership.capacity_weight), 0);
-  const holds = ((requestsResult.data ?? []) as { id: string; status: string }[]).filter((request) => request.id !== input.excludingRequestId).length;
-
-  return used + holds + 1 <= capacity;
 }
 
 function readEnum(formData: FormData, field: string, allowed: Set<string>, fallback: string) {

@@ -2,11 +2,13 @@
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle, CheckCircle2, Clock3, ListTodo, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
+import Link from "next/link";
 
 import { ActivityTimeline } from "@/components/admin/activity-timeline";
 import { SubmitButton } from "@/components/admin/domain-ui";
 import { WaitTimeInsight } from "@/components/admin/wait-time-insight";
 import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
+import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/shell/ui";
@@ -17,6 +19,7 @@ import { getWaitlistStatusMeta } from "@/lib/ui/status-meta";
 
 export type PlacementCockpitRow = {
   id: string;
+  guardianId: string | null;
   participantName: string;
   parentName: string;
   parentEmail: string;
@@ -156,6 +159,10 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
           </div>
         </TabsContent>
         <TabsContent value="placement">
+          <Link className="mb-4 inline-flex min-h-10 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={row.guardianId ? `/admin/gezinnen/${row.guardianId}` : "/admin/gezinnen"}>
+            <Users className="size-4" />
+            Zoek gezinsmatch
+          </Link>
           <div className="grid gap-4">
             <section>
               <div className="mb-3 flex items-center justify-between gap-3">
@@ -202,7 +209,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
                 {!row.proposals.length ? <p className="rounded-xl bg-muted p-3 text-[13px] text-muted-foreground">Geen actieve groep voldoet aan de basisvoorwaarden.</p> : null}
               </div>
             </section>
-            {!effectivelyAgeBlocked && !statusMeta.isTerminal ? <section className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="text-sm font-bold text-foreground">Plaatsingsvoorstel maken</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Kies bewust een blocker-vrije groep. De geverifieerde ouderaanbieding blijft de aanbevolen route.</p><form action={createSlotOfferAction} className="mt-4 grid gap-3"><input name="waitlistEntryId" type="hidden" value={row.id} /><label className="grid gap-1.5 text-[13px] font-semibold text-foreground" htmlFor={`placement-group-${row.id}`}>Groep<select className="h-10 rounded-lg border border-border bg-background px-3 font-normal" id={`placement-group-${row.id}`} name="groupId" required defaultValue=""><option disabled value="">Kies een groep</option>{row.offerGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label><SubmitButton>Goedkeuren en aanbod maken</SubmitButton></form>
+            {!effectivelyAgeBlocked && !statusMeta.isTerminal ? <section className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="text-sm font-bold text-foreground">Plaatsingsvoorstel maken</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Kies bewust een blocker-vrije groep. De geverifieerde ouderaanbieding blijft de aanbevolen route.</p><ConfirmActionForm action={createSlotOfferAction} className="mt-4 grid gap-3" confirmLabel="Aanbod maken en e-mail versturen" description="De plaatsing wordt opnieuw gecontroleerd. Daarna maakt NXTTRACK het aanbod aan en verstuurt de geverifieerde uitnodiging naar de ouder." hiddenFields={{ waitlistEntryId: row.id, humanConfirmation: "confirmed" }} title={`Aanbod voor ${row.participantName} versturen?`} triggerLabel="Controleer en maak aanbod"><label className="grid gap-1.5 text-[13px] font-semibold text-foreground" htmlFor={`placement-group-${row.id}`}>Groep<select className="h-10 rounded-lg border border-border bg-background px-3 font-normal" id={`placement-group-${row.id}`} name="groupId" required defaultValue=""><option disabled value="">Kies een groep</option>{row.offerGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label></ConfirmActionForm>
               <details className="mt-4 border-t border-primary/15 pt-4">
                 <summary className="cursor-pointer text-xs font-bold text-muted-foreground">Direct plaatsen na reeds verkregen oudertoestemming</summary>
                 <form action={confirmDirectPlacementAction} className="mt-3 grid gap-3">

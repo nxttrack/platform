@@ -1,13 +1,16 @@
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Mail, RefreshCcw, Users } from "lucide-react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PlanningDayBoard } from "@/components/admin/planning-day-board";
 import { PlanningWorkbench } from "@/components/admin/planning-workbench";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
 import { createSessionAction } from "@/lib/domain/actions";
 import { decideCatchUpRequestAction, saveInstructorAvailabilityAction, undoPlanningChangeAction } from "@/lib/domain/planning-actions";
 import { getPlanningData, type PlanningConflict } from "@/lib/domain/planning";
+import { findMakeupMarketplaceMatches } from "@/lib/domain/makeup-marketplace";
+import { bookMakeupMarketplaceDirectAction, ignoreMakeupMarketplaceMatchAction, inviteMakeupMarketplaceParentAction } from "@/lib/domain/makeup-marketplace-actions";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -20,6 +23,8 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const undo = getParam(params, "undo");
+  const marketplaceSessionId = getParam(params, "marketplace");
+  const marketplace = marketplaceSessionId ? await findMakeupMarketplaceMatches({ tenantId: data.tenant.id, sessionId: marketplaceSessionId }) : null;
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const sessionInsightById = new Map(data.sessionInsights.map((insight) => [insight.session.id, insight]));
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
@@ -63,6 +68,91 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
         )}
       </AdminListSurface>
 
+      <AdminSection
+        title="Inhaalmarktplaats"
+        description="Match een aantoonbaar vrijgekomen sessieplek met een geldige credit. Uitnodigen en boeken blijven afzonderlijke menselijke keuzes."
+      >
+        <div className="scroll-mt-24" id="makeup-marketplace">
+          {!marketplaceSessionId ? (
+            <EmptyState>Open een les op het dagplan en kies bij Capaciteit voor “Open Inhaalmarktplaats”.</EmptyState>
+          ) : !marketplace ? (
+            <EmptyState>Deze sessie is niet beschikbaar voor de inhaalmarktplaats.</EmptyState>
+          ) : (
+            <div className="grid gap-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 p-4">
+                <div>
+                  <p className="font-bold">{marketplace.session.groupName}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(marketplace.session.startsAt)} · effectief {marketplace.session.effectiveUsed}/{marketplace.session.capacity} bezet</p>
+                </div>
+                <StatusPill tone={marketplace.session.available > 0 ? "success" : "warning"}>{marketplace.session.available > 0 ? "Korte wachttijd · plek beschikbaar" : "Geen vrije flexplek"}</StatusPill>
+              </div>
+              {marketplace.matches.length === 0 ? (
+                <EmptyState>Geen geldige credit met exact programma, niveau, sessiedatum en beschikbare flexplek.</EmptyState>
+              ) : (
+                <div className="grid gap-3">
+                  {marketplace.matches.map((match) => {
+                    const decision = marketplace.decisions.find((item) => item.creditId === match.credit_id);
+                    const inactive = decision?.status === "ignored" || decision?.status === "booked";
+                    return (
+                      <article className="rounded-xl border border-border bg-card p-4" key={match.credit_id}>
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-bold">{match.participant_name}</p>
+                              {match.expires_soon ? <StatusPill tone="warning">Credit verloopt snel</StatusPill> : null}
+                              {match.is_test ? <StatusPill tone="info">Journey Bot · intern</StatusPill> : null}
+                            </div>
+                            <p className="mt-1 text-sm text-muted-foreground">Matchscore {match.score}/100 · {Math.round(match.confidence * 100)}% confidence</p>
+                          </div>
+                          <StatusPill tone={decision?.status === "booked" ? "success" : decision?.status === "ignored" ? "neutral" : decision?.status === "invited" ? "info" : "success"}>{decision?.status ?? match.suggested_action.replaceAll("_", " ")}</StatusPill>
+                        </div>
+                        <ul className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
+                          {match.reasons.map((reason) => <li key={`${match.credit_id}:${reason.label}`}><span className="font-semibold text-foreground">{reason.label}</span> — {reason.explanation} ({reason.evidence})</li>)}
+                        </ul>
+                        {!inactive ? (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {!match.is_test && match.notification_allowed && match.guardian_user_id ? (
+                              <ConfirmActionForm
+                                action={inviteMakeupMarketplaceParentAction}
+                                confirmLabel="Uitnodiging versturen"
+                                description="Er wordt een in-app bericht gemaakt. E-mail wordt alleen verzonden wanneer de communicatievoorkeur dit toestaat. De ouder boekt daarna zelf."
+                                hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
+                                title={`Nodig ouder van ${match.participant_name} uit?`}
+                                triggerLabel={<><Mail className="size-4" />Nodig ouder uit</>}
+                              />
+                            ) : null}
+                            {!match.is_test ? (
+                              <ConfirmActionForm
+                                action={bookMakeupMarketplaceDirectAction}
+                                confirmLabel="Direct boeken"
+                                description="Gebruik dit alleen na bevestigde oudertoestemming. Credit, niveau en actuele sessiecapaciteit worden in één transactie opnieuw gecontroleerd."
+                                hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
+                                title={`Boek ${match.participant_name} direct?`}
+                                triggerLabel={<><RefreshCcw className="size-4" />Boek direct</>}
+                                triggerVariant="destructive"
+                              />
+                            ) : null}
+                            <ConfirmActionForm
+                              action={ignoreMakeupMarketplaceMatchAction}
+                              confirmLabel="Match negeren"
+                              description="De match wordt alleen voor deze credit en sessie genegeerd en blijft in de audit zichtbaar."
+                              hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
+                              title="Deze match negeren?"
+                              triggerLabel="Negeer"
+                              triggerVariant="outline"
+                            />
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </AdminSection>
+
       <AdminListSurface>
         <div className="mb-3 scroll-mt-24" id="what-if-planning"><h2 className="text-base font-bold">What-if planning</h2><p className="text-[13px] text-muted-foreground">Sleep of gebruik het toetsenbord; pas pas toe wanneer de conflictengine groen is.</p></div>
         <PlanningWorkbench initialItems={data.sessionInsights.map((insight) => ({ id: insight.session.id, groupName: insight.group?.name ?? "Lesgroep", startsAt: insight.session.starts_at, endsAt: insight.session.ends_at, resourceId: insight.session.resource_id, resourceName: insight.resourceName }))} />
@@ -88,20 +178,31 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
                       </div>
                       <StatusPill tone={insight && insight.available > 0 ? "success" : "danger"}>{insight ? insight.status : "missing"}</StatusPill>
                     </div>
-                    <form action={decideCatchUpRequestAction} className="flex flex-wrap items-end gap-2">
-                      <input name="requestId" type="hidden" value={request.id} />
-                      <label className="space-y-1 text-xs font-semibold text-muted-foreground">
-                        <span>Notitie</span>
-                        <input className="h-9 w-56 rounded-lg border border-border bg-white px-3 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" name="adminNotes" placeholder="Optioneel" />
-                      </label>
-                      <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" name="decision" type="submit" value="approved">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Goedkeuren
-                      </button>
-                      <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-foreground hover:bg-muted" name="decision" type="submit" value="declined">
-                        Afwijzen
-                      </button>
-                    </form>
+                    <div className="flex flex-wrap items-end gap-2">
+                      <ConfirmActionForm
+                        action={decideCatchUpRequestAction}
+                        className="flex flex-wrap items-end gap-2"
+                        confirmLabel="Inhaalplek goedkeuren"
+                        description="Capaciteit, credit, programma en niveau worden opnieuw transactioneel gecontroleerd. De credit blijft gereserveerd tot aanwezigheid is vastgelegd."
+                        hiddenFields={{ requestId: request.id, decision: "approved", humanConfirmation: "confirmed" }}
+                        title="Inhaalplek definitief goedkeuren?"
+                        triggerLabel={<><CheckCircle2 className="h-4 w-4" /> Goedkeuren</>}
+                      >
+                        <label className="space-y-1 text-xs font-semibold text-muted-foreground">
+                          <span>Notitie bij goedkeuring</span>
+                          <input className="block h-9 w-56 rounded-lg border border-border bg-white px-3 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" name="adminNotes" placeholder="Optioneel" />
+                        </label>
+                      </ConfirmActionForm>
+                      <ConfirmActionForm
+                        action={decideCatchUpRequestAction}
+                        confirmLabel="Aanvraag afwijzen"
+                        description="De aanvraag wordt afgewezen en de inhaalcredit komt opnieuw beschikbaar voor een ander passend moment."
+                        hiddenFields={{ requestId: request.id, decision: "declined", humanConfirmation: "confirmed" }}
+                        title="Inhaalverzoek afwijzen?"
+                        triggerLabel="Afwijzen"
+                        triggerVariant="outline"
+                      />
+                    </div>
                   </div>
                 );
               })}

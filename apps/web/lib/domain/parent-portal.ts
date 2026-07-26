@@ -30,6 +30,12 @@ export type ParentAccessRow = {
   status: string;
 };
 
+export type ParentMakeupCommunicationPreferences = {
+  makeUpInAppEnabled: boolean;
+  makeUpEmailEnabled: boolean;
+  automaticMakeUpInvitesEnabled: boolean;
+};
+
 export type ParentPortalSettings = {
   locale: string;
   timezone: string;
@@ -818,6 +824,25 @@ export async function loadParentParticipantAccess(
     ]),
     participantIds: unique([...directIds, ...links.map((link) => link.participant_id)]),
     links
+  };
+}
+
+export async function getParentMakeupCommunicationPreferences(): Promise<ParentMakeupCommunicationPreferences> {
+  const context = await requirePrivateShellContext("/portaal/profiel");
+  const tenant = getActiveTenant(context);
+  const result = await createAdminClient()
+    .from("guardian_communication_preferences")
+    .select("make_up_in_app_enabled, make_up_email_enabled, automatic_make_up_invites_enabled")
+    .eq("tenant_id", tenant.id)
+    .eq("guardian_user_id", context.user.id)
+    .maybeSingle();
+
+  assertParentPortalResult(result.error, "make-up communication preferences");
+
+  return {
+    makeUpInAppEnabled: result.data?.make_up_in_app_enabled ?? true,
+    makeUpEmailEnabled: result.data?.make_up_email_enabled ?? true,
+    automaticMakeUpInvitesEnabled: result.data?.automatic_make_up_invites_enabled ?? false
   };
 }
 

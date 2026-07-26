@@ -30,6 +30,33 @@ export async function updateParentProfileAction(formData: FormData) {
   redirect("/portaal/profiel?saved=1");
 }
 
+export async function updateParentMakeupPreferencesAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/portaal/profiel");
+  const tenant = getActiveTenant(context);
+  const result = await createAdminClient()
+    .from("guardian_communication_preferences")
+    .upsert(
+      {
+        tenant_id: tenant.id,
+        guardian_user_id: context.user.id,
+        make_up_in_app_enabled: formData.get("makeUpInAppEnabled") === "on",
+        make_up_email_enabled: formData.get("makeUpEmailEnabled") === "on",
+        automatic_make_up_invites_enabled: formData.get("automaticMakeUpInvitesEnabled") === "on",
+        updated_by_user_id: context.user.id
+      },
+      { onConflict: "tenant_id,guardian_user_id" }
+    );
+
+  revalidatePath("/portaal/profiel");
+  revalidatePath("/portaal/lessen");
+
+  if (result.error) {
+    redirect("/portaal/profiel?error=makeup-preferences");
+  }
+
+  redirect("/portaal/profiel?saved=makeup-preferences");
+}
+
 export async function cancelLessonAction(formData: FormData) {
   const nextPath = getFormNextPath(formData, "/portaal/lessen");
   const context = await requirePrivateShellContext("/portaal/lessen");
@@ -131,104 +158,46 @@ export async function requestCatchUpSessionAction(formData: FormData) {
   const admin = createAdminClient();
   const creditId = readRequired(formData, "creditId");
   const sessionId = readRequired(formData, "sessionId");
+  if (formData.get("humanConfirmation") !== "confirmed") {
+    redirectWithStatus(nextPath, "error", "confirmation");
+  }
   const access = await loadParentParticipantAccess(tenant.id, context.user.id);
-  const [creditResult, sessionResult, settingsResult] = await Promise.all([
-    admin
-      .from("catch_up_credits")
-      .select("id, participant_id, enrollment_id, status, expires_on")
-      .eq("tenant_id", tenant.id)
-      .eq("id", creditId)
-      .maybeSingle(),
-    admin
-      .from("sessions")
-      .select("id, group_id, starts_at, status, capacity_override")
-      .eq("tenant_id", tenant.id)
-      .eq("id", sessionId)
-      .maybeSingle(),
-    admin.from("tenant_settings").select("catch_up_requires_admin_approval").eq("tenant_id", tenant.id).maybeSingle()
-  ]);
-
-  if (creditResult.error || sessionResult.error || settingsResult.error || !creditResult.data || !sessionResult.data) {
+  const creditResult = await admin
+    .from("catch_up_credits")
+    .select("participant_id")
+    .eq("tenant_id", tenant.id)
+    .eq("id", creditId)
+    .maybeSingle();
+  if (creditResult.error || !creditResult.data) {
     redirectWithStatus(nextPath, "error", "catchup");
   }
-
-  const credit = creditResult.data as { enrollment_id: string; expires_on: string | null; id: string; participant_id: string; status: string };
-  const session = sessionResult.data as { capacity_override: number | null; group_id: string; id: string; starts_at: string; status: string };
-
-  if (!access.mutableParticipantIds.includes(credit.participant_id) || credit.status !== "available") {
+  if (!access.mutableParticipantIds.includes(creditResult.data.participant_id)) {
     redirectWithStatus(nextPath, "error", "access");
   }
-
-  if (credit.expires_on && new Date(`${credit.expires_on}T23:59:59`).getTime() < Date.now()) {
-    redirectWithStatus(nextPath, "error", "expired");
-  }
-
-  if (session.status !== "scheduled" || new Date(session.starts_at).getTime() <= Date.now()) {
-    redirectWithStatus(nextPath, "error", "lesson");
-  }
-
-  const [enrollmentResult, groupResult] = await Promise.all([
-    admin.from("enrollments").select("id, participant_id, program_id, current_stage_id, status").eq("tenant_id", tenant.id).eq("id", credit.enrollment_id).maybeSingle(),
-    admin.from("groups").select("id, program_id, stage_id, capacity").eq("tenant_id", tenant.id).eq("id", session.group_id).maybeSingle()
-  ]);
-
-  if (enrollmentResult.error || groupResult.error || !enrollmentResult.data || !groupResult.data) {
+  const bookingResult = await admin.rpc("book_makeup_marketplace_session", {
+    target_tenant_id: tenant.id,
+    target_credit_id: creditId,
+    target_session_id: sessionId,
+    actor_user_id: context.user.id,
+    booking_mode: "parent_request",
+    human_confirmation: true
+  });
+  if (bookingResult.error) {
+    console.error("[makeup-marketplace] parent booking failed", {
+      tenantId: tenant.id,
+      sessionId,
+      creditId,
+      code: bookingResult.error.code,
+      message: bookingResult.error.message
+    });
     redirectWithStatus(nextPath, "error", "catchup");
   }
-
-  const enrollment = enrollmentResult.data as { current_stage_id: string | null; id: string; participant_id: string; program_id: string; status: string };
-  const group = groupResult.data as { capacity: number; id: string; program_id: string; stage_id: string | null };
-
-  if (enrollment.status !== "active" || enrollment.participant_id !== credit.participant_id || group.program_id !== enrollment.program_id || (enrollment.current_stage_id && group.stage_id && group.stage_id !== enrollment.current_stage_id)) {
-    redirectWithStatus(nextPath, "error", "match");
-  }
-
-  const capacityOk = await sessionHasCatchUpCapacity({ tenantId: tenant.id, sessionId: session.id });
-
-  if (!capacityOk) {
-    redirectWithStatus(nextPath, "error", "capacity");
-  }
-
-  const requiresApproval = ((settingsResult.data as { catch_up_requires_admin_approval?: boolean } | null)?.catch_up_requires_admin_approval ?? true) === true;
-  const status = requiresApproval ? "requested" : "approved";
-  const requestResult = await admin
-    .from("catch_up_requests")
-    .insert({
-      tenant_id: tenant.id,
-      credit_id: credit.id,
-      participant_id: credit.participant_id,
-      enrollment_id: credit.enrollment_id,
-      requested_by_user_id: context.user.id,
-      preferred_session_id: session.id,
-      assigned_session_id: requiresApproval ? null : session.id,
-      status,
-      decided_at: requiresApproval ? null : new Date().toISOString(),
-      decided_by_user_id: requiresApproval ? null : context.user.id
-    })
-    .select("id")
-    .single();
-
-  if (requestResult.error || !requestResult.data) {
-    redirectWithStatus(nextPath, "error", "catchup");
-  }
-
-  const { error: creditError } = await admin
-    .from("catch_up_credits")
-    .update({
-      status: "reserved",
-      used_session_id: session.id
-    })
-    .eq("tenant_id", tenant.id)
-    .eq("id", credit.id);
-
-  if (creditError) {
-    redirectWithStatus(nextPath, "error", "credit");
-  }
+  const status = (bookingResult.data as { status?: string } | null)?.status ?? "requested";
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/lessen");
   revalidatePath(nextPath);
-  redirectWithStatus(nextPath, "saved", requiresApproval ? "catchup-requested" : "catchup-approved");
+  redirectWithStatus(nextPath, "saved", status === "approved" ? "catchup-approved" : "catchup-requested");
 }
 
 export async function respondGraduationInviteAction(formData: FormData) {
@@ -293,43 +262,6 @@ function normalizeActionSettings(value: unknown): Pick<ParentPortalSettings, "le
 
 function isCancellationOnTime(settings: Pick<ParentPortalSettings, "lesson_cancellation_cutoff_hours">, startsAt: string) {
   return new Date(startsAt).getTime() - Date.now() >= settings.lesson_cancellation_cutoff_hours * 60 * 60 * 1000;
-}
-
-async function sessionHasCatchUpCapacity(input: { sessionId: string; tenantId: string }) {
-  const admin = createAdminClient();
-  const sessionResult = await admin
-    .from("sessions")
-    .select("id, group_id, capacity_override, status")
-    .eq("tenant_id", input.tenantId)
-    .eq("id", input.sessionId)
-    .maybeSingle();
-
-  if (sessionResult.error || !sessionResult.data || sessionResult.data.status !== "scheduled") {
-    return false;
-  }
-
-  const [groupResult, membershipsResult, requestsResult] = await Promise.all([
-    admin.from("groups").select("capacity").eq("tenant_id", input.tenantId).eq("id", sessionResult.data.group_id).maybeSingle(),
-    admin.from("group_memberships").select("capacity_weight, status").eq("tenant_id", input.tenantId).eq("group_id", sessionResult.data.group_id),
-    admin
-      .from("catch_up_requests")
-      .select("id")
-      .eq("tenant_id", input.tenantId)
-      .or(`preferred_session_id.eq.${input.sessionId},assigned_session_id.eq.${input.sessionId}`)
-      .in("status", ["requested", "approved"])
-  ]);
-
-  if (groupResult.error || !groupResult.data || membershipsResult.error || requestsResult.error) {
-    return false;
-  }
-
-  const capacity = Number(sessionResult.data.capacity_override ?? groupResult.data.capacity ?? 0);
-  const used = ((membershipsResult.data ?? []) as { capacity_weight: number; status: string }[])
-    .filter((membership) => membership.status === "active" || membership.status === "trial")
-    .reduce((total, membership) => total + Number(membership.capacity_weight), 0);
-  const holds = ((requestsResult.data ?? []) as { id: string }[]).length;
-
-  return used + holds + 1 <= capacity;
 }
 
 function redirectWithStatus(path: `/${string}`, key: "saved" | "error", value: string): never {

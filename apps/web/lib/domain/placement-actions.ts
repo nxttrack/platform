@@ -313,6 +313,9 @@ export async function createSlotOfferAction(formData: FormData) {
   const context = await requirePrivateShellContext("/admin");
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
+  if (formData.get("humanConfirmation") !== "confirmed") {
+    redirect("/admin/wachtlijst?error=confirmation");
+  }
   const waitlistEntryId = readRequired(formData, "waitlistEntryId");
   const groupId = readRequired(formData, "groupId");
   const entry = await getWaitlistEntry(tenant.id, waitlistEntryId);
@@ -435,7 +438,7 @@ export async function createPlacementSuggestionTaskAction(formData: FormData) {
 
   const suggestionResult = await admin
     .from("placement_suggestions")
-    .select("id, waitlist_entry_id, group_id, score, confidence, status, reasons_json, blockers_json")
+    .select("id, waitlist_entry_id, group_id, score, confidence, status, reasons_json, blockers_json, is_test, journey_run_id")
     .eq("tenant_id", tenant.id)
     .eq("waitlist_entry_id", waitlistEntryId)
     .eq("group_id", groupId)
@@ -446,6 +449,9 @@ export async function createPlacementSuggestionTaskAction(formData: FormData) {
 
   if (suggestionResult.error || !suggestionResult.data) {
     redirect("/admin/wachtlijst?error=suggestion");
+  }
+  if (suggestionResult.data.is_test || suggestionResult.data.journey_run_id) {
+    redirect("/admin/wachtlijst?error=test_task_blocked");
   }
 
   const existingTask = await admin
@@ -492,6 +498,8 @@ export async function createPlacementSuggestionTaskAction(formData: FormData) {
     description,
     priority: (suggestionResult.data.blockers_json as unknown[]).length > 0 ? "high" : "normal",
     status: "open",
+    is_test: false,
+    journey_run_id: null,
     content_classification: classification.classification,
     classification_reasons: classification.reasons
   });

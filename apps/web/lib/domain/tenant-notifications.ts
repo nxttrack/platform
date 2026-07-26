@@ -10,6 +10,7 @@ export type TenantNotificationType =
   | "certificate_issued"
   | "document_published"
   | "graduation_invite"
+  | "makeup_invitation"
   | "payment_due"
   | "payment_overdue"
   | "payment_received"
@@ -34,6 +35,7 @@ export async function createTenantNotifications(input: {
   tenantId: string;
   title: string;
   type: TenantNotificationType;
+  deliverEmail?: boolean;
 }) {
   const recipientIds = unique(input.recipientIds);
 
@@ -66,6 +68,7 @@ export async function createTenantNotifications(input: {
   const notifications = data as InsertedNotification[];
 
   await deliverNotificationsByEmail({
+    deliverEmail: input.deliverEmail ?? true,
     notifications,
     organizationName: input.organizationName,
     tenantId: input.tenantId,
@@ -76,6 +79,7 @@ export async function createTenantNotifications(input: {
 }
 
 async function deliverNotificationsByEmail(input: {
+  deliverEmail: boolean;
   notifications: InsertedNotification[];
   organizationName?: string;
   tenantId: string;
@@ -98,6 +102,13 @@ async function deliverNotificationsByEmail(input: {
 
   await Promise.all(
     input.notifications.map(async (notification) => {
+      if (!input.deliverEmail) {
+        await updateNotificationDelivery(notification.id, {
+          deliveryError: "E-mail uitgeschakeld volgens communicatievoorkeur; in-app notificatie bewaard.",
+          deliveryStatus: "skipped"
+        });
+        return;
+      }
       const email = emailByUserId.get(notification.recipient_user_id);
 
       if (!email) {

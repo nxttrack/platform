@@ -33,6 +33,8 @@ export type ParentCatchUpOption = {
   endsAt: string;
   groupName: string;
   available: number;
+  score: number;
+  reasons: string[];
 };
 
 export type ParentCatchUpData = {
@@ -92,12 +94,7 @@ export async function getParentCatchUpData(): Promise<ParentCatchUpData> {
 
   const enrollments = (enrollmentsResult.data ?? []) as { current_stage_id: string | null; id: string; participant_id: string; program_id: string; status: string }[];
   const programIds = [...new Set(enrollments.map((enrollment) => enrollment.program_id))];
-  const stageIds = [...new Set(enrollments.flatMap((enrollment) => (enrollment.current_stage_id ? [enrollment.current_stage_id] : [])))];
   let groupsQuery = admin.from("groups").select("id, program_id, stage_id, default_resource_id, name, code, status, capacity, default_weekday, default_start_time, default_end_time").eq("tenant_id", tenant.id).eq("status", "active").in("program_id", programIds);
-
-  if (stageIds.length > 0) {
-    groupsQuery = groupsQuery.or(`stage_id.in.(${stageIds.join(",")}),stage_id.is.null`);
-  }
 
   const groupsResult = await groupsQuery;
 
@@ -126,7 +123,7 @@ export async function getParentCatchUpData(): Promise<ParentCatchUpData> {
       .gte("starts_at", now.toISOString())
       .lte("starts_at", until.toISOString())
       .order("starts_at"),
-    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id).in("group_id", groupIds),
+    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight, starts_on, ends_on").eq("tenant_id", tenant.id).in("group_id", groupIds),
     admin.from("catch_up_requests").select("id, preferred_session_id, assigned_session_id, status").eq("tenant_id", tenant.id).in("status", ["requested", "approved"])
   ]);
 
@@ -135,8 +132,32 @@ export async function getParentCatchUpData(): Promise<ParentCatchUpData> {
   assertCatchUpResult(holdsResult.error, "catch-up holds");
 
   const sessions = (sessionsResult.data ?? []) as SessionRow[];
-  const memberships = (membershipsResult.data ?? []) as GroupMembershipRow[];
-  const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
+  const memberships = (membershipsResult.data ?? []) as Array<GroupMembershipRow & { starts_on: string; ends_on: string | null }>;
+  const sessionIds = sessions.map((session) => session.id);
+  const [cancellationsResult, preferencesResult] = await Promise.all([
+    sessionIds.length
+      ? admin
+          .from("lesson_cancellations")
+          .select("session_id, participant_id, status")
+          .eq("tenant_id", tenant.id)
+          .in("session_id", sessionIds)
+          .in("status", ["accepted", "late_cancelled"])
+      : Promise.resolve({ data: [], error: null }),
+    admin
+      .from("participant_schedule_preferences")
+      .select("participant_id, weekday, starts_after, ends_before, preference_weight")
+      .eq("tenant_id", tenant.id)
+      .in("participant_id", participantIds)
+  ]);
+  assertCatchUpResult(cancellationsResult.error, "session cancellations");
+  assertCatchUpResult(preferencesResult.error, "participant schedule preferences");
+  const cancellationsBySession = new Map<string, Set<string>>();
+  for (const cancellation of cancellationsResult.data ?? []) {
+    const participantSet = cancellationsBySession.get(cancellation.session_id) ?? new Set<string>();
+    participantSet.add(cancellation.participant_id);
+    cancellationsBySession.set(cancellation.session_id, participantSet);
+  }
+  const preferencesByParticipant = groupBy(preferencesResult.data ?? [], (preference) => preference.participant_id);
   const holdsBySession = new Map<string, number>();
 
   for (const hold of (holdsResult.data ?? []) as { assigned_session_id: string | null; preferred_session_id: string; status: string }[]) {
@@ -162,31 +183,69 @@ export async function getParentCatchUpData(): Promise<ParentCatchUpData> {
         continue;
       }
 
-      if (enrollment.current_stage_id && group.stage_id && group.stage_id !== enrollment.current_stage_id) {
+      if (group.stage_id !== enrollment.current_stage_id) {
         continue;
       }
-
-      const groupCapacity = capacityByGroup.get(group.id);
+      const sessionDay = session.starts_at.slice(0, 10);
+      if (credit.expires_on && credit.expires_on < sessionDay) {
+        continue;
+      }
+      const regularMemberships = memberships.filter((membership) =>
+        membership.group_id === group.id &&
+        ["active", "trial"].includes(membership.status) &&
+        membership.starts_on <= sessionDay &&
+        (!membership.ends_on || membership.ends_on >= sessionDay)
+      );
+      if (regularMemberships.some((membership) => membership.participant_id === credit.participant_id)) {
+        continue;
+      }
+      const cancelledParticipantIds = cancellationsBySession.get(session.id) ?? new Set<string>();
+      const cancelledRegularWeight = regularMemberships
+        .filter((membership) => cancelledParticipantIds.has(membership.participant_id))
+        .reduce((sum, membership) => sum + Number(membership.capacity_weight), 0);
       const sessionCapacity = session.capacity_override ?? group.capacity;
-      const used = (groupCapacity?.used ?? 0) + (holdsBySession.get(session.id) ?? 0);
+      const used = Math.max(
+        0,
+        regularMemberships.reduce((sum, membership) => sum + Number(membership.capacity_weight), 0) - cancelledRegularWeight
+      ) + (holdsBySession.get(session.id) ?? 0);
       const available = sessionCapacity - used;
 
       if (available <= 0) {
         continue;
       }
 
+      const sessionWeekday = new Date(session.starts_at).getDay() || 7;
+      const sessionTime = session.starts_at.slice(11, 16);
+      const matchingPreferences = (preferencesByParticipant.get(credit.participant_id) ?? []).filter((preference) =>
+        preference.weekday === sessionWeekday &&
+        (!preference.starts_after || sessionTime >= preference.starts_after.slice(0, 5)) &&
+        (!preference.ends_before || sessionTime <= preference.ends_before.slice(0, 5))
+      );
+      const expiryDays = credit.expires_on ? Math.floor((new Date(`${credit.expires_on}T00:00:00Z`).getTime() - new Date(`${sessionDay}T00:00:00Z`).getTime()) / dayMs) : null;
       options.push({
         creditId: credit.id,
         sessionId: session.id,
         startsAt: session.starts_at,
         endsAt: session.ends_at,
         groupName: group.name,
-        available
+        available,
+        score: 60 + (matchingPreferences.length ? 25 : 0) + (expiryDays !== null && expiryDays <= 14 ? 15 : 0),
+        reasons: [
+          "Programma en niveau passen exact.",
+          ...(matchingPreferences.length ? ["Les valt binnen de vastgelegde voorkeursdag en -tijd."] : []),
+          ...(expiryDays !== null && expiryDays <= 14 ? ["Credit verloopt binnen veertien dagen na dit lesmoment."] : [])
+        ]
       });
     }
   }
 
-  return { credits, requests, options };
+  return { credits, requests, options: options.sort((left, right) => right.score - left.score || left.startsAt.localeCompare(right.startsAt)) };
+}
+
+function groupBy<Row, Key>(rows: Row[], key: (row: Row) => Key) {
+  const grouped = new Map<Key, Row[]>();
+  for (const row of rows) grouped.set(key(row), [...(grouped.get(key(row)) ?? []), row]);
+  return grouped;
 }
 
 function assertCatchUpResult(error: { message: string } | null, label: string) {
@@ -194,3 +253,5 @@ function assertCatchUpResult(error: { message: string } | null, label: string) {
     throw new Error(`Could not load ${label}: ${error.message}`);
   }
 }
+
+const dayMs = 24 * 60 * 60 * 1000;

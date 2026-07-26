@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Users, Waves } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 import { StatusPill } from "@/components/shell/ui";
 import { DetailsSheet } from "@/components/ui/details-sheet";
@@ -74,7 +75,13 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
               <DetailGrid entries={[["Start", formatDateTime(detail.startsAt)], ["Einde", formatDateTime(detail.endsAt)], ["Resource", detail.resourceName], ["Notitie", detail.notes || "Geen notitie"]]} />
             </TabsContent>
             <TabsContent value="capacity">
-              <div className="grid gap-4"><DetailGrid entries={[["Bezetting", `${detail.used} van ${detail.capacity}`], ["Beschikbaar", String(detail.available)], ["Inhaalreserveringen", String(detail.catchUpHolds)]]} /><Progress value={detail.capacity ? Math.min(100, (detail.used / detail.capacity) * 100) : 0} /></div>
+              <div className="grid gap-4">
+                <DetailGrid entries={[["Bezetting", `${detail.used} van ${detail.capacity}`], ["Beschikbaar", String(detail.available)], ["Inhaalreserveringen", String(detail.catchUpHolds)]]} />
+                <Progress value={detail.capacity ? Math.min(100, (detail.used / detail.capacity) * 100) : 0} />
+                <Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/agenda?marketplace=${detail.id}#makeup-marketplace`}>
+                  Open Inhaalmarktplaats
+                </Link>
+              </div>
             </TabsContent>
             <TabsContent value="instructor">
               <div className="rounded-xl border border-border bg-muted/40 p-4"><Users className="size-4 text-primary" /><p className="mt-3 text-[13px] font-semibold">{detail.instructorNames.join(", ") || "Nog geen instructeur gekoppeld"}</p></div>

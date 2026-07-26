@@ -102,6 +102,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
           }));
     return {
       id: entry.id,
+      guardianId: entry.guardian_user_id,
       participantName: entry.participant_name,
       parentName: entry.parent_name,
       parentEmail: entry.parent_email,
