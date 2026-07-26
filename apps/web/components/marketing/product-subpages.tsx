@@ -209,7 +209,7 @@ function BackofficePage() {
 function BackofficeVisual() {
   return (
     <>
-      <HeroVisual caption="Backoffice · AquaSwim Academy">
+      <HeroVisual caption="Backoffice · De Waterlijn">
         <div className="bg-white p-5">
           <div className="grid gap-3 sm:grid-cols-3">
             {[{ label: "Lessen vandaag", value: "24" }, { label: "Bezetting", value: "92%" }, { label: "Wachtlijst", value: "23" }].map((metric) => (

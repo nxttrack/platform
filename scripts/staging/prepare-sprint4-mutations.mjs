@@ -7,7 +7,7 @@ const { createClient } = requireFromWeb("@supabase/supabase-js");
 const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-const tenantSlug = process.env.PHASE16_TENANT_SLUG || "aquaswim-demo";
+const tenantSlug = process.env.PHASE16_TENANT_SLUG || "nxttrack-e2e";
 const edgeGroupCode = "sprint4-edge-full";
 const edgeParticipantReference = "sprint4-edge-full-participant";
 

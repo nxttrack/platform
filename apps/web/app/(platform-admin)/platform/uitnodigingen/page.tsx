@@ -60,7 +60,7 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
           </Field>
           <Field>
             <FieldLabel htmlFor="tenantSlug">Organisatie slug</FieldLabel>
-            <Input className="h-11" id="tenantSlug" name="tenantSlug" placeholder="aquaswim-demo" type="text" />
+            <Input className="h-11" id="tenantSlug" name="tenantSlug" placeholder="waterlijn-demo" type="text" />
           </Field>
         </div>
         <Button className="mt-5" size="lg" type="submit">

@@ -501,7 +501,7 @@ function DashboardMock({ compact }: { compact?: boolean }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs text-slate-500">Goedemorgen, Lisa</p>
-              <p className="text-lg font-bold text-slate-900">Vandaag bij AquaSwim</p>
+              <p className="text-lg font-bold text-slate-900">Vandaag bij De Waterlijn</p>
             </div>
             <Bell className="h-4 w-4 text-slate-400" />
           </div>
@@ -581,9 +581,9 @@ function TrainerMock({ className = "" }: { className?: string }) {
 function TenantSiteMock() {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
-      <div className="border-b bg-slate-50 px-4 py-2 text-[10px] text-slate-400">aquaswim.nl</div>
+      <div className="border-b bg-slate-50 px-4 py-2 text-[10px] text-slate-400">dewaterlijn.example</div>
       <div className="bg-gradient-to-br from-sky-100 via-white to-white p-6">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#1D4ED8]">AquaSwim Academy Den Haag</p>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#1D4ED8]">Zwemacademie De Waterlijn</p>
         <h3 className="mt-2 text-xl font-bold text-slate-900">Zwemles met vertrouwen</h3>
         <p className="mt-1 text-xs text-slate-600">Programma's · Wachtlijst · Intake · Nieuws</p>
         <div className="mt-4 flex gap-2">

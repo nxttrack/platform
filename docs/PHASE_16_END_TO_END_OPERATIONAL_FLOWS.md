@@ -18,7 +18,8 @@ Prove that the canonical swim-school journey works without manual database inter
 
 ## Implemented
 
-- `pnpm run phase16:flow` creates or reuses a stable demo organization.
+- `pnpm run phase16:flow` creates or reuses a stable technical E2E organization. It is deliberately separate
+  from the managed Waterlijn showcase.
 - The runner ensures tenant admin, instructor and parent test accounts exist and can sign in.
 - Demo data is created with stable codes/references so the runner can be repeated.
 - The accepted placement path creates the participant, enrollment, group membership and parent access.
@@ -51,12 +52,18 @@ Prove that the canonical swim-school journey works without manual database inter
 ## Optional Variables
 
 - `RUN_PHASE_16_FLOW=false` bypasses the deploy-time Phase 16 gate.
-- `PHASE16_TENANT_SLUG=aquaswim-demo`
-- `PHASE16_TENANT_HOSTNAME=aquaswim-demo.staging.nxttrack.nl`
-- `PHASE16_TENANT_NAME=AquaSwim Demo`
+- `PHASE16_TENANT_SLUG=nxttrack-e2e`
+- `PHASE16_TENANT_HOSTNAME=nxttrack-e2e.staging.nxttrack.nl`
+- `PHASE16_TENANT_NAME=NXTTRACK technische E2E-fixture`
 - `PHASE16_RESET_E2E_PASSWORDS=true` lets the runner reset the E2E account passwords to the configured secrets.
 - `PHASE16_SKIP_PLAYWRIGHT=true` runs database and RLS role checks without browser dashboard checks.
 - `PHASE16_SKIP_PLAYWRIGHT_INSTALL=true` skips browser install when the runner already has Chromium.
+
+Existing staging environments may temporarily retain the historical internal slug and hostname
+`aquaswim-demo`. The runner normalizes its visible tenant name and branding to NXTTRACK E2E, so that identifier
+cannot be confused with the canonical showcase. It should be renamed in GitHub environment variables during a
+separate controlled fixture migration; changing the slug without updating the controlled E2E accounts and
+stored screenshot host would unnecessarily break release validation.
 
 ## Acceptance
 

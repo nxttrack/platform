@@ -15,9 +15,12 @@ const supabaseUrl = normalizeUrl(process.env.NEXT_PUBLIC_SUPABASE_URL || "");
 const supabasePublicKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabaseSecretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const tokenPepper = process.env.AUTH_CODE_PEPPER || process.env.SESSION_SECRET || process.env.JWT_SECRET || "";
-const tenantSlug = process.env.PHASE16_TENANT_SLUG || "aquaswim-demo";
+const tenantSlug = process.env.PHASE16_TENANT_SLUG || "nxttrack-e2e";
 const tenantHostname = process.env.PHASE16_TENANT_HOSTNAME || `${tenantSlug}.staging.nxttrack.nl`;
-const tenantName = process.env.PHASE16_TENANT_NAME || "AquaSwim Demo";
+const configuredTenantName = process.env.PHASE16_TENANT_NAME || "";
+const tenantName = /aquaswim/i.test(configuredTenantName) || !configuredTenantName
+  ? "NXTTRACK technische E2E-fixture"
+  : configuredTenantName;
 const statePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 const today = new Date().toISOString().slice(0, 10);
 const phase16ProgressLabel = "Ik kan het bijna zelf";
@@ -28,21 +31,21 @@ const roleAccounts = {
     role: "tenant_admin",
     email: process.env.E2E_TENANT_ADMIN_EMAIL,
     password: process.env.E2E_TENANT_ADMIN_PASSWORD,
-    fullName: process.env.PHASE16_TENANT_ADMIN_NAME || "Phase 16 Admin"
+    fullName: process.env.PHASE16_TENANT_ADMIN_NAME || "E2E Tenantbeheer"
   },
   instructor: {
     label: "instructor",
     role: "instructor",
     email: process.env.E2E_INSTRUCTOR_EMAIL,
     password: process.env.E2E_INSTRUCTOR_PASSWORD,
-    fullName: process.env.PHASE16_INSTRUCTOR_NAME || "Phase 16 Instructeur"
+    fullName: process.env.PHASE16_INSTRUCTOR_NAME || "E2E Instructeur"
   },
   parent: {
     label: "parent",
     role: "parent",
     email: process.env.E2E_PARENT_EMAIL,
     password: process.env.E2E_PARENT_PASSWORD,
-    fullName: process.env.PHASE16_PARENT_NAME || "Phase 16 Ouder"
+    fullName: process.env.PHASE16_PARENT_NAME || "E2E Ouder"
   }
 };
 
@@ -209,6 +212,21 @@ async function ensureTenant() {
     "id"
   );
 
+  await upsertOne(
+    "tenant_branding",
+    {
+      tenant_id: tenantRow.id,
+      product_name: "NXTTRACK E2E",
+      primary_color: "#334155",
+      accent_color: "#64748b",
+      portal_welcome: "Technische staging-fixture voor geautomatiseerde kwaliteitscontrole.",
+      pwa_enabled: false,
+      status: "active"
+    },
+    "tenant_id",
+    "tenant_id"
+  );
+
   return tenantRow;
 }
 
@@ -238,7 +256,7 @@ async function ensureRoleUsers(tenantId) {
 }
 
 async function ensureCoreDemoData(tenantId, users) {
-  const participantName = process.env.PHASE16_PARTICIPANT_NAME || "Sofie Phase16";
+  const participantName = process.env.PHASE16_PARTICIPANT_NAME || "E2E Leerling";
   const program = await upsertOne(
     "programs",
     {
