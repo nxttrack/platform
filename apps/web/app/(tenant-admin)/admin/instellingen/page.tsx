@@ -1,9 +1,13 @@
-import { AdminSection, Field, SubmitButton } from "@/components/admin/domain-ui";
+import { AdminListSurface } from "@/components/admin/admin-patterns";
+import { Field, SubmitButton } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
 import { saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { ReactNode } from "react";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -41,107 +45,74 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
   const canManage = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Organisatie" subtitle={`Beheer basisinstellingen en ouderportaalbeleid voor ${tenant.name}.`} title="Instellingen" />
+    <div className="space-y-5">
+      <PageHeader kicker="Beheer" subtitle={`Beheer configuratie, beleid, analytics en privacy voor ${tenant.name}.`} title="Instellingen" />
 
       {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Instellingen zijn opgeslagen.</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessage(error)}</p> : null}
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <AdminSection description="Deze gegevens sturen labels, taal, tijdzone en toekomstige sector-template keuzes." title="Basis">
-          <form action={saveTenantSettingsAction} className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <ReadOnlyField label="Organisatie" value={tenant.name} />
-              <ReadOnlyField label="Slug" value={tenant.slug} />
-              <label className="space-y-2 text-sm font-semibold text-foreground">
-                <span>Sector en terminologie</span>
-                <select
-                  className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
-                  defaultValue={settings.terminology_sector}
-                  disabled={!canManage}
-                  name="terminologySector"
-                >
-                  {sectorOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <Field defaultValue={settings.locale} label="Locale" name="locale" required />
-              <Field defaultValue={settings.timezone} label="Tijdzone" name="timezone" required />
-            </div>
+      <AdminListSurface>
+        <DirtyForm action={saveTenantSettingsAction} className="grid gap-5">
+          <Tabs defaultValue="general">
+            <TabsList className="justify-start">
+              <TabsTrigger className="flex-none" value="general">Algemeen</TabsTrigger>
+              <TabsTrigger className="flex-none" value="terminology">Terminologie</TabsTrigger>
+              <TabsTrigger className="flex-none" value="cancellation">Annuleren & inhalen</TabsTrigger>
+              <TabsTrigger className="flex-none" value="analytics">Analytics</TabsTrigger>
+              <TabsTrigger className="flex-none" value="notifications">Notificaties</TabsTrigger>
+              <TabsTrigger className="flex-none" value="privacy">Privacy & cookies</TabsTrigger>
+              <TabsTrigger className="flex-none" value="product">Productisatie</TabsTrigger>
+            </TabsList>
 
-            <div className="rounded-lg border border-border bg-white p-4">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-bold text-foreground">Annuleren en inhalen</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Deze policy wordt gebruikt in het ouderportaal bij lesannuleringen en inhaalcredits.</p>
+            <TabsContent forceMount value="general">
+              <SettingsPanel description="Basisgegevens voor taal, planning en tijdnotatie." title="Algemeen">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <ReadOnlyField label="Organisatie" value={tenant.name} />
+                  <ReadOnlyField label="Slug" value={tenant.slug} />
+                  <Field defaultValue={settings.locale} label="Locale" name="locale" required />
+                  <Field defaultValue={settings.timezone} label="Tijdzone" name="timezone" required />
                 </div>
-                <StatusPill tone={settings.lesson_cancellation_grants_credit ? "success" : "warning"}>
-                  {settings.lesson_cancellation_grants_credit ? "credits actief" : "geen automatische credits"}
-                </StatusPill>
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <Field defaultValue={settings.lesson_cancellation_cutoff_hours} label="Annuleren tot aantal uur vooraf" name="lessonCancellationCutoffHours" type="number" />
-                <Field defaultValue={settings.lesson_cancellation_credit_window_days} label="Credit geldig in dagen" name="lessonCancellationCreditWindowDays" type="number" />
-                <label className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm font-semibold text-foreground md:col-span-2">
-                  <input className="size-4 rounded border-border" defaultChecked={settings.lesson_cancellation_grants_credit} disabled={!canManage} name="lessonCancellationGrantsCredit" type="checkbox" />
-                  Tijdige annulering geeft automatisch een inhaalcredit
-                </label>
-              </div>
-            </div>
+              </SettingsPanel>
+            </TabsContent>
 
-            <div className="rounded-lg border border-border bg-white p-4">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-base font-bold text-foreground">Google Analytics 4</h2>
-                  <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-                    Meet alleen publieke websitebezoeken na expliciete toestemming. Leadherkomst wordt daarnaast first-party in NXTTRACK opgeslagen.
-                  </p>
+            <TabsContent forceMount value="terminology">
+              <SettingsPanel description="Sector templates bepalen consistente termen in backoffice en portalen." title="Sector en terminologie">
+                <label className="grid max-w-xl gap-1.5 text-[13px] font-semibold text-foreground">
+                  Sector
+                  <select className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring" defaultValue={settings.terminology_sector} disabled={!canManage} name="terminologySector">
+                    {sectorOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                </label>
+              </SettingsPanel>
+            </TabsContent>
+
+            <TabsContent forceMount value="cancellation">
+              <SettingsPanel action={<StatusPill tone={settings.lesson_cancellation_grants_credit ? "success" : "warning"}>{settings.lesson_cancellation_grants_credit ? "Credits actief" : "Geen automatische credits"}</StatusPill>} description="Beleid voor annuleringen en inhaalcredits in het ouderportaal." title="Annuleren en inhalen">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field defaultValue={settings.lesson_cancellation_cutoff_hours} label="Annuleren tot aantal uur vooraf" name="lessonCancellationCutoffHours" type="number" />
+                  <Field defaultValue={settings.lesson_cancellation_credit_window_days} label="Credit geldig in dagen" name="lessonCancellationCreditWindowDays" type="number" />
+                  <label className="flex min-h-11 items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 text-[13px] font-semibold text-foreground md:col-span-2"><input className="size-4 rounded border-border" defaultChecked={settings.lesson_cancellation_grants_credit} disabled={!canManage} name="lessonCancellationGrantsCredit" type="checkbox" />Tijdige annulering geeft automatisch een inhaalcredit</label>
                 </div>
-                <StatusPill tone={settings.analytics_enabled ? "success" : "neutral"}>
-                  {settings.analytics_enabled ? "analytics actief" : "uitgeschakeld"}
-                </StatusPill>
-              </div>
-              <div className="grid gap-4">
-                <Field
-                  defaultValue={settings.google_analytics_measurement_id ?? ""}
-                  label="GA4-meet-ID"
-                  name="googleAnalyticsMeasurementId"
-                  placeholder="G-XXXXXXXXXX"
-                />
-                <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-sm font-semibold text-foreground">
-                  <input
-                    className="mt-0.5 size-4 rounded border-border"
-                    defaultChecked={settings.analytics_enabled}
-                    disabled={!canManage}
-                    name="analyticsEnabled"
-                    type="checkbox"
-                  />
-                  <span>
-                    Analytics inschakelen op de publieke organisatiesite
-                    <span className="mt-1 block text-xs font-normal leading-5 text-muted-foreground">
-                      De Google-tag wordt pas geladen nadat de bezoeker analytics toestaat. Deel nooit namen, e-mailadressen of kindgegevens via campagneparameters.
-                    </span>
-                  </span>
-                </label>
-              </div>
-            </div>
+              </SettingsPanel>
+            </TabsContent>
 
-            {canManage ? <SubmitButton>Instellingen opslaan</SubmitButton> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
-          </form>
-        </AdminSection>
+            <TabsContent forceMount value="analytics">
+              <SettingsPanel action={<StatusPill tone={settings.analytics_enabled ? "success" : "neutral"}>{settings.analytics_enabled ? "Analytics actief" : "Uitgeschakeld"}</StatusPill>} description="Privacy-first GA4 voor publieke bezoeken; leadherkomst blijft ook first-party beschikbaar." title="Google Analytics 4">
+                <div className="grid max-w-2xl gap-4">
+                  <Field defaultValue={settings.google_analytics_measurement_id ?? ""} label="GA4-meet-ID" name="googleAnalyticsMeasurementId" placeholder="G-XXXXXXXXXX" />
+                  <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[13px] font-semibold text-foreground"><input className="mt-0.5 size-4 rounded border-border" defaultChecked={settings.analytics_enabled} disabled={!canManage} name="analyticsEnabled" type="checkbox" /><span>Analytics inschakelen na toestemming<span className="mt-1 block text-xs font-normal leading-5 text-muted-foreground">De Google-tag wordt pas na consent geladen. Deel nooit persoonsgegevens via campagneparameters.</span></span></label>
+                </div>
+              </SettingsPanel>
+            </TabsContent>
 
-        <AdminSection description="Deze punten horen bij de volgende productization-subtaken." title="Nog te productiseren">
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="rounded-lg bg-muted px-3 py-2">Logo en publieke branding per organisatie.</li>
-            <li className="rounded-lg bg-muted px-3 py-2">Volwaardige CRM-pijplijn met eigenaar, opvolgtaak en verloren-redenen.</li>
-            <li className="rounded-lg bg-muted px-3 py-2">Document- en diplomabestanden via private storage.</li>
-            <li className="rounded-lg bg-muted px-3 py-2">Mailtemplates en afzender per organisatie waar passend.</li>
-          </ul>
-        </AdminSection>
-      </div>
+            <TabsContent forceMount value="notifications"><SettingsPanel description="Afzenders en platformbrede mailprovider worden centraal beheerd." title="Notificaties"><p className="text-[13px] text-muted-foreground">Organisatiespecifieke templates en notificatievoorkeuren volgen via de communicatie-instellingen.</p></SettingsPanel></TabsContent>
+            <TabsContent forceMount value="privacy"><SettingsPanel description="Publieke analytics blijft consent-gestuurd; gevoelige gegevens blijven buiten trackingparameters." title="Privacy en cookies"><p className="text-[13px] text-muted-foreground">Controleer privacyverklaring, bewaartermijnen en cookiebeleid bij iedere productierelease.</p></SettingsPanel></TabsContent>
+            <TabsContent forceMount value="product"><SettingsPanel description="Compact overzicht van resterende commerciële uitbreidingen." title="Productisatie checklist"><ul className="grid gap-2 text-[13px] text-muted-foreground sm:grid-cols-2"><li className="rounded-lg bg-muted px-3 py-2">Logo en publieke branding per organisatie</li><li className="rounded-lg bg-muted px-3 py-2">CRM-pijplijn en opvolgtaken</li><li className="rounded-lg bg-muted px-3 py-2">Document- en diplomabestanden</li><li className="rounded-lg bg-muted px-3 py-2">Organisatiespecifieke mailtemplates</li></ul></SettingsPanel></TabsContent>
+          </Tabs>
+
+          {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Instellingen opslaan</SubmitButton></div> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
+        </DirtyForm>
+      </AdminListSurface>
     </div>
   );
 }
@@ -170,6 +141,18 @@ async function loadSettings(tenantId: string) {
     terminology_sector: row?.terminology_sector ?? "swim_school",
     timezone: row?.timezone ?? "Europe/Amsterdam"
   };
+}
+
+function SettingsPanel({ action, children, description, title }: { action?: ReactNode; children: ReactNode; description: string; title: string }) {
+  return (
+    <section className="max-w-4xl rounded-xl border border-border bg-card p-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div><h2 className="text-base font-bold text-foreground">{title}</h2><p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{description}</p></div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
 }
 
 function ReadOnlyField({ label, value }: { label: string; value: string }) {

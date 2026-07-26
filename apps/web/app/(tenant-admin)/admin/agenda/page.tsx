@@ -1,11 +1,13 @@
 import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
+import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { PlanningDayBoard } from "@/components/admin/planning-day-board";
 import { PlanningWorkbench } from "@/components/admin/planning-workbench";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { createSessionAction } from "@/lib/domain/actions";
 import { decideCatchUpRequestAction, saveInstructorAvailabilityAction, undoPlanningChangeAction } from "@/lib/domain/planning-actions";
-import { getPlanningData, type PlanningConflict, type PlanningSessionInsight } from "@/lib/domain/planning";
+import { getPlanningData, type PlanningConflict } from "@/lib/domain/planning";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,81 +29,46 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const overCapacitySessions = data.sessionInsights.filter((insight) => insight.status === "over_capacity").length;
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Planboard" title="Planning en capaciteit" subtitle="Dag- en weekplanning met resource-, instructor- en capaciteitssignalen." />
+    <div className="space-y-5">
+      <PageHeader
+        action={
+          <>
+            <AdminActionDrawer description="Plan een concrete les; conflict- en capaciteitssignalen verschijnen direct op het planbord." title="Nieuwe les" triggerLabel="Les plannen" width="wide">
+              <SessionForm data={data} />
+            </AdminActionDrawer>
+            <AdminActionDrawer description="Leg beschikbaarheid vast voor automatische conflictwaarschuwingen." title="Beschikbaarheid instructeur" triggerLabel="Beschikbaarheid" triggerVariant="outline">
+              <AvailabilityForm data={data} />
+            </AdminActionDrawer>
+          </>
+        }
+        kicker="Planning"
+        title="Planbord"
+        subtitle="Scan de week, open lesdetails in een dossierdrawer en stuur alleen bij waar signalen daarom vragen."
+      />
       <Feedback saved={saved} error={error} undo={undo} />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Metric icon={<CalendarDays className="h-5 w-5" />} label="Vandaag" value={todaySessions.length.toString()} />
-        <Metric icon={<AlertTriangle className="h-5 w-5" />} label="Conflicten" tone={data.conflicts.some((conflict) => conflict.severity === "danger") ? "danger" : data.conflicts.length > 0 ? "warning" : "success"} value={data.conflicts.length.toString()} />
-        <Metric icon={<Users className="h-5 w-5" />} label="Over capaciteit" tone={overCapacitySessions > 0 ? "danger" : "success"} value={overCapacitySessions.toString()} />
-        <Metric icon={<Clock className="h-5 w-5" />} label="Inhaalverzoeken" tone={pendingCatchUps.length > 0 ? "warning" : "success"} value={pendingCatchUps.length.toString()} />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminMetricCard icon={CalendarDays} label="Vandaag" value={todaySessions.length} />
+        <AdminMetricCard icon={AlertTriangle} label="Conflicten" tone={data.conflicts.length ? "warning" : "success"} value={data.conflicts.length} />
+        <AdminMetricCard icon={Users} label="Over capaciteit" tone={overCapacitySessions ? "warning" : "success"} value={overCapacitySessions} />
+        <AdminMetricCard icon={Clock} label="Inhaalverzoeken" tone={pendingCatchUps.length ? "warning" : "success"} value={pendingCatchUps.length} />
       </div>
 
-      <AdminSection title="Dag- en weekplan" description="Begin bij het rooster; open daarna alleen de formulieren die nodig zijn om de planning bij te sturen.">
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">Dag- en weekplan</h2><p className="text-[13px] text-muted-foreground">Klik een les voor capaciteit, instructeurs, inhaalplekken en conflicten.</p></div>
         {data.dayPlan.length === 0 ? (
           <EmptyState>Geen lessen in de komende 14 dagen.</EmptyState>
         ) : (
-          <div className="grid gap-4 xl:grid-cols-2">
-            {data.dayPlan.map((day) => (
-              <section className="rounded-2xl border border-border bg-white p-4 shadow-soft" key={day.key}>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <h2 className="font-bold text-foreground">{day.label}</h2>
-                  <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>
-                </div>
-                <div className="space-y-2">
-                  {day.sessions.map((insight) => (
-                    <SessionPlanRow insight={insight} key={insight.session.id} />
-                  ))}
-                </div>
-              </section>
-            ))}
-          </div>
+          <PlanningDayBoard days={data.dayPlan.map((day) => ({ key: day.key, label: day.label, sessions: day.sessions.map((insight) => ({ available: insight.available, capacity: insight.capacity, catchUpHolds: insight.catchUpHolds, endsAt: insight.session.ends_at, groupName: insight.group?.name ?? "Lesgroep", id: insight.session.id, instructorNames: insight.instructorNames, notes: insight.session.notes ?? "", resourceName: insight.resourceName, startsAt: insight.session.starts_at, status: insight.status, used: insight.used })) }))} />
         )}
-      </AdminSection>
+      </AdminListSurface>
 
-      <AdminSection title="Visuele what-if planning" description="Sleep lessen tussen dagen of gebruik de toetsenbordbedienbare pijlen. De database verandert pas na toepassen; elke wijziging krijgt een undo-event.">
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">What-if planning</h2><p className="text-[13px] text-muted-foreground">Sleep of gebruik het toetsenbord; pas pas toe wanneer de conflictengine groen is.</p></div>
         <PlanningWorkbench initialItems={data.sessionInsights.map((insight) => ({ id: insight.session.id, groupName: insight.group?.name ?? "Lesgroep", startsAt: insight.session.starts_at, endsAt: insight.session.ends_at, resourceId: insight.session.resource_id, resourceName: insight.resourceName }))} />
-      </AdminSection>
+      </AdminListSurface>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <AdminSection title="Les plannen" description="Een sessie is een concrete lesdatum en tijd. Conflicten verschijnen direct in het planboard.">
-          <form action={createSessionAction} className="grid gap-4 md:grid-cols-2">
-            <SelectField label="Lesgroep" name="groupId" required>
-              <option value="">Kies groep</option>
-              {data.groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </SelectField>
-            <SelectField label="Resource" name="resourceId">
-              <option value="">Gebruik groepsresource</option>
-              {data.resources.map((resource) => (
-                <option key={resource.id} value={resource.id}>
-                  {resource.name}
-                </option>
-              ))}
-            </SelectField>
-            <Field label="Start" name="startsAt" type="datetime-local" required />
-            <Field label="Einde" name="endsAt" type="datetime-local" required />
-            <SelectField label="Status" name="status">
-              <option value="scheduled">Gepland</option>
-              <option value="draft">Concept</option>
-              <option value="completed">Afgerond</option>
-              <option value="cancelled">Geannuleerd</option>
-            </SelectField>
-            <Field label="Capaciteit override" name="capacityOverride" type="number" />
-            <div className="md:col-span-2">
-              <TextAreaField label="Notitie" name="notes" />
-            </div>
-            <div className="md:col-span-2">
-              <SubmitButton>Les opslaan</SubmitButton>
-            </div>
-          </form>
-        </AdminSection>
-
-        <AdminSection title="Catch-up approvals" description="Zet inhaalcredits om naar echte lessen zodra capaciteit klopt.">
+      <AdminSection title="Inhaalverzoeken" description="Zet inhaalcredits om naar echte lessen zodra capaciteit klopt.">
           {pendingCatchUps.length === 0 ? (
             <EmptyState>Geen open inhaalverzoeken.</EmptyState>
           ) : (
@@ -140,8 +107,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
               })}
             </DataList>
           )}
-        </AdminSection>
-      </div>
+      </AdminSection>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <AdminSection title="Conflicten">
@@ -157,70 +123,63 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
         </AdminSection>
 
         <AdminSection title="Instructor availability" description="Beschikbaarheid wordt gebruikt voor conflictwaarschuwingen. Instructors kunnen eigen beschikbaarheid later ook zelf beheren.">
-          <form action={saveInstructorAvailabilityAction} className="grid gap-3">
-            <SelectField label="Instructeur" name="instructorUserId" required>
-              <option value="">Kies instructeur</option>
-              {data.instructors.map((instructor) => (
-                <option key={instructor.userId} value={instructor.userId}>
-                  {instructor.label}
-                </option>
-              ))}
-            </SelectField>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <SelectField label="Dag" name="weekday">
-                <option value="1">Maandag</option>
-                <option value="2">Dinsdag</option>
-                <option value="3">Woensdag</option>
-                <option value="4">Donderdag</option>
-                <option value="5">Vrijdag</option>
-                <option value="6">Zaterdag</option>
-                <option value="0">Zondag</option>
-              </SelectField>
-              <Field label="Van" name="startsAt" required type="time" />
-              <Field label="Tot" name="endsAt" required type="time" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <SelectField label="Type" name="availabilityType">
-                <option value="available">Beschikbaar</option>
-                <option value="unavailable">Niet beschikbaar</option>
-              </SelectField>
-              <SelectField label="Status" name="status">
-                <option value="active">Actief</option>
-                <option value="inactive">Inactief</option>
-              </SelectField>
-            </div>
-            <SubmitButton>Beschikbaarheid opslaan</SubmitButton>
-          </form>
-          <div className="mt-4">
-            {data.availability.length === 0 ? (
-              <EmptyState>Nog geen availability regels.</EmptyState>
-            ) : (
-              <DataList>
-                {data.availability.slice(0, 6).map((row) => {
-                  const instructor = data.instructors.find((item) => item.userId === row.instructor_user_id);
-
-                  return <DataListRow aside={<StatusPill tone={row.availability_type === "available" ? "success" : "warning"}>{row.availability_type}</StatusPill>} key={row.id} meta={`${weekdayLabel(row.weekday)} ${row.starts_at.slice(0, 5)}-${row.ends_at.slice(0, 5)}`} title={instructor?.label ?? row.instructor_user_id} />;
-                })}
-              </DataList>
-            )}
-          </div>
+          {data.availability.length === 0 ? (
+            <EmptyState>Nog geen beschikbaarheidsregels.</EmptyState>
+          ) : (
+            <DataList>
+              {data.availability.slice(0, 8).map((row) => {
+                const instructor = data.instructors.find((item) => item.userId === row.instructor_user_id);
+                return <DataListRow aside={<StatusPill tone={row.availability_type === "available" ? "success" : "warning"}>{row.availability_type === "available" ? "Beschikbaar" : "Niet beschikbaar"}</StatusPill>} key={row.id} meta={`${weekdayLabel(row.weekday)} ${row.starts_at.slice(0, 5)}–${row.ends_at.slice(0, 5)}`} title={instructor?.label ?? row.instructor_user_id} />;
+              })}
+            </DataList>
+          )}
         </AdminSection>
       </div>
     </div>
   );
 }
 
-function Metric({ icon, label, value, tone = "neutral" }: { icon: ReactNode; label: string; value: string; tone?: "success" | "warning" | "danger" | "neutral" }) {
-  const toneClass = tone === "danger" ? "text-danger" : tone === "warning" ? "text-warning" : tone === "success" ? "text-success" : "text-foreground";
-
+function SessionForm({ data }: { data: Awaited<ReturnType<typeof getPlanningData>> }) {
   return (
-    <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-        <span className={toneClass}>{icon}</span>
+    <form action={createSessionAction} className="grid gap-4 sm:grid-cols-2">
+      <SelectField label="Lesgroep" name="groupId" required>
+        <option value="">Kies groep</option>
+        {data.groups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+      </SelectField>
+      <SelectField label="Resource" name="resourceId">
+        <option value="">Gebruik groepsresource</option>
+        {data.resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}
+      </SelectField>
+      <Field label="Start" name="startsAt" type="datetime-local" required />
+      <Field label="Einde" name="endsAt" type="datetime-local" required />
+      <SelectField label="Status" name="status">
+        <option value="scheduled">Gepland</option><option value="draft">Concept</option><option value="completed">Afgerond</option><option value="cancelled">Geannuleerd</option>
+      </SelectField>
+      <Field label="Capaciteit override" name="capacityOverride" type="number" />
+      <div className="sm:col-span-2"><TextAreaField label="Notitie" name="notes" /></div>
+      <div className="sm:col-span-2"><SubmitButton>Les opslaan</SubmitButton></div>
+    </form>
+  );
+}
+
+function AvailabilityForm({ data }: { data: Awaited<ReturnType<typeof getPlanningData>> }) {
+  return (
+    <form action={saveInstructorAvailabilityAction} className="grid gap-4">
+      <SelectField label="Instructeur" name="instructorUserId" required>
+        <option value="">Kies instructeur</option>
+        {data.instructors.map((instructor) => <option key={instructor.userId} value={instructor.userId}>{instructor.label}</option>)}
+      </SelectField>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <SelectField label="Dag" name="weekday"><option value="1">Maandag</option><option value="2">Dinsdag</option><option value="3">Woensdag</option><option value="4">Donderdag</option><option value="5">Vrijdag</option><option value="6">Zaterdag</option><option value="0">Zondag</option></SelectField>
+        <Field label="Van" name="startsAt" required type="time" />
+        <Field label="Tot" name="endsAt" required type="time" />
       </div>
-      <p className={`mt-2 text-3xl font-bold ${toneClass}`}>{value}</p>
-    </section>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectField label="Type" name="availabilityType"><option value="available">Beschikbaar</option><option value="unavailable">Niet beschikbaar</option></SelectField>
+        <SelectField label="Status" name="status"><option value="active">Actief</option><option value="inactive">Inactief</option></SelectField>
+      </div>
+      <SubmitButton>Beschikbaarheid opslaan</SubmitButton>
+    </form>
   );
 }
 
@@ -235,26 +194,6 @@ function ConflictRow({ conflict }: { conflict: PlanningConflict }) {
         <StatusPill tone={conflict.severity === "danger" ? "danger" : "warning"}>{conflict.type}</StatusPill>
       </div>
     </div>
-  );
-}
-
-function SessionPlanRow({ insight }: { insight: PlanningSessionInsight }) {
-  return (
-    <article className="rounded-xl border border-border bg-muted/30 px-3 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-foreground">
-            {formatTime(insight.session.starts_at)}-{formatTime(insight.session.ends_at)} · {insight.group?.name ?? "Lesgroep"}
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {insight.resourceName} · {insight.instructorNames.length > 0 ? insight.instructorNames.join(", ") : "geen instructeur"} · inhaalplekken {insight.catchUpHolds}
-          </p>
-        </div>
-        <StatusPill tone={insight.status === "available" ? "success" : insight.status === "full" ? "warning" : "danger"}>
-          {formatNumber(insight.used)}/{insight.capacity}
-        </StatusPill>
-      </div>
-    </article>
   );
 }
 
