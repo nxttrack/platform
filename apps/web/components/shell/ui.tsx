@@ -24,7 +24,7 @@ const statusPillVariants = cva("inline-flex items-center gap-1 rounded-full px-2
   variants: {
     tone: {
       success: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20",
-      warning: "bg-amber-500/10 text-amber-700 ring-amber-500/20",
+      warning: "bg-amber-500/10 text-amber-800 ring-amber-500/20",
       danger: "bg-red-500/10 text-red-700 ring-red-500/20",
       info: "bg-sky-500/10 text-sky-700 ring-sky-500/20",
       neutral: "bg-muted text-foreground ring-border"

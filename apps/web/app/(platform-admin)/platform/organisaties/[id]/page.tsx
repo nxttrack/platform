@@ -203,7 +203,7 @@ export default async function PlatformOrganizationDetailPage({ params, searchPar
 
       <AdminSection title="Uitnodigingen" description="Bekijk ontvanger, bezorgstatus en vervaldatum. Oude codes worden bij opnieuw versturen direct ingetrokken.">
         {data.invitations.length ? (
-          <div className="overflow-x-auto rounded-2xl border border-border">
+          <div aria-label="Uitnodigingenoverzicht" className="overflow-x-auto rounded-2xl border border-border" role="region" tabIndex={0}>
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-muted/70 text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-4 py-3">Naam en e-mail</th><th className="px-4 py-3">Rol</th><th className="px-4 py-3">Bezorging</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Verloopt</th><th className="px-4 py-3 text-right">Acties</th></tr></thead>
               <tbody className="divide-y divide-border">
