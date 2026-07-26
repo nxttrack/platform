@@ -59,9 +59,11 @@ test.describe("phase 16 operational happy path", () => {
     await expect(page.getByRole("table", { name: "Betalingen per status" })).toBeAttached();
 
     await page.goto("/admin/uitnodigingen", { waitUntil: "domcontentloaded" });
-    await expect(page.getByLabel("E-mail")).toBeVisible();
-    await expect(page.getByLabel("Rol")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Uitnodiging sturen" })).toBeVisible();
+    await page.getByRole("button", { name: "Uitnodiging sturen" }).click();
+    const invitationDrawer = page.getByRole("dialog", { name: "Account uitnodigen" });
+    await expect(invitationDrawer.getByLabel("E-mail")).toBeVisible();
+    await expect(invitationDrawer.getByLabel("Rol")).toBeVisible();
+    await expect(invitationDrawer.getByRole("button", { name: "Uitnodiging sturen" })).toBeVisible();
 
     expect(failures()).toEqual([]);
   });
