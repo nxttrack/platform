@@ -3,20 +3,25 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Download, Mail, Users } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { StatusPill } from "@/components/shell/ui";
 import { Button } from "@/components/ui/button";
 import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
 import { DirtyForm } from "@/components/ui/dirty-form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateAdminTaskStatusAction } from "@/lib/domain/admin-operations-actions";
 import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
+import { getIntakeStatusMeta, getParticipantStatusMeta, getPaymentStatusMeta, getTaskStatusMeta, type StatusMeta } from "@/lib/ui/status-meta";
 
 export type StudentTableRow = {
   guardian: string;
   groups: string;
   id: string;
   isTest: boolean;
+  instructors: string;
+  lesson: string;
   name: string;
   program: string;
   stage: string;
@@ -30,10 +35,10 @@ export function StudentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
     { accessorKey: "stage", header: "Niveau", meta: { label: "Niveau" } },
     { accessorKey: "groups", header: "Lesgroep", meta: { label: "Lesgroep" } },
-    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : "neutral"}>{String(getValue())}</StatusPill> },
+    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getParticipantStatusMeta(String(getValue()))} /> },
     { accessorKey: "startsOn", header: "Start", meta: { label: "Startdatum" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Lesgroep", row.groups], ["Status", row.status], ["Startdatum", formatDate(row.startsOn)]]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
 }
 
 export type GroupTableRow = {
@@ -60,21 +65,25 @@ export function GroupsTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : "neutral"}>{String(getValue())}</StatusPill> },
     { accessorKey: "capacityStatus", header: "Capaciteit", meta: { label: "Capaciteit" }, cell: ({ row }) => <StatusPill tone={row.original.capacityStatus === "available" ? "success" : row.original.capacityStatus === "full" ? "warning" : row.original.capacityStatus === "over_capacity" ? "danger" : "neutral"}>{row.original.capacityLabel}</StatusPill> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Resource", row.resource], ["Lesmoment", row.time], ["Instructeurs", row.instructors], ["Capaciteit", row.capacityLabel], ["Status", row.status]]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Status", row.status]]} /> }, { label: "Planning", value: "planning", content: <DetailList entries={[["Lesmoment", row.time], ["Resource", row.resource], ["Instructeurs", row.instructors]]} /> }, { label: "Capaciteit", value: "capacity", content: <DetailList entries={[["Bezetting", row.capacityLabel], ["Signaal", capacityStatusLabel(row.capacityStatus)]]} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="groep" /> }]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
 }
 
 export type IntakeTableRow = {
   choice: string;
+  birthDate: string;
   duplicateState: string;
   email: string;
   experience: string;
   id: string;
   isTest: boolean;
+  journeyRunId: string;
+  notes: string;
   option: string;
   parent: string;
   participant: string;
   phone: string;
   preferredDays: string;
+  secondaryParent: string;
   program: string;
   receivedAt: string;
   source: string;
@@ -89,10 +98,10 @@ export function IntakeTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
     { accessorKey: "preferredDays", header: "Voorkeur", meta: { label: "Voorkeur" } },
     { accessorKey: "waitBand", header: "Wachttijd", meta: { label: "Wachttijd" }, cell: ({ row }) => row.original.waitBand ? <WaitTimeChip band={row.original.waitBand} /> : <span className="text-muted-foreground">Onbekend</span> },
-    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ row }) => <div className="flex flex-wrap gap-1"><StatusPill tone={row.original.status === "received" ? "info" : "neutral"}>{row.original.status}</StatusPill>{row.original.duplicateState === "possible_duplicate" ? <StatusPill tone="warning">mogelijk dubbel</StatusPill> : null}</div> },
+    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ row }) => <div className="flex flex-wrap gap-1"><StatusBadge meta={getIntakeStatusMeta(row.original.status)} />{row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}{row.original.duplicateState === "possible_duplicate" ? <StatusPill tone="warning">Mogelijk dubbel</StatusPill> : null}</div> },
     { accessorKey: "receivedAt", header: "Ontvangen", meta: { label: "Ontvangen" }, cell: ({ getValue }) => formatDateTime(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"]), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Ouder/verzorger", row.parent], ["E-mail", row.email], ["Telefoon", row.phone || "—"], ["Programma", row.program], ["Zwemervaring", row.experience || "—"], ["Voorkeursdagen", row.preferredDays || "—"], ["Eerste momentkeuze", row.choice || "—"], ["Herkomst", row.source], ["Ontvangen", formatDateTime(row.receivedAt)]]} />{row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null}</div>} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"], getIntakeStatusMeta), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <div className="grid gap-4"><div className="flex flex-wrap gap-2"><StatusBadge meta={getIntakeStatusMeta(row.status)} />{row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}</div><DetailList entries={[["Programma", row.program], ["Aanvraagtype", row.option], ["Ontvangen", formatDateTime(row.receivedAt)], ["Bron", row.source]]} /></div> }, { label: "Kind", value: "child", content: <DetailList entries={[["Naam", row.participant], ["Geboortedatum", row.birthDate ? formatDate(row.birthDate) : "Niet opgegeven"], ["Zwemervaring", row.experience || "Niet opgegeven"]]} /> }, { label: "Ouders", value: "guardians", content: <DetailList entries={[["Ouder/verzorger 1", row.parent], ["Ouder/verzorger 2", row.secondaryParent || "Niet opgegeven"], ["E-mail", row.email], ["Telefoon", row.phone || "Niet opgegeven"]]} /> }, { label: "Voorkeuren", value: "preferences", content: <DetailList entries={[["Voorkeursdagen", row.preferredDays || "Niet opgegeven"], ["Voorgesteld moment", row.choice || "Nog geen keuze"], ["Wachttijd", row.waitBand ?? "Onbekend"], ["Notities", row.notes || "Geen notities"]]} /> }, { label: "Logs", value: "logs", content: <DetailList entries={[["Bron", row.source], ["Journey run", row.journeyRunId || "Niet van toepassing"], ["Duplicaatcontrole", row.duplicateState]]} /> }]} footer={row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null} />} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
 }
 
 export type DocumentTableRow = {
@@ -140,9 +149,9 @@ export function TasksTable({ initialSearch, rows }: { initialSearch?: string; ro
     { accessorKey: "assignee", header: "Toegewezen aan", meta: { label: "Toegewezen aan" } },
     { accessorKey: "dueOn", header: "Deadline", meta: { label: "Deadline" }, cell: ({ getValue }) => getValue() ? formatDate(String(getValue())) : "Geen" },
     { accessorKey: "priority", header: "Prioriteit", meta: { label: "Prioriteit" }, cell: ({ getValue }) => <StatusPill tone={["urgent", "high"].includes(String(getValue())) ? "warning" : "neutral"}>{String(getValue())}</StatusPill> },
-    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "done" ? "success" : getValue() === "in_progress" ? "info" : "neutral"}>{String(getValue())}</StatusPill> }
+    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getTaskStatusMeta(String(getValue()))} /> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.assignee} · ${row.participant}`} detailTitle={(row) => row.title} filters={[statusFilter(["open", "in_progress", "done", "cancelled"]), { column: "priority", label: "Prioriteit", options: ["urgent", "high", "normal", "low"].map((value) => ({ label: value, value })) }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5">{row.description ? <p className="text-sm leading-6 text-muted-foreground">{row.description}</p> : null}<DetailList entries={[["Assignee", row.assignee], ["Leerling", row.participant], ["Deadline", row.dueOn ? formatDate(row.dueOn) : "Geen"], ["Prioriteit", row.priority], ["Status", row.status], ["Bijgewerkt", formatDateTime(row.updatedAt)]]} /><DirtyForm action={updateAdminTaskStatusAction} className="rounded-xl border border-border p-4"><input name="taskId" type="hidden" value={row.id} /><label className="grid gap-1.5 text-sm font-semibold">Status<select className="min-h-11 rounded-lg border border-border bg-background px-3 font-normal" defaultValue={row.status} name="status"><option value="open">Open</option><option value="in_progress">Bezig</option><option value="done">Klaar</option><option value="cancelled">Geannuleerd</option></select></label><Button type="submit"><CheckCircle2 className="size-4" />Status bijwerken</Button></DirtyForm></div>} searchColumn="title" searchPlaceholder="Zoek taak…" storageKey="admin.tasks" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.assignee} · ${row.participant}`} detailTitle={(row) => row.title} filters={[statusFilter(["open", "in_progress", "done", "cancelled"], getTaskStatusMeta), { column: "priority", label: "Prioriteit", options: ["urgent", "high", "normal", "low"].map((value) => ({ label: value, value })) }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5">{row.description ? <p className="text-[13px] leading-5 text-muted-foreground">{row.description}</p> : null}<DetailList entries={[["Toegewezen aan", row.assignee], ["Leerling", row.participant], ["Deadline", row.dueOn ? formatDate(row.dueOn) : "Geen"], ["Prioriteit", row.priority], ["Status", getTaskStatusMeta(row.status).label], ["Bijgewerkt", formatDateTime(row.updatedAt)]]} /><DirtyForm action={updateAdminTaskStatusAction} className="rounded-xl border border-border p-4"><input name="taskId" type="hidden" value={row.id} /><label className="grid gap-1.5 text-[13px] font-semibold">Status<select className="min-h-11 rounded-lg border border-border bg-background px-3 font-normal" defaultValue={row.status} name="status"><option value="open">Open</option><option value="in_progress">Bezig</option><option value="done">Klaar</option><option value="cancelled">Geannuleerd</option></select></label><Button type="submit"><CheckCircle2 className="size-4" />Status bijwerken</Button></DirtyForm></div>} searchColumn="title" searchPlaceholder="Zoek taak…" storageKey="admin.tasks" />;
 }
 
 export type PaymentTableRow = {
@@ -164,9 +173,9 @@ export function PaymentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "amount", header: "Bedrag", meta: { label: "Bedrag" } },
     { accessorKey: "dueOn", header: "Vervaldatum", meta: { label: "Vervaldatum" }, cell: ({ getValue }) => formatDate(String(getValue())) },
     { accessorKey: "method", header: "Methode", meta: { label: "Methode" } },
-    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "paid" ? "success" : getValue() === "overdue" ? "danger" : getValue() === "due" ? "warning" : "neutral"}>{String(getValue())}</StatusPill> }
+    { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getPaymentStatusMeta(String(getValue()))} /> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.plan} · ${row.amount}`} detailTitle={(row) => row.participant} filters={[statusFilter(["due", "overdue", "paid", "waived", "cancelled", "refunded", "chargeback"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Leerling", row.participant], ["Betaalplan", row.plan], ["Bedrag", row.amount], ["Referentie", row.reference || "—"], ["Vervaldatum", formatDate(row.dueOn)], ["Betaaldatum", row.paidOn ? formatDate(row.paidOn) : "—"], ["Methode", row.method || "—"], ["Status", row.status]]} />} searchColumn="participant" searchPlaceholder="Zoek betaling…" storageKey="admin.payments" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.plan} · ${row.amount}`} detailTitle={(row) => row.participant} filters={[statusFilter(["due", "overdue", "paid", "waived", "cancelled", "refunded", "chargeback"], getPaymentStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Leerling", row.participant], ["Betaalplan", row.plan], ["Bedrag", row.amount], ["Referentie", row.reference || "—"], ["Vervaldatum", formatDate(row.dueOn)], ["Betaaldatum", row.paidOn ? formatDate(row.paidOn) : "—"], ["Methode", row.method || "—"], ["Status", getPaymentStatusMeta(row.status).label]]} />} searchColumn="participant" searchPlaceholder="Zoek betaling…" storageKey="admin.payments" />;
 }
 
 export type InvitationTableRow = {
@@ -221,11 +230,11 @@ function DuplicateButton({ id, label, state }: { id: string; label: string; stat
 }
 
 function DetailList({ entries }: { entries: Array<[string, string]> }) {
-  return <dl className="grid gap-3">{entries.map(([label, value]) => <div className="rounded-xl bg-muted p-3" key={label}><dt className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</dt><dd className="mt-1 break-words font-medium text-foreground">{value}</dd></div>)}</dl>;
+  return <dl className="grid gap-2 sm:grid-cols-2">{entries.map(([label, value]) => <div className="rounded-lg border border-border/70 bg-muted/55 p-3" key={label}><dt className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-[13px] font-medium leading-5 text-foreground">{value}</dd></div>)}</dl>;
 }
 
-function statusFilter(statuses: string[]) {
-  return { column: "status", label: "Status", options: statuses.map((value) => ({ label: value.replaceAll("_", " "), value })) };
+function statusFilter(statuses: string[], resolver?: (status: string) => StatusMeta) {
+  return { column: "status", label: "Status", options: statuses.map((value) => ({ label: resolver?.(value).label ?? value.replaceAll("_", " "), value })) };
 }
 
 function formatDate(value: string) {
@@ -235,4 +244,36 @@ function formatDate(value: string) {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function StatusBadge({ meta }: { meta: StatusMeta }) {
+  return <StatusPill tone={meta.tone} title={meta.description}>{meta.label}</StatusPill>;
+}
+
+function DossierTabs({
+  footer,
+  tabs
+}: {
+  footer?: ReactNode;
+  tabs: Array<{ content: ReactNode; label: string; value: string }>;
+}) {
+  return (
+    <div className="grid gap-5">
+      <Tabs defaultValue={tabs[0]?.value}>
+        <TabsList className="justify-start">
+          {tabs.map((tab) => <TabsTrigger className="flex-none" key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
+        </TabsList>
+        {tabs.map((tab) => <TabsContent key={tab.value} value={tab.value}>{tab.content}</TabsContent>)}
+      </Tabs>
+      {footer}
+    </div>
+  );
+}
+
+function DossierPlaceholder({ entity }: { entity: string }) {
+  return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Gerelateerde betalingen, berichten, taken, documenten en auditlogs blijven vanuit dit {entity}dossier bereikbaar zodra die bronnen gekoppeld zijn.</p>;
+}
+
+function capacityStatusLabel(status: GroupTableRow["capacityStatus"]) {
+  return ({ available: "Beschikbaar", full: "Vol", over_capacity: "Over capaciteit", unknown: "Niet ingesteld" } as const)[status];
 }

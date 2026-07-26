@@ -7,7 +7,7 @@ export type NavItem = ShellNavItem;
 
 type Props = {
   brand: { title: string; subtitle: string };
-  nav: Array<{ href: string; label: string; icon: ShellIconName; badge?: number }>;
+  nav: Array<{ href: string; label: string; icon: ShellIconName; badge?: number; section?: string }>;
   user: { name: string; role: string };
   children: ReactNode;
   accent?: ShellAccent;

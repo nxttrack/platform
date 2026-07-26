@@ -1,9 +1,11 @@
-import { AdminSection, DataList, DataListRow, EmptyState, SubmitButton } from "@/components/admin/domain-ui";
-import { PlacementCockpit, type PlacementCockpitRow } from "@/components/admin/placement-cockpit";
+import { Bot, Clock3, Send, UserCheck } from "lucide-react";
+
+import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
+import { EmptyState } from "@/components/admin/domain-ui";
+import { PendingIntakesTable, PlacementCockpit, type PlacementCockpitRow } from "@/components/admin/placement-cockpit";
 import { PageHeader } from "@/components/shell/ui";
-import { createWaitlistEntryFromIntakeAction } from "@/lib/domain/placement-actions";
 import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
-import Link from "next/link";
+import { compareIntakeOperationalOrder, compareWaitlistOperationalOrder } from "@/lib/ui/status-meta";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -14,19 +16,21 @@ export const dynamic = "force-dynamic";
 export default async function AdminWaitlistPage({ searchParams }: PageProps) {
   const data = await getPlacementDashboardData();
   const params = (await searchParams) ?? {};
-  const saved = getParam(params, "saved") === "1";
+  const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const offerLink = getParam(params, "aanbod");
   const testFilter = getParam(params, "testdata") ?? "all";
   const waitlistIntakeIds = new Set(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [entry.intake_submission_id] : [])));
-  const pendingIntakes = data.intakeSubmissions.filter((submission) => submission.program_id && !waitlistIntakeIds.has(submission.id) && matchesTestFilter(submission.is_test, testFilter));
+  const pendingIntakes = data.intakeSubmissions
+    .filter((submission) => submission.program_id && ["received", "reviewing"].includes(submission.status) && !waitlistIntakeIds.has(submission.id) && matchesTestFilter(submission.is_test, testFilter))
+    .sort(compareIntakeOperationalOrder);
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const preferencesByEntry = groupBy(data.waitlistPreferences, "waitlist_entry_id");
   const scoresByEntry = groupBy(data.placementScores, "waitlist_entry_id");
   const offersByEntry = groupBy(data.slotOffers, "waitlist_entry_id");
-  const visibleWaitlist = data.waitlistEntries.filter((entry) => matchesTestFilter(entry.is_test, testFilter));
+  const visibleWaitlist = data.waitlistEntries.filter((entry) => matchesTestFilter(entry.is_test, testFilter)).sort(compareWaitlistOperationalOrder);
   const cockpitRows: PlacementCockpitRow[] = visibleWaitlist.map((entry) => {
     const stored = scoresByEntry.get(entry.id) ?? [];
     const computed = computePlacementScores({ entry, preferences: preferencesByEntry.get(entry.id) ?? [], groups: data.groups, memberships: data.groupMemberships });
@@ -47,61 +51,42 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       proposals,
       offerGroups: getOfferGroups(entry.program_id, proposals.map((proposal) => proposal.groupId), data.groups),
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
+      ,
+      preferences: (preferencesByEntry.get(entry.id) ?? []).map((preference) => formatPreference(preference.weekday, preference.starts_after, preference.ends_before)),
+      auditEvents: data.auditEvents.filter((event) => event.waitlist_entry_id === entry.id).slice(0, 12).map((event) => ({ createdAt: event.created_at, eventType: event.event_type, message: event.message ?? "" }))
     };
   });
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Placement assistant" title="Wachtlijst en plaatsing" subtitle="Zet intake om naar wachtlijst, score beschikbare groepen en verstuur een aanbodlink." />
+    <div className="space-y-5">
+      <PageHeader kicker="Leerlingen" title="Wachtlijst en plaatsing" subtitle="Accepteer nieuwe kandidaten, bewaak FIFO en open verklaarbare plaatsingsmogelijkheden vanuit één operationele lijst." />
       <Feedback saved={saved} error={error} offerLink={offerLink} />
-      <TestDataFilter current={testFilter} />
+      <AdminFilterPills current={testFilter} href={(value) => `/admin/wachtlijst?testdata=${value}`} items={[{ label: "Alle", value: "all" }, { label: "Verberg testdata", value: "hide" }, { label: "Alleen testdata", value: "only" }]} />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Metric label="Nieuwe intakes" value={pendingIntakes.length} />
-        <Metric label="Wachtlijst" value={visibleWaitlist.filter((entry) => entry.status === "waiting").length} />
-        <Metric label="Aanbiedingen" value={data.slotOffers.filter((offer) => offer.status === "sent").length} />
-        <Metric label="Journey Bot" value={data.waitlistEntries.filter((entry) => entry.is_test).length} />
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminMetricCard icon={UserCheck} label="Te beoordelen" tone="warning" value={pendingIntakes.length} />
+        <AdminMetricCard icon={Clock3} label="Op wachtlijst" value={visibleWaitlist.filter((entry) => entry.status === "waiting").length} />
+        <AdminMetricCard icon={Send} label="Aanbiedingen" tone="success" value={data.slotOffers.filter((offer) => offer.status === "sent").length} />
+        <AdminMetricCard icon={Bot} label="Journey Bot" tone="info" value={data.waitlistEntries.filter((entry) => entry.is_test).length} />
       </div>
 
-      <AdminSection title="Intake naar wachtlijst">
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">Nieuwe wachtlijstkandidaten</h2><p className="text-[13px] text-muted-foreground">Accepteer of weiger eerst; pas na acceptatie verschijnen plaatsingsacties.</p></div>
         {pendingIntakes.length === 0 ? (
           <EmptyState>Geen nieuwe programmagelinkte intakes om om te zetten.</EmptyState>
         ) : (
-          <DataList>
-            {pendingIntakes.map((submission) => (
-              <DataListRow
-                key={submission.id}
-                title={`${submission.participant_name} · ${submission.parent_name}`}
-                meta={`${programById.get(submission.program_id ?? "")?.name ?? "Programma onbekend"} · ${submission.selected_option}`}
-                aside={
-                  <form action={createWaitlistEntryFromIntakeAction}>
-                    <input name="intakeSubmissionId" type="hidden" value={submission.id} />
-                    <SubmitButton>Maak wachtlijst</SubmitButton>
-                  </form>
-                }
-              />
-            ))}
-          </DataList>
+          <PendingIntakesTable rows={pendingIntakes.map((submission) => ({ id: submission.id, isTest: submission.is_test, option: submission.selected_option, parentName: submission.parent_name, participantName: submission.participant_name, program: programById.get(submission.program_id ?? "")?.name ?? "Programma onbekend", receivedAt: submission.received_at }))} />
         )}
-      </AdminSection>
+      </AdminListSurface>
 
-      <AdminSection title="Smart Placement & Capacity Cockpit" description="Vergelijk verklaarbare voorstellen, bewaar rolgerichte filters en keur een plaatsing handmatig goed.">
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">Smart Placement & Capacity</h2><p className="text-[13px] text-muted-foreground">Vergelijk verklaarbare voorstellen, respecteer leeftijd en FIFO en keur handmatig goed.</p></div>
         {visibleWaitlist.length === 0 ? (
           <EmptyState>Nog geen wachtlijstentries.</EmptyState>
         ) : (
           <PlacementCockpit rows={cockpitRows} />
         )}
-      </AdminSection>
-    </div>
-  );
-}
-
-function TestDataFilter({ current }: { current: string }) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
-        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/wachtlijst?testdata=${value}`} key={value}>{label}</Link>
-      ))}
+      </AdminListSurface>
     </div>
   );
 }
@@ -118,16 +103,7 @@ function getOfferGroups(programId: string, scoredGroupIds: string[], groups: { i
   return groups.filter((group) => group.program_id === programId && group.status === "active");
 }
 
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <section className="relative overflow-hidden rounded-2xl border border-border bg-card p-4 shadow-soft before:absolute before:inset-x-0 before:top-0 before:h-1 before:bg-gradient-to-r before:from-aqua before:to-primary">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-    </section>
-  );
-}
-
-function Feedback({ saved, error, offerLink }: { saved: boolean; error?: string; offerLink?: string }) {
+function Feedback({ saved, error, offerLink }: { saved?: string; error?: string; offerLink?: string }) {
   if (offerLink) {
     return (
       <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">
@@ -137,7 +113,7 @@ function Feedback({ saved, error, offerLink }: { saved: boolean; error?: string;
   }
 
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "declined" ? "Kandidaat is geweigerd en blijft als afgehandelde aanvraag bewaard." : "Wachtlijstactie opgeslagen."}</p>;
   }
 
   if (error) {
@@ -145,6 +121,12 @@ function Feedback({ saved, error, offerLink }: { saved: boolean; error?: string;
   }
 
   return null;
+}
+
+function formatPreference(weekday: number, startsAfter: string | null, endsBefore: string | null) {
+  const weekdays = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
+  const time = startsAfter || endsBefore ? `${startsAfter?.slice(0, 5) ?? "start"}–${endsBefore?.slice(0, 5) ?? "einde"}` : "ieder tijdstip";
+  return `${weekdays[weekday] ?? "dag"} ${time}`;
 }
 
 function groupBy<Row extends Record<Key, string>, Key extends string>(rows: Row[], key: Key) {

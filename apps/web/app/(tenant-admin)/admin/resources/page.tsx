@@ -1,5 +1,8 @@
-import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
+import { AdminListSurface } from "@/components/admin/admin-patterns";
+import { DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
 import { createResourceAction } from "@/lib/domain/actions";
 import { getTenantCoreData, type ResourceRow } from "@/lib/domain/core";
 
@@ -25,38 +28,12 @@ export default async function AdminResourcesPage({ searchParams }: PageProps) {
   const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Core domeinmodel" title="Resources" subtitle="Beheer locaties, baden, banen en capaciteit als operationele planningbasis." />
+    <div className="space-y-5">
+      <PageHeader action={<AdminActionDrawer description="Hang een baan of bad onder een locatie en leg de planningscapaciteit vast." title="Nieuwe resource" triggerLabel="Resource toevoegen" width="wide"><ResourceForm data={data} /></AdminActionDrawer>} kicker="Planning" title="Resources" subtitle="Beheer locaties, baden, banen en capaciteit als operationele planningbasis." />
       <Feedback saved={saved} error={error} />
 
-      <AdminSection title="Resource aanmaken" description="Gebruik parent resource om bijvoorbeeld een baan onder een bad of locatie te hangen.">
-        <form action={createResourceAction} className="grid gap-4 md:grid-cols-3">
-          <SelectField label="Type" name="kind" required>
-            <option value="location">Locatie</option>
-            <option value="pool">Bad</option>
-            <option value="lane">Baan</option>
-            <option value="room">Ruimte</option>
-            <option value="other">Overig</option>
-          </SelectField>
-          <Field label="Naam" name="name" required placeholder="Hoofdbad" />
-          <Field label="Code" name="code" placeholder="bad-1" />
-          <SelectField label="Onderdeel van" name="parentResourceId">
-            <option value="">Geen parent</option>
-            {data.resources.map((resource) => (
-              <option key={resource.id} value={resource.id}>
-                {resource.name}
-              </option>
-            ))}
-          </SelectField>
-          <Field label="Capaciteit" name="capacity" type="number" placeholder="8" />
-          <Field label="Volgorde" name="sortOrder" type="number" defaultValue={0} />
-          <div className="md:col-span-3">
-            <SubmitButton>Resource opslaan</SubmitButton>
-          </div>
-        </form>
-      </AdminSection>
-
-      <AdminSection title="Resource overzicht">
+      <AdminListSurface>
+        <div className="mb-3"><h2 className="text-base font-bold">Resourceoverzicht</h2><p className="text-[13px] text-muted-foreground">Locaties, baden, banen en ruimtes in hun operationele hiërarchie.</p></div>
         {data.resources.length === 0 ? (
           <EmptyState>Nog geen resources.</EmptyState>
         ) : (
@@ -71,9 +48,13 @@ export default async function AdminResourcesPage({ searchParams }: PageProps) {
             ))}
           </DataList>
         )}
-      </AdminSection>
+      </AdminListSurface>
     </div>
   );
+}
+
+function ResourceForm({ data }: { data: Awaited<ReturnType<typeof getTenantCoreData>> }) {
+  return <DirtyForm action={createResourceAction} className="grid gap-4 sm:grid-cols-2"><SelectField label="Type" name="kind" required><option value="location">Locatie</option><option value="pool">Bad</option><option value="lane">Baan</option><option value="room">Ruimte</option><option value="other">Overig</option></SelectField><Field label="Naam" name="name" required placeholder="Hoofdbad" /><Field label="Code" name="code" placeholder="bad-1" /><SelectField label="Onderdeel van" name="parentResourceId"><option value="">Geen parent</option>{data.resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</SelectField><Field label="Capaciteit" name="capacity" type="number" placeholder="8" /><Field label="Volgorde" name="sortOrder" type="number" defaultValue={0} /><div className="sm:col-span-2"><SubmitButton>Resource opslaan</SubmitButton></div></DirtyForm>;
 }
 
 function ResourceMeta({ resource, parent }: { resource: ResourceRow; parent?: ResourceRow | null }) {

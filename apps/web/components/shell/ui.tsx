@@ -1,26 +1,26 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
 export function PageHeader({ kicker, title, subtitle, action }: { kicker?: string; title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        {kicker ? <p className="text-xs font-semibold uppercase tracking-wider text-primary">{kicker}</p> : null}
-        <h1 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-        {subtitle ? <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{subtitle}</p> : null}
+    <div className="mb-5 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        {kicker ? <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">{kicker}</p> : null}
+        <h1 className="mt-0.5 font-display text-2xl font-bold leading-tight tracking-tight md:text-[30px]">{title}</h1>
+        {subtitle ? <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted-foreground md:text-sm">{subtitle}</p> : null}
       </div>
-      {action}
+      {action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}
     </div>
   );
 }
 
 export function Card({ className, children }: { className?: string; children: ReactNode }) {
-  return <div className={cn("rounded-3xl border bg-card p-5 shadow-soft", className)}>{children}</div>;
+  return <div className={cn("rounded-xl border bg-card p-4 shadow-soft", className)}>{children}</div>;
 }
 
-const statusPillVariants = cva("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1", {
+const statusPillVariants = cva("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold leading-5 ring-1", {
   variants: {
     tone: {
       success: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20",
@@ -35,8 +35,8 @@ const statusPillVariants = cva("inline-flex items-center gap-1 rounded-full px-2
   }
 });
 
-export function StatusPill({ tone, className, children }: { className?: string; children: ReactNode } & VariantProps<typeof statusPillVariants>) {
-  return <span className={cn(statusPillVariants({ tone }), className)}>{children}</span>;
+export function StatusPill({ tone, className, children, ...props }: ComponentProps<"span"> & VariantProps<typeof statusPillVariants>) {
+  return <span className={cn(statusPillVariants({ tone }), className)} {...props}>{children}</span>;
 }
 
 export function ProgressRing({ value, size = 96, label }: { value: number; size?: number; label?: string }) {

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Award, CalendarCheck, Download, FileBadge, Send, UploadCloud } from "lucide-react";
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
 import { createGraduationEventAction, inviteGraduationParticipantAction, markGraduationReadinessAction, registerGraduationResultAction, uploadCertificateFileAction } from "@/lib/domain/graduation-actions";
 import { getGraduationAdminData } from "@/lib/domain/graduation";
 
@@ -16,99 +18,17 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
-  const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const readinessById = new Map(data.readiness.map((readiness) => [readiness.id, readiness]));
   const certificatesByEventParticipantId = new Map(data.certificates.flatMap((certificate) => (certificate.event_participant_id ? [[certificate.event_participant_id, certificate] as const] : [])));
-  const activeEnrollments = data.enrollments.filter((enrollment) => enrollment.status === "active" && enrollment.current_stage_id);
   const inviteableReadiness = data.readiness.filter((readiness) => readiness.status === "ready" || readiness.status === "nearly_ready" || readiness.status === "invited");
   const openEvents = data.graduationEvents.filter((event) => event.status === "planned" || event.status === "published");
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Afzwemmen" title="Afzwemmen en diploma's" subtitle="Beoordeel readiness, plan afzwemmomenten, nodig ouders uit en registreer resultaten." />
+    <div className="space-y-5">
+      <PageHeader action={<><AdminActionDrawer description="Markeer een leerling als bijna klaar, klaar, geblokkeerd of nog niet klaar." title="Readiness beoordelen" triggerLabel="Readiness beoordelen"><ReadinessForm data={data} /></AdminActionDrawer><AdminActionDrawer description="Plan een afzwemmoment voor programma, niveau en locatie." title="Afzwemevent plannen" triggerLabel="Event plannen" triggerVariant="outline" width="wide"><GraduationEventForm data={data} /></AdminActionDrawer></>} kicker="Lesproces" title="Afzwemmen en diploma's" subtitle="Beoordeel readiness, plan afzwemmomenten, nodig ouders uit en registreer resultaten." />
       <Feedback saved={saved} error={error} />
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <AdminSection title="Afzwem readiness" description="Markeer leerlingen die bijna klaar of klaar zijn voor een afzwemmoment.">
-          <form action={markGraduationReadinessAction} className="grid gap-4 md:grid-cols-2">
-            <SelectField label="Inschrijving" name="enrollmentId" required>
-              <option value="">Kies leerling</option>
-              {activeEnrollments.map((enrollment) => {
-                const participant = participantById.get(enrollment.participant_id);
-                const program = programById.get(enrollment.program_id);
-                const stage = enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id) : null;
-
-                return (
-                  <option key={enrollment.id} value={enrollment.id}>
-                    {participant?.display_name ?? "Leerling"} - {program?.name ?? "Programma"} - {stage?.badge_label ?? stage?.name ?? "Badje"}
-                  </option>
-                );
-              })}
-            </SelectField>
-            <SelectField label="Readiness status" name="status">
-              <option value="nearly_ready">Bijna klaar</option>
-              <option value="ready">Klaar voor afzwemmen</option>
-              <option value="not_ready">Nog niet klaar</option>
-              <option value="blocked">Geblokkeerd</option>
-            </SelectField>
-            <Field label="Readiness score" name="readinessScore" type="number" placeholder="0-100" />
-            <Field label="Volgende review" name="nextReviewOn" type="date" />
-            <div className="md:col-span-2">
-              <TextAreaField label="Checklist samenvatting" name="checklistSummary" placeholder="Bijvoorbeeld: techniek stabiel, nog oefenen op uithoudingsvermogen." />
-            </div>
-            <div className="md:col-span-2">
-              <SubmitButton>Readiness opslaan</SubmitButton>
-            </div>
-          </form>
-        </AdminSection>
-
-        <AdminSection title="Afzwemevent plannen" description="Maak een afzwemmoment voor een programma, badje en locatie.">
-          <form action={createGraduationEventAction} className="grid gap-4 md:grid-cols-2">
-            <Field label="Titel" name="title" required placeholder="Afzwemmen diploma A" />
-            <SelectField label="Status" name="status">
-              <option value="planned">Gepland</option>
-              <option value="published">Gepubliceerd</option>
-              <option value="completed">Afgerond</option>
-              <option value="cancelled">Geannuleerd</option>
-            </SelectField>
-            <SelectField label="Programma" name="programId">
-              <option value="">Alle programma's</option>
-              {data.programs.map((program) => (
-                <option key={program.id} value={program.id}>
-                  {program.name}
-                </option>
-              ))}
-            </SelectField>
-            <SelectField label="Badje/stage" name="stageId">
-              <option value="">Alle badjes</option>
-              {data.stages.map((stage) => (
-                <option key={stage.id} value={stage.id}>
-                  {stage.badge_label ?? stage.name}
-                </option>
-              ))}
-            </SelectField>
-            <SelectField label="Locatie/resource" name="resourceId">
-              <option value="">Nog niet gezet</option>
-              {data.resources.map((resource) => (
-                <option key={resource.id} value={resource.id}>
-                  {resource.name}
-                </option>
-              ))}
-            </SelectField>
-            <Field label="Capaciteit" name="capacity" type="number" />
-            <Field label="Start" name="startsAt" required type="datetime-local" />
-            <Field label="Einde" name="endsAt" required type="datetime-local" />
-            <div className="md:col-span-2">
-              <TextAreaField label="Notities" name="notes" />
-            </div>
-            <div className="md:col-span-2">
-              <SubmitButton>Event opslaan</SubmitButton>
-            </div>
-          </form>
-        </AdminSection>
-      </div>
 
       <AdminSection title="Uitnodigen" description="Stuur een parent-visible afzwemuitnodiging naar leerlingen met readiness.">
         {inviteableReadiness.length === 0 || openEvents.length === 0 ? (
@@ -272,6 +192,18 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
       </AdminSection>
     </div>
   );
+}
+
+function ReadinessForm({ data }: { data: Awaited<ReturnType<typeof getGraduationAdminData>> }) {
+  const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
+  const programById = new Map(data.programs.map((program) => [program.id, program]));
+  const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
+  const activeEnrollments = data.enrollments.filter((enrollment) => enrollment.status === "active" && enrollment.current_stage_id);
+  return <DirtyForm action={markGraduationReadinessAction} className="grid gap-4 sm:grid-cols-2"><SelectField label="Inschrijving" name="enrollmentId" required><option value="">Kies leerling</option>{activeEnrollments.map((enrollment) => <option key={enrollment.id} value={enrollment.id}>{participantById.get(enrollment.participant_id)?.display_name ?? "Leerling"} · {programById.get(enrollment.program_id)?.name ?? "Programma"} · {enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.badge_label ?? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau" : "Niveau"}</option>)}</SelectField><SelectField label="Readiness status" name="status"><option value="nearly_ready">Bijna klaar</option><option value="ready">Klaar voor afzwemmen</option><option value="not_ready">Nog niet klaar</option><option value="blocked">Geblokkeerd</option></SelectField><Field label="Readiness score" name="readinessScore" type="number" placeholder="0-100" /><Field label="Volgende review" name="nextReviewOn" type="date" /><div className="sm:col-span-2"><TextAreaField label="Checklist samenvatting" name="checklistSummary" placeholder="Bijvoorbeeld: techniek stabiel, nog oefenen op uithoudingsvermogen." /></div><div className="sm:col-span-2"><SubmitButton>Readiness opslaan</SubmitButton></div></DirtyForm>;
+}
+
+function GraduationEventForm({ data }: { data: Awaited<ReturnType<typeof getGraduationAdminData>> }) {
+  return <DirtyForm action={createGraduationEventAction} className="grid gap-4 sm:grid-cols-2"><Field label="Titel" name="title" required placeholder="Afzwemmen diploma A" /><SelectField label="Status" name="status"><option value="planned">Gepland</option><option value="published">Gepubliceerd</option><option value="completed">Afgerond</option><option value="cancelled">Geannuleerd</option></SelectField><SelectField label="Programma" name="programId"><option value="">Alle programma's</option>{data.programs.map((program) => <option key={program.id} value={program.id}>{program.name}</option>)}</SelectField><SelectField label="Niveau" name="stageId"><option value="">Alle niveaus</option>{data.stages.map((stage) => <option key={stage.id} value={stage.id}>{stage.badge_label ?? stage.name}</option>)}</SelectField><SelectField label="Locatie / resource" name="resourceId"><option value="">Nog niet gezet</option>{data.resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</SelectField><Field label="Capaciteit" name="capacity" type="number" /><Field label="Start" name="startsAt" required type="datetime-local" /><Field label="Einde" name="endsAt" required type="datetime-local" /><div className="sm:col-span-2"><TextAreaField label="Notities" name="notes" /></div><div className="sm:col-span-2"><SubmitButton>Event opslaan</SubmitButton></div></DirtyForm>;
 }
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {

@@ -168,6 +168,27 @@
 }
 
 @layer components {
+  .admin-density {
+    --radius: 0.75rem;
+  }
+
+  .admin-density :is(input, select, textarea, button) {
+    scroll-margin-block: 5rem;
+  }
+
+  .admin-density table {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  @media (min-width: 1536px) {
+    .admin-density main {
+      max-width: 1800px;
+      width: 100%;
+      margin-inline: auto;
+    }
+  }
+
   .rdp-root {
     --rdp-day_button-width: 2.25rem;
     --rdp-day_button-height: 2.25rem;

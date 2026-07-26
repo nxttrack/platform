@@ -8,10 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 export function AdminSection({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
-      <div className="mb-4">
-        <h2 className="text-lg font-bold text-foreground">{title}</h2>
-        {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
+      <div className="mb-3">
+        <h2 className="text-base font-bold text-foreground">{title}</h2>
+        {description ? <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{description}</p> : null}
       </div>
       {children}
     </section>
@@ -102,7 +102,7 @@ export function SubmitButton({ children = "Opslaan" }: { children?: ReactNode })
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return <p className="rounded-lg border border-dashed border-border bg-muted/50 px-3 py-4 text-sm text-muted-foreground">{children}</p>;
+  return <p className="rounded-lg border border-dashed border-border bg-muted/40 px-3 py-5 text-center text-[13px] text-muted-foreground">{children}</p>;
 }
 
 export function DataList({ children }: { children: ReactNode }) {
@@ -111,7 +111,7 @@ export function DataList({ children }: { children: ReactNode }) {
 
 export function DataListRow({ title, meta, aside }: { title: string; meta?: ReactNode; aside?: ReactNode }) {
   return (
-    <div role="listitem" className="flex flex-wrap items-center justify-between gap-3 px-3 py-3">
+    <div role="listitem" className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5">
       <div className="min-w-0">
         <p className="truncate text-sm font-semibold text-foreground">{title}</p>
         {meta ? <div className="mt-1 text-xs text-muted-foreground">{meta}</div> : null}

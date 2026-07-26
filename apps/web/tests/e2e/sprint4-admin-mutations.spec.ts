@@ -40,68 +40,81 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
 
     await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
 
+    await openAction(page, "Programma toevoegen");
     let form = formWithButton(page, "Programma opslaan");
     await form.getByLabel("Naam").fill(programName);
     await form.getByLabel("Code").fill(programCode);
     await form.getByLabel("Omschrijving").fill("Browsergedreven Sprint 4 adminbewijs.");
-    await form.getByRole("button", { name: "Programma opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Programma opslaan", "/admin/programma", "1");
     await mutationExpect(page.getByRole("listitem").filter({ hasText: programName })).toHaveCount(1);
 
+    await page.goto("/admin/programma", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Niveau toevoegen");
     form = formWithButton(page, "Stage opslaan");
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await form.getByLabel("Naam").fill(stageName);
     await form.getByLabel("Code").fill(stageCode);
     await form.getByLabel("Badge label").fill("Sprint 4 bewijsbadje");
-    await form.getByRole("button", { name: "Stage opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Stage opslaan", "/admin/programma", "1");
     await mutationExpect(page.getByRole("listitem").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Nieuwe groep");
     form = formWithButton(page, "Lesgroep opslaan");
     await form.getByLabel("Naam").fill(groupName);
     await form.getByLabel("Code").fill(groupCode);
     await selectOptionByText(form.getByLabel("Programma"), programName);
-    await selectOptionByText(form.getByLabel("Badje/stage"), stageName);
+    await selectOptionByText(form.getByLabel("Niveau"), stageName);
     await form.getByLabel("Capaciteit").fill("6");
     await form.getByLabel("Vaste dag").selectOption("3");
     await form.getByLabel("Starttijd").fill("17:00");
     await form.getByLabel("Eindtijd").fill("17:45");
-    await form.getByRole("button", { name: "Lesgroep opslaan" }).click();
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: groupName })).toHaveCount(1);
+    await submitAndWaitForSaved(page, form, "Lesgroep opslaan", "/admin/groepen", "1");
+    await filterResourceTable(page, "Zoek groep…", groupName);
+    await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
 
+    await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Instructeur koppelen");
     form = formWithButton(page, "Instructeur koppelen");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await selectOptionByText(form.getByLabel("Instructeur"), state.users.instructor.fullName);
     await form.getByLabel("Vanaf").fill(today);
-    await form.getByRole("button", { name: "Instructeur koppelen" }).click();
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: groupName }).getByText("1 instructeur(s)", { exact: false })).toBeVisible();
+    await submitAndWaitForSaved(page, form, "Instructeur koppelen", "/admin/groepen", "1");
+    await filterResourceTable(page, "Zoek groep…", groupName);
+    await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
 
     await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Leerling toevoegen");
     form = formWithButton(page, "Leerling inschrijven");
     await form.getByLabel("Leerlingnaam").fill(participantName);
     await form.getByLabel("Geboortedatum").fill("2019-04-12");
     await form.getByLabel("Startdatum").fill(today);
     await selectOptionByText(form.getByLabel("Programma"), programName);
-    await selectOptionByText(form.getByLabel("Huidig badje/stage"), stageName);
-    await form.getByRole("button", { name: "Leerling inschrijven" }).click();
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: participantName })).toHaveCount(1);
+    await selectOptionByText(form.getByLabel("Huidig niveau"), stageName);
+    await submitAndWaitForSaved(page, form, "Leerling inschrijven", "/admin/leerlingen", "1");
+    await filterResourceTable(page, "Zoek leerling of ouder…", participantName);
+    await mutationExpect(resourceRow(page, participantName)).toHaveCount(1);
 
+    await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Plaatsen");
     form = formWithButton(page, "In groep plaatsen");
     await selectOptionByText(form.getByLabel("Inschrijving"), participantName);
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await form.getByLabel("Startdatum").fill(today);
-    await form.getByRole("button", { name: "In groep plaatsen" }).click();
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: participantName }).getByText(groupName, { exact: false })).toBeVisible();
+    await submitAndWaitForSaved(page, form, "In groep plaatsen", "/admin/leerlingen", "1");
+    await filterResourceTable(page, "Zoek leerling of ouder…", participantName);
+    await mutationExpect(resourceRow(page, participantName).getByText(groupName, { exact: true })).toBeVisible();
 
     await page.goto("/admin/agenda", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Les plannen");
     form = formWithButton(page, "Les opslaan");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
     await form.getByLabel("Start").fill(dateTimeValue(5, 17, 0));
     await form.getByLabel("Einde").fill(dateTimeValue(5, 17, 45));
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
-    await form.getByRole("button", { name: "Les opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
     await expect(page.getByText("Opgeslagen: 1.")).toBeVisible();
-    const dayPlan = page.locator("section").filter({ has: page.getByRole("heading", { name: "Dag- en weekplan", exact: true }) }).first();
-    await expect(dayPlan.locator("article").filter({ hasText: groupName })).toHaveCount(1);
+    await expect(page.getByRole("button").filter({ hasText: groupName })).toHaveCount(1);
 
     await page.goto("/admin/betalingen", { waitUntil: "domcontentloaded" });
     form = formWithButton(page, "Plan opslaan");
@@ -109,7 +122,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Code").fill(planCode);
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await form.getByLabel("Bedrag").fill("42,50");
-    await form.getByRole("button", { name: "Plan opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Plan opslaan", "/admin/betalingen", "plan");
     await expect(page.getByText("Opgeslagen: plan.")).toBeVisible();
 
     form = formWithButton(page, "Subscription opslaan");
@@ -118,39 +131,43 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Startdatum").fill(today);
     await form.getByLabel("Volgende vervaldatum").fill(dateValue(14));
     await form.getByLabel("Notities").fill(`sprint4-admin:${suffix}:subscription`);
-    await form.getByRole("button", { name: "Subscription opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Subscription opslaan", "/admin/betalingen", "subscription");
     await expect(page.getByText("Opgeslagen: subscription.")).toBeVisible();
     await expect(page.locator("article").filter({ hasText: participantName }).filter({ hasText: planName })).toHaveCount(1);
 
+    await openAction(page, "Betaling toevoegen");
     form = formWithButton(page, "Betaling opslaan");
     await selectOptionByText(form.getByLabel("Subscription"), participantName);
     await form.getByLabel("Vervaldatum").fill(dateValue(14));
     await form.getByLabel("Referentie").fill(paymentReference);
     await form.getByLabel("Methode").fill("staging-browser");
-    await form.getByRole("button", { name: "Betaling opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Betaling opslaan", "/admin/betalingen", "payment");
     await expect(page.getByText("Opgeslagen: payment.")).toBeVisible();
     let payment = page.locator("article").filter({ hasText: paymentReference });
     await expect(payment).toHaveCount(1);
     await payment.getByLabel("Status").selectOption("paid");
     await payment.getByLabel("Betaaldatum").fill(today);
-    await payment.getByRole("button", { name: "Status bijwerken" }).click();
+    await submitAndWaitForSaved(page, payment, "Status bijwerken", "/admin/betalingen", "status");
     await expect(page.getByText("Opgeslagen: status.")).toBeVisible();
     payment = page.locator("article").filter({ hasText: paymentReference });
     await expect(payment.getByText("paid", { exact: true })).toBeVisible();
 
     await page.goto("/admin/documenten", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Document toevoegen");
     form = formWithButton(page, "Document opslaan");
     await form.getByLabel("Titel").fill(documentTitle);
     await form.getByLabel("Omschrijving").fill("Metadata-only browserbewijs; geen extern bestand.");
-    await form.getByRole("button", { name: "Document opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Document opslaan", "/admin/documenten", "document");
     await expect(page.getByText("Opgeslagen: document.")).toBeVisible();
-    await expect(page.getByRole("list").getByText(documentTitle, { exact: true })).toBeVisible();
+    await filterResourceTable(page, "Zoek document…", documentTitle);
+    await expect(resourceRow(page, documentTitle)).toHaveCount(1);
 
     await page.goto("/admin/berichten", { waitUntil: "domcontentloaded" });
+    await openAction(page, "Bericht opstellen");
     form = formWithButton(page, "Bericht opslaan");
     await form.getByLabel("Titel").fill(messageTitle);
     await form.getByLabel("Bericht").fill("Interne conceptcommunicatie uit de Sprint 4 browserjourney.");
-    await form.getByRole("button", { name: "Bericht opslaan" }).click();
+    await submitAndWaitForSaved(page, form, "Bericht opslaan", "/admin/berichten", "message");
     await expect(page.getByText("Opgeslagen: message.")).toBeVisible();
     await expect(page.getByRole("list").getByText(messageTitle, { exact: true })).toBeVisible();
 
@@ -160,6 +177,31 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
 
 function formWithButton(page: Page, name: string) {
   return page.locator("form").filter({ has: page.getByRole("button", { name, exact: true }) });
+}
+
+async function openAction(page: Page, name: string) {
+  await page.getByRole("button", { name, exact: true }).click();
+}
+
+function resourceRow(page: Page, text: string) {
+  return page.getByRole("table").getByRole("row").filter({ hasText: text });
+}
+
+async function filterResourceTable(page: Page, accessibleName: string, value: string) {
+  await page.getByRole("textbox", { name: accessibleName, exact: true }).fill(value);
+}
+
+async function submitAndWaitForSaved(page: Page, form: Locator, buttonName: string, pathname: string, saved: string) {
+  await Promise.all([
+    page.waitForURL(
+      (url) =>
+        url.pathname === pathname &&
+        (url.searchParams.get("saved") === saved || url.searchParams.has("error")),
+      { timeout: 20_000 }
+    ),
+    form.getByRole("button", { name: buttonName, exact: true }).click()
+  ]);
+  expect(new URL(page.url()).searchParams.get("saved"), `${buttonName} must finish with a confirmed saved redirect.`).toBe(saved);
 }
 
 async function selectOptionByText(select: Locator, text: string) {
