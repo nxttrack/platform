@@ -1,5 +1,8 @@
-import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { AdminSection, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
+import { GroupsTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupAction, createGroupInstructorAssignmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData, type GroupCapacity } from "@/lib/domain/core";
 
@@ -24,6 +27,7 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
+  const query = getParam(params, "q");
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
@@ -32,11 +36,11 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Core domeinmodel" title="Lesgroepen" subtitle="Maak groepen aan, koppel ze aan programma/stage/resource en wijs instructeurs toe." />
-      <Feedback saved={saved} error={error} />
+      <RouteFeedback success={saved ? "Groepsgegevens zijn opgeslagen." : null} error={error ? "Opslaan is niet gelukt." : null} />
 
       <div className="grid gap-5 xl:grid-cols-2">
         <AdminSection title="Lesgroep aanmaken">
-          <form action={createGroupAction} className="grid gap-4 md:grid-cols-2">
+          <DirtyForm action={createGroupAction} className="grid gap-4 md:grid-cols-2">
             <Field label="Naam" name="name" required placeholder="Maandag 16:00 Badje 1" />
             <Field label="Code" name="code" placeholder="ma-1600-b1" />
             <SelectField label="Programma" name="programId" required>
@@ -83,11 +87,11 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
             <div className="md:col-span-2">
               <SubmitButton>Lesgroep opslaan</SubmitButton>
             </div>
-          </form>
+          </DirtyForm>
         </AdminSection>
 
         <AdminSection title="Instructeur koppelen">
-          <form action={createGroupInstructorAssignmentAction} className="grid gap-4 md:grid-cols-2">
+          <DirtyForm action={createGroupInstructorAssignmentAction} className="grid gap-4 md:grid-cols-2">
             <SelectField label="Lesgroep" name="groupId" required>
               <option value="">Kies groep</option>
               {data.groups.map((group) => (
@@ -116,64 +120,39 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
             <div className="md:col-span-2">
               <SubmitButton>Instructeur koppelen</SubmitButton>
             </div>
-          </form>
+          </DirtyForm>
         </AdminSection>
       </div>
 
       <AdminSection title="Groepen en capaciteit">
-        {data.groups.length === 0 ? (
-          <EmptyState>Nog geen lesgroepen.</EmptyState>
-        ) : (
-          <DataList>
-            {data.groups.map((group) => {
-              const capacity = capacityByGroupId.get(group.id);
-              const instructors = data.groupInstructorAssignments.filter((assignment) => assignment.group_id === group.id && assignment.status === "active");
-
-              return (
-                <DataListRow
-                  key={group.id}
-                  title={group.name}
-                  meta={
-                    <span>
-                      {programById.get(group.program_id)?.name ?? "programma onbekend"} · {group.stage_id ? stageById.get(group.stage_id)?.name ?? "stage onbekend" : "geen stage"} ·{" "}
-                      {group.default_resource_id ? resourceById.get(group.default_resource_id)?.name ?? "resource onbekend" : "geen resource"} · {instructors.length} instructeur(s)
-                    </span>
-                  }
-                  aside={<CapacityPill capacity={capacity} />}
-                />
-              );
-            })}
-          </DataList>
-        )}
+        <GroupsTable
+          initialSearch={query}
+          rows={data.groups.map((group) => {
+            const capacity = capacityByGroupId.get(group.id);
+            const instructorCount = data.groupInstructorAssignments.filter((assignment) => assignment.group_id === group.id && assignment.status === "active").length;
+            return {
+              capacityLabel: capacity ? `${capacity.used}/${capacity.capacity}` : "Geen capaciteit",
+              capacityStatus: capacity?.status ?? "unknown",
+              code: group.code ?? "",
+              id: group.id,
+              instructors: `${instructorCount} instructeur${instructorCount === 1 ? "" : "s"}`,
+              name: group.name,
+              program: programById.get(group.program_id)?.name ?? "Programma onbekend",
+              resource: group.default_resource_id ? resourceById.get(group.default_resource_id)?.name ?? "Resource onbekend" : "Geen vaste resource",
+              stage: group.stage_id ? stageById.get(group.stage_id)?.name ?? "Niveau onbekend" : "Geen niveau",
+              status: group.status,
+              time: formatGroupTime(group.default_weekday, group.default_start_time, group.default_end_time)
+            };
+          })}
+        />
       </AdminSection>
     </div>
   );
 }
 
-function CapacityPill({ capacity }: { capacity?: GroupCapacity }) {
-  if (!capacity) {
-    return <StatusPill>Geen capaciteit</StatusPill>;
-  }
-
-  const tone = capacity.status === "available" ? "success" : capacity.status === "full" ? "warning" : "danger";
-
-  return (
-    <StatusPill tone={tone}>
-      {capacity.used}/{capacity.capacity}
-    </StatusPill>
-  );
-}
-
-function Feedback({ saved, error }: { saved: boolean; error?: string }) {
-  if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen.</p>;
-  }
-
-  if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Opslaan is niet gelukt.</p>;
-  }
-
-  return null;
+function formatGroupTime(weekday: number | null, start: string | null, end: string | null) {
+  const day = weekdays.find(([value]) => Number(value) === weekday)?.[1] ?? "Geen vaste dag";
+  return start ? `${day} ${start.slice(0, 5)}${end ? `–${end.slice(0, 5)}` : ""}` : day;
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

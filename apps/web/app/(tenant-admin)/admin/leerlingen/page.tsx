@@ -1,5 +1,8 @@
-import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { AdminSection, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
+import { StudentsTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupMembershipAction, createParticipantEnrollmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
 import Link from "next/link";
@@ -15,22 +18,24 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
+  const query = getParam(params, "q");
   const testFilter = getParam(params, "testdata") ?? "all";
   const enrollments = data.enrollments.filter((enrollment) => testFilter === "only" ? enrollment.is_test : testFilter === "hide" ? !enrollment.is_test : true);
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
+  const guardianById = new Map(data.guardians.map((guardian) => [guardian.userId, guardian]));
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Core domeinmodel" title="Leerlingen en inschrijvingen" subtitle="Maak een parent-mediated leerling aan, schrijf die in op een programma en plaats die in een groep." />
-      <Feedback saved={saved} error={error} />
+      <RouteFeedback success={saved ? "Leerlinggegevens zijn opgeslagen." : null} error={error === "capacity" ? "Deze groep heeft geen vrije capaciteit." : error ? "Opslaan is niet gelukt." : null} />
       <TestDataFilter current={testFilter} />
 
       <div className="grid gap-5 xl:grid-cols-2">
         <AdminSection title="Leerling + inschrijving" description="Nog geen intake/wachtlijst: dit is handmatig beheer voor het operationele model.">
-          <form action={createParticipantEnrollmentAction} className="grid gap-4 md:grid-cols-2">
+          <DirtyForm action={createParticipantEnrollmentAction} className="grid gap-4 md:grid-cols-2">
             <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
             <Field label="Geboortedatum" name="birthDate" type="date" />
             <SelectField label="Ouder/guardian" name="guardianUserId">
@@ -61,11 +66,11 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             <div className="md:col-span-2">
               <SubmitButton>Leerling inschrijven</SubmitButton>
             </div>
-          </form>
+          </DirtyForm>
         </AdminSection>
 
         <AdminSection title="Plaatsing in lesgroep" description="Groepsplaatsing telt mee in de capaciteit van de lesgroep.">
-          <form action={createGroupMembershipAction} className="grid gap-4 md:grid-cols-2">
+          <DirtyForm action={createGroupMembershipAction} className="grid gap-4 md:grid-cols-2">
             <SelectField label="Inschrijving" name="enrollmentId" required>
               <option value="">Kies inschrijving</option>
               {data.enrollments.map((enrollment) => {
@@ -97,36 +102,29 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             <div className="md:col-span-2">
               <SubmitButton>In groep plaatsen</SubmitButton>
             </div>
-          </form>
+          </DirtyForm>
         </AdminSection>
       </div>
 
       <AdminSection title="Inschrijvingen en plaatsingen">
-        {enrollments.length === 0 ? (
-          <EmptyState>Nog geen inschrijvingen.</EmptyState>
-        ) : (
-          <DataList>
-            {enrollments.map((enrollment) => {
-              const participant = participantById.get(enrollment.participant_id);
-              const memberships = data.groupMemberships.filter((membership) => membership.enrollment_id === enrollment.id && (membership.status === "active" || membership.status === "trial"));
-              const groupNames = memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Onbekende groep");
-
-              return (
-                <DataListRow
-                  key={enrollment.id}
-                  title={participant?.display_name ?? "Onbekende leerling"}
-                  meta={
-                    <span>
-                      {programById.get(enrollment.program_id)?.name ?? "programma onbekend"} · {enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "stage onbekend" : "geen stage"} ·{" "}
-                      {groupNames.length > 0 ? groupNames.join(", ") : "nog niet geplaatst"}
-                    </span>
-                  }
-                  aside={<div className="space-y-1"><StatusPill tone={enrollment.status === "active" ? "success" : "neutral"}>{enrollment.status}</StatusPill>{enrollment.is_test ? <StatusPill tone="info">Journey Bot · testdata</StatusPill> : null}</div>}
-                />
-              );
-            })}
-          </DataList>
-        )}
+        <StudentsTable
+          initialSearch={query}
+          rows={enrollments.map((enrollment) => {
+            const participant = participantById.get(enrollment.participant_id);
+            const memberships = data.groupMemberships.filter((membership) => membership.enrollment_id === enrollment.id && (membership.status === "active" || membership.status === "trial"));
+            return {
+              groups: memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Onbekende groep").join(", ") || "Nog niet geplaatst",
+              guardian: participant?.guardian_user_id ? guardianById.get(participant.guardian_user_id)?.label ?? "Onbekende ouder/verzorger" : "Niet gekoppeld",
+              id: enrollment.id,
+              isTest: enrollment.is_test,
+              name: participant?.display_name ?? "Onbekende leerling",
+              program: programById.get(enrollment.program_id)?.name ?? "Programma onbekend",
+              stage: enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau onbekend" : "Nog geen niveau",
+              startsOn: enrollment.starts_on,
+              status: enrollment.status
+            };
+          })}
+        />
       </AdminSection>
     </div>
   );
@@ -140,22 +138,6 @@ function TestDataFilter({ current }: { current: string }) {
       ))}
     </div>
   );
-}
-
-function Feedback({ saved, error }: { saved: boolean; error?: string }) {
-  if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen.</p>;
-  }
-
-  if (error === "capacity") {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Deze groep heeft geen vrije capaciteit.</p>;
-  }
-
-  if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Opslaan is niet gelukt.</p>;
-  }
-
-  return null;
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

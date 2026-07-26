@@ -1,8 +1,7 @@
-import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
-import { WaitTimeChip } from "@/components/public/wait-time-chip";
-import { Button } from "@/components/ui/button";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
+import { AdminSection } from "@/components/admin/domain-ui";
+import { IntakeTable } from "@/components/admin/resource-tables";
+import { PageHeader } from "@/components/shell/ui";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
@@ -26,6 +25,9 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
   const inbox = await getTenantIntakeInbox();
   const params = (await searchParams) ?? {};
   const testFilter = getParam(params, "testdata") ?? "all";
+  const query = getParam(params, "q");
+  const saved = getParam(params, "saved");
+  const error = getParam(params, "error");
   const submissions = inbox.submissions.filter((submission) => testFilter === "only" ? submission.is_test : testFilter === "hide" ? !submission.is_test : true);
   const programById = new Map(inbox.programs.map((program) => [program.id, program]));
   const answersBySubmission = groupAnswers(inbox.answers);
@@ -34,6 +36,7 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Intake" title="Aanmeldingen" subtitle={`Nieuwe oudervragen voor ${inbox.tenant.name}.`} />
+      <RouteFeedback success={saved ? "Intake-aanmelding is bijgewerkt." : null} error={error ? `Intake-actie is niet gelukt: ${error}.` : null} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Metric label="Ontvangen" value={submissions.length} />
@@ -43,67 +46,32 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
 
       <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
         <TestDataFilter current={testFilter} />
-        {submissions.length === 0 ? (
-          <EmptyState>Nog geen intake-aanmeldingen.</EmptyState>
-        ) : (
-          <DataList>
-            {submissions.map((submission) => {
-              const program = submission.program_id ? programById.get(submission.program_id) : null;
-              const event = eventBySubjectId.get(submission.id);
-              const answers = answersBySubmission.get(submission.id) ?? [];
-              const selectedChoice = getSelectedChoice(submission.recommendation_snapshot, submission.selected_group_id);
-
-              return (
-                <DataListRow
-                  key={submission.id}
-                  title={`${submission.participant_name} · ${optionLabels[submission.selected_option]}`}
-                  meta={
-                    <div className="space-y-1">
-                      <p>
-                        {submission.parent_name} · {submission.parent_email}
-                        {submission.parent_phone ? ` · ${submission.parent_phone}` : ""}
-                      </p>
-                      {submission.secondary_parent_name ? (
-                        <p>
-                          Tweede contact: {submission.secondary_parent_name}
-                          {submission.secondary_parent_email ? ` · ${submission.secondary_parent_email}` : ""}
-                          {submission.secondary_parent_phone ? ` · ${submission.secondary_parent_phone}` : ""}
-                        </p>
-                      ) : null}
-                      <p>
-                        {program?.name ?? "Geen programma"} · {formatDate(submission.received_at)}
-                      </p>
-                      {submission.preferred_days.length > 0 ? <p>Voorkeur: {submission.preferred_days.join(", ")}</p> : null}
-                      {submission.swimming_experience ? <p>Zwemervaring: {getExperienceLabel(submission.swimming_experience)}</p> : null}
-                      {selectedChoice ? <p>Eerste momentkeuze: {formatChoice(selectedChoice)}</p> : null}
-                      <p>
-                        Herkomst: {attributionChannelLabel(submission.attribution_channel)} · {submission.attribution_source}
-                        {submission.attribution_campaign ? ` · campagne ${submission.attribution_campaign}` : ""}
-                      </p>
-                      {submission.is_test ? <p className="font-mono">Journey run: {submission.journey_run_id?.slice(0, 8) ?? "onbekend"} · volledig op te schonen via platformbeheer</p> : null}
-                      {answers.length > 0 ? <p>Antwoorden: {answers.map(formatAnswer).join(" · ")}</p> : null}
-                    </div>
-                  }
-                  aside={
-                    <div className="space-y-1">
-                      <StatusPill tone={submission.status === "received" ? "info" : "neutral"}>{submission.status}</StatusPill>
-                      {submission.is_test ? <StatusPill tone="info">Journey Bot · testdata</StatusPill> : null}
-                      {submission.selected_wait_band ? <WaitTimeChip band={submission.selected_wait_band} /> : null}
-                      {submission.duplicate_state === "possible_duplicate" ? <StatusPill tone="warning">controleer dubbel</StatusPill> : null}
-                      <StatusPill tone={event?.status === "pending" ? "warning" : "success"}>{event ? `event ${event.status}` : "geen event"}</StatusPill>
-                      {submission.duplicate_state === "possible_duplicate" ? (
-                        <div className="flex gap-1">
-                          <DuplicateAction id={submission.id} label="Dubbel" state="confirmed_duplicate" />
-                          <DuplicateAction id={submission.id} label="Uniek" state="dismissed" />
-                        </div>
-                      ) : null}
-                    </div>
-                  }
-                />
-              );
-            })}
-          </DataList>
-        )}
+        <IntakeTable
+          initialSearch={query}
+          rows={submissions.map((submission) => {
+            const selectedChoice = getSelectedChoice(submission.recommendation_snapshot, submission.selected_group_id);
+            const answers = answersBySubmission.get(submission.id) ?? [];
+            const event = eventBySubjectId.get(submission.id);
+            return {
+              choice: selectedChoice ? formatChoice(selectedChoice) : "",
+              duplicateState: submission.duplicate_state,
+              email: submission.parent_email,
+              experience: [submission.swimming_experience ? getExperienceLabel(submission.swimming_experience) : "", answers.length ? answers.map(formatAnswer).join(" · ") : ""].filter(Boolean).join(" · "),
+              id: submission.id,
+              isTest: submission.is_test,
+              option: optionLabels[submission.selected_option],
+              parent: submission.parent_name,
+              participant: submission.participant_name,
+              phone: submission.parent_phone ?? "",
+              preferredDays: submission.preferred_days.join(", "),
+              program: submission.program_id ? programById.get(submission.program_id)?.name ?? "Programma onbekend" : "Geen programma",
+              receivedAt: submission.received_at,
+              source: `${attributionChannelLabel(submission.attribution_channel)} · ${submission.attribution_source}${submission.attribution_campaign ? ` · ${submission.attribution_campaign}` : ""}${event ? ` · event ${event.status}` : ""}`,
+              status: submission.status,
+              waitBand: submission.selected_wait_band
+            };
+          })}
+        />
       </AdminSection>
     </div>
   );
@@ -116,16 +84,6 @@ function TestDataFilter({ current }: { current: string }) {
         <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/intake?testdata=${value}`} key={value}>{label}</Link>
       ))}
     </div>
-  );
-}
-
-function DuplicateAction({ id, label, state }: { id: string; label: string; state: "confirmed_duplicate" | "dismissed" }) {
-  return (
-    <form action={updateIntakeDuplicateStateAction}>
-      <input name="submissionId" type="hidden" value={id} />
-      <input name="duplicateState" type="hidden" value={state} />
-      <Button size="sm" type="submit" variant="outline">{label}</Button>
-    </form>
   );
 }
 

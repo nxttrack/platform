@@ -1,7 +1,10 @@
 import { randomUUID } from "node:crypto";
 import { CreditCard, ReceiptText } from "lucide-react";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { PaymentsTable } from "@/components/admin/resource-tables";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { DirtyForm } from "@/components/ui/dirty-form";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import {
   createBillingExportBatchAction,
   createInvoiceForPaymentAction,
@@ -37,6 +40,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
   const [data, params] = await Promise.all([getBillingAdminData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const query = getParam(params, "q");
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const enrollmentById = new Map(data.enrollments.map((enrollment) => [enrollment.id, enrollment]));
   const programById = new Map(data.programs.map((program) => [program.id, program]));
@@ -50,7 +54,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader kicker="Billing" title="Betalingen en subscriptions" subtitle="Handmatige billing en idempotente Mollie-checkout met provider-verified webhooks." />
-      <Feedback saved={saved} error={error} />
+      <RouteFeedback success={saved ? successMessage(saved) : null} error={error ? errorMessage(error) : null} />
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -75,9 +79,28 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
         <Metric label="Overdue" tone={overdueAmount > 0 ? "danger" : "success"} value={formatMoney(overdueAmount)} />
       </div>
 
+      <AdminSection title="Betalingencockpit" description="Sorteer, filter en bewaar persoonlijke weergaven; open een betaling voor snelle inzage zonder contextverlies.">
+        <PaymentsTable initialSearch={query} rows={data.manualPayments.map((payment) => {
+          const participant = participantById.get(payment.participant_id);
+          const subscription = data.subscriptions.find((item) => item.id === payment.subscription_id);
+          const plan = subscription ? planById.get(subscription.payment_plan_id) : null;
+          return {
+            amount: formatMoney(payment.amount_cents, payment.currency),
+            dueOn: payment.due_on,
+            id: payment.id,
+            method: payment.method ?? "",
+            paidOn: payment.paid_on ?? "",
+            participant: participant?.display_name ?? "Onbekende leerling",
+            plan: plan?.name ?? "Subscription",
+            reference: payment.reference ?? "",
+            status: isPaymentOverdue(payment) && payment.status === "due" ? "overdue" : payment.status
+          };
+        })} />
+      </AdminSection>
+
       <AdminSection title="Payment provider boundary" description="Leg providerkeuze en secret-referenties vast zonder echte sleutels in de database te bewaren. Manual billing blijft altijd beschikbaar.">
         <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-          <form action={saveBillingProviderConfigAction} className="grid gap-4">
+          <DirtyForm action={saveBillingProviderConfigAction} className="grid gap-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <SelectField label="Provider" name="provider">
                 <option value="manual">Handmatig</option>
@@ -126,7 +149,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             </div>
             <TextAreaField label="Checkout omschrijving" name="checkoutDescription" />
             <SubmitButton>Provider opslaan</SubmitButton>
-          </form>
+          </DirtyForm>
           <DataList>
             {data.providerConfigs.length === 0 ? (
               <div className="px-3 py-4">
@@ -164,7 +187,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
 
       <div className="grid gap-5 xl:grid-cols-3">
         <AdminSection title="Payment plan" description="Maak een handmatig tariefplan aan.">
-          <form action={createPaymentPlanAction} className="grid gap-4">
+          <DirtyForm action={createPaymentPlanAction} className="grid gap-4">
             <Field label="Naam" name="name" required placeholder="Maandabonnement zwemles" />
             <Field label="Code" name="code" placeholder="MONTHLY-A" />
             <SelectField label="Programma" name="programId">
@@ -199,11 +222,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             </div>
             <TextAreaField label="Omschrijving" name="description" />
             <SubmitButton>Plan opslaan</SubmitButton>
-          </form>
+          </DirtyForm>
         </AdminSection>
 
         <AdminSection title="Subscription" description="Koppel een inschrijving aan een payment plan.">
-          <form action={createSubscriptionAction} className="grid gap-4">
+          <DirtyForm action={createSubscriptionAction} className="grid gap-4">
             <SelectField label="Inschrijving" name="enrollmentId" required>
               <option value="">Kies inschrijving</option>
               {data.enrollments.map((enrollment) => {
@@ -268,11 +291,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             <Field label="Bedrag override" name="amount" placeholder="Leeg = planbedrag" />
             <TextAreaField label="Notities" name="notes" />
             <SubmitButton>Subscription opslaan</SubmitButton>
-          </form>
+          </DirtyForm>
         </AdminSection>
 
         <AdminSection title="Handmatige betaling" description="Maak een openstaande of betaalde handmatige betaling aan.">
-          <form action={createManualPaymentAction} className="grid gap-4">
+          <DirtyForm action={createManualPaymentAction} className="grid gap-4">
             <SelectField label="Subscription" name="subscriptionId" required>
               <option value="">Kies subscription</option>
               {data.subscriptions.map((subscription) => {
@@ -304,7 +327,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             <Field label="Methode" name="method" placeholder="Bank, contant, pin" />
             <TextAreaField label="Notities" name="notes" />
             <SubmitButton>Betaling opslaan</SubmitButton>
-          </form>
+          </DirtyForm>
         </AdminSection>
       </div>
 
@@ -361,7 +384,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
         )}
       </AdminSection>
 
-      <AdminSection title="Payment overview">
+      <AdminSection title="Betalingsoperaties" description="Voer statuswijzigingen, facturatie, checkout en incassostappen uit op de gekozen betaling.">
         {data.manualPayments.length === 0 ? (
           <EmptyState>Nog geen handmatige betalingen.</EmptyState>
         ) : (
@@ -398,7 +421,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       Deze financiële status wordt uitsluitend vanuit de geverifieerde Mollie-administratie bijgewerkt.
                     </p>
                   ) : (
-                    <form action={updateManualPaymentStatusAction} className="mt-3 grid gap-3 md:grid-cols-4">
+                    <DirtyForm action={updateManualPaymentStatusAction} className="mt-3 grid gap-3 md:grid-cols-4">
                       <input name="paymentId" type="hidden" value={payment.id} />
                       <SelectField defaultValue={payment.status} label="Status" name="status">
                         <option value="due">Open</option>
@@ -414,10 +437,10 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                           Status bijwerken
                         </button>
                       </div>
-                    </form>
+                    </DirtyForm>
                   )}
                   <div className="mt-3 grid gap-3 xl:grid-cols-3">
-                    <form action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
+                    <DirtyForm action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
                       <input name="status" type="hidden" value={payment.status === "paid" ? "paid" : "issued"} />
                       <Field label="Factuurregel" name="description" placeholder={payment.reference ?? "Zwemles betaling"} />
@@ -426,8 +449,8 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                           Factuur voorbereiden
                         </button>
                       </div>
-                    </form>
-                    <form action={createPaymentProviderSessionAction} className="rounded-lg border border-border bg-muted/30 p-3">
+                    </DirtyForm>
+                    <DirtyForm action={createPaymentProviderSessionAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
                       <input name="idempotencyKey" type="hidden" value={randomUUID()} />
                       <SelectField label="Provider" name="providerConfigId" required>
@@ -444,7 +467,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                       <div className="mt-3">
                         <SubmitButton>Checkout aanmaken</SubmitButton>
                       </div>
-                    </form>
+                    </DirtyForm>
                     <div className="rounded-lg border border-border bg-muted/30 p-3">
                       <p className="text-sm font-bold text-foreground">Automatische incasso</p>
                       {latestAttempt ? (
@@ -561,7 +584,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                           </button>
                         </form>
                       ) : null}
-                      <form action={recordPaymentSessionFailureAction} className="grid gap-3 md:grid-cols-[160px_1fr_auto]">
+                      <DirtyForm action={recordPaymentSessionFailureAction} className="grid gap-3 md:grid-cols-[160px_1fr_auto]">
                         <input name="paymentSessionId" type="hidden" value={session.id} />
                         <Field label="Code" name="failureCode" placeholder="provider_failed" />
                         <Field label="Melding" name="failureMessage" placeholder="Betaling mislukt of verlopen" />
@@ -570,11 +593,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                             Markeer mislukt
                           </button>
                         </div>
-                      </form>
+                      </DirtyForm>
                     </div>
                   ) : null}
                   {session.status === "paid" && refundableCents > 0 ? (
-                    <form action={createMollieRefundAction} className="mt-3 grid gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3 lg:grid-cols-[150px_1fr_150px_auto]">
+                    <DirtyForm action={createMollieRefundAction} className="mt-3 grid gap-3 rounded-lg border border-warning/30 bg-warning/5 p-3 lg:grid-cols-[150px_1fr_150px_auto]">
                       <input name="paymentSessionId" type="hidden" value={session.id} />
                       <input name="idempotencyKey" type="hidden" value={randomUUID()} />
                       <Field label={`Bedrag (max. ${formatMoney(refundableCents, session.currency)})`} name="amount" required defaultValue={(refundableCents / 100).toFixed(2)} />
@@ -585,7 +608,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                           Refund aanvragen
                         </button>
                       </div>
-                    </form>
+                    </DirtyForm>
                   ) : null}
                   {sessionRefunds.length > 0 ? (
                     <div className="mt-3 space-y-2">
@@ -664,7 +687,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
       </AdminSection>
 
       <AdminSection title="Facturen en export">
-        <form action={createBillingExportBatchAction} className="mb-4 grid gap-3 rounded-lg border border-border bg-white p-4 md:grid-cols-[180px_1fr_1fr_auto]">
+        <DirtyForm action={createBillingExportBatchAction} className="mb-4 grid gap-3 rounded-lg border border-border bg-white p-4 md:grid-cols-[180px_1fr_1fr_auto]">
           <SelectField label="Exporttype" name="exportType">
             <option value="invoices">Facturen</option>
             <option value="payments">Betalingen</option>
@@ -678,7 +701,7 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
               Export voorbereiden
             </button>
           </div>
-        </form>
+        </DirtyForm>
         <div className="grid gap-4 xl:grid-cols-2">
           <div>
             <h3 className="mb-3 font-bold text-foreground">Facturen</h3>
@@ -757,20 +780,18 @@ function Metric({ label, value, tone = "neutral" }: { label: string; value: stri
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
-  if (saved) {
-    const message = {
+function successMessage(saved: string) {
+  return {
       "incasso-prenotified": "De incasso is aangekondigd en staat klaar voor de geplande datum.",
       "incasso-reconciled": "De betaalstatus is opnieuw bij Mollie gecontroleerd.",
       "incasso-started": "De incasso is veilig bij Mollie gestart.",
       "refund-created": "De terugbetaling is bij Mollie aangevraagd.",
       "refund-reconciled": "De terugbetaling en eventuele storneringen zijn opnieuw gesynchroniseerd."
     }[saved] ?? `Opgeslagen: ${saved}.`;
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{message}</p>;
-  }
+}
 
-  if (error) {
-    const message = {
+function errorMessage(error: string) {
+  return {
       "incasso-outcome-unknown": "Mollie heeft niet tijdig geantwoord. Dezelfde poging wordt eerst veilig gereconcilieerd; start geen nieuwe incasso.",
       "payment-provider-managed": "Een terugbetaling of stornering kan alleen via de geverifieerde Mollie-synchronisatie worden gewijzigd.",
       "provider-automation-requires-incasso": "Schakel terugkerende SEPA-incasso in voordat je automatische uitvoering of retries activeert.",
@@ -781,10 +802,6 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
       "refund-reconcile": "De provideruitkomst is bekend, maar de lokale synchronisatie vraagt aandacht. Gebruik ‘Synchroniseren’ voordat je opnieuw handelt.",
       "refund-unknown": "De provideruitkomst is onbekend. Synchroniseer de aanvraag voordat je opnieuw handelt."
     }[error] ?? `Actie is niet gelukt: ${error}.`;
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{message}</p>;
-  }
-
-  return null;
 }
 
 function formatDate(value: string) {
