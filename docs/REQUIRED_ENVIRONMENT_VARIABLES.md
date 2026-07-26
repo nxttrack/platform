@@ -10,9 +10,11 @@
 
 | Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |
 | --- | --- | --- | --- | --- | --- | --- |
-| `CRON_SECRET` | Beveiligt `POST /api/internal/journey-bot/tick` en `POST /api/internal/next-best-actions` | Journey Bot runner en dagelijkse Next Best Action-generator | Nodig voor geplande runs | `placeholder_add_later` | GitHub environment secret en VPS runtime-env | Gebruik minimaal 32 willekeurige tekens. Nooit committen. |
+| `CRON_SECRET` | Beveiligt `POST /api/internal/journey-bot/tick`, `POST /api/internal/next-best-actions`, `POST /api/internal/automation-recipes/tick` en `POST /api/internal/participant-media/expire` | Journey Bot, Next Best Actions, de review-only automation-recipe runner en fysieke media-expiry | Nodig voor geplande runs | `placeholder_add_later` | GitHub environment secret en VPS runtime-env | Gebruik minimaal 32 willekeurige tekens. Nooit committen. Media-expiry verwijdert uitsluitend objecten waarvan de bewaartermijn is verstreken of waarvan verwijdering al bevestigd is. |
 | `JOURNEY_BOT_DEFAULT_ENABLED` | Documenteert de gewenste defaultstatus | Control plane | Later | `false` | GitHub environment variable | Een databaseconfig moet daarnaast expliciet enabled zijn. |
 | `JOURNEY_BOT_EMAIL_DOMAIN` | Domein voor herkenbare testaccounts | Testdatagenerator | Nu | `nxttrack.test` | GitHub environment variable | Gebruik een niet-bezorgbaar testdomein. |
 | `ALLOW_JOURNEY_BOT_SEED` | Eenmalige mutatieguard voor De Waterlijn-seed | Staging seed script | Alleen tijdens seed | `false` | Alleen als job-env in de staging seedworkflow | Nooit in de permanente runtime-env inschakelen. |
 
 De Journey Bot forceert `suppress_external_notifications=true` en `suppress_real_payments=true`. Deze twee beveiligingen zijn niet vanuit de UI uit te schakelen.
+
+De automation-recipe runner en participant-media expiry hergebruiken bewust hetzelfde interne `CRON_SECRET`; er is geen extra secret nodig. Tenantrecipes hebben daarnaast een database-afgedwongen `review_only`-grens en kunnen geen externe delivery activeren.
