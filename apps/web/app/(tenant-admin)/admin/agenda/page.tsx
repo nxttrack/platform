@@ -64,7 +64,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
       </AdminListSurface>
 
       <AdminListSurface>
-        <div className="mb-3"><h2 className="text-base font-bold">What-if planning</h2><p className="text-[13px] text-muted-foreground">Sleep of gebruik het toetsenbord; pas pas toe wanneer de conflictengine groen is.</p></div>
+        <div className="mb-3 scroll-mt-24" id="what-if-planning"><h2 className="text-base font-bold">What-if planning</h2><p className="text-[13px] text-muted-foreground">Sleep of gebruik het toetsenbord; pas pas toe wanneer de conflictengine groen is.</p></div>
         <PlanningWorkbench initialItems={data.sessionInsights.map((insight) => ({ id: insight.session.id, groupName: insight.group?.name ?? "Lesgroep", startsAt: insight.session.starts_at, endsAt: insight.session.ends_at, resourceId: insight.session.resource_id, resourceName: insight.resourceName }))} />
       </AdminListSurface>
 
