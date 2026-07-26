@@ -7,6 +7,8 @@ import { PageHeader } from "@/components/shell/ui";
 import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
 import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getTenantSmartEvents } from "@/lib/domain/smart-events";
+import { calculateWaitTimeBands } from "@/lib/domain/wait-time";
+import type { WaitTimeQuery } from "@/lib/domain/wait-time-contract";
 import { compareIntakeOperationalOrder, compareWaitlistOperationalOrder } from "@/lib/ui/status-meta";
 
 type PageProps = {
@@ -34,6 +36,20 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
   const scoresByEntry = groupBy(data.placementScores, "waitlist_entry_id");
   const offersByEntry = groupBy(data.slotOffers, "waitlist_entry_id");
   const visibleWaitlist = data.waitlistEntries.filter((entry) => matchesTestFilter(entry.is_test, testFilter)).sort(compareWaitlistOperationalOrder);
+  const waitTimeRequests = visibleWaitlist.map((entry) => {
+    const preference = (preferencesByEntry.get(entry.id) ?? [])[0];
+    return {
+      programId: entry.program_id,
+      stageId: entry.recommended_stage_id,
+      preferredDay: preference?.weekday ?? null,
+      preferredTimeBlock: preference ? derivePreferenceBlock(preference.starts_after) : null
+    } satisfies WaitTimeQuery;
+  });
+  const waitTimes = await calculateWaitTimeBands({
+    tenantId: data.tenant.id,
+    requests: waitTimeRequests
+  });
+  const waitTimeByScope = new Map(waitTimes.map((row) => [waitTimeKey(row.query), row.prediction]));
   const cockpitRows: PlacementCockpitRow[] = visibleWaitlist.map((entry) => {
     const stored = scoresByEntry.get(entry.id) ?? [];
     const computed = computePlacementScores({ entry, preferences: preferencesByEntry.get(entry.id) ?? [], groups: data.groups, memberships: data.groupMemberships });
@@ -51,6 +67,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       journeyRunId: entry.journey_run_id,
       minimumAgeBlocked: entry.minimum_age_blocked,
       eligibleFrom: entry.eligible_from,
+      waitTime: waitTimeByScope.get(waitTimeKey(waitTimeRequests[visibleWaitlist.findIndex((candidate) => candidate.id === entry.id)]!)) ?? insufficientWaitTime(),
       proposals,
       offerGroups: getOfferGroups(entry.program_id, proposals.map((proposal) => proposal.groupId), data.groups),
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
@@ -138,6 +155,38 @@ function formatPreference(weekday: number, startsAfter: string | null, endsBefor
   const weekdays = ["", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag"];
   const time = startsAfter || endsBefore ? `${startsAfter?.slice(0, 5) ?? "start"}–${endsBefore?.slice(0, 5) ?? "einde"}` : "ieder tijdstip";
   return `${weekdays[weekday] ?? "dag"} ${time}`;
+}
+
+function derivePreferenceBlock(startsAfter: string | null) {
+  if (!startsAfter) return null;
+  const hour = Number(startsAfter.slice(0, 2));
+  return hour < 12 ? "morning" as const : hour < 17 ? "afternoon" as const : "evening" as const;
+}
+
+function waitTimeKey(query: WaitTimeQuery) {
+  return [query.programId, query.stageId ?? "", query.preferredDay ?? "", query.preferredTimeBlock ?? "", query.locationId ?? ""].join(":");
+}
+
+function insufficientWaitTime() {
+  return {
+    band: "insufficient_data" as const,
+    confidence: 0,
+    sample_size: 0,
+    basis: "insufficient_data" as const,
+    reasons: ["geen berekenbare wachttijdgegevens"],
+    admin_explanation: "Onvoldoende gegevens om de wachttijdband te berekenen.",
+    parent_explanation: "Er is nog onvoldoende informatie voor een betrouwbare wachttijdindicatie.",
+    suggested_alternatives: [],
+    statistics: {
+      medianWeeks: null,
+      p75Weeks: null,
+      p90Weeks: null,
+      inflowPerWeek: 0,
+      outflowPerWeek: 0,
+      currentWaitlist: 0,
+      availableCapacity: 0
+    }
+  };
 }
 
 function groupBy<Row extends Record<Key, string>, Key extends string>(rows: Row[], key: Key) {

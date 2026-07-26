@@ -5,12 +5,14 @@ import { CheckCircle2, Clock3, RefreshCw, Sparkles, UserCheck, Users, XCircle } 
 
 import { ActivityTimeline } from "@/components/admin/activity-timeline";
 import { SubmitButton } from "@/components/admin/domain-ui";
+import { WaitTimeInsight } from "@/components/admin/wait-time-insight";
 import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/shell/ui";
 import { createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
 import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
+import type { WaitTimePrediction } from "@/lib/domain/wait-time-contract";
 import { getWaitlistStatusMeta } from "@/lib/ui/status-meta";
 
 export type PlacementCockpitRow = {
@@ -26,6 +28,7 @@ export type PlacementCockpitRow = {
   journeyRunId: string | null;
   minimumAgeBlocked: boolean;
   eligibleFrom: string | null;
+  waitTime: WaitTimePrediction;
   proposals: Array<{ capacity: number; groupId: string; groupName: string; reasons: string[]; score: number }>;
   offerGroups: Array<{ id: string; name: string }>;
   offers: Array<{ deliveryStatus: string; groupName: string; status: string }>;
@@ -124,6 +127,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Voorkeuren</p>
               <p className="mt-2 text-[13px] leading-5 text-foreground">{row.preferences.join(" · ") || "Geen specifieke voorkeur vastgelegd."}</p>
             </div>
+            <WaitTimeInsight prediction={row.waitTime} />
             {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · veilig te archiveren via platformbeheer</p> : null}
             {row.minimumAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
             <section className="rounded-xl border border-border p-4">

@@ -269,7 +269,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       })),
       selected_group_id: selectedRecommendation?.groupId ?? null,
       selected_wait_band: selectedRecommendation?.waitBand ?? "long",
-      recommendation_version: "intake-v1",
+      recommendation_version: "wait-time-v2",
       consent_given: consentGiven,
       source_hostname: await getRequestHostname(),
       dedupe_key: dedupeKey,

@@ -350,6 +350,12 @@ export function IntakeWizard(props: IntakeWizardProps) {
                 {selectedRecommendation.weekdayLabel} · {selectedRecommendation.startsAt}
               </p>
               <WaitTimeChip band={selectedRecommendation.waitBand} className="mt-3" />
+              {selectedRecommendation.waitExplanation ? (
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">{selectedRecommendation.waitExplanation}</p>
+              ) : null}
+              {selectedRecommendation.waitTip ? (
+                <p className="mt-2 text-xs font-semibold leading-5 text-primary">{selectedRecommendation.waitTip}</p>
+              ) : null}
             </div>
           ) : null}
           <div className="mt-6 flex gap-2 rounded-2xl border border-border bg-white p-4 text-xs leading-5 text-muted-foreground">
@@ -739,6 +745,9 @@ function ChoiceStep(props: {
                   <span className="mt-3 block text-xs leading-5 text-muted-foreground">
                     {recommendation.reasons.slice(0, 2).join(" · ")}
                   </span>
+                  {recommendation.waitTip ? (
+                    <span className="mt-2 block text-xs font-semibold leading-5 text-primary">{recommendation.waitTip}</span>
+                  ) : null}
                 </span>
               </span>
             </label>

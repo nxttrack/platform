@@ -9,6 +9,7 @@ import {
   type WaitTimeBand
 } from "./intake-recommendation-contract";
 import { summarizeGroupCapacity, type GroupMembershipRow, type GroupRow, type ProgramRow, type ProgramStageRow } from "./core";
+import { calculateWaitTimeBands } from "./wait-time";
 
 export type IntakeOption = "enrollment" | "trial" | "waitlist" | "information_request";
 
@@ -111,11 +112,12 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("program_stages").select("id, program_id, name, code, badge_label, color_hex, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("groups").select("id, program_id, stage_id, default_resource_id, name, code, status, capacity, default_weekday, default_start_time, default_end_time").eq("tenant_id", tenant.id).eq("status", "active"),
-    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id),
+    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id).eq("is_test", false),
     admin
       .from("waitlist_entries")
       .select("program_id, recommended_stage_id")
       .eq("tenant_id", tenant.id)
+      .eq("is_test", false)
       .in("status", ["waiting", "reviewing", "offered"]),
     admin.from("intake_forms").select("id, program_id, name, intro, allowed_options").eq("tenant_id", tenant.id).eq("status", "active"),
     admin
@@ -150,6 +152,24 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
   const formsByProgramId = new Map(forms.filter((form) => form.program_id).map((form) => [form.program_id as string, normalizeForm(form, questions)]));
   const defaultForm = normalizeForm(forms.find((form) => !form.program_id) ?? null, questions);
+  const waitTimePredictions = await calculateWaitTimeBands({
+    tenantId: tenant.id,
+    requests: groups.flatMap((group) =>
+      group.default_weekday && group.default_start_time
+        ? [{
+            programId: group.program_id,
+            stageId: group.stage_id,
+            preferredDay: group.default_weekday,
+            preferredTimeBlock: deriveDaypart(group.default_start_time),
+            locationId: group.default_resource_id
+          }]
+        : []
+    )
+  });
+  const waitTimeByScope = new Map(waitTimePredictions.map((item) => [
+    waitTimeScopeKey(item.query),
+    item.prediction
+  ]));
 
   return {
     tenant,
@@ -168,6 +188,13 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
           (entry) => entry.program_id === program.id && (!entry.recommended_stage_id || entry.recommended_stage_id === group.stage_id)
         ).length;
         const capacity = capacityByGroup.get(group.id);
+        const waitTime = waitTimeByScope.get(waitTimeScopeKey({
+          programId: program.id,
+          stageId: stage?.id ?? null,
+          preferredDay: group.default_weekday,
+          preferredTimeBlock: deriveDaypart(group.default_start_time),
+          locationId: group.default_resource_id
+        }));
 
         return [
           {
@@ -182,11 +209,13 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
             daypart: deriveDaypart(group.default_start_time),
             startsAt: group.default_start_time.slice(0, 5),
             endsAt: group.default_end_time.slice(0, 5),
-            waitBand: deriveWaitBand({
+            waitBand: waitTime?.band ?? deriveWaitBand({
               available: Math.max(0, capacity?.available ?? 0),
               capacity: Math.max(1, capacity?.capacity ?? group.capacity),
               pressure
-            })
+            }),
+            waitExplanation: waitTime?.parent_explanation,
+            waitTip: waitTime?.suggested_alternatives[0]?.reason
           }
         ];
       });
@@ -308,13 +337,28 @@ function deriveWaitBand(input: { available: number; capacity: number; pressure: 
 }
 
 function getBestWaitBand(slots: PublicIntakeSlot[]): WaitTimeBand {
-  if (slots.some((slot) => slot.waitBand === "short")) {
-    return "short";
-  }
+  const rank: Record<WaitTimeBand, number> = {
+    short: 0,
+    medium: 1,
+    long: 2,
+    very_long: 3,
+    insufficient_data: 4
+  };
+  return [...slots].sort((left, right) => rank[left.waitBand] - rank[right.waitBand])[0]?.waitBand ?? "insufficient_data";
+}
 
-  if (slots.some((slot) => slot.waitBand === "medium")) {
-    return "medium";
-  }
-
-  return "long";
+function waitTimeScopeKey(query: {
+  programId: string;
+  stageId?: string | null;
+  preferredDay?: number | null;
+  preferredTimeBlock?: string | null;
+  locationId?: string | null;
+}) {
+  return [
+    query.programId,
+    query.stageId ?? "",
+    query.preferredDay ?? "",
+    query.preferredTimeBlock ?? "",
+    query.locationId ?? ""
+  ].join(":");
 }

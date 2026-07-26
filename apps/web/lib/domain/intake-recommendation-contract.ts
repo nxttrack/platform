@@ -1,4 +1,4 @@
-export type WaitTimeBand = "short" | "medium" | "long";
+export type WaitTimeBand = "short" | "medium" | "long" | "very_long" | "insufficient_data";
 
 export type IntakeDaypart = "morning" | "afternoon" | "evening";
 
@@ -23,6 +23,8 @@ export type PublicIntakeSlot = {
   startsAt: string;
   endsAt: string;
   waitBand: WaitTimeBand;
+  waitExplanation?: string;
+  waitTip?: string;
 };
 
 export type IntakeRecommendation = PublicIntakeSlot & {
@@ -54,7 +56,9 @@ export const swimmingExperienceOptions: ReadonlyArray<{
 export const waitTimeLabels: Record<WaitTimeBand, string> = {
   short: "Korte wachttijd",
   medium: "Gemiddelde wachttijd",
-  long: "Lange wachttijd"
+  long: "Lange wachttijd",
+  very_long: "Zeer lange wachttijd",
+  insufficient_data: "Onvoldoende data"
 };
 
 export const daypartLabels: Record<IntakeDaypart, string> = {
@@ -80,7 +84,16 @@ export function rankIntakeSlots(input: IntakeRecommendationInput): IntakeRecomme
       const stageDistance =
         targetStageOrder === null || slot.stageSortOrder === null ? 0 : Math.abs(stageOrders.indexOf(slot.stageSortOrder) - targetStageIndex);
       const stageScore = Math.max(0, 34 - stageDistance * 10);
-      const waitScore = slot.waitBand === "short" ? 32 : slot.waitBand === "medium" ? 16 : 4;
+      const waitScore =
+        slot.waitBand === "short"
+          ? 32
+          : slot.waitBand === "medium"
+            ? 16
+            : slot.waitBand === "long"
+              ? 4
+              : slot.waitBand === "insufficient_data"
+                ? 2
+                : 0;
       const dayPreferenceIndex = preferredDayIndex.get(slot.weekday);
       const dayMatches = typeof dayPreferenceIndex === "number";
       const preferredParts = input.preferredDayparts[slot.weekday] ?? [];
