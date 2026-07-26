@@ -195,6 +195,7 @@ export function InvitationsTable({ platform = false, rows }: { platform?: boolea
 export type PlatformTenantTableRow = {
   createdAt: string;
   domain: string;
+  href: string;
   id: string;
   memberCount: number;
   name: string;
@@ -212,7 +213,7 @@ export function PlatformTenantsTable({ initialSearch, rows }: { initialSearch?: 
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : getValue() === "suspended" ? "danger" : "warning"}>{String(getValue())}</StatusPill> },
     { accessorKey: "createdAt", header: "Aangemaakt", meta: { label: "Aangemaakt" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "onboarding", "suspended", "closed"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} />} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "inactive", "suspended"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} /><Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={row.href}>Organisatie beheren</Link></div>} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
 }
 
 function DuplicateButton({ id, label, state }: { id: string; label: string; state: "confirmed_duplicate" | "dismissed" }) {
