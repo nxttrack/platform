@@ -146,6 +146,19 @@ test.describe("staging MVP smoke", () => {
 
     expect(failures()).toEqual([]);
   });
+
+  test("invitation acceptance distinguishes code, password and activation failures", async ({ page }) => {
+    const messages = [
+      ["invalid_code", "De code is ongeldig of verlopen."],
+      ["password", "Het gekozen wachtwoord voldoet niet aan de eisen"],
+      ["activation", "De code is juist, maar het account kon tijdelijk niet worden geactiveerd."]
+    ] as const;
+
+    for (const [reason, message] of messages) {
+      await page.goto(`/uitnodiging-accepteren?error=${reason}`, { waitUntil: "domcontentloaded" });
+      await expect(page.getByRole("alert")).toContainText(message);
+    }
+  });
 });
 
 function collectRuntimeFailures(page: Page) {

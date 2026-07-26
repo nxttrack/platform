@@ -15,6 +15,7 @@ export const dynamic = "force-dynamic";
 export default async function AcceptInvitationPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const error = getParam(params, "error");
+  const errorMessage = getErrorMessage(error);
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -26,9 +27,9 @@ export default async function AcceptInvitationPage({ searchParams }: PageProps) 
           NXTTRACK-account, kies dan direct je eigen wachtwoord.
         </p>
 
-        {error ? (
-          <p className="mt-5 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">
-            De code is ongeldig, verlopen of het gekozen wachtwoord voldoet niet aan de eisen.
+        {errorMessage ? (
+          <p className="mt-5 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger" role="alert">
+            {errorMessage}
           </p>
         ) : null}
 
@@ -89,4 +90,20 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   const value = params[key];
 
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getErrorMessage(error: string | undefined) {
+  if (error === "invalid_code" || error === "invalid") {
+    return "De code is ongeldig of verlopen. Controleer het e-mailadres en gebruik de nieuwste uitnodigingsmail.";
+  }
+
+  if (error === "password") {
+    return "Het gekozen wachtwoord voldoet niet aan de eisen of de twee wachtwoorden zijn niet gelijk.";
+  }
+
+  if (error === "activation") {
+    return "De code is juist, maar het account kon tijdelijk niet worden geactiveerd. Probeer het opnieuw.";
+  }
+
+  return null;
 }

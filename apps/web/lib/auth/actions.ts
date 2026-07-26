@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { acceptInvitation, createInvitation } from "./invitations";
+import { acceptInvitation, createInvitation, InvitationAcceptanceError } from "./invitations";
 import { confirmPasswordReset, changeAuthenticatedPassword, requestPasswordResetCode } from "./password-reset";
 import { buildLoginRedirect, getDefaultRedirectForRoles, sanitizeRelativePath } from "./redirects";
 import { isPlatformRole, isTenantRole, type AppRole } from "./roles";
@@ -94,8 +94,16 @@ export async function acceptInvitationAction(formData: FormData) {
       email,
       password
     });
-  } catch {
-    redirect("/uitnodiging-accepteren?error=invalid");
+  } catch (error) {
+    const reason = error instanceof InvitationAcceptanceError ? error.reason : "activation";
+
+    if (reason === "activation") {
+      console.error("[auth] Invitation activation failed.", {
+        cause: error instanceof Error ? error.message : "unknown"
+      });
+    }
+
+    redirect(`/uitnodiging-accepteren?error=${reason}`);
   }
 
   redirect("/login?invitation=accepted");
