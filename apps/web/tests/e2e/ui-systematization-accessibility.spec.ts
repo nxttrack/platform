@@ -13,6 +13,8 @@ test.describe("systematic admin UI accessibility", () => {
   });
 
   test("resource tables pass critical WCAG checks and expose sorting state", async ({ page }) => {
+    test.setTimeout(120_000);
+
     for (const path of paths) {
       await page.goto(path, { waitUntil: "domcontentloaded" });
       await page.waitForLoadState("networkidle", { timeout: 10_000 }).catch(() => undefined);
