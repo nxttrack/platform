@@ -156,7 +156,7 @@ test.describe("staging MVP smoke", () => {
 
     for (const [reason, message] of messages) {
       await page.goto(`/uitnodiging-accepteren?error=${reason}`, { waitUntil: "domcontentloaded" });
-      await expect(page.getByRole("alert")).toContainText(message);
+      await expect(page.getByRole("alert").filter({ hasText: message })).toHaveCount(1);
     }
   });
 });
