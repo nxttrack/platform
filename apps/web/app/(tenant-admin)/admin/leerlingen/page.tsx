@@ -9,6 +9,7 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupMembershipAction, createParticipantEnrollmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import { detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
 import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
@@ -19,7 +20,11 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminStudentsPage({ searchParams }: PageProps) {
-  const [data, smartEvents] = await Promise.all([getTenantCoreData(), getTenantSmartEvents()]);
+  const data = await getTenantCoreData();
+  const [smartEvents, attendanceSignals] = await Promise.all([
+    getTenantSmartEvents(),
+    detectAttendanceRisks(data.tenant.id)
+  ]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
@@ -90,6 +95,14 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                 .map((assignment) => instructorById.get(assignment.instructor_user_id)?.label ?? "Onbekende instructeur")
             );
             return {
+              attendanceSignals: attendanceSignals
+                .filter((signal) => signal.participant_id === participant?.id)
+                .slice(0, 4)
+                .map((signal) => ({
+                  label: signal.reason,
+                  evidence: signal.evidence.join(" · "),
+                  confidence: signal.confidence
+                })),
               groups: groups.map((group) => group.name).join(", ") || "Nog niet geplaatst",
               guardian: participant?.guardian_user_id ? guardianById.get(participant.guardian_user_id)?.label ?? "Onbekende ouder/verzorger" : "Niet gekoppeld",
               id: enrollment.id,

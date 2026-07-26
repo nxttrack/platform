@@ -100,9 +100,21 @@ export async function createAttendanceContactDraftAction(formData: FormData) {
     "Met vriendelijke groet"
   ].join("\n\n");
   const classification = classifyContent({ title, body }, "personal");
+  const sourceFingerprint = attendanceFingerprint(participantId, groupId, signalType);
+  const existingDraft = await admin
+    .from("participant_contact_drafts")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("source_fingerprint", sourceFingerprint)
+    .in("status", ["draft", "reviewed"])
+    .limit(1)
+    .maybeSingle();
+  if (existingDraft.error) redirect(`${nextPath}?error=draft`);
+  if (existingDraft.data) redirect(`${nextPath}?saved=draft_exists`);
+
   const result = await admin
     .from("participant_contact_drafts")
-    .upsert({
+    .insert({
       tenant_id: tenant.id,
       participant_id: participantId,
       recipient_user_id: recipientId,
@@ -110,14 +122,14 @@ export async function createAttendanceContactDraftAction(formData: FormData) {
       title,
       body,
       source_type: "attendance_risk",
-      source_fingerprint: attendanceFingerprint(participantId, groupId, signalType),
+      source_fingerprint: sourceFingerprint,
       status: "draft",
       content_classification: classification.classification,
       classification_reasons: classification.reasons,
       source: "learning_intelligence",
       is_test: false,
       journey_run_id: null
-    }, { onConflict: "tenant_id,source_fingerprint", ignoreDuplicates: true });
+    });
   if (result.error) redirect(`${nextPath}?error=draft`);
   revalidateLearningPaths();
   redirect(`${nextPath}?saved=draft`);
@@ -290,6 +302,90 @@ export async function markLessonFocusTreatedAction(formData: FormData) {
   redirect(`${nextPath}?saved=focus`);
 }
 
+export async function markInstructorReadinessRecommendationAction(formData: FormData) {
+  const nextPath = getFormNextPath(formData, "/instructor");
+  const context = await requirePrivateShellContext("/instructor");
+  const tenant = getActiveTenant(context);
+  const participantId = readUuid(formData, "participantId", nextPath);
+  const programId = readUuid(formData, "programId", nextPath);
+  const requested = readRequired(formData, "status", nextPath);
+  const status = requested === "ready"
+    ? "ready"
+    : requested === "nearly_ready"
+      ? "nearly_ready"
+      : "not_ready";
+  const admin = createAdminClient();
+  const enrollmentResult = await admin
+    .from("enrollments")
+    .select("id, participant_id, program_id, current_stage_id, is_test")
+    .eq("tenant_id", tenant.id)
+    .eq("participant_id", participantId)
+    .eq("program_id", programId)
+    .in("status", ["active", "paused"])
+    .order("starts_on", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (
+    enrollmentResult.error ||
+    !enrollmentResult.data ||
+    !enrollmentResult.data.current_stage_id ||
+    enrollmentResult.data.is_test
+  ) redirect(`${nextPath}?error=readiness`);
+  if (!await canInstructParticipant({
+    tenantId: tenant.id,
+    userId: context.user.id,
+    roles: context.activeTenant?.roles ?? [],
+    participantId
+  })) redirect(`${nextPath}?error=access`);
+
+  const existingResult = await admin
+    .from("graduation_readiness")
+    .select("id, status")
+    .eq("tenant_id", tenant.id)
+    .eq("enrollment_id", enrollmentResult.data.id)
+    .eq("stage_id", enrollmentResult.data.current_stage_id)
+    .maybeSingle();
+  if (existingResult.error) redirect(`${nextPath}?error=readiness`);
+  if (
+    existingResult.data &&
+    ["invited", "completed"].includes(existingResult.data.status)
+  ) redirect(`${nextPath}?error=readiness_locked`);
+
+  const values = {
+    tenant_id: tenant.id,
+    participant_id: participantId,
+    enrollment_id: enrollmentResult.data.id,
+    program_id: programId,
+    stage_id: enrollmentResult.data.current_stage_id,
+    status,
+    readiness_score: null,
+    checklist_summary: "Menselijke aanbeveling vastgelegd vanuit het instructeursdossier; bekijk de assistentuitleg en brondata bij de admin-review.",
+    reviewed_by_user_id: context.user.id,
+    reviewed_at: new Date().toISOString(),
+    source: "manual",
+    is_test: false,
+    journey_run_id: null
+  };
+  const result = existingResult.data
+    ? await admin
+        .from("graduation_readiness")
+        .update(values)
+        .eq("tenant_id", tenant.id)
+        .eq("id", existingResult.data.id)
+        .in("status", ["not_ready", "nearly_ready", "ready", "blocked"])
+        .select("id")
+        .maybeSingle()
+    : await admin
+        .from("graduation_readiness")
+        .insert(values)
+        .select("id")
+        .single();
+  if (result.error) redirect(`${nextPath}?error=readiness`);
+  if (!result.data) redirect(`${nextPath}?error=readiness_locked`);
+  revalidateLearningPaths();
+  redirect(`${nextPath}?saved=readiness`);
+}
+
 async function findCurrentBottleneck(
   tenantId: string,
   groupId: string,
@@ -354,6 +450,66 @@ async function canManageFocusCard(input: {
       .maybeSingle()
   ]);
   return !!sessionAssignment.data || !!groupAssignment.data;
+}
+
+async function canInstructParticipant(input: {
+  tenantId: string;
+  userId: string;
+  roles: readonly string[];
+  participantId: string;
+}) {
+  if (input.roles.some((role) =>
+    ["tenant_owner", "tenant_admin", "tenant_staff"].includes(role)
+  )) return true;
+  if (!input.roles.includes("instructor")) return false;
+  const admin = createAdminClient();
+  const [membershipsResult, catchUpResult] = await Promise.all([
+    admin
+      .from("group_memberships")
+      .select("group_id")
+      .eq("tenant_id", input.tenantId)
+      .eq("participant_id", input.participantId)
+      .in("status", ["active", "trial"]),
+    admin
+      .from("catch_up_requests")
+      .select("assigned_session_id")
+      .eq("tenant_id", input.tenantId)
+      .eq("participant_id", input.participantId)
+      .eq("status", "approved")
+      .not("assigned_session_id", "is", null)
+  ]);
+  if (membershipsResult.error || catchUpResult.error) return false;
+  const groupIds = (membershipsResult.data ?? []).map((row) => row.group_id);
+  const sessionIds = (catchUpResult.data ?? []).flatMap((row) =>
+    row.assigned_session_id ? [row.assigned_session_id] : []
+  );
+  const [groupAssignment, sessionAssignment] = await Promise.all([
+    groupIds.length
+      ? admin
+          .from("group_instructor_assignments")
+          .select("id")
+          .eq("tenant_id", input.tenantId)
+          .eq("instructor_user_id", input.userId)
+          .eq("status", "active")
+          .in("group_id", groupIds)
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    sessionIds.length
+      ? admin
+          .from("session_instructor_assignments")
+          .select("id")
+          .eq("tenant_id", input.tenantId)
+          .eq("instructor_user_id", input.userId)
+          .eq("status", "active")
+          .in("session_id", sessionIds)
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null })
+  ]);
+  return !groupAssignment.error &&
+    !sessionAssignment.error &&
+    (!!groupAssignment.data || !!sessionAssignment.data);
 }
 
 function parsePoints(value: unknown) {

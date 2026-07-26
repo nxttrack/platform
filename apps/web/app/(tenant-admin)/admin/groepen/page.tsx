@@ -9,6 +9,7 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupAction, createGroupInstructorAssignmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import { detectAttendanceRisks, detectProgressBottlenecks } from "@/lib/domain/learning-intelligence";
 import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
@@ -29,7 +30,18 @@ const weekdays = [
 export const dynamic = "force-dynamic";
 
 export default async function AdminGroupsPage({ searchParams }: PageProps) {
-  const [data, smartEvents] = await Promise.all([getTenantCoreData(), getTenantSmartEvents()]);
+  const data = await getTenantCoreData();
+  const [smartEvents, attendanceSignals, bottlenecks] = await Promise.all([
+    getTenantSmartEvents(),
+    detectAttendanceRisks(data.tenant.id),
+    detectProgressBottlenecks({
+      tenantId: data.tenant.id,
+      period: {
+        from: new Date(Date.now() - 84 * 86_400_000).toISOString(),
+        to: new Date().toISOString()
+      }
+    })
+  ]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
@@ -86,7 +98,25 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
               events: smartEvents
                 .filter((event) => event.group_id === group.id || (event.entity_type === "group" && event.entity_id === group.id))
                 .slice(0, 20)
-                .map(toSmartActivityItem)
+                .map(toSmartActivityItem),
+              healthSignals: [
+                ...attendanceSignals
+                  .filter((signal) => signal.group_id === group.id)
+                  .slice(0, 2)
+                  .map((signal) => ({
+                    label: "Aanwezigheid volgen",
+                    detail: signal.reason,
+                    tone: "info" as const
+                  })),
+                ...bottlenecks
+                  .filter((signal) => signal.group_id === group.id)
+                  .slice(0, 3)
+                  .map((signal) => ({
+                    label: signal.skill_label,
+                    detail: `${signal.affected_count} van ${signal.total_count} observaties · ${signal.suggested_lesson_focus}`,
+                    tone: "warning" as const
+                  }))
+              ]
             };
           })}
         />

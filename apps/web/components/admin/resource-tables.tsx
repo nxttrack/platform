@@ -19,6 +19,11 @@ import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getIntakeStatusMeta, getParticipantStatusMeta, getPaymentStatusMeta, getTaskStatusMeta, type StatusMeta } from "@/lib/ui/status-meta";
 
 export type StudentTableRow = {
+  attendanceSignals: Array<{
+    label: string;
+    evidence: string;
+    confidence: string;
+  }>;
   guardian: string;
   groups: string;
   id: string;
@@ -42,7 +47,7 @@ export function StudentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getParticipantStatusMeta(String(getValue()))} /> },
     { accessorKey: "startsOn", header: "Start", meta: { label: "Startdatum" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Begeleiding", value: "guidance", content: <GuidanceSignals signals={row.attendanceSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
 }
 
 export type GroupTableRow = {
@@ -58,6 +63,7 @@ export type GroupTableRow = {
   status: string;
   time: string;
   events: SmartActivityItem[];
+  healthSignals: Array<{ label: string; detail: string; tone: "info" | "warning" }>;
 };
 
 export function GroupsTable({ initialSearch, rows }: { initialSearch?: string; rows: GroupTableRow[] }) {
@@ -70,7 +76,7 @@ export function GroupsTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : "neutral"}>{String(getValue())}</StatusPill> },
     { accessorKey: "capacityStatus", header: "Capaciteit", meta: { label: "Capaciteit" }, cell: ({ row }) => <StatusPill tone={row.original.capacityStatus === "available" ? "success" : row.original.capacityStatus === "full" ? "warning" : row.original.capacityStatus === "over_capacity" ? "danger" : "neutral"}>{row.original.capacityLabel}</StatusPill> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Status", row.status]]} /> }, { label: "Planning", value: "planning", content: <DetailList entries={[["Lesmoment", row.time], ["Resource", row.resource], ["Instructeurs", row.instructors]]} /> }, { label: "Capaciteit", value: "capacity", content: <DetailList entries={[["Bezetting", row.capacityLabel], ["Signaal", capacityStatusLabel(row.capacityStatus)]]} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="groep" /> }]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Status", row.status]]} /> }, { label: "Planning", value: "planning", content: <DetailList entries={[["Lesmoment", row.time], ["Resource", row.resource], ["Instructeurs", row.instructors]]} /> }, { label: "Capaciteit", value: "capacity", content: <DetailList entries={[["Bezetting", row.capacityLabel], ["Signaal", capacityStatusLabel(row.capacityStatus)]]} /> }, { label: "Group Health", value: "health", content: <GroupHealthSignals signals={row.healthSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="groep" /> }]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
 }
 
 export type IntakeTableRow = {
@@ -279,6 +285,46 @@ function DossierTabs({
 
 function DossierPlaceholder({ entity }: { entity: string }) {
   return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Gerelateerde betalingen, berichten, taken, documenten en auditlogs blijven vanuit dit {entity}dossier bereikbaar zodra die bronnen gekoppeld zijn.</p>;
+}
+
+function GuidanceSignals({ signals }: { signals: StudentTableRow["attendanceSignals"] }) {
+  if (signals.length === 0) {
+    return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Geen actueel begeleidingssignaal. Dit betekent niet dat er geen persoonlijk gesprek nodig kan zijn.</p>;
+  }
+  return (
+    <div className="grid gap-3">
+      {signals.map((signal) => (
+        <article className="rounded-xl border border-warning/20 bg-warning/5 p-3" key={`${signal.label}-${signal.evidence}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">{signal.label}</p>
+            <StatusPill tone="info">{signal.confidence} vertrouwen</StatusPill>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{signal.evidence}</p>
+        </article>
+      ))}
+      <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href="/admin/rapportages/leskwaliteit">Open veilige opvolging</Link>
+    </div>
+  );
+}
+
+function GroupHealthSignals({ signals }: { signals: GroupTableRow["healthSignals"] }) {
+  if (signals.length === 0) {
+    return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Geen actueel groepssignaal bij voldoende brondata.</p>;
+  }
+  return (
+    <div className="grid gap-3">
+      {signals.map((signal) => (
+        <article className="rounded-xl border border-border bg-muted/35 p-3" key={`${signal.label}-${signal.detail}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">{signal.label}</p>
+            <StatusPill tone={signal.tone}>{signal.tone === "warning" ? "Lesfocus" : "Begeleiding"}</StatusPill>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{signal.detail}</p>
+        </article>
+      ))}
+      <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href="/admin/rapportages/leskwaliteit">Open Group Health</Link>
+    </div>
+  );
 }
 
 function capacityStatusLabel(status: GroupTableRow["capacityStatus"]) {

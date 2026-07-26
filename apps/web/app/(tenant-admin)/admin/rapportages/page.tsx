@@ -1,4 +1,4 @@
-import { AlertTriangle, ArrowRight, BarChart3, CheckCircle2, Save, Sparkles } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, BarChart3, CalendarRange, CheckCircle2, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { AdminSection, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
 import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
@@ -43,6 +43,25 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-gradient-to-r from-blue-950 to-primary px-5 py-4 text-white"><div><p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-aqua"><Sparkles className="size-4" />School Health & Growth</p><h2 className="mt-1 text-xl font-bold">Van metric naar vervolgstap</h2></div><span className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-bold">{growthActions.filter((action) => action.urgent).length} aandachtspunt(en)</span></div>
         <div className="grid gap-px bg-border md:grid-cols-2 xl:grid-cols-4">{growthActions.map((action) => <Link className="group bg-card p-4 transition hover:bg-primary/5" href={action.href} key={action.label}><div className="flex items-center justify-between gap-3">{action.urgent ? <AlertTriangle className="size-5 text-warning" /> : <CheckCircle2 className="size-5 text-success" />}<ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><p className="mt-4 text-2xl font-bold text-foreground">{action.metric}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{action.label}</p></Link>)}</div>
       </section>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Link className="group rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card" href="/admin/rapportages/capaciteit">
+          <div className="flex items-start justify-between gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"><CalendarRange className="size-5" /></span>
+            <ArrowRight className="size-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+          </div>
+          <h2 className="mt-5 text-lg font-bold text-foreground">Capaciteitsvoorspelling</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">Kijk 4, 8 of 12 weken vooruit naar voorzichtige openingen, vraagdruk, resources en instructeurdekking.</p>
+        </Link>
+        <Link className="group rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card" href="/admin/rapportages/leskwaliteit">
+          <div className="flex items-start justify-between gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-aqua/15 text-primary"><Activity className="size-5" /></span>
+            <ArrowRight className="size-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+          </div>
+          <h2 className="mt-5 text-lg font-bold text-foreground">Group Health & leskwaliteit</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">Volg aanwezigheid positief, vind geaggregeerde vaardigheidsbottlenecks en zet veilige vervolgacties klaar.</p>
+        </Link>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {data.reports.map((report) => (

@@ -15,6 +15,9 @@ export type GraduationReadinessRow = {
   reviewed_by_user_id: string | null;
   reviewed_at: string | null;
   next_review_on: string | null;
+  source: string;
+  is_test: boolean;
+  journey_run_id: string | null;
 };
 
 export type GraduationEventRow = {
@@ -82,7 +85,7 @@ export async function getGraduationAdminData(): Promise<GraduationAdminData> {
   const [readinessResult, eventsResult, participantsResult, certificatesResult] = await Promise.all([
     admin
       .from("graduation_readiness")
-      .select("id, participant_id, enrollment_id, program_id, stage_id, status, readiness_score, checklist_summary, reviewed_by_user_id, reviewed_at, next_review_on")
+      .select("id, participant_id, enrollment_id, program_id, stage_id, status, readiness_score, checklist_summary, reviewed_by_user_id, reviewed_at, next_review_on, source, is_test, journey_run_id")
       .eq("tenant_id", core.tenant.id)
       .order("reviewed_at", { ascending: false }),
     admin
