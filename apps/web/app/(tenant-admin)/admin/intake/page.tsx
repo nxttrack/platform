@@ -1,4 +1,6 @@
-import { AdminSection } from "@/components/admin/domain-ui";
+import { Bot, Inbox, SearchCheck } from "lucide-react";
+
+import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { IntakeTable } from "@/components/admin/resource-tables";
 import { PageHeader } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
@@ -6,7 +8,7 @@ import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake"
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
 import { attributionChannelLabel } from "@/lib/analytics/attribution";
-import Link from "next/link";
+import { compareIntakeOperationalOrder } from "@/lib/ui/status-meta";
 
 const optionLabels: Record<IntakeOption, string> = {
   enrollment: "Inschrijving",
@@ -28,24 +30,27 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
   const query = getParam(params, "q");
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
-  const submissions = inbox.submissions.filter((submission) => testFilter === "only" ? submission.is_test : testFilter === "hide" ? !submission.is_test : true);
+  const submissions = inbox.submissions
+    .filter((submission) => testFilter === "only" ? submission.is_test : testFilter === "hide" ? !submission.is_test : true)
+    .sort(compareIntakeOperationalOrder);
   const programById = new Map(inbox.programs.map((program) => [program.id, program]));
   const answersBySubmission = groupAnswers(inbox.answers);
   const eventBySubjectId = new Map(inbox.events.map((event) => [event.subject_id, event]));
 
   return (
-    <div className="space-y-6">
-      <PageHeader kicker="Intake" title="Aanmeldingen" subtitle={`Nieuwe oudervragen voor ${inbox.tenant.name}.`} />
+    <div className="space-y-5">
+      <PageHeader kicker="Leerlingen" title="Aanmeldingen" subtitle={`Beoordeel aanvragen voor ${inbox.tenant.name}, herken prioriteit en open het volledige intakedossier zonder contextverlies.`} />
       <RouteFeedback success={saved ? "Intake-aanmelding is bijgewerkt." : null} error={error ? `Intake-actie is niet gelukt: ${error}.` : null} />
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Metric label="Ontvangen" value={submissions.length} />
-        <Metric label="Nieuwe status" value={submissions.filter((submission) => submission.status === "received").length} />
-        <Metric label="Journey Bot" value={inbox.submissions.filter((submission) => submission.is_test).length} />
+      <div className="grid gap-3 sm:grid-cols-3">
+        <AdminMetricCard icon={Inbox} label="Aanvragen" value={submissions.length} />
+        <AdminMetricCard icon={SearchCheck} label="Nieuw te beoordelen" tone="warning" value={submissions.filter((submission) => submission.status === "received").length} />
+        <AdminMetricCard icon={Bot} label="Journey Bot" tone="info" value={inbox.submissions.filter((submission) => submission.is_test).length} />
       </div>
 
-      <AdminSection title="Intake inbox" description="Beoordeel nieuwe aanvragen en zet geschikte inschrijvingen door naar de wachtlijst of plaatsing.">
-        <TestDataFilter current={testFilter} />
+      <AdminFilterPills current={testFilter} href={(value) => `/admin/intake?testdata=${value}`} items={[{ label: "Alle", value: "all" }, { label: "Verberg testdata", value: "hide" }, { label: "Alleen testdata", value: "only" }]} />
+
+      <AdminListSurface>
         <IntakeTable
           initialSearch={query}
           rows={submissions.map((submission) => {
@@ -54,11 +59,14 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
             const event = eventBySubjectId.get(submission.id);
             return {
               choice: selectedChoice ? formatChoice(selectedChoice) : "",
+              birthDate: submission.participant_birth_date ?? "",
               duplicateState: submission.duplicate_state,
               email: submission.parent_email,
               experience: [submission.swimming_experience ? getExperienceLabel(submission.swimming_experience) : "", answers.length ? answers.map(formatAnswer).join(" · ") : ""].filter(Boolean).join(" · "),
               id: submission.id,
               isTest: submission.is_test,
+              journeyRunId: submission.journey_run_id ?? "",
+              notes: [submission.preferred_notes, submission.message].filter(Boolean).join(" · "),
               option: optionLabels[submission.selected_option],
               parent: submission.parent_name,
               participant: submission.participant_name,
@@ -67,32 +75,14 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
               program: submission.program_id ? programById.get(submission.program_id)?.name ?? "Programma onbekend" : "Geen programma",
               receivedAt: submission.received_at,
               source: `${attributionChannelLabel(submission.attribution_channel)} · ${submission.attribution_source}${submission.attribution_campaign ? ` · ${submission.attribution_campaign}` : ""}${event ? ` · event ${event.status}` : ""}`,
+              secondaryParent: submission.secondary_parent_name ?? "",
               status: submission.status,
               waitBand: submission.selected_wait_band
             };
           })}
         />
-      </AdminSection>
+      </AdminListSurface>
     </div>
-  );
-}
-
-function TestDataFilter({ current }: { current: string }) {
-  return (
-    <div className="mb-4 flex flex-wrap gap-2">
-      {[["all", "Alle"], ["hide", "Verberg testdata"], ["only", "Alleen testdata"]].map(([value, label]) => (
-        <Link className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ${current === value ? "bg-primary text-primary-foreground ring-primary" : "bg-white text-muted-foreground ring-border"}`} href={`/admin/intake?testdata=${value}`} key={value}>{label}</Link>
-      ))}
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: number }) {
-  return (
-    <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
-    </section>
   );
 }
 

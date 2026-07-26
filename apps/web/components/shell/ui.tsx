@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -35,8 +35,8 @@ const statusPillVariants = cva("inline-flex items-center gap-1 rounded-full px-2
   }
 });
 
-export function StatusPill({ tone, className, children }: { className?: string; children: ReactNode } & VariantProps<typeof statusPillVariants>) {
-  return <span className={cn(statusPillVariants({ tone }), className)}>{children}</span>;
+export function StatusPill({ tone, className, children, ...props }: ComponentProps<"span"> & VariantProps<typeof statusPillVariants>) {
+  return <span className={cn(statusPillVariants({ tone }), className)} {...props}>{children}</span>;
 }
 
 export function ProgressRing({ value, size = 96, label }: { value: number; size?: number; label?: string }) {

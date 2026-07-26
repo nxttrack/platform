@@ -154,6 +154,64 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   redirect("/admin/wachtlijst?saved=1");
 }
 
+export async function declineIntakeForWaitlistAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin");
+  const tenant = getActiveTenant(context);
+  const submissionId = readRequired(formData, "intakeSubmissionId");
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("intake_submissions")
+    .update({ status: "closed" })
+    .eq("tenant_id", tenant.id)
+    .eq("id", submissionId)
+    .in("status", ["received", "reviewing"])
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    redirect("/admin/wachtlijst?error=decline");
+  }
+
+  revalidatePath("/admin/intake");
+  revalidatePath("/admin/wachtlijst");
+  redirect("/admin/wachtlijst?saved=declined");
+}
+
+export async function updateWaitlistEntryStatusAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin");
+  const tenant = getActiveTenant(context);
+  const waitlistEntryId = readRequired(formData, "waitlistEntryId");
+  const status = readRequired(formData, "status");
+
+  if (!["waiting", "reviewing", "declined", "closed"].includes(status)) {
+    redirect("/admin/wachtlijst?error=status");
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .from("waitlist_entries")
+    .update({ status })
+    .eq("tenant_id", tenant.id)
+    .eq("id", waitlistEntryId)
+    .select("id")
+    .maybeSingle();
+
+  if (error || !data) {
+    redirect("/admin/wachtlijst?error=status");
+  }
+
+  await writeAudit({
+    actorUserId: context.user.id,
+    eventType: `waitlist.${status}`,
+    message: `Wachtlijststatus gewijzigd naar ${status}.`,
+    tenantId: tenant.id,
+    waitlistEntryId
+  });
+
+  revalidatePath("/admin/wachtlijst");
+  redirect(`/admin/wachtlijst?saved=${status}`);
+}
+
 const daypartRanges = {
   morning: { startsAfter: "06:00", endsBefore: "12:00" },
   afternoon: { startsAfter: "12:00", endsBefore: "17:00" },

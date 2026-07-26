@@ -45,7 +45,7 @@ export function AdminFilterPills({
 }: {
   current: string;
   href: (value: string) => string;
-  items: Array<{ label: string; value: string; count?: number }>;
+  items: Array<{ label: string; value: string; count?: number; href?: string }>;
 }) {
   return (
     <nav aria-label="Overzichtsfilter" className="flex max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-muted/55 p-1">
@@ -56,7 +56,7 @@ export function AdminFilterPills({
             "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             current === item.value ? "bg-card text-foreground shadow-soft" : "text-muted-foreground hover:text-foreground"
           )}
-          href={href(item.value)}
+          href={item.href ?? href(item.value)}
           key={item.value}
         >
           {item.label}
