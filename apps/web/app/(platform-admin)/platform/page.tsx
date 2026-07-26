@@ -37,6 +37,12 @@ type PlatformMembershipRow = {
   user_id: string;
 };
 
+type ProfileRow = {
+  email: string | null;
+  full_name: string | null;
+  id: string;
+};
+
 export const dynamic = "force-dynamic";
 
 type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
@@ -94,6 +100,7 @@ export default async function PlatformPage({ searchParams }: PageProps) {
           <PlatformTenantsTable initialSearch={query} rows={data.organizations.map((organization) => ({
             createdAt: organization.created_at,
             domain: data.domains.find((domain) => domain.tenant_id === organization.id && domain.is_primary)?.hostname ?? `${organization.slug}.nxttrack.nl`,
+            href: `/platform/organisaties/${organization.id}`,
             id: organization.id,
             memberCount: activeMembers.filter((membership) => membership.tenant_id === organization.id).length,
             name: organization.name,
@@ -147,8 +154,8 @@ export default async function PlatformPage({ searchParams }: PageProps) {
                 <DataListRow
                   aside={<StatusPill tone={membership.status === "active" ? "success" : "warning"}>{membership.status}</StatusPill>}
                   key={`${membership.user_id}-${membership.role}`}
-                  meta={membership.user_id}
-                  title={platformRoleLabel(membership.role)}
+                  meta={`${data.platformProfiles.get(membership.user_id)?.email ?? "E-mail onbekend"} · ${platformRoleLabel(membership.role)}`}
+                  title={data.platformProfiles.get(membership.user_id)?.full_name ?? data.platformProfiles.get(membership.user_id)?.email ?? "Platformgebruiker"}
                 />
               ))}
             </DataList>
@@ -173,12 +180,18 @@ async function getPlatformOverviewData() {
   assertResult(domainsResult.error, "domains");
   assertResult(membershipsResult.error, "organization memberships");
   assertResult(platformMembershipsResult.error, "platform memberships");
+  const platformUserIds = [...new Set((platformMembershipsResult.data ?? []).map((membership) => membership.user_id))];
+  const profilesResult = platformUserIds.length
+    ? await admin.from("profiles").select("id, full_name, email").in("id", platformUserIds)
+    : { data: [] as ProfileRow[], error: null };
+  assertResult(profilesResult.error, "platform profiles");
 
   return {
     organizations: (organizationsResult.data ?? []) as OrganizationRow[],
     domains: (domainsResult.data ?? []) as DomainRow[],
     memberships: (membershipsResult.data ?? []) as MembershipRow[],
     platformMemberships: (platformMembershipsResult.data ?? []) as PlatformMembershipRow[],
+    platformProfiles: new Map(((profilesResult.data ?? []) as ProfileRow[]).map((profile) => [profile.id, profile])),
     email: {
       enabled: emailSettings.enabled,
       fromEmail: emailSettings.fromEmail,

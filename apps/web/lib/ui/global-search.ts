@@ -20,8 +20,8 @@ export async function getAdminGlobalSearchItems(context: AuthenticatedTrustedAut
 
   const parentIds = (memberships.data ?? []).map((row) => row.user_id);
   const profiles = parentIds.length
-    ? await admin.from("profiles").select("id, display_name, email").in("id", parentIds).limit(resultLimit)
-    : { data: [] as Array<{ id: string; display_name: string | null; email: string | null }> };
+    ? await admin.from("profiles").select("id, full_name, email").in("id", parentIds).limit(resultLimit)
+    : { data: [] as Array<{ id: string; full_name: string | null; email: string | null }> };
 
   return [
     ...(participants.data ?? []).map((row) => ({
@@ -41,9 +41,9 @@ export async function getAdminGlobalSearchItems(context: AuthenticatedTrustedAut
     ...(profiles.data ?? []).map((row) => ({
       description: row.email ? `Ouder/verzorger · ${row.email}` : "Ouder/verzorger",
       group: "Ouders",
-      href: `/admin/leerlingen?q=${encodeURIComponent(row.display_name || row.email || row.id)}`,
+      href: `/admin/leerlingen?q=${encodeURIComponent(row.full_name || row.email || row.id)}`,
       keywords: ["ouder", "guardian", "verzorger", row.email ?? ""],
-      label: row.display_name || row.email || "Ouder zonder naam"
+      label: row.full_name || row.email || "Ouder zonder naam"
     })),
     ...(tasks.data ?? []).map((row) => ({
       description: `${row.priority} · ${statusLabel(row.status)}`,
@@ -68,7 +68,7 @@ export async function getPlatformGlobalSearchItems(): Promise<GlobalSearchItem[]
   return (data ?? []).map((tenant) => ({
     description: `${tenant.slug} · ${statusLabel(tenant.status)}`,
     group: "Tenants",
-    href: `/platform?q=${encodeURIComponent(tenant.name)}`,
+    href: `/platform/organisaties/${tenant.id}`,
     keywords: ["tenant", "organisatie", tenant.slug, tenant.status, tenant.sector],
     label: tenant.name
   }));
