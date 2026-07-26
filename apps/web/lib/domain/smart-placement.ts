@@ -63,7 +63,7 @@ export async function calculateSmartPlacementSuggestionsForEntries(input: {
     };
     const suggestions = computeSmartPlacementSuggestions({
       entry: smartEntry,
-      groups: model.groups.filter((group) => group.programId === entry.program_id),
+      groups: (entry.is_test ? model.testGroups : model.groups).filter((group) => group.programId === entry.program_id),
       now: model.now
     });
     results.set(entry.id, suggestions);
@@ -238,10 +238,16 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
       .map((readiness) => [readiness.participant_id, readiness])
   );
   const usedByGroup = new Map<string, number>();
+  const usedByGroupIncludingTest = new Map<string, number>();
   const agesByGroup = new Map<string, number[]>();
   const exits4ByGroup = new Map<string, number>();
   const exits8ByGroup = new Map<string, number>();
-  for (const membership of memberships.filter((row) => !row.is_test)) {
+  for (const membership of memberships) {
+    usedByGroupIncludingTest.set(
+      membership.group_id,
+      (usedByGroupIncludingTest.get(membership.group_id) ?? 0) + Number(membership.capacity_weight)
+    );
+    if (membership.is_test) continue;
     usedByGroup.set(membership.group_id, (usedByGroup.get(membership.group_id) ?? 0) + Number(membership.capacity_weight));
     const participant = participantById.get(membership.participant_id);
     const age = ageYears(participant?.birth_date ?? null, now);
@@ -269,7 +275,9 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
         ? futureSessions.map((session) => session.resource_id ?? group.default_resource_id)
         : [group.default_resource_id];
       const hasResource = effectiveResourceIds.every((resourceId) =>
-        !!resourceId && resourceById.get(resourceId)?.status === "active"
+        !!resourceId &&
+        resourceById.get(resourceId)?.status === "active" &&
+        resourceById.get(resourceId)?.kind !== "location"
       );
       const resourceConflict = futureSessions.some((session) =>
         !!(session.resource_id ?? group.default_resource_id) &&
@@ -297,7 +305,15 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
           sessions.some((other) =>
             other.id !== session.id &&
             !other.is_test &&
-            (assignmentsBySession.get(other.id) ?? []).some((assignment) => assignment.instructor_user_id === instructorId) &&
+            (
+              (assignmentsBySession.get(other.id) ?? []).some((assignment) => assignment.instructor_user_id === instructorId) ||
+              assignments.some((assignment) =>
+                assignment.group_id === other.group_id &&
+                assignment.instructor_user_id === instructorId &&
+                (!assignment.starts_on || assignment.starts_on <= other.starts_at.slice(0, 10)) &&
+                (!assignment.ends_on || assignment.ends_on >= other.starts_at.slice(0, 10))
+              )
+            ) &&
             other.starts_at < session.ends_at &&
             other.ends_at > session.starts_at
           )
@@ -324,6 +340,10 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
         ageSampleSize: ages.length
       };
     });
+  const testGroups = smartGroups.map((group) => ({
+    ...group,
+    usedCapacity: usedByGroupIncludingTest.get(group.id) ?? 0
+  }));
 
   const selectedGroupByIntake = new Map(
     ((intakesResult.data ?? []) as Array<{ id: string; selected_group_id: string | null }>).map((intake) => [
@@ -356,6 +376,7 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
 
   return {
     groups: smartGroups,
+    testGroups,
     locationByGroup,
     now: now.toISOString(),
     selectedGroupByIntake,

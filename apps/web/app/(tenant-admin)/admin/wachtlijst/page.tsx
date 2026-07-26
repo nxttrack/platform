@@ -37,15 +37,16 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
   const scoresByEntry = groupBy(data.placementScores, "waitlist_entry_id");
   const offersByEntry = groupBy(data.slotOffers, "waitlist_entry_id");
   const visibleWaitlist = data.waitlistEntries.filter((entry) => matchesTestFilter(entry.is_test, testFilter)).sort(compareWaitlistOperationalOrder);
-  const waitTimeRequests = visibleWaitlist.map((entry) => {
+  const waitRequestByEntry = new Map(visibleWaitlist.map((entry) => {
     const preference = (preferencesByEntry.get(entry.id) ?? [])[0];
-    return {
+    return [entry.id, {
       programId: entry.program_id,
       stageId: entry.recommended_stage_id,
       preferredDay: preference?.weekday ?? null,
       preferredTimeBlock: preference ? derivePreferenceBlock(preference.starts_after) : null
-    } satisfies WaitTimeQuery;
-  });
+    } satisfies WaitTimeQuery] as const;
+  }));
+  const waitTimeRequests = [...waitRequestByEntry.values()];
   const waitTimes = await calculateWaitTimeBands({
     tenantId: data.tenant.id,
     requests: waitTimeRequests
@@ -112,7 +113,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       journeyRunId: entry.journey_run_id,
       minimumAgeBlocked: entry.minimum_age_blocked,
       eligibleFrom: entry.eligible_from,
-      waitTime: waitTimeByScope.get(waitTimeKey(waitTimeRequests[visibleWaitlist.findIndex((candidate) => candidate.id === entry.id)]!)) ?? insufficientWaitTime(),
+      waitTime: waitTimeByScope.get(waitTimeKey(waitRequestByEntry.get(entry.id)!)) ?? insufficientWaitTime(),
       proposals,
       offerGroups: getOfferGroups(entry.program_id, proposals.filter((proposal) => proposal.canOffer).map((proposal) => proposal.groupId), data.groups, proposals.length > 0),
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
@@ -187,7 +188,7 @@ function Feedback({ saved, error, offerLink }: { saved?: string; error?: string;
   }
 
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "declined" ? "Kandidaat is geweigerd en blijft als afgehandelde aanvraag bewaard." : "Wachtlijstactie opgeslagen."}</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "declined" ? "Kandidaat is geweigerd en blijft als afgehandelde aanvraag bewaard." : saved === "direct_placement" ? "Directe plaatsing is transactioneel uitgevoerd en in de auditlog vastgelegd." : "Wachtlijstactie opgeslagen."}</p>;
   }
 
   if (error) {

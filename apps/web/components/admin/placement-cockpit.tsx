@@ -10,7 +10,7 @@ import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/shell/ui";
-import { createPlacementSuggestionTaskAction, createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
+import { confirmDirectPlacementAction, createPlacementSuggestionTaskAction, createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
 import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import type { WaitTimePrediction } from "@/lib/domain/wait-time-contract";
 import { getWaitlistStatusMeta } from "@/lib/ui/status-meta";
@@ -114,6 +114,9 @@ export function PlacementCockpit({ initialSearch, rows }: { initialSearch?: stri
 
 function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
   const statusMeta = getWaitlistStatusMeta(row.status);
+  const effectivelyAgeBlocked = row.minimumAgeBlocked && (
+    !row.eligibleFrom || row.eligibleFrom > new Date().toISOString().slice(0, 10)
+  );
 
   return (
     <div className="grid gap-5">
@@ -140,7 +143,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
             </div>
             <WaitTimeInsight prediction={row.waitTime} />
             {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · veilig te archiveren via platformbeheer</p> : null}
-            {row.minimumAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
+            {effectivelyAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
             <section className="rounded-xl border border-border p-4">
               <h3 className="text-sm font-bold text-foreground">Wachtlijststatus</h3>
               <p className="mt-1 text-xs leading-5 text-muted-foreground">{statusMeta.description}</p>
@@ -199,7 +202,25 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
                 {!row.proposals.length ? <p className="rounded-xl bg-muted p-3 text-[13px] text-muted-foreground">Geen actieve groep voldoet aan de basisvoorwaarden.</p> : null}
               </div>
             </section>
-            {!row.minimumAgeBlocked && !statusMeta.isTerminal ? <section className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="text-sm font-bold text-foreground">Plaatsingsvoorstel maken</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Kies bewust een groep; pas daarna wordt een veilig aanbod verstuurd.</p><form action={createSlotOfferAction} className="mt-4 grid gap-3"><input name="waitlistEntryId" type="hidden" value={row.id} /><label className="grid gap-1.5 text-[13px] font-semibold text-foreground" htmlFor={`placement-group-${row.id}`}>Groep<select className="h-10 rounded-lg border border-border bg-background px-3 font-normal" id={`placement-group-${row.id}`} name="groupId" required defaultValue=""><option disabled value="">Kies een groep</option>{row.offerGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label><SubmitButton>Goedkeuren en aanbod maken</SubmitButton></form></section> : null}
+            {!effectivelyAgeBlocked && !statusMeta.isTerminal ? <section className="rounded-xl border border-primary/20 bg-primary/5 p-4"><h3 className="text-sm font-bold text-foreground">Plaatsingsvoorstel maken</h3><p className="mt-1 text-xs leading-5 text-muted-foreground">Kies bewust een blocker-vrije groep. De geverifieerde ouderaanbieding blijft de aanbevolen route.</p><form action={createSlotOfferAction} className="mt-4 grid gap-3"><input name="waitlistEntryId" type="hidden" value={row.id} /><label className="grid gap-1.5 text-[13px] font-semibold text-foreground" htmlFor={`placement-group-${row.id}`}>Groep<select className="h-10 rounded-lg border border-border bg-background px-3 font-normal" id={`placement-group-${row.id}`} name="groupId" required defaultValue=""><option disabled value="">Kies een groep</option>{row.offerGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}</select></label><SubmitButton>Goedkeuren en aanbod maken</SubmitButton></form>
+              <details className="mt-4 border-t border-primary/15 pt-4">
+                <summary className="cursor-pointer text-xs font-bold text-muted-foreground">Direct plaatsen na reeds verkregen oudertoestemming</summary>
+                <form action={confirmDirectPlacementAction} className="mt-3 grid gap-3">
+                  <input name="waitlistEntryId" type="hidden" value={row.id} />
+                  <label className="grid gap-1.5 text-[13px] font-semibold text-foreground" htmlFor={`direct-placement-group-${row.id}`}>Groep
+                    <select className="h-10 rounded-lg border border-border bg-background px-3 font-normal" id={`direct-placement-group-${row.id}`} name="groupId" required defaultValue="">
+                      <option disabled value="">Kies een groep</option>
+                      {row.offerGroups.map((group) => <option key={group.id} value={group.id}>{group.name}</option>)}
+                    </select>
+                  </label>
+                  <label className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-950">
+                    <input className="mt-1 size-4 shrink-0" name="humanConfirmation" required type="checkbox" value="confirmed" />
+                    Ik bevestig dat de ouder buiten NXTTRACK toestemming gaf en dat ik deze directe plaatsing bewust uitvoer. Capaciteit, niveau, resource en instructeur worden opnieuw transactioneel gecontroleerd.
+                  </label>
+                  <SubmitButton>Plaats direct en leg vast in auditlog</SubmitButton>
+                </form>
+              </details>
+            </section> : null}
           </div>
         </TabsContent>
         <TabsContent value="communication">

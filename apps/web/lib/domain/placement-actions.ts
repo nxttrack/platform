@@ -502,6 +502,53 @@ export async function createPlacementSuggestionTaskAction(formData: FormData) {
   redirect("/admin/wachtlijst?saved=task");
 }
 
+export async function confirmDirectPlacementAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin");
+  const tenant = getActiveTenant(context);
+  const waitlistEntryId = readRequired(formData, "waitlistEntryId");
+  const groupId = readRequired(formData, "groupId");
+  if (formData.get("humanConfirmation") !== "confirmed") {
+    redirect("/admin/wachtlijst?error=confirmation_required");
+  }
+
+  const entry = await getWaitlistEntry(tenant.id, waitlistEntryId);
+  if (!entry) redirect("/admin/wachtlijst?error=waitlist");
+  const suggestion = await validateSmartPlacementOffer({
+    tenantId: tenant.id,
+    entry,
+    groupId
+  });
+  if (!suggestion?.canOffer) {
+    redirect(`/admin/wachtlijst?error=${encodeURIComponent(suggestion?.blockers[0]?.code ?? "placement_blocked")}`);
+  }
+
+  const guardianUserId = await findTenantGuardianUserId(tenant.id, entry.parent_email);
+  const placementResult = await createAdminClient().rpc("confirm_direct_placement", {
+    target_tenant_id: tenant.id,
+    target_waitlist_entry_id: waitlistEntryId,
+    target_group_id: groupId,
+    target_guardian_user_id: guardianUserId,
+    actor_user_id: context.user.id,
+    human_confirmation: true
+  });
+  if (placementResult.error) {
+    console.error("[smart-placement] Confirmed direct placement failed", {
+      code: placementResult.error.code,
+      message: placementResult.error.message,
+      tenantId: tenant.id,
+      waitlistEntryId,
+      groupId
+    });
+    redirect("/admin/wachtlijst?error=direct_placement");
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/admin/leerlingen");
+  revalidatePath("/admin/groepen");
+  revalidatePath("/admin/wachtlijst");
+  redirect("/admin/wachtlijst?saved=direct_placement");
+}
+
 export async function verifySlotOfferAction(formData: FormData) {
   const email = readRequired(formData, "email").trim().toLowerCase();
   const code = readRequired(formData, "code");

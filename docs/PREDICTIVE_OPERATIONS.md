@@ -39,6 +39,8 @@ Plaatsingssuggesties combineren bewezen programma- en niveaumatch, voorkeuren, v
 
 Harde blockers blijven zichtbaar en maken `canOffer=false`. Verwachte uitstroom heft een volle groep nooit op. De server controleert blockers opnieuw bij het maken én accepteren van een aanbod.
 
-De huidige database heeft nog geen expliciet tenantbeleid voor flexcapaciteit, instructeurskwalificaties of maximale instructeursbelasting. Die signalen worden daarom niet verzonnen. Een bewezen planningsconflict wordt wel als overload behandeld. Rechtstreekse plaatsing vanuit een wachtlijstvoorstel is bewust niet toegevoegd: de bestaande geverifieerde aanbodflow bewaart ouderbevestiging en voorkomt gedeeltelijke deelnemers-, inschrijvings- en groepsrecords.
+De huidige database heeft nog geen expliciet tenantbeleid voor flexcapaciteit, instructeurskwalificaties of maximale instructeursbelasting. Die signalen worden daarom niet verzonnen. Een bewezen planningsconflict wordt wel als overload behandeld.
+
+De geverifieerde ouderaanbieding blijft de aanbevolen plaatsingsroute. Als toestemming aantoonbaar buiten NXTTRACK is verkregen, kan een tenantadmin expliciet **direct plaatsen** bevestigen. Die handeling draait in één databasetransactie en controleert leeftijd, status, niveau, vaste capaciteit, resource, roosterconflicten, instructeur en instructeurconflicten opnieuw. Bij één fout wordt niets gedeeltelijk aangemaakt. De bevestiging en resulterende record-ID’s komen in de plaatsingsaudit.
 
 Journey Bot-markers worden doorgezet naar deelnemer, inschrijving, groepslidmaatschap, suggesties en afgeleide acties. De purgefunctie verwijdert afgeleide records van dezelfde run voordat de bronrecords worden opgeschoond.
