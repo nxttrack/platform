@@ -5,6 +5,8 @@ import { EmptyState } from "@/components/admin/domain-ui";
 import { PendingIntakesTable, PlacementCockpit, type PlacementCockpitRow } from "@/components/admin/placement-cockpit";
 import { PageHeader } from "@/components/shell/ui";
 import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 import { compareIntakeOperationalOrder, compareWaitlistOperationalOrder } from "@/lib/ui/status-meta";
 
 type PageProps = {
@@ -14,12 +16,13 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminWaitlistPage({ searchParams }: PageProps) {
-  const data = await getPlacementDashboardData();
+  const [data, smartEvents] = await Promise.all([getPlacementDashboardData(), getTenantSmartEvents()]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const offerLink = getParam(params, "aanbod");
   const testFilter = getParam(params, "testdata") ?? "all";
+  const query = getParam(params, "q");
   const waitlistIntakeIds = new Set(data.waitlistEntries.flatMap((entry) => (entry.intake_submission_id ? [entry.intake_submission_id] : [])));
   const pendingIntakes = data.intakeSubmissions
     .filter((submission) => submission.program_id && ["received", "reviewing"].includes(submission.status) && !waitlistIntakeIds.has(submission.id) && matchesTestFilter(submission.is_test, testFilter))
@@ -53,7 +56,15 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
       ,
       preferences: (preferencesByEntry.get(entry.id) ?? []).map((preference) => formatPreference(preference.weekday, preference.starts_after, preference.ends_before)),
-      auditEvents: data.auditEvents.filter((event) => event.waitlist_entry_id === entry.id).slice(0, 12).map((event) => ({ createdAt: event.created_at, eventType: event.event_type, message: event.message ?? "" }))
+      auditEvents: data.auditEvents.filter((event) => event.waitlist_entry_id === entry.id).slice(0, 12).map((event) => ({ createdAt: event.created_at, eventType: event.event_type, message: event.message ?? "" })),
+      smartEvents: smartEvents
+        .filter((event) =>
+          (event.entity_type === "waitlist_entry" && event.entity_id === entry.id) ||
+          event.metadata_json.waitlist_entry_id === entry.id ||
+          event.metadata_json.waitlistEntryId === entry.id
+        )
+        .slice(0, 20)
+        .map(toSmartActivityItem)
     };
   });
 
@@ -84,7 +95,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
         {visibleWaitlist.length === 0 ? (
           <EmptyState>Nog geen wachtlijstentries.</EmptyState>
         ) : (
-          <PlacementCockpit rows={cockpitRows} />
+          <PlacementCockpit initialSearch={query} rows={cockpitRows} />
         )}
       </AdminListSurface>
     </div>

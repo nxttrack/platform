@@ -9,6 +9,8 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupAction, createGroupInstructorAssignmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,7 +29,7 @@ const weekdays = [
 export const dynamic = "force-dynamic";
 
 export default async function AdminGroupsPage({ searchParams }: PageProps) {
-  const data = await getTenantCoreData();
+  const [data, smartEvents] = await Promise.all([getTenantCoreData(), getTenantSmartEvents()]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
@@ -80,7 +82,11 @@ export default async function AdminGroupsPage({ searchParams }: PageProps) {
               resource: group.default_resource_id ? resourceById.get(group.default_resource_id)?.name ?? "Resource onbekend" : "Geen vaste resource",
               stage: group.stage_id ? stageById.get(group.stage_id)?.name ?? "Niveau onbekend" : "Geen niveau",
               status: group.status,
-              time: formatGroupTime(group.default_weekday, group.default_start_time, group.default_end_time)
+              time: formatGroupTime(group.default_weekday, group.default_start_time, group.default_end_time),
+              events: smartEvents
+                .filter((event) => event.group_id === group.id || (event.entity_type === "group" && event.entity_id === group.id))
+                .slice(0, 20)
+                .map(toSmartActivityItem)
             };
           })}
         />

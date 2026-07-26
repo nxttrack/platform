@@ -15,13 +15,14 @@ export function AdminMetricCard({
   label: string;
   value: number | string;
   detail?: string;
-  tone?: "neutral" | "info" | "success" | "warning";
+  tone?: "neutral" | "info" | "success" | "warning" | "danger";
 }) {
   const toneClass = {
     neutral: "bg-slate-500/8 text-slate-700",
     info: "bg-sky-500/10 text-sky-700",
     success: "bg-emerald-500/10 text-emerald-700",
-    warning: "bg-amber-500/10 text-amber-800"
+    warning: "bg-amber-500/10 text-amber-800",
+    danger: "bg-red-500/10 text-red-700"
   }[tone];
 
   return (

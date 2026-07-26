@@ -9,6 +9,8 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupMembershipAction, createParticipantEnrollmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -17,7 +19,7 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminStudentsPage({ searchParams }: PageProps) {
-  const data = await getTenantCoreData();
+  const [data, smartEvents] = await Promise.all([getTenantCoreData(), getTenantSmartEvents()]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
@@ -98,7 +100,14 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
               program: programById.get(enrollment.program_id)?.name ?? "Programma onbekend",
               stage: enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau onbekend" : "Nog geen niveau",
               startsOn: enrollment.starts_on,
-              status: enrollment.status
+              status: enrollment.status,
+              events: smartEvents
+                .filter((event) =>
+                  event.participant_id === participant?.id ||
+                  (event.entity_type === "enrollment" && event.entity_id === enrollment.id)
+                )
+                .slice(0, 20)
+                .map(toSmartActivityItem)
             };
           })}
         />

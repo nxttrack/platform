@@ -41,6 +41,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/betalingen", label: "Betalingen", icon: "card", section: "Financieel" },
   { href: "/admin/rapportages", label: "Rapportages", icon: "chart", section: "Financieel" },
   { href: "/admin/automatisering", label: "Automatisering", icon: "bot", section: "Automatisering" },
+  { href: "/admin/automatisering/datakwaliteit", label: "Datakwaliteit", icon: "shield", section: "Automatisering" },
   { href: "/admin/branding", label: "Branding", icon: "palette", section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: "settings", section: "Beheer" },
   { href: "/admin/importeren", label: "Importeren", icon: "upload", section: "Beheer" }

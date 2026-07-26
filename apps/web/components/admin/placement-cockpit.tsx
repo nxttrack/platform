@@ -3,12 +3,14 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { CheckCircle2, Clock3, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
 
+import { ActivityTimeline } from "@/components/admin/activity-timeline";
 import { SubmitButton } from "@/components/admin/domain-ui";
 import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/shell/ui";
 import { createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
+import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getWaitlistStatusMeta } from "@/lib/ui/status-meta";
 
 export type PlacementCockpitRow = {
@@ -29,6 +31,7 @@ export type PlacementCockpitRow = {
   offers: Array<{ deliveryStatus: string; groupName: string; status: string }>;
   preferences: string[];
   auditEvents: Array<{ createdAt: string; eventType: string; message: string }>;
+  smartEvents: SmartActivityItem[];
 };
 
 export type PendingIntakeRow = {
@@ -77,7 +80,7 @@ const columns: ColumnDef<PlacementCockpitRow, unknown>[] = [
   { accessorKey: "priorityDate", header: "Sinds", meta: { label: "Prioriteit" }, cell: ({ getValue }) => new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(String(getValue()))) }
 ];
 
-export function PlacementCockpit({ rows }: { rows: PlacementCockpitRow[] }) {
+export function PlacementCockpit({ initialSearch, rows }: { initialSearch?: string; rows: PlacementCockpitRow[] }) {
   return (
     <DataTable
       columns={columns}
@@ -86,6 +89,7 @@ export function PlacementCockpit({ rows }: { rows: PlacementCockpitRow[] }) {
       detailTitle={(row) => row.participantName}
       filters={[{ column: "status", label: "Statussen", options: ["waiting", "reviewing", "offered", "placed", "declined"].map((value) => ({ label: getWaitlistStatusMeta(value).label, value })) }]}
       getRowId={(row) => row.id}
+      initialSearchValue={initialSearch}
       renderDetails={(row) => <PlacementDetails row={row} />}
       searchColumn="participantName"
       searchPlaceholder="Zoek deelnemer…"
@@ -108,7 +112,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
           <TabsTrigger className="flex-none" value="overview">Overzicht</TabsTrigger>
           <TabsTrigger className="flex-none" value="placement">Plaatsingsmogelijkheden</TabsTrigger>
           <TabsTrigger className="flex-none" value="communication">Communicatie</TabsTrigger>
-          <TabsTrigger className="flex-none" value="logs">Logs</TabsTrigger>
+          <TabsTrigger className="flex-none" value="activity">Activiteit</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <div className="grid gap-4">
@@ -151,8 +155,14 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
         <TabsContent value="communication">
           {row.offers.length ? <div className="grid gap-2">{row.offers.slice(0, 8).map((offer, index) => <div className="flex items-center gap-3 rounded-xl bg-muted px-3 py-2 text-[13px]" key={`${offer.groupName}-${index}`}><CheckCircle2 className="size-4 text-primary" /><span className="flex-1 font-medium">{offer.groupName}</span><span className="text-xs text-muted-foreground">{offer.status} · {offer.deliveryStatus}</span></div>)}</div> : <p className="rounded-xl bg-muted p-4 text-[13px] text-muted-foreground">Nog geen aanbodcommunicatie voor deze kandidaat.</p>}
         </TabsContent>
-        <TabsContent value="logs">
-          {row.auditEvents.length ? <ol className="grid gap-3">{row.auditEvents.map((event, index) => <li className="border-l-2 border-primary/25 pl-3" key={`${event.eventType}-${index}`}><p className="text-[13px] font-semibold">{event.eventType.replaceAll("_", " ")}</p><p className="text-xs text-muted-foreground">{event.message || "Geen toelichting"} · {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.createdAt))}</p></li>)}</ol> : <p className="rounded-xl bg-muted p-4 text-[13px] text-muted-foreground">Nog geen auditgebeurtenissen vastgelegd.</p>}
+        <TabsContent value="activity">
+          <div className="grid gap-5">
+            <ActivityTimeline events={row.smartEvents} />
+            <section className="border-t border-border pt-4">
+              <h3 className="text-xs font-bold uppercase tracking-[0.1em] text-muted-foreground">Technische plaatsingsaudit</h3>
+              {row.auditEvents.length ? <ol className="mt-3 grid gap-3">{row.auditEvents.map((event, index) => <li className="border-l-2 border-primary/25 pl-3" key={`${event.eventType}-${index}`}><p className="text-[13px] font-semibold">{event.eventType.replaceAll("_", " ")}</p><p className="text-xs text-muted-foreground">{event.message || "Geen toelichting"} · {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.createdAt))}</p></li>)}</ol> : <p className="mt-3 rounded-xl bg-muted p-4 text-[13px] text-muted-foreground">Nog geen technische auditgebeurtenissen vastgelegd.</p>}
+            </section>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

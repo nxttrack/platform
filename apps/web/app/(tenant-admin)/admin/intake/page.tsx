@@ -7,6 +7,8 @@ import { RouteFeedback } from "@/components/ui/route-feedback";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 import { attributionChannelLabel } from "@/lib/analytics/attribution";
 import { compareIntakeOperationalOrder } from "@/lib/ui/status-meta";
 
@@ -24,7 +26,7 @@ type PageProps = {
 };
 
 export default async function AdminIntakePage({ searchParams }: PageProps) {
-  const inbox = await getTenantIntakeInbox();
+  const [inbox, smartEvents] = await Promise.all([getTenantIntakeInbox(), getTenantSmartEvents()]);
   const params = (await searchParams) ?? {};
   const testFilter = getParam(params, "testdata") ?? "all";
   const query = getParam(params, "q");
@@ -77,7 +79,11 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
               source: `${attributionChannelLabel(submission.attribution_channel)} · ${submission.attribution_source}${submission.attribution_campaign ? ` · ${submission.attribution_campaign}` : ""}${event ? ` · event ${event.status}` : ""}`,
               secondaryParent: submission.secondary_parent_name ?? "",
               status: submission.status,
-              waitBand: submission.selected_wait_band
+              waitBand: submission.selected_wait_band,
+              events: smartEvents
+                .filter((smartEvent) => smartEvent.entity_type === "intake_submission" && smartEvent.entity_id === submission.id)
+                .slice(0, 20)
+                .map(toSmartActivityItem)
             };
           })}
         />
