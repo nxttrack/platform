@@ -85,10 +85,10 @@ async function submitIntake(page: Page, tenantUrl: string, participantName: stri
 }
 
 async function convertIntake(page: Page, participantName: string) {
-  const pendingIntake = page.getByRole("listitem").filter({ hasText: participantName });
+  const pendingIntake = page.getByRole("row").filter({ hasText: participantName });
 
   await expect(pendingIntake).toHaveCount(1);
-  await pendingIntake.getByRole("button", { name: "Maak wachtlijst" }).click();
+  await pendingIntake.getByRole("button", { name: "Accepteren" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1/);
 
   return openPlacementDetails(page, participantName);
@@ -107,6 +107,7 @@ async function openPlacementDetails(page: Page, participantName: string) {
   await row.getByRole("button", { name: "Details openen" }).click();
   const dialog = page.getByRole("dialog").filter({ hasText: participantName });
   await expect(dialog).toBeVisible();
+  await dialog.getByRole("tab", { name: "Plaatsingsmogelijkheden" }).click();
   return dialog;
 }
 
