@@ -15,7 +15,9 @@ const checks = [
   ["apps/web/lib/security/content-classification.ts", ["operational", "personal", "sensitive", "restricted", "sanitizeImportedCell"]],
   ["supabase/migrations/20260725190000_content_classification_and_malware.sql", ["content_classification", "malware_scan_status", "legacy_sensitive_keyword"]],
   ["docs/SPRINT_31_IMAGE_PROMPTS.md", ["IMG-31-01", "IMG-31-11", "Vervangingscontract"]],
-  ["scripts/staging/seed-sprint31-demo.mjs", ["APP_ENV", "ALLOW_SPRINT31_DEMO_SEED", "Zwemacademie De Waterlijn", "SPRINT31_DEMO"]]
+  ["scripts/staging/seed-sprint31-demo.mjs", ["APP_ENV", "ALLOW_SPRINT31_DEMO_SEED", "Zwemacademie De Waterlijn", "SPRINT31_DEMO", "@demo.nxttrack.test", "Europe/Amsterdam", "seedProgressTimeline", "seedBilling"]],
+  ["scripts/staging/verify-sprint31-demo.mjs", ["waterlijn-demo", "expectCount(\"participants\", participants, 48)", "expectCount(\"demo sessions\", sessions, 72)", "@demo.nxttrack.test", "duplicate demo sessions"]],
+  [".github/workflows/staging-demo-tenant-seed.yml", ["cron: \"17 4 * * *\"", "staging:verify-demo", "restore managed Waterlijn showcase"]]
 ];
 
 const failures = [];
