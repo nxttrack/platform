@@ -111,8 +111,8 @@ export function computeCapacityForecast(input: {
         reason(
           "demand",
           "Verwachte vraag",
-          "Wachtlijstdruk en verwachte doorstroom naar dit niveau worden samen bekeken.",
-          `${group.waitlistDemand} wachtend · ${group.expectedTransfersIn} mogelijke doorstromers`
+          "Wachtlijstdruk en verwachte doorstroom naar dit niveau worden kansgewogen verdeeld over passende lesgroepen.",
+          `${roundOne(group.waitlistDemand)} gewogen wachtlijstvraag · ${roundOne(group.expectedTransfersIn)} mogelijke doorstromers`
         ),
         reason(
           "openings",
@@ -425,7 +425,7 @@ export function detectProgressBottleneckSignals(input: {
   periodEnd: string;
   minimumSampleSize?: number;
 }): ProgressBottleneck[] {
-  const minimumSampleSize = input.minimumSampleSize ?? 4;
+  const minimumSampleSize = input.minimumSampleSize ?? 5;
   const inPeriod = input.assessments.filter((row) =>
     row.assessedAt >= input.periodStart && row.assessedAt <= input.periodEnd
   );
@@ -760,7 +760,7 @@ function capacityActions(
   groupId: string
 ): Array<{ label: string; href: string }> {
   const actions = [
-    { label: "Open What-if planning", href: `/admin/agenda?group=${groupId}&mode=what-if` },
+    { label: "Open What-if planbord", href: `/admin/agenda?group=${groupId}` },
     { label: "Bekijk Next Best Actions", href: "/admin/automatisering/acties" }
   ];
   if (riskLevel === "healthy") {

@@ -27,6 +27,8 @@ test("assessment history is append-only and automatically captures score changes
   assert.match(migration, /after insert or update of score, positive_label, visibility, scored_by_user_id, scored_at/);
   assert.match(migration, /insert into public\.participant_progress_assessments/);
   assert.match(migration, /participant_progress_assessments_source_score_fk[\s\S]+on delete cascade/);
+  assert.match(migration, /left join lateral \([\s\S]+from public\.group_memberships/);
+  assert.match(migration, /if target_group_id is null then[\s\S]+from public\.group_memberships/);
 });
 
 test("lesson focus is capped, human treated and Journey-safe", () => {

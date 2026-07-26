@@ -140,7 +140,7 @@ test("a future or still-running session never becomes a missing check-in signal"
 
 test("progress bottlenecks require a sufficient participant sample", () => {
   const insufficient = detectProgressBottleneckSignals({
-    assessments: progressAssessments(3),
+    assessments: progressAssessments(4),
     periodStart: "2026-05-01T00:00:00.000Z",
     periodEnd: "2026-08-01T00:00:00.000Z"
   });

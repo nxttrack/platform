@@ -90,6 +90,40 @@ function populatedInput(): NextBestActionInput {
   input.qualityIssues = [{ id: "quality-1", entityType: "participant", entityId: "participant-1", severity: "error", title: "Dossier mist gegeven", description: "Controleer het dossier.", suggestedAction: "Vul het gegeven aan", isTest: false, journeyRunId: null }];
   input.readiness = [{ id: "ready-1", participantId: "participant-1", programId: "program-1", stageId: "stage-1", readinessScore: 92, isTest: false, journeyRunId: null }];
   input.credits = [{ id: "credit-1", participantId: "participant-1", expiresOn: "2026-08-01", isTest: false, journeyRunId: null }];
+  input.capacityForecasts = [{
+    groupId: "group-full",
+    groupName: "Badje 1 woensdag",
+    programId: "program-1",
+    riskLevel: "critical",
+    expectedBottlenecks: 4,
+    confidence: "hoog",
+    evidence: ["8 van 8 bezet", "12 kandidaten in de voorkeursscope"],
+    isTest: false
+  }];
+  input.attendanceRisks = [{
+    participantId: "participant-1",
+    groupId: "group-full",
+    signalType: "repeated_no_show",
+    riskLevel: "high",
+    reason: "Een warme check-in kan helpen.",
+    evidence: ["2 afwezigheden in 30 dagen"],
+    confidence: "hoog",
+    isTest: false,
+    journeyRunId: null
+  }];
+  input.progressBottlenecks = [{
+    groupId: "group-full",
+    programId: "program-1",
+    skillId: "skill-1",
+    skillLabel: "Rugdrijven",
+    affectedCount: 4,
+    totalCount: 6,
+    stagnationRate: 0.67,
+    confidence: "middel",
+    suggestedFocus: "Oefen rugdrijven rustig en positief.",
+    isTest: false,
+    journeyRunId: null
+  }];
   return input;
 }
 

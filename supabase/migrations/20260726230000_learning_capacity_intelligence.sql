@@ -107,7 +107,7 @@ select
   score.module_id,
   score.item_id,
   score.session_id,
-  session.group_id,
+  coalesce(session.group_id, membership.group_id),
   score.score,
   score.positive_label,
   score.visibility,
@@ -122,7 +122,22 @@ join public.progress_modules module
  and module.id = score.module_id
 left join public.sessions session
   on session.tenant_id = score.tenant_id
- and session.id = score.session_id;
+ and session.id = score.session_id
+left join lateral (
+  select group_membership.group_id
+  from public.group_memberships group_membership
+  where group_membership.tenant_id = score.tenant_id
+    and group_membership.participant_id = score.participant_id
+    and (score.enrollment_id is null or group_membership.enrollment_id = score.enrollment_id)
+    and group_membership.starts_on <= score.scored_at::date
+    and (group_membership.ends_on is null or group_membership.ends_on >= score.scored_at::date)
+    and group_membership.status in ('active', 'trial', 'completed')
+  order by
+    (group_membership.status in ('active', 'trial')) desc,
+    group_membership.starts_on desc,
+    group_membership.created_at desc
+  limit 1
+) membership on session.group_id is null;
 
 create function app_private.capture_progress_assessment()
 returns trigger
@@ -147,6 +162,23 @@ begin
     from public.sessions session
     where session.tenant_id = new.tenant_id
       and session.id = new.session_id;
+  end if;
+
+  if target_group_id is null then
+    select group_membership.group_id
+    into target_group_id
+    from public.group_memberships group_membership
+    where group_membership.tenant_id = new.tenant_id
+      and group_membership.participant_id = new.participant_id
+      and (new.enrollment_id is null or group_membership.enrollment_id = new.enrollment_id)
+      and group_membership.starts_on <= new.scored_at::date
+      and (group_membership.ends_on is null or group_membership.ends_on >= new.scored_at::date)
+      and group_membership.status in ('active', 'trial', 'completed')
+    order by
+      (group_membership.status in ('active', 'trial')) desc,
+      group_membership.starts_on desc,
+      group_membership.created_at desc
+    limit 1;
   end if;
 
   insert into public.participant_progress_assessments (

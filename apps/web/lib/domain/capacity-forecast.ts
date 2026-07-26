@@ -42,7 +42,7 @@ export async function forecastCapacity(input: {
   ] = await Promise.all([
     admin
       .from("groups")
-      .select("id, name, program_id, stage_id, default_resource_id, default_weekday, default_start_time, capacity, status")
+      .select("id, name, program_id, stage_id, default_resource_id, default_weekday, default_start_time, default_end_time, capacity, status")
       .eq("tenant_id", input.tenantId)
       .eq("status", "active"),
     admin
@@ -159,31 +159,40 @@ export async function forecastCapacity(input: {
         row.ends_on < today
       ).length;
       const historicalExitsPerWeek = historicalExits / 12;
+      const currentParticipantIds = new Set(
+        currentMemberships.map((membership) => membership.participant_id)
+      );
       const targetStageReadiness = readiness.filter((row) =>
         row.program_id === group.program_id &&
         row.stage_id === group.stage_id &&
+        currentParticipantIds.has(row.participant_id) &&
         (!row.next_review_on || row.next_review_on <= horizon.toISOString().slice(0, 10))
       );
       const previousStageId = group.stage_id ? previousStageById.get(group.stage_id) : null;
+      const eligibleTargetGroupCount = Math.max(
+        1,
+        groups.filter((candidate) =>
+          candidate.program_id === group.program_id &&
+          candidate.stage_id === group.stage_id
+        ).length
+      );
       const expectedTransfersIn = previousStageId
-        ? readiness.filter((row) =>
+        ? roundOne(readiness.filter((row) =>
             row.program_id === group.program_id &&
             row.stage_id === previousStageId &&
             ["ready", "invited"].includes(row.status)
-          ).length
+          ).length / eligibleTargetGroupCount)
         : 0;
-      const matchingWaitlist = waitlist.filter((entry) => {
-        if (entry.program_id !== group.program_id) return false;
-        if (entry.recommended_stage_id && group.stage_id && entry.recommended_stage_id !== group.stage_id) {
-          return false;
-        }
-        const entryPreferences = preferencesByWaitlistId.get(entry.id) ?? [];
-        if (!entryPreferences.length || !group.default_weekday) return true;
-        return entryPreferences.some((preference) =>
-          preference.weekday === group.default_weekday &&
-          timeMatches(group.default_start_time, preference.starts_after, preference.ends_before)
+      const waitlistDemand = roundOne(waitlist.reduce((total, entry) => {
+        if (!waitlistEntryMatchesGroup(entry, group, preferencesByWaitlistId)) return total;
+        const matchingGroupCount = Math.max(
+          1,
+          groups.filter((candidate) =>
+            waitlistEntryMatchesGroup(entry, candidate, preferencesByWaitlistId)
+          ).length
         );
-      });
+        return total + 1 / matchingGroupCount;
+      }, 0));
       const groupAssignments = assignments.filter((row) =>
         row.group_id === group.id &&
         (!row.starts_on || row.starts_on <= horizon.toISOString().slice(0, 10)) &&
@@ -196,6 +205,7 @@ export async function forecastCapacity(input: {
           availability,
           groupWeekday: group.default_weekday,
           groupStart: group.default_start_time,
+          groupEnd: group.default_end_time,
           today,
           horizonEnd: horizon.toISOString().slice(0, 10)
         })
@@ -232,7 +242,7 @@ export async function forecastCapacity(input: {
           (total, row) => total + (row.status === "nearly_ready" ? 0.4 : 1),
           0
         ),
-        waitlistDemand: matchingWaitlist.length,
+        waitlistDemand,
         expectedTransfersIn,
         hasInstructor,
         instructorAvailable: hasInstructor && instructorAvailable,
@@ -252,6 +262,7 @@ type GroupRow = {
   default_resource_id: string | null;
   default_weekday: number | null;
   default_start_time: string | null;
+  default_end_time: string | null;
   capacity: number;
   status: string;
 };
@@ -355,10 +366,11 @@ function isInstructorAvailable(input: {
   availability: AvailabilityRow[];
   groupWeekday: number | null;
   groupStart: string | null;
+  groupEnd: string | null;
   today: string;
   horizonEnd: string;
 }) {
-  if (!input.groupWeekday || !input.groupStart) return true;
+  if (!input.groupWeekday || !input.groupStart || !input.groupEnd) return true;
   const availabilityWeekday = input.groupWeekday === 7 ? 0 : input.groupWeekday;
   const matching = input.availability.filter((row) =>
     row.instructor_user_id === input.assignment.instructor_user_id &&
@@ -369,13 +381,14 @@ function isInstructorAvailable(input: {
   if (!matching.length) return true;
   if (matching.some((row) =>
     row.availability_type === "unavailable" &&
-    input.groupStart! >= row.starts_at &&
-    input.groupStart! < row.ends_at
+    timeRangesOverlap(input.groupStart!, input.groupEnd!, row.starts_at, row.ends_at)
   )) return false;
-  return matching.some((row) =>
+  const explicitlyAvailable = matching.filter((row) => row.availability_type === "available");
+  if (!explicitlyAvailable.length) return true;
+  return explicitlyAvailable.some((row) =>
     row.availability_type === "available" &&
     input.groupStart! >= row.starts_at &&
-    input.groupStart! < row.ends_at
+    input.groupEnd! <= row.ends_at
   );
 }
 
@@ -387,17 +400,43 @@ function isResourceAvailable(input: {
   if (!input.group.default_resource_id) return false;
   const resource = input.resources.find((row) => row.id === input.group.default_resource_id);
   if (!resource || resource.status !== "active") return false;
-  if (!input.group.default_weekday || !input.group.default_start_time) return true;
+  if (
+    !input.group.default_weekday ||
+    !input.group.default_start_time ||
+    !input.group.default_end_time
+  ) return true;
   const groupStart = input.group.default_start_time.slice(0, 5);
+  const groupEnd = input.group.default_end_time.slice(0, 5);
 
-  const ownSessions = input.sessions.filter((session) => session.group_id === input.group.id);
   const conflicts = input.sessions.filter((session) =>
     session.group_id !== input.group.id &&
     session.resource_id === input.group.default_resource_id &&
     isoWeekday(session.starts_at) === input.group.default_weekday &&
-    localTime(session.starts_at) === groupStart
+    timeRangesOverlap(
+      groupStart,
+      groupEnd,
+      localTime(session.starts_at),
+      localTime(session.ends_at)
+    )
   );
-  return ownSessions.length > 0 || conflicts.length === 0;
+  return conflicts.length === 0;
+}
+
+function waitlistEntryMatchesGroup(
+  entry: WaitlistRow,
+  group: GroupRow,
+  preferencesByWaitlistId: Map<string, PreferenceRow[]>
+) {
+  if (entry.program_id !== group.program_id) return false;
+  if (entry.recommended_stage_id && entry.recommended_stage_id !== group.stage_id) {
+    return false;
+  }
+  const entryPreferences = preferencesByWaitlistId.get(entry.id) ?? [];
+  if (!entryPreferences.length || !group.default_weekday) return true;
+  return entryPreferences.some((preference) =>
+    preference.weekday === group.default_weekday &&
+    timeMatches(group.default_start_time, preference.starts_after, preference.ends_before)
+  );
 }
 
 function resolveLocationId(
@@ -427,9 +466,21 @@ function timeMatches(
   return true;
 }
 
+function timeRangesOverlap(
+  leftStart: string,
+  leftEnd: string,
+  rightStart: string,
+  rightEnd: string
+) {
+  return leftStart < rightEnd && leftEnd > rightStart;
+}
+
 function isoWeekday(value: string) {
-  const day = new Date(value).getDay();
-  return day === 0 ? 7 : day;
+  const label = new Intl.DateTimeFormat("en-GB", {
+    weekday: "short",
+    timeZone: "Europe/Amsterdam"
+  }).format(new Date(value));
+  return weekdayByLabel[label] ?? 0;
 }
 
 function localTime(value: string) {
@@ -459,3 +510,16 @@ function assertResult(error: { message: string } | null, label: string) {
 }
 
 const dayMs = 86_400_000;
+const weekdayByLabel: Record<string, number> = {
+  Mon: 1,
+  Tue: 2,
+  Wed: 3,
+  Thu: 4,
+  Fri: 5,
+  Sat: 6,
+  Sun: 7
+};
+
+function roundOne(value: number) {
+  return Math.round(value * 10) / 10;
+}

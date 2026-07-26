@@ -43,7 +43,7 @@ export async function detectAttendanceRisks(
       .from("group_memberships")
       .select("group_id, participant_id, starts_on, ends_on, status, is_test, journey_run_id")
       .eq("tenant_id", tenantId)
-      .in("status", ["active", "trial", "paused", "completed"]),
+      .in("status", ["active", "trial", "completed"]),
     admin
       .from("session_attendance")
       .select("session_id, participant_id, status, marked_at, is_test, journey_run_id")
@@ -210,7 +210,7 @@ export async function detectProgressBottlenecks(input: {
     assessments,
     periodStart: input.period.from,
     periodEnd: input.period.to,
-    minimumSampleSize: 4
+    minimumSampleSize: 5
   });
 }
 
@@ -284,6 +284,8 @@ export async function calculateDiplomaReadiness(input: {
             .eq("participant_id", input.participantId)
             .eq("program_id", input.programId)
             .eq("stage_id", stageId)
+            .order("reviewed_at", { ascending: false })
+            .limit(1)
             .maybeSingle()
         : Promise.resolve({ data: null, error: null })
     ]);
@@ -313,15 +315,17 @@ export async function calculateDiplomaReadiness(input: {
     .filter((row) => includeTestData || !row.is_test)
     .map((row) => ({ status: row.status, sessionStartsAt: row.marked_at }));
   const recommendationRow = readinessResult.data as {
-    status: "not_ready" | "nearly_ready" | "ready" | "blocked";
+    status: "not_ready" | "nearly_ready" | "ready" | "invited" | "completed" | "blocked";
     source: string;
     is_test: boolean;
   } | null;
-  const recommendation = recommendationRow &&
-    (!recommendationRow.is_test || includeTestData) &&
-    recommendationRow.source !== "journey_simulation_bot"
-    ? recommendationRow.status
-    : null;
+  const recommendation = normalizeHumanRecommendation(
+    recommendationRow &&
+      (!recommendationRow.is_test || includeTestData) &&
+      recommendationRow.source !== "journey_simulation_bot"
+      ? recommendationRow.status
+      : null
+  );
 
   return computeDiplomaReadiness({
     participantId: input.participantId,
@@ -353,7 +357,7 @@ export async function generateLessonFocusCards(input: {
   if (!sessionResult.data || (!includeTestData && sessionResult.data.is_test)) return [];
 
   const groupId = sessionResult.data.group_id as string;
-  const [membershipsResult, participantsResult, assessmentsResult, itemsResult, existingResult] =
+  const [membershipsResult, catchUpResult, participantsResult, assessmentsResult, itemsResult, existingResult] =
     await Promise.all([
       admin
         .from("group_memberships")
@@ -361,6 +365,12 @@ export async function generateLessonFocusCards(input: {
         .eq("tenant_id", input.tenantId)
         .eq("group_id", groupId)
         .in("status", ["active", "trial"]),
+      admin
+        .from("catch_up_requests")
+        .select("participant_id")
+        .eq("tenant_id", input.tenantId)
+        .eq("assigned_session_id", input.sessionId)
+        .eq("status", "approved"),
       admin
         .from("participants")
         .select("id, display_name, is_test, journey_run_id")
@@ -385,6 +395,7 @@ export async function generateLessonFocusCards(input: {
 
   for (const [label, result] of [
     ["lesson-focus memberships", membershipsResult],
+    ["lesson-focus catch-up roster", catchUpResult],
     ["lesson-focus participants", participantsResult],
     ["lesson-focus assessments", assessmentsResult],
     ["lesson-focus items", itemsResult],
@@ -393,12 +404,30 @@ export async function generateLessonFocusCards(input: {
     assertResult(result.error, label);
   }
 
-  const memberships = ((membershipsResult.data ?? []) as FocusMembershipRow[]).filter(
+  const regularMemberships = ((membershipsResult.data ?? []) as FocusMembershipRow[]).filter(
     (row) => includeTestData || !row.is_test
   );
+  const participantRows = (participantsResult.data ?? []) as FocusParticipantRow[];
+  const participantSourceById = new Map(participantRows.map((row) => [row.id, row]));
+  const catchUpMemberships = ((catchUpResult.data ?? []) as Array<{ participant_id: string }>)
+    .flatMap((row) => {
+      const participant = participantSourceById.get(row.participant_id);
+      if (!participant || (!includeTestData && participant.is_test)) return [];
+      return [{
+        participant_id: participant.id,
+        is_test: participant.is_test,
+        journey_run_id: participant.journey_run_id
+      }];
+    });
+  const memberships = [
+    ...regularMemberships,
+    ...catchUpMemberships.filter((row) =>
+      !regularMemberships.some((membership) => membership.participant_id === row.participant_id)
+    )
+  ];
   const participantIds = new Set(memberships.map((row) => row.participant_id));
   const participantById = new Map(
-    ((participantsResult.data ?? []) as FocusParticipantRow[])
+    participantRows
       .filter((row) => participantIds.has(row.id))
       .map((row) => [row.id, row])
   );
@@ -698,6 +727,13 @@ function normalizeToSharedThreshold(score: number, threshold: number) {
   if (threshold === 4) return score;
   if (score >= threshold) return 4;
   return Math.min(3, score);
+}
+
+function normalizeHumanRecommendation(
+  status: "not_ready" | "nearly_ready" | "ready" | "invited" | "completed" | "blocked" | null
+) {
+  if (status === "invited" || status === "completed") return "ready" as const;
+  return status;
 }
 
 function groupBy<T, K>(rows: T[], getKey: (row: T) => K) {

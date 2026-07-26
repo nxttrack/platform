@@ -441,7 +441,7 @@ export function detectNextBestActions(input: NextBestActionInput): NextBestActio
       entityId: readiness.id,
       participantId: readiness.participantId,
       programId: readiness.programId,
-      reasons: [reason("Readiness", "Alleen status ready wordt meegenomen.", readiness.readinessScore === null ? "ready, zonder score" : `ready, score ${readiness.readinessScore}`)],
+      reasons: [reason("Readiness", "Alleen een expliciet door een medewerker bevestigde ready-status wordt meegenomen; een getal wordt bewust niet als schijnprecisie getoond.", "menselijke status: ready")],
       sourceHref: "/admin/afzwemmen",
       isTest: readiness.isTest,
       journeyRunId: readiness.journeyRunId
