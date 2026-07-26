@@ -64,7 +64,7 @@ export async function updateIntakeDuplicateStateAction(formData: FormData) {
     redirect("/admin/intake?error=write");
   }
 
-  await admin.from("tenant_events").insert({
+  const auditResult = await admin.from("tenant_events").insert({
     tenant_id: tenant.id,
     event_type: `intake.duplicate_${duplicateState === "dismissed" ? "dismissed" : "confirmed"}`,
     subject_type: "intake_submission",
@@ -73,6 +73,9 @@ export async function updateIntakeDuplicateStateAction(formData: FormData) {
     classification_reasons: ["intake_review_actor"],
     payload: { reviewedByUserId: context.user.id }
   });
+  if (auditResult.error) {
+    console.error(`[intake] Duplicate review audit failed: ${auditResult.error.message}`);
+  }
 
   revalidatePath("/admin/intake");
   redirect("/admin/intake?saved=duplicate");
