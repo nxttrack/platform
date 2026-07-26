@@ -63,7 +63,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
         ) : (
           <div className="flex flex-wrap gap-2">
             {groupSessions.map((session) => (
-              <Link className={`rounded-lg border px-3 py-2 text-sm font-semibold ${session.id === selectedSession?.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-white text-foreground hover:bg-muted"}`} href={`/instructor/group/${group.id}?session=${session.id}`} key={session.id}>
+              <Link className={`inline-flex min-h-11 items-center rounded-lg border px-3 py-2 text-sm font-semibold ${session.id === selectedSession?.id ? "border-primary bg-primary/10 text-primary" : "border-border bg-white text-foreground hover:bg-muted"}`} href={`/instructor/group/${group.id}?session=${session.id}`} key={session.id}>
                 {new Intl.DateTimeFormat("nl-NL", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(session.starts_at))}
               </Link>
             ))}

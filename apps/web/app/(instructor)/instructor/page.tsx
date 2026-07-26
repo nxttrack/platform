@@ -126,7 +126,7 @@ export default async function InstructorHomePage({ searchParams }: PageProps) {
                   <StatusPill tone={session.status === "scheduled" ? "info" : session.status === "completed" ? "success" : "neutral"}>{session.status}</StatusPill>
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Link className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
+                  <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
                     Roster <ArrowRight className="h-4 w-4" />
                   </Link>
                   {session.status === "scheduled" ? (

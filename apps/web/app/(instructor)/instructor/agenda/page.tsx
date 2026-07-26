@@ -42,7 +42,7 @@ export default async function InstructorAgendaPage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill tone={session.status === "scheduled" ? "info" : session.status === "completed" ? "success" : "neutral"}>{session.status}</StatusPill>
-                    <Link className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
+                    <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${session.group_id}?session=${session.id}`}>
                       Open <ArrowRight className="h-4 w-4" />
                     </Link>
                   </div>

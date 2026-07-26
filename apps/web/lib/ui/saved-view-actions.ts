@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAuthenticatedContext } from "@/lib/auth/server-guard";
+import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { SavedView, SavedViewResult, SavedViewState } from "./saved-view-contract";
 
@@ -38,6 +38,15 @@ export async function saveSavedViewAction(input: {
   if (!state) return { ok: false, error: "Deze weergave bevat ongeldige filters." };
 
   const admin = createAdminClient();
+  let existingQuery = admin
+    .from("saved_views")
+    .select("id")
+    .eq("user_id", scope.userId)
+    .eq("resource_key", scope.resourceKey)
+    .ilike("name", escapeLike(name));
+  existingQuery = scope.tenantId ? existingQuery.eq("tenant_id", scope.tenantId) : existingQuery.is("tenant_id", null);
+  const existing = await existingQuery.maybeSingle();
+
   let countQuery = admin
     .from("saved_views")
     .select("id", { count: "exact", head: true })
@@ -45,7 +54,7 @@ export async function saveSavedViewAction(input: {
     .eq("resource_key", scope.resourceKey);
   countQuery = scope.tenantId ? countQuery.eq("tenant_id", scope.tenantId) : countQuery.is("tenant_id", null);
   const countResult = await countQuery;
-  if ((countResult.count ?? 0) >= maxViewsPerResource) {
+  if (!existing.data && (countResult.count ?? 0) >= maxViewsPerResource) {
     return { ok: false, error: `Je kunt maximaal ${maxViewsPerResource} weergaven per overzicht bewaren.` };
   }
 
@@ -58,15 +67,6 @@ export async function saveSavedViewAction(input: {
     resetQuery = scope.tenantId ? resetQuery.eq("tenant_id", scope.tenantId) : resetQuery.is("tenant_id", null);
     await resetQuery;
   }
-
-  let existingQuery = admin
-    .from("saved_views")
-    .select("id")
-    .eq("user_id", scope.userId)
-    .eq("resource_key", scope.resourceKey)
-    .ilike("name", name);
-  existingQuery = scope.tenantId ? existingQuery.eq("tenant_id", scope.tenantId) : existingQuery.is("tenant_id", null);
-  const existing = await existingQuery.maybeSingle();
 
   const payload = {
     is_default: Boolean(input.isDefault),
@@ -102,7 +102,7 @@ export async function deleteSavedViewAction(input: { id: string; resourceKey: st
 
 async function resolveScope(resourceKey: string) {
   if (!resourcePattern.test(resourceKey)) throw new Error("Invalid saved-view resource key.");
-  const context = await requireAuthenticatedContext("/admin");
+  const context = await requirePrivateShellContext(resourceKey.startsWith("platform.") ? "/platform" : "/admin");
   if (resourceKey.startsWith("platform.")) {
     const allowed = context.platform?.roles.some((role) => ["platform_owner", "platform_admin", "platform_support"].includes(role));
     if (!allowed) throw new Error("Platform access required.");
@@ -122,6 +122,10 @@ function sanitizeState(value: SavedViewState): SavedViewState | null {
   const encoded = JSON.stringify(value);
   if (encoded.length > 20_000) return null;
   return JSON.parse(encoded) as SavedViewState;
+}
+
+function escapeLike(value: string) {
+  return value.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
 }
 
 function toSavedView(row: { id: string; is_default: boolean; name: string; view_state: unknown }): SavedView {

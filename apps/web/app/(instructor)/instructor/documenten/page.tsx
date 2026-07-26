@@ -51,7 +51,7 @@ export default async function InstructorDocumentsPage() {
                 {document.file_name ?? "Geen bestand"} - {formatDocumentSize(document.size_bytes)} - {formatDocumentDate(document.created_at)}
               </p>
               {document.file_path ? (
-                <Link className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/api/files/tenant-document/${document.id}`}>
+                <Link className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/api/files/tenant-document/${document.id}`}>
                   <Download className="h-4 w-4" />
                   Downloaden
                 </Link>

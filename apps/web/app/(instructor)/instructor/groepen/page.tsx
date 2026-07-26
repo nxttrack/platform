@@ -37,7 +37,7 @@ export default async function InstructorGroupsPage() {
                   <StatusPill tone={group.status === "active" ? "success" : "neutral"}>{group.status}</StatusPill>
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">{nextSession ? `Volgende les: ${new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(nextSession.starts_at))}` : "Geen komende les gepland"}</p>
-                <Link className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${group.id}`}>
+                <Link className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" href={`/instructor/group/${group.id}`}>
                   Open roster <ArrowRight className="h-4 w-4" />
                 </Link>
               </article>
