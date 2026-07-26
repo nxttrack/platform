@@ -1,10 +1,10 @@
-import { MailWarning, MessageSquare, RotateCcw, Send } from "lucide-react";
+import { MailWarning, MessageSquare, RotateCcw } from "lucide-react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface } from "@/components/admin/admin-patterns";
-import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { AdminSection, DataList, EmptyState } from "@/components/admin/domain-ui";
+import { MessageComposer } from "@/components/admin/message-composer";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { DirtyForm } from "@/components/ui/dirty-form";
-import { createAdminMessageAction, retryEmailDeliveryAttemptAction } from "@/lib/domain/admin-operations-actions";
+import { retryEmailDeliveryAttemptAction } from "@/lib/domain/admin-operations-actions";
 import { formatDateTime, getAdminOperationsData } from "@/lib/domain/admin-operations";
 
 type PageProps = {
@@ -20,7 +20,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-5">
-      <PageHeader action={<AdminActionDrawer description="Kies doelgroep, zichtbaarheid en publicatiestatus voordat je het bericht opslaat." title="Nieuw bericht" triggerLabel="Bericht opstellen"><MessageForm /></AdminActionDrawer>} kicker="Communicatie" title="Berichten" subtitle="Publiceer interne en portal-zichtbare berichten met tenant-scoped notificaties." />
+      <PageHeader action={<AdminActionDrawer description="Kies doelgroep, zichtbaarheid en publicatiestatus voordat je het bericht opslaat." title="Nieuw bericht" triggerLabel="Bericht opstellen" width="wide"><MessageComposer /></AdminActionDrawer>} kicker="Communicatie" title="Berichten" subtitle="Publiceer interne en portal-zichtbare berichten met tenant-scoped notificaties." />
       <Feedback saved={saved} error={error} />
 
       <AdminListSurface>
@@ -89,28 +89,18 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
   );
 }
 
-function MessageForm() {
-  return (
-    <DirtyForm action={createAdminMessageAction} className="grid gap-4">
-      <Field label="Titel" name="title" required placeholder="Nieuwe lesserie start maandag" />
-      <TextAreaField label="Bericht" name="body" placeholder="Schrijf een kort en duidelijk bericht voor de gekozen doelgroep." />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField label="Doelgroep" name="audience"><option value="tenant_staff">Team</option><option value="instructors">Instructeurs</option><option value="parents">Ouders</option><option value="all_tenant">Iedereen</option></SelectField>
-        <SelectField label="Zichtbaarheid" name="visibility"><option value="internal">Intern</option><option value="portal">Portaal</option></SelectField>
-        <SelectField label="Status" name="status"><option value="draft">Concept</option><option value="published">Publiceren</option><option value="archived">Archief</option></SelectField>
-      </div>
-      <SubmitButton><span className="inline-flex items-center gap-2"><Send className="size-4" />Bericht opslaan</span></SubmitButton>
-    </DirtyForm>
-  );
-}
-
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
   }
 
   if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Actie is niet gelukt: {error}.</p>;
+    const message = error === "confirmation"
+      ? "Publiceren is gestopt omdat de menselijke bevestiging ontbrak."
+      : error === "visibility"
+        ? "Een bericht voor ouders moet zichtbaar zijn in het portaal."
+      : `Actie is niet gelukt: ${error}.`;
+    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{message}</p>;
   }
 
   return null;

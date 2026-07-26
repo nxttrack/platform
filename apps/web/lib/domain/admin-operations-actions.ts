@@ -10,6 +10,13 @@ import { getFileFromFormData, TENANT_DOCUMENTS_BUCKET, uploadTenantDocumentFile 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReportMetricsSnapshot, getAdminOperationsData } from "./admin-operations";
 import { getActiveTenant } from "./core";
+import {
+  getMessageAudienceRoles,
+  isMessagePublicationConfirmed,
+  isMessageVisibilityPublishable,
+  type MessageAudience,
+  type MessageVisibility
+} from "./message-audience-contract";
 import { createTenantNotifications, type TenantNotificationType } from "./tenant-notifications";
 
 const messageAudiences = new Set(["tenant_staff", "instructors", "parents", "all_tenant"]);
@@ -26,6 +33,22 @@ export async function createAdminMessageAction(formData: FormData) {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
   const status = readEnum(formData, "status", messageStatuses, "draft");
+  const audience = readEnum(formData, "audience", messageAudiences, "tenant_staff");
+  const visibility = readEnum(formData, "visibility", messageVisibilities, "internal");
+
+  if (!isMessagePublicationConfirmed(status, formData.get("humanConfirmation"))) {
+    redirect("/admin/berichten?error=confirmation");
+  }
+  if (
+    status === "published" &&
+    !isMessageVisibilityPublishable(
+      audience as MessageAudience,
+      visibility as MessageVisibility
+    )
+  ) {
+    redirect("/admin/berichten?error=visibility");
+  }
+
   const title = readRequired(formData, "title");
   const body = readRequired(formData, "body");
   const classification = classifyContent({ title, body });
@@ -38,8 +61,8 @@ export async function createAdminMessageAction(formData: FormData) {
       body,
       content_classification: classification.classification,
       classification_reasons: classification.reasons,
-      audience: readEnum(formData, "audience", messageAudiences, "tenant_staff"),
-      visibility: readEnum(formData, "visibility", messageVisibilities, "internal"),
+      audience,
+      visibility,
       status,
       published_at: status === "published" ? new Date().toISOString() : null
     })
@@ -356,7 +379,11 @@ async function notifyAudience(input: {
     return;
   }
 
-  const recipientIds = await getAudienceRecipientIds(input.tenantId, input.audience);
+  const recipientIds = await getAudienceRecipientIds(
+    input.tenantId,
+    input.audience,
+    input.visibility
+  );
 
   await createNotifications({
     tenantId: input.tenantId,
@@ -368,20 +395,17 @@ async function notifyAudience(input: {
   });
 }
 
-async function getAudienceRecipientIds(tenantId: string, audience: string) {
-  if (audience === "parents") {
-    return getTenantMemberIds(tenantId, ["parent"]);
-  }
+async function getAudienceRecipientIds(
+  tenantId: string,
+  audience: string,
+  visibility: string
+) {
+  const roles = getMessageAudienceRoles(
+    audience as MessageAudience,
+    visibility as MessageVisibility
+  );
 
-  if (audience === "instructors") {
-    return getTenantMemberIds(tenantId, ["instructor"]);
-  }
-
-  if (audience === "all_tenant") {
-    return getTenantMemberIds(tenantId, ["tenant_owner", "tenant_admin", "tenant_staff", "instructor", "parent"]);
-  }
-
-  return getStaffRecipientIds(tenantId);
+  return roles.length > 0 ? getTenantMemberIds(tenantId, roles) : [];
 }
 
 async function getStaffRecipientIds(tenantId: string) {
