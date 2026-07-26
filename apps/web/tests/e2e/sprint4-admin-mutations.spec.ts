@@ -123,7 +123,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await form.getByLabel("Bedrag").fill("42,50");
     await submitAndWaitForSaved(page, form, "Plan opslaan", "/admin/betalingen", "plan");
-    await expect(page.getByText("Opgeslagen: plan.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: plan.");
 
     form = formWithButton(page, "Subscription opslaan");
     await selectOptionByText(form.getByLabel("Inschrijving"), participantName);
@@ -132,23 +132,23 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Volgende vervaldatum").fill(dateValue(14));
     await form.getByLabel("Notities").fill(`sprint4-admin:${suffix}:subscription`);
     await submitAndWaitForSaved(page, form, "Subscription opslaan", "/admin/betalingen", "subscription");
-    await expect(page.getByText("Opgeslagen: subscription.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: subscription.");
     await expect(page.locator("article").filter({ hasText: participantName }).filter({ hasText: planName })).toHaveCount(1);
 
     await openAction(page, "Betaling toevoegen");
     form = formWithButton(page, "Betaling opslaan");
-    await selectOptionByText(form.getByLabel("Subscription"), participantName);
+    await selectOptionByText(form.getByLabel("Abonnement"), participantName);
     await form.getByLabel("Vervaldatum").fill(dateValue(14));
     await form.getByLabel("Referentie").fill(paymentReference);
     await form.getByLabel("Methode").fill("staging-browser");
     await submitAndWaitForSaved(page, form, "Betaling opslaan", "/admin/betalingen", "payment");
-    await expect(page.getByText("Opgeslagen: payment.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: payment.");
     let payment = page.locator("article").filter({ hasText: paymentReference });
     await expect(payment).toHaveCount(1);
     await payment.getByLabel("Status").selectOption("paid");
     await payment.getByLabel("Betaaldatum").fill(today);
     await submitAndWaitForSaved(page, payment, "Status bijwerken", "/admin/betalingen", "status");
-    await expect(page.getByText("Opgeslagen: status.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: status.");
     payment = page.locator("article").filter({ hasText: paymentReference });
     await expect(payment.getByText("paid", { exact: true })).toBeVisible();
 
@@ -158,7 +158,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Titel").fill(documentTitle);
     await form.getByLabel("Omschrijving").fill("Metadata-only browserbewijs; geen extern bestand.");
     await submitAndWaitForSaved(page, form, "Document opslaan", "/admin/documenten", "document");
-    await expect(page.getByText("Opgeslagen: document.")).toBeVisible();
+    await expectSavedStatus(page, "Documentactie opgeslagen: document.");
     await filterResourceTable(page, "Zoek document…", documentTitle);
     await expect(resourceRow(page, documentTitle)).toHaveCount(1);
 
@@ -189,6 +189,10 @@ function resourceRow(page: Page, text: string) {
 
 async function filterResourceTable(page: Page, accessibleName: string, value: string) {
   await page.getByRole("textbox", { name: accessibleName, exact: true }).fill(value);
+}
+
+async function expectSavedStatus(page: Page, message: string) {
+  await expect(page.getByRole("status").filter({ hasText: message })).toBeVisible();
 }
 
 async function submitAndWaitForSaved(page: Page, form: Locator, buttonName: string, pathname: string, saved: string) {
