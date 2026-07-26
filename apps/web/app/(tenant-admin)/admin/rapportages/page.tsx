@@ -1,4 +1,4 @@
-import { Activity, AlertTriangle, ArrowRight, BarChart3, CalendarRange, CheckCircle2, Save, Sparkles } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, BarChart3, BadgeEuro, CalendarRange, CheckCircle2, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { AdminSection, EmptyState, Field, SelectField, SubmitButton } from "@/components/admin/domain-ui";
 import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
@@ -44,7 +44,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
         <div className="grid gap-px bg-border md:grid-cols-2 xl:grid-cols-4">{growthActions.map((action) => <Link className="group bg-card p-4 transition hover:bg-primary/5" href={action.href} key={action.label}><div className="flex items-center justify-between gap-3">{action.urgent ? <AlertTriangle className="size-5 text-warning" /> : <CheckCircle2 className="size-5 text-success" />}<ArrowRight className="size-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" /></div><p className="mt-4 text-2xl font-bold text-foreground">{action.metric}</p><p className="mt-1 text-sm leading-6 text-muted-foreground">{action.label}</p></Link>)}</div>
       </section>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         <Link className="group rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card" href="/admin/rapportages/capaciteit">
           <div className="flex items-start justify-between gap-3">
             <span className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"><CalendarRange className="size-5" /></span>
@@ -60,6 +60,14 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
           </div>
           <h2 className="mt-5 text-lg font-bold text-foreground">Group Health & leskwaliteit</h2>
           <p className="mt-1 text-sm leading-6 text-muted-foreground">Volg aanwezigheid positief, vind geaggregeerde vaardigheidsbottlenecks en zet veilige vervolgacties klaar.</p>
+        </Link>
+        <Link className="group rounded-2xl border border-border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-card" href="/admin/rapportages/campagnes">
+          <div className="flex items-start justify-between gap-3">
+            <span className="grid size-11 place-items-center rounded-xl bg-success/10 text-success"><BadgeEuro className="size-5" /></span>
+            <ArrowRight className="size-5 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-primary" />
+          </div>
+          <h2 className="mt-5 text-lg font-bold text-foreground">Campagne naar omzet</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground">Volg privacy-veilige first-party brondata naar bewezen plaatsing, abonnement en netto ontvangen betaling.</p>
         </Link>
       </div>
 
@@ -150,8 +158,8 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
               ) : (
                 <p className="mt-4 rounded-lg bg-card px-3 py-4 text-sm text-muted-foreground">Nog geen UTM-campagnes ontvangen.</p>
               )}
-              <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline" href="/admin/intake">
-                Open de intake-inbox <ArrowRight className="size-4" />
+              <Link className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline" href="/admin/rapportages/campagnes">
+                Open volledige campagnerapportage <ArrowRight className="size-4" />
               </Link>
             </div>
           </div>

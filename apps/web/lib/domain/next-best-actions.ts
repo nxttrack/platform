@@ -182,7 +182,8 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
     participantsResult,
     qualityResult,
     readinessResult,
-    creditsResult
+    creditsResult,
+    leadScoresResult
   ] = await Promise.all([
     intakesQuery,
     waitlistQuery,
@@ -236,7 +237,13 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
       .eq("status", "available")
       .not("expires_on", "is", null)
       .gte("expires_on", today)
-      .lte("expires_on", new Date(now.getTime() + 14 * dayMs).toISOString().slice(0, 10))
+      .lte("expires_on", new Date(now.getTime() + 14 * dayMs).toISOString().slice(0, 10)),
+    admin
+      .from("lead_score_snapshots")
+      .select("intake_submission_id, score, confidence, reasons_json, suggested_next_action, is_test, journey_run_id")
+      .eq("tenant_id", tenantId)
+      .eq("model_version", "lead-score-v1")
+      .gte("score", 75)
   ]);
 
   for (const [label, result] of [
@@ -253,7 +260,8 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
     ["participants", participantsResult],
     ["data quality", qualityResult],
     ["graduation readiness", readinessResult],
-    ["catch-up credits", creditsResult]
+    ["catch-up credits", creditsResult],
+    ["lead scores", leadScoresResult]
   ] as const) {
     assertNextBestActionResult(result.error, label);
   }
@@ -272,6 +280,9 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
   }>;
   const waitlistById = new Map(waitlistRows.map((row) => [row.id, row]));
   const waitlistedIntakeIds = new Set(waitlistRows.flatMap((row) => row.intake_submission_id ? [row.intake_submission_id] : []));
+  const intakeProgramById = new Map(
+    ((intakesResult.data ?? []) as Array<{ id: string; program_id: string | null }>).map((row) => [row.id, row.program_id])
+  );
   const preferencesByEntry = groupBy(
     (preferencesResult.data ?? []) as Array<{
       waitlist_entry_id: string;
@@ -535,7 +546,27 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
       suggestedFocus: bottleneck.suggested_lesson_focus,
       isTest: bottleneck.is_test,
       journeyRunId: bottleneck.journey_run_id
-    }))
+    })),
+    leadScores: ((leadScoresResult.data ?? []) as Array<{
+      intake_submission_id: string;
+      score: number;
+      confidence: number;
+      reasons_json: Array<{ label: string; explanation: string; evidence: string }>;
+      suggested_next_action: string;
+      is_test: boolean;
+      journey_run_id: string | null;
+    }>)
+      .filter((row) => includeTestData || (!row.is_test && row.journey_run_id === null))
+      .map((row) => ({
+        intakeId: row.intake_submission_id,
+        programId: intakeProgramById.get(row.intake_submission_id) ?? null,
+        score: Number(row.score),
+        confidence: Number(row.confidence),
+        suggestedAction: row.suggested_next_action,
+        reasons: row.reasons_json,
+        isTest: row.is_test,
+        journeyRunId: row.journey_run_id
+      }))
   };
 }
 

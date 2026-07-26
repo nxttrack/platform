@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Download, Mail, Users } from "lucide-react";
+import { CheckCircle2, Download, Mail, Phone, SearchCheck, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateAdminTaskStatusAction } from "@/lib/domain/admin-operations-actions";
 import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
 import type { WaitTimeBand } from "@/lib/domain/intake-recommendation-contract";
+import type { LeadScoreBand, LeadScoreEvidence } from "@/lib/domain/lead-scoring-contract";
 import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getIntakeStatusMeta, getParticipantStatusMeta, getPaymentStatusMeta, getTaskStatusMeta, type StatusMeta } from "@/lib/ui/status-meta";
 
@@ -88,6 +89,14 @@ export type IntakeTableRow = {
   id: string;
   isTest: boolean;
   journeyRunId: string;
+  leadScore: {
+    band: LeadScoreBand;
+    score: number;
+    confidence: number;
+    reasons: LeadScoreEvidence[];
+    blockers: LeadScoreEvidence[];
+    suggestedAction: string;
+  };
   notes: string;
   option: string;
   parent: string;
@@ -110,10 +119,43 @@ export function IntakeTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
     { accessorKey: "preferredDays", header: "Voorkeur", meta: { label: "Voorkeur" } },
     { accessorKey: "waitBand", header: "Wachttijd", meta: { label: "Wachttijd" }, cell: ({ row }) => row.original.waitBand ? <WaitTimeChip band={row.original.waitBand} /> : <span className="text-muted-foreground">Onbekend</span> },
+    { id: "leadScoreBand", accessorFn: (row) => row.leadScore.band, header: "Leadscore", meta: { label: "Leadscore" }, cell: ({ row }) => <LeadScoreBadge band={row.original.leadScore.band} score={row.original.leadScore.score} /> },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ row }) => <div className="flex flex-wrap gap-1"><StatusBadge meta={getIntakeStatusMeta(row.original.status)} />{row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}{row.original.duplicateState === "possible_duplicate" ? <StatusPill tone="warning">Mogelijk dubbel</StatusPill> : null}</div> },
     { accessorKey: "receivedAt", header: "Ontvangen", meta: { label: "Ontvangen" }, cell: ({ getValue }) => formatDateTime(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"], getIntakeStatusMeta), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }, { label: "Zeer lang", value: "very_long" }, { label: "Onvoldoende data", value: "insufficient_data" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <div className="grid gap-4"><div className="flex flex-wrap gap-2"><StatusBadge meta={getIntakeStatusMeta(row.status)} />{row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}</div><DetailList entries={[["Programma", row.program], ["Aanvraagtype", row.option], ["Ontvangen", formatDateTime(row.receivedAt)], ["Bron", row.source]]} /></div> }, { label: "Kind", value: "child", content: <DetailList entries={[["Naam", row.participant], ["Geboortedatum", row.birthDate ? formatDate(row.birthDate) : "Niet opgegeven"], ["Zwemervaring", row.experience || "Niet opgegeven"]]} /> }, { label: "Ouders", value: "guardians", content: <DetailList entries={[["Ouder/verzorger 1", row.parent], ["Ouder/verzorger 2", row.secondaryParent || "Niet opgegeven"], ["E-mail", row.email], ["Telefoon", row.phone || "Niet opgegeven"]]} /> }, { label: "Voorkeuren", value: "preferences", content: <DetailList entries={[["Voorkeursdagen", row.preferredDays || "Niet opgegeven"], ["Voorgesteld moment", row.choice || "Nog geen keuze"], ["Wachttijd", row.waitBand ?? "Onbekend"], ["Notities", row.notes || "Geen notities"]]} /> }, { label: "Activiteit", value: "activity", content: <div className="grid gap-4"><DetailList entries={[["Bron", row.source], ["Journey run", row.journeyRunId || "Niet van toepassing"], ["Duplicaatcontrole", row.duplicateState]]} /><ActivityTimeline events={row.events} /></div> }]} footer={row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null} />} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"], getIntakeStatusMeta), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }, { label: "Zeer lang", value: "very_long" }, { label: "Onvoldoende data", value: "insufficient_data" }] }, { column: "leadScoreBand", label: "Leadscore", options: [{ label: "Hoog", value: "high" }, { label: "Gemiddeld", value: "average" }, { label: "Laag", value: "low" }, { label: "Wacht op informatie", value: "waiting_for_information" }, { label: "Niet plaatsbaar", value: "not_placeable" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <div className="grid gap-4"><div className="flex flex-wrap gap-2"><StatusBadge meta={getIntakeStatusMeta(row.status)} />{row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}<LeadScoreBadge band={row.leadScore.band} score={row.leadScore.score} /></div><DetailList entries={[["Programma", row.program], ["Aanvraagtype", row.option], ["Ontvangen", formatDateTime(row.receivedAt)], ["Bron", row.source]]} /></div> }, { label: "Leadscore", value: "lead-score", content: <LeadScoreDetails row={row} /> }, { label: "Kind", value: "child", content: <DetailList entries={[["Naam", row.participant], ["Geboortedatum", row.birthDate ? formatDate(row.birthDate) : "Niet opgegeven"], ["Zwemervaring", row.experience || "Niet opgegeven"]]} /> }, { label: "Ouders", value: "guardians", content: <DetailList entries={[["Ouder/verzorger 1", row.parent], ["Ouder/verzorger 2", row.secondaryParent || "Niet opgegeven"], ["E-mail", row.email], ["Telefoon", row.phone || "Niet opgegeven"]]} /> }, { label: "Voorkeuren", value: "preferences", content: <DetailList entries={[["Voorkeursdagen", row.preferredDays || "Niet opgegeven"], ["Voorgesteld moment", row.choice || "Nog geen keuze"], ["Wachttijd", row.waitBand ?? "Onbekend"], ["Notities", row.notes || "Geen notities"]]} /> }, { label: "Activiteit", value: "activity", content: <div className="grid gap-4"><DetailList entries={[["Bron", row.source], ["Journey run", row.journeyRunId || "Niet van toepassing"], ["Duplicaatcontrole", row.duplicateState]]} /><ActivityTimeline events={row.events} /></div> }]} footer={row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null} />} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
+}
+
+function LeadScoreBadge({ band, score }: { band: LeadScoreBand; score: number }) {
+  const label = band === "high" ? "Hoog" : band === "average" ? "Gemiddeld" : band === "low" ? "Laag" : band === "waiting_for_information" ? "Wacht op informatie" : "Niet plaatsbaar";
+  const tone = band === "high" ? "success" : band === "average" ? "info" : band === "low" ? "neutral" : "warning";
+  return <StatusPill tone={tone} title="Operationele opvolgprioriteit; geen oordeel over kind of gezin.">{label} · {score}</StatusPill>;
+}
+
+function LeadScoreDetails({ row }: { row: IntakeTableRow }) {
+  return (
+    <div className="grid gap-4">
+      <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><LeadScoreBadge band={row.leadScore.band} score={row.leadScore.score} /><span className="text-xs font-semibold text-muted-foreground">{Math.round(row.leadScore.confidence * 100)}% confidence</span></div>
+        <p className="mt-3 text-sm font-semibold">{row.leadScore.suggestedAction}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Deze score gebruikt uitsluitend operationele brondata. Vrije tekst, namen, herkomst en campagnetype tellen niet mee.</p>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <EvidenceList title="Redenen" rows={row.leadScore.reasons} />
+        <EvidenceList title="Blockers en context" rows={row.leadScore.blockers} />
+      </div>
+      {!row.isTest ? <div className="flex flex-wrap gap-2">
+        {row.phone ? <a className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`tel:${row.phone}`}><Phone className="size-4" />Bel</a> : null}
+        <a className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`mailto:${row.email}`}><Mail className="size-4" />E-mail openen</a>
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`/admin/wachtlijst?q=${encodeURIComponent(row.participant)}`}><SearchCheck className="size-4" />Plaatsing bekijken</Link>
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" href={`/admin/opvolging?intake=${row.id}`}>Opvolging en taak</Link>
+      </div> : <p className="text-xs font-semibold text-muted-foreground">Journey Bot-data is uitlegbaar zichtbaar, maar kan geen echte CRM-taak of extern bericht maken.</p>}
+    </div>
+  );
+}
+
+function EvidenceList({ title, rows }: { title: string; rows: LeadScoreEvidence[] }) {
+  return <section className="rounded-xl border border-border p-4"><h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>{rows.length ? <ul className="mt-3 grid gap-3">{rows.map((item) => <li key={`${item.label}:${item.evidence}`}><p className="text-sm font-semibold">{item.label} <span className="text-xs text-muted-foreground">({item.weight >= 0 ? "+" : ""}{item.weight})</span></p><p className="text-xs leading-5 text-muted-foreground">{item.explanation}</p><p className="text-[11px] font-semibold text-primary">{item.source}: {item.evidence}</p></li>)}</ul> : <p className="mt-3 text-sm text-muted-foreground">Geen signalen.</p>}</section>;
 }
 
 export type DocumentTableRow = {

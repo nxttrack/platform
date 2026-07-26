@@ -16,7 +16,8 @@ export const nextBestActionTypes = [
   "makeup_credit_expiring",
   "attendance_follow_up",
   "progress_bottleneck_review",
-  "forecast_capacity_review"
+  "forecast_capacity_review",
+  "lead_follow_up"
 ] as const;
 
 export type NextBestActionType = (typeof nextBestActionTypes)[number];
@@ -38,7 +39,8 @@ export const nextBestActionTypeLabels: Record<NextBestActionType, string> = {
   makeup_credit_expiring: "Inhaalcredit",
   attendance_follow_up: "Aanwezigheidscheck",
   progress_bottleneck_review: "Leskwaliteit",
-  forecast_capacity_review: "Capaciteitsforecast"
+  forecast_capacity_review: "Capaciteitsforecast",
+  lead_follow_up: "Lead opvolgen"
 };
 
 export type NextBestActionReason = {
@@ -196,12 +198,48 @@ export type NextBestActionInput = {
     isTest: boolean;
     journeyRunId: string | null;
   }>;
+  leadScores?: Array<{
+    intakeId: string;
+    programId: string | null;
+    score: number;
+    confidence: number;
+    suggestedAction: string;
+    reasons: Array<{ label: string; explanation: string; evidence: string }>;
+    isTest: boolean;
+    journeyRunId: string | null;
+  }>;
 };
 
 export function detectNextBestActions(input: NextBestActionInput): NextBestActionCandidate[] {
   const now = new Date(input.now);
   const today = input.now.slice(0, 10);
   const actions: NextBestActionCandidate[] = [];
+
+  for (const lead of input.leadScores ?? []) {
+    if (lead.score < 75) continue;
+    actions.push(candidate({
+      actionType: "lead_follow_up",
+      fingerprint: `lead_follow_up:${lead.intakeId}`,
+      title: "Kansrijke intake persoonlijk opvolgen",
+      description: lead.suggestedAction,
+      priority: lead.score >= 90 ? "high" : "medium",
+      entityType: "intake_submission",
+      entityId: lead.intakeId,
+      programId: lead.programId,
+      reasons: [
+        reason("Operationele leadscore", "De uitlegbare score gebruikt geen gevoelige kenmerken en is geen oordeel over het gezin.", `${lead.score}/100`),
+        ...lead.reasons.slice(0, 3).map((item) => reason(item.label, item.explanation, item.evidence))
+      ],
+      suggestedActions: [
+        { label: "Open opvolging", href: `/admin/opvolging?intake=${lead.intakeId}` },
+        { label: "Open intakedossier", href: "/admin/intake" }
+      ],
+      sourceHref: `/admin/opvolging?intake=${lead.intakeId}`,
+      confidence: lead.confidence,
+      isTest: lead.isTest,
+      journeyRunId: lead.journeyRunId
+    }));
+  }
 
   for (const partition of partitionTestData(input.intakes)) {
     if (partition.rows.length === 0) continue;

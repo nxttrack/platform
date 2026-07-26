@@ -58,12 +58,13 @@ export async function createNextBestActionTaskAction(formData: FormData) {
   const admin = createAdminClient();
   const actionResult = await admin
     .from("next_best_actions")
-    .select("id, title, description, priority, participant_id, source_href, reasons_json, status")
+    .select("id, title, description, priority, participant_id, source_href, reasons_json, status, is_test, journey_run_id")
     .eq("tenant_id", tenant.id)
     .eq("id", actionId)
     .eq("status", "open")
     .maybeSingle();
   if (actionResult.error || !actionResult.data) redirect(`${actionsPath}?error=missing`);
+  if (actionResult.data.is_test || actionResult.data.journey_run_id) redirect(`${actionsPath}?error=test_task_blocked`);
 
   const existing = await admin
     .from("tenant_tasks")
@@ -100,6 +101,8 @@ export async function createNextBestActionTaskAction(formData: FormData) {
     description,
     priority: actionResult.data.priority === "high" ? "high" : actionResult.data.priority === "low" ? "low" : "normal",
     status: "open",
+    is_test: false,
+    journey_run_id: null,
     content_classification: classification.classification,
     classification_reasons: classification.reasons
   });

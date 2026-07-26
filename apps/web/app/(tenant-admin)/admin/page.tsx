@@ -1,20 +1,25 @@
+import Link from "next/link";
 import { AdminSection, DataList, DataListRow, EmptyState } from "@/components/admin/domain-ui";
 import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
 import { NextBestActionsWidget } from "@/components/admin/next-best-actions-widget";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { buildAdminChartData } from "@/lib/domain/admin-chart-data";
 import { formatMoney, getAdminOperationsData, isTaskOverdue } from "@/lib/domain/admin-operations";
+import { generateCrmFollowUpItems } from "@/lib/domain/crm-follow-up";
 import { getTenantNextBestActions } from "@/lib/domain/next-best-actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminHomePage() {
   const data = await getAdminOperationsData();
-  const nextBestActions = await getTenantNextBestActions({
-    tenantId: data.tenant.id,
-    statuses: ["open"],
-    limit: 6
-  });
+  const [nextBestActions, followUps] = await Promise.all([
+    getTenantNextBestActions({
+      tenantId: data.tenant.id,
+      statuses: ["open"],
+      limit: 6
+    }),
+    generateCrmFollowUpItems(data.tenant.id)
+  ]);
   const activeGroups = data.groups.filter((group) => group.status === "active").length;
   const urgentTasks = data.tasks.filter((task) => task.priority === "urgent" && task.status !== "done" && task.status !== "cancelled");
   const recentEvents = [...data.tenantEvents, ...data.billingEvents.map((event) => ({ id: event.id, event_type: event.type, subject_type: "billing", subject_id: event.id, status: event.status, created_at: event.occurred_at }))].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8);
@@ -32,6 +37,28 @@ export default async function AdminHomePage() {
       </div>
 
       <NextBestActionsWidget actions={nextBestActions} />
+
+      <AdminSection title="Opvolgen" description="Uitlegbare CRM-signalen. Concepten worden nooit automatisch verzonden.">
+        {followUps.length === 0 ? (
+          <EmptyState>Geen open opvolgsignalen voor live intakes.</EmptyState>
+        ) : (
+          <div className="space-y-3">
+            <DataList>
+              {followUps.slice(0, 4).map((item) => (
+                <DataListRow
+                  aside={<StatusPill tone={item.leadScoreBand === "high" ? "warning" : "info"}>{leadScoreLabel(item.leadScoreBand)}</StatusPill>}
+                  key={item.id}
+                  meta={`${item.reason} · ${item.suggested_action}`}
+                  title={`${item.parentName} · ${item.participantName}`}
+                />
+              ))}
+            </DataList>
+            <Link className="inline-flex min-h-11 items-center rounded-lg border border-border bg-white px-4 text-sm font-semibold text-foreground hover:bg-muted" href="/admin/opvolging">
+              Bekijk alle opvolging
+            </Link>
+          </div>
+        )}
+      </AdminSection>
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.4fr)_minmax(20rem,0.6fr)]">
         <section className="rounded-xl border border-border bg-card p-5 shadow-soft"><CapacityChart data={charts.capacity} /></section>
@@ -134,4 +161,8 @@ function formatDate(value: string) {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function leadScoreLabel(value: string) {
+  return value === "high" ? "Hoge leadscore" : value === "average" ? "Gemiddeld" : value === "low" ? "Laag" : "Informatie nodig";
 }
