@@ -19,6 +19,11 @@ import {
 import { cookies } from "next/headers";
 import { timingSafeEqual } from "node:crypto";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
+import { classifyContent } from "@/lib/security/content-classification";
+import {
+  calculateSmartPlacementSuggestionsForEntries,
+  validateSmartPlacementOffer
+} from "./smart-placement";
 
 const weekdayMap: Record<string, number> = {
   maandag: 1,
@@ -37,7 +42,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   const intakeSubmissionId = readRequired(formData, "intakeSubmissionId");
   const submissionResult = await admin
     .from("intake_submissions")
-    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, selected_group_id")
+    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, selected_group_id, source, is_test, journey_run_id, test_metadata_json")
     .eq("tenant_id", tenant.id)
     .eq("id", intakeSubmissionId)
     .single();
@@ -59,6 +64,10 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     preferred_dayparts: unknown;
     preferred_notes: string | null;
     selected_group_id: string | null;
+    source: string;
+    is_test: boolean;
+    journey_run_id: string | null;
+    test_metadata_json: Record<string, unknown>;
   };
 
   if (!submission.program_id) {
@@ -68,6 +77,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   const stage = submission.selected_group_id
     ? await getStageForSelectedGroup(tenant.id, submission.program_id, submission.selected_group_id)
     : await getFirstStageForProgram(tenant.id, submission.program_id);
+  const ageDecision = getMinimumAgeDecision(submission.participant_birth_date);
   const entryResult = await admin
     .from("waitlist_entries")
     .insert({
@@ -82,8 +92,14 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
       participant_birth_date: submission.participant_birth_date,
       selected_option: submission.selected_option,
       status: "waiting",
-      source: "intake",
-      admin_notes: submission.preferred_notes
+      source: submission.is_test ? "journey_simulation_bot" : "intake",
+      admin_notes: submission.preferred_notes,
+      is_test: submission.is_test,
+      journey_run_id: submission.journey_run_id,
+      test_metadata_json: submission.test_metadata_json,
+      minimum_age_blocked: ageDecision.blocked,
+      eligible_from: ageDecision.blocked ? ageDecision.eligibleFrom : null,
+      waitlist_reason: ageDecision.blocked ? "under_minimum_age" : null
     })
     .select("id")
     .single();
@@ -239,7 +255,30 @@ export async function scoreWaitlistEntryAction(formData: FormData) {
   const admin = createAdminClient();
   const entryId = readRequired(formData, "waitlistEntryId");
   const { entry, preferences, groups, memberships } = await loadScoringInput(tenant.id, entryId);
-  const scores = computePlacementScores({ entry, preferences, groups, memberships });
+  const legacyScores = computePlacementScores({ entry, preferences, groups, memberships });
+  const smartScores = (await calculateSmartPlacementSuggestionsForEntries({
+    tenantId: tenant.id,
+    entries: [entry],
+    preferences,
+    groups,
+    persist: true
+  })).get(entry.id) ?? [];
+  const scores = smartScores.length > 0
+    ? smartScores.map((score) => {
+        const group = groups.find((candidate) => candidate.id === score.groupId)!;
+        return {
+          group,
+          score: score.score,
+          capacityAvailable: score.capacitySnapshot.available,
+          stageMatch: !score.blockers.some((blocker) => blocker.code === "wrong_stage"),
+          preferredDayMatch: score.reasons.some((reason) => reason.code === "preferred_day"),
+          reasons: [
+            ...score.reasons.map((reason) => reason.label),
+            ...score.blockers.map((blocker) => `Blokkade: ${blocker.label}`)
+          ]
+        };
+      })
+    : legacyScores;
 
   await admin.from("placement_scores").delete().eq("tenant_id", tenant.id).eq("waitlist_entry_id", entryId);
 
@@ -263,7 +302,7 @@ export async function scoreWaitlistEntryAction(formData: FormData) {
     waitlistEntryId: entryId,
     actorUserId: context.user.id,
     eventType: "placement.scored",
-    message: `${scores.length} groepsoptie(s) gescoord.`
+    message: `${scores.length} groepsoptie(s) met Smart Placement 2.0 gescoord.`
   });
 
   revalidatePath("/admin/wachtlijst");
@@ -280,6 +319,16 @@ export async function createSlotOfferAction(formData: FormData) {
 
   if (!entry) {
     redirect("/admin/wachtlijst?error=waitlist");
+  }
+
+  const suggestion = await validateSmartPlacementOffer({
+    tenantId: tenant.id,
+    entry,
+    groupId
+  });
+  if (!suggestion?.canOffer) {
+    const blocker = suggestion?.blockers[0]?.code ?? "placement_blocked";
+    redirect(`/admin/wachtlijst?error=${encodeURIComponent(blocker)}`);
   }
 
   const groupEligible = await groupHasCapacity(tenant.id, groupId, entry.program_id);
@@ -337,6 +386,13 @@ export async function createSlotOfferAction(formData: FormData) {
       .eq("tenant_id", tenant.id)
       .eq("id", offerId),
     admin.from("waitlist_entries").update({ status: "offered" }).eq("tenant_id", tenant.id).eq("id", waitlistEntryId),
+    admin
+      .from("placement_suggestions")
+      .update({ status: "offered" })
+      .eq("tenant_id", tenant.id)
+      .eq("waitlist_entry_id", waitlistEntryId)
+      .eq("group_id", groupId)
+      .eq("status", "suggested"),
     writeAudit({
       tenantId: tenant.id,
       waitlistEntryId,
@@ -359,6 +415,91 @@ export async function createSlotOfferAction(formData: FormData) {
 
   revalidatePath("/admin/wachtlijst");
   redirect(`/admin/wachtlijst?saved=1&delivery=${mail.delivered ? "sent" : "skipped"}`);
+}
+
+export async function createPlacementSuggestionTaskAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin");
+  const tenant = getActiveTenant(context);
+  const waitlistEntryId = readRequired(formData, "waitlistEntryId");
+  const groupId = readRequired(formData, "groupId");
+  const admin = createAdminClient();
+  const { entry, preferences, groups } = await loadScoringInput(tenant.id, waitlistEntryId);
+  const calculated = (await calculateSmartPlacementSuggestionsForEntries({
+    tenantId: tenant.id,
+    entries: [entry],
+    preferences,
+    groups,
+    persist: true
+  })).get(entry.id)?.find((suggestion) => suggestion.groupId === groupId);
+  if (!calculated) redirect("/admin/wachtlijst?error=suggestion");
+
+  const suggestionResult = await admin
+    .from("placement_suggestions")
+    .select("id, waitlist_entry_id, group_id, score, confidence, status, reasons_json, blockers_json")
+    .eq("tenant_id", tenant.id)
+    .eq("waitlist_entry_id", waitlistEntryId)
+    .eq("group_id", groupId)
+    .eq("status", "suggested")
+    .order("computed_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (suggestionResult.error || !suggestionResult.data) {
+    redirect("/admin/wachtlijst?error=suggestion");
+  }
+
+  const existingTask = await admin
+    .from("tenant_tasks")
+    .select("id")
+    .eq("tenant_id", tenant.id)
+    .eq("placement_suggestion_id", suggestionResult.data.id)
+    .in("status", ["open", "in_progress"])
+    .limit(1)
+    .maybeSingle();
+  if (existingTask.error) redirect("/admin/wachtlijst?error=task");
+  if (existingTask.data) redirect("/admin/wachtlijst?saved=task_exists");
+
+  const [entryResult, groupResult] = await Promise.all([
+    admin
+      .from("waitlist_entries")
+      .select("participant_name")
+      .eq("tenant_id", tenant.id)
+      .eq("id", suggestionResult.data.waitlist_entry_id)
+      .maybeSingle(),
+    admin
+      .from("groups")
+      .select("name")
+      .eq("tenant_id", tenant.id)
+      .eq("id", suggestionResult.data.group_id)
+      .maybeSingle()
+  ]);
+  const participantName = entryResult.data?.participant_name ?? "wachtlijstkandidaat";
+  const groupName = groupResult.data?.name ?? "voorgestelde groep";
+  const description = [
+    `Beoordeel de plaatsingssuggestie voor ${participantName} in ${groupName}.`,
+    `Matchscore ${Math.round(Number(suggestionResult.data.score))}; confidence ${Math.round(Number(suggestionResult.data.confidence) * 100)}%.`,
+    "Open de wachtlijst, controleer brondata en blockers en maak alleen na menselijke bevestiging een aanbod."
+  ].join("\n\n");
+  const classification = classifyContent(
+    { title: `Plaatsing beoordelen: ${participantName}`, description },
+    "personal"
+  );
+  const taskResult = await admin.from("tenant_tasks").insert({
+    tenant_id: tenant.id,
+    created_by_user_id: context.user.id,
+    placement_suggestion_id: suggestionResult.data.id,
+    title: `Plaatsing beoordelen: ${participantName}`,
+    description,
+    priority: (suggestionResult.data.blockers_json as unknown[]).length > 0 ? "high" : "normal",
+    status: "open",
+    content_classification: classification.classification,
+    classification_reasons: classification.reasons
+  });
+  if (taskResult.error) redirect("/admin/wachtlijst?error=task");
+
+  revalidatePath("/admin/taken");
+  revalidatePath("/admin/wachtlijst");
+  redirect("/admin/wachtlijst?saved=task");
 }
 
 export async function verifySlotOfferAction(formData: FormData) {
@@ -495,8 +636,14 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
   }
 
   const capacityOk = await groupHasCapacity(offer.tenant_id, offer.group_id, entry.program_id);
+  const suggestion = await validateSmartPlacementOffer({
+    tenantId: offer.tenant_id,
+    entry,
+    groupId: offer.group_id,
+    allowOfferedStatus: true
+  });
 
-  if (!capacityOk) {
+  if (!capacityOk || !suggestion?.canOffer) {
     redirect("/plaatsing-aanbod?status=vol");
   }
 
@@ -508,7 +655,11 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       guardian_user_id: guardianUserId,
       display_name: entry.participant_name,
       birth_date: entry.participant_birth_date,
-      status: "active"
+      status: "active",
+      source: entry.is_test ? "journey_simulation_bot" : "intake",
+      is_test: entry.is_test,
+      journey_run_id: entry.journey_run_id,
+      test_metadata_json: entry.test_metadata_json
     })
     .select("id")
     .single();
@@ -527,7 +678,10 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       program_id: entry.program_id,
       current_stage_id: entry.recommended_stage_id,
       status: "active",
-      source: "intake",
+      source: entry.is_test ? "journey_simulation_bot" : "intake",
+      is_test: entry.is_test,
+      journey_run_id: entry.journey_run_id,
+      test_metadata_json: entry.test_metadata_json,
       starts_on: new Date().toISOString().slice(0, 10)
     })
     .select("id")
@@ -547,7 +701,11 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       participant_id: participantId,
       status: "active",
       starts_on: new Date().toISOString().slice(0, 10),
-      capacity_weight: 1
+      capacity_weight: 1,
+      source: entry.is_test ? "journey_simulation_bot" : "intake",
+      is_test: entry.is_test,
+      journey_run_id: entry.journey_run_id,
+      test_metadata_json: entry.test_metadata_json
     })
     .select("id")
     .single();
@@ -585,6 +743,13 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       .eq("tenant_id", offer.tenant_id)
       .eq("id", offer.id),
     admin.from("waitlist_entries").update({ status: "placed" }).eq("tenant_id", offer.tenant_id).eq("id", offer.waitlist_entry_id),
+    admin
+      .from("placement_suggestions")
+      .update({ status: "accepted" })
+      .eq("tenant_id", offer.tenant_id)
+      .eq("waitlist_entry_id", offer.waitlist_entry_id)
+      .eq("group_id", offer.group_id)
+      .in("status", ["suggested", "offered"]),
     entry.intake_submission_id
       ? admin
           .from("intake_submissions")
@@ -611,7 +776,7 @@ async function loadScoringInput(tenantId: string, entryId: string) {
   const [entryResult, preferencesResult, groupsResult, membershipsResult] = await Promise.all([
     admin
       .from("waitlist_entries")
-      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, admin_notes")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
       .eq("tenant_id", tenantId)
       .eq("id", entryId)
       .single(),
@@ -674,7 +839,7 @@ async function getWaitlistEntry(tenantId: string, entryId: string): Promise<Wait
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("waitlist_entries")
-    .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, admin_notes")
+    .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
     .eq("tenant_id", tenantId)
     .eq("id", entryId)
     .maybeSingle();
@@ -720,6 +885,24 @@ function safeEqualHash(left: string, right: string) {
   }
 
   return timingSafeEqual(Buffer.from(left, "hex"), Buffer.from(right, "hex"));
+}
+
+function getMinimumAgeDecision(birthDate: string | null) {
+  if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    return { blocked: false, eligibleFrom: null };
+  }
+  const [year, month, day] = birthDate.split("-").map(Number);
+  const birth = new Date(Date.UTC(year!, month! - 1, day));
+  if (birth.getUTCFullYear() !== year || birth.getUTCMonth() !== month! - 1 || birth.getUTCDate() !== day) {
+    return { blocked: false, eligibleFrom: null };
+  }
+  const eligible = new Date(Date.UTC(year! + 4, month! - 1, day));
+  const today = new Date();
+  const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+  return {
+    blocked: eligible > todayDate,
+    eligibleFrom: eligible.toISOString().slice(0, 10)
+  };
 }
 
 async function findTenantGuardianUserId(tenantId: string, email: string) {

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Clock3, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clock3, ListTodo, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
 
 import { ActivityTimeline } from "@/components/admin/activity-timeline";
 import { SubmitButton } from "@/components/admin/domain-ui";
@@ -10,7 +10,7 @@ import { DataTable, dataTableTextFilter } from "@/components/ui/data-table";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusPill } from "@/components/shell/ui";
-import { createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
+import { createPlacementSuggestionTaskAction, createSlotOfferAction, createWaitlistEntryFromIntakeAction, declineIntakeForWaitlistAction, scoreWaitlistEntryAction, updateWaitlistEntryStatusAction } from "@/lib/domain/placement-actions";
 import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import type { WaitTimePrediction } from "@/lib/domain/wait-time-contract";
 import { getWaitlistStatusMeta } from "@/lib/ui/status-meta";
@@ -29,7 +29,18 @@ export type PlacementCockpitRow = {
   minimumAgeBlocked: boolean;
   eligibleFrom: string | null;
   waitTime: WaitTimePrediction;
-  proposals: Array<{ capacity: number; groupId: string; groupName: string; reasons: string[]; score: number }>;
+  proposals: Array<{
+    capacity: number;
+    capacityFixed: number;
+    capacityUsed: number;
+    confidence: number;
+    groupId: string;
+    groupName: string;
+    reasons: Array<{ label: string; explanation: string; evidence: string }>;
+    blockers: Array<{ code: string; label: string; explanation: string; evidence: string }>;
+    score: number;
+    canOffer: boolean;
+  }>;
   offerGroups: Array<{ id: string; name: string }>;
   offers: Array<{ deliveryStatus: string; groupName: string; status: string }>;
   preferences: string[];
@@ -72,7 +83,7 @@ const columns: ColumnDef<PlacementCockpitRow, unknown>[] = [
     accessorFn: (row) => row.proposals[0]?.score ?? 0,
     header: "Beste match",
     meta: { label: "Beste match" },
-    cell: ({ row }) => row.original.proposals[0] ? <div className="min-w-36"><p className="font-semibold text-foreground">{row.original.proposals[0].groupName}</p><p className="text-xs text-muted-foreground">score {Math.round(row.original.proposals[0].score)} · {row.original.proposals[0].capacity} vrij</p></div> : <span className="text-muted-foreground">Geen match</span>
+    cell: ({ row }) => row.original.proposals[0] ? <div className="min-w-36"><p className="font-semibold text-foreground">{row.original.proposals[0].groupName}</p><p className="text-xs text-muted-foreground">score {Math.round(row.original.proposals[0].score)} · {Math.round(row.original.proposals[0].confidence * 100)}% confidence · {row.original.proposals[0].capacity} vrij</p></div> : <span className="text-muted-foreground">Geen match</span>
   },
   {
     accessorKey: "status",
@@ -145,11 +156,46 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
           <div className="grid gap-4">
             <section>
               <div className="mb-3 flex items-center justify-between gap-3">
-                <div><h3 className="text-sm font-bold text-foreground">Verklaarbare voorstellen</h3><p className="text-xs text-muted-foreground">Niveau, voorkeur en capaciteit bepalen de score.</p></div>
+                <div><h3 className="text-sm font-bold text-foreground">Verklaarbare voorstellen</h3><p className="text-xs text-muted-foreground">Niveau, voorkeur, capaciteit, resource, instructeur, leeftijd, FIFO en doorstroom bepalen de score.</p></div>
                 <form action={scoreWaitlistEntryAction}><input name="waitlistEntryId" type="hidden" value={row.id} /><button className="grid size-10 place-items-center rounded-lg border border-border text-muted-foreground transition hover:bg-muted hover:text-foreground" type="submit" aria-label="Voorstellen herberekenen"><RefreshCw className="size-4" /></button></form>
               </div>
               <div className="grid gap-3">
-                {row.proposals.map((proposal, index) => <article className="rounded-xl border border-border p-3" key={proposal.groupId}><div className="flex items-start justify-between gap-3"><div><p className="flex items-center gap-2 text-[13px] font-semibold text-foreground">{index === 0 ? <Sparkles className="size-4 text-primary" /> : null}{proposal.groupName}</p><p className="mt-1 text-xs text-muted-foreground">{proposal.reasons.join(" · ")}</p></div><span className="text-lg font-bold text-primary">{Math.round(proposal.score)}</span></div><Progress className="mt-3" value={Math.min(100, proposal.score)} aria-label={`Matchscore ${Math.round(proposal.score)} van 100`} /></article>)}
+                {row.proposals.map((proposal, index) => (
+                  <article className={proposal.blockers.length ? "rounded-xl border border-amber-200 bg-amber-50/35 p-3" : "rounded-xl border border-border p-3"} key={proposal.groupId}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="flex items-center gap-2 text-[13px] font-semibold text-foreground">{index === 0 ? <Sparkles className="size-4 text-primary" /> : null}{proposal.groupName}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {proposal.capacityUsed}/{proposal.capacityFixed} bezet · {proposal.capacity} vrij · {Math.round(proposal.confidence * 100)}% confidence
+                        </p>
+                      </div>
+                      <span className="text-lg font-bold text-primary">{Math.round(proposal.score)}</span>
+                    </div>
+                    <Progress className="mt-3" value={Math.min(100, proposal.score)} aria-label={`Matchscore ${Math.round(proposal.score)} van 100`} />
+                    <div className="mt-3 grid gap-2">
+                      {proposal.reasons.slice(0, 5).map((reason) => (
+                        <div className="rounded-lg bg-muted/60 px-3 py-2 text-xs" key={reason.label}>
+                          <p className="font-semibold text-foreground">{reason.label}</p>
+                          <p className="mt-0.5 leading-5 text-muted-foreground">{reason.explanation} <span className="font-medium">Bron: {reason.evidence}.</span></p>
+                        </div>
+                      ))}
+                      {proposal.blockers.map((blocker) => (
+                        <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-950" key={blocker.code}>
+                          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                          <p><span className="font-bold">{blocker.label}.</span> {blocker.explanation} Bron: {blocker.evidence}.</p>
+                        </div>
+                      ))}
+                    </div>
+                    <form action={createPlacementSuggestionTaskAction} className="mt-3">
+                      <input name="waitlistEntryId" type="hidden" value={row.id} />
+                      <input name="groupId" type="hidden" value={proposal.groupId} />
+                      <button className="inline-flex min-h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground hover:bg-muted" type="submit">
+                        <ListTodo className="size-4" aria-hidden="true" />
+                        Maak taak
+                      </button>
+                    </form>
+                  </article>
+                ))}
                 {!row.proposals.length ? <p className="rounded-xl bg-muted p-3 text-[13px] text-muted-foreground">Geen actieve groep voldoet aan de basisvoorwaarden.</p> : null}
               </div>
             </section>

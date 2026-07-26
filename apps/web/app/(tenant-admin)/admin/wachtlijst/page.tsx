@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shell/ui";
 import { computePlacementScores, getPlacementDashboardData } from "@/lib/domain/placement";
 import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getTenantSmartEvents } from "@/lib/domain/smart-events";
+import { calculateSmartPlacementSuggestionsForEntries } from "@/lib/domain/smart-placement";
 import { calculateWaitTimeBands } from "@/lib/domain/wait-time";
 import type { WaitTimeQuery } from "@/lib/domain/wait-time-contract";
 import { compareIntakeOperationalOrder, compareWaitlistOperationalOrder } from "@/lib/ui/status-meta";
@@ -50,10 +51,54 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
     requests: waitTimeRequests
   });
   const waitTimeByScope = new Map(waitTimes.map((row) => [waitTimeKey(row.query), row.prediction]));
+  const smartPlacements = await calculateSmartPlacementSuggestionsForEntries({
+    tenantId: data.tenant.id,
+    entries: visibleWaitlist,
+    preferences: data.waitlistPreferences,
+    groups: data.groups
+  });
   const cockpitRows: PlacementCockpitRow[] = visibleWaitlist.map((entry) => {
     const stored = scoresByEntry.get(entry.id) ?? [];
     const computed = computePlacementScores({ entry, preferences: preferencesByEntry.get(entry.id) ?? [], groups: data.groups, memberships: data.groupMemberships });
-    const proposals = stored.length ? stored.map((score) => ({ capacity: score.capacity_available, groupId: score.group_id, groupName: groupById.get(score.group_id)?.name ?? "Groep", reasons: score.reasons, score: Number(score.score) })) : computed.map((score) => ({ capacity: score.capacityAvailable, groupId: score.group.id, groupName: score.group.name, reasons: score.reasons, score: score.score }));
+    const smart = smartPlacements.get(entry.id) ?? [];
+    const proposals: PlacementCockpitRow["proposals"] = smart.length
+      ? smart.map((score) => ({
+          capacity: score.capacitySnapshot.available,
+          capacityFixed: score.capacitySnapshot.fixed,
+          capacityUsed: score.capacitySnapshot.used,
+          confidence: score.confidence,
+          groupId: score.groupId,
+          groupName: score.groupName,
+          reasons: score.reasons,
+          blockers: score.blockers,
+          score: score.score,
+          canOffer: score.canOffer
+        }))
+      : stored.length
+        ? stored.map((score) => ({
+            capacity: score.capacity_available,
+            capacityFixed: groupById.get(score.group_id)?.capacity ?? score.capacity_available,
+            capacityUsed: Math.max(0, (groupById.get(score.group_id)?.capacity ?? score.capacity_available) - score.capacity_available),
+            confidence: 0.35,
+            groupId: score.group_id,
+            groupName: groupById.get(score.group_id)?.name ?? "Groep",
+            reasons: score.reasons.map((reason) => ({ label: reason, explanation: "Bestaande basisplaatsingsscore.", evidence: "legacy placement score" })),
+            blockers: [],
+            score: Number(score.score),
+            canOffer: score.capacity_available > 0
+          }))
+        : computed.map((score) => ({
+            capacity: score.capacityAvailable,
+            capacityFixed: score.group.capacity,
+            capacityUsed: Math.max(0, score.group.capacity - score.capacityAvailable),
+            confidence: 0.3,
+            groupId: score.group.id,
+            groupName: score.group.name,
+            reasons: score.reasons.map((reason) => ({ label: reason, explanation: "Bestaande basisplaatsingsscore.", evidence: "live groepsdata" })),
+            blockers: [],
+            score: score.score,
+            canOffer: score.capacityAvailable > 0
+          }));
     return {
       id: entry.id,
       participantName: entry.participant_name,
@@ -69,7 +114,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
       eligibleFrom: entry.eligible_from,
       waitTime: waitTimeByScope.get(waitTimeKey(waitTimeRequests[visibleWaitlist.findIndex((candidate) => candidate.id === entry.id)]!)) ?? insufficientWaitTime(),
       proposals,
-      offerGroups: getOfferGroups(entry.program_id, proposals.map((proposal) => proposal.groupId), data.groups),
+      offerGroups: getOfferGroups(entry.program_id, proposals.filter((proposal) => proposal.canOffer).map((proposal) => proposal.groupId), data.groups, proposals.length > 0),
       offers: (offersByEntry.get(entry.id) ?? []).map((offer) => ({ deliveryStatus: offer.delivery_status, groupName: groupById.get(offer.group_id)?.name ?? "Groep", status: offer.status }))
       ,
       preferences: (preferencesByEntry.get(entry.id) ?? []).map((preference) => formatPreference(preference.weekday, preference.starts_after, preference.ends_before)),
@@ -123,11 +168,12 @@ function matchesTestFilter(isTest: boolean, filter: string) {
   return filter === "only" ? isTest : filter === "hide" ? !isTest : true;
 }
 
-function getOfferGroups(programId: string, scoredGroupIds: string[], groups: { id: string; name: string; program_id: string; status: string }[]) {
+function getOfferGroups(programId: string, scoredGroupIds: string[], groups: { id: string; name: string; program_id: string; status: string }[], hasSuggestions: boolean) {
   if (scoredGroupIds.length > 0) {
     return scoredGroupIds.flatMap((groupId) => groups.find((group) => group.id === groupId) ?? []);
   }
 
+  if (hasSuggestions) return [];
   return groups.filter((group) => group.program_id === programId && group.status === "active");
 }
 
