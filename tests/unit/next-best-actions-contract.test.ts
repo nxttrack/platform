@@ -124,6 +124,20 @@ function populatedInput(): NextBestActionInput {
     isTest: false,
     journeyRunId: null
   }];
+  input.leadScores = [{
+    intakeId: "intake-1",
+    programId: "program-1",
+    score: 84,
+    confidence: 0.9,
+    suggestedAction: "Neem persoonlijk contact op en open de plaatsingsmogelijkheden.",
+    reasons: [{
+      label: "Plaatsingsoptie beschikbaar",
+      explanation: "Er is een actuele blocker-vrije optie.",
+      evidence: "84/100"
+    }],
+    isTest: false,
+    journeyRunId: null
+  }];
   return input;
 }
 
