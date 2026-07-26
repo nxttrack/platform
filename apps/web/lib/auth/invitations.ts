@@ -54,6 +54,15 @@ export type AcceptInvitationInput = {
   password?: string | null;
 };
 
+export type InvitationAcceptanceFailure = "activation" | "invalid_code" | "password";
+
+export class InvitationAcceptanceError extends Error {
+  constructor(public readonly reason: InvitationAcceptanceFailure, message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "InvitationAcceptanceError";
+  }
+}
+
 export async function createInvitation(input: CreateInvitationInput): Promise<CreateInvitationResult> {
   const email = normalizeEmail(input.email);
   const role = input.role;
@@ -157,27 +166,31 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
   const email = normalizeEmail(input.email);
 
   if (!isEightDigitCode(input.code)) {
-    throw new Error("Deze uitnodigingscode is ongeldig.");
+    throw new InvitationAcceptanceError("invalid_code", "Deze uitnodigingscode is ongeldig.");
   }
 
   const invitation = await findInvitationForCode(email, input.code);
 
   if (!invitation) {
-    throw new Error("Deze uitnodigingscode is ongeldig of verlopen.");
+    throw new InvitationAcceptanceError("invalid_code", "Deze uitnodigingscode is ongeldig of verlopen.");
   }
 
   if (invitation.requires_password_setup) {
     const password = input.password ?? "";
     const confirmPassword = input.confirmPassword ?? "";
 
-    assertStrongPassword(password, confirmPassword);
+    try {
+      assertStrongPassword(password, confirmPassword);
+    } catch (error) {
+      throw new InvitationAcceptanceError("password", "Het gekozen wachtwoord voldoet niet aan de eisen.", { cause: error });
+    }
 
     const { error } = await createAdminClient().auth.admin.updateUserById(invitation.invited_user_id, {
       password
     });
 
     if (error) {
-      throw new Error(`Could not set invited account password: ${error.message}`);
+      throw new InvitationAcceptanceError("activation", "Het accountwachtwoord kon niet worden ingesteld.", { cause: error });
     }
   }
 
@@ -187,11 +200,21 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
   });
 
   if (error || data !== true) {
-    throw new Error(`Could not accept invitation: ${error?.message ?? "invitation no longer pending"}`);
+    throw new InvitationAcceptanceError(
+      "activation",
+      `Could not accept invitation: ${error?.message ?? "invitation no longer pending"}`
+    );
   }
 
   if (invitation.requires_password_setup) {
-    await clearMustChangePassword(invitation.invited_user_id, email);
+    try {
+      await clearMustChangePassword(invitation.invited_user_id, email);
+    } catch (error) {
+      console.error("[auth] Accepted invitation but could not clear password-change state.", {
+        invitationId: invitation.id,
+        cause: error instanceof Error ? error.message : "unknown"
+      });
+    }
   }
 
   return {

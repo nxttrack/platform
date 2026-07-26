@@ -39,6 +39,7 @@ for (const scanRoot of scanRoots) {
 }
 
 auditEmailSecretPreservation();
+auditInvitationAcceptanceRpc();
 auditProtectedApiRoutes();
 auditPublicCapabilityUrls();
 
@@ -133,6 +134,32 @@ function auditProtectedApiRoutes() {
       "requireApiAuthenticatedContext",
       `${route} must enforce the centralized API password-change boundary`
     );
+  }
+}
+
+function auditInvitationAcceptanceRpc() {
+  const invitations = readFileSync(join(root, "apps/web/lib/auth/invitations.ts"), "utf8");
+  const migrationsDirectory = join(root, "supabase/migrations");
+  const migrations = readdirSync(migrationsDirectory)
+    .filter((file) => file.endsWith(".sql"))
+    .map((file) => readFileSync(join(migrationsDirectory, file), "utf8").toLowerCase())
+    .join("\n");
+
+  if (!invitations.includes('.rpc("accept_auth_invitation"')) {
+    failures.push("invitation acceptance contract: the server must activate invitations through the atomic RPC.");
+  }
+
+  const requiredSql = [
+    "function public.accept_auth_invitation",
+    "revoke all on function public.accept_auth_invitation(uuid) from anon",
+    "revoke all on function public.accept_auth_invitation(uuid) from authenticated",
+    "grant execute on function public.accept_auth_invitation(uuid) to service_role"
+  ];
+
+  for (const contract of requiredSql) {
+    if (!migrations.includes(contract)) {
+      failures.push(`invitation acceptance contract: missing database contract "${contract}".`);
+    }
   }
 }
 
