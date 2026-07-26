@@ -8,10 +8,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: nxttrack-next-best-actions-${{ matrix.environment }}
-  cancel-in-progress: false
-
 jobs:
   generate:
     name: generate ${{ matrix.environment }} action proposals
@@ -22,6 +18,9 @@ jobs:
         environment:
           - staging
           - production
+    concurrency:
+      group: nxttrack-next-best-actions-${{ matrix.environment }}
+      cancel-in-progress: false
     environment: ${{ matrix.environment }}
     env:
       APP_URL: ${{ vars.APP_URL }}
