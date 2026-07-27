@@ -42,7 +42,7 @@ jobs:
             --no-pager \
             --full \
             --lines=200 |
-            grep -Ei 'participant.media|media.consents|participant.guardians|PGRST|Supabase admin|Could not find|Kon .* laden|Internal Server Error|Error:' |
+            grep -Ei 'participant.media|media.consents|participant.guardians|PGRST|Supabase admin|Could not find|Kon .* laden|Internal Server Error|Error:|digest|failed|⨯' |
             sed -E \
               -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g' \
               -e 's/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/[uuid]/g' \
