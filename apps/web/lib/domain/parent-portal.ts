@@ -34,6 +34,10 @@ export type ParentMakeupCommunicationPreferences = {
   makeUpInAppEnabled: boolean;
   makeUpEmailEnabled: boolean;
   automaticMakeUpInvitesEnabled: boolean;
+  inAppEnabled: boolean;
+  transactionalEmailEnabled: boolean;
+  newsletterEmailEnabled: boolean;
+  marketingConsentStatus: "unknown" | "granted" | "denied" | "withdrawn";
 };
 
 export type ParentPortalSettings = {
@@ -832,7 +836,7 @@ export async function getParentMakeupCommunicationPreferences(): Promise<ParentM
   const tenant = getActiveTenant(context);
   const result = await createAdminClient()
     .from("guardian_communication_preferences")
-    .select("make_up_in_app_enabled, make_up_email_enabled, automatic_make_up_invites_enabled")
+    .select("make_up_in_app_enabled, make_up_email_enabled, automatic_make_up_invites_enabled, in_app_enabled, transactional_email_enabled, newsletter_email_enabled, marketing_consent_status")
     .eq("tenant_id", tenant.id)
     .eq("guardian_user_id", context.user.id)
     .maybeSingle();
@@ -842,7 +846,16 @@ export async function getParentMakeupCommunicationPreferences(): Promise<ParentM
   return {
     makeUpInAppEnabled: result.data?.make_up_in_app_enabled ?? true,
     makeUpEmailEnabled: result.data?.make_up_email_enabled ?? true,
-    automaticMakeUpInvitesEnabled: result.data?.automatic_make_up_invites_enabled ?? false
+    automaticMakeUpInvitesEnabled: result.data?.automatic_make_up_invites_enabled ?? false,
+    inAppEnabled: result.data?.in_app_enabled ?? true,
+    transactionalEmailEnabled: result.data?.transactional_email_enabled ?? true,
+    newsletterEmailEnabled: result.data?.newsletter_email_enabled ?? false,
+    marketingConsentStatus:
+      result.data?.marketing_consent_status === "granted" ||
+      result.data?.marketing_consent_status === "denied" ||
+      result.data?.marketing_consent_status === "withdrawn"
+        ? result.data.marketing_consent_status
+        : "unknown"
   };
 }
 

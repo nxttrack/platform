@@ -57,6 +57,41 @@ export async function updateParentMakeupPreferencesAction(formData: FormData) {
   redirect("/portaal/profiel?saved=makeup-preferences");
 }
 
+export async function updateParentCommunicationPreferencesAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/portaal/profiel");
+  const tenant = getActiveTenant(context);
+  const newsletterEnabled = formData.get("newsletterEmailEnabled") === "on";
+  const consentConfirmed = formData.get("marketingConsentConfirmation") === "confirmed";
+  if (newsletterEnabled && !consentConfirmed) {
+    redirect("/portaal/profiel?error=newsletter-consent");
+  }
+
+  const now = new Date().toISOString();
+  const result = await createAdminClient()
+    .from("guardian_communication_preferences")
+    .upsert(
+      {
+        tenant_id: tenant.id,
+        guardian_user_id: context.user.id,
+        in_app_enabled: formData.get("inAppEnabled") === "on",
+        transactional_email_enabled: formData.get("transactionalEmailEnabled") === "on",
+        newsletter_email_enabled: newsletterEnabled,
+        marketing_consent_status: newsletterEnabled ? "granted" : "withdrawn",
+        marketing_consent_recorded_at: now,
+        marketing_unsubscribed_at: newsletterEnabled ? null : now,
+        updated_by_user_id: context.user.id
+      },
+      { onConflict: "tenant_id,guardian_user_id" }
+    );
+
+  revalidatePath("/portaal/profiel");
+  revalidatePath("/portaal/berichten");
+  if (result.error) {
+    redirect("/portaal/profiel?error=communication-preferences");
+  }
+  redirect("/portaal/profiel?saved=communication-preferences");
+}
+
 export async function cancelLessonAction(formData: FormData) {
   const nextPath = getFormNextPath(formData, "/portaal/lessen");
   const context = await requirePrivateShellContext("/portaal/lessen");

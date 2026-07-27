@@ -2,7 +2,11 @@ import { Mail, Phone, RefreshCcw, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, PageHeader } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
-import { updateParentMakeupPreferencesAction, updateParentProfileAction } from "@/lib/domain/parent-portal-actions";
+import {
+  updateParentCommunicationPreferencesAction,
+  updateParentMakeupPreferencesAction,
+  updateParentProfileAction
+} from "@/lib/domain/parent-portal-actions";
 import { getParentMakeupCommunicationPreferences, getParentPortalData } from "@/lib/domain/parent-portal";
 
 type PageProps = {
@@ -18,7 +22,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
     searchParams ?? Promise.resolve({})
   ]);
   const savedValue = getParam(params, "saved");
-  const saved = savedValue === "1" || savedValue === "makeup-preferences";
+  const saved = savedValue === "1" || savedValue === "makeup-preferences" || savedValue === "communication-preferences";
   const error = getParam(params, "error");
   const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available");
 
@@ -89,6 +93,28 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
                 Voorkeuren opslaan
               </button>
             </div>
+          </DirtyForm>
+        </div>
+      </Card>
+
+      <Card>
+        <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Communicatievoorkeuren</p>
+            <h2 className="mt-2 text-xl font-bold text-foreground">Kies hoe we je bereiken</h2>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">
+              Servicemails gaan over je lessen en account. Nieuwsbrieven zijn optioneel en kun je hier altijd weer uitzetten.
+            </p>
+          </div>
+          <DirtyForm action={updateParentCommunicationPreferencesAction} className="gap-3">
+            <PreferenceToggle defaultChecked={communication.inAppEnabled} description="Meldingen en nieuwe berichten in het beveiligde ouderportaal." label="In-app meldingen" name="inAppEnabled" />
+            <PreferenceToggle defaultChecked={communication.transactionalEmailEnabled} description="Belangrijke service-informatie over lessen, planning en account." label="Servicemails" name="transactionalEmailEnabled" />
+            <PreferenceToggle defaultChecked={communication.newsletterEmailEnabled} description="Redactioneel nieuws en updates van de zwemschool. Dit is altijd optioneel." label="Nieuwsbrieven per e-mail" name="newsletterEmailEnabled" />
+            <label className="flex min-h-14 items-start gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm">
+              <input className="mt-1 size-5 accent-primary" name="marketingConsentConfirmation" type="checkbox" value="confirmed" />
+              <span><strong className="block text-foreground">Toestemming bevestigen</strong><span className="mt-1 block text-xs leading-5 text-muted-foreground">Alleen nodig als je nieuwsbrieven inschakelt. Je kunt de toestemming later intrekken.</span></span>
+            </label>
+            <div><button className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit">Communicatievoorkeuren opslaan</button></div>
           </DirtyForm>
         </div>
       </Card>
