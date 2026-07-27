@@ -57,7 +57,22 @@ const tenantScopedTables = parseTableList(
       "tenant_documents",
       "participant_media",
       "media_consent_events",
-      "media_access_logs"
+      "media_access_logs",
+      "communication_templates",
+      "message_threads",
+      "message_thread_participants",
+      "messages",
+      "newsletter_campaigns",
+      "newsletter_recipients",
+      "communication_deliveries",
+      "tenant_badge_module_settings",
+      "tenant_badge_settings",
+      "tenant_custom_badges",
+      "badge_message_suggestions",
+      "badge_collections",
+      "badge_share_template_sets",
+      "badge_share_assets",
+      "badge_analytics_events"
     ].join(",")
 );
 

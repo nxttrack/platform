@@ -49,6 +49,12 @@ jobs:
       - name: Test Journey Bot safety contracts
         run: pnpm run test:journey-bot
 
+      - name: Test Communicationhub contracts
+        run: pnpm run test:communication-hub
+
+      - name: Test premium badge contracts
+        run: pnpm run test:badges
+
       - name: Audit Journey Bot foundation
         run: pnpm run release:audit-journey-bot
 

@@ -289,6 +289,8 @@ jobs:
           pnpm run typecheck
           pnpm run test:billing-contract
           pnpm run test:journey-bot
+          pnpm run test:communication-hub
+          pnpm run test:badges
           pnpm run release:audit-journey-bot
           pnpm run auth:audit
           pnpm run security:audit-dependencies
@@ -486,6 +488,11 @@ jobs:
         env:
           SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
         run: pnpm run sprint4:test-quality
+
+      - name: Communicationhub and Badge Studio browser validation
+        env:
+          BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
+        run: pnpm run test:communication-badges:e2e
 
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
