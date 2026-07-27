@@ -104,6 +104,18 @@ async function createOffer(page: Page, entry: Locator, groupName: string) {
 }
 
 async function openPlacementDetails(page: Page, participantName: string) {
+  const savedViewsLoader = page.locator('button[aria-label="Opgeslagen weergaven beheren"] svg.animate-spin');
+  await expect(savedViewsLoader).toHaveCount(0);
+
+  const clearFilters = page.getByRole("button", { name: "Wis filters" });
+  if (await clearFilters.isVisible()) {
+    await clearFilters.click();
+  }
+
+  const search = page.getByPlaceholder("Zoek deelnemer…");
+  await expect(search).toBeVisible();
+  await search.fill(participantName);
+
   const row = page.getByRole("row").filter({ hasText: participantName });
   await expect(row).toHaveCount(1);
   await row.getByRole("button", { name: "Details openen" }).click();
