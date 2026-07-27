@@ -7,6 +7,7 @@ import { getFileFromFormData, uploadCertificateFile } from "@/lib/storage/privat
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 import { createTenantNotifications } from "./tenant-notifications";
+import { evaluateBadgeTriggers } from "./badge-engine";
 
 const readinessStatuses = new Set(["not_ready", "nearly_ready", "ready", "blocked"]);
 const eventStatuses = new Set(["planned", "published", "completed", "cancelled"]);
@@ -39,6 +40,15 @@ export async function markGraduationReadinessAction(formData: FormData) {
     },
     { onConflict: "tenant_id,enrollment_id,stage_id" }
   );
+
+  if (!error && status === "ready") {
+    await evaluateBadgeTriggers({
+      tenantId: tenant.id,
+      participantId: enrollmentResult.data.participant_id,
+      eventType: "graduation_ready",
+      eventContext: { entityId: enrollmentResult.data.id }
+    });
+  }
 
   redirectAfterWrite(error, "readiness");
 }
@@ -171,7 +181,7 @@ export async function registerGraduationResultAction(formData: FormData) {
   }
 
   if (result === "passed") {
-    const stageResult = await admin.from("program_stages").select("name, badge_label").eq("tenant_id", tenant.id).eq("id", enrollmentResult.data.current_stage_id).maybeSingle();
+    const stageResult = await admin.from("program_stages").select("name, badge_label, sort_order").eq("tenant_id", tenant.id).eq("id", enrollmentResult.data.current_stage_id).maybeSingle();
     const certificateTitle = readOptional(formData, "certificateTitle") ?? `Diploma ${stageResult.data?.badge_label ?? stageResult.data?.name ?? "zwemvaardigheid"}`;
     const certificateResult = await admin
       .from("certificate_records")
@@ -211,6 +221,46 @@ export async function registerGraduationResultAction(formData: FormData) {
       title: "Diploma beschikbaar",
       message: certificateTitle
     });
+
+    const certificateCode = inferCertificateCode(stageResult.data?.badge_label, stageResult.data?.name, certificateTitle);
+    await Promise.all([
+      evaluateBadgeTriggers({
+        tenantId: tenant.id,
+        participantId: eventParticipantResult.data.participant_id,
+        eventType: "stage_completed",
+        eventContext: {
+          entityId: eventParticipantResult.data.id,
+          stage: Math.max(1, Number(stageResult.data?.sort_order ?? 0) || 1)
+        }
+      }),
+      certificateCode
+        ? evaluateBadgeTriggers({
+            tenantId: tenant.id,
+            participantId: eventParticipantResult.data.participant_id,
+            eventType: "certificate_issued",
+            eventContext: { entityId: certificateResult.data.id, certificate: certificateCode }
+          })
+        : Promise.resolve({ awarded: [], skipped: ["Geen A/B/C-code herkend."] })
+    ]);
+
+    const certificateSeriesResult = await admin
+      .from("certificate_records")
+      .select("title")
+      .eq("tenant_id", tenant.id)
+      .eq("participant_id", eventParticipantResult.data.participant_id)
+      .eq("status", "issued");
+    const codes = new Set((certificateSeriesResult.data ?? []).flatMap((certificate) => {
+      const code = inferCertificateCode(null, null, certificate.title);
+      return code ? [code] : [];
+    }));
+    if (["A", "B", "C"].every((code) => codes.has(code))) {
+      await evaluateBadgeTriggers({
+        tenantId: tenant.id,
+        participantId: eventParticipantResult.data.participant_id,
+        eventType: "certificate_series_completed",
+        eventContext: { entityId: "ABC", certificates: ["A", "B", "C"] }
+      });
+    }
   }
 
   redirectAfterWrite(null, "result");
@@ -377,6 +427,12 @@ function readInteger(formData: FormData, field: string) {
   const parsed = Number.parseInt(value, 10);
 
   return Number.isFinite(parsed) ? parsed : null;
+}
+
+function inferCertificateCode(...values: Array<string | null | undefined>) {
+  const text = values.filter(Boolean).join(" ").toUpperCase();
+  const match = text.match(/(?:DIPLOMA|NIVEAU|BADGE)?\s*([ABC])(?:\b|$)/);
+  return match?.[1] && ["A", "B", "C"].includes(match[1]) ? match[1] : null;
 }
 
 function readNumber(formData: FormData, field: string) {

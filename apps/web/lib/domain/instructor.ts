@@ -158,6 +158,41 @@ export type InstructorData = {
   progressNotes: ProgressNoteRow[];
   badgeAwards: BadgeAwardRow[];
   badgeDefinitions: BadgeDefinitionRow[];
+  premiumBadgeCatalog: Array<{
+    id: string;
+    badge_key: string;
+    name_default: string;
+    name_boy: string | null;
+    name_girl: string | null;
+    description_default: string;
+    category: string;
+    audience: "all" | "boys" | "girls";
+    badge_type: string;
+  }>;
+  customBadges: Array<{
+    id: string;
+    badge_key: string;
+    name_default: string;
+    name_boy: string | null;
+    name_girl: string | null;
+    description_default: string;
+    category: string;
+    audience: "all" | "boys" | "girls";
+  }>;
+  badgeModuleSettings: {
+    badges_enabled: boolean;
+    manual_badges_enabled: boolean;
+    instructor_can_award_directly: boolean;
+    manual_badge_requires_admin_approval: boolean;
+  } | null;
+  badgeSuggestions: Array<{
+    catalog_definition_id: string | null;
+    custom_badge_id: string | null;
+    suggestion_default: string;
+    suggestion_boy: string | null;
+    suggestion_girl: string | null;
+    sort_order: number;
+  }>;
   progressModules: ProgressModuleRow[];
   progressItems: ProgressItemRow[];
   progressScores: ProgressScoreRow[];
@@ -240,7 +275,7 @@ export async function getInstructorData(): Promise<InstructorData> {
   const participantIds = unique(groupMemberships.map((membership) => membership.participant_id).concat(catchUpRequests.map((request) => request.participant_id)));
   const enrollmentIds = unique(groupMemberships.map((membership) => membership.enrollment_id).concat(catchUpRequests.map((request) => request.enrollment_id)));
   const [participantsResult, enrollmentsResult, notesResult, badgeAwardsResult, progressScoresResult] = await Promise.all([
-    participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
+    participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, gender, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
     enrollmentIds.length > 0
       ? admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on").eq("tenant_id", tenant.id).in("id", enrollmentIds)
       : Promise.resolve({ data: [], error: null }),
@@ -281,13 +316,18 @@ export async function getInstructorData(): Promise<InstructorData> {
   const programIds = unique(enrollments.map((enrollment) => enrollment.program_id).concat(groups.map((group) => group.program_id)));
   const stageIds = unique(enrollments.flatMap((enrollment) => (enrollment.current_stage_id ? [enrollment.current_stage_id] : [])).concat(groups.flatMap((group) => (group.stage_id ? [group.stage_id] : []))));
   const resourceIds = unique(groups.flatMap((group) => (group.default_resource_id ? [group.default_resource_id] : [])).concat(sessions.flatMap((session) => (session.resource_id ? [session.resource_id] : []))));
-  const [programsResult, stagesResult, resourcesResult, badgeDefinitionsResult, progressModulesResult, progressItemsResult] = await Promise.all([
+  const [programsResult, stagesResult, resourcesResult, badgeDefinitionsResult, progressModulesResult, progressItemsResult, premiumBadgeCatalogResult, customBadgesResult, badgeModuleSettingsResult, badgeSuggestionsResult] = await Promise.all([
     programIds.length > 0 ? admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).in("id", programIds) : Promise.resolve({ data: [], error: null }),
     stageIds.length > 0 ? admin.from("program_stages").select("id, program_id, name, code, badge_label, color_hex, status, sort_order").eq("tenant_id", tenant.id).in("id", stageIds) : Promise.resolve({ data: [], error: null }),
     resourceIds.length > 0 ? admin.from("resources").select("id, parent_resource_id, kind, name, code, capacity, status, sort_order").eq("tenant_id", tenant.id).in("id", resourceIds) : Promise.resolve({ data: [], error: null }),
     admin.from("badge_definitions").select("id, program_id, stage_id, code, name, description, icon_name, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("progress_modules").select("id, program_id, stage_id, code, name, description, template_key, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order"),
     admin.from("progress_items").select("id, module_id, code, name, description, positive_goal, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order")
+    ,
+    admin.from("badge_catalog_definitions").select("id, badge_key, name_default, name_boy, name_girl, description_default, category, audience, badge_type").eq("status", "active").eq("badge_type", "manual").order("sort_order"),
+    admin.from("tenant_custom_badges").select("id, badge_key, name_default, name_boy, name_girl, description_default, category, audience").eq("tenant_id", tenant.id).eq("status", "active").order("name_default"),
+    admin.from("tenant_badge_module_settings").select("badges_enabled, manual_badges_enabled, instructor_can_award_directly, manual_badge_requires_admin_approval").eq("tenant_id", tenant.id).maybeSingle(),
+    admin.from("badge_message_suggestions").select("catalog_definition_id, custom_badge_id, suggestion_default, suggestion_boy, suggestion_girl, sort_order").or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`).eq("status", "active").order("sort_order")
   ]);
 
   assertInstructorResult(programsResult.error, "programs");
@@ -296,6 +336,10 @@ export async function getInstructorData(): Promise<InstructorData> {
   assertInstructorResult(badgeDefinitionsResult.error, "badge definitions");
   assertInstructorResult(progressModulesResult.error, "progress modules");
   assertInstructorResult(progressItemsResult.error, "progress items");
+  assertInstructorResult(premiumBadgeCatalogResult.error, "premium badge catalog");
+  assertInstructorResult(customBadgesResult.error, "custom badges");
+  assertInstructorResult(badgeModuleSettingsResult.error, "badge module settings");
+  assertInstructorResult(badgeSuggestionsResult.error, "badge suggestions");
 
   return {
     tenant,
@@ -316,6 +360,10 @@ export async function getInstructorData(): Promise<InstructorData> {
     progressNotes: (notesResult.data ?? []) as ProgressNoteRow[],
     badgeAwards: (badgeAwardsResult.data ?? []) as BadgeAwardRow[],
     badgeDefinitions: (badgeDefinitionsResult.data ?? []) as BadgeDefinitionRow[],
+    premiumBadgeCatalog: (premiumBadgeCatalogResult.data ?? []) as InstructorData["premiumBadgeCatalog"],
+    customBadges: (customBadgesResult.data ?? []) as InstructorData["customBadges"],
+    badgeModuleSettings: badgeModuleSettingsResult.data as InstructorData["badgeModuleSettings"],
+    badgeSuggestions: (badgeSuggestionsResult.data ?? []) as InstructorData["badgeSuggestions"],
     progressModules: (progressModulesResult.data ?? []) as ProgressModuleRow[],
     progressItems: (progressItemsResult.data ?? []) as ProgressItemRow[],
     progressScores: (progressScoresResult.data ?? []) as ProgressScoreRow[],

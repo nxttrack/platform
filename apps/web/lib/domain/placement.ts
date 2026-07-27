@@ -17,6 +17,7 @@ export type WaitlistEntryRow = {
   parent_phone: string | null;
   participant_name: string;
   participant_birth_date: string | null;
+  participant_gender: "boy" | "girl" | "unknown";
   selected_option: string;
   status: string;
   priority_date: string;
@@ -115,7 +116,7 @@ export async function getPlacementDashboardData(): Promise<PlacementDashboardDat
       .order("received_at", { ascending: false }),
     admin
       .from("waitlist_entries")
-      .select("id, intake_submission_id, participant_id, guardian_user_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
+      .select("id, intake_submission_id, participant_id, guardian_user_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, participant_gender, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
       .eq("tenant_id", tenant.id)
       .order("priority_date"),
     admin.from("waitlist_preferences").select("id, waitlist_entry_id, weekday, starts_after, ends_before, preference_weight").eq("tenant_id", tenant.id),

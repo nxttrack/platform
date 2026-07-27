@@ -135,6 +135,11 @@ function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCor
     <DirtyForm action={createParticipantEnrollmentAction} className="grid gap-4 sm:grid-cols-2">
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
+      <SelectField label="Badge-aanspreekvorm" name="gender">
+        <option value="unknown">Neutraal / onbekend</option>
+        <option value="boy">Jongen</option>
+        <option value="girl">Meisje</option>
+      </SelectField>
       <SelectField label="Ouder/verzorger" name="guardianUserId">
         <option value="">Nog niet gekoppeld</option>
         {data.guardians.map((guardian) => <option key={guardian.userId} value={guardian.userId}>{guardian.label}</option>)}

@@ -24,6 +24,7 @@ import {
   calculateSmartPlacementSuggestionsForEntries,
   validateSmartPlacementOffer
 } from "./smart-placement";
+import { evaluateBadgeTriggers } from "./badge-engine";
 
 const weekdayMap: Record<string, number> = {
   maandag: 1,
@@ -42,7 +43,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
   const intakeSubmissionId = readRequired(formData, "intakeSubmissionId");
   const submissionResult = await admin
     .from("intake_submissions")
-    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, preferred_days, preferred_dayparts, preferred_notes, selected_group_id, source, is_test, journey_run_id, test_metadata_json")
+    .select("id, program_id, selected_option, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, participant_gender, preferred_days, preferred_dayparts, preferred_notes, selected_group_id, source, is_test, journey_run_id, test_metadata_json")
     .eq("tenant_id", tenant.id)
     .eq("id", intakeSubmissionId)
     .single();
@@ -60,6 +61,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     parent_phone: string | null;
     participant_name: string;
     participant_birth_date: string | null;
+    participant_gender: "boy" | "girl" | "unknown";
     preferred_days: string[];
     preferred_dayparts: unknown;
     preferred_notes: string | null;
@@ -90,6 +92,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
       parent_phone: submission.parent_phone,
       participant_name: submission.participant_name,
       participant_birth_date: submission.participant_birth_date,
+      participant_gender: submission.participant_gender,
       selected_option: submission.selected_option,
       status: "waiting",
       source: submission.is_test ? "journey_simulation_bot" : "intake",
@@ -710,6 +713,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       guardian_user_id: guardianUserId,
       display_name: entry.participant_name,
       birth_date: entry.participant_birth_date,
+      gender: entry.participant_gender ?? "unknown",
       status: "active",
       source: entry.is_test ? "journey_simulation_bot" : "intake",
       is_test: entry.is_test,
@@ -724,6 +728,12 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
   }
 
   const participantId = (participantResult.data as { id: string }).id;
+  await evaluateBadgeTriggers({
+    tenantId: offer.tenant_id,
+    participantId,
+    eventType: "swim_start_created",
+    eventContext: { entityId: participantId, source: "confirmed_offer" }
+  });
   const enrollmentResult = await admin
     .from("enrollments")
     .insert({
@@ -831,7 +841,7 @@ async function loadScoringInput(tenantId: string, entryId: string) {
   const [entryResult, preferencesResult, groupsResult, membershipsResult] = await Promise.all([
     admin
       .from("waitlist_entries")
-      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
+      .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, participant_gender, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
       .eq("tenant_id", tenantId)
       .eq("id", entryId)
       .single(),
@@ -894,7 +904,7 @@ async function getWaitlistEntry(tenantId: string, entryId: string): Promise<Wait
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("waitlist_entries")
-    .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
+    .select("id, intake_submission_id, program_id, recommended_stage_id, parent_name, parent_email, parent_phone, participant_name, participant_birth_date, participant_gender, selected_option, status, priority_date, created_at, admin_notes, source, is_test, journey_run_id, test_metadata_json, eligible_from, minimum_age_blocked, waitlist_reason")
     .eq("tenant_id", tenantId)
     .eq("id", entryId)
     .maybeSingle();

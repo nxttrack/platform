@@ -98,6 +98,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const parentEmail = normalizeEmail(readRequired(formData, "parentEmail"));
   const participantName = readRequired(formData, "participantName");
   const participantBirthDate = readOptional(formData, "participantBirthDate");
+  const participantGender = readOptional(formData, "participantGender");
   const secondaryParentName = readOptional(formData, "secondaryParentName");
   const secondaryParentEmail = normalizeOptionalEmail(readOptional(formData, "secondaryParentEmail"));
   const swimmingExperience = readOptional(formData, "swimmingExperience");
@@ -124,6 +125,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     !participantName ||
     !participantBirthDate ||
     !isValidBirthDate(participantBirthDate) ||
+    !["boy", "girl", "unknown"].includes(participantGender ?? "") ||
     !isSwimmingExperience(swimmingExperience) ||
     (secondaryParentEmail && !isEmail(secondaryParentEmail))
   ) {
@@ -197,6 +199,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       parentEmail,
       participantName,
       participantBirthDate,
+      participantGender,
       preferredNotes,
       message,
       secondaryParentEmail,
@@ -249,6 +252,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
       secondary_parent_phone: readOptional(formData, "secondaryParentPhone"),
       participant_name: participantName,
       participant_birth_date: participantBirthDate,
+      participant_gender: participantGender,
       preferred_days: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
       preferred_dayparts: preferredDayparts,
       preferred_notes: preferredNotes,
