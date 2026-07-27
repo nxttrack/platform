@@ -153,7 +153,7 @@ jobs:
           PLAYWRIGHT_BASE_URL="http://$tenant_hostname:3901" \
             pnpm --filter @nxttrack/web exec playwright test tests/e2e/authenticated.spec.ts \
               --project chromium-desktop \
-              --grep "^parent can sign in"
+              --grep "parent can sign in"
           test_status="$?"
           set -e
 
