@@ -39,7 +39,7 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
     entry = await openPlacementDetails(page, participantName);
     await expect(entry).toContainText(phase.expected.groupName);
-    await expect(entry).toContainText("voorkeursdag match");
+    await expect(entry.getByText("Voorkeursdag match", { exact: true })).toBeVisible();
 
     await createOffer(page, entry, phase.expected.groupName);
     await page.goto("/plaatsing-aanbod", { waitUntil: "domcontentloaded" });
