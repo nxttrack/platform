@@ -9,6 +9,8 @@ const webDir = join(repoRoot, "apps", "web");
 const nextDir = join(webDir, ".next");
 const standaloneWebDir = join(nextDir, "standalone", "apps", "web");
 const standaloneNextDir = join(standaloneWebDir, ".next");
+const sourcePnpmDir = join(repoRoot, "node_modules", ".pnpm");
+const standalonePnpmDir = join(nextDir, "standalone", "node_modules", ".pnpm");
 const sourceStaticDir = join(nextDir, "static");
 const targetStaticDir = join(standaloneNextDir, "static");
 const sourcePublicDir = join(webDir, "public");
@@ -24,14 +26,38 @@ if (existsSync(sourcePublicDir)) {
   replaceDirectory(sourcePublicDir, targetPublicDir);
 }
 
+packageSharpRuntimeDependencies();
+
 assertDirectory(targetStaticDir, "Packaged standalone static assets are missing.");
 assertHasAsset(join(targetStaticDir, "chunks"), [".js", ".css"], "Packaged standalone chunks do not contain JavaScript or CSS assets.");
+assertHasAsset(standalonePnpmDir, [".node"], "Packaged standalone Sharp runtime is missing its native Node binding.");
+assertHasAsset(standalonePnpmDir, [".so", ".dylib", ".dll"], "Packaged standalone Sharp runtime is missing libvips.");
 
-console.log("[deploy:package-standalone-assets] Packaged .next/static and public assets for standalone runtime.");
+console.log("[deploy:package-standalone-assets] Packaged static, public and native Sharp assets for standalone runtime.");
 
 function replaceDirectory(source, target) {
   rmSync(target, { recursive: true, force: true });
   cpSync(source, target, { recursive: true });
+}
+
+function packageSharpRuntimeDependencies() {
+  assertDirectory(sourcePnpmDir, "Installed pnpm dependencies are missing.");
+  assertDirectory(standalonePnpmDir, "Traced standalone dependencies are missing.");
+
+  const sharpRuntimePackages = readdirSync(sourcePnpmDir)
+    .filter((entry) => entry.startsWith("@img+sharp-"))
+    .filter((entry) => existsSync(join(standalonePnpmDir, entry)));
+
+  if (sharpRuntimePackages.length === 0) {
+    fail("No traced Sharp runtime packages were found.");
+  }
+
+  for (const packageDirectory of sharpRuntimePackages) {
+    cpSync(join(sourcePnpmDir, packageDirectory), join(standalonePnpmDir, packageDirectory), {
+      recursive: true,
+      force: true
+    });
+  }
 }
 
 function assertPath(path, message) {
@@ -60,7 +86,10 @@ function containsAsset(directory, extensions) {
       return true;
     }
 
-    if (entry.isFile() && extensions.some((extension) => entry.name.endsWith(extension))) {
+    if (
+      entry.isFile() &&
+      extensions.some((extension) => entry.name.endsWith(extension) || (extension === ".so" && entry.name.includes(".so.")))
+    ) {
       return true;
     }
   }
