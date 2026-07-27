@@ -23,6 +23,8 @@ jobs:
     env:
       APP_URL: ${{ vars.APP_URL }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME || 'nxttrack-staging' }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - name: Authorize bounded diagnostic
         env:
@@ -34,7 +36,40 @@ jobs:
           status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "${APP_URL%/}/portaal/media")"
           echo "Unauthenticated /portaal/media status: $status"
 
+      - name: Validate media REST schema without reading rows
+        run: |
+          set -euo pipefail
+
+          check_contract() {
+            label="$1"
+            path="$2"
+            response_file="$RUNNER_TEMP/${label}.json"
+            status="$(
+              curl --silent --show-error \
+                --header "apikey: $SUPABASE_SECRET_KEY" \
+                --header "Authorization: Bearer $SUPABASE_SECRET_KEY" \
+                --output "$response_file" \
+                --write-out '%{http_code}' \
+                "${NEXT_PUBLIC_SUPABASE_URL%/}/rest/v1/${path}"
+            )"
+
+            if [[ "$status" == 2* ]]; then
+              echo "$label contract: HTTP $status"
+              return
+            fi
+
+            echo "::error::$label contract returned HTTP $status"
+            jq '{code, message, hint, details}' "$response_file"
+            return 1
+          }
+
+          check_contract participant_guardians 'participant_guardians?select=participant_id,access_level&limit=0'
+          check_contract participants 'participants?select=id,display_name,guardian_user_id,is_test&limit=0'
+          check_contract participant_media 'participant_media?select=id,tenant_id,participant_id,caption,storage_bucket,storage_path,file_name,mime_type,size_bytes,malware_scan_status,download_allowed,status,consent_checked_at,published_at,expires_at,created_at&limit=0'
+          check_contract media_consents 'media_consents?select=participant_id,guardian_user_id,status,expires_at,updated_at&limit=0'
+
       - name: Emit only redacted relevant service errors
+        if: always()
         run: |
           set -o pipefail
           systemctl status \
