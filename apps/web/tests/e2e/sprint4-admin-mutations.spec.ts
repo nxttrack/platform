@@ -46,7 +46,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Code").fill(programCode);
     await form.getByLabel("Omschrijving").fill("Browsergedreven Sprint 4 adminbewijs.");
     await submitAndWaitForSaved(page, form, "Programma opslaan", "/admin/programma", "1");
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: programName })).toHaveCount(1);
+    await mutationExpect(page.locator("article").filter({ hasText: programName })).toHaveCount(1);
 
     await page.goto("/admin/programma", { waitUntil: "domcontentloaded" });
     await openAction(page, "Niveau toevoegen");
@@ -56,7 +56,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Code").fill(stageCode);
     await form.getByLabel("Badge label").fill("Sprint 4 bewijsbadje");
     await submitAndWaitForSaved(page, form, "Stage opslaan", "/admin/programma", "1");
-    await mutationExpect(page.getByRole("listitem").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
+    await mutationExpect(page.locator("article").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
     await openAction(page, "Nieuwe groep");

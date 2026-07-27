@@ -94,7 +94,7 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
                             description="De geldigheid, het niveau en de actuele vrije plek worden bij bevestiging opnieuw transactioneel gecontroleerd. Afhankelijk van de zwemschool volgt directe boeking of adminbeoordeling."
                             hiddenFields={{ creditId: credit.id, sessionId: option.sessionId, next: "/portaal/lessen", humanConfirmation: "confirmed" }}
                             title="Dit inhaalmoment kiezen?"
-                            triggerLabel={<><RefreshCcw className="h-4 w-4" />Kiezen</>}
+                            triggerLabel={<><RefreshCcw className="h-4 w-4" />Kiezen<span className="sr-only"> {option.groupName}</span></>}
                           />
                         </div>
                       ))}
