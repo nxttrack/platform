@@ -137,7 +137,8 @@ jobs:
           echo "127.0.0.1 $tenant_hostname" | sudo tee -a /etc/hosts >/dev/null
 
           pnpm --filter @nxttrack/web build > "$log_file" 2>&1
-          pnpm --filter @nxttrack/web exec next start --hostname 127.0.0.1 --port 3901 >> "$log_file" 2>&1 &
+          pnpm run deploy:package-standalone-assets >> "$log_file" 2>&1
+          HOSTNAME=127.0.0.1 PORT=3901 node apps/web/.next/standalone/apps/web/server.js >> "$log_file" 2>&1 &
           server_pid="$!"
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
 
