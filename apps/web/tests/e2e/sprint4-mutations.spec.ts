@@ -95,8 +95,9 @@ async function convertIntake(page: Page, participantName: string) {
 }
 
 async function createOffer(page: Page, entry: Locator, groupName: string) {
-  await entry.getByLabel("Groep").selectOption({ label: groupName });
-  await entry.getByRole("button", { name: "Goedkeuren en aanbod maken" }).click();
+  await entry.locator("select[id^='placement-group-']").selectOption({ label: groupName });
+  await entry.getByRole("button", { name: "Controleer en maak aanbod" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Aanbod maken en e-mail versturen" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&delivery=(sent|skipped)/);
   expect(new URL(page.url()).searchParams.has("aanbod")).toBe(false);
 }
