@@ -37,11 +37,11 @@ jobs:
       - name: Emit only redacted relevant service errors
         run: |
           set -o pipefail
-          journalctl \
-            --unit="$SERVICE_NAME" \
-            --since="10 minutes ago" \
+          systemctl status \
+            "$SERVICE_NAME" \
             --no-pager \
-            --output=cat |
+            --full \
+            --lines=200 |
             grep -Ei 'participant.media|media.consents|participant.guardians|PGRST|Supabase admin|Could not find|Kon .* laden|Internal Server Error|Error:' |
             sed -E \
               -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g' \
