@@ -42,8 +42,10 @@ test.describe("Communicationhub and Badge Studio", () => {
     ] as const) {
       await page.goto(route[0], { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { level: 1, name: route[1] })).toBeVisible();
+      if (route[0] === "/platform/badges/share-templates") {
+        await expect(page.getByText("sleep lagen op het canvas", { exact: false })).toBeVisible();
+      }
     }
-    await expect(page.getByText("sleep lagen op het canvas", { exact: false })).toBeVisible();
     expect(failures()).toEqual([]);
   });
 
