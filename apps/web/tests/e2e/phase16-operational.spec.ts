@@ -119,6 +119,10 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/portaal/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
 
+    await page.goto("/portaal/media", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Media-tijdlijn" })).toBeVisible();
+    await expectBodyToContain(page, phase.expected.participantName);
+
     expect(failures()).toEqual([]);
   });
 

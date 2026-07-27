@@ -74,6 +74,12 @@ test.describe("authenticated role workflows", () => {
       }
 
       expect(currentUrl.pathname === authCase.path || currentUrl.pathname.startsWith(`${authCase.path}/`)).toBeTruthy();
+
+      if (authCase.label === "parent") {
+        await page.goto("/portaal/media", { waitUntil: "domcontentloaded" });
+        await expect(page.getByRole("heading", { name: "Media-tijdlijn" })).toBeVisible();
+      }
+
       expect(failures()).toEqual([]);
     });
   }

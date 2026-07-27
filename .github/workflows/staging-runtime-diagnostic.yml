@@ -101,6 +101,9 @@ jobs:
       SESSION_SECRET: ${{ secrets.SESSION_SECRET || secrets.JWT_SESSION }}
       TENANT_DOMAIN_SUFFIX: staging.nxttrack.nl
       TENANT_BASE_DOMAINS: staging.nxttrack.nl
+      PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
+      E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
+      E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
     steps:
       - name: Authorize isolated reproduction
         env:
@@ -123,22 +126,36 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Reproduce and emit redacted development error
+      - name: Install Chromium
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+
+      - name: Reproduce authenticated parent route and emit redacted development error
         run: |
           set -euo pipefail
           log_file="$RUNNER_TEMP/nxttrack-media-dev.log"
+          tenant_hostname="${PHASE16_TENANT_HOSTNAME:-nxttrack-e2e.staging.nxttrack.nl}"
+          echo "127.0.0.1 $tenant_hostname" | sudo tee -a /etc/hosts >/dev/null
+
           pnpm --filter @nxttrack/web exec next dev --hostname 127.0.0.1 --port 3901 > "$log_file" 2>&1 &
           dev_pid="$!"
           trap 'kill "$dev_pid" 2>/dev/null || true' EXIT
 
           for attempt in $(seq 1 60); do
-            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3901/portaal/media || true)"
+            status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "http://$tenant_hostname:3901/login" || true)"
             if [ "$status" != "000" ]; then
-              echo "Development /portaal/media status: $status"
+              echo "Development login status: $status"
               break
             fi
             sleep 1
           done
+
+          set +e
+          PLAYWRIGHT_BASE_URL="http://$tenant_hostname:3901" \
+            pnpm --filter @nxttrack/web exec playwright test tests/e2e/authenticated.spec.ts \
+              --project chromium-desktop \
+              --grep "^parent can sign in"
+          test_status="$?"
+          set -e
 
           sed -E \
             -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g' \
@@ -147,3 +164,5 @@ jobs:
             -e 's/((token|code|secret|key)=)[^&[:space:]]+/\1[redacted]/gi' \
             "$log_file" |
             tail -n 180
+
+          exit "$test_status"
