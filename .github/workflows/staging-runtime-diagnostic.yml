@@ -1,0 +1,50 @@
+name: Temporary staging runtime diagnostic
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type CAPTURE_STAGING_RUNTIME_DIAGNOSTIC
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nxttrack-staging-runtime-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.ref_name == 'main'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      SERVICE_NAME: ${{ vars.SERVICE_NAME || 'nxttrack-staging' }}
+    steps:
+      - name: Authorize bounded diagnostic
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = "CAPTURE_STAGING_RUNTIME_DIAGNOSTIC"
+
+      - name: Reproduce private media route failure
+        run: |
+          status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "${APP_URL%/}/portaal/media")"
+          echo "Unauthenticated /portaal/media status: $status"
+
+      - name: Emit only redacted relevant service errors
+        run: |
+          sudo journalctl \
+            --unit="$SERVICE_NAME" \
+            --since="10 minutes ago" \
+            --no-pager \
+            --output=cat |
+            grep -Ei 'participant.media|media.consents|participant.guardians|PGRST|Supabase admin|Could not find|Kon .* laden|Internal Server Error|Error:' |
+            sed -E \
+              -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email]/g' \
+              -e 's/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}/[uuid]/g' \
+              -e 's/(Bearer )[A-Za-z0-9._~+\/=-]+/\1[redacted]/g' \
+              -e 's/((token|code|secret|key)=)[^&[:space:]]+/\1[redacted]/gi' |
+            tail -n 120
