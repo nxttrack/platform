@@ -18,7 +18,20 @@ jobs:
     environment: staging
     timeout-minutes: 10
     steps:
+      - name: Check internal jobs release gate
+        id: release_gate
+        env:
+          INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED }}
+        run: |
+          if [ "$INTERNAL_JOBS_ENABLED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Internal jobs are disabled for staging until its matching release is deployed."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
       - name: Expire and remove due private media
+        if: steps.release_gate.outputs.enabled == 'true'
         env:
           APP_URL: ${{ vars.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -39,7 +52,20 @@ jobs:
     environment: production
     timeout-minutes: 10
     steps:
+      - name: Check internal jobs release gate
+        id: release_gate
+        env:
+          INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED }}
+        run: |
+          if [ "$INTERNAL_JOBS_ENABLED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Internal jobs are disabled for production until its matching release is deployed."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
       - name: Expire and remove due private media
+        if: steps.release_gate.outputs.enabled == 'true'
         env:
           APP_URL: ${{ vars.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
