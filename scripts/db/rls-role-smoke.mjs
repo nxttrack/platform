@@ -183,11 +183,11 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
   }
 
   for (const table of tenantScopedTables) {
-    const rows = await optionalRest(auth.accessToken, `/${table}?select=id,tenant_id&limit=50`, table);
+    const rows = await optionalRest(auth.accessToken, `/${table}?select=tenant_id&limit=50`, table);
     const leakedRow = rows.find((row) => row.tenant_id && !ownTenantIds.has(row.tenant_id));
 
     if (leakedRow) {
-      failures.push(`${check.key} can see ${table}.${leakedRow.id ?? "unknown"} for another tenant.`);
+      failures.push(`${check.key} can see a ${table} row for another tenant.`);
     }
   }
 }
