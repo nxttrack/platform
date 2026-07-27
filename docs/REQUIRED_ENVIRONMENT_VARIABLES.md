@@ -1,5 +1,16 @@
 # Vereiste environmentvariabelen
 
+## Communicatiehub en e-mail
+
+| Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |
+| --- | --- | --- | --- | --- | --- | --- |
+| `EMAIL_SENDING_ENABLED` | Expliciete releasegate voor externe communicatie vanuit de Communicatiehub | Nieuwsbrieven, templates en toekomstige externe threaddelivery | Nu veilig uit; pas aan na release-go | `false` | GitHub environment variable en VPS runtime-env | Alleen exact `true` staat een provider-call toe. Providerconfiguratie, toestemming en menselijke bevestiging blijven daarnaast verplicht. Transactionele platformmail buiten de hub behoudt zijn bestaande providerinstellingen. |
+| `SENDGRID_API_KEY` | Fallback SendGrid API-key wanneer geen platformbrede providerinstelling beschikbaar is | E-mailprovider | Optioneel | `placeholder_add_later` | GitHub environment secret en VPS runtime-env | Secret; nooit als `NEXT_PUBLIC_*` of in clientcode gebruiken. Platform Global Instellingen heeft voorrang. |
+| `SENDGRID_FROM_EMAIL` | Gedocumenteerde fallback-afzender voor de Communicatiehub | E-mailprovider | Optioneel | `placeholder_add_later` | GitHub environment variable | Gebruik een in SendGrid geverifieerde afzender. De bestaande runtime ondersteunt ook `SMTP_FROM_EMAIL`. |
+| `SENDGRID_FROM_NAME` | Gedocumenteerde fallback-afzendernaam | E-mailprovider | Optioneel | `NXTTRACK` | GitHub environment variable | Niet geheim. De tenantnaam kan in templates als `{{tenant_name}}` worden gebruikt. |
+
+WhatsApp en SMS blijven uit zolang er geen afzonderlijke provider, tenantinstelling, kanaaltoestemming en juridische goedkeuring aanwezig zijn. De huidige implementatie doet zonder die configuratie geen externe calls.
+
 ## Analytics
 
 | Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |

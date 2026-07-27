@@ -55,6 +55,7 @@
     "test:analytics": "tsx --test tests/unit/analytics-attribution.test.ts",
     "test:family-crm": "tsx --test tests/unit/family-crm-intelligence.test.ts tests/unit/family-crm-intelligence-schema.test.ts",
     "test:automation-recipes": "tsx --test tests/unit/automation-recipe-contract.test.ts tests/unit/automation-recipe-schema.test.ts",
+    "test:communication-hub": "tsx --test tests/unit/communication-hub-contract.test.ts tests/unit/communication-hub-schema.test.ts",
     "test:participant-media": "tsx --test tests/unit/participant-media-contract.test.ts tests/unit/participant-media-schema.test.ts",
     "test:content-security": "tsx --test tests/unit/content-classification.test.ts",
     "test:journey-bot": "tsx --test tests/unit/journey-bot-contract.test.ts tests/unit/journey-bot-tick-evaluator.test.ts",
@@ -85,7 +86,7 @@
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
-    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:automation-recipes && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
+    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {

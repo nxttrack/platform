@@ -11,6 +11,8 @@ export type TenantNotificationType =
   | "document_published"
   | "graduation_invite"
   | "makeup_invitation"
+  | "message_received"
+  | "newsletter_status"
   | "payment_due"
   | "payment_overdue"
   | "payment_received"
@@ -36,6 +38,10 @@ export async function createTenantNotifications(input: {
   title: string;
   type: TenantNotificationType;
   deliverEmail?: boolean;
+  priority?: "low" | "normal" | "high" | "urgent";
+  entityType?: string | null;
+  entityId?: string | null;
+  actionHref?: string | null;
 }) {
   const recipientIds = unique(input.recipientIds);
 
@@ -55,6 +61,10 @@ export async function createTenantNotifications(input: {
         title: input.title,
         message: input.message,
         status: "unread",
+        priority: input.priority ?? "normal",
+        entity_type: input.entityType ?? null,
+        entity_id: input.entityId ?? null,
+        action_href: input.actionHref ?? null,
         related_progress_score_id: input.relatedProgressScoreId ?? null,
         related_badge_award_id: input.relatedBadgeAwardId ?? null
       }))
