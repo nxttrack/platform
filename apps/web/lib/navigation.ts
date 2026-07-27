@@ -37,6 +37,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/uitnodigingen", label: "Uitnodigingen", icon: "userPlus", section: "Leerlingen" },
   { href: "/admin/programma", label: "Programma's", icon: "waves", section: "Lesproces" },
   { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award", section: "Lesproces" },
+  { href: "/admin/badges", label: "Badges", icon: "award", section: "Lesproces" },
   { href: "/admin/documenten", label: "Documenten", icon: "file", section: "Lesproces" },
   { href: "/admin/berichten", label: "Berichten", icon: "message", section: "Communicatie" },
   { href: "/admin/notificaties", label: "Notificaties", icon: "bell", section: "Communicatie" },
@@ -65,5 +66,6 @@ export const platformNav: NavItem[] = [
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
   { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
+  { href: "/platform/badges", label: "Badge Studio", icon: "award" },
   { href: "/platform/instellingen", label: "Instellingen", icon: "settings" }
 ];

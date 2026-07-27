@@ -2,13 +2,14 @@ import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageS
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { InstructorBadgeAwardForm } from "@/components/badges/instructor-badge-award-form";
 import { Button } from "@/components/ui/button";
 import { Field as FieldRoot, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { awardBadgeAction, installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
+import { installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
 import { getInstructorData } from "@/lib/domain/instructor";
 import { markInstructorReadinessRecommendationAction } from "@/lib/domain/learning-intelligence-actions";
 import { calculateDiplomaReadiness, detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
@@ -31,6 +32,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
 
   const saved = getParam(rawParams, "saved");
   const error = getParam(rawParams, "error");
+  const success = getParam(rawParams, "success");
   const activeTab = getDossierTab(getParam(rawParams, "tab"));
   const memberships = data.groupMemberships.filter((membership) => membership.participant_id === participant.id && (membership.status === "active" || membership.status === "trial"));
   const enrollment = data.enrollments.find((item) => item.id === memberships[0]?.enrollment_id) ?? data.enrollments.find((item) => item.participant_id === participant.id) ?? null;
@@ -65,7 +67,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   return (
     <div className="space-y-6">
       <PageHeader kicker="Student detail" title={participant.display_name} subtitle="Progress notes, zichtbaarheid en badge action foundation." />
-      <Feedback saved={saved} error={error} />
+      <Feedback saved={saved} error={error} success={success} />
 
       <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -275,30 +277,39 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         <TabsContent value="badges">
           <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
-              <h2 className="text-lg font-bold text-foreground">Badge toekennen</h2>
-              <form action={awardBadgeAction} className="mt-4 grid gap-3">
-                <input name="participantId" type="hidden" value={participant.id} />
-                <input name="enrollmentId" type="hidden" value={enrollment?.id ?? ""} />
-                <input name="next" type="hidden" value={`/instructor/student/${participant.id}?tab=badges`} />
-                <SelectField fieldId="badge-definition" label="Badgecatalogus" name="badgeDefinitionId">
-                  <option value="">Vrije badge</option>
-                  {data.badgeDefinitions.map((badge) => (
-                    <option key={badge.id} value={badge.id}>
-                      {badge.name}
-                    </option>
-                  ))}
-                </SelectField>
-                <TextField fieldId="badge-title" label="Badgetitel" name="title" placeholder="Optioneel bij catalogusbadge" />
-                <TextAreaField fieldId="badge-note" label="Badgenotitie" name="note" />
-                <SelectField fieldId="badge-visibility" label="Zichtbaarheid" name="visibility">
-                  <option value="parent_visible">Zichtbaar voor ouder</option>
-                  <option value="internal">Alleen intern</option>
-                </SelectField>
-                <Button type="submit">
-                  <Award className="h-4 w-4" />
-                  Badge toekennen
-                </Button>
-              </form>
+              <h2 className="text-lg font-bold text-foreground">Positief moment vastleggen</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">Kies een passende complimentbadge. De aanspreekvorm gebruikt alleen de badgevoorkeur en beïnvloedt geen enkel operationeel besluit.</p>
+              <InstructorBadgeAwardForm
+                badges={[
+                  ...data.premiumBadgeCatalog.map((badge) => ({
+                    id: badge.id,
+                    kind: "catalog" as const,
+                    badgeKey: badge.badge_key,
+                    nameDefault: badge.name_default,
+                    nameBoy: badge.name_boy,
+                    nameGirl: badge.name_girl,
+                    description: badge.description_default,
+                    category: badge.category,
+                    audience: badge.audience
+                  })),
+                  ...data.customBadges.map((badge) => ({
+                    id: badge.id,
+                    kind: "custom" as const,
+                    badgeKey: badge.badge_key,
+                    nameDefault: badge.name_default,
+                    nameBoy: badge.name_boy,
+                    nameGirl: badge.name_girl,
+                    description: badge.description_default,
+                    category: badge.category,
+                    audience: badge.audience
+                  }))
+                ]}
+                directAward={data.badgeModuleSettings?.instructor_can_award_directly === true && data.badgeModuleSettings?.manual_badge_requires_admin_approval === false}
+                nextPath={`/instructor/student/${participant.id}?tab=badges`}
+                participantGender={participant.gender}
+                participantId={participant.id}
+                suggestions={data.badgeSuggestions}
+              />
             </article>
 
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -438,7 +449,10 @@ function SelectField({ children, defaultValue, name, fieldId = name, label }: { 
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
+function Feedback({ saved, error, success }: { saved?: string; error?: string; success?: string }) {
+  if (success) {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">{success}</p>;
+  }
   if (saved === "note") {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Note opgeslagen.</p>;
   }
