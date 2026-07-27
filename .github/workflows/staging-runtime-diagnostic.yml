@@ -36,7 +36,8 @@ jobs:
 
       - name: Emit only redacted relevant service errors
         run: |
-          sudo journalctl \
+          set -o pipefail
+          journalctl \
             --unit="$SERVICE_NAME" \
             --since="10 minutes ago" \
             --no-pager \
