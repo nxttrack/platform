@@ -1,7 +1,12 @@
 import { Bell, Check, MailOpen, MessageSquare } from "lucide-react";
 import type { ReactNode } from "react";
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
+import { NewThreadForm } from "@/components/communication/communication-forms";
+import { ThreadWorkspace } from "@/components/communication/thread-workspace";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { markNotificationReadAction } from "@/lib/domain/communication-actions";
+import { getParentCommunicationHub } from "@/lib/domain/communication-hub";
 import { formatCommunicationDate, getParentMessages, messageAudienceLabel } from "@/lib/domain/communications";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
 
@@ -12,21 +17,35 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function ParentMessagesPage({ searchParams }: PageProps) {
-  const [data, messages, params] = await Promise.all([getParentPortalData(), getParentMessages(), searchParams ?? Promise.resolve({})]);
+  const [data, messages, hub, params] = await Promise.all([getParentPortalData(), getParentMessages(), getParentCommunicationHub(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const success = getParam(params, "success");
+  const selectedThreadId = getParam(params, "thread");
   const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Communicatie" title="Berichten en updates" subtitle="Alle ouderberichten, meldingen en belangrijke updates van de zwemschool." />
+      <PageHeader
+        action={
+          <AdminActionDrawer description="Kies een kind en schrijf je vraag. De zwemschool ziet alleen de context die bij dit gesprek hoort." title="Nieuw bericht" triggerLabel="Bericht sturen" width="wide">
+            <NewThreadForm next="/portaal/berichten" parentMode participants={hub.participants} />
+          </AdminActionDrawer>
+        }
+        kicker="Communicatie"
+        title="Berichten en updates"
+        subtitle="Persoonlijke gesprekken, meldingen en belangrijke updates van de zwemschool."
+      />
       <Feedback saved={saved} error={error} />
+      <RouteFeedback error={error} success={success} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Metric icon={<MessageSquare className="h-5 w-5" />} label="Berichten" value={messages.length} />
         <Metric icon={<Bell className="h-5 w-5" />} label="Updates" value={data.notifications.length} />
         <Metric icon={<MailOpen className="h-5 w-5" />} label="Ongelezen" value={unreadNotifications.length} />
       </div>
+
+      <ThreadWorkspace baseHref="/portaal/berichten" messages={hub.messages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={hub.threads} unreadThreadIds={hub.unreadThreadIds} />
 
       <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

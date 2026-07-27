@@ -10,12 +10,13 @@ export async function getAdminGlobalSearchItems(context: AuthenticatedTrustedAut
   const tenantId = context.activeTenant?.tenantId;
   if (!tenantId) return [];
   const admin = createAdminClient();
-  const [participants, groups, tasks, leads, memberships] = await Promise.all([
+  const [participants, groups, tasks, leads, memberships, threads] = await Promise.all([
     admin.from("participants").select("id, display_name, guardian_user_id, status").eq("tenant_id", tenantId).order("display_name").limit(resultLimit),
     admin.from("groups").select("id, name, code, status").eq("tenant_id", tenantId).order("name").limit(resultLimit),
     admin.from("tenant_tasks").select("id, title, priority, status").eq("tenant_id", tenantId).order("updated_at", { ascending: false }).limit(resultLimit),
     admin.from("intake_submissions").select("id, participant_name, parent_name, parent_email, status").eq("tenant_id", tenantId).order("received_at", { ascending: false }).limit(resultLimit),
-    admin.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId).eq("role", "parent").eq("status", "active").limit(resultLimit)
+    admin.from("tenant_memberships").select("user_id").eq("tenant_id", tenantId).eq("role", "parent").eq("status", "active").limit(resultLimit),
+    admin.from("message_threads").select("id, subject, thread_type, status").eq("tenant_id", tenantId).order("last_message_at", { ascending: false, nullsFirst: false }).limit(resultLimit)
   ]);
 
   const parentIds = (memberships.data ?? []).map((row) => row.user_id);
@@ -58,6 +59,13 @@ export async function getAdminGlobalSearchItems(context: AuthenticatedTrustedAut
       href: `/admin/intake?q=${encodeURIComponent(row.participant_name)}`,
       keywords: ["lead", "intake", "aanmelding", row.parent_name, row.parent_email, row.status],
       label: row.participant_name
+    })),
+    ...(threads.data ?? []).map((row) => ({
+      description: `${row.thread_type.replaceAll("_", " ")} · ${statusLabel(row.status)}`,
+      group: "Berichten",
+      href: `/admin/berichten?thread=${row.id}`,
+      keywords: ["bericht", "gesprek", row.thread_type, row.status],
+      label: row.subject
     }))
   ];
 }

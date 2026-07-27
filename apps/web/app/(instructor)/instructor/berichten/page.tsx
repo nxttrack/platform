@@ -1,7 +1,10 @@
 import { Bell, Check, MailOpen, MessageSquare } from "lucide-react";
 import type { ReactNode } from "react";
+import { ThreadWorkspace } from "@/components/communication/thread-workspace";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { markNotificationReadAction } from "@/lib/domain/communication-actions";
+import { getInstructorCommunicationHub } from "@/lib/domain/communication-hub";
 import { formatCommunicationDate, getInstructorMessages, messageAudienceLabel } from "@/lib/domain/communications";
 import { getInstructorData } from "@/lib/domain/instructor";
 
@@ -12,21 +15,26 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function InstructorMessagesPage({ searchParams }: PageProps) {
-  const [data, messages, params] = await Promise.all([getInstructorData(), getInstructorMessages(), searchParams ?? Promise.resolve({})]);
+  const [data, messages, hub, params] = await Promise.all([getInstructorData(), getInstructorMessages(), getInstructorCommunicationHub(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const success = getParam(params, "success");
+  const selectedThreadId = getParam(params, "thread");
   const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Communicatie" title="Berichten en teamupdates" subtitle="Alles wat je nodig hebt voor de zwemzaal: teamberichten, taakmeldingen en leerlingupdates." />
       <Feedback saved={saved} error={error} />
+      <RouteFeedback error={error} success={success} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Metric icon={<MessageSquare className="h-5 w-5" />} label="Teamberichten" value={messages.length} />
         <Metric icon={<Bell className="h-5 w-5" />} label="Meldingen" value={data.notifications.length} />
         <Metric icon={<MailOpen className="h-5 w-5" />} label="Ongelezen" value={unreadNotifications.length} />
       </div>
+
+      <ThreadWorkspace baseHref="/instructor/berichten" canReply={hub.canReplyToParents} currentUserId={hub.currentUserId} messages={hub.messages} mode="instructor" people={hub.people} selectedThreadId={selectedThreadId} threads={hub.threads} unreadThreadIds={hub.unreadThreadIds} />
 
       <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

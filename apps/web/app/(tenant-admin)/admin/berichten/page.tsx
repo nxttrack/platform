@@ -1,11 +1,15 @@
-import { MailWarning, MessageSquare, RotateCcw } from "lucide-react";
+import { MailWarning, Megaphone, MessageSquare, RotateCcw } from "lucide-react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface } from "@/components/admin/admin-patterns";
 import { AdminSection, DataList, EmptyState } from "@/components/admin/domain-ui";
 import { MessageComposer } from "@/components/admin/message-composer";
+import { NewThreadForm } from "@/components/communication/communication-forms";
+import { ThreadWorkspace } from "@/components/communication/thread-workspace";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { RouteFeedback } from "@/components/ui/route-feedback";
 import { retryEmailDeliveryAttemptAction } from "@/lib/domain/admin-operations-actions";
 import { formatDateTime, getAdminOperationsData } from "@/lib/domain/admin-operations";
+import { getAdminCommunicationHub } from "@/lib/domain/communication-hub";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -14,17 +18,83 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminMessagesPage({ searchParams }: PageProps) {
-  const [data, params] = await Promise.all([getAdminOperationsData(), searchParams ?? Promise.resolve({})]);
+  const [data, hub, params] = await Promise.all([getAdminOperationsData(), getAdminCommunicationHub(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const success = getParam(params, "success");
+  const selectedThreadId = getParam(params, "thread");
+  const filters = {
+    assigned: getParam(params, "assigned") ?? "",
+    query: getParam(params, "q") ?? "",
+    status: getParam(params, "threadStatus") ?? "",
+    type: getParam(params, "threadType") ?? ""
+  };
+  const filteredThreads = hub.threads.filter((thread) => {
+    const assignedIds = [thread.assigned_staff_user_id, thread.assigned_instructor_user_id].filter(Boolean);
+    const matchesAssigned =
+      !filters.assigned ||
+      (filters.assigned === "unassigned" ? assignedIds.length === 0 : assignedIds.includes(filters.assigned));
+    const searchable = [
+      thread.subject,
+      thread.thread_type,
+      thread.status,
+      thread.guardian_user_id ? hub.people.get(thread.guardian_user_id)?.name : ""
+    ].join(" ").toLowerCase();
+    return (
+      matchesAssigned &&
+      (!filters.status || thread.status === filters.status) &&
+      (!filters.type || thread.thread_type === filters.type) &&
+      (!filters.query || searchable.includes(filters.query.toLowerCase()))
+    );
+  });
 
   return (
     <div className="space-y-5">
-      <PageHeader action={<AdminActionDrawer description="Kies doelgroep, zichtbaarheid en publicatiestatus voordat je het bericht opslaat." title="Nieuw bericht" triggerLabel="Bericht opstellen" width="wide"><MessageComposer /></AdminActionDrawer>} kicker="Communicatie" title="Berichten" subtitle="Publiceer interne en portal-zichtbare berichten met tenant-scoped notificaties." />
+      <PageHeader
+        action={
+          <div className="flex flex-wrap gap-2">
+            <AdminActionDrawer description="Start een veilig gesprek en koppel direct de juiste ouder, leerling, groep of instructeur." title="Nieuw gesprek" triggerLabel="Gesprek starten" width="wide">
+              <NewThreadForm
+                graduationEvents={hub.graduationEvents}
+                guardians={hub.guardians}
+                groups={hub.groups}
+                instructors={hub.instructors}
+                intakes={hub.intakes}
+                next="/admin/berichten"
+                participants={hub.participants}
+                payments={hub.payments}
+                staff={hub.staff}
+                waitlistEntries={hub.waitlistEntries}
+              />
+            </AdminActionDrawer>
+            <AdminActionDrawer description="Kies doelgroep, zichtbaarheid en publicatiestatus voordat je het bericht opslaat." icon={<Megaphone className="size-4" />} title="Nieuwe mededeling" triggerLabel="Bericht opstellen" triggerVariant="outline" width="wide">
+              <MessageComposer />
+            </AdminActionDrawer>
+          </div>
+        }
+        kicker="Communicatiehub"
+        title="Berichten"
+        subtitle="Beheer oudergesprekken, interne context en tenantbrede mededelingen vanuit één werkplek."
+      />
       <Feedback saved={saved} error={error} />
+      <RouteFeedback error={error && !["confirmation", "visibility"].includes(error) ? error : null} success={success} />
+
+      <ThreadWorkspace
+        baseHref="/admin/berichten"
+        instructors={hub.instructors}
+        filters={filters}
+        filterAssignees={[...hub.staff, ...hub.instructors]}
+        messages={hub.messages}
+        mode="admin"
+        people={hub.people}
+        selectedThreadId={selectedThreadId}
+        staff={hub.staff}
+        threads={filteredThreads}
+        unreadThreadIds={hub.unreadThreadIds}
+      />
 
       <AdminListSurface>
-        <div className="mb-3"><h2 className="text-base font-bold">Berichtenoverzicht</h2><p className="text-[13px] text-muted-foreground">Concepten, publicaties en archief in chronologische volgorde.</p></div>
+        <div className="mb-3"><h2 className="text-base font-bold">Mededelingen</h2><p className="text-[13px] text-muted-foreground">Tenantbrede concepten, publicaties en archief. Deze feed blijft los van privégesprekken.</p></div>
           {data.messages.length === 0 ? (
             <EmptyState>Nog geen berichten.</EmptyState>
           ) : (
