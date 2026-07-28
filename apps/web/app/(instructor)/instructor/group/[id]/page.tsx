@@ -89,7 +89,14 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Attendance</p>
             <h2 className="mt-1 text-xl font-bold text-foreground">{selectedSession ? formatSessionTime(selectedSession.starts_at, selectedSession.ends_at) : "Geen sessie geselecteerd"}</h2>
           </div>
-          {selectedSession ? <StatusPill tone={selectedSession.status === "scheduled" ? "info" : selectedSession.status === "completed" ? "success" : "neutral"}>{selectedSession.status}</StatusPill> : null}
+          {selectedSession ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Link className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm font-semibold text-primary hover:bg-primary/5" href={`/instructor/lesplannen?session=${selectedSession.id}`}>
+                <Sparkles className="size-4" /> Lesplan
+              </Link>
+              <StatusPill tone={selectedSession.status === "scheduled" ? "info" : selectedSession.status === "completed" ? "success" : "neutral"}>{selectedSession.status}</StatusPill>
+            </div>
+          ) : null}
         </div>
 
         {!selectedSession ? (
