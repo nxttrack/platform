@@ -11,6 +11,16 @@
 
 WhatsApp en SMS blijven uit zolang er geen afzonderlijke provider, tenantinstelling, kanaaltoestemming en juridische goedkeuring aanwezig zijn. De huidige implementatie doet zonder die configuratie geen externe calls.
 
+## Veilige web-push
+
+| Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |
+| --- | --- | --- | --- | --- | --- | --- |
+| `NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY` | Browser laat een gebruiker een pushabonnement voor deze applicatie maken | Ouderprofiel en service worker | Optioneel; nodig om web-push te activeren | leeg | GitHub environment variable en VPS runtime-env | Publieke VAPID-key; dit is bewust geen secret. |
+| `WEB_PUSH_VAPID_PRIVATE_KEY` | Ondertekent pushberichten op de server | Push delivery | Optioneel; nodig om web-push te activeren | leeg | GitHub environment secret en VPS runtime-env | Server-only. Nooit onder een `NEXT_PUBLIC_`-naam opslaan. |
+| `WEB_PUSH_VAPID_SUBJECT` | Contactadres voor de pushprovider | Push delivery | Optioneel; nodig om web-push te activeren | `mailto:admin@nxttrack.nl` | GitHub environment variable en VPS runtime-env | Geldige `mailto:`- of HTTPS-URI. |
+
+Web-push blijft vanzelf uit zolang niet alle drie waarden geldig zijn. Toestemming wordt per gebruiker én apparaat vastgelegd. De payload bevat alleen een generieke servicetekst en een interne route; geen namen of medische/financiële details.
+
 ## Analytics
 
 | Naam | Doel | Module | Nu/later | Placeholder | Configureren | Opmerking |

@@ -26,3 +26,34 @@ self.addEventListener("fetch", (event) => {
     return response;
   })));
 });
+
+self.addEventListener("push", (event) => {
+  let payload = { title: "NXTTRACK", body: "Er staat een nieuwe update voor je klaar.", url: "/" };
+  try {
+    const candidate = event.data ? event.data.json() : null;
+    if (candidate && typeof candidate === "object") {
+      payload = {
+        title: typeof candidate.title === "string" ? candidate.title.slice(0, 80) : payload.title,
+        body: typeof candidate.body === "string" ? candidate.body.slice(0, 180) : payload.body,
+        url: typeof candidate.url === "string" && candidate.url.startsWith("/") && !candidate.url.startsWith("//") ? candidate.url : "/"
+      };
+    }
+  } catch {}
+  event.waitUntil(self.registration.showNotification(payload.title, {
+    body: payload.body,
+    icon: "/lovable/nxttrack-logo.svg",
+    badge: "/lovable/nxttrack-logo.svg",
+    data: { url: payload.url },
+    tag: "nxttrack-service-update"
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const path = event.notification.data && typeof event.notification.data.url === "string" ? event.notification.data.url : "/";
+  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+    const existing = clients.find((client) => new URL(client.url).pathname === path);
+    if (existing) return existing.focus();
+    return self.clients.openWindow(path);
+  }));
+});

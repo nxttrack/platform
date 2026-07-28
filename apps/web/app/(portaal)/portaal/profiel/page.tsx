@@ -2,12 +2,14 @@ import { Mail, Phone, RefreshCcw, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, PageHeader } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
+import { WebPushSettings } from "@/components/parent/web-push-settings";
 import {
   updateParentCommunicationPreferencesAction,
   updateParentMakeupPreferencesAction,
   updateParentProfileAction
 } from "@/lib/domain/parent-portal-actions";
 import { getParentMakeupCommunicationPreferences, getParentPortalData } from "@/lib/domain/parent-portal";
+import { getOwnWebPushSettings } from "@/lib/domain/web-push";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -16,9 +18,10 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function ParentProfilePage({ searchParams }: PageProps) {
-  const [data, communication, params] = await Promise.all([
+  const [data, communication, pushSettings, params] = await Promise.all([
     getParentPortalData(),
     getParentMakeupCommunicationPreferences(),
+    getOwnWebPushSettings("/portaal/profiel"),
     searchParams ?? Promise.resolve({})
   ]);
   const savedValue = getParam(params, "saved");
@@ -117,6 +120,10 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             <div><button className="min-h-11 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground" type="submit">Communicatievoorkeuren opslaan</button></div>
           </DirtyForm>
         </div>
+      </Card>
+
+      <Card>
+        <WebPushSettings {...pushSettings} />
       </Card>
     </div>
   );

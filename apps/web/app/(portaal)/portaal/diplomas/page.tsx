@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarCheck, CheckCircle2, Download, FileBadge, XCircle } from "lucide-react";
+import { CalendarCheck, CheckCircle2, Download, FileBadge, QrCode, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
@@ -112,6 +112,18 @@ export default async function ParentDiplomaVaultPage({ searchParams }: PageProps
                       <Download className="h-4 w-4" />
                       Diploma downloaden
                     </Link>
+                  ) : null}
+                  {certificate.verification_status === "active" ? (
+                    <details className="mt-4 rounded-xl border border-border bg-muted/20 p-3">
+                      <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-bold text-foreground">
+                        <QrCode className="size-4 text-primary" />
+                        Digitale echtheidscontrole
+                      </summary>
+                      <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
+                        <img alt={`QR-code voor verificatie van ${certificate.title}`} className="size-28 rounded-xl border border-border bg-white p-2" src={`/api/public/diplomas/${certificate.verification_public_id}/qr`} />
+                        <div><p className="text-sm leading-6 text-muted-foreground">Laat deze QR-code scannen om de geldigheid te controleren, zonder het private diplomabestand te delen.</p><Link className="mt-2 inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline" href={`/diploma-verificatie/${certificate.verification_public_id}`}>Verificatiepagina openen</Link></div>
+                      </div>
+                    </details>
                   ) : null}
                 </article>
               );

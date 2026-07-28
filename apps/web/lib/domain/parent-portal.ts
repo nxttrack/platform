@@ -194,6 +194,8 @@ export type ParentCertificateRecordRow = {
   size_bytes: number | null;
   storage_status: string;
   notes: string | null;
+  verification_public_id: string;
+  verification_status: string;
 };
 
 export type ParentPaymentPlanRow = {
@@ -561,7 +563,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("certificate_records")
-          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, file_name, mime_type, size_bytes, storage_status, notes")
+          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, file_name, mime_type, size_bytes, storage_status, notes, verification_public_id, verification_status")
           .eq("tenant_id", tenant.id)
           .eq("status", "issued")
           .in("participant_id", loadedParticipantIds)
