@@ -36,8 +36,8 @@ export type BadgeStudioAsset = {
   id: string;
   mimeType: "image/jpeg" | "image/png";
   name: string;
-  signedUrl: string;
   sizeBytes: number;
+  url: string;
 };
 
 export type BadgeTriggerDefinition = {

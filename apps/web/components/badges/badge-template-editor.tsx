@@ -241,7 +241,7 @@ export function BadgeTemplateEditor({
                 type="button"
               >
                 {/* Signed private URLs are short-lived and intentionally not optimized by Next. */}
-                <img alt="" className="h-16 w-full object-contain p-1" draggable={false} src={asset.signedUrl} />
+                <img alt="" className="h-16 w-full object-contain p-1" draggable={false} src={asset.url} />
                 <span className="block truncate border-t border-border px-2 py-1 text-[10px] font-semibold">{asset.name}</span>
               </button>
             ))}
@@ -291,7 +291,7 @@ export function BadgeTemplateEditor({
                     {layer.type === "decoration" ? <span className="grid size-full place-items-center text-[120px] text-amber-400">✦</span> : null}
                     {layer.type === "logo" ? <span className="font-bold text-primary">NXTTRACK</span> : null}
                     {layer.type === "text" ? previewText(layer.text ?? "") : null}
-                    {imageAsset ? <img alt={layer.alt ?? ""} className="pointer-events-none size-full" draggable={false} src={imageAsset.signedUrl} style={{ objectFit: layer.objectFit ?? "contain" }} /> : null}
+                    {imageAsset ? <img alt={layer.alt ?? ""} className="pointer-events-none size-full" draggable={false} src={imageAsset.url} style={{ objectFit: layer.objectFit ?? "contain" }} /> : null}
                     {layer.type === "image" && !imageAsset ? <span className="grid size-full place-items-center bg-muted text-center text-2xl font-bold text-muted-foreground">Afbeelding niet beschikbaar</span> : null}
                   </div>
                 );

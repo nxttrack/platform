@@ -354,10 +354,6 @@ export async function uploadBadgeStudioAssetAction(formData: FormData): Promise<
   try {
     uploaded = await uploadBadgeStudioAssetFile({ assetId, file });
     const name = (readOptional(formData, "name", 120) ?? file.name.replace(/\.[^.]+$/, "")).trim().slice(0, 120) || "Afbeelding";
-    const signed = await admin.storage.from(uploaded.storageBucket).createSignedUrl(uploaded.filePath, 60 * 60);
-    if (signed.error || !signed.data?.signedUrl) {
-      throw new Error("De afbeelding kon niet veilig worden voorbereid.");
-    }
     const { error } = await admin.from("badge_studio_assets").insert({
       id: assetId,
       tenant_id: null,
@@ -381,8 +377,8 @@ export async function uploadBadgeStudioAssetAction(formData: FormData): Promise<
         id: assetId,
         mimeType: storedUpload.mimeType as BadgeStudioAsset["mimeType"],
         name,
-        signedUrl: signed.data.signedUrl,
-        sizeBytes: storedUpload.sizeBytes
+        sizeBytes: storedUpload.sizeBytes,
+        url: `/api/files/badge-studio-asset/${assetId}`
       },
       message: "Afbeelding toegevoegd aan de bibliotheek.",
       ok: true

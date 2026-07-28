@@ -8,6 +8,10 @@ const migration = readFileSync(
 );
 const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
 const erasureModule = readFileSync(new URL("../../apps/web/lib/storage/tenant-erasure.ts", import.meta.url), "utf8");
+const privateFileResponse = readFileSync(new URL("../../apps/web/lib/storage/private-file-response.ts", import.meta.url), "utf8");
+const documentRoute = readFileSync(new URL("../../apps/web/app/api/files/tenant-document/[id]/route.ts", import.meta.url), "utf8");
+const certificateRoute = readFileSync(new URL("../../apps/web/app/api/files/certificate/[id]/route.ts", import.meta.url), "utf8");
+const mediaRoute = readFileSync(new URL("../../apps/web/app/api/files/participant-media/[id]/route.ts", import.meta.url), "utf8");
 const cleanReadMigration = readFileSync(
   new URL("../../supabase/migrations/20260727101100_private_storage_clean_read_enforcement.sql", import.meta.url),
   "utf8"
@@ -78,4 +82,17 @@ test("existing private buckets only expose exact, stored and clean objects", () 
   }
   assert.match(cleanReadMigration, /drop policy if exists "Tenant staff can update tenant document files"/);
   assert.match(cleanReadMigration, /drop policy if exists "Tenant staff can update diploma vault files"/);
+});
+
+test("private downloads stay behind authenticated NXTTRACK streaming routes", () => {
+  for (const route of [documentRoute, certificateRoute, mediaRoute]) {
+    assert.match(route, /requireApiAuthenticatedContext/);
+    assert.match(route, /createPrivateFileResponse/);
+    assert.doesNotMatch(route, /createSignedUrl|createPrivateFileSignedUrl|NextResponse\.redirect/);
+  }
+  assert.match(privateFileResponse, /\.storage\.from\(input\.bucket\)\.download\(input\.path\)/);
+  assert.match(privateFileResponse, /Cache-Control": "private, no-store, max-age=0"/);
+  assert.match(privateFileResponse, /Cross-Origin-Resource-Policy": "same-origin"/);
+  assert.match(privateFileResponse, /X-Content-Type-Options": "nosniff"/);
+  assert.match(privateFileResponse, /filename\*=UTF-8''/);
 });

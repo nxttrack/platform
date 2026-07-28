@@ -15,6 +15,10 @@ const badgeActions = readFileSync(
   "utf8"
 );
 const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
+const badgeAssetRoute = readFileSync(
+  new URL("../../apps/web/app/api/files/badge-studio-asset/[id]/route.ts", import.meta.url),
+  "utf8"
+);
 
 const tenantTables = [
   "tenant_badge_module_settings",
@@ -117,6 +121,12 @@ test("studio-afbeeldingen zijn privé, gescand, begrensd en RLS-beveiligd", () =
   assert.doesNotMatch(imageAssetMigration, /badge-studio-assets[\s\S]+storage\.objects[\s\S]+create policy/i);
   assert.match(badgeActions, /uploadBadgeStudioAssetFile/);
   assert.match(badgeActions, /platform_owner.*platform_admin/);
+  assert.doesNotMatch(badgeActions, /createSignedUrl|signedUrl/);
+  assert.match(badgeActions, /url: `\/api\/files\/badge-studio-asset\/\$\{assetId\}`/);
+  assert.match(badgeAssetRoute, /requireApiAuthenticatedContext/);
+  assert.match(badgeAssetRoute, /createPrivateFileResponse/);
+  assert.match(badgeAssetRoute, /asset\.storage_bucket !== BADGE_STUDIO_ASSETS_BUCKET/);
+  assert.doesNotMatch(badgeAssetRoute, /createSignedUrl|NextResponse\.redirect/);
 });
 
 test("studio-afbeeldingen vallen onder de objectbackup en herstelrehearsal", () => {

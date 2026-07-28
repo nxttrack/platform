@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireApiAuthenticatedContext } from "@/lib/auth/server-guard";
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { canManageTenantFiles, hasTenantRole } from "@/lib/domain/private-file-access";
-import { createPrivateFileSignedUrl, TENANT_DOCUMENTS_BUCKET } from "@/lib/storage/private-files";
+import { createPrivateFileResponse } from "@/lib/storage/private-file-response";
+import { TENANT_DOCUMENTS_BUCKET } from "@/lib/storage/private-files";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
@@ -11,8 +12,10 @@ type RouteContext = {
 
 type TenantDocumentDownloadRow = {
   audience: string;
+  file_name: string | null;
   file_path: string | null;
   id: string;
+  mime_type: string | null;
   status: string;
   storage_bucket: string | null;
   tenant_id: string;
@@ -32,7 +35,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("tenant_documents")
-    .select("id, tenant_id, audience, visibility, status, file_path, storage_bucket, malware_scan_status")
+    .select("id, tenant_id, audience, visibility, status, file_name, file_path, mime_type, storage_bucket, malware_scan_status")
     .eq("id", id)
     .maybeSingle();
 
@@ -53,12 +56,14 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "file_scan_required" }, { status: 423 });
   }
 
-  const signedUrl = await createPrivateFileSignedUrl({
+  const response = await createPrivateFileResponse({
     bucket: document.storage_bucket ?? TENANT_DOCUMENTS_BUCKET,
+    fileName: document.file_name ?? `nxttrack-document-${document.id}`,
+    mimeType: document.mime_type,
     path: document.file_path
   });
 
-  return NextResponse.redirect(signedUrl, { status: 302 });
+  return response ?? NextResponse.json({ error: "file_missing" }, { status: 404 });
 }
 
 function hasDownloadableScan(status: string) {

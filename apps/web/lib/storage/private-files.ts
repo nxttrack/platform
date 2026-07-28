@@ -75,17 +75,6 @@ export async function uploadBadgeStudioAssetFile(input: {
   });
 }
 
-export async function createPrivateFileSignedUrl(input: { bucket: string; path: string }) {
-  const admin = createAdminClient();
-  const { data, error } = await admin.storage.from(input.bucket).createSignedUrl(input.path, 60 * 5);
-
-  if (error || !data?.signedUrl) {
-    throw new Error(`Could not create signed file URL: ${error?.message ?? "missing URL"}`);
-  }
-
-  return data.signedUrl;
-}
-
 export function getFileFromFormData(formData: FormData, field: string) {
   const value = formData.get(field);
 

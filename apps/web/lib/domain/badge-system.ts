@@ -170,17 +170,13 @@ export async function getBadgeEditorData(templateId?: string) {
     .eq("status", "active")
     .order("created_at", { ascending: false });
   assertResults([["badge studio assets", assetsResult.error]]);
-  const assets = (await Promise.all((assetsResult.data ?? []).map(async (asset): Promise<BadgeStudioAsset | null> => {
-    const signed = await admin.storage.from(asset.storage_bucket).createSignedUrl(asset.storage_path, 60 * 60);
-    if (signed.error || !signed.data?.signedUrl) return null;
-    return {
+  const assets = (assetsResult.data ?? []).map((asset): BadgeStudioAsset => ({
       id: asset.id,
       mimeType: asset.mime_type as BadgeStudioAsset["mimeType"],
       name: asset.name,
-      signedUrl: signed.data.signedUrl,
-      sizeBytes: Number(asset.size_bytes)
-    };
-  }))).filter((asset): asset is BadgeStudioAsset => asset !== null);
+      sizeBytes: Number(asset.size_bytes),
+      url: `/api/files/badge-studio-asset/${asset.id}`
+    }));
   const selected = templateId
     ? data.templates.find((template) => template.id === templateId)
     : data.templates.find((template) => template.format === "square") ?? data.templates[0];

@@ -12,6 +12,7 @@ import {
   hasTenantRole
 } from "@/lib/domain/private-file-access";
 import { getParticipantMediaConsentState, type ParticipantMediaRow } from "@/lib/domain/participant-media";
+import { createPrivateFileResponse } from "@/lib/storage/private-file-response";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
@@ -56,8 +57,15 @@ export async function GET(request: Request, context: RouteContext) {
   });
   if (!decision.allowed) return notFound();
 
-  const storageResult = await admin.storage.from(media.storage_bucket).download(media.storage_path);
-  if (storageResult.error || !storageResult.data) return notFound();
+  const extension = media.mime_type === "image/png" ? "png" : "jpg";
+  const response = await createPrivateFileResponse({
+    bucket: media.storage_bucket,
+    disposition: requestedDownload ? "attachment" : "inline",
+    fileName: media.file_name || `nxttrack-media-${media.id}.${extension}`,
+    mimeType: media.mime_type,
+    path: media.storage_path
+  });
+  if (!response) return notFound();
 
   const logResult = await admin.from("media_access_logs").insert({
     tenant_id: media.tenant_id,
@@ -74,20 +82,7 @@ export async function GET(request: Request, context: RouteContext) {
     return NextResponse.json({ error: "audit_unavailable" }, { status: 503 });
   }
 
-  const body = new Uint8Array(await storageResult.data.arrayBuffer());
-  const extension = media.mime_type === "image/png" ? "png" : "jpg";
-  const disposition = requestedDownload ? "attachment" : "inline";
-
-  return new Response(body, {
-    headers: {
-      "Cache-Control": "private, no-store, max-age=0",
-      "Content-Disposition": `${disposition}; filename="nxttrack-media-${media.id}.${extension}"`,
-      "Content-Length": String(body.byteLength),
-      "Content-Type": media.mime_type,
-      "Referrer-Policy": "no-referrer",
-      "X-Content-Type-Options": "nosniff"
-    }
-  });
+  return response;
 }
 
 async function canViewerAccessMedia(
