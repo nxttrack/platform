@@ -57,6 +57,7 @@ for (const result of results) {
 }
 
 const failures = results.filter((result) => result.status === "fail");
+await publishPlatformHeartbeat(failures);
 
 if (failures.length > 0) {
   let alertDelivered = false;
@@ -79,6 +80,33 @@ if (failures.length > 0) {
 }
 
 console.log(`[operations:monitor] PASS ${results.length} operational checks passed.`);
+
+async function publishPlatformHeartbeat(failures) {
+  const secret = process.env.CRON_SECRET?.trim();
+  if (!appUrlValid || !secret || secret.length < 32) {
+    console.log("[operations:monitor] INFO platform heartbeat skipped: APP_URL or CRON_SECRET is unavailable.");
+    return;
+  }
+  try {
+    const response = await fetch(absoluteUrl("/api/internal/platform-health/heartbeat"), {
+      body: JSON.stringify({
+        serviceKey: "runtime_monitor",
+        status: failures.length ? "fail" : "pass",
+        detail: failures.length
+          ? `${failures.length} operationele controle(s) faalden.`
+          : `${results.length} operationele controles zijn geslaagd.`,
+        ttlMinutes: Math.max(30, windowMinutes * 3),
+        metadata: { checks: results.length, failures: failures.map((failure) => failure.id) }
+      }),
+      headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
+      method: "POST",
+      signal: AbortSignal.timeout(timeoutMs)
+    });
+    console.log(`[operations:monitor] ${response.ok ? "PASS" : "WARN"} platform heartbeat HTTP ${response.status}.`);
+  } catch (error) {
+    console.log(`[operations:monitor] WARN platform heartbeat failed: ${safeMessage(error)}.`);
+  }
+}
 
 async function checkHealth() {
   const url = absoluteUrl("/api/health");

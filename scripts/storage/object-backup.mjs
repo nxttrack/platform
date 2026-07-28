@@ -8,8 +8,8 @@ import { dirname, join, resolve } from "node:path";
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
 
-const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets"]);
-const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media,badge-studio-assets");
+const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets", "tenant-media-assets"]);
+const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media,badge-studio-assets,tenant-media-assets");
 const command = process.argv[2];
 const backupDirectory = resolve(process.env.STORAGE_BACKUP_DIR ?? "artifacts/storage-backup");
 const scopedPrefix = normalizePrefix(process.env.STORAGE_BACKUP_PREFIX ?? "");
@@ -54,6 +54,11 @@ try {
     fatal("Expected export, verify-local, restore, verify-remote, seed-rehearsal, delete-rehearsal or summary.");
   }
 } catch (error) {
+  if (command === "export") {
+    await recordStorageBackupHeartbeat("fail", "Storage-back-up is mislukt.", {
+      errorType: error instanceof Error ? error.name : "unknown"
+    }).catch(() => undefined);
+  }
   fatal(error instanceof Error ? error.message : String(error));
 }
 
@@ -120,7 +125,27 @@ async function exportObjects() {
   await writeFile(join(backupDirectory, "manifest.sha256"), `${sha256(await readFile(manifestPath))}  manifest.json\n`, {
     mode: 0o600
   });
+  await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
+    objectCount: manifest.objectCount,
+    totalBytes: manifest.totalBytes,
+    sourceProjectFingerprint: manifest.sourceProjectFingerprint
+  });
   return summarizeManifest(manifest);
+}
+
+async function recordStorageBackupHeartbeat(status, detail, metadata) {
+  const checkedAt = new Date();
+  const { error } = await admin.from("platform_service_heartbeats").upsert({
+    service_key: "storage_backup",
+    environment: process.env.APP_ENV,
+    status,
+    detail,
+    metadata_json: metadata,
+    commit_sha: process.env.GITHUB_SHA?.slice(0, 64) ?? null,
+    checked_at: checkedAt.toISOString(),
+    expires_at: new Date(checkedAt.getTime() + (status === "pass" ? 36 : 2) * 3_600_000).toISOString()
+  }, { onConflict: "environment,service_key" });
+  if (error) throw new Error(`Could not record Storage backup heartbeat: ${error.message}`);
 }
 
 async function verifyLocalBackup() {

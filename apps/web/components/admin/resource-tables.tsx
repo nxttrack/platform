@@ -261,7 +261,10 @@ export type PlatformTenantTableRow = {
   createdAt: string;
   domain: string;
   href: string;
+  healthScore?: number;
+  healthStatus?: string;
   id: string;
+  lastAdminLoginAt?: string | null;
   memberCount: number;
   name: string;
   sector: string;
@@ -275,10 +278,12 @@ export function PlatformTenantsTable({ initialSearch, rows }: { initialSearch?: 
     { accessorKey: "domain", header: "Primair domein", meta: { label: "Primair domein" } },
     { accessorKey: "sector", header: "Sector", meta: { label: "Sector" } },
     { accessorKey: "memberCount", header: "Gebruikers", meta: { label: "Gebruikers" }, cell: ({ getValue }) => <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{String(getValue())}</span> },
+    { accessorKey: "healthStatus", header: "Tenant health", meta: { label: "Tenant health" }, cell: ({ row }) => typeof row.original.healthScore === "number" ? <div className="flex items-center gap-2"><StatusPill tone={row.original.healthStatus === "healthy" ? "success" : row.original.healthStatus === "watch" ? "warning" : "danger"}>{row.original.healthScore}/100</StatusPill><span className="text-xs text-muted-foreground">{row.original.healthStatus}</span></div> : "—" },
+    { accessorKey: "lastAdminLoginAt", header: "Laatste beheerlogin", meta: { label: "Laatste beheerlogin" }, cell: ({ getValue }) => getValue() ? formatDateTime(String(getValue())) : "Nog niet" },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : getValue() === "suspended" ? "danger" : "warning"}>{String(getValue())}</StatusPill> },
     { accessorKey: "createdAt", header: "Aangemaakt", meta: { label: "Aangemaakt" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "inactive", "suspended"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} /><Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={row.href}>Organisatie beheren</Link></div>} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "inactive", "suspended"]), { column: "healthStatus", label: "Tenant health", options: ["healthy", "watch", "risk", "critical"].map((value) => ({ label: value, value })) }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Tenant health", typeof row.healthScore === "number" ? `${row.healthScore}/100 · ${row.healthStatus}` : "Nog niet berekend"], ["Laatste beheerlogin", row.lastAdminLoginAt ? formatDateTime(row.lastAdminLoginAt) : "Nog niet"], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} /><Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={row.href}>Organisatie beheren</Link></div>} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
 }
 
 function DuplicateButton({ id, label, state }: { id: string; label: string; state: "confirmed_duplicate" | "dismissed" }) {

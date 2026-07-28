@@ -60,6 +60,7 @@
     "test:instructor-replacement": "tsx --test tests/unit/instructor-replacement-contract.test.ts tests/unit/instructor-replacement-schema.test.ts",
     "test:retention-signals": "tsx --test tests/unit/retention-signals-contract.test.ts tests/unit/retention-signals-schema.test.ts",
     "test:lesson-plans": "tsx --test tests/unit/lesson-plan-contract.test.ts tests/unit/lesson-plan-schema.test.ts",
+    "test:tenant-health": "tsx --test tests/unit/tenant-health-contract.test.ts tests/unit/tenant-health-schema.test.ts",
     "test:automation-recipes": "tsx --test tests/unit/automation-recipe-contract.test.ts tests/unit/automation-recipe-schema.test.ts",
     "test:communication-hub": "tsx --test tests/unit/communication-hub-contract.test.ts tests/unit/communication-hub-schema.test.ts",
     "test:badges": "tsx --test tests/unit/badge-system-contract.test.ts tests/unit/badge-system-schema.test.ts",
@@ -95,7 +96,7 @@
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
-    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:crm-pipeline && pnpm run test:empty-seat-recovery && pnpm run test:operational-cockpit && pnpm run test:instructor-replacement && pnpm run test:retention-signals && pnpm run test:lesson-plans && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:badges && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:site-cms && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
+    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:crm-pipeline && pnpm run test:empty-seat-recovery && pnpm run test:operational-cockpit && pnpm run test:instructor-replacement && pnpm run test:retention-signals && pnpm run test:lesson-plans && pnpm run test:tenant-health && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:badges && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:site-cms && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
