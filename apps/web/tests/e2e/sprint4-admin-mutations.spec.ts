@@ -156,7 +156,12 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await openAction(page, "Document toevoegen");
     form = formWithButton(page, "Document opslaan");
     await form.getByLabel("Titel").fill(documentTitle);
-    await form.getByLabel("Omschrijving").fill("Metadata-only browserbewijs; geen extern bestand.");
+    await form.getByLabel("Omschrijving").fill("Malwaregescand browserbewijs met herkenbare Sprint 4-testdata.");
+    await form.getByLabel("Bestand").setInputFiles({
+      name: `sprint4-admin-${suffix}.pdf`,
+      mimeType: "application/pdf",
+      buffer: Buffer.from("%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n")
+    });
     await submitAndWaitForSaved(page, form, "Document opslaan", "/admin/documenten", "document");
     await expectSavedStatus(page, "Documentactie opgeslagen: document.");
     await filterResourceTable(page, "Zoek document…", documentTitle);

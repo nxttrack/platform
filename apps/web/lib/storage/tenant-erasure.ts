@@ -1,9 +1,9 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET, TENANT_DOCUMENTS_BUCKET } from "./private-files";
+import { BADGE_STUDIO_ASSETS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET, TENANT_DOCUMENTS_BUCKET } from "./private-files";
 
-export const tenantPrivateBuckets = [TENANT_DOCUMENTS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET] as const;
+export const tenantPrivateBuckets = [TENANT_DOCUMENTS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET, BADGE_STUDIO_ASSETS_BUCKET] as const;
 
 export async function listTenantStorageObjects(tenantId: string) {
   const inventory: Record<string, string[]> = {};

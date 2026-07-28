@@ -59,7 +59,7 @@ test("private media objects participate in backup and verified tenant erasure", 
   assert.match(backupScript, /tenant-documents,diploma-vault,participant-media,badge-studio-assets/);
   assert.match(backupScript, /participant-media/);
   assert.match(erasureModule, /PARTICIPANT_MEDIA_BUCKET/);
-  assert.match(erasureModule, /tenantPrivateBuckets = \[TENANT_DOCUMENTS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET\]/);
+  assert.match(erasureModule, /tenantPrivateBuckets = \[TENANT_DOCUMENTS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET, BADGE_STUDIO_ASSETS_BUCKET\]/);
 });
 
 test("existing private buckets only expose exact, stored and clean objects", () => {

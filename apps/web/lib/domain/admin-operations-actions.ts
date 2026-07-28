@@ -170,6 +170,9 @@ export async function createAdminDocumentAction(formData: FormData) {
   } catch {
     redirect("/admin/documenten?error=file");
   }
+  if (!file) {
+    redirect("/admin/documenten?error=file_required");
+  }
 
   const documentResult = await admin
     .from("tenant_documents")
@@ -183,14 +186,14 @@ export async function createAdminDocumentAction(formData: FormData) {
       audience: readEnum(formData, "audience", documentAudiences, "tenant_staff"),
       visibility,
       status,
-      file_name: file?.name ?? readOptional(formData, "fileName"),
-      file_path: readOptional(formData, "filePath"),
-      mime_type: file?.type ?? readOptional(formData, "mimeType"),
-      size_bytes: file?.size ?? readInteger(formData, "sizeBytes"),
+      file_name: file.name,
+      file_path: null,
+      mime_type: file.type,
+      size_bytes: file.size,
       storage_bucket: TENANT_DOCUMENTS_BUCKET,
-      storage_status: file ? "missing" : readOptional(formData, "filePath") ? "stored" : "metadata",
-      malware_scan_status: file ? "pending" : "not_required",
-      uploaded_at: file ? new Date().toISOString() : null
+      storage_status: "missing",
+      malware_scan_status: "pending",
+      uploaded_at: new Date().toISOString()
     })
     .select("id, title, audience, visibility, status")
     .single();
@@ -199,42 +202,47 @@ export async function createAdminDocumentAction(formData: FormData) {
     redirect("/admin/documenten?error=document");
   }
 
-  if (file) {
-    try {
-      const upload = await uploadTenantDocumentFile({
-        documentId: documentResult.data.id,
-        file,
-        tenantId: tenant.id
-      });
-      const { error: updateError } = await admin
-        .from("tenant_documents")
-        .update({
-          file_name: upload.fileName,
-          file_path: upload.filePath,
-          mime_type: upload.mimeType,
-          size_bytes: upload.sizeBytes,
-          storage_bucket: upload.storageBucket,
-          storage_status: "stored",
-          file_sha256: upload.scan.sha256,
-          malware_scan_engine: upload.scan.engine,
-          malware_scan_status: upload.scan.status,
-          malware_scanned_at: upload.scan.scannedAt,
-          uploaded_at: new Date().toISOString()
-        })
-        .eq("tenant_id", tenant.id)
-        .eq("id", documentResult.data.id);
+  let upload: Awaited<ReturnType<typeof uploadTenantDocumentFile>>;
+  try {
+    upload = await uploadTenantDocumentFile({
+      documentId: documentResult.data.id,
+      file,
+      tenantId: tenant.id
+    });
+  } catch {
+    await admin
+      .from("tenant_documents")
+      .update({ malware_scan_status: "failed", storage_status: "missing" })
+      .eq("tenant_id", tenant.id)
+      .eq("id", documentResult.data.id);
+    redirect("/admin/documenten?error=file_upload");
+  }
+  const { error: updateError } = await admin
+    .from("tenant_documents")
+    .update({
+      file_name: upload.fileName,
+      file_path: upload.filePath,
+      mime_type: upload.mimeType,
+      size_bytes: upload.sizeBytes,
+      storage_bucket: upload.storageBucket,
+      storage_status: "stored",
+      file_sha256: upload.scan.sha256,
+      malware_scan_engine: upload.scan.engine,
+      malware_scan_status: upload.scan.status,
+      malware_scanned_at: upload.scan.scannedAt,
+      uploaded_at: new Date().toISOString()
+    })
+    .eq("tenant_id", tenant.id)
+    .eq("id", documentResult.data.id);
 
-      if (updateError) {
-        redirect("/admin/documenten?error=file_update");
-      }
-    } catch {
-      await admin
-        .from("tenant_documents")
-        .update({ malware_scan_status: "failed", storage_status: "missing" })
-        .eq("tenant_id", tenant.id)
-        .eq("id", documentResult.data.id);
-      redirect("/admin/documenten?error=file_upload");
-    }
+  if (updateError) {
+    await admin.storage.from(upload.storageBucket).remove([upload.filePath]);
+    await admin
+      .from("tenant_documents")
+      .update({ malware_scan_status: "failed", storage_status: "missing" })
+      .eq("tenant_id", tenant.id)
+      .eq("id", documentResult.data.id);
+    redirect("/admin/documenten?error=file_update");
   }
 
   if (documentResult.data.status === "active" && documentResult.data.visibility === "portal") {

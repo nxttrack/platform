@@ -184,7 +184,7 @@ export async function startTenantOffboardingAction(formData: FormData) {
     reason: readOptional(formData, "reason"),
     retention_ends_at: new Date(Date.now() + retentionDays * 24 * 60 * 60 * 1_000).toISOString(),
     backup_retention_days: backupRetentionDays,
-    export_manifest: { format: "nxttrack-tenant-export-v1", storageBuckets: ["tenant-documents", "diploma-vault", "participant-media"] },
+    export_manifest: { format: "nxttrack-tenant-export-v1", storageBuckets: ["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets"] },
     tenant_name_snapshot: tenantResult.data.name,
     tenant_slug_snapshot: tenantResult.data.slug,
     requested_by_user_id: context.user.id
