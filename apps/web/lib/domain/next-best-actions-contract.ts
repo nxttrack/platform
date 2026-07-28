@@ -526,7 +526,7 @@ export function detectNextBestActions(input: NextBestActionInput): NextBestActio
       ],
       suggestedActions: [
         { label: "Open capaciteitsvoorspelling", href: "/admin/rapportages/capaciteit" },
-        { label: "Open What-if planning", href: `/admin/agenda?group=${forecast.groupId}` }
+        { label: "Open lesgroep", href: `/admin/groepen?q=${encodeURIComponent(forecast.groupName)}` }
       ],
       sourceHref: "/admin/rapportages/capaciteit",
       confidence: confidenceValue(forecast.confidence),

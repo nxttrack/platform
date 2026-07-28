@@ -44,7 +44,7 @@ test("capacity forecast keeps no-shows outside expected openings and explains ev
   assert.equal(forecast.risk_level, "critical");
   assert.ok(forecast.reasons.some((reason) => /No-shows tellen nooit/i.test(reason.explanation)));
   assert.ok(forecast.recommended_actions.some((action) =>
-    /What-if/i.test(action.label) && action.href.endsWith("#what-if-planning")
+    /capaciteitsforecast/i.test(action.label) && action.href.startsWith("/admin/rapportages/capaciteit")
   ));
 });
 

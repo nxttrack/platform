@@ -78,7 +78,7 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
               <div className="grid gap-4">
                 <DetailGrid entries={[["Bezetting", `${detail.used} van ${detail.capacity}`], ["Beschikbaar", String(detail.available)], ["Inhaalreserveringen", String(detail.catchUpHolds)]]} />
                 <Progress value={detail.capacity ? Math.min(100, (detail.used / detail.capacity) * 100) : 0} />
-                <Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/agenda?marketplace=${detail.id}#makeup-marketplace`}>
+                <Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/inhaalmarkt?sessie=${detail.id}`}>
                   Open Inhaalmarktplaats
                 </Link>
               </div>

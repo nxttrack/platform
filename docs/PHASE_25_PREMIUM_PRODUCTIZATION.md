@@ -17,7 +17,7 @@ Stagingrun: `30000489255`
 - Herstelbare CSV-importjobs met delimiterdetectie, previewopslag, validatie, duplicate detection, limieten en annulering vóór operationele mutatie.
 - White-label configuratie met live preview, e-mailcopy, tenantkleuren en branded-PWA vlag.
 - Mollie checkout via server-side environment references, `Idempotency-Key` en provider-verified webhookverwerking.
-- What-if planboard met drag/drop, toetsenbordalternatief, conflictcheck, expliciet toepassen en database-backed undo.
+- Het experimentele What-if-planbord is later verwijderd; operationele capaciteit wordt nu via het compacte planbord en de capaciteitsforecast beoordeeld.
 - School Health & Growth met bezetting, wachtlijstconversie, attendance en betaalachterstand gekoppeld aan vervolgstappen.
 - PWA manifest en veilige offline-indicator. Alleen statische build-assets worden gecachet.
 - Consent-datamodel voor foto/video-evidence; private evidence mag pas worden toegevoegd na een expliciete geldige consentcheck.

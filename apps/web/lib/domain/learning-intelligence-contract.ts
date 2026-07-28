@@ -760,7 +760,7 @@ function capacityActions(
   groupId: string
 ): Array<{ label: string; href: string }> {
   const actions = [
-    { label: "Open What-if planbord", href: `/admin/agenda?group=${groupId}#what-if-planning` },
+    { label: "Open capaciteitsforecast", href: `/admin/rapportages/capaciteit?groep=${groupId}` },
     { label: "Bekijk Next Best Actions", href: "/admin/automatisering/acties" }
   ];
   if (riskLevel === "healthy") {

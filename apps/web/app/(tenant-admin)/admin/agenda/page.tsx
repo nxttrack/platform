@@ -1,16 +1,12 @@
-import { AlertTriangle, CalendarDays, CheckCircle2, Clock, Mail, RefreshCcw, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, Clock, Users } from "lucide-react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
-import { AdminSection, DataList, DataListRow, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
+import { EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PlanningDayBoard } from "@/components/admin/planning-day-board";
-import { PlanningWorkbench } from "@/components/admin/planning-workbench";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
+import { PageHeader } from "@/components/shell/ui";
 import { createSessionAction } from "@/lib/domain/actions";
-import { decideCatchUpRequestAction, saveInstructorAvailabilityAction, undoPlanningChangeAction } from "@/lib/domain/planning-actions";
-import { getPlanningData, type PlanningConflict } from "@/lib/domain/planning";
-import { findMakeupMarketplaceMatches } from "@/lib/domain/makeup-marketplace";
-import { bookMakeupMarketplaceDirectAction, ignoreMakeupMarketplaceMatchAction, inviteMakeupMarketplaceParentAction } from "@/lib/domain/makeup-marketplace-actions";
+import { saveInstructorAvailabilityAction } from "@/lib/domain/planning-actions";
+import { getPlanningData } from "@/lib/domain/planning";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -22,12 +18,6 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const [data, params] = await Promise.all([getPlanningData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
-  const undo = getParam(params, "undo");
-  const marketplaceSessionId = getParam(params, "marketplace");
-  const marketplace = marketplaceSessionId ? await findMakeupMarketplaceMatches({ tenantId: data.tenant.id, sessionId: marketplaceSessionId }) : null;
-  const groupById = new Map(data.groups.map((group) => [group.id, group]));
-  const sessionInsightById = new Map(data.sessionInsights.map((insight) => [insight.session.id, insight]));
-  const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const pendingCatchUps = data.catchUpRequests.filter((request) => request.status === "requested");
   const todayKey = new Date().toISOString().slice(0, 10);
   const todaySessions = data.sessionInsights.filter((insight) => insight.dayKey === todayKey);
@@ -50,7 +40,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
         title="Planbord"
         subtitle="Scan de week, open lesdetails in een dossierdrawer en stuur alleen bij waar signalen daarom vragen."
       />
-      <Feedback saved={saved} error={error} undo={undo} />
+      <Feedback saved={saved} error={error} />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard icon={CalendarDays} label="Vandaag" value={todaySessions.length} />
@@ -67,175 +57,6 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
           <PlanningDayBoard days={data.dayPlan.map((day) => ({ key: day.key, label: day.label, sessions: day.sessions.map((insight) => ({ available: insight.available, capacity: insight.capacity, catchUpHolds: insight.catchUpHolds, endsAt: insight.session.ends_at, groupName: insight.group?.name ?? "Lesgroep", id: insight.session.id, instructorNames: insight.instructorNames, notes: insight.session.notes ?? "", resourceName: insight.resourceName, startsAt: insight.session.starts_at, status: insight.status, used: insight.used })) }))} />
         )}
       </AdminListSurface>
-
-      <AdminSection
-        title="Inhaalmarktplaats"
-        description="Match een aantoonbaar vrijgekomen sessieplek met een geldige credit. Uitnodigen en boeken blijven afzonderlijke menselijke keuzes."
-      >
-        <div className="scroll-mt-24" id="makeup-marketplace">
-          {!marketplaceSessionId ? (
-            <EmptyState>Open een les op het dagplan en kies bij Capaciteit voor “Open Inhaalmarktplaats”.</EmptyState>
-          ) : !marketplace ? (
-            <EmptyState>Deze sessie is niet beschikbaar voor de inhaalmarktplaats.</EmptyState>
-          ) : (
-            <div className="grid gap-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 p-4">
-                <div>
-                  <p className="font-bold">{marketplace.session.groupName}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(marketplace.session.startsAt)} · effectief {marketplace.session.effectiveUsed}/{marketplace.session.capacity} bezet</p>
-                </div>
-                <StatusPill tone={marketplace.session.available > 0 ? "success" : "warning"}>{marketplace.session.available > 0 ? "Korte wachttijd · plek beschikbaar" : "Geen vrije flexplek"}</StatusPill>
-              </div>
-              {marketplace.matches.length === 0 ? (
-                <EmptyState>Geen geldige credit met exact programma, niveau, sessiedatum en beschikbare flexplek.</EmptyState>
-              ) : (
-                <div className="grid gap-3">
-                  {marketplace.matches.map((match) => {
-                    const decision = marketplace.decisions.find((item) => item.creditId === match.credit_id);
-                    const inactive = decision?.status === "ignored" || decision?.status === "booked";
-                    return (
-                      <article className="rounded-xl border border-border bg-card p-4" key={match.credit_id}>
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <div className="flex flex-wrap items-center gap-2">
-                              <p className="font-bold">{match.participant_name}</p>
-                              {match.expires_soon ? <StatusPill tone="warning">Credit verloopt snel</StatusPill> : null}
-                              {match.is_test ? <StatusPill tone="info">Journey Bot · intern</StatusPill> : null}
-                            </div>
-                            <p className="mt-1 text-sm text-muted-foreground">Matchscore {match.score}/100 · {Math.round(match.confidence * 100)}% confidence</p>
-                          </div>
-                          <StatusPill tone={decision?.status === "booked" ? "success" : decision?.status === "ignored" ? "neutral" : decision?.status === "invited" ? "info" : "success"}>{decision?.status ?? match.suggested_action.replaceAll("_", " ")}</StatusPill>
-                        </div>
-                        <ul className="mt-3 grid gap-1.5 text-xs text-muted-foreground">
-                          {match.reasons.map((reason) => <li key={`${match.credit_id}:${reason.label}`}><span className="font-semibold text-foreground">{reason.label}</span> — {reason.explanation} ({reason.evidence})</li>)}
-                        </ul>
-                        {!inactive ? (
-                          <div className="mt-4 flex flex-wrap gap-2">
-                            {!match.is_test && match.notification_allowed && match.guardian_user_id ? (
-                              <ConfirmActionForm
-                                action={inviteMakeupMarketplaceParentAction}
-                                confirmLabel="Uitnodiging versturen"
-                                description="Er wordt een in-app bericht gemaakt. E-mail wordt alleen verzonden wanneer de communicatievoorkeur dit toestaat. De ouder boekt daarna zelf."
-                                hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
-                                title={`Nodig ouder van ${match.participant_name} uit?`}
-                                triggerLabel={<><Mail className="size-4" />Nodig ouder uit</>}
-                              />
-                            ) : null}
-                            {!match.is_test ? (
-                              <ConfirmActionForm
-                                action={bookMakeupMarketplaceDirectAction}
-                                confirmLabel="Direct boeken"
-                                description="Gebruik dit alleen na bevestigde oudertoestemming. Credit, niveau en actuele sessiecapaciteit worden in één transactie opnieuw gecontroleerd."
-                                hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
-                                title={`Boek ${match.participant_name} direct?`}
-                                triggerLabel={<><RefreshCcw className="size-4" />Boek direct</>}
-                                triggerVariant="destructive"
-                              />
-                            ) : null}
-                            <ConfirmActionForm
-                              action={ignoreMakeupMarketplaceMatchAction}
-                              confirmLabel="Match negeren"
-                              description="De match wordt alleen voor deze credit en sessie genegeerd en blijft in de audit zichtbaar."
-                              hiddenFields={{ sessionId: marketplace.session.id, creditId: match.credit_id, humanConfirmation: "confirmed" }}
-                              title="Deze match negeren?"
-                              triggerLabel="Negeer"
-                              triggerVariant="outline"
-                            />
-                          </div>
-                        ) : null}
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </AdminSection>
-
-      <AdminListSurface>
-        <div className="mb-3 scroll-mt-24" id="what-if-planning"><h2 className="text-base font-bold">What-if planning</h2><p className="text-[13px] text-muted-foreground">Sleep of gebruik het toetsenbord; pas pas toe wanneer de conflictengine groen is.</p></div>
-        <PlanningWorkbench initialItems={data.sessionInsights.map((insight) => ({ id: insight.session.id, groupName: insight.group?.name ?? "Lesgroep", startsAt: insight.session.starts_at, endsAt: insight.session.ends_at, resourceId: insight.session.resource_id, resourceName: insight.resourceName }))} />
-      </AdminListSurface>
-
-      <AdminSection title="Inhaalverzoeken" description="Zet inhaalcredits om naar echte lessen zodra capaciteit klopt.">
-          {pendingCatchUps.length === 0 ? (
-            <EmptyState>Geen open inhaalverzoeken.</EmptyState>
-          ) : (
-            <DataList>
-              {pendingCatchUps.map((request) => {
-                const insight = sessionInsightById.get(request.preferred_session_id);
-                const participant = participantById.get(request.participant_id);
-
-                return (
-                  <div className="grid gap-3 px-3 py-3" key={request.id}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-foreground">{participant?.display_name ?? "Leerling"}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {insight ? `${formatDateTime(insight.session.starts_at)} - ${insight.group?.name ?? "Lesgroep"} - ${formatNumber(insight.available)} vrij` : "Sessie niet gevonden"}
-                        </p>
-                      </div>
-                      <StatusPill tone={insight && insight.available > 0 ? "success" : "danger"}>{insight ? insight.status : "missing"}</StatusPill>
-                    </div>
-                    <div className="flex flex-wrap items-end gap-2">
-                      <ConfirmActionForm
-                        action={decideCatchUpRequestAction}
-                        className="flex flex-wrap items-end gap-2"
-                        confirmLabel="Inhaalplek goedkeuren"
-                        description="Capaciteit, credit, programma en niveau worden opnieuw transactioneel gecontroleerd. De credit blijft gereserveerd tot aanwezigheid is vastgelegd."
-                        hiddenFields={{ requestId: request.id, decision: "approved", humanConfirmation: "confirmed" }}
-                        title="Inhaalplek definitief goedkeuren?"
-                        triggerLabel={<><CheckCircle2 className="h-4 w-4" /> Goedkeuren</>}
-                      >
-                        <label className="space-y-1 text-xs font-semibold text-muted-foreground">
-                          <span>Notitie bij goedkeuring</span>
-                          <input className="block h-9 w-56 rounded-lg border border-border bg-white px-3 text-sm font-normal text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" name="adminNotes" placeholder="Optioneel" />
-                        </label>
-                      </ConfirmActionForm>
-                      <ConfirmActionForm
-                        action={decideCatchUpRequestAction}
-                        confirmLabel="Aanvraag afwijzen"
-                        description="De aanvraag wordt afgewezen en de inhaalcredit komt opnieuw beschikbaar voor een ander passend moment."
-                        hiddenFields={{ requestId: request.id, decision: "declined", humanConfirmation: "confirmed" }}
-                        title="Inhaalverzoek afwijzen?"
-                        triggerLabel="Afwijzen"
-                        triggerVariant="outline"
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </DataList>
-          )}
-      </AdminSection>
-
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <AdminSection title="Conflicten">
-          {data.conflicts.length === 0 ? (
-            <EmptyState>Geen planningconflicten gevonden.</EmptyState>
-          ) : (
-            <DataList>
-              {data.conflicts.slice(0, 12).map((conflict) => (
-                <ConflictRow conflict={conflict} key={conflict.id} />
-              ))}
-            </DataList>
-          )}
-        </AdminSection>
-
-        <AdminSection title="Instructor availability" description="Beschikbaarheid wordt gebruikt voor conflictwaarschuwingen. Instructors kunnen eigen beschikbaarheid later ook zelf beheren.">
-          {data.availability.length === 0 ? (
-            <EmptyState>Nog geen beschikbaarheidsregels.</EmptyState>
-          ) : (
-            <DataList>
-              {data.availability.slice(0, 8).map((row) => {
-                const instructor = data.instructors.find((item) => item.userId === row.instructor_user_id);
-                return <DataListRow aside={<StatusPill tone={row.availability_type === "available" ? "success" : "warning"}>{row.availability_type === "available" ? "Beschikbaar" : "Niet beschikbaar"}</StatusPill>} key={row.id} meta={`${weekdayLabel(row.weekday)} ${row.starts_at.slice(0, 5)}–${row.ends_at.slice(0, 5)}`} title={instructor?.label ?? row.instructor_user_id} />;
-              })}
-            </DataList>
-          )}
-        </AdminSection>
-      </div>
     </div>
   );
 }
@@ -284,23 +105,9 @@ function AvailabilityForm({ data }: { data: Awaited<ReturnType<typeof getPlannin
   );
 }
 
-function ConflictRow({ conflict }: { conflict: PlanningConflict }) {
-  return (
-    <div className="px-3 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-semibold text-foreground">{conflict.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{conflict.detail}</p>
-        </div>
-        <StatusPill tone={conflict.severity === "danger" ? "danger" : "warning"}>{conflict.type}</StatusPill>
-      </div>
-    </div>
-  );
-}
-
-function Feedback({ saved, error, undo }: { saved?: string; error?: string; undo?: string }) {
+function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <div className="flex flex-wrap items-center gap-3 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success"><span className="mr-auto">Opgeslagen: {saved}.</span>{undo ? <form action={undoPlanningChangeAction}><input name="changeId" type="hidden" value={undo} /><button className="rounded-lg border border-success/30 bg-background px-3 py-1.5 font-bold text-foreground hover:bg-muted" type="submit">Ongedaan maken</button></form> : null}</div>;
+    return <div className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</div>;
   }
 
   if (error === "time") {
@@ -318,25 +125,6 @@ function Feedback({ saved, error, undo }: { saved?: string; error?: string; undo
   }
 
   return null;
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(value));
-}
-
-function formatTime(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
-}
-
-function formatNumber(value: number) {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(1);
-}
-
-function weekdayLabel(value: number) {
-  return ["Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag"][value] ?? "Dag";
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

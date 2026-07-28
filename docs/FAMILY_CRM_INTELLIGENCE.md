@@ -16,7 +16,7 @@ All suggestions are decision support. NXTTRACK does not automatically place, rej
 | --- | --- | --- |
 | Family overview | `/admin/gezinnen` | Read-only family aggregation |
 | Family planning | `/admin/gezinnen/[guardianId]` | Separate confirmed offer or placement per child |
-| Make-up marketplace | `/admin/agenda?marketplace=[sessionId]#makeup-marketplace` | Invite, direct booking, and ignore each require a deliberate action |
+| Make-up marketplace | `/admin/inhaalmarkt?sessie=[sessionId]` | Invite, direct booking, and ignore each require a deliberate action |
 | Parent make-up booking | `/portaal/lessen` | Parent explicitly confirms a valid option |
 | Parent communication preferences | `/portaal/profiel` | Parent controls in-app, email, and future recipe opt-in |
 | Lead score | `/admin/intake` | Score, confidence, evidence, blockers, and follow-up actions are visible |

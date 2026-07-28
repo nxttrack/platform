@@ -28,6 +28,7 @@ export const instructorNav: NavItem[] = [
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "home" },
   { href: "/admin/agenda", label: "Planbord", icon: "calendar", section: "Planning" },
+  { href: "/admin/inhaalmarkt", label: "Inhaalmarkt", icon: "refresh", section: "Planning" },
   { href: "/admin/groepen", label: "Groepen", icon: "users", section: "Planning" },
   { href: "/admin/resources", label: "Resources", icon: "location", section: "Planning" },
   { href: "/admin/intake", label: "Intake", icon: "inbox", section: "Leerlingen" },
@@ -46,6 +47,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/communicatie-instellingen", label: "Instellingen", icon: "settings", section: "Communicatie" },
   { href: "/admin/taken", label: "Taken", icon: "tasks", section: "Communicatie" },
   { href: "/admin/opvolging", label: "Opvolgen", icon: "userPlus", section: "Communicatie" },
+  { href: "/admin/website", label: "Website", icon: "globe", section: "Communicatie" },
   { href: "/admin/betalingen", label: "Betalingen", icon: "card", section: "Financieel" },
   { href: "/admin/rapportages", label: "Rapportages", icon: "chart", section: "Inzichten" },
   { href: "/admin/rapportages/capaciteit", label: "Capaciteitsforecast", icon: "trending", section: "Inzichten" },

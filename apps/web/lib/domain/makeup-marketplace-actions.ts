@@ -10,17 +10,17 @@ import { findMakeupMarketplaceMatches } from "./makeup-marketplace";
 import { createTenantNotifications } from "./tenant-notifications";
 
 export async function inviteMakeupMarketplaceParentAction(formData: FormData) {
-  const context = await requirePrivateShellContext("/admin/agenda");
+  const context = await requirePrivateShellContext("/admin/inhaalmarkt");
   const tenant = getActiveTenant(context);
   const sessionId = readRequired(formData, "sessionId");
   const creditId = readRequired(formData, "creditId");
   if (formData.get("humanConfirmation") !== "confirmed") {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=confirmation#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=confirmation`);
   }
   const data = await findMakeupMarketplaceMatches({ tenantId: tenant.id, sessionId });
   const match = data?.matches.find((candidate) => candidate.credit_id === creditId);
   if (!data || !match || match.is_test || !match.notification_allowed || !match.guardian_user_id) {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=invite_not_allowed#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=invite_not_allowed`);
   }
   const admin = createAdminClient();
   const preferenceResult = await admin
@@ -30,7 +30,7 @@ export async function inviteMakeupMarketplaceParentAction(formData: FormData) {
     .eq("guardian_user_id", match.guardian_user_id)
     .maybeSingle();
   if (preferenceResult.error || preferenceResult.data?.make_up_in_app_enabled === false) {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=communication_preference#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=communication_preference`);
   }
 
   const decisionResult = await admin
@@ -53,7 +53,7 @@ export async function inviteMakeupMarketplaceParentAction(formData: FormData) {
       test_metadata_json: {}
     }, { onConflict: "tenant_id,session_id,credit_id" });
   if (decisionResult.error) {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=invite#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=invite`);
   }
 
   const notification = await createTenantNotifications({
@@ -67,26 +67,27 @@ export async function inviteMakeupMarketplaceParentAction(formData: FormData) {
     deliverEmail: preferenceResult.data?.make_up_email_enabled ?? true
   });
   if (notification.length === 0) {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=notification#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=notification`);
   }
 
+  revalidatePath("/admin/inhaalmarkt");
   revalidatePath("/admin/agenda");
   revalidatePath("/portaal/lessen");
-  redirect(`/admin/agenda?marketplace=${sessionId}&saved=marketplace-invited#makeup-marketplace`);
+  redirect(`/admin/inhaalmarkt?sessie=${sessionId}&saved=marketplace-invited`);
 }
 
 export async function bookMakeupMarketplaceDirectAction(formData: FormData) {
-  const context = await requirePrivateShellContext("/admin/agenda");
+  const context = await requirePrivateShellContext("/admin/inhaalmarkt");
   const tenant = getActiveTenant(context);
   const sessionId = readRequired(formData, "sessionId");
   const creditId = readRequired(formData, "creditId");
   if (formData.get("humanConfirmation") !== "confirmed") {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=confirmation#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=confirmation`);
   }
   const data = await findMakeupMarketplaceMatches({ tenantId: tenant.id, sessionId });
   const match = data?.matches.find((candidate) => candidate.credit_id === creditId);
   if (!match || match.is_test) {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=match#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=match`);
   }
   const result = await createAdminClient().rpc("book_makeup_marketplace_session", {
     target_tenant_id: tenant.id,
@@ -98,24 +99,25 @@ export async function bookMakeupMarketplaceDirectAction(formData: FormData) {
   });
   if (result.error) {
     console.error("[makeup-marketplace] direct booking failed", { tenantId: tenant.id, sessionId, creditId, code: result.error.code, message: result.error.message });
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=booking#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=booking`);
   }
+  revalidatePath("/admin/inhaalmarkt");
   revalidatePath("/admin/agenda");
   revalidatePath("/portaal/lessen");
-  redirect(`/admin/agenda?marketplace=${sessionId}&saved=marketplace-booked#makeup-marketplace`);
+  redirect(`/admin/inhaalmarkt?sessie=${sessionId}&saved=marketplace-booked`);
 }
 
 export async function ignoreMakeupMarketplaceMatchAction(formData: FormData) {
-  const context = await requirePrivateShellContext("/admin/agenda");
+  const context = await requirePrivateShellContext("/admin/inhaalmarkt");
   const tenant = getActiveTenant(context);
   const sessionId = readRequired(formData, "sessionId");
   const creditId = readRequired(formData, "creditId");
   if (formData.get("humanConfirmation") !== "confirmed") {
-    redirect(`/admin/agenda?marketplace=${sessionId}&error=confirmation#makeup-marketplace`);
+    redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=confirmation`);
   }
   const data = await findMakeupMarketplaceMatches({ tenantId: tenant.id, sessionId });
   const match = data?.matches.find((candidate) => candidate.credit_id === creditId);
-  if (!match) redirect(`/admin/agenda?marketplace=${sessionId}&error=match#makeup-marketplace`);
+  if (!match) redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=match`);
   const result = await createAdminClient()
     .from("makeup_marketplace_decisions")
     .upsert({
@@ -135,9 +137,10 @@ export async function ignoreMakeupMarketplaceMatchAction(formData: FormData) {
       journey_run_id: match.journey_run_id,
       test_metadata_json: match.is_test ? { source: "journey_simulation_bot" } : {}
     }, { onConflict: "tenant_id,session_id,credit_id" });
-  if (result.error) redirect(`/admin/agenda?marketplace=${sessionId}&error=ignore#makeup-marketplace`);
+  if (result.error) redirect(`/admin/inhaalmarkt?sessie=${sessionId}&error=ignore`);
+  revalidatePath("/admin/inhaalmarkt");
   revalidatePath("/admin/agenda");
-  redirect(`/admin/agenda?marketplace=${sessionId}&saved=marketplace-ignored#makeup-marketplace`);
+  redirect(`/admin/inhaalmarkt?sessie=${sessionId}&saved=marketplace-ignored`);
 }
 
 function readRequired(formData: FormData, field: string) {
