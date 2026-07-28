@@ -4,7 +4,8 @@ import test from "node:test";
 import {
   getDefaultTenantSitePages,
   isSafeTenantSiteHref,
-  normalizeTenantSitePage
+  normalizeTenantSitePage,
+  normalizeTenantSiteSnapshot
 } from "../../apps/web/lib/domain/site-page-contract";
 
 test("website editor only accepts local paths and rejects protocol-relative or executable URLs", () => {
@@ -49,4 +50,42 @@ test("database content is normalized, bounded and falls back safely", () => {
   assert.equal(normalized.status, "published");
   assert.equal(normalized.theme, fallback.theme);
   assert.equal(normalized.title, "<script>alert(1)</script>");
+});
+
+test("version snapshots normalize controlled sections and reject unsafe structure", () => {
+  const fallback = getDefaultTenantSitePages("De Waterlijn").home;
+  const validId = "8a4c764c-476d-4933-99bc-3446c05fa4af";
+  const normalized = normalizeTenantSiteSnapshot({
+    page: {
+      ...fallback,
+      heroAssetId: validId,
+      primaryCtaHref: "/intake"
+    },
+    sections: [{
+      id: validId,
+      type: "faq",
+      title: "Veelgestelde vragen",
+      intro: "Praktische antwoorden.",
+      style: "cards",
+      visible: true,
+      assetIds: [],
+      items: [{
+        id: validId,
+        title: "Wanneer kan mijn kind starten?",
+        text: "Na een passende intake.",
+        ctaLabel: "Onveilig",
+        ctaHref: "https://outside.example"
+      }]
+    }, {
+      id: validId,
+      type: "custom_html",
+      title: "Onveilig",
+      items: []
+    }]
+  }, fallback);
+
+  assert.equal(normalized.heroAssetId, validId);
+  assert.equal(normalized.sections.length, 1);
+  assert.equal(normalized.sections[0].type, "faq");
+  assert.equal(normalized.sections[0].items[0].ctaHref, null);
 });

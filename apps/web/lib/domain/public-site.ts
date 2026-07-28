@@ -13,6 +13,7 @@ import { calculateWaitTimeBands } from "./wait-time";
 import {
   getDefaultTenantSitePages,
   normalizeTenantSitePage,
+  normalizeTenantSiteSnapshot,
   tenantSitePageKeys,
   type TenantSitePageContent,
   type TenantSitePageKey
@@ -140,7 +141,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       .maybeSingle(),
     admin
       .from("tenant_site_pages")
-      .select("page_key, eyebrow, title, intro, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, seo_title, seo_description, theme, status")
+      .select("page_key, eyebrow, title, intro, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, seo_title, seo_description, theme, status, published_version_id")
       .eq("tenant_id", tenant.id)
   ]);
 
@@ -163,12 +164,20 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   const questions = (questionsResult.data ?? []) as IntakeQuestionRow[];
   const analyticsSettings = settingsResult.data as PublicAnalyticsSettingsRow | null;
   const pageDefaults = getDefaultTenantSitePages(tenant.name);
+  const sitePageRows = (sitePagesResult.data ?? []) as Array<Record<string, unknown> & { page_key: string; published_version_id: string | null }>;
+  const publishedVersionIds = sitePageRows.flatMap((page) => page.published_version_id ? [page.published_version_id] : []);
+  const versionsResult = publishedVersionIds.length
+    ? await admin
+        .from("tenant_site_page_versions")
+        .select("id, snapshot_json")
+        .eq("tenant_id", tenant.id)
+        .in("id", publishedVersionIds)
+    : { data: [], error: null };
+  assertPublicResult(versionsResult.error, "published website versions");
+  const versionsById = new Map((versionsResult.data ?? []).map((version) => [version.id, version.snapshot_json]));
   const pages = Object.fromEntries(tenantSitePageKeys.map((key) => [
     key,
-    normalizeTenantSitePage(
-      (sitePagesResult.data ?? []).find((page) => page.page_key === key) as Record<string, unknown> | undefined,
-      pageDefaults[key]
-    )
+    normalizePublishedSitePage(sitePageRows.find((page) => page.page_key === key), versionsById, pageDefaults[key])
   ])) as Record<TenantSitePageKey, TenantSitePageContent>;
   const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
   const formsByProgramId = new Map(forms.filter((form) => form.program_id).map((form) => [form.program_id as string, normalizeForm(form, questions)]));
@@ -251,6 +260,17 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       };
     })
   };
+}
+
+function normalizePublishedSitePage(
+  row: (Record<string, unknown> & { published_version_id: string | null }) | undefined,
+  versionsById: Map<string, unknown>,
+  fallback: TenantSitePageContent
+) {
+  const legacy = normalizeTenantSitePage(row, fallback);
+  const snapshot = row?.published_version_id ? versionsById.get(row.published_version_id) : null;
+  if (snapshot) return normalizeTenantSiteSnapshot(snapshot, legacy);
+  return row?.status === "draft" ? { ...fallback, status: "hidden" as const } : legacy;
 }
 
 export async function getTenantSlugFromRequest() {

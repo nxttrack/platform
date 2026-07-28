@@ -8,8 +8,10 @@ export const TENANT_DOCUMENTS_BUCKET = "tenant-documents";
 export const DIPLOMA_VAULT_BUCKET = "diploma-vault";
 export const PARTICIPANT_MEDIA_BUCKET = "participant-media";
 export const BADGE_STUDIO_ASSETS_BUCKET = "badge-studio-assets";
+export const TENANT_MEDIA_ASSETS_BUCKET = "tenant-media-assets";
 export const PRIVATE_FILE_MAX_BYTES = 20 * 1024 * 1024;
 export const BADGE_STUDIO_ASSET_MAX_BYTES = 5 * 1024 * 1024;
+export const TENANT_MEDIA_ASSET_MAX_BYTES = 10 * 1024 * 1024;
 
 export type PrivateFileUpload = {
   fileName: string;
@@ -75,6 +77,27 @@ export async function uploadBadgeStudioAssetFile(input: {
   });
 }
 
+export async function uploadTenantMediaAssetFile(input: {
+  assetId: string;
+  file: File;
+  tenantId: string;
+}): Promise<PrivateFileUpload> {
+  if (input.file.size > TENANT_MEDIA_ASSET_MAX_BYTES) {
+    throw new Error("De afbeelding is groter dan 10 MB.");
+  }
+  if (!["image/jpeg", "image/png"].includes(input.file.type)) {
+    throw new Error("Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.");
+  }
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
+  return uploadPrivateFile({
+    bucket: TENANT_MEDIA_ASSETS_BUCKET,
+    file: input.file,
+    path: `${input.tenantId}/library/${input.assetId}.${extension}`,
+    purpose: "site_media",
+    upsert: false
+  });
+}
+
 export function getFileFromFormData(formData: FormData, field: string) {
   const value = formData.get(field);
 
@@ -101,7 +124,7 @@ async function uploadPrivateFile(input: {
   bucket: string;
   file: File;
   path: string;
-  purpose?: "badge_studio" | "participant_media" | "private_document";
+  purpose?: "badge_studio" | "participant_media" | "private_document" | "site_media";
   upsert?: boolean;
 }): Promise<PrivateFileUpload> {
   validatePrivateFile(input.file);

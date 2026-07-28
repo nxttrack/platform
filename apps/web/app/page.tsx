@@ -2,6 +2,7 @@ import { ArrowRight, CalendarCheck, CheckCircle2, HeartHandshake, Layers, Shield
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FeatureGrid, FinalCTA, PageHero, PageSection } from "@/components/lovable/page-kit";
+import { TenantSiteHeroMedia, TenantSiteSections } from "@/components/public/tenant-site-sections";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { TenantPublicShell } from "@/components/tenant-public/site-shell";
 import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/public-site";
@@ -82,6 +83,7 @@ function TenantHome({ data }: { data: NonNullable<Awaited<ReturnType<typeof getP
       <main>
       <section className={`relative overflow-hidden px-4 py-14 md:py-20 ${publicThemeClass(page.theme)}`}>
         <div aria-hidden="true" className={`absolute inset-0 bg-gradient-to-br ${publicHeroBackdropClass(page.theme)}`} />
+        <TenantSiteHeroMedia assetId={page.heroAssetId} />
         <div aria-hidden="true" className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-aqua/20 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
           <div>
@@ -178,6 +180,7 @@ function TenantHome({ data }: { data: NonNullable<Awaited<ReturnType<typeof getP
           </div>
         </div>
       </section>
+      <TenantSiteSections page={page} programs={data.programs} />
       </main>
     </TenantPublicShell>
   );

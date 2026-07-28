@@ -8,6 +8,7 @@ declare module "sharp" {
 
   type SharpInstance = {
     jpeg(options?: { mozjpeg?: boolean; quality?: number }): SharpInstance;
+    metadata(): Promise<{ height?: number; width?: number }>;
     png(options?: { compressionLevel?: number }): SharpInstance;
     resize(options: ResizeOptions): SharpInstance;
     rotate(): SharpInstance;

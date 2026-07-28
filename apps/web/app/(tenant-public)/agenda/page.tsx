@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/lovable/page-kit";
+import { TenantSiteHeroMedia, TenantSiteSections } from "@/components/public/tenant-site-sections";
 import { getPublicTenantSiteData } from "@/lib/domain/public-site";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,15 @@ export default async function AgendaPage() {
   const data = await getPublicTenantSiteData();
   const page = data?.pages.agenda;
   if (!page || page.status === "hidden") return <Unavailable />;
-  return <PageHero className={themeClass(page.theme)} kicker={page.eyebrow} title={page.title} sub={page.intro} primary={{ href: page.primaryCtaHref ?? "/", label: page.primaryCtaLabel ?? "Home" }} secondary={page.secondaryCtaHref && page.secondaryCtaLabel ? { href: page.secondaryCtaHref, label: page.secondaryCtaLabel } : undefined} />;
+  return (
+    <main>
+      <div className="relative overflow-hidden">
+        <TenantSiteHeroMedia assetId={page.heroAssetId} />
+        <PageHero className={`relative ${themeClass(page.theme)}`} kicker={page.eyebrow} title={page.title} sub={page.intro} primary={{ href: page.primaryCtaHref ?? "/", label: page.primaryCtaLabel ?? "Home" }} secondary={page.secondaryCtaHref && page.secondaryCtaLabel ? { href: page.secondaryCtaHref, label: page.secondaryCtaLabel } : undefined} />
+      </div>
+      <TenantSiteSections page={page} programs={data.programs} />
+    </main>
+  );
 }
 
 function Unavailable() {

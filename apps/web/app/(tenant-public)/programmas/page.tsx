@@ -2,6 +2,7 @@ import { ArrowRight, Clock, ListChecks, Waves } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { TenantSiteHeroMedia, TenantSiteSections } from "@/components/public/tenant-site-sections";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/public-site";
 
@@ -26,8 +27,9 @@ export default async function ProgramsPage() {
 
   return (
     <main>
-      <section className={`px-4 py-12 ${themeClass(page.theme)}`}>
-        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-5">
+      <section className={`relative overflow-hidden px-4 py-12 ${themeClass(page.theme)}`}>
+        <TenantSiteHeroMedia assetId={page.heroAssetId} />
+        <div className="relative mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-5">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">{page.eyebrow}</p>
             <h1 className="mt-2 text-4xl font-bold text-foreground md:text-5xl">{page.title}</h1>
@@ -74,6 +76,7 @@ export default async function ProgramsPage() {
           <InfoCard icon={<Waves className="h-5 w-5" />} title="Programma gekoppeld" text="De intake komt direct binnen bij het gekozen programma." />
         </div>
       </section>
+      <TenantSiteSections page={page} programs={data.programs} />
     </main>
   );
 }
