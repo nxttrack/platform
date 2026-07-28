@@ -8,8 +8,8 @@ import { dirname, join, resolve } from "node:path";
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
 
-const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media"]);
-const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media");
+const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets"]);
+const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media,badge-studio-assets");
 const command = process.argv[2];
 const backupDirectory = resolve(process.env.STORAGE_BACKUP_DIR ?? "artifacts/storage-backup");
 const scopedPrefix = normalizePrefix(process.env.STORAGE_BACKUP_PREFIX ?? "");
@@ -205,16 +205,16 @@ async function seedRehearsal() {
   try {
     for (const bucket of buckets) {
       await assertBucketExists(bucket);
-      const isMediaBucket = bucket === "participant-media";
-      const path = `${scopedPrefix}/probe.${isMediaBucket ? "png" : "pdf"}`;
-      const bytes = isMediaBucket
+      const isImageBucket = bucket === "participant-media" || bucket === "badge-studio-assets";
+      const path = `${scopedPrefix}/probe.${isImageBucket ? "png" : "pdf"}`;
+      const bytes = isImageBucket
         ? Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
         : Buffer.from(
             `%PDF-1.4\n% NXTTRACK controlled storage restore rehearsal\n% bucket=${bucket}\n%%EOF\n`,
             "utf8"
           );
       const { error } = await admin.storage.from(bucket).upload(path, bytes, {
-        contentType: isMediaBucket ? "image/png" : "application/pdf",
+        contentType: isImageBucket ? "image/png" : "application/pdf",
         cacheControl: "60",
         upsert: false
       });
@@ -233,7 +233,7 @@ async function seedRehearsal() {
 async function deleteRehearsalObjects() {
   const objects = buckets.map((bucket) => ({
     bucket,
-    path: `${scopedPrefix}/probe.${bucket === "participant-media" ? "png" : "pdf"}`
+    path: `${scopedPrefix}/probe.${bucket === "participant-media" || bucket === "badge-studio-assets" ? "png" : "pdf"}`
   }));
   await removeObjects(objects);
 
@@ -375,7 +375,7 @@ function validateManifestEntry(entry) {
     typeof entry.path !== "string" ||
     !entry.path ||
     typeof entry.file !== "string" ||
-    !/^objects\/(?:tenant-documents|diploma-vault|participant-media)\/[a-f0-9]{64}\.bin$/.test(entry.file) ||
+    !/^objects\/(?:tenant-documents|diploma-vault|participant-media|badge-studio-assets)\/[a-f0-9]{64}\.bin$/.test(entry.file) ||
     !Number.isInteger(entry.size) ||
     entry.size < 0 ||
     !/^[a-f0-9]{64}$/.test(entry.sha256)
@@ -394,7 +394,7 @@ function parseBuckets(value) {
   const parsed = [...new Set(value.split(",").map((bucket) => bucket.trim()).filter(Boolean))];
 
   if (parsed.length === 0 || parsed.some((bucket) => !allowedBuckets.has(bucket))) {
-    fatal("STORAGE_BACKUP_BUCKETS may only contain tenant-documents, diploma-vault and participant-media.");
+    fatal("STORAGE_BACKUP_BUCKETS may only contain tenant-documents, diploma-vault, participant-media and badge-studio-assets.");
   }
 
   return parsed;

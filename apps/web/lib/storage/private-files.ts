@@ -7,7 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export const TENANT_DOCUMENTS_BUCKET = "tenant-documents";
 export const DIPLOMA_VAULT_BUCKET = "diploma-vault";
 export const PARTICIPANT_MEDIA_BUCKET = "participant-media";
+export const BADGE_STUDIO_ASSETS_BUCKET = "badge-studio-assets";
 export const PRIVATE_FILE_MAX_BYTES = 20 * 1024 * 1024;
+export const BADGE_STUDIO_ASSET_MAX_BYTES = 5 * 1024 * 1024;
 
 export type PrivateFileUpload = {
   fileName: string;
@@ -51,6 +53,28 @@ export async function uploadParticipantMediaFile(input: {
   });
 }
 
+export async function uploadBadgeStudioAssetFile(input: {
+  assetId: string;
+  file: File;
+  scope?: string;
+}): Promise<PrivateFileUpload> {
+  if (input.file.size > BADGE_STUDIO_ASSET_MAX_BYTES) {
+    throw new Error("De afbeelding is groter dan 5 MB.");
+  }
+  if (!["image/jpeg", "image/png"].includes(input.file.type)) {
+    throw new Error("Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.");
+  }
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
+
+  return uploadPrivateFile({
+    bucket: BADGE_STUDIO_ASSETS_BUCKET,
+    file: input.file,
+    path: `${input.scope ?? "platform"}/assets/${input.assetId}.${extension}`,
+    purpose: "badge_studio",
+    upsert: false
+  });
+}
+
 export async function createPrivateFileSignedUrl(input: { bucket: string; path: string }) {
   const admin = createAdminClient();
   const { data, error } = await admin.storage.from(input.bucket).createSignedUrl(input.path, 60 * 5);
@@ -88,7 +112,7 @@ async function uploadPrivateFile(input: {
   bucket: string;
   file: File;
   path: string;
-  purpose?: "participant_media" | "private_document";
+  purpose?: "badge_studio" | "participant_media" | "private_document";
   upsert?: boolean;
 }): Promise<PrivateFileUpload> {
   validatePrivateFile(input.file);

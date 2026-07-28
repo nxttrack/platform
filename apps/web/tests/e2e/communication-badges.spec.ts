@@ -43,7 +43,11 @@ test.describe("Communicationhub and Badge Studio", () => {
       await page.goto(route[0], { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { level: 1, name: route[1] })).toBeVisible();
       if (route[0] === "/platform/badges/share-templates") {
-        await expect(page.getByText("sleep lagen op het canvas", { exact: false })).toBeVisible();
+        await expect(page.getByText("canvas schaalt automatisch mee", { exact: false })).toBeVisible();
+        await expect(page.getByText("Afbeeldingen", { exact: true })).toBeVisible();
+        await expect(page.getByLabel("Afbeelding kiezen")).toBeVisible();
+        await expect(page.getByTestId("badge-studio-editor")).toBeVisible();
+        await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 2)).toBe(true);
       }
     }
     expect(failures()).toEqual([]);

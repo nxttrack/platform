@@ -14,11 +14,14 @@ export type GenderedCopy = {
 
 export type BadgeLayer = {
   id: string;
-  type: "text" | "shape" | "badge" | "logo" | "decoration";
+  type: "text" | "shape" | "badge" | "logo" | "decoration" | "image";
   x: number;
   y: number;
   width: number;
   height: number;
+  assetId?: string;
+  alt?: string;
+  objectFit?: "contain" | "cover";
   text?: string;
   fill?: string;
   opacity?: number;
@@ -27,6 +30,14 @@ export type BadgeLayer = {
   align?: "left" | "center" | "right";
   locked?: boolean;
   hidden?: boolean;
+};
+
+export type BadgeStudioAsset = {
+  id: string;
+  mimeType: "image/jpeg" | "image/png";
+  name: string;
+  signedUrl: string;
+  sizeBytes: number;
 };
 
 export type BadgeTriggerDefinition = {
@@ -93,7 +104,9 @@ export function validateBadgeLayers(value: unknown): BadgeLayer[] {
     if (!layer || typeof layer !== "object") return [];
     const record = layer as Record<string, unknown>;
     const type = record.type;
-    if (!["text", "shape", "badge", "logo", "decoration"].includes(String(type))) return [];
+    if (!["text", "shape", "badge", "logo", "decoration", "image"].includes(String(type))) return [];
+    const assetId = optionalUuid(record.assetId);
+    if (type === "image" && !assetId) return [];
 
     return [{
       id: cleanText(record.id, "layer"),
@@ -102,6 +115,9 @@ export function validateBadgeLayers(value: unknown): BadgeLayer[] {
       y: clampNumber(record.y, 0, 2400),
       width: clampNumber(record.width, 24, 2400),
       height: clampNumber(record.height, 24, 2400),
+      assetId,
+      alt: optionalText(record.alt, 200),
+      objectFit: ["contain", "cover"].includes(String(record.objectFit)) ? record.objectFit as BadgeLayer["objectFit"] : "contain",
       text: optionalText(record.text),
       fill: optionalText(record.fill),
       opacity: clampNumber(record.opacity ?? 1, 0, 1),
@@ -155,8 +171,15 @@ function readNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-function optionalText(value: unknown) {
-  return typeof value === "string" && value.trim() ? value.trim().slice(0, 500) : undefined;
+function optionalText(value: unknown, maxLength = 500) {
+  return typeof value === "string" && value.trim() ? value.trim().slice(0, maxLength) : undefined;
+}
+
+function optionalUuid(value: unknown) {
+  const normalized = optionalText(value, 36);
+  return normalized && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)
+    ? normalized
+    : undefined;
 }
 
 function cleanText(value: unknown, fallback: string) {

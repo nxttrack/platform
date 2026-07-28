@@ -76,13 +76,17 @@ test("awardkeys zijn stabiel en begrensd voor idempotente toekenning", () => {
 test("template-editor accepteert alleen bekende, begrensde lagen", () => {
   const layers = validateBadgeLayers([
     { id: "title", type: "text", x: -10, y: 20, width: 9000, height: 80, text: "Hallo", opacity: 3 },
+    { id: "photo", type: "image", assetId: "5a9403a7-44d5-4d7a-a593-b341f2046b49", x: 10, y: 10, width: 500, height: 500, objectFit: "cover", alt: "Zwemillustratie" },
+    { id: "unsafe-image", type: "image", assetId: "../../object", x: 10, y: 10, width: 500, height: 500 },
     { id: "script", type: "iframe", x: 0, y: 0, width: 10, height: 10 }
   ]);
 
-  assert.equal(layers.length, 1);
+  assert.equal(layers.length, 2);
   assert.equal(layers[0]?.x, 0);
   assert.equal(layers[0]?.width, 2400);
   assert.equal(layers[0]?.opacity, 1);
+  assert.equal(layers[1]?.type, "image");
+  assert.equal(layers[1]?.objectFit, "cover");
 });
 
 test("engine verstuurt niets extern buiten de bestaande notificatielaag", () => {

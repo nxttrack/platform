@@ -5,8 +5,9 @@ import { redirect } from "next/navigation";
 
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { uploadBadgeStudioAssetFile } from "@/lib/storage/private-files";
 import { awardBadge } from "./badge-engine";
-import { badgeFormats, validateBadgeLayers } from "./badge-system-contract";
+import { badgeFormats, validateBadgeLayers, type BadgeStudioAsset } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
 import { createTenantNotifications } from "./tenant-notifications";
 
@@ -309,6 +310,18 @@ export async function saveBadgeTemplateAction(formData: FormData) {
   const layers = validateBadgeLayers(parsed);
   if (!layers.length) redirectWith(nextPath, "error", "Voeg minimaal één geldige laag toe.");
   const admin = createAdminClient();
+  const imageAssetIds = [...new Set(layers.flatMap((layer) => layer.type === "image" && layer.assetId ? [layer.assetId] : []))];
+  if (imageAssetIds.length) {
+    const assets = await admin
+      .from("badge_studio_assets")
+      .select("id")
+      .is("tenant_id", null)
+      .eq("status", "active")
+      .in("id", imageAssetIds);
+    if (assets.error || (assets.data ?? []).length !== imageAssetIds.length) {
+      redirectWith(nextPath, "error", "Een gebruikte afbeelding is niet meer beschikbaar.");
+    }
+  }
   const { error } = await admin.from("badge_share_templates").update({
     format,
     layers_json: layers,
@@ -318,6 +331,71 @@ export async function saveBadgeTemplateAction(formData: FormData) {
   if (error) redirectWith(nextPath, "error", error.message);
   revalidateBadgePaths();
   redirectWith(nextPath, "success", "Sharetemplate opgeslagen.");
+}
+
+export async function uploadBadgeStudioAssetAction(formData: FormData): Promise<{
+  asset?: BadgeStudioAsset;
+  message: string;
+  ok: boolean;
+}> {
+  const context = await requirePrivateShellContext("/platform/badges/share-templates");
+  if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) {
+    return { message: "Geen recht om studio-afbeeldingen toe te voegen.", ok: false };
+  }
+  const file = formData.get("image");
+  if (!(file instanceof File) || file.size === 0) {
+    return { message: "Kies eerst een JPEG- of PNG-afbeelding.", ok: false };
+  }
+
+  const assetId = crypto.randomUUID();
+  const admin = createAdminClient();
+  let uploaded: Awaited<ReturnType<typeof uploadBadgeStudioAssetFile>> | null = null;
+
+  try {
+    uploaded = await uploadBadgeStudioAssetFile({ assetId, file });
+    const name = (readOptional(formData, "name", 120) ?? file.name.replace(/\.[^.]+$/, "")).trim().slice(0, 120) || "Afbeelding";
+    const signed = await admin.storage.from(uploaded.storageBucket).createSignedUrl(uploaded.filePath, 60 * 60);
+    if (signed.error || !signed.data?.signedUrl) {
+      throw new Error("De afbeelding kon niet veilig worden voorbereid.");
+    }
+    const { error } = await admin.from("badge_studio_assets").insert({
+      id: assetId,
+      tenant_id: null,
+      name,
+      storage_bucket: uploaded.storageBucket,
+      storage_path: uploaded.filePath,
+      mime_type: uploaded.mimeType,
+      size_bytes: uploaded.sizeBytes,
+      sha256: uploaded.scan.sha256,
+      malware_scan_status: uploaded.scan.status,
+      status: "active",
+      uploaded_by_user_id: context.user.id
+    });
+    if (error) throw new Error("De afbeelding kon niet in de bibliotheek worden opgeslagen.");
+    const storedUpload = uploaded;
+    uploaded = null;
+
+    revalidatePath("/platform/badges/share-templates");
+    return {
+      asset: {
+        id: assetId,
+        mimeType: storedUpload.mimeType as BadgeStudioAsset["mimeType"],
+        name,
+        signedUrl: signed.data.signedUrl,
+        sizeBytes: storedUpload.sizeBytes
+      },
+      message: "Afbeelding toegevoegd aan de bibliotheek.",
+      ok: true
+    };
+  } catch (error) {
+    if (uploaded) {
+      await admin.storage.from(uploaded.storageBucket).remove([uploaded.filePath]);
+    }
+    return {
+      message: error instanceof Error ? error.message : "De afbeelding kon niet worden toegevoegd.",
+      ok: false
+    };
+  }
 }
 
 export async function saveParentBadgePreferencesAction(formData: FormData) {

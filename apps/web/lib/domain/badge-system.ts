@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { BadgeStudioAsset } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
 
 export async function getPlatformBadgeData() {
@@ -161,10 +162,29 @@ export async function getParentBadgeWallData() {
 
 export async function getBadgeEditorData(templateId?: string) {
   const data = await getPlatformBadgeData();
+  const admin = createAdminClient();
+  const assetsResult = await admin
+    .from("badge_studio_assets")
+    .select("id, name, storage_bucket, storage_path, mime_type, size_bytes")
+    .is("tenant_id", null)
+    .eq("status", "active")
+    .order("created_at", { ascending: false });
+  assertResults([["badge studio assets", assetsResult.error]]);
+  const assets = (await Promise.all((assetsResult.data ?? []).map(async (asset): Promise<BadgeStudioAsset | null> => {
+    const signed = await admin.storage.from(asset.storage_bucket).createSignedUrl(asset.storage_path, 60 * 60);
+    if (signed.error || !signed.data?.signedUrl) return null;
+    return {
+      id: asset.id,
+      mimeType: asset.mime_type as BadgeStudioAsset["mimeType"],
+      name: asset.name,
+      signedUrl: signed.data.signedUrl,
+      sizeBytes: Number(asset.size_bytes)
+    };
+  }))).filter((asset): asset is BadgeStudioAsset => asset !== null);
   const selected = templateId
     ? data.templates.find((template) => template.id === templateId)
     : data.templates.find((template) => template.format === "square") ?? data.templates[0];
-  return { ...data, selected };
+  return { ...data, assets, selected };
 }
 
 function assertResults(results: Array<[string, { message: string } | null]>) {

@@ -6,6 +6,15 @@ const migration = readFileSync(
   new URL("../../supabase/migrations/20260727180000_premium_badges.sql", import.meta.url),
   "utf8"
 );
+const imageAssetMigration = readFileSync(
+  new URL("../../supabase/migrations/20260728100000_badge_studio_image_assets.sql", import.meta.url),
+  "utf8"
+);
+const badgeActions = readFileSync(
+  new URL("../../apps/web/lib/domain/badge-system-actions.ts", import.meta.url),
+  "utf8"
+);
+const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
 
 const tenantTables = [
   "tenant_badge_module_settings",
@@ -95,4 +104,22 @@ test("shareformats zijn laag-gebaseerd, versieerbaar en privacyveilig voorbereid
   assert.match(migration, /version integer not null default 1/);
   assert.match(migration, /share_first_name_only boolean not null default true/);
   assert.match(migration, /status in \('queued', 'generating', 'generated', 'failed'\)/);
+});
+
+test("studio-afbeeldingen zijn privé, gescand, begrensd en RLS-beveiligd", () => {
+  assert.match(imageAssetMigration, /create table public\.badge_studio_assets/);
+  assert.match(imageAssetMigration, /tenant_id uuid references public\.tenants/);
+  assert.match(imageAssetMigration, /mime_type in \('image\/jpeg', 'image\/png'\)/);
+  assert.match(imageAssetMigration, /size_bytes > 0 and size_bytes <= 5242880/);
+  assert.match(imageAssetMigration, /alter table public\.badge_studio_assets enable row level security/);
+  assert.match(imageAssetMigration, /alter table public\.badge_studio_assets force row level security/);
+  assert.match(imageAssetMigration, /'badge-studio-assets',[\s\S]+'badge-studio-assets',[\s\S]+false/);
+  assert.doesNotMatch(imageAssetMigration, /badge-studio-assets[\s\S]+storage\.objects[\s\S]+create policy/i);
+  assert.match(badgeActions, /uploadBadgeStudioAssetFile/);
+  assert.match(badgeActions, /platform_owner.*platform_admin/);
+});
+
+test("studio-afbeeldingen vallen onder de objectbackup en herstelrehearsal", () => {
+  assert.match(backupScript, /tenant-documents,diploma-vault,participant-media,badge-studio-assets/);
+  assert.match(backupScript, /badge-studio-assets/);
 });
