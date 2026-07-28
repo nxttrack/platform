@@ -29,6 +29,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin", label: "Dashboard", icon: "home" },
   { href: "/admin/agenda", label: "Planbord", icon: "calendar", section: "Planning" },
   { href: "/admin/inhaalmarkt", label: "Inhaalmarkt", icon: "refresh", section: "Planning" },
+  { href: "/admin/plekherstel", label: "Vrije plekken", icon: "trending", section: "Planning" },
   { href: "/admin/groepen", label: "Groepen", icon: "users", section: "Planning" },
   { href: "/admin/resources", label: "Resources", icon: "location", section: "Planning" },
   { href: "/admin/intake", label: "Intake", icon: "inbox", section: "Leerlingen" },
