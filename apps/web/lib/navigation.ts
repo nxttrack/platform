@@ -46,6 +46,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/templates", label: "Templates", icon: "file", section: "Communicatie" },
   { href: "/admin/communicatie-instellingen", label: "Instellingen", icon: "settings", section: "Communicatie" },
   { href: "/admin/taken", label: "Taken", icon: "tasks", section: "Communicatie" },
+  { href: "/admin/crm", label: "CRM-pipeline", icon: "userPlus", section: "Relaties" },
   { href: "/admin/opvolging", label: "Opvolgen", icon: "userPlus", section: "Communicatie" },
   { href: "/admin/website", label: "Website", icon: "globe", section: "Communicatie" },
   { href: "/admin/betalingen", label: "Betalingen", icon: "card", section: "Financieel" },
