@@ -210,7 +210,7 @@ export async function getInstructorData(): Promise<InstructorData> {
   since.setDate(since.getDate() - 7);
   until.setDate(until.getDate() + 30);
 
-  const [groupAssignmentsResult, sessionAssignmentsResult, groupsResult, sessionsResult, notificationsResult] = await Promise.all([
+  const [groupAssignmentsResult, sessionAssignmentsResult, groupsResult, sessionsResult, notificationsResult, absencesResult] = await Promise.all([
     canManageTenant
       ? admin.from("group_instructor_assignments").select("id, group_id, instructor_user_id, role, status").eq("tenant_id", tenant.id).eq("status", "active")
       : admin.from("group_instructor_assignments").select("id, group_id, instructor_user_id, role, status").eq("tenant_id", tenant.id).eq("instructor_user_id", context.user.id).eq("status", "active"),
@@ -235,7 +235,10 @@ export async function getInstructorData(): Promise<InstructorData> {
       .eq("tenant_id", tenant.id)
       .eq("recipient_user_id", context.user.id)
       .order("created_at", { ascending: false })
-      .limit(20)
+      .limit(20),
+    canManageTenant
+      ? admin.from("instructor_absences").select("session_id, instructor_user_id, status").eq("tenant_id", tenant.id).in("status", ["reported", "reviewing", "covered"])
+      : admin.from("instructor_absences").select("session_id, instructor_user_id, status").eq("tenant_id", tenant.id).eq("instructor_user_id", context.user.id).in("status", ["reported", "reviewing", "covered"])
   ]);
 
   assertInstructorResult(groupAssignmentsResult.error, "group instructor assignments");
@@ -243,12 +246,16 @@ export async function getInstructorData(): Promise<InstructorData> {
   assertInstructorResult(groupsResult.error, "groups");
   assertInstructorResult(sessionsResult.error, "sessions");
   assertInstructorResult(notificationsResult.error, "notifications");
+  assertInstructorResult(absencesResult.error, "instructor absences");
 
   const groupAssignments = (groupAssignmentsResult.data ?? []) as InstructorAssignmentRow[];
   const sessionAssignments = (sessionAssignmentsResult.data ?? []) as SessionInstructorAssignmentRow[];
   const assignedGroupIds = new Set(groupAssignments.map((assignment) => assignment.group_id));
   const assignedSessionIds = new Set(sessionAssignments.map((assignment) => assignment.session_id));
-  const sessions = ((sessionsResult.data ?? []) as SessionRow[]).filter((session) => canManageTenant || assignedGroupIds.has(session.group_id) || assignedSessionIds.has(session.id));
+  const absentSessionIds = new Set((absencesResult.data ?? []).filter((absence) => absence.instructor_user_id === context.user.id).map((absence) => absence.session_id));
+  const sessions = ((sessionsResult.data ?? []) as SessionRow[]).filter((session) =>
+    canManageTenant || (!absentSessionIds.has(session.id) && (assignedGroupIds.has(session.group_id) || assignedSessionIds.has(session.id)))
+  );
   const visibleGroupIds = new Set([...sessions.map((session) => session.group_id), ...assignedGroupIds]);
   const groups = ((groupsResult.data ?? []) as GroupRow[]).filter((group) => canManageTenant || visibleGroupIds.has(group.id));
   const groupIds = groups.map((group) => group.id);

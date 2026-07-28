@@ -31,6 +31,12 @@ export type CatchUpRequestRow = {
   admin_notes: string | null;
 };
 
+export type InstructorAbsenceRow = {
+  session_id: string;
+  instructor_user_id: string;
+  status: string;
+};
+
 export type PlanningSessionInsight = {
   session: SessionRow;
   group: GroupRow | null;
@@ -62,6 +68,7 @@ export type PlanningDay = {
 export type PlanningData = TenantCoreData & {
   availability: InstructorAvailabilityRow[];
   catchUpRequests: CatchUpRequestRow[];
+  instructorAbsences: InstructorAbsenceRow[];
   conflicts: PlanningConflict[];
   dayPlan: PlanningDay[];
   sessionInsights: PlanningSessionInsight[];
@@ -72,7 +79,7 @@ const planningStatuses = new Set(["draft", "scheduled"]);
 export async function getPlanningData(): Promise<PlanningData> {
   const core = await getTenantCoreData();
   const admin = createAdminClient();
-  const [availabilityResult, catchUpResult] = await Promise.all([
+  const [availabilityResult, catchUpResult, absencesResult] = await Promise.all([
     admin
       .from("instructor_availability")
       .select("id, instructor_user_id, weekday, starts_at, ends_at, availability_type, status, starts_on, ends_on, notes")
@@ -84,34 +91,46 @@ export async function getPlanningData(): Promise<PlanningData> {
       .from("catch_up_requests")
       .select("id, credit_id, participant_id, enrollment_id, requested_by_user_id, preferred_session_id, assigned_session_id, status, requested_at, decided_at, decided_by_user_id, admin_notes")
       .eq("tenant_id", core.tenant.id)
-      .order("requested_at", { ascending: false })
+      .order("requested_at", { ascending: false }),
+    admin
+      .from("instructor_absences")
+      .select("session_id, instructor_user_id, status")
+      .eq("tenant_id", core.tenant.id)
+      .in("status", ["reported", "reviewing", "covered"])
   ]);
 
   assertPlanningResult(availabilityResult.error, "instructor availability");
   assertPlanningResult(catchUpResult.error, "catch-up requests");
+  assertPlanningResult(absencesResult.error, "instructor absences");
 
   const availability = (availabilityResult.data ?? []) as InstructorAvailabilityRow[];
   const catchUpRequests = (catchUpResult.data ?? []) as CatchUpRequestRow[];
-  const sessionInsights = buildSessionInsights(core, catchUpRequests);
-  const conflicts = buildPlanningConflicts(core, availability, catchUpRequests, sessionInsights);
+  const instructorAbsences = (absencesResult.data ?? []) as InstructorAbsenceRow[];
+  const sessionInsights = buildSessionInsights(core, catchUpRequests, instructorAbsences);
+  const conflicts = buildPlanningConflicts(core, availability, catchUpRequests, sessionInsights, instructorAbsences);
 
   return {
     ...core,
     availability,
     catchUpRequests,
+    instructorAbsences,
     conflicts,
     dayPlan: buildDayPlan(sessionInsights),
     sessionInsights
   };
 }
 
-export function buildSessionInsights(core: TenantCoreData, catchUpRequests: readonly CatchUpRequestRow[]): PlanningSessionInsight[] {
+export function buildSessionInsights(
+  core: TenantCoreData,
+  catchUpRequests: readonly CatchUpRequestRow[],
+  instructorAbsences: readonly InstructorAbsenceRow[] = []
+): PlanningSessionInsight[] {
   const groupById = new Map(core.groups.map((group) => [group.id, group]));
   const resourceById = new Map(core.resources.map((resource) => [resource.id, resource]));
   const membershipWeightByGroup = new Map<string, number>();
   const catchUpHoldsBySession = new Map<string, number>();
   const instructorNameById = new Map(core.instructors.map((instructor) => [instructor.userId, instructor.label]));
-  const sessionInstructorIds = buildSessionInstructorMap(core);
+  const sessionInstructorIds = buildSessionInstructorMap(core, instructorAbsences);
 
   for (const membership of core.groupMemberships) {
     if (membership.status !== "active" && membership.status !== "trial") {
@@ -160,12 +179,18 @@ export function buildSessionInsights(core: TenantCoreData, catchUpRequests: read
     .sort((a, b) => new Date(a.session.starts_at).getTime() - new Date(b.session.starts_at).getTime());
 }
 
-function buildPlanningConflicts(core: TenantCoreData, availability: readonly InstructorAvailabilityRow[], catchUpRequests: readonly CatchUpRequestRow[], insights: readonly PlanningSessionInsight[]) {
+function buildPlanningConflicts(
+  core: TenantCoreData,
+  availability: readonly InstructorAvailabilityRow[],
+  catchUpRequests: readonly CatchUpRequestRow[],
+  insights: readonly PlanningSessionInsight[],
+  instructorAbsences: readonly InstructorAbsenceRow[] = []
+) {
   const conflicts: PlanningConflict[] = [];
   const resourceById = new Map(core.resources.map((resource) => [resource.id, resource]));
   const groupById = new Map(core.groups.map((group) => [group.id, group]));
   const sessionById = new Map(core.sessions.map((session) => [session.id, session]));
-  const sessionInstructorIds = buildSessionInstructorMap(core);
+  const sessionInstructorIds = buildSessionInstructorMap(core, instructorAbsences);
   const instructorNameById = new Map(core.instructors.map((instructor) => [instructor.userId, instructor.label]));
   const activeSessions = core.sessions.filter((session) => planningStatuses.has(session.status));
 
@@ -309,9 +334,10 @@ function buildDayPlan(insights: readonly PlanningSessionInsight[]) {
     }));
 }
 
-function buildSessionInstructorMap(core: TenantCoreData) {
+function buildSessionInstructorMap(core: TenantCoreData, instructorAbsences: readonly InstructorAbsenceRow[] = []) {
   const bySession = new Map<string, Set<string>>();
   const sessionsByGroup = new Map<string, SessionRow[]>();
+  const absentPairs = new Set(instructorAbsences.map((row) => `${row.session_id}:${row.instructor_user_id}`));
 
   for (const session of core.sessions) {
     const items = sessionsByGroup.get(session.group_id) ?? [];
@@ -325,12 +351,14 @@ function buildSessionInstructorMap(core: TenantCoreData) {
     }
 
     for (const session of sessionsByGroup.get(assignment.group_id) ?? []) {
-      addMapSet(bySession, session.id, assignment.instructor_user_id);
+      if (!absentPairs.has(`${session.id}:${assignment.instructor_user_id}`)) {
+        addMapSet(bySession, session.id, assignment.instructor_user_id);
+      }
     }
   }
 
   for (const assignment of core.sessionInstructorAssignments) {
-    if (assignment.status === "active") {
+    if (assignment.status === "active" && !absentPairs.has(`${assignment.session_id}:${assignment.instructor_user_id}`)) {
       addMapSet(bySession, assignment.session_id, assignment.instructor_user_id);
     }
   }
