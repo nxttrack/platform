@@ -39,6 +39,7 @@ export async function getDailyOperationalCockpit(tenantId: string): Promise<Dail
     threadsResult,
     mediaResult,
     automationResult,
+    attentionResult,
     statesResult
   ] = await Promise.all([
     admin.from("intake_submissions")
@@ -104,6 +105,14 @@ export async function getDailyOperationalCockpit(tenantId: string): Promise<Dail
       .gte("completed_at", yesterday.toISOString())
       .order("completed_at", { ascending: false })
       .limit(40),
+    admin.from("participant_attention_signals")
+      .select("id, participant_id, attention_level, title, summary, reasons_json, recommended_action, source_fingerprint, expires_at, status, is_test")
+      .eq("tenant_id", tenantId)
+      .eq("is_test", false)
+      .in("status", ["open", "reviewed"])
+      .gt("expires_at", now.toISOString())
+      .order("last_observed_at", { ascending: false })
+      .limit(40),
     admin.from("operational_signal_states")
       .select("id, signal_key, source_fingerprint, status, snoozed_until, assigned_to_user_id")
       .eq("tenant_id", tenantId)
@@ -119,6 +128,7 @@ export async function getDailyOperationalCockpit(tenantId: string): Promise<Dail
     ["parent questions", threadsResult],
     ["expiring media", mediaResult],
     ["automation failures", automationResult],
+    ["attention signals", attentionResult],
     ["signal states", statesResult]
   ] as const) assertResult(result.error, label);
 
@@ -144,8 +154,11 @@ export async function getDailyOperationalCockpit(tenantId: string): Promise<Dail
     sessionIds.length
       ? admin.from("session_attendance").select("session_id").eq("tenant_id", tenantId).in("session_id", sessionIds)
       : Promise.resolve(emptyResult()),
-    (mediaResult.data ?? []).length
-      ? admin.from("participants").select("id, display_name").eq("tenant_id", tenantId).in("id", [...new Set((mediaResult.data ?? []).map((row) => row.participant_id))])
+    (mediaResult.data ?? []).length || (attentionResult.data ?? []).length
+      ? admin.from("participants").select("id, display_name").eq("tenant_id", tenantId).in("id", [...new Set([
+          ...(mediaResult.data ?? []).map((row) => row.participant_id),
+          ...(attentionResult.data ?? []).map((row) => row.participant_id)
+        ])])
       : Promise.resolve(emptyResult())
   ]);
   for (const [label, result] of [
@@ -328,6 +341,23 @@ export async function getDailyOperationalCockpit(tenantId: string): Promise<Dail
       dueAt: run.completed_at,
       href: "/admin/automatisering",
       actionLabel: "Open runlog"
+    }));
+  }
+
+  for (const attention of attentionResult.data ?? []) {
+    signals.push(createSignal({
+      key: `attention:${attention.id}`,
+      type: "retention_risk",
+      entityType: "participant",
+      entityId: attention.participant_id,
+      title: attention.title,
+      summary: attention.summary,
+      evidence: [...toStringArray(attention.reasons_json).slice(0, 3), attention.recommended_action],
+      priority: attention.attention_level === "priority_contact" ? "high" : attention.attention_level === "contact_suggested" ? "medium" : "low",
+      dueAt: attention.expires_at,
+      href: "/admin/aandacht",
+      actionLabel: `Open aandacht voor ${participantNames.get(attention.participant_id) ?? "leerling"}`,
+      fingerprint: attention.source_fingerprint
     }));
   }
 
