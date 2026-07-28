@@ -2,6 +2,7 @@ import { ArrowRight, CheckCircle2, Sparkles, Waves } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 type LinkTarget = {
   href: string;
@@ -15,7 +16,8 @@ export function PageHero({
   primary,
   secondary,
   visual,
-  chips
+  chips,
+  className
 }: {
   kicker: string;
   title: string;
@@ -24,9 +26,10 @@ export function PageHero({
   secondary?: LinkTarget;
   visual?: ReactNode;
   chips?: string[];
+  className?: string;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-border bg-gradient-to-b from-slate-50 to-white">
+    <section className={cn("relative overflow-hidden border-b border-border bg-gradient-to-b from-slate-50 to-white", className)}>
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div className="absolute -top-40 left-1/3 h-[520px] w-[1000px] -translate-x-1/2 rounded-full bg-gradient-to-br from-blue-100 via-sky-50 to-transparent blur-3xl" />
         <div className="absolute -right-20 top-32 h-72 w-72 rounded-full bg-[#B6FF2E]/25 blur-3xl" />

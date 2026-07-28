@@ -71,7 +71,9 @@ test.describe("Communicationhub and Badge Studio", () => {
       ["/admin/notificaties", "Notificaties"],
       ["/admin/nieuwsbrieven", "Nieuwsbrieven"],
       ["/admin/templates", "Templates"],
-      ["/admin/communicatie-instellingen", "Instellingen"]
+      ["/admin/communicatie-instellingen", "Instellingen"],
+      ["/admin/website", "Websitepagina’s"],
+      ["/admin/inhaalmarkt", "Inhaalmarkt"]
     ] as const) {
       await page.goto(route[0], { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { level: 1 })).toContainText(route[1]);

@@ -1,10 +1,17 @@
 import { ArrowRight, Clock, ListChecks, Waves } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/public-site";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const data = await getPublicTenantSiteData();
+  const page = data?.pages.programs;
+  return page ? { description: page.seoDescription, title: page.seoTitle } : {};
+}
 
 export default async function ProgramsPage() {
   const [data, slug] = await Promise.all([getPublicTenantSiteData(), getTenantSlugFromRequest()]);
@@ -12,14 +19,21 @@ export default async function ProgramsPage() {
   if (!slug || !data) {
     return <Unavailable />;
   }
+  const page = data.pages.programs;
+  if (page.status === "hidden") {
+    return <Unavailable hidden />;
+  }
 
   return (
     <main>
-      <section className="bg-card px-4 py-12">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-xs font-semibold uppercase tracking-wider text-primary">{data.tenant.name}</p>
-          <h1 className="mt-2 text-4xl font-bold text-foreground md:text-5xl">Programma's</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">Bekijk beschikbare zwemprogramma's en kies meteen of je wilt inschrijven, een proefles wilt plannen, op de wachtlijst wilt of eerst informatie wilt ontvangen.</p>
+      <section className={`px-4 py-12 ${themeClass(page.theme)}`}>
+        <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">{page.eyebrow}</p>
+            <h1 className="mt-2 text-4xl font-bold text-foreground md:text-5xl">{page.title}</h1>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{page.intro}</p>
+          </div>
+          {page.primaryCtaHref && page.primaryCtaLabel ? <Link className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground" href={page.primaryCtaHref}>{page.primaryCtaLabel}<ArrowRight className="size-4" /></Link> : null}
         </div>
       </section>
 
@@ -74,13 +88,19 @@ function InfoCard({ icon, title, text }: { icon: ReactNode; title: string; text:
   );
 }
 
-function Unavailable() {
+function Unavailable({ hidden = false }: { hidden?: boolean }) {
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
       <section className="max-w-lg rounded-xl border border-border bg-card p-6 text-center shadow-card">
-        <h1 className="text-2xl font-bold text-foreground">Programma's niet beschikbaar</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Open deze pagina via een tenant-subdomain.</p>
+        <h1 className="text-2xl font-bold text-foreground">Programma&apos;s niet beschikbaar</h1>
+        <p className="mt-2 text-sm text-muted-foreground">{hidden ? "Deze pagina is tijdelijk verborgen door de zwemschool." : "Open deze pagina via een tenant-subdomain."}</p>
       </section>
     </main>
   );
+}
+
+function themeClass(theme: string) {
+  if (theme === "navy") return "bg-gradient-to-br from-slate-950 to-blue-950 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-white/70";
+  if (theme === "water") return "bg-gradient-to-br from-aqua-soft via-white to-primary/10";
+  return "bg-card";
 }

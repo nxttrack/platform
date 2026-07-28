@@ -72,7 +72,8 @@ const tenantScopedTables = parseTableList(
       "badge_collections",
       "badge_share_template_sets",
       "badge_share_assets",
-      "badge_analytics_events"
+      "badge_analytics_events",
+      "tenant_site_pages"
     ].join(",")
 );
 

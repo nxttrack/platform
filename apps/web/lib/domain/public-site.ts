@@ -10,6 +10,13 @@ import {
 } from "./intake-recommendation-contract";
 import { summarizeGroupCapacity, type GroupMembershipRow, type GroupRow, type ProgramRow, type ProgramStageRow } from "./core";
 import { calculateWaitTimeBands } from "./wait-time";
+import {
+  getDefaultTenantSitePages,
+  normalizeTenantSitePage,
+  tenantSitePageKeys,
+  type TenantSitePageContent,
+  type TenantSitePageKey
+} from "./site-page-contract";
 
 export type IntakeOption = "enrollment" | "trial" | "waitlist" | "information_request";
 
@@ -52,6 +59,7 @@ export type PublicTenantSiteData = {
   analyticsMeasurementId: string | null;
   programs: PublicProgram[];
   defaultForm: PublicIntakeForm;
+  pages: Record<TenantSitePageKey, TenantSitePageContent>;
 };
 
 type IntakeFormRow = {
@@ -108,7 +116,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   }
 
   const tenant = tenantResult.data as PublicTenant;
-  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult, settingsResult] = await Promise.all([
+  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult, settingsResult, sitePagesResult] = await Promise.all([
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("program_stages").select("id, program_id, name, code, badge_label, color_hex, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("groups").select("id, program_id, stage_id, default_resource_id, name, code, status, capacity, default_weekday, default_start_time, default_end_time").eq("tenant_id", tenant.id).eq("status", "active"),
@@ -129,7 +137,11 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       .from("tenant_settings")
       .select("analytics_enabled, google_analytics_measurement_id")
       .eq("tenant_id", tenant.id)
-      .maybeSingle()
+      .maybeSingle(),
+    admin
+      .from("tenant_site_pages")
+      .select("page_key, eyebrow, title, intro, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, seo_title, seo_description, theme, status")
+      .eq("tenant_id", tenant.id)
   ]);
 
   assertPublicResult(programsResult.error, "programs");
@@ -140,6 +152,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   assertPublicResult(formsResult.error, "intake forms");
   assertPublicResult(questionsResult.error, "intake questions");
   assertPublicResult(settingsResult.error, "analytics settings");
+  assertPublicResult(sitePagesResult.error, "website pages");
 
   const programs = (programsResult.data ?? []) as ProgramRow[];
   const stages = (stagesResult.data ?? []) as ProgramStageRow[];
@@ -149,6 +162,14 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   const forms = (formsResult.data ?? []) as IntakeFormRow[];
   const questions = (questionsResult.data ?? []) as IntakeQuestionRow[];
   const analyticsSettings = settingsResult.data as PublicAnalyticsSettingsRow | null;
+  const pageDefaults = getDefaultTenantSitePages(tenant.name);
+  const pages = Object.fromEntries(tenantSitePageKeys.map((key) => [
+    key,
+    normalizeTenantSitePage(
+      (sitePagesResult.data ?? []).find((page) => page.page_key === key) as Record<string, unknown> | undefined,
+      pageDefaults[key]
+    )
+  ])) as Record<TenantSitePageKey, TenantSitePageContent>;
   const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
   const formsByProgramId = new Map(forms.filter((form) => form.program_id).map((form) => [form.program_id as string, normalizeForm(form, questions)]));
   const defaultForm = normalizeForm(forms.find((form) => !form.program_id) ?? null, questions);
@@ -175,6 +196,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
     tenant,
     analyticsMeasurementId: analyticsSettings?.analytics_enabled ? analyticsSettings.google_analytics_measurement_id : null,
     defaultForm,
+    pages,
     programs: programs.map((program) => {
       const programGroups = groups.filter((group) => group.program_id === program.id);
       const programStages = stages.filter((stage) => stage.program_id === program.id);
