@@ -155,10 +155,12 @@ export async function saveTenantBrandingAction(formData: FormData) {
   const primaryColor = readColor(formData, "primaryColor", "#1d4ed8");
   const accentColor = readColor(formData, "accentColor", "#06b6d4");
   const admin = createAdminClient();
+  const logoUrl = readOptional(formData, "logoUrl");
+  if (logoUrl && !isSafeHttpsUrl(logoUrl)) redirect("/admin/branding?error=logo");
   const { error } = await admin.from("tenant_branding").upsert({
     tenant_id: tenant.id,
     product_name: readOptional(formData, "productName"),
-    logo_url: readOptional(formData, "logoUrl"),
+    logo_url: logoUrl,
     primary_color: primaryColor,
     accent_color: accentColor,
     email_from_name: readOptional(formData, "emailFromName"),
@@ -210,6 +212,14 @@ function readRequired(formData: FormData, field: string) {
 function readOptional(formData: FormData, field: string) { return String(formData.get(field) ?? "").trim() || null; }
 function readEnum(formData: FormData, field: string, values: Set<string>) { const value = readRequired(formData, field); if (!values.has(value)) throw new Error(`${field} is invalid`); return value; }
 function readColor(formData: FormData, field: string, fallback: string) { const value = String(formData.get(field) ?? fallback); return /^#[0-9a-f]{6}$/i.test(value) ? value : fallback; }
+function isSafeHttpsUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password && value.length <= 2000;
+  } catch {
+    return false;
+  }
+}
 function normalizeHeader(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
 function getCanonicalFields(importType: string) {
   const fields: Record<string, string[]> = {
