@@ -67,7 +67,9 @@ export const adminNav: NavItem[] = [
   { href: "/admin/automatisering/datakwaliteit", label: "Datakwaliteit", icon: "shield", section: "Automatisering" },
   { href: "/admin/branding", label: "Branding", icon: "palette", section: "Beheer" },
   { href: "/admin/instellingen", label: "Instellingen", icon: "settings", section: "Beheer" },
-  { href: "/admin/importeren", label: "Importeren", icon: "upload", section: "Beheer" }
+  { href: "/admin/importeren", label: "Importeren", icon: "upload", section: "Beheer" },
+  { href: "/admin/audit", label: "Audit Explorer", icon: "shield", section: "Beheer" },
+  { href: "/admin/support", label: "Supporttoegang", icon: "userPlus", section: "Beheer" }
 ];
 
 export const platformNav: NavItem[] = [
@@ -77,5 +79,7 @@ export const platformNav: NavItem[] = [
   { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
   { href: "/platform/badges", label: "Badge Studio", icon: "award" },
+  { href: "/platform/audit", label: "Audit Explorer", icon: "shield" },
+  { href: "/platform/support", label: "Supporttoegang", icon: "userPlus" },
   { href: "/platform/instellingen", label: "Instellingen", icon: "settings" }
 ];

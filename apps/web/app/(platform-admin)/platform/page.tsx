@@ -1,9 +1,5 @@
 import {
   Activity,
-  AlertTriangle,
-  CheckCircle2,
-  CircleGauge,
-  Clock3,
   CloudCog,
   DatabaseBackup,
   HeartPulse,
@@ -11,22 +7,22 @@ import {
   Plus,
   ScanSearch,
   ShieldCheck,
-  Siren,
-  Users
+  Siren
 } from "lucide-react";
 import Link from "next/link";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
-import { AdminMetricCard } from "@/components/admin/admin-patterns";
 import { Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PlatformTenantsTable } from "@/components/admin/resource-tables";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { PersonalizablePlatformMetrics } from "@/components/platform/personalizable-metrics";
 import { ConfirmActionForm } from "@/components/ui/confirm-action-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createPlatformIncidentAction, resolvePlatformIncidentAction } from "@/lib/domain/platform-health-actions";
 import { getPlatformHealthDashboard } from "@/lib/domain/platform-health";
 import { cn } from "@/lib/utils";
+import { getDashboardWidgetPreferences } from "@/lib/ui/dashboard-preferences";
 
 type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
@@ -36,6 +32,12 @@ export default async function PlatformPage({ searchParams }: PageProps) {
   const context = await requirePrivateShellContext("/platform");
   const params = (await searchParams) ?? {};
   const data = await getPlatformHealthDashboard();
+  const widgetPreferences = await getDashboardWidgetPreferences({
+    dashboardKey: "platform_command_center",
+    defaults: ["organizations", "average_health", "healthy", "watch", "risk", "incidents"].map((key, position) => ({ key, position, visible: true, width: "small" as const })),
+    tenantId: null,
+    userId: context.user.id
+  });
   const query = getParam(params, "q");
   const canManage = context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin") ?? false;
   const priorityTenants = [...data.tenants]
@@ -65,14 +67,17 @@ export default async function PlatformPage({ searchParams }: PageProps) {
         success={successMessage(getParam(params, "saved"))}
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        <AdminMetricCard icon={Users} label="Organisaties" value={data.tenants.length} />
-        <AdminMetricCard icon={CircleGauge} label="Gem. health" tone={data.summary.averageScore >= 85 ? "success" : "warning"} value={`${data.summary.averageScore}/100`} />
-        <AdminMetricCard icon={CheckCircle2} label="Gezond" tone="success" value={data.summary.healthy} />
-        <AdminMetricCard icon={Clock3} label="Aandacht" tone={data.summary.watch ? "warning" : "neutral"} value={data.summary.watch} />
-        <AdminMetricCard icon={AlertTriangle} label="Risico" tone={data.summary.risk ? "danger" : "success"} value={data.summary.risk} />
-        <AdminMetricCard icon={Siren} label="Incidenten" tone={data.summary.openIncidents ? "danger" : "success"} value={data.summary.openIncidents} />
-      </div>
+      <PersonalizablePlatformMetrics initial={widgetPreferences.map((preference) => ({
+        ...preference,
+        ...({
+          organizations: { label: "Organisaties", value: data.tenants.length, tone: "neutral" as const },
+          average_health: { label: "Gem. health", value: `${data.summary.averageScore}/100`, tone: data.summary.averageScore >= 85 ? "success" as const : "warning" as const },
+          healthy: { label: "Gezond", value: data.summary.healthy, tone: "success" as const },
+          watch: { label: "Aandacht", value: data.summary.watch, tone: data.summary.watch ? "warning" as const : "neutral" as const },
+          risk: { label: "Risico", value: data.summary.risk, tone: data.summary.risk ? "danger" as const : "success" as const },
+          incidents: { label: "Incidenten", value: data.summary.openIncidents, tone: data.summary.openIncidents ? "danger" as const : "success" as const }
+        } as const)[preference.key as "organizations" | "average_health" | "healthy" | "watch" | "risk" | "incidents"]
+      }))} />
 
       <section className="overflow-hidden rounded-[1.75rem] border border-slate-800 bg-slate-950 text-white shadow-card">
         <div className="relative overflow-hidden px-5 py-6 md:px-7">
