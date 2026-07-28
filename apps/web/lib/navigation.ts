@@ -26,7 +26,7 @@ export const instructorNav: NavItem[] = [
 ];
 
 export const adminNav: NavItem[] = [
-  { href: "/admin", label: "Dashboard", icon: "home" },
+  { href: "/admin", label: "Vandaag belangrijk", icon: "home" },
   { href: "/admin/agenda", label: "Planbord", icon: "calendar", section: "Planning" },
   { href: "/admin/inhaalmarkt", label: "Inhaalmarkt", icon: "refresh", section: "Planning" },
   { href: "/admin/plekherstel", label: "Vrije plekken", icon: "trending", section: "Planning" },
