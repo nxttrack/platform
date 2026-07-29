@@ -7,6 +7,7 @@ const engagement = read("supabase/migrations/20260729180000_premium_engagement_f
 const governance = read("supabase/migrations/20260729190000_audit_support_and_dashboard_preferences.sql");
 const seasons = read("supabase/migrations/20260729200000_seasonal_planning.sql");
 const summaries = read("supabase/migrations/20260729210000_management_summary_drafts.sql");
+const entitlements = read("supabase/migrations/20260729220000_shadow_entitlements.sql");
 const pushSubscription = read("apps/web/app/api/push/subscription/route.ts");
 const pushTest = read("apps/web/app/api/push/test/route.ts");
 const diplomaRoute = read("apps/web/app/diploma-verificatie/[code]/page.tsx");
@@ -67,4 +68,37 @@ test("management summaries remain rule-based drafts behind the internal job gate
   assert.match(managementRoute, /INTERNAL_JOBS_ENABLED !== "true"/);
   assert.match(managementRoute, /hasValidCronSecret/);
   assert.match(managementRoute, /generateManagementSummaryDraft/);
+});
+
+test("commercial packages can only observe and never enforce access", () => {
+  for (const table of [
+    "platform_release_flags",
+    "platform_commercial_features",
+    "platform_package_catalog",
+    "platform_package_entitlements",
+    "platform_package_limits",
+    "tenant_package_assignments"
+  ]) {
+    assert.match(entitlements, new RegExp(`alter table public\\.${table} force row level security`));
+  }
+  assert.match(entitlements, /tenant_package_assignments_shadow_only_check check \(evaluation_mode = 'shadow'\)/);
+  assert.match(entitlements, /is_legacy_full_access boolean not null default false/);
+  assert.match(entitlements, /tenants_assign_default_shadow_package/);
+  assert.match(entitlements, /where package\.key = 'legacy_full_access'/);
+  assert.doesNotMatch(entitlements, /\bprice\b|\bamount_cents\b|\bcurrency\b/i);
+  assert.doesNotMatch(entitlements, /evaluation_mode in \([^)]*enforc/i);
+});
+
+test("technical release flags stay separate from commercial entitlements", () => {
+  assert.match(entitlements, /create table public\.platform_release_flags/);
+  assert.match(entitlements, /create table public\.platform_commercial_features/);
+  assert.doesNotMatch(
+    entitlements.match(/create table public\.platform_release_flags[\s\S]+?\n\);/)?.[0] ?? "",
+    /package_id|feature_key|soft_limit/
+  );
+  assert.match(entitlements, /Only draft simulation packages are editable/);
+  assert.doesNotMatch(
+    entitlements,
+    /grant execute on function app_private\.replace_shadow_package_configuration[^;]+authenticated/
+  );
 });
