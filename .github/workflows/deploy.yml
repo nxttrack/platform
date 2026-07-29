@@ -505,6 +505,11 @@ jobs:
           BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
         run: pnpm run test:communication-badges:e2e
 
+      - name: Premium release browser validation
+        env:
+          PREMIUM_RELEASE_BROWSER_ENABLED: "true"
+        run: pnpm run test:premium-release:e2e
+
       - name: Capture Priority A staging visual evidence
         run: pnpm run design:capture-production
 
