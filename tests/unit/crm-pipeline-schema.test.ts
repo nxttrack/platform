@@ -40,3 +40,8 @@ test("CRM mutations require service role and preserve human decision boundaries"
   assert.match(migration, /revoke all on function public\.update_crm_lead[\s\S]+from public, anon, authenticated/);
   assert.match(migration, /grant execute on function public\.record_crm_contact[\s\S]+to service_role/);
 });
+
+test("CRM merge foreign key uses valid PostgreSQL delete syntax", () => {
+  assert.match(migration, /intake_submissions_merge_fk[\s\S]+on delete restrict;/);
+  assert.doesNotMatch(migration, /on delete restrict\s*\(/);
+});
