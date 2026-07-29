@@ -2,9 +2,12 @@ import { AlertTriangle, CheckCircle2, Clock3, Radar, Sparkles } from "lucide-rea
 
 import { AdminMetricCard } from "@/components/admin/admin-patterns";
 import { DailyOperationalCockpit } from "@/components/admin/daily-operational-cockpit";
+import { CapacityChart, StatusDonutChart } from "@/components/admin/operational-charts";
 import { PageHeader } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { buildAdminChartData } from "@/lib/domain/admin-chart-data";
+import { getAdminOperationsData } from "@/lib/domain/admin-operations";
 import { getActiveTenant } from "@/lib/domain/core";
 import { getDailyOperationalCockpit } from "@/lib/domain/operational-cockpit";
 
@@ -18,7 +21,11 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
   const context = await requirePrivateShellContext("/admin");
   const tenant = getActiveTenant(context);
   const params = (await searchParams) ?? {};
-  const data = await getDailyOperationalCockpit(tenant.id);
+  const [data, operations] = await Promise.all([
+    getDailyOperationalCockpit(tenant.id),
+    getAdminOperationsData()
+  ]);
+  const charts = buildAdminChartData(operations);
   const filter = getParam(params, "filter") ?? "all";
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
@@ -38,6 +45,17 @@ export default async function AdminHomePage({ searchParams }: PageProps) {
         <AdminMetricCard icon={Sparkles} label="Kritieke signalen" tone={data.metrics.critical ? "danger" : "success"} value={data.metrics.critical} />
         <AdminMetricCard icon={CheckCircle2} label="Gezien" tone="success" value={data.metrics.acknowledged} />
       </div>
+      <section aria-labelledby="operational-overview-title" className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+        <div className="mb-4">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">Operationele context</p>
+          <h2 className="mt-1 text-xl font-bold" id="operational-overview-title">Capaciteit en instroom vandaag</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Werkelijke tenantdata naast de geprioriteerde signalen. Iedere visualisatie heeft een toegankelijke tabelweergave.</p>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">
+          <div className="rounded-xl border border-border bg-muted/20 p-4"><CapacityChart data={charts.capacity} /></div>
+          <div className="rounded-xl border border-border bg-muted/20 p-4"><StatusDonutChart data={charts.intake} title="Intakestatus" description="Actuele verdeling van alle intake-aanvragen." /></div>
+        </div>
+      </section>
       <DailyOperationalCockpit filter={filter} generatedAt={data.generatedAt} signals={data.signals} />
     </div>
   );
