@@ -30,6 +30,7 @@
     "release:audit-premium": "node scripts/release/audit-premium-productization.mjs",
     "release:audit-sprint31": "node scripts/release/audit-sprint31.mjs",
     "release:audit-journey-bot": "node scripts/release/audit-journey-bot.mjs",
+    "release:audit-runtime-env": "node scripts/release/audit-runtime-environment-contract.mjs",
     "release:create-go-no-go": "node scripts/release/create-go-no-go-form.mjs",
     "release:write-artifact-probe": "node scripts/release/write-artifact-storage-probe.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
@@ -97,7 +98,7 @@
     "sprint6:test-mandate": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/mollie-mandate-onboarding.spec.ts --project=chromium-desktop --retries=0",
     "sprint6:verify-mandate": "node scripts/staging/verify-mollie-mandate-onboarding.mjs",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
-    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:crm-pipeline && pnpm run test:empty-seat-recovery && pnpm run test:operational-cockpit && pnpm run test:instructor-replacement && pnpm run test:retention-signals && pnpm run test:lesson-plans && pnpm run test:tenant-health && pnpm run test:premium-suite && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:badges && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:site-cms && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
+    "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:crm-pipeline && pnpm run test:empty-seat-recovery && pnpm run test:operational-cockpit && pnpm run test:instructor-replacement && pnpm run test:retention-signals && pnpm run test:lesson-plans && pnpm run test:tenant-health && pnpm run test:premium-suite && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:badges && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:site-cms && pnpm run test:journey-bot && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-journey-bot && pnpm run release:audit-runtime-env && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {

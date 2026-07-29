@@ -58,6 +58,9 @@ jobs:
       - name: Audit Journey Bot foundation
         run: pnpm run release:audit-journey-bot
 
+      - name: Audit runtime environment contract
+        run: pnpm run release:audit-runtime-env
+
       - name: Audit auth boundaries
         run: pnpm run auth:audit
 

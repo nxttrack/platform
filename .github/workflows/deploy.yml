@@ -72,6 +72,9 @@ jobs:
       APP_URL: ${{ vars.APP_URL }}
       NEXT_PUBLIC_APP_URL: ${{ vars.NEXT_PUBLIC_APP_URL }}
       NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: ${{ vars.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID }}
+      NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY }}
+      WEB_PUSH_VAPID_PRIVATE_KEY: ${{ secrets.WEB_PUSH_VAPID_PRIVATE_KEY }}
+      WEB_PUSH_VAPID_SUBJECT: ${{ vars.WEB_PUSH_VAPID_SUBJECT }}
       PLATFORM_ADMIN_URL: ${{ vars.PLATFORM_ADMIN_URL }}
       TENANT_DOMAIN_SUFFIX: ${{ vars.TENANT_DOMAIN_SUFFIX }}
       PLATFORM_HOSTNAMES: ${{ vars.PLATFORM_HOSTNAMES }}
@@ -134,6 +137,8 @@ jobs:
       SUPABASE_ADVISOR_LEVEL: ${{ vars.SUPABASE_ADVISOR_LEVEL }}
       SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED || 'false' }}
+      INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED || 'false' }}
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
       BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -218,6 +223,9 @@ jobs:
             printf 'APP_URL=%s\n' "$APP_URL"
             printf 'NEXT_PUBLIC_APP_URL=%s\n' "$NEXT_PUBLIC_APP_URL"
             printf 'NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=%s\n' "$NEXT_PUBLIC_GOOGLE_ANALYTICS_ID"
+            printf 'NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY=%s\n' "$NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY"
+            printf 'WEB_PUSH_VAPID_PRIVATE_KEY=%s\n' "$WEB_PUSH_VAPID_PRIVATE_KEY"
+            printf 'WEB_PUSH_VAPID_SUBJECT=%s\n' "$WEB_PUSH_VAPID_SUBJECT"
             printf 'PLATFORM_ADMIN_URL=%s\n' "$PLATFORM_ADMIN_URL"
             printf 'TENANT_DOMAIN_SUFFIX=%s\n' "$TENANT_DOMAIN_SUFFIX"
             printf 'PLATFORM_HOSTNAMES=%s\n' "$PLATFORM_HOSTNAMES"
@@ -248,6 +256,8 @@ jobs:
             printf 'BOOTSTRAP_PLATFORM_OWNER_EMAIL=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_EMAIL"
             printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
             printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
+            printf 'EMAIL_SENDING_ENABLED=%s\n' "$EMAIL_SENDING_ENABLED"
+            printf 'INTERNAL_JOBS_ENABLED=%s\n' "$INTERNAL_JOBS_ENABLED"
             printf 'MOLLIE_API_KEY=%s\n' "$MOLLIE_API_KEY"
             printf 'BILLING_AUTOMATION_SECRET=%s\n' "$BILLING_AUTOMATION_SECRET"
             printf 'CRON_SECRET=%s\n' "$CRON_SECRET"
@@ -292,6 +302,7 @@ jobs:
           pnpm run test:communication-hub
           pnpm run test:badges
           pnpm run release:audit-journey-bot
+          pnpm run release:audit-runtime-env
           pnpm run auth:audit
           pnpm run security:audit-dependencies
           pnpm run db:audit
