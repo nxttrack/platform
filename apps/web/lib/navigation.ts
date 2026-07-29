@@ -63,6 +63,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/rapportages/capaciteit", label: "Capaciteitsforecast", icon: "trending", section: "Inzichten" },
   { href: "/admin/rapportages/leskwaliteit", label: "Group Health", icon: "shield", section: "Inzichten" },
   { href: "/admin/rapportages/campagnes", label: "Campagnes", icon: "chart", section: "Inzichten" },
+  { href: "/admin/rapportages/groei", label: "Groei & cohorten", icon: "trending", section: "Inzichten" },
   { href: "/admin/automatisering", label: "Recipe gallery", icon: "bot", section: "Automatisering" },
   { href: "/admin/automatisering/regels", label: "Eigen regels", icon: "settings", section: "Automatisering" },
   { href: "/admin/automatisering/acties", label: "Vandaag belangrijk", icon: "tasks", section: "Automatisering" },

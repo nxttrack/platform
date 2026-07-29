@@ -1,0 +1,64 @@
+name: Weekly management summary drafts
+
+on:
+  schedule:
+    - cron: "30 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: generate ${{ matrix.environment }} management drafts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [staging, production]
+    concurrency:
+      group: nxttrack-management-summaries-${{ matrix.environment }}
+      cancel-in-progress: false
+    environment: ${{ matrix.environment }}
+    env:
+      APP_URL: ${{ vars.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
+      INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED }}
+    steps:
+      - name: Check internal jobs release gate
+        id: gate
+        run: |
+          if [ "$INTERNAL_JOBS_ENABLED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Internal jobs are disabled for ${{ matrix.environment }}."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Validate endpoint configuration
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          if [ "${#CRON_SECRET}" -lt 32 ]; then
+            echo "::error::CRON_SECRET must contain at least 32 characters."
+            exit 1
+          fi
+          case "${{ matrix.environment }}:$APP_URL" in
+            staging:https://staging.nxttrack.nl|staging:https://*.staging.nxttrack.nl) ;;
+            production:https://nxttrack.nl|production:https://*.nxttrack.nl) ;;
+            *) echo "::error::Unexpected APP_URL: $APP_URL"; exit 1 ;;
+          esac
+
+      - name: Generate review-only weekly concepts
+        if: steps.gate.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
+          response_file="$RUNNER_TEMP/management-summaries.json"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --output "$response_file" \
+            "$APP_URL/api/internal/management-summaries/weekly"
+          cat "$response_file"
+          test "$(jq -r '.accepted // false' "$response_file")" = "true"
+          test "$(jq -r '.failed // 1' "$response_file")" = "0"
