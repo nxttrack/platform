@@ -19,11 +19,12 @@ test.describe("controlled staging communications", () => {
     const marker = `controlled-communications:${process.env.GITHUB_RUN_ID ?? Date.now()}`;
 
     await signIn(page, requiredEnv("E2E_PLATFORM_OWNER_EMAIL"), requiredEnv("E2E_PLATFORM_OWNER_PASSWORD"), "/platform/uitnodigingen");
+    await page.getByRole("tab", { name: "Zwemschool" }).click();
     await page.getByLabel("Naam").fill("Controlled Communications Recipient");
     await page.getByLabel("E-mail").fill(recipientEmail);
-    await page.getByLabel("Rol").selectOption("parent");
-    await page.getByLabel("Organisatie slug").fill(tenantSlug);
-    await page.getByRole("button", { name: "Uitnodiging sturen" }).click();
+    await page.getByLabel("Rol binnen de zwemschool").selectOption("parent");
+    await page.getByLabel("Organisatie").selectOption(tenantSlug);
+    await page.getByRole("button", { name: "Organisatie-uitnodiging sturen" }).click();
     await mutationExpect(page.getByText("Uitnodiging is verzonden.")).toBeVisible();
     await evidenceCommand("wait-delivery", [recipientEmail, startedAt, "auth_invitation"]);
 

@@ -50,6 +50,14 @@ test.describe("Communicationhub and Badge Studio", () => {
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 2)).toBe(true);
       }
     }
+
+    await page.goto("/platform/uitnodigingen", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("tab", { name: "NXTTRACK-team" })).toHaveAttribute("data-state", "active");
+    await expect(page.getByLabel("Toegangsniveau")).toBeVisible();
+    await expect(page.getByLabel("Organisatie slug")).toHaveCount(0);
+    await page.getByRole("tab", { name: "Zwemschool" }).click();
+    await expect(page.getByLabel("Organisatie")).toBeVisible();
+    await expect(page.getByLabel("Rol binnen de zwemschool")).toBeVisible();
     expect(failures()).toEqual([]);
   });
 
