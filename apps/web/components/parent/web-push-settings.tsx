@@ -66,9 +66,9 @@ export function WebPushSettings({ configured, enabled: initiallyEnabled, prefere
 
   return (
     <div className="grid gap-5 lg:grid-cols-[.8fr_1.2fr]">
-      <div><p className="text-xs font-bold uppercase tracking-wider text-primary">Web-push</p><h2 className="mt-2 text-xl font-bold">Directe, veilige updates</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Ontvang alleen de gekozen servicemeldingen. Geen marketing, geen kindgegevens in het vergrendelscherm en op ieder moment weer uit te zetten.</p><div className="mt-4 inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-success"><ShieldCheck className="size-4" /> Expliciete toestemming per apparaat</div></div>
+      <div><p className="text-xs font-bold uppercase tracking-wider text-primary">Web-push</p><h2 className="mt-2 text-xl font-bold">Directe, veilige updates</h2><p className="mt-2 text-sm leading-6 text-muted-foreground">Ontvang alleen de gekozen servicemeldingen. Geen marketing, geen kindgegevens in het vergrendelscherm en op ieder moment weer uit te zetten.</p><div className="mt-4 inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 text-xs font-bold text-emerald-800"><ShieldCheck className="size-4" /> Expliciete toestemming per apparaat</div></div>
       <div className="space-y-3">
-        {!configured ? <p className="rounded-xl border border-warning/25 bg-warning/10 p-4 text-sm font-semibold text-warning">De zwemschool heeft web-push nog niet technisch geactiveerd.</p> : null}
+        {!configured ? <p className="rounded-xl border border-warning/25 bg-warning/10 p-4 text-sm font-semibold text-warning-foreground">De zwemschool heeft web-push nog niet technisch geactiveerd.</p> : null}
         {enabled ? <>
           <Toggle checked={preferences.lessonChanges} label="Leswijzigingen en annuleringen" onChange={(value) => setPreferences((current) => ({ ...current, lessonChanges: value }))} />
           <Toggle checked={preferences.newMessages} label="Nieuwe beveiligde berichten" onChange={(value) => setPreferences((current) => ({ ...current, newMessages: value }))} />
