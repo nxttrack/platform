@@ -39,7 +39,7 @@ alter table public.intake_submissions
   add constraint intake_submissions_merge_fk
     foreign key (tenant_id, merged_into_intake_id)
     references public.intake_submissions (tenant_id, id)
-    on delete restrict (merged_into_intake_id);
+    on delete restrict;
 
 create index intake_submissions_crm_board_idx
   on public.intake_submissions (tenant_id, crm_stage, crm_priority, stage_changed_at desc)

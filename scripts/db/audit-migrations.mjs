@@ -49,7 +49,11 @@ function checkForbiddenPatterns(file, sql) {
   const forbiddenPatterns = [
     { pattern: /\bauth\.role\s*\(/, message: "uses deprecated auth.role(); use policy TO clauses instead" },
     { pattern: /\braw_user_meta_data\b|\buser_metadata\b/, message: "uses editable user metadata for authorization" },
-    { pattern: /create\s+function\s+public\.[\s\S]*?\bsecurity\s+definer\b/, message: "creates a security definer function in public schema" }
+    { pattern: /create\s+function\s+public\.[\s\S]*?\bsecurity\s+definer\b/, message: "creates a security definer function in public schema" },
+    {
+      pattern: /\bon\s+delete\s+(?:restrict|cascade|no\s+action)\s*\(/,
+      message: "uses a foreign-key column list with an ON DELETE action that does not support one"
+    }
   ];
 
   for (const { pattern, message } of forbiddenPatterns) {
