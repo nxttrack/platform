@@ -61,7 +61,7 @@ test.describe("premium release hardening", () => {
     await expectHeading(page, "Instructor vervangingsassistent");
     await expect(page.getByRole("heading", { name: "Les kiezen" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Veilige beslisgrens" })).toBeVisible();
-    await expect(page.getByText("Een concept verstuurt geen bericht.", { exact: true })).toBeVisible();
+    await expect(page.getByRole("listitem").filter({ hasText: "Een concept verstuurt geen bericht." })).toBeVisible();
     await expect(page.getByRole("button", { name: "Kwalificatie" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Belastbaarheid" })).toBeVisible();
 
