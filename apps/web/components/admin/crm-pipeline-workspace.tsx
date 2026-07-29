@@ -165,7 +165,7 @@ function LeadDetail({ data }: { data: CrmPipelineData }) {
           </div>
           <StatusPill tone={crmStageMeta[lead.stage].tone}>{crmStageMeta[lead.stage].label}</StatusPill>
         </div>
-        <Progress className="mt-4" value={crmStageProgress(lead.stage)} />
+        <Progress aria-label={`Pipelinevoortgang ${crmStageProgress(lead.stage)} procent`} className="mt-4" value={crmStageProgress(lead.stage)} />
         <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
           <Info icon={Mail} label={lead.parentEmail} />
           <Info icon={Phone} label={lead.parentPhone || "Geen telefoon"} />
