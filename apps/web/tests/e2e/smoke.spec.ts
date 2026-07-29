@@ -104,12 +104,13 @@ test.describe("staging MVP smoke", () => {
 
     if (await menuTrigger.isVisible()) {
       await menuTrigger.click();
-      await expect(page.getByRole("dialog")).toBeVisible();
+      const mobileMenu = page.getByRole("dialog", { name: "NXTTRACK navigatie" });
+      await expect(mobileMenu).toBeVisible();
       const mobileNavigation = page.getByRole("navigation", { name: "Mobiele NXTTRACK navigatie" });
       await expect(mobileNavigation).toBeVisible();
       await expect(mobileNavigation.getByRole("link", { name: "Zwemscholen" })).toHaveAttribute("aria-current", "page");
       await page.keyboard.press("Escape");
-      await expect(page.getByRole("dialog")).toBeHidden();
+      await expect(mobileMenu).toBeHidden();
     } else {
       const desktopNavigation = page.getByRole("navigation", { name: "NXTTRACK hoofdnavigatie" });
       await expect(desktopNavigation.getByRole("link", { name: "Zwemscholen" })).toHaveAttribute("aria-current", "page");
