@@ -14,6 +14,8 @@ const diplomaRoute = read("apps/web/app/diploma-verificatie/[code]/page.tsx");
 const supportActions = read("apps/web/lib/domain/support-access-actions.ts");
 const auditExplorer = read("apps/web/lib/domain/audit-explorer.ts");
 const managementRoute = read("apps/web/app/api/internal/management-summaries/weekly/route.ts");
+const packageActions = read("apps/web/lib/domain/shadow-entitlements-actions.ts");
+const packagePage = read("apps/web/app/(platform-admin)/platform/packages/page.tsx");
 
 test("engagement tables are tenant scoped, forced through RLS and preserve human control", () => {
   for (const table of ["tenant_feedback_campaigns", "feedback_survey_requests", "feedback_survey_responses", "web_push_subscriptions", "web_push_preferences"]) {
@@ -101,4 +103,15 @@ test("technical release flags stay separate from commercial entitlements", () =>
     entitlements,
     /grant execute on function app_private\.replace_shadow_package_configuration[^;]+authenticated/
   );
+});
+
+test("package control center requires human confirmation and communicates zero enforcement", () => {
+  assert.match(packageActions, /humanConfirmation"\) !== "assign-shadow-package"/);
+  assert.match(packageActions, /evaluation_mode: "shadow"/);
+  assert.match(packageActions, /accessChanged: false/);
+  assert.match(packageActions, /requirePrivateShellContext\(path\)/);
+  assert.match(packagePage, /Toegang geweigerd/);
+  assert.match(packagePage, /data\.summary\.accessDenied/);
+  assert.match(packagePage, /Deze inventaris is nog niet aan runtime-autorisatie gekoppeld/);
+  assert.doesNotMatch(packageActions, /redirect\([^)]*upgrade|payment|checkout/i);
 });

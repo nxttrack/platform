@@ -28,7 +28,10 @@ export function Field({
   description,
   disabled = false,
   autoComplete,
-  maxLength
+  maxLength,
+  min,
+  pattern,
+  step
 }: {
   label: string;
   name: string;
@@ -40,6 +43,9 @@ export function Field({
   disabled?: boolean;
   autoComplete?: string;
   maxLength?: number;
+  min?: number;
+  pattern?: string;
+  step?: number;
 }) {
   const id = useId();
   const descriptionId = description ? `${id}-description` : undefined;
@@ -54,9 +60,12 @@ export function Field({
         disabled={disabled}
         id={id}
         maxLength={maxLength}
+        min={min}
         name={name}
+        pattern={pattern}
         placeholder={placeholder}
         required={required}
+        step={step}
         type={type}
       />
       {description ? <FieldDescription id={descriptionId}>{description}</FieldDescription> : null}

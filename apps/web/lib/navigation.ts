@@ -77,6 +77,7 @@ export const adminNav: NavItem[] = [
 
 export const platformNav: NavItem[] = [
   { href: "/platform", label: "Overzicht", icon: "home" },
+  { href: "/platform/packages", label: "Packages & features", icon: "boxes" },
   { href: "/platform/onboarding", label: "Onboarding", icon: "waves" },
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
   { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },

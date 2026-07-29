@@ -331,6 +331,7 @@ alter table public.platform_admin_audit_events
       'auth_user',
       'platform_incident',
       'support_access',
+      'release_flag',
       'package_config',
       'tenant_package_assignment'
     )
