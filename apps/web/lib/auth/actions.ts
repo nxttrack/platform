@@ -5,6 +5,7 @@ import { acceptInvitation, createInvitation, InvitationAcceptanceError } from ".
 import { confirmPasswordReset, changeAuthenticatedPassword, requestPasswordResetCode } from "./password-reset";
 import { buildLoginRedirect, getDefaultRedirectForRoles, sanitizeRelativePath } from "./redirects";
 import { isPlatformRole, isTenantRole, type AppRole } from "./roles";
+import { resolveInvitationTenantSlug } from "./invitation-target";
 import { createClient } from "@/lib/supabase/server";
 import { getTrustedAuthContextForRequest, requireAuthenticatedContext, requirePrivateShellContext } from "./server-guard";
 import { normalizeEmail } from "./tokens";
@@ -132,14 +133,19 @@ export async function changePasswordAction(formData: FormData) {
 export async function createInvitationAction(formData: FormData) {
   const returnPath = sanitizeRelativePath(formData.get("next"), "/platform/uitnodigingen");
   const guardPath = returnPath.startsWith("/admin") ? "/admin" : "/platform";
+  const invitationKind = readString(formData, "invitationKind") === "tenant" ? "tenant" : "platform";
   const actor = await requirePrivateShellContext(guardPath);
   const email = readString(formData, "email");
   const fullName = optionalString(formData, "fullName");
   const role = readString(formData, "role") as AppRole;
-  const tenantSlug = optionalString(formData, "tenantSlug") ?? actor.activeTenant?.slug ?? null;
+  const tenantSlug = resolveInvitationTenantSlug({
+    activeTenantSlug: actor.activeTenant?.slug,
+    explicitTenantSlug: optionalString(formData, "tenantSlug"),
+    shell: guardPath === "/admin" ? "admin" : "platform"
+  });
 
   if (!isPlatformRole(role) && !isTenantRole(role)) {
-    redirect(`${returnPath}?error=invalid_role`);
+    redirect(`${returnPath}?error=invalid_role&kind=${invitationKind}`);
   }
 
   let delivered = false;
@@ -155,11 +161,26 @@ export async function createInvitationAction(formData: FormData) {
     });
 
     delivered = result.delivered;
-  } catch {
-    redirect(`${returnPath}?error=invite_failed`);
+  } catch (error) {
+    redirect(`${returnPath}?error=${invitationErrorCode(error)}&kind=${invitationKind}`);
   }
 
-  redirect(`${returnPath}?sent=1&delivery=${delivered ? "sent" : "skipped"}`);
+  redirect(`${returnPath}?sent=1&delivery=${delivered ? "sent" : "skipped"}&kind=${invitationKind}`);
+}
+
+function invitationErrorCode(error: unknown) {
+  const message = error instanceof Error ? error.message : "";
+
+  if (message === "Deze gebruiker heeft deze platformrol al." || message === "Deze gebruiker heeft deze tenantrol al.") {
+    return "role_active";
+  }
+
+  if (message === "Kies een tenant voor tenantrollen.") return "tenant_required";
+  if (message === "Deze tenant bestaat niet of is niet actief.") return "tenant_unavailable";
+  if (message === "Platformrollen horen niet bij een tenant.") return "platform_tenant_mismatch";
+  if (message.startsWith("Alleen ")) return "forbidden";
+
+  return "invite_failed";
 }
 
 function readString(formData: FormData, field: string) {
