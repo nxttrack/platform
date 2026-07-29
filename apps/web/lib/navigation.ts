@@ -30,6 +30,7 @@ export const instructorNav: NavItem[] = [
 export const adminNav: NavItem[] = [
   { href: "/admin", label: "Vandaag belangrijk", icon: "home" },
   { href: "/admin/agenda", label: "Planbord", icon: "calendar", section: "Planning" },
+  { href: "/admin/seizoenen", label: "Seizoenen", icon: "calendar", section: "Planning" },
   { href: "/admin/inhaalmarkt", label: "Inhaalmarkt", icon: "refresh", section: "Planning" },
   { href: "/admin/plekherstel", label: "Vrije plekken", icon: "trending", section: "Planning" },
   { href: "/admin/vervanging", label: "Vervanging", icon: "userPlus", section: "Planning" },
@@ -45,6 +46,7 @@ export const adminNav: NavItem[] = [
   { href: "/admin/afzwemmen", label: "Afzwemmen", icon: "award", section: "Lesproces" },
   { href: "/admin/badges", label: "Badges", icon: "award", section: "Lesproces" },
   { href: "/admin/documenten", label: "Documenten", icon: "file", section: "Lesproces" },
+  { href: "/admin/media", label: "Media & graphics", icon: "file", section: "Lesproces" },
   { href: "/admin/berichten", label: "Berichten", icon: "message", section: "Communicatie" },
   { href: "/admin/notificaties", label: "Notificaties", icon: "bell", section: "Communicatie" },
   { href: "/admin/nieuwsbrieven", label: "Nieuwsbrieven", icon: "newspaper", section: "Communicatie" },
