@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -31,7 +31,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await signIn(page, phase.users.instructor.email, requiredEnv("E2E_INSTRUCTOR_PASSWORD"), groupPath);
     let rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
     await expect(rosterEntry).toHaveCount(1);
-    await rosterEntry.getByRole("button", { name: "Laat", exact: true }).click();
+    await submitAndWaitForSaved(page, rosterEntry.getByRole("button", { name: "Laat", exact: true }), "attendance");
     await expect(page.getByText("Attendance opgeslagen.")).toBeVisible();
     rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
     await expect(rosterEntry.locator("span").filter({ hasText: /^Laat$/ })).toBeVisible();
@@ -42,7 +42,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await assessment.getByLabel("Score").selectOption("5");
     await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
     await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
-    await assessment.getByRole("button", { name: "Score opslaan" }).click();
+    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
     await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment.getByText("Ik kan het zelfstandig", { exact: true })).toBeVisible();
@@ -50,7 +50,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await page.getByRole("tab", { name: "Notities" }).click();
     await page.getByLabel("Notitie", { exact: true }).fill(`${marker}: interne lesnotitie.`);
     await page.getByLabel("Zichtbaarheid").selectOption("internal");
-    await page.getByRole("button", { name: "Notitie opslaan" }).click();
+    await submitAndWaitForSaved(page, page.getByRole("button", { name: "Notitie opslaan" }), "note");
     await expect(page.getByText("Note opgeslagen.")).toBeVisible();
     await expect(page.getByText(`${marker}: interne lesnotitie.`)).toBeVisible();
 
@@ -62,6 +62,17 @@ test.describe("Sprint 4 instructor mutations", () => {
     await page.getByRole("button", { name: /Badge toekennen|Ter goedkeuring indienen/ }).click();
     await expect(page.getByText(/Badge (?:wacht op menselijke goedkeuring|toegekend)\./)).toBeVisible();
 
+    // Restore the shared participant before completing the session. A retry
+    // must never inherit a private assessment from a partially completed run.
+    await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
+    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
+    await assessment.getByLabel("Score").selectOption("4");
+    await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
+    await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
+    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
+    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
+    await expect(assessment.getByText("Ik kan het bijna zelf", { exact: true })).toBeVisible();
+
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
     const completedStatus = page.getByText("completed", { exact: true });
@@ -69,26 +80,21 @@ test.describe("Sprint 4 instructor mutations", () => {
     await expect(completeButton.or(completedStatus)).toBeVisible();
 
     if (await completeButton.isVisible()) {
-      await completeButton.click();
+      await submitAndWaitForSaved(page, completeButton, "completed");
       await expect(page.getByText("Les afgerond.")).toBeVisible();
     }
 
     await expect(completedStatus).toBeVisible();
 
-    // Leave the shared Phase 16 fixture in its parent-visible canonical state so
-    // later full-suite role checks do not inherit this test's private assessment.
-    await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
-    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await assessment.getByLabel("Score").selectOption("4");
-    await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
-    await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
-    await assessment.getByRole("button", { name: "Score opslaan" }).click();
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
-    await expect(assessment.getByText("Ik kan het bijna zelf", { exact: true })).toBeVisible();
-
     expect(failures()).toEqual([]);
   });
 });
+
+async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string) {
+  const confirmedRedirect = page.waitForURL((url) => url.searchParams.get("saved") === saved, { timeout: 15_000 });
+  await submit.click();
+  await confirmedRedirect;
+}
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
   await page.goto(`/login?next=${encodeURIComponent(nextPath)}`, { waitUntil: "domcontentloaded" });
