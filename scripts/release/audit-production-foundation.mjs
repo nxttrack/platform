@@ -61,6 +61,47 @@ check(
   process.env.BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD === "false",
   "Production owner password reset defaults to disabled."
 );
+check(
+  "email-sending-release-gate",
+  isBooleanLiteral(process.env.EMAIL_SENDING_ENABLED),
+  "EMAIL_SENDING_ENABLED is explicitly true or false."
+);
+check(
+  "internal-jobs-release-gate",
+  isBooleanLiteral(process.env.INTERNAL_JOBS_ENABLED),
+  "INTERNAL_JOBS_ENABLED is explicitly true or false."
+);
+check(
+  "upload-malware-scan-required",
+  process.env.UPLOAD_MALWARE_SCAN_MODE === "required",
+  "Production uploads fail closed when malware scanning is unavailable."
+);
+check(
+  "clamav-socket",
+  ["/run/clamav/clamd.ctl", "/var/run/clamav/clamd.ctl"].includes(process.env.CLAMAV_SOCKET_PATH || ""),
+  "Production uses the approved local ClamAV socket."
+);
+const analyticsId = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID || "";
+check(
+  "analytics-id",
+  !analyticsId || /^G-[A-Z0-9]{6,20}$/.test(analyticsId),
+  "The optional GA4 measurement ID is empty or has a valid public G- format."
+);
+const webPushValues = [
+  process.env.NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY,
+  process.env.WEB_PUSH_VAPID_PRIVATE_KEY,
+  process.env.WEB_PUSH_VAPID_SUBJECT
+].filter(Boolean);
+check(
+  "web-push-complete-or-disabled",
+  webPushValues.length === 0 || webPushValues.length === 3,
+  "Web push is either fully configured or safely disabled."
+);
+check(
+  "web-push-subject",
+  webPushValues.length === 0 || /^(mailto:[^@\s]+@[^@\s]+|https:\/\/)/.test(process.env.WEB_PUSH_VAPID_SUBJECT || ""),
+  "The optional web-push subject is a contact mailto or HTTPS URL."
+);
 check("database-health-enabled", process.env.HEALTH_CHECK_DATABASE === "true", "Database health probing is required.");
 check("health-strict", process.env.HEALTH_STRICT === "true", "Production health is strict.");
 check("health-database-required", process.env.REQUIRE_HEALTH_DATABASE === "true", "Production health requires a passing database probe.");
@@ -228,6 +269,10 @@ function csv(value) {
 
 function normalized(value) {
   return (value || "").trim().toLowerCase().replace(/\.$/, "");
+}
+
+function isBooleanLiteral(value) {
+  return value === "true" || value === "false";
 }
 
 function writeOutput(name, value) {
