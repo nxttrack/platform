@@ -28,6 +28,10 @@ test.describe("privacy-first public analytics", () => {
     await page.getByRole("button", { name: "Cookievoorkeuren" }).click();
     await page.getByRole("button", { name: "Analytics toestaan" }).click();
     await expect.poll(() => googleTagRequests.length).toBe(1);
+    await expect.poll(
+      () => page.evaluate(() => JSON.stringify(window.dataLayer ?? [])),
+      { message: "The consented Google tag must finish loading before analytics evidence is inspected." }
+    ).toContain("page_view");
 
     const dataLayer = await page.evaluate(() => window.dataLayer ?? []);
     const serialized = JSON.stringify(dataLayer);
