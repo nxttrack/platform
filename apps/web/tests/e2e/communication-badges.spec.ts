@@ -72,7 +72,7 @@ test.describe("Communicationhub and Badge Studio", () => {
       ["/admin/nieuwsbrieven", "Nieuwsbrieven"],
       ["/admin/templates", "Templates"],
       ["/admin/communicatie-instellingen", "Instellingen"],
-      ["/admin/website", "Websitepagina’s"],
+      ["/admin/website", "Website studio"],
       ["/admin/inhaalmarkt", "Inhaalmarkt"]
     ] as const) {
       await page.goto(route[0], { waitUntil: "domcontentloaded" });
