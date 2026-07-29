@@ -2,6 +2,7 @@ import { ArrowRight, CalendarCheck, CheckCircle2, HeartHandshake, Layers, Shield
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FeatureGrid, FinalCTA, PageHero, PageSection } from "@/components/lovable/page-kit";
+import { TenantSiteHeroMedia, TenantSiteSections } from "@/components/public/tenant-site-sections";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { TenantPublicShell } from "@/components/tenant-public/site-shell";
 import { getPublicTenantSiteData, getTenantSlugFromRequest } from "@/lib/domain/public-site";
@@ -31,6 +32,9 @@ export default async function HomePage() {
 
   if (tenantSlug) {
     if (!tenantData) {
+      return <TenantUnavailable slug={tenantSlug} />;
+    }
+    if (tenantData.pages.home.status === "hidden") {
       return <TenantUnavailable slug={tenantSlug} />;
     }
 
@@ -67,28 +71,35 @@ export default async function HomePage() {
 
 function TenantHome({ data }: { data: NonNullable<Awaited<ReturnType<typeof getPublicTenantSiteData>>> }) {
   const shortWaitPrograms = data.programs.filter((program) => program.waitBand === "short").length;
+  const page = data.pages.home;
+  const hiddenPaths = [
+    data.pages.programs.status === "hidden" ? "/programmas" : null,
+    data.pages.agenda.status === "hidden" ? "/agenda" : null,
+    data.pages.news.status === "hidden" ? "/nieuws" : null
+  ].filter((value): value is string => Boolean(value));
 
   return (
-    <TenantPublicShell tenantName={data.tenant.name}>
+    <TenantPublicShell hiddenPaths={hiddenPaths} tenantName={data.tenant.name}>
       <main>
-      <section className="relative overflow-hidden px-4 py-14 md:py-20">
-        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-br from-aqua-soft via-background to-primary/10" />
+      <section className={`relative overflow-hidden px-4 py-14 md:py-20 ${publicThemeClass(page.theme)}`}>
+        <div aria-hidden="true" className={`absolute inset-0 bg-gradient-to-br ${publicHeroBackdropClass(page.theme)}`} />
+        <TenantSiteHeroMedia assetId={page.heroAssetId} />
         <div aria-hidden="true" className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-aqua/20 blur-3xl" />
         <div className="relative mx-auto grid max-w-6xl gap-10 lg:grid-cols-[1.08fr_0.92fr] lg:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-card/80 px-3 py-1.5 text-xs font-semibold text-primary shadow-soft">
-              <Sparkles className="h-3.5 w-3.5" /> Persoonlijke zwemontwikkeling
+              <Sparkles className="h-3.5 w-3.5" /> {page.eyebrow}
             </span>
-            <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-[1.05] text-foreground md:text-6xl">Met vertrouwen naar de volgende zwemstap.</h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">Ontdek het programma dat bij je kind past. Van eerste kennismaking tot diploma, met heldere lessen en zichtbare voortgang.</p>
+            <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-[1.05] text-foreground md:text-6xl">{page.title}</h1>
+            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground md:text-lg">{page.intro}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow" href="/programmas">
-                Programma's bekijken
+              {page.primaryCtaHref && page.primaryCtaLabel ? <Link className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-glow" href={page.primaryCtaHref}>
+                {page.primaryCtaLabel}
                 <ArrowRight className="h-4 w-4" />
-              </Link>
-              <Link className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-soft" href="/intake">
-                Proefles of intake
-              </Link>
+              </Link> : null}
+              {page.secondaryCtaHref && page.secondaryCtaLabel ? <Link className="rounded-xl border border-border bg-card px-5 py-3 text-sm font-semibold text-foreground shadow-soft" href={page.secondaryCtaHref}>
+                {page.secondaryCtaLabel}
+              </Link> : null}
             </div>
             <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
               <span className="inline-flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-success" /> Duidelijk programma</span>
@@ -169,9 +180,22 @@ function TenantHome({ data }: { data: NonNullable<Awaited<ReturnType<typeof getP
           </div>
         </div>
       </section>
+      <TenantSiteSections page={page} programs={data.programs} />
       </main>
     </TenantPublicShell>
   );
+}
+
+function publicThemeClass(theme: string) {
+  if (theme === "navy") return "bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 [&_.text-foreground]:text-white [&_.text-muted-foreground]:text-white/70";
+  if (theme === "calm") return "bg-gradient-to-br from-slate-50 via-white to-slate-100";
+  return "";
+}
+
+function publicHeroBackdropClass(theme: string) {
+  if (theme === "navy") return "from-slate-950 via-blue-950 to-slate-900";
+  if (theme === "calm") return "from-slate-50 via-white to-slate-100";
+  return "from-aqua-soft via-background to-primary/10";
 }
 
 function TenantUnavailable({ slug }: { slug: string }) {

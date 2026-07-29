@@ -9,6 +9,15 @@ import {
   type WaitTimeBand
 } from "./intake-recommendation-contract";
 import { summarizeGroupCapacity, type GroupMembershipRow, type GroupRow, type ProgramRow, type ProgramStageRow } from "./core";
+import { calculateWaitTimeBands } from "./wait-time";
+import {
+  getDefaultTenantSitePages,
+  normalizeTenantSitePage,
+  normalizeTenantSiteSnapshot,
+  tenantSitePageKeys,
+  type TenantSitePageContent,
+  type TenantSitePageKey
+} from "./site-page-contract";
 
 export type IntakeOption = "enrollment" | "trial" | "waitlist" | "information_request";
 
@@ -51,6 +60,7 @@ export type PublicTenantSiteData = {
   analyticsMeasurementId: string | null;
   programs: PublicProgram[];
   defaultForm: PublicIntakeForm;
+  pages: Record<TenantSitePageKey, TenantSitePageContent>;
 };
 
 type IntakeFormRow = {
@@ -107,15 +117,16 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   }
 
   const tenant = tenantResult.data as PublicTenant;
-  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult, settingsResult] = await Promise.all([
+  const [programsResult, stagesResult, groupsResult, membershipsResult, waitlistResult, formsResult, questionsResult, settingsResult, sitePagesResult] = await Promise.all([
     admin.from("programs").select("id, name, code, description, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("program_stages").select("id, program_id, name, code, badge_label, color_hex, status, sort_order").eq("tenant_id", tenant.id).eq("status", "active").order("sort_order").order("name"),
     admin.from("groups").select("id, program_id, stage_id, default_resource_id, name, code, status, capacity, default_weekday, default_start_time, default_end_time").eq("tenant_id", tenant.id).eq("status", "active"),
-    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id),
+    admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight").eq("tenant_id", tenant.id).eq("is_test", false),
     admin
       .from("waitlist_entries")
       .select("program_id, recommended_stage_id")
       .eq("tenant_id", tenant.id)
+      .eq("is_test", false)
       .in("status", ["waiting", "reviewing", "offered"]),
     admin.from("intake_forms").select("id, program_id, name, intro, allowed_options").eq("tenant_id", tenant.id).eq("status", "active"),
     admin
@@ -127,7 +138,11 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       .from("tenant_settings")
       .select("analytics_enabled, google_analytics_measurement_id")
       .eq("tenant_id", tenant.id)
-      .maybeSingle()
+      .maybeSingle(),
+    admin
+      .from("tenant_site_pages")
+      .select("page_key, eyebrow, title, intro, primary_cta_label, primary_cta_href, secondary_cta_label, secondary_cta_href, seo_title, seo_description, theme, status, published_version_id")
+      .eq("tenant_id", tenant.id)
   ]);
 
   assertPublicResult(programsResult.error, "programs");
@@ -138,6 +153,7 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   assertPublicResult(formsResult.error, "intake forms");
   assertPublicResult(questionsResult.error, "intake questions");
   assertPublicResult(settingsResult.error, "analytics settings");
+  assertPublicResult(sitePagesResult.error, "website pages");
 
   const programs = (programsResult.data ?? []) as ProgramRow[];
   const stages = (stagesResult.data ?? []) as ProgramStageRow[];
@@ -147,14 +163,49 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
   const forms = (formsResult.data ?? []) as IntakeFormRow[];
   const questions = (questionsResult.data ?? []) as IntakeQuestionRow[];
   const analyticsSettings = settingsResult.data as PublicAnalyticsSettingsRow | null;
+  const pageDefaults = getDefaultTenantSitePages(tenant.name);
+  const sitePageRows = (sitePagesResult.data ?? []) as Array<Record<string, unknown> & { page_key: string; published_version_id: string | null }>;
+  const publishedVersionIds = sitePageRows.flatMap((page) => page.published_version_id ? [page.published_version_id] : []);
+  const versionsResult = publishedVersionIds.length
+    ? await admin
+        .from("tenant_site_page_versions")
+        .select("id, snapshot_json")
+        .eq("tenant_id", tenant.id)
+        .in("id", publishedVersionIds)
+    : { data: [], error: null };
+  assertPublicResult(versionsResult.error, "published website versions");
+  const versionsById = new Map((versionsResult.data ?? []).map((version) => [version.id, version.snapshot_json]));
+  const pages = Object.fromEntries(tenantSitePageKeys.map((key) => [
+    key,
+    normalizePublishedSitePage(sitePageRows.find((page) => page.page_key === key), versionsById, pageDefaults[key])
+  ])) as Record<TenantSitePageKey, TenantSitePageContent>;
   const capacityByGroup = new Map(summarizeGroupCapacity(groups, memberships).map((capacity) => [capacity.groupId, capacity]));
   const formsByProgramId = new Map(forms.filter((form) => form.program_id).map((form) => [form.program_id as string, normalizeForm(form, questions)]));
   const defaultForm = normalizeForm(forms.find((form) => !form.program_id) ?? null, questions);
+  const waitTimePredictions = await calculateWaitTimeBands({
+    tenantId: tenant.id,
+    requests: groups.flatMap((group) =>
+      group.default_weekday && group.default_start_time
+        ? [{
+            programId: group.program_id,
+            stageId: group.stage_id,
+            preferredDay: group.default_weekday,
+            preferredTimeBlock: deriveDaypart(group.default_start_time),
+            locationId: group.default_resource_id
+          }]
+        : []
+    )
+  });
+  const waitTimeByScope = new Map(waitTimePredictions.map((item) => [
+    waitTimeScopeKey(item.query),
+    item.prediction
+  ]));
 
   return {
     tenant,
     analyticsMeasurementId: analyticsSettings?.analytics_enabled ? analyticsSettings.google_analytics_measurement_id : null,
     defaultForm,
+    pages,
     programs: programs.map((program) => {
       const programGroups = groups.filter((group) => group.program_id === program.id);
       const programStages = stages.filter((stage) => stage.program_id === program.id);
@@ -168,6 +219,13 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
           (entry) => entry.program_id === program.id && (!entry.recommended_stage_id || entry.recommended_stage_id === group.stage_id)
         ).length;
         const capacity = capacityByGroup.get(group.id);
+        const waitTime = waitTimeByScope.get(waitTimeScopeKey({
+          programId: program.id,
+          stageId: stage?.id ?? null,
+          preferredDay: group.default_weekday,
+          preferredTimeBlock: deriveDaypart(group.default_start_time),
+          locationId: group.default_resource_id
+        }));
 
         return [
           {
@@ -182,11 +240,13 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
             daypart: deriveDaypart(group.default_start_time),
             startsAt: group.default_start_time.slice(0, 5),
             endsAt: group.default_end_time.slice(0, 5),
-            waitBand: deriveWaitBand({
+            waitBand: waitTime?.band ?? deriveWaitBand({
               available: Math.max(0, capacity?.available ?? 0),
               capacity: Math.max(1, capacity?.capacity ?? group.capacity),
               pressure
-            })
+            }),
+            waitExplanation: waitTime?.parent_explanation,
+            waitTip: waitTime?.suggested_alternatives[0]?.reason
           }
         ];
       });
@@ -200,6 +260,17 @@ export async function getPublicTenantSiteDataBySlug(slug: string): Promise<Publi
       };
     })
   };
+}
+
+function normalizePublishedSitePage(
+  row: (Record<string, unknown> & { published_version_id: string | null }) | undefined,
+  versionsById: Map<string, unknown>,
+  fallback: TenantSitePageContent
+) {
+  const legacy = normalizeTenantSitePage(row, fallback);
+  const snapshot = row?.published_version_id ? versionsById.get(row.published_version_id) : null;
+  if (snapshot) return normalizeTenantSiteSnapshot(snapshot, legacy);
+  return row?.status === "draft" ? { ...fallback, status: "hidden" as const } : legacy;
 }
 
 export async function getTenantSlugFromRequest() {
@@ -308,13 +379,28 @@ function deriveWaitBand(input: { available: number; capacity: number; pressure: 
 }
 
 function getBestWaitBand(slots: PublicIntakeSlot[]): WaitTimeBand {
-  if (slots.some((slot) => slot.waitBand === "short")) {
-    return "short";
-  }
+  const rank: Record<WaitTimeBand, number> = {
+    short: 0,
+    medium: 1,
+    long: 2,
+    very_long: 3,
+    insufficient_data: 4
+  };
+  return [...slots].sort((left, right) => rank[left.waitBand] - rank[right.waitBand])[0]?.waitBand ?? "insufficient_data";
+}
 
-  if (slots.some((slot) => slot.waitBand === "medium")) {
-    return "medium";
-  }
-
-  return "long";
+function waitTimeScopeKey(query: {
+  programId: string;
+  stageId?: string | null;
+  preferredDay?: number | null;
+  preferredTimeBlock?: string | null;
+  locationId?: string | null;
+}) {
+  return [
+    query.programId,
+    query.stageId ?? "",
+    query.preferredDay ?? "",
+    query.preferredTimeBlock ?? "",
+    query.locationId ?? ""
+  ].join(":");
 }

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
+
 import { AdminListSurface } from "@/components/admin/admin-patterns";
 import { Field, SubmitButton } from "@/components/admin/domain-ui";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -7,7 +10,6 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
 import { saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { ReactNode } from "react";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -105,7 +107,31 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
               </SettingsPanel>
             </TabsContent>
 
-            <TabsContent forceMount value="notifications"><SettingsPanel description="Afzenders en platformbrede mailprovider worden centraal beheerd." title="Notificaties"><p className="text-[13px] text-muted-foreground">Organisatiespecifieke templates en notificatievoorkeuren volgen via de communicatie-instellingen.</p></SettingsPanel></TabsContent>
+            <TabsContent forceMount value="notifications">
+              <SettingsPanel
+                action={<StatusPill tone="warning">WhatsApp/SMS niet gekoppeld</StatusPill>}
+                description="Afzenders en de platformbrede e-mailprovider worden centraal beheerd."
+                title="Notificaties en automation"
+              >
+                <div className="grid gap-3 text-[13px] leading-5">
+                  <p className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-muted-foreground">
+                    E-mail gebruikt de centrale platformprovider. Organisatiespecifieke templates en voorkeuren volgen via de communicatie-instellingen.
+                  </p>
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-3 text-amber-950">
+                    <p className="font-bold">WhatsApp en SMS zijn bewust uitgeschakeld</p>
+                    <p className="mt-1">
+                      Er is nog geen provider, consentregistratie of delivery-audit voor deze kanalen. Automation recipes maken daarom uitsluitend interne controletaken.
+                    </p>
+                  </div>
+                  <Link
+                    className="inline-flex min-h-11 w-fit items-center rounded-lg border border-border bg-background px-4 font-bold text-foreground hover:bg-muted"
+                    href="/admin/automatisering"
+                  >
+                    Open veilige recipegallery
+                  </Link>
+                </div>
+              </SettingsPanel>
+            </TabsContent>
             <TabsContent forceMount value="privacy"><SettingsPanel description="Publieke analytics blijft consent-gestuurd; gevoelige gegevens blijven buiten trackingparameters." title="Privacy en cookies"><p className="text-[13px] text-muted-foreground">Controleer privacyverklaring, bewaartermijnen en cookiebeleid bij iedere productierelease.</p></SettingsPanel></TabsContent>
             <TabsContent forceMount value="product"><SettingsPanel description="Compact overzicht van resterende commerciële uitbreidingen." title="Productisatie checklist"><ul className="grid gap-2 text-[13px] text-muted-foreground sm:grid-cols-2"><li className="rounded-lg bg-muted px-3 py-2">Logo en publieke branding per organisatie</li><li className="rounded-lg bg-muted px-3 py-2">CRM-pijplijn en opvolgtaken</li><li className="rounded-lg bg-muted px-3 py-2">Document- en diplomabestanden</li><li className="rounded-lg bg-muted px-3 py-2">Organisatiespecifieke mailtemplates</li></ul></SettingsPanel></TabsContent>
           </Tabs>

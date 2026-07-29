@@ -8,6 +8,7 @@ import { classifyContent } from "@/lib/security/content-classification";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
 import { createTenantNotifications } from "./tenant-notifications";
+import { evaluateBadgeTriggers } from "./badge-engine";
 
 const attendanceStatuses = new Set(["present", "absent", "late", "excused", "trial"]);
 const noteVisibilities = new Set(["internal", "parent_visible"]);
@@ -130,6 +131,10 @@ export async function markAttendanceAction(formData: FormData) {
     redirectWithStatus(nextPath, "error", "attendance");
   }
 
+  if (status === "present") {
+    await evaluateAttendanceBadges({ tenantId: tenant.id, participantId, sessionId });
+  }
+
   redirectWithStatus(nextPath, "saved", "attendance");
 }
 
@@ -156,12 +161,24 @@ export async function markRosterPresentAction(formData: FormData) {
     .eq("tenant_id", tenant.id)
     .eq("group_id", access.session.group_id)
     .in("status", ["active", "trial"]);
+  const catchUpResult = await admin
+    .from("catch_up_requests")
+    .select("participant_id, enrollment_id")
+    .eq("tenant_id", tenant.id)
+    .eq("assigned_session_id", sessionId)
+    .eq("status", "approved");
 
-  if (membershipsResult.error) {
+  if (membershipsResult.error || catchUpResult.error) {
     redirectWithStatus(nextPath, "error", "attendance");
   }
 
-  const memberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  const regularMemberships = (membershipsResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>;
+  const memberships = [
+    ...regularMemberships,
+    ...((catchUpResult.data ?? []) as Array<{ enrollment_id: string; participant_id: string }>).filter(
+      (row) => !regularMemberships.some((membership) => membership.participant_id === row.participant_id)
+    )
+  ];
   if (memberships.length) {
     const markedAt = new Date().toISOString();
     const { error } = await admin.from("session_attendance").upsert(
@@ -178,6 +195,16 @@ export async function markRosterPresentAction(formData: FormData) {
     );
 
     if (error) redirectWithStatus(nextPath, "error", "attendance");
+
+    await Promise.all(
+      memberships.map((membership) =>
+        evaluateAttendanceBadges({
+          tenantId: tenant.id,
+          participantId: membership.participant_id,
+          sessionId
+        })
+      )
+    );
   }
 
   revalidateInstructorPaths(nextPath);
@@ -294,7 +321,7 @@ export async function scoreProgressItemAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
-  const itemResult = await admin.from("progress_items").select("id, module_id, name").eq("tenant_id", tenant.id).eq("module_id", moduleId).eq("id", itemId).eq("status", "active").maybeSingle();
+  const itemResult = await admin.from("progress_items").select("id, module_id, name, code").eq("tenant_id", tenant.id).eq("module_id", moduleId).eq("id", itemId).eq("status", "active").maybeSingle();
 
   if (itemResult.error || !itemResult.data) {
     redirectWithStatus(nextPath, "error", "progress");
@@ -340,6 +367,25 @@ export async function scoreProgressItemAction(formData: FormData) {
       message: `${itemResult.data.name}: ${positiveLabel}`,
       relatedProgressScoreId: scoreResult.data.id
     });
+  }
+
+  if (score >= 4) {
+    const completedCountResult = await admin
+      .from("participant_progress_scores")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenant.id)
+      .eq("participant_id", participantId)
+      .eq("status", "active")
+      .gte("score", 4);
+    const triggerContext = {
+      count: completedCountResult.count ?? 1,
+      entityId: scoreResult.data.id,
+      skill: itemResult.data.code?.replace(/_completed$/, "") ?? itemResult.data.id
+    };
+    await Promise.all([
+      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "progress_item_completed", eventContext: triggerContext }),
+      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "skill_completed", eventContext: triggerContext })
+    ]);
   }
 
   redirectWithStatus(nextPath, "saved", "progress");
@@ -487,7 +533,25 @@ async function getSessionMembership(input: { tenantId: string; userId: string; c
     return null;
   }
 
-  return ((data ?? []) as { enrollment_id: string; participant_id: string; group_id: string; status: string }[])[0] ?? null;
+  const membership = ((data ?? []) as { enrollment_id: string; participant_id: string; group_id: string; status: string }[])[0] ?? null;
+  if (membership) return membership;
+
+  const catchUpResult = await admin
+    .from("catch_up_requests")
+    .select("enrollment_id, participant_id, status")
+    .eq("tenant_id", input.tenantId)
+    .eq("assigned_session_id", input.sessionId)
+    .eq("participant_id", input.participantId)
+    .eq("status", "approved")
+    .limit(1)
+    .maybeSingle();
+  if (catchUpResult.error || !catchUpResult.data) return null;
+  return {
+    enrollment_id: catchUpResult.data.enrollment_id,
+    participant_id: catchUpResult.data.participant_id,
+    group_id: access.session.group_id,
+    status: "active"
+  };
 }
 
 async function getInstructorMembershipForParticipant(input: { tenantId: string; userId: string; canManageTenant: boolean; participantId: string }) {
@@ -634,4 +698,37 @@ function readOptional(formData: FormData, field: string) {
 
 function unique(values: Array<string | null | undefined>) {
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
+async function evaluateAttendanceBadges(input: { participantId: string; sessionId: string; tenantId: string }) {
+  const admin = createAdminClient();
+  const attendanceResult = await admin
+    .from("session_attendance")
+    .select("id, status, marked_at")
+    .eq("tenant_id", input.tenantId)
+    .eq("participant_id", input.participantId)
+    .order("marked_at", { ascending: false })
+    .limit(50);
+  if (attendanceResult.error) return;
+  const rows = attendanceResult.data ?? [];
+  const presentCount = rows.filter((row) => row.status === "present").length;
+  let streak = 0;
+  for (const row of rows) {
+    if (row.status !== "present") break;
+    streak += 1;
+  }
+  await Promise.all([
+    evaluateBadgeTriggers({
+      tenantId: input.tenantId,
+      participantId: input.participantId,
+      eventType: "attendance_count",
+      eventContext: { count: presentCount, entityId: input.sessionId }
+    }),
+    evaluateBadgeTriggers({
+      tenantId: input.tenantId,
+      participantId: input.participantId,
+      eventType: "attendance_streak",
+      eventContext: { count: streak, entityId: input.sessionId }
+    })
+  ]);
 }

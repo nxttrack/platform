@@ -70,6 +70,11 @@ export function saveAnalyticsConsent(value: Exclude<AnalyticsConsent, "unknown">
   if (value === "granted") {
     persistAttributionWhenAllowed(getClientAttribution());
   } else {
+    try {
+      window.sessionStorage.removeItem(attributionStorageKey);
+    } catch {
+      // Consent withdrawal still applies when storage is unavailable.
+    }
     clearGoogleAnalyticsCookies();
   }
 

@@ -81,21 +81,22 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
                   ) : (
                     <div className="mt-3 grid gap-2">
                       {options.map((option) => (
-                        <form action={requestCatchUpSessionAction} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-3" key={`${credit.id}:${option.sessionId}`}>
-                          <input name="creditId" type="hidden" value={credit.id} />
-                          <input name="sessionId" type="hidden" value={option.sessionId} />
-                          <input name="next" type="hidden" value="/portaal/lessen" />
+                        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-muted/30 px-3 py-3" key={`${credit.id}:${option.sessionId}`}>
                           <div>
                             <p className="text-sm font-semibold text-foreground">{formatLessonDate(option.startsAt, option.endsAt)}</p>
                             <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                               {option.groupName} <WaitTimeChip band="short" />
                             </span>
                           </div>
-                          <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" type="submit">
-                            <RefreshCcw className="h-4 w-4" />
-                            Kiezen
-                          </button>
-                        </form>
+                          <ConfirmActionForm
+                            action={requestCatchUpSessionAction}
+                            confirmLabel="Inhaalmoment bevestigen"
+                            description="De geldigheid, het niveau en de actuele vrije plek worden bij bevestiging opnieuw transactioneel gecontroleerd. Afhankelijk van de zwemschool volgt directe boeking of adminbeoordeling."
+                            hiddenFields={{ creditId: credit.id, sessionId: option.sessionId, next: "/portaal/lessen", humanConfirmation: "confirmed" }}
+                            title="Dit inhaalmoment kiezen?"
+                            triggerLabel={<><RefreshCcw className="h-4 w-4" />Kiezen<span className="sr-only"> {option.groupName}</span></>}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}

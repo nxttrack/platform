@@ -127,13 +127,20 @@ Voer dit uit op de NXTTRACK VPS met een account dat `sudo` mag gebruiken.
 5. Test de fail-closed grens uitsluitend op staging:
 
    ```bash
-   sudo systemctl stop clamav-daemon
+   sudo systemctl stop clamav-daemon.socket clamav-daemon.service
+   sudo systemctl is-active clamav-daemon.socket clamav-daemon.service
+   sudo test ! -S /run/clamav/clamd.ctl
    ```
 
-   Een geldige upload moet nu met een malware-scanfout worden geweigerd. Herstel direct daarna:
+   Beide units horen `inactive` te melden en de socket hoort afwezig te zijn. Selecteer vervolgens
+   expliciet een geldig klein bestand in **Document uploaden**. De upload moet nu met de rode melding
+   `Upload geweigerd: de malwarecontrole is niet bereikbaar of het bestand is niet schoon.` worden
+   geweigerd. Alleen de service stoppen is geen geldige test: `clamav-daemon.socket` kan de daemon
+   bij de eerstvolgende scan automatisch opnieuw starten. Herstel direct daarna:
 
    ```bash
-   sudo systemctl start clamav-daemon
+   sudo systemctl enable --now clamav-daemon.socket clamav-daemon.service
+   sudo systemctl is-active --quiet clamav-daemon.socket
    sudo systemctl is-active --quiet clamav-daemon
    ```
 

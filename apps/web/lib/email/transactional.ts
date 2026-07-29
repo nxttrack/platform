@@ -3,6 +3,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getConfiguredEmailDeliveryConfig, type SendGridApiEmailConfig } from "./platform-settings";
 import { sendSmtpEmail } from "./smtp";
+import { applyTenantEmailBranding, type TenantEmailBranding } from "./tenant-branding";
 
 export type TransactionalEmailInput = {
   fromName?: string | null;
@@ -45,7 +46,10 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
     });
   }
 
-  const config = await getConfiguredEmailDeliveryConfig();
+  const [config, branding] = await Promise.all([
+    getConfiguredEmailDeliveryConfig(),
+    input.tenantId ? getTenantEmailBranding(input.tenantId) : Promise.resolve(null)
+  ]);
 
   if (!config) {
     const result: TransactionalEmailResult = {
@@ -57,12 +61,16 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
     return withDeliveryAttempt(input, result);
   }
 
-  const fromName = input.fromName ?? input.organizationName ?? config.fromName;
+  const brandedContent = branding ? applyTenantEmailBranding(input, branding) : null;
+  const deliveryInput: TransactionalEmailInput = brandedContent
+    ? { ...input, ...brandedContent }
+    : input;
+  const fromName = input.fromName ?? branding?.fromName ?? brandedContent?.organizationName ?? input.organizationName ?? config.fromName;
   let result: TransactionalEmailResult;
 
   if (config.provider === "sendgrid_api") {
     try {
-      result = await sendWithSendGridApi({ ...config, fromName }, input);
+      result = await sendWithSendGridApi({ ...config, fromName }, deliveryInput);
     } catch (error) {
       result = {
         delivered: false,
@@ -73,7 +81,7 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
     }
   } else {
     try {
-      await sendSmtpEmail({ ...config, fromName }, input);
+      await sendSmtpEmail({ ...config, fromName }, deliveryInput);
 
       result = {
         delivered: true,
@@ -90,7 +98,27 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
     }
   }
 
-  return withDeliveryAttempt(input, result);
+  return withDeliveryAttempt(deliveryInput, result);
+}
+
+async function getTenantEmailBranding(tenantId: string): Promise<TenantEmailBranding | null> {
+  const { data, error } = await createAdminClient()
+    .from("tenant_branding")
+    .select("accent_color, email_footer, email_from_name, logo_url, primary_color, product_name")
+    .eq("tenant_id", tenantId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (error || !data) return null;
+
+  return {
+    accentColor: data.accent_color,
+    footer: data.email_footer,
+    fromName: data.email_from_name,
+    logoUrl: data.logo_url,
+    primaryColor: data.primary_color,
+    productName: data.product_name
+  };
 }
 
 async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: TransactionalEmailInput): Promise<TransactionalEmailResult> {

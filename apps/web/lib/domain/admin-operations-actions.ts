@@ -10,6 +10,13 @@ import { getFileFromFormData, TENANT_DOCUMENTS_BUCKET, uploadTenantDocumentFile 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { buildReportMetricsSnapshot, getAdminOperationsData } from "./admin-operations";
 import { getActiveTenant } from "./core";
+import {
+  getMessageAudienceRoles,
+  isMessagePublicationConfirmed,
+  isMessageVisibilityPublishable,
+  type MessageAudience,
+  type MessageVisibility
+} from "./message-audience-contract";
 import { createTenantNotifications, type TenantNotificationType } from "./tenant-notifications";
 
 const messageAudiences = new Set(["tenant_staff", "instructors", "parents", "all_tenant"]);
@@ -26,6 +33,22 @@ export async function createAdminMessageAction(formData: FormData) {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
   const status = readEnum(formData, "status", messageStatuses, "draft");
+  const audience = readEnum(formData, "audience", messageAudiences, "tenant_staff");
+  const visibility = readEnum(formData, "visibility", messageVisibilities, "internal");
+
+  if (!isMessagePublicationConfirmed(status, formData.get("humanConfirmation"))) {
+    redirect("/admin/berichten?error=confirmation");
+  }
+  if (
+    status === "published" &&
+    !isMessageVisibilityPublishable(
+      audience as MessageAudience,
+      visibility as MessageVisibility
+    )
+  ) {
+    redirect("/admin/berichten?error=visibility");
+  }
+
   const title = readRequired(formData, "title");
   const body = readRequired(formData, "body");
   const classification = classifyContent({ title, body });
@@ -38,8 +61,8 @@ export async function createAdminMessageAction(formData: FormData) {
       body,
       content_classification: classification.classification,
       classification_reasons: classification.reasons,
-      audience: readEnum(formData, "audience", messageAudiences, "tenant_staff"),
-      visibility: readEnum(formData, "visibility", messageVisibilities, "internal"),
+      audience,
+      visibility,
       status,
       published_at: status === "published" ? new Date().toISOString() : null
     })
@@ -147,6 +170,9 @@ export async function createAdminDocumentAction(formData: FormData) {
   } catch {
     redirect("/admin/documenten?error=file");
   }
+  if (!file) {
+    redirect("/admin/documenten?error=file_required");
+  }
 
   const documentResult = await admin
     .from("tenant_documents")
@@ -160,14 +186,14 @@ export async function createAdminDocumentAction(formData: FormData) {
       audience: readEnum(formData, "audience", documentAudiences, "tenant_staff"),
       visibility,
       status,
-      file_name: file?.name ?? readOptional(formData, "fileName"),
-      file_path: readOptional(formData, "filePath"),
-      mime_type: file?.type ?? readOptional(formData, "mimeType"),
-      size_bytes: file?.size ?? readInteger(formData, "sizeBytes"),
+      file_name: file.name,
+      file_path: null,
+      mime_type: file.type,
+      size_bytes: file.size,
       storage_bucket: TENANT_DOCUMENTS_BUCKET,
-      storage_status: file ? "missing" : readOptional(formData, "filePath") ? "stored" : "metadata",
-      malware_scan_status: file ? "pending" : "not_required",
-      uploaded_at: file ? new Date().toISOString() : null
+      storage_status: "missing",
+      malware_scan_status: "pending",
+      uploaded_at: new Date().toISOString()
     })
     .select("id, title, audience, visibility, status")
     .single();
@@ -176,42 +202,47 @@ export async function createAdminDocumentAction(formData: FormData) {
     redirect("/admin/documenten?error=document");
   }
 
-  if (file) {
-    try {
-      const upload = await uploadTenantDocumentFile({
-        documentId: documentResult.data.id,
-        file,
-        tenantId: tenant.id
-      });
-      const { error: updateError } = await admin
-        .from("tenant_documents")
-        .update({
-          file_name: upload.fileName,
-          file_path: upload.filePath,
-          mime_type: upload.mimeType,
-          size_bytes: upload.sizeBytes,
-          storage_bucket: upload.storageBucket,
-          storage_status: "stored",
-          file_sha256: upload.scan.sha256,
-          malware_scan_engine: upload.scan.engine,
-          malware_scan_status: upload.scan.status,
-          malware_scanned_at: upload.scan.scannedAt,
-          uploaded_at: new Date().toISOString()
-        })
-        .eq("tenant_id", tenant.id)
-        .eq("id", documentResult.data.id);
+  let upload: Awaited<ReturnType<typeof uploadTenantDocumentFile>>;
+  try {
+    upload = await uploadTenantDocumentFile({
+      documentId: documentResult.data.id,
+      file,
+      tenantId: tenant.id
+    });
+  } catch {
+    await admin
+      .from("tenant_documents")
+      .update({ malware_scan_status: "failed", storage_status: "missing" })
+      .eq("tenant_id", tenant.id)
+      .eq("id", documentResult.data.id);
+    redirect("/admin/documenten?error=file_upload");
+  }
+  const { error: updateError } = await admin
+    .from("tenant_documents")
+    .update({
+      file_name: upload.fileName,
+      file_path: upload.filePath,
+      mime_type: upload.mimeType,
+      size_bytes: upload.sizeBytes,
+      storage_bucket: upload.storageBucket,
+      storage_status: "stored",
+      file_sha256: upload.scan.sha256,
+      malware_scan_engine: upload.scan.engine,
+      malware_scan_status: upload.scan.status,
+      malware_scanned_at: upload.scan.scannedAt,
+      uploaded_at: new Date().toISOString()
+    })
+    .eq("tenant_id", tenant.id)
+    .eq("id", documentResult.data.id);
 
-      if (updateError) {
-        redirect("/admin/documenten?error=file_update");
-      }
-    } catch {
-      await admin
-        .from("tenant_documents")
-        .update({ malware_scan_status: "failed", storage_status: "missing" })
-        .eq("tenant_id", tenant.id)
-        .eq("id", documentResult.data.id);
-      redirect("/admin/documenten?error=file_upload");
-    }
+  if (updateError) {
+    await admin.storage.from(upload.storageBucket).remove([upload.filePath]);
+    await admin
+      .from("tenant_documents")
+      .update({ malware_scan_status: "failed", storage_status: "missing" })
+      .eq("tenant_id", tenant.id)
+      .eq("id", documentResult.data.id);
+    redirect("/admin/documenten?error=file_update");
   }
 
   if (documentResult.data.status === "active" && documentResult.data.visibility === "portal") {
@@ -356,7 +387,11 @@ async function notifyAudience(input: {
     return;
   }
 
-  const recipientIds = await getAudienceRecipientIds(input.tenantId, input.audience);
+  const recipientIds = await getAudienceRecipientIds(
+    input.tenantId,
+    input.audience,
+    input.visibility
+  );
 
   await createNotifications({
     tenantId: input.tenantId,
@@ -368,20 +403,17 @@ async function notifyAudience(input: {
   });
 }
 
-async function getAudienceRecipientIds(tenantId: string, audience: string) {
-  if (audience === "parents") {
-    return getTenantMemberIds(tenantId, ["parent"]);
-  }
+async function getAudienceRecipientIds(
+  tenantId: string,
+  audience: string,
+  visibility: string
+) {
+  const roles = getMessageAudienceRoles(
+    audience as MessageAudience,
+    visibility as MessageVisibility
+  );
 
-  if (audience === "instructors") {
-    return getTenantMemberIds(tenantId, ["instructor"]);
-  }
-
-  if (audience === "all_tenant") {
-    return getTenantMemberIds(tenantId, ["tenant_owner", "tenant_admin", "tenant_staff", "instructor", "parent"]);
-  }
-
-  return getStaffRecipientIds(tenantId);
+  return roles.length > 0 ? getTenantMemberIds(tenantId, roles) : [];
 }
 
 async function getStaffRecipientIds(tenantId: string) {

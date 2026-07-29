@@ -1,15 +1,18 @@
-import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageSquare, Star, UserRound } from "lucide-react";
+import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageSquare, Sparkles, Star, UserRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { InstructorBadgeAwardForm } from "@/components/badges/instructor-badge-award-form";
 import { Button } from "@/components/ui/button";
 import { Field as FieldRoot, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { awardBadgeAction, installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
+import { installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
 import { getInstructorData } from "@/lib/domain/instructor";
+import { markInstructorReadinessRecommendationAction } from "@/lib/domain/learning-intelligence-actions";
+import { calculateDiplomaReadiness, detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
 import { getPositiveScoreLabel, positiveScoreLevels } from "@/lib/domain/progress-template";
 
 type PageProps = {
@@ -29,6 +32,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
 
   const saved = getParam(rawParams, "saved");
   const error = getParam(rawParams, "error");
+  const success = getParam(rawParams, "success");
   const activeTab = getDossierTab(getParam(rawParams, "tab"));
   const memberships = data.groupMemberships.filter((membership) => membership.participant_id === participant.id && (membership.status === "active" || membership.status === "trial"));
   const enrollment = data.enrollments.find((item) => item.id === memberships[0]?.enrollment_id) ?? data.enrollments.find((item) => item.participant_id === participant.id) ?? null;
@@ -48,11 +52,22 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   const itemsByModuleId = new Map(
     progressModules.map((module) => [module.id, data.progressItems.filter((item) => item.module_id === module.id && item.status === "active")])
   );
+  const [attendanceRisks, diplomaReadiness] = await Promise.all([
+    detectAttendanceRisks(data.tenant.id, { includeTestData: participant.is_test }),
+    enrollment && program && !participant.is_test
+      ? calculateDiplomaReadiness({
+          tenantId: data.tenant.id,
+          participantId: participant.id,
+          programId: program.id
+        })
+      : Promise.resolve(null)
+  ]);
+  const participantAttendanceRisks = attendanceRisks.filter((risk) => risk.participant_id === participant.id);
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Student detail" title={participant.display_name} subtitle="Progress notes, zichtbaarheid en badge action foundation." />
-      <Feedback saved={saved} error={error} />
+      <Feedback saved={saved} error={error} success={success} />
 
       <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-4">
@@ -100,6 +115,10 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
           <TabsTrigger value="badges">
             <Award className="h-4 w-4" />
             Badges
+          </TabsTrigger>
+          <TabsTrigger value="graduation">
+            <Sparkles className="h-4 w-4" />
+            Afzwemmen
           </TabsTrigger>
         </TabsList>
 
@@ -258,30 +277,39 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         <TabsContent value="badges">
           <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
-              <h2 className="text-lg font-bold text-foreground">Badge toekennen</h2>
-              <form action={awardBadgeAction} className="mt-4 grid gap-3">
-                <input name="participantId" type="hidden" value={participant.id} />
-                <input name="enrollmentId" type="hidden" value={enrollment?.id ?? ""} />
-                <input name="next" type="hidden" value={`/instructor/student/${participant.id}?tab=badges`} />
-                <SelectField fieldId="badge-definition" label="Badgecatalogus" name="badgeDefinitionId">
-                  <option value="">Vrije badge</option>
-                  {data.badgeDefinitions.map((badge) => (
-                    <option key={badge.id} value={badge.id}>
-                      {badge.name}
-                    </option>
-                  ))}
-                </SelectField>
-                <TextField fieldId="badge-title" label="Badgetitel" name="title" placeholder="Optioneel bij catalogusbadge" />
-                <TextAreaField fieldId="badge-note" label="Badgenotitie" name="note" />
-                <SelectField fieldId="badge-visibility" label="Zichtbaarheid" name="visibility">
-                  <option value="parent_visible">Zichtbaar voor ouder</option>
-                  <option value="internal">Alleen intern</option>
-                </SelectField>
-                <Button type="submit">
-                  <Award className="h-4 w-4" />
-                  Badge toekennen
-                </Button>
-              </form>
+              <h2 className="text-lg font-bold text-foreground">Positief moment vastleggen</h2>
+              <p className="mt-1 text-sm leading-6 text-muted-foreground">Kies een passende complimentbadge. De aanspreekvorm gebruikt alleen de badgevoorkeur en beïnvloedt geen enkel operationeel besluit.</p>
+              <InstructorBadgeAwardForm
+                badges={[
+                  ...data.premiumBadgeCatalog.map((badge) => ({
+                    id: badge.id,
+                    kind: "catalog" as const,
+                    badgeKey: badge.badge_key,
+                    nameDefault: badge.name_default,
+                    nameBoy: badge.name_boy,
+                    nameGirl: badge.name_girl,
+                    description: badge.description_default,
+                    category: badge.category,
+                    audience: badge.audience
+                  })),
+                  ...data.customBadges.map((badge) => ({
+                    id: badge.id,
+                    kind: "custom" as const,
+                    badgeKey: badge.badge_key,
+                    nameDefault: badge.name_default,
+                    nameBoy: badge.name_boy,
+                    nameGirl: badge.name_girl,
+                    description: badge.description_default,
+                    category: badge.category,
+                    audience: badge.audience
+                  }))
+                ]}
+                directAward={data.badgeModuleSettings?.instructor_can_award_directly === true && data.badgeModuleSettings?.manual_badge_requires_admin_approval === false}
+                nextPath={`/instructor/student/${participant.id}?tab=badges`}
+                participantGender={participant.gender}
+                participantId={participant.id}
+                suggestions={data.badgeSuggestions}
+              />
             </article>
 
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -301,6 +329,66 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
               </div>
             </article>
           </div>
+        </TabsContent>
+
+        <TabsContent value="graduation">
+          {!diplomaReadiness || !enrollment || !program ? (
+            <EmptyState>De afzwemassistent is beschikbaar bij een actieve, niet-synthetische programma-inschrijving.</EmptyState>
+          ) : (
+            <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
+              <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"><Sparkles className="size-4" />Adviserend</p>
+                    <h2 className="mt-1 text-lg font-bold text-foreground">Afzwemgereedheid</h2>
+                    <p className="mt-1 text-sm text-muted-foreground">Uitlegbaar, zonder automatisch besluit of exact schijncijfer.</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <StatusPill tone={readinessTone(diplomaReadiness.readiness_band)}>{readinessLabel(diplomaReadiness.readiness_band)}</StatusPill>
+                    <StatusPill tone="info">{diplomaReadiness.confidence} vertrouwen</StatusPill>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <Detail label="Vaardigheden" value={`${diplomaReadiness.required_skills_completed.length} stabiel op niveau`} />
+                  <Detail label="Aanwezigheidscontext" value={diplomaReadiness.attendance_summary} />
+                  <Detail label="Stabiliteit" value={diplomaReadiness.recent_score_stability} />
+                  <Detail label="Menselijke aanbeveling" value={diplomaReadiness.instructor_recommendation?.replaceAll("_", " ") ?? "Nog niet vastgelegd"} />
+                </div>
+                <div className="mt-4 space-y-2">
+                  {diplomaReadiness.reasons.map((reason) => (
+                    <article className="rounded-lg border border-border bg-muted/35 p-3" key={reason.code}>
+                      <p className="text-sm font-semibold text-foreground">{reason.label}</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">{reason.explanation}</p>
+                      <p className="mt-2 text-xs font-semibold text-primary">{reason.evidence}</p>
+                    </article>
+                  ))}
+                </div>
+                <p className="mt-4 rounded-lg bg-primary/5 px-3 py-2 text-sm font-medium leading-6 text-foreground">{diplomaReadiness.suggested_next_step}</p>
+              </article>
+              <div className="grid content-start gap-4">
+                <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+                  <h2 className="font-bold text-foreground">Menselijke aanbeveling</h2>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">Deze keuze wordt gelogd als review. Alleen een admin kan daarna een afzwemevent kiezen en een uitnodiging versturen.</p>
+                  <div className="mt-4 grid gap-2">
+                    <ReadinessRecommendationButton participantId={participant.id} programId={program.id} status="not_ready" label="Verder ontwikkelen" />
+                    <ReadinessRecommendationButton participantId={participant.id} programId={program.id} status="nearly_ready" label="Bijna klaar" />
+                    <ReadinessRecommendationButton participantId={participant.id} programId={program.id} status="ready" label="Klaar voor admin-review" />
+                  </div>
+                </article>
+                <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+                  <h2 className="font-bold text-foreground">Begeleidingscontext</h2>
+                  {participantAttendanceRisks.length ? (
+                    <div className="mt-3 space-y-2">
+                      {participantAttendanceRisks.slice(0, 3).map((risk) => (
+                        <p className="rounded-lg bg-warning/10 px-3 py-2 text-xs leading-5 text-muted-foreground" key={`${risk.group_id}-${risk.signal_type}`}>{risk.reason}</p>
+                      ))}
+                    </div>
+                  ) : <p className="mt-3 text-sm text-muted-foreground">Geen actueel aanwezigheidssignaal.</p>}
+                  <p className="mt-3 text-xs leading-5 text-muted-foreground">Aanwezigheid geeft context en beslist nooit zelfstandig over afzwemmen.</p>
+                </article>
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -361,7 +449,10 @@ function SelectField({ children, defaultValue, name, fieldId = name, label }: { 
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
+function Feedback({ saved, error, success }: { saved?: string; error?: string; success?: string }) {
+  if (success) {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">{success}</p>;
+  }
   if (saved === "note") {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Note opgeslagen.</p>;
   }
@@ -415,8 +506,23 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   return Array.isArray(value) ? value[0] : value;
 }
 
-function getDossierTab(value?: string): "progress" | "assessment" | "notes" | "badges" {
-  if (value === "assessment" || value === "notes" || value === "badges") {
+function ReadinessRecommendationButton({ label, participantId, programId, status }: { label: string; participantId: string; programId: string; status: "not_ready" | "nearly_ready" | "ready" }) {
+  return <form action={markInstructorReadinessRecommendationAction}><input name="participantId" type="hidden" value={participantId} /><input name="programId" type="hidden" value={programId} /><input name="status" type="hidden" value={status} /><input name="next" type="hidden" value={`/instructor/student/${participantId}?tab=graduation`} /><Button className="w-full justify-start" type="submit" variant={status === "ready" ? "default" : "outline"}>{label}</Button></form>;
+}
+
+function readinessLabel(value: string) {
+  return ({ laag: "Verder ontwikkelen", in_ontwikkeling: "In ontwikkeling", bijna_klaar: "Bijna klaar", hoog_vertrouwen: "Hoog vertrouwen", klaar_voor_admin_review: "Klaar voor admin-review" } as Record<string, string>)[value] ?? value;
+}
+
+function readinessTone(value: string): "neutral" | "info" | "warning" | "success" {
+  if (value === "klaar_voor_admin_review" || value === "hoog_vertrouwen") return "success";
+  if (value === "bijna_klaar") return "warning";
+  if (value === "in_ontwikkeling") return "info";
+  return "neutral";
+}
+
+function getDossierTab(value?: string): "progress" | "assessment" | "notes" | "badges" | "graduation" {
+  if (value === "assessment" || value === "notes" || value === "badges" || value === "graduation") {
     return value;
   }
 

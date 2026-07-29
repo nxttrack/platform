@@ -24,7 +24,7 @@ export default async function AdminDocumentsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-5">
       <PageHeader action={<AdminActionDrawer description="Private opslag, inhoudsclassificatie en malwarecontrole zijn onderdeel van deze upload." title="Document uploaden" triggerLabel="Document toevoegen" width="wide"><DocumentForm /></AdminActionDrawer>} kicker="Lesproces" title="Documenten" subtitle="Beheer documenten voor backoffice, instructeurs en ouderportaal vanuit één veilig register." />
-      <RouteFeedback success={saved ? `Documentactie opgeslagen: ${saved}.` : null} error={error ? `Documentactie is niet gelukt: ${error}.` : null} />
+      <RouteFeedback success={saved ? `Documentactie opgeslagen: ${saved}.` : null} error={error ? documentError(error) : null} />
 
       <AdminListSurface>
         <div className="mb-3"><h2 className="text-base font-bold">Documentregister</h2><p className="text-[13px] text-muted-foreground">Filter, beheer kolommen en open het documentdossier zonder de lijst te verlaten.</p></div>
@@ -58,7 +58,7 @@ function DocumentForm() {
         <SelectField label="Status" name="status"><option value="active">Actief</option><option value="archived">Archief</option></SelectField>
         <SelectField label="Dataclassificatie" name="contentClassification"><option value="personal">Persoonsgegevens</option><option value="sensitive">Gevoelig</option><option value="restricted">Strikt beperkt</option><option value="operational">Operationeel</option></SelectField>
       </div>
-      <label className="space-y-2 text-[13px] font-semibold text-foreground"><span>Bestand</span><input accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" type="file" /><span className="block text-xs font-normal leading-5 text-muted-foreground">PDF, PNG, JPG, DOCX of XLSX. Publicatie volgt alleen na een schone malwarecontrole.</span></label>
+      <label className="space-y-2 text-[13px] font-semibold text-foreground"><span>Bestand</span><input accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx,application/pdf,image/png,image/jpeg,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-primary-foreground" name="file" required type="file" /><span className="block text-xs font-normal leading-5 text-muted-foreground">PDF, PNG, JPG, DOCX of XLSX. Publicatie volgt alleen na een schone malwarecontrole.</span></label>
       <SubmitButton><span className="inline-flex items-center gap-2"><UploadCloud className="size-4" />Document opslaan</span></SubmitButton>
     </DirtyForm>
   );
@@ -80,4 +80,12 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   const value = params[key];
 
   return Array.isArray(value) ? value[0] : value;
+}
+
+function documentError(value: string) {
+  if (value === "file_required") return "Selecteer een bestand voordat je het document opslaat.";
+  if (value === "file") return "Het geselecteerde bestand is ongeldig of te groot.";
+  if (value === "file_upload") return "Upload geweigerd: de malwarecontrole is niet bereikbaar of het bestand is niet schoon.";
+  if (value === "file_update") return "Het bestand is gecontroleerd, maar de opslagstatus kon niet worden bijgewerkt.";
+  return "De documentactie kon niet veilig worden afgerond.";
 }

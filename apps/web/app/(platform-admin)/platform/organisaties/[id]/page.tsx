@@ -1,4 +1,4 @@
-import { ArrowLeft, Building2, ExternalLink, MailPlus, ShieldCheck, UserCog, Users } from "lucide-react";
+import { ArrowLeft, Building2, ExternalLink, HeartPulse, MailPlus, ShieldCheck, UserCog, Users } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -19,6 +19,7 @@ import {
   updatePlatformTenantAction,
   updateTenantMemberAction
 } from "@/lib/domain/platform-tenant-actions";
+import { getPlatformHealthDashboard } from "@/lib/domain/platform-health";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type PageProps = {
@@ -45,8 +46,9 @@ export default async function PlatformOrganizationDetailPage({ params, searchPar
   const { id: tenantId } = await params;
   if (!isUuid(tenantId)) notFound();
   const query = (await searchParams) ?? {};
-  const data = await getOrganizationDetail(tenantId);
+  const [data, healthDashboard] = await Promise.all([getOrganizationDetail(tenantId), getPlatformHealthDashboard()]);
   if (!data) notFound();
+  const tenantHealth = healthDashboard.tenants.find((tenant) => tenant.id === tenantId)?.health ?? null;
   const canManage = context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin") ?? false;
   const saved = getParam(query, "saved");
   const error = getParam(query, "error");
@@ -82,6 +84,24 @@ export default async function PlatformOrganizationDetailPage({ params, searchPar
         <Metric icon={MailPlus} label="Open uitnodigingen" value={data.invitations.filter((invitation) => invitation.status === "pending" && new Date(invitation.expires_at).getTime() > Date.now()).length} />
         <Metric icon={Building2} label="Domeinen" value={data.domains.length} />
       </div>
+
+      {tenantHealth ? (
+        <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+          <div className="flex flex-wrap items-start justify-between gap-4 bg-gradient-to-r from-slate-950 to-blue-950 px-5 py-5 text-white">
+            <div><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-300"><HeartPulse className="size-4" />Tenant Health</p><h2 className="mt-1 text-2xl font-bold">{tenantHealth.score}/100 · {tenantHealth.status}</h2><p className="mt-1 text-sm text-slate-300">Uitlegbaar over tien componenten; bedoeld voor customer success, niet voor automatische klantbesluiten.</p></div>
+            <StatusPill tone={tenantHealth.status === "healthy" ? "success" : tenantHealth.status === "watch" ? "warning" : "danger"}>{tenantHealth.topActions.length} aandachtspunt(en)</StatusPill>
+          </div>
+          <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-5">
+            {tenantHealth.components.map((component) => (
+              <article className="bg-card p-4" key={component.key}>
+                <div className="flex items-center justify-between gap-2"><p className="text-sm font-bold text-foreground">{component.label}</p><StatusPill tone={component.status === "healthy" ? "success" : component.status === "watch" ? "warning" : "danger"}>{component.score}</StatusPill></div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full ${component.score >= 85 ? "bg-success" : component.score >= 60 ? "bg-warning" : "bg-danger"}`} style={{ width: `${component.score}%` }} /></div>
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">{component.evidence}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <div className="grid gap-5 2xl:grid-cols-[minmax(320px,0.75fr)_minmax(0,1.55fr)]">
         <AdminSection title="Organisatie-instellingen" description="Naam, slug, sector en operationele status van deze tenant.">

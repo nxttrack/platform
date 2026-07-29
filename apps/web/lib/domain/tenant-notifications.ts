@@ -10,6 +10,9 @@ export type TenantNotificationType =
   | "certificate_issued"
   | "document_published"
   | "graduation_invite"
+  | "makeup_invitation"
+  | "message_received"
+  | "newsletter_status"
   | "payment_due"
   | "payment_overdue"
   | "payment_received"
@@ -34,6 +37,11 @@ export async function createTenantNotifications(input: {
   tenantId: string;
   title: string;
   type: TenantNotificationType;
+  deliverEmail?: boolean;
+  priority?: "low" | "normal" | "high" | "urgent";
+  entityType?: string | null;
+  entityId?: string | null;
+  actionHref?: string | null;
 }) {
   const recipientIds = unique(input.recipientIds);
 
@@ -53,6 +61,10 @@ export async function createTenantNotifications(input: {
         title: input.title,
         message: input.message,
         status: "unread",
+        priority: input.priority ?? "normal",
+        entity_type: input.entityType ?? null,
+        entity_id: input.entityId ?? null,
+        action_href: input.actionHref ?? null,
         related_progress_score_id: input.relatedProgressScoreId ?? null,
         related_badge_award_id: input.relatedBadgeAwardId ?? null
       }))
@@ -66,6 +78,7 @@ export async function createTenantNotifications(input: {
   const notifications = data as InsertedNotification[];
 
   await deliverNotificationsByEmail({
+    deliverEmail: input.deliverEmail ?? true,
     notifications,
     organizationName: input.organizationName,
     tenantId: input.tenantId,
@@ -76,6 +89,7 @@ export async function createTenantNotifications(input: {
 }
 
 async function deliverNotificationsByEmail(input: {
+  deliverEmail: boolean;
   notifications: InsertedNotification[];
   organizationName?: string;
   tenantId: string;
@@ -98,6 +112,13 @@ async function deliverNotificationsByEmail(input: {
 
   await Promise.all(
     input.notifications.map(async (notification) => {
+      if (!input.deliverEmail) {
+        await updateNotificationDelivery(notification.id, {
+          deliveryError: "E-mail uitgeschakeld volgens communicatievoorkeur; in-app notificatie bewaard.",
+          deliveryStatus: "skipped"
+        });
+        return;
+      }
       const email = emailByUserId.get(notification.recipient_user_id);
 
       if (!email) {

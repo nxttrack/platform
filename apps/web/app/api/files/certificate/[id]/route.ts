@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireApiAuthenticatedContext } from "@/lib/auth/server-guard";
 import { canInstructParticipantFile, canManageTenantFiles, canViewParticipantFile } from "@/lib/domain/private-file-access";
-import { createPrivateFileSignedUrl, DIPLOMA_VAULT_BUCKET } from "@/lib/storage/private-files";
+import { createPrivateFileResponse } from "@/lib/storage/private-file-response";
+import { DIPLOMA_VAULT_BUCKET } from "@/lib/storage/private-files";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type RouteContext = {
@@ -9,8 +10,10 @@ type RouteContext = {
 };
 
 type CertificateDownloadRow = {
+  file_name: string | null;
   file_path: string | null;
   id: string;
+  mime_type: string | null;
   participant_id: string;
   status: string;
   storage_bucket: string | null;
@@ -30,7 +33,7 @@ export async function GET(_request: Request, context: RouteContext) {
   const admin = createAdminClient();
   const { data, error } = await admin
     .from("certificate_records")
-    .select("id, tenant_id, participant_id, status, file_path, storage_bucket, malware_scan_status")
+    .select("id, tenant_id, participant_id, status, file_name, file_path, mime_type, storage_bucket, malware_scan_status")
     .eq("id", id)
     .maybeSingle();
 
@@ -62,12 +65,14 @@ export async function GET(_request: Request, context: RouteContext) {
     return NextResponse.json({ error: "file_scan_required" }, { status: 423 });
   }
 
-  const signedUrl = await createPrivateFileSignedUrl({
+  const response = await createPrivateFileResponse({
     bucket: certificate.storage_bucket ?? DIPLOMA_VAULT_BUCKET,
+    fileName: certificate.file_name ?? `nxttrack-diploma-${certificate.id}.pdf`,
+    mimeType: certificate.mime_type,
     path: certificate.file_path
   });
 
-  return NextResponse.redirect(signedUrl, { status: 302 });
+  return response ?? NextResponse.json({ error: "file_missing" }, { status: 404 });
 }
 
 function hasDownloadableScan(status: string) {

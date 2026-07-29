@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Users, Waves } from "lucide-react";
 import { useState } from "react";
+import Link from "next/link";
 
 import { StatusPill } from "@/components/shell/ui";
 import { DetailsSheet } from "@/components/ui/details-sheet";
@@ -30,12 +31,17 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
     <>
       <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
         {days.map((day) => (
-          <section className="rounded-xl border border-border bg-card p-3 shadow-soft" key={day.key}>
-            <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          <section className="flex h-64 flex-col rounded-xl border border-border bg-card p-3 shadow-soft" key={day.key}>
+            <div className="mb-2 flex shrink-0 items-center justify-between gap-2 px-1">
               <h3 className="text-sm font-bold text-foreground">{day.label}</h3>
               <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>
             </div>
-            <div className="grid gap-1.5">
+            <div
+              aria-label={day.sessions.length > 3 ? `Lessen op ${day.label}` : undefined}
+              className="grid min-h-0 flex-1 content-start gap-1.5 overflow-y-auto overscroll-contain pr-1"
+              role={day.sessions.length > 3 ? "region" : undefined}
+              tabIndex={day.sessions.length > 3 ? 0 : undefined}
+            >
               {day.sessions.map((session) => (
                 <button
                   className="flex min-h-16 w-full items-center gap-3 rounded-lg border border-transparent bg-muted/45 px-3 py-2 text-left transition hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -69,7 +75,13 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
               <DetailGrid entries={[["Start", formatDateTime(detail.startsAt)], ["Einde", formatDateTime(detail.endsAt)], ["Resource", detail.resourceName], ["Notitie", detail.notes || "Geen notitie"]]} />
             </TabsContent>
             <TabsContent value="capacity">
-              <div className="grid gap-4"><DetailGrid entries={[["Bezetting", `${detail.used} van ${detail.capacity}`], ["Beschikbaar", String(detail.available)], ["Inhaalreserveringen", String(detail.catchUpHolds)]]} /><Progress value={detail.capacity ? Math.min(100, (detail.used / detail.capacity) * 100) : 0} /></div>
+              <div className="grid gap-4">
+                <DetailGrid entries={[["Bezetting", `${detail.used} van ${detail.capacity}`], ["Beschikbaar", String(detail.available)], ["Inhaalreserveringen", String(detail.catchUpHolds)]]} />
+                <Progress value={detail.capacity ? Math.min(100, (detail.used / detail.capacity) * 100) : 0} />
+                <Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/inhaalmarkt?sessie=${detail.id}`}>
+                  Open Inhaalmarktplaats
+                </Link>
+              </div>
             </TabsContent>
             <TabsContent value="instructor">
               <div className="rounded-xl border border-border bg-muted/40 p-4"><Users className="size-4 text-primary" /><p className="mt-3 text-[13px] font-semibold">{detail.instructorNames.join(", ") || "Nog geen instructeur gekoppeld"}</p></div>

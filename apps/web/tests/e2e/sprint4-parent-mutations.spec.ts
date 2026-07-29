@@ -57,14 +57,14 @@ test.describe("Sprint 4 parent self-service mutations", () => {
 
     await expect(cancellationStatus).toBeVisible();
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
-    const catchUpOption = page.locator("form").filter({ hasText: parentState.targetGroupName });
-    const chooseCatchUpButton = catchUpOption.getByRole("button", { name: "Kiezen" });
+    const chooseCatchUpButton = page.getByRole("button", { name: `Kiezen ${parentState.targetGroupName}`, exact: true });
     const catchUpStatus = page.getByText(`Aanvraag ingediend. Status: ${parentState.catchUpOutcome}.`);
 
     await expect(chooseCatchUpButton.or(catchUpStatus)).toBeVisible();
 
     if (await chooseCatchUpButton.isVisible()) {
       await chooseCatchUpButton.click();
+      await page.getByRole("alertdialog").getByRole("button", { name: "Inhaalmoment bevestigen" }).click();
       const feedback = parentState.catchUpOutcome === "requested" ? "Inhaalles aangevraagd. De administratie beoordeelt de aanvraag." : "Inhaalles ingepland.";
       await expect(page.getByText(feedback)).toBeVisible();
     }

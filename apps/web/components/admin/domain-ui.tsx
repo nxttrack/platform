@@ -27,7 +27,11 @@ export function Field({
   defaultValue,
   description,
   disabled = false,
-  autoComplete
+  autoComplete,
+  maxLength,
+  min,
+  pattern,
+  step
 }: {
   label: string;
   name: string;
@@ -38,6 +42,10 @@ export function Field({
   description?: string;
   disabled?: boolean;
   autoComplete?: string;
+  maxLength?: number;
+  min?: number;
+  pattern?: string;
+  step?: number;
 }) {
   const id = useId();
   const descriptionId = description ? `${id}-description` : undefined;
@@ -51,9 +59,13 @@ export function Field({
         defaultValue={defaultValue}
         disabled={disabled}
         id={id}
+        maxLength={maxLength}
+        min={min}
         name={name}
+        pattern={pattern}
         placeholder={placeholder}
         required={required}
+        step={step}
         type={type}
       />
       {description ? <FieldDescription id={descriptionId}>{description}</FieldDescription> : null}
@@ -61,13 +73,27 @@ export function Field({
   );
 }
 
-export function TextAreaField({ label, name, placeholder }: { label: string; name: string; placeholder?: string }) {
+export function TextAreaField({
+  label,
+  name,
+  placeholder,
+  defaultValue,
+  maxLength,
+  required = false
+}: {
+  label: string;
+  name: string;
+  placeholder?: string;
+  defaultValue?: string;
+  maxLength?: number;
+  required?: boolean;
+}) {
   const id = useId();
 
   return (
     <FieldRoot>
       <FieldLabel htmlFor={id}>{label}</FieldLabel>
-      <Textarea id={id} name={name} placeholder={placeholder} />
+      <Textarea defaultValue={defaultValue} id={id} maxLength={maxLength} name={name} placeholder={placeholder} required={required} />
     </FieldRoot>
   );
 }

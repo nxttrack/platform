@@ -12,9 +12,10 @@ import { getActiveTenant } from "./core";
 const automationEvents = new Set(["no_show", "birthday", "milestone", "offer_expiring", "payment_failed", "long_absence", "graduation_ready"]);
 const automationActions = new Set(["send_email", "create_task", "notify_parent", "notify_admin", "add_tag"]);
 const importTypes = new Set(["participants", "guardians", "groups", "enrollments", "payments", "mixed"]);
+const legacyAutomationPath = "/admin/automatisering/regels";
 
 export async function createAutomationRuleAction(formData: FormData) {
-  const { tenant, userId } = await requireTenantAdmin("/admin/automatisering");
+  const { tenant, userId } = await requireTenantAdmin(legacyAutomationPath);
   const eventKey = readEnum(formData, "eventKey", automationEvents);
   const actionKey = readEnum(formData, "actionKey", automationActions);
   const name = readRequired(formData, "name");
@@ -32,20 +33,20 @@ export async function createAutomationRuleAction(formData: FormData) {
     status: formData.get("active") === "on" ? "active" : "draft",
     created_by_user_id: userId
   });
-  if (error) redirect("/admin/automatisering?error=save");
-  revalidatePath("/admin/automatisering");
-  redirect("/admin/automatisering?saved=1");
+  if (error) redirect(`${legacyAutomationPath}?error=save`);
+  revalidatePath(legacyAutomationPath);
+  redirect(`${legacyAutomationPath}?saved=1`);
 }
 
 export async function setAutomationRuleStatusAction(formData: FormData) {
-  const { tenant } = await requireTenantAdmin("/admin/automatisering");
+  const { tenant } = await requireTenantAdmin(legacyAutomationPath);
   const ruleId = readRequired(formData, "ruleId");
   const status = readEnum(formData, "status", new Set(["active", "paused", "archived"]));
   const admin = createAdminClient();
   const { error } = await admin.from("automation_rules").update({ status }).eq("tenant_id", tenant.id).eq("id", ruleId);
-  if (error) redirect("/admin/automatisering?error=status");
-  revalidatePath("/admin/automatisering");
-  redirect("/admin/automatisering?saved=1");
+  if (error) redirect(`${legacyAutomationPath}?error=status`);
+  revalidatePath(legacyAutomationPath);
+  redirect(`${legacyAutomationPath}?saved=1`);
 }
 
 export async function createImportJobAction(formData: FormData) {
@@ -154,10 +155,12 @@ export async function saveTenantBrandingAction(formData: FormData) {
   const primaryColor = readColor(formData, "primaryColor", "#1d4ed8");
   const accentColor = readColor(formData, "accentColor", "#06b6d4");
   const admin = createAdminClient();
+  const logoUrl = readOptional(formData, "logoUrl");
+  if (logoUrl && !isSafeHttpsUrl(logoUrl)) redirect("/admin/branding?error=logo");
   const { error } = await admin.from("tenant_branding").upsert({
     tenant_id: tenant.id,
     product_name: readOptional(formData, "productName"),
-    logo_url: readOptional(formData, "logoUrl"),
+    logo_url: logoUrl,
     primary_color: primaryColor,
     accent_color: accentColor,
     email_from_name: readOptional(formData, "emailFromName"),
@@ -209,6 +212,14 @@ function readRequired(formData: FormData, field: string) {
 function readOptional(formData: FormData, field: string) { return String(formData.get(field) ?? "").trim() || null; }
 function readEnum(formData: FormData, field: string, values: Set<string>) { const value = readRequired(formData, field); if (!values.has(value)) throw new Error(`${field} is invalid`); return value; }
 function readColor(formData: FormData, field: string, fallback: string) { const value = String(formData.get(field) ?? fallback); return /^#[0-9a-f]{6}$/i.test(value) ? value : fallback; }
+function isSafeHttpsUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password && value.length <= 2000;
+  } catch {
+    return false;
+  }
+}
 function normalizeHeader(value: string) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, ""); }
 function getCanonicalFields(importType: string) {
   const fields: Record<string, string[]> = {

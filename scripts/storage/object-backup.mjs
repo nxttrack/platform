@@ -8,8 +8,8 @@ import { dirname, join, resolve } from "node:path";
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
 
-const allowedBuckets = new Set(["tenant-documents", "diploma-vault"]);
-const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault");
+const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets", "tenant-media-assets"]);
+const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media,badge-studio-assets,tenant-media-assets");
 const command = process.argv[2];
 const backupDirectory = resolve(process.env.STORAGE_BACKUP_DIR ?? "artifacts/storage-backup");
 const scopedPrefix = normalizePrefix(process.env.STORAGE_BACKUP_PREFIX ?? "");
@@ -54,6 +54,11 @@ try {
     fatal("Expected export, verify-local, restore, verify-remote, seed-rehearsal, delete-rehearsal or summary.");
   }
 } catch (error) {
+  if (command === "export") {
+    await recordStorageBackupHeartbeat("fail", "Storage-back-up is mislukt.", {
+      errorType: error instanceof Error ? error.name : "unknown"
+    }).catch(() => undefined);
+  }
   fatal(error instanceof Error ? error.message : String(error));
 }
 
@@ -120,7 +125,27 @@ async function exportObjects() {
   await writeFile(join(backupDirectory, "manifest.sha256"), `${sha256(await readFile(manifestPath))}  manifest.json\n`, {
     mode: 0o600
   });
+  await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
+    objectCount: manifest.objectCount,
+    totalBytes: manifest.totalBytes,
+    sourceProjectFingerprint: manifest.sourceProjectFingerprint
+  });
   return summarizeManifest(manifest);
+}
+
+async function recordStorageBackupHeartbeat(status, detail, metadata) {
+  const checkedAt = new Date();
+  const { error } = await admin.from("platform_service_heartbeats").upsert({
+    service_key: "storage_backup",
+    environment: process.env.APP_ENV,
+    status,
+    detail,
+    metadata_json: metadata,
+    commit_sha: process.env.GITHUB_SHA?.slice(0, 64) ?? null,
+    checked_at: checkedAt.toISOString(),
+    expires_at: new Date(checkedAt.getTime() + (status === "pass" ? 36 : 2) * 3_600_000).toISOString()
+  }, { onConflict: "environment,service_key" });
+  if (error) throw new Error(`Could not record Storage backup heartbeat: ${error.message}`);
 }
 
 async function verifyLocalBackup() {
@@ -205,13 +230,16 @@ async function seedRehearsal() {
   try {
     for (const bucket of buckets) {
       await assertBucketExists(bucket);
-      const path = `${scopedPrefix}/probe.pdf`;
-      const bytes = Buffer.from(
-        `%PDF-1.4\n% NXTTRACK controlled storage restore rehearsal\n% bucket=${bucket}\n%%EOF\n`,
-        "utf8"
-      );
+      const isImageBucket = bucket === "participant-media" || bucket === "badge-studio-assets";
+      const path = `${scopedPrefix}/probe.${isImageBucket ? "png" : "pdf"}`;
+      const bytes = isImageBucket
+        ? Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
+        : Buffer.from(
+            `%PDF-1.4\n% NXTTRACK controlled storage restore rehearsal\n% bucket=${bucket}\n%%EOF\n`,
+            "utf8"
+          );
       const { error } = await admin.storage.from(bucket).upload(path, bytes, {
-        contentType: "application/pdf",
+        contentType: isImageBucket ? "image/png" : "application/pdf",
         cacheControl: "60",
         upsert: false
       });
@@ -228,7 +256,10 @@ async function seedRehearsal() {
 }
 
 async function deleteRehearsalObjects() {
-  const objects = buckets.map((bucket) => ({ bucket, path: `${scopedPrefix}/probe.pdf` }));
+  const objects = buckets.map((bucket) => ({
+    bucket,
+    path: `${scopedPrefix}/probe.${bucket === "participant-media" || bucket === "badge-studio-assets" ? "png" : "pdf"}`
+  }));
   await removeObjects(objects);
 
   for (const bucket of buckets) {
@@ -369,7 +400,7 @@ function validateManifestEntry(entry) {
     typeof entry.path !== "string" ||
     !entry.path ||
     typeof entry.file !== "string" ||
-    !/^objects\/(?:tenant-documents|diploma-vault)\/[a-f0-9]{64}\.bin$/.test(entry.file) ||
+    !/^objects\/(?:tenant-documents|diploma-vault|participant-media|badge-studio-assets)\/[a-f0-9]{64}\.bin$/.test(entry.file) ||
     !Number.isInteger(entry.size) ||
     entry.size < 0 ||
     !/^[a-f0-9]{64}$/.test(entry.sha256)
@@ -388,7 +419,7 @@ function parseBuckets(value) {
   const parsed = [...new Set(value.split(",").map((bucket) => bucket.trim()).filter(Boolean))];
 
   if (parsed.length === 0 || parsed.some((bucket) => !allowedBuckets.has(bucket))) {
-    fatal("STORAGE_BACKUP_BUCKETS may only contain tenant-documents and diploma-vault.");
+    fatal("STORAGE_BACKUP_BUCKETS may only contain tenant-documents, diploma-vault, participant-media and badge-studio-assets.");
   }
 
   return parsed;

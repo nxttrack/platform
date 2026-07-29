@@ -30,7 +30,7 @@ if (tenantResult.error || !tenantResult.data) {
 
 const tenantId = tenantResult.data.id;
 await removeRows(admin.from("progress_notes").delete().eq("tenant_id", tenantId).like("note", "sprint4-instructor:%"), "instructor note fixtures");
-await removeRows(admin.from("participant_badge_awards").delete().eq("tenant_id", tenantId).like("note", "sprint4-instructor:%"), "instructor badge fixtures");
+await retireBadgeFixtures(admin, tenantId);
 const submissionsResult = await admin
   .from("intake_submissions")
   .select("id")
@@ -118,5 +118,43 @@ async function removeRows(query, label) {
 
   if (result.error) {
     throw new Error(`Could not remove prior Sprint 4 ${label}: ${result.error.message}`);
+  }
+}
+
+async function retireBadgeFixtures(client, scopedTenantId) {
+  const inventory = await client
+    .from("participant_badge_awards")
+    .select("id, status")
+    .eq("tenant_id", scopedTenantId)
+    .like("note", "sprint4-instructor:%");
+
+  if (inventory.error) {
+    throw new Error(`Could not inventory prior Sprint 4 instructor badge fixtures: ${inventory.error.message}`);
+  }
+
+  const removableIds = (inventory.data ?? [])
+    .filter((row) => row.status === "pending" || row.status === "rejected")
+    .map((row) => row.id);
+  const earnedIds = (inventory.data ?? [])
+    .filter((row) => row.status === "awarded")
+    .map((row) => row.id);
+
+  if (removableIds.length > 0) {
+    await removeRows(
+      client.from("participant_badge_awards").delete().eq("tenant_id", scopedTenantId).in("id", removableIds),
+      "open instructor badge fixtures"
+    );
+  }
+
+  if (earnedIds.length > 0) {
+    const revoked = await client
+      .from("participant_badge_awards")
+      .update({ status: "revoked" })
+      .eq("tenant_id", scopedTenantId)
+      .in("id", earnedIds);
+
+    if (revoked.error) {
+      throw new Error(`Could not revoke prior Sprint 4 instructor badge fixtures: ${revoked.error.message}`);
+    }
   }
 }

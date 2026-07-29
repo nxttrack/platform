@@ -15,8 +15,9 @@ const navItems = [
   { href: "/nieuws", label: "Nieuws", icon: Newspaper }
 ];
 
-export function TenantPublicShell({ tenantName, children }: { tenantName: string; children: ReactNode }) {
+export function TenantPublicShell({ tenantName, children, hiddenPaths = [] }: { tenantName: string; children: ReactNode; hiddenPaths?: string[] }) {
   const pathname = usePathname();
+  const visibleNavItems = navItems.filter((item) => !hiddenPaths.includes(item.href));
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,7 +32,7 @@ export function TenantPublicShell({ tenantName, children }: { tenantName: string
           </Link>
 
           <nav aria-label="Publieke navigatie" className="ml-auto hidden items-center gap-1 md:flex">
-            {navItems.map((item) => (
+            {visibleNavItems.map((item) => (
               <PublicNavLink active={isActive(pathname, item.href)} href={item.href} key={item.href} label={item.label} />
             ))}
           </nav>
@@ -65,7 +66,7 @@ export function TenantPublicShell({ tenantName, children }: { tenantName: string
                 </div>
               </div>
               <nav aria-label="Mobiele publieke navigatie" className="grid gap-1 p-4">
-                {navItems.map((item) => {
+                {visibleNavItems.map((item) => {
                   const Icon = item.icon;
 
                   return (
@@ -116,7 +117,7 @@ export function TenantPublicShell({ tenantName, children }: { tenantName: string
             </div>
             <p className="mt-4 max-w-md text-sm leading-6 text-white/65">Van kennismaking en intake tot lessen, voortgang en diploma: één duidelijke route voor ieder kind.</p>
           </div>
-          <FooterLinks title="Ontdek" links={navItems.slice(1).map(({ href, label }) => ({ href, label }))} />
+          <FooterLinks title="Ontdek" links={visibleNavItems.slice(1).map(({ href, label }) => ({ href, label }))} />
           <FooterLinks title="Direct regelen" links={[{ href: "/intake", label: "Aanmelden" }, { href: "/login", label: "Inloggen" }]} />
         </div>
         <div className="border-t border-white/10 px-4 py-4 text-center text-xs text-white/50">

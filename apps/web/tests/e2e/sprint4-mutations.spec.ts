@@ -39,7 +39,7 @@ test.describe("Sprint 4 browser-driven mutations", () => {
 
     entry = await openPlacementDetails(page, participantName);
     await expect(entry).toContainText(phase.expected.groupName);
-    await expect(entry).toContainText("voorkeursdag match");
+    await expect(entry.getByText("Voorkeursdag match", { exact: true })).toBeVisible();
 
     await createOffer(page, entry, phase.expected.groupName);
     await page.goto("/plaatsing-aanbod", { waitUntil: "domcontentloaded" });
@@ -59,6 +59,7 @@ async function submitIntake(page: Page, tenantUrl: string, participantName: stri
   await expect(page.locator("form[data-intake-wizard]")).toHaveAttribute("data-hydrated", "true");
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
+  await page.getByText("Neutraal / niet zeggen", { exact: true }).click();
   await page.getByText("Wachtlijst", { exact: true }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
 
@@ -95,13 +96,26 @@ async function convertIntake(page: Page, participantName: string) {
 }
 
 async function createOffer(page: Page, entry: Locator, groupName: string) {
-  await entry.getByLabel("Groep").selectOption({ label: groupName });
-  await entry.getByRole("button", { name: "Goedkeuren en aanbod maken" }).click();
+  await entry.locator("select[id^='placement-group-']").selectOption({ label: groupName });
+  await entry.getByRole("button", { name: "Controleer en maak aanbod" }).click();
+  await page.getByRole("alertdialog").getByRole("button", { name: "Aanbod maken en e-mail versturen" }).click();
   await expect(page).toHaveURL(/\/admin\/wachtlijst\?saved=1&delivery=(sent|skipped)/);
   expect(new URL(page.url()).searchParams.has("aanbod")).toBe(false);
 }
 
 async function openPlacementDetails(page: Page, participantName: string) {
+  const savedViewsLoader = page.locator('button[aria-label="Opgeslagen weergaven beheren"] svg.animate-spin');
+  await expect(savedViewsLoader).toHaveCount(0);
+
+  const clearFilters = page.getByRole("button", { name: "Wis filters" });
+  if (await clearFilters.isVisible()) {
+    await clearFilters.click();
+  }
+
+  const search = page.getByPlaceholder("Zoek deelnemer…");
+  await expect(search).toBeVisible();
+  await search.fill(participantName);
+
   const row = page.getByRole("row").filter({ hasText: participantName });
   await expect(row).toHaveCount(1);
   await row.getByRole("button", { name: "Details openen" }).click();

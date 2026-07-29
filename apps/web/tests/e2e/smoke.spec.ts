@@ -9,7 +9,16 @@ const publicRoutes = [
   { path: "/nxttrack/zwemscholen", label: "marketing swim schools" }
 ];
 
-const privateRoutes = ["/platform", "/admin", "/portaal", "/instructor"];
+const privateRoutes = [
+  "/platform",
+  "/platform/badges",
+  "/admin",
+  "/admin/badges",
+  "/admin/berichten",
+  "/portaal",
+  "/portaal/badges",
+  "/instructor"
+];
 
 const marketingSubpages = [
   { path: "/nxttrack/ouderportaal", heading: "Altijd weten waar je kind staat." },

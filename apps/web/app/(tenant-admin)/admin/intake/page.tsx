@@ -7,8 +7,11 @@ import { RouteFeedback } from "@/components/ui/route-feedback";
 import { getTenantIntakeInbox, type IntakeAnswerRow } from "@/lib/domain/intake";
 import type { IntakeOption } from "@/lib/domain/public-site";
 import { swimmingExperienceOptions } from "@/lib/domain/intake-recommendation-contract";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 import { attributionChannelLabel } from "@/lib/analytics/attribution";
 import { compareIntakeOperationalOrder } from "@/lib/ui/status-meta";
+import { calculateLeadScoresForIntakes } from "@/lib/domain/lead-scoring";
 
 const optionLabels: Record<IntakeOption, string> = {
   enrollment: "Inschrijving",
@@ -24,8 +27,13 @@ type PageProps = {
 };
 
 export default async function AdminIntakePage({ searchParams }: PageProps) {
-  const inbox = await getTenantIntakeInbox();
+  const [inbox, smartEvents] = await Promise.all([getTenantIntakeInbox(), getTenantSmartEvents()]);
   const params = (await searchParams) ?? {};
+  const leadScores = await calculateLeadScoresForIntakes({
+    tenantId: inbox.tenant.id,
+    intakeSubmissionIds: inbox.submissions.map((submission) => submission.id),
+    persist: true
+  });
   const testFilter = getParam(params, "testdata") ?? "all";
   const query = getParam(params, "q");
   const saved = getParam(params, "saved");
@@ -57,6 +65,14 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
             const selectedChoice = getSelectedChoice(submission.recommendation_snapshot, submission.selected_group_id);
             const answers = answersBySubmission.get(submission.id) ?? [];
             const event = eventBySubjectId.get(submission.id);
+            const leadScore = leadScores.get(submission.id) ?? {
+              score_band: "waiting_for_information" as const,
+              score: 0,
+              confidence: 0,
+              reasons: [],
+              blockers: [],
+              suggested_next_action: "Controleer de ontbrekende brondata."
+            };
             return {
               choice: selectedChoice ? formatChoice(selectedChoice) : "",
               birthDate: submission.participant_birth_date ?? "",
@@ -66,6 +82,14 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
               id: submission.id,
               isTest: submission.is_test,
               journeyRunId: submission.journey_run_id ?? "",
+              leadScore: {
+                band: leadScore.score_band,
+                score: leadScore.score,
+                confidence: leadScore.confidence,
+                reasons: leadScore.reasons,
+                blockers: leadScore.blockers,
+                suggestedAction: leadScore.suggested_next_action
+              },
               notes: [submission.preferred_notes, submission.message].filter(Boolean).join(" · "),
               option: optionLabels[submission.selected_option],
               parent: submission.parent_name,
@@ -77,7 +101,11 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
               source: `${attributionChannelLabel(submission.attribution_channel)} · ${submission.attribution_source}${submission.attribution_campaign ? ` · ${submission.attribution_campaign}` : ""}${event ? ` · event ${event.status}` : ""}`,
               secondaryParent: submission.secondary_parent_name ?? "",
               status: submission.status,
-              waitBand: submission.selected_wait_band
+              waitBand: submission.selected_wait_band,
+              events: smartEvents
+                .filter((smartEvent) => smartEvent.entity_type === "intake_submission" && smartEvent.entity_id === submission.id)
+                .slice(0, 20)
+                .map(toSmartActivityItem)
             };
           })}
         />

@@ -21,7 +21,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     expect(state, "PHASE16_STATE_PATH must resolve to a readable state file when instructor mutations are enabled.").not.toBeNull();
   });
 
-  test("instructor records attendance, progress, note, badge and session completion", async ({ page }, testInfo) => {
+  test("instructor records attendance, progress, note, confirmed badge proposal and session completion", async ({ page }, testInfo) => {
     test.setTimeout(60_000);
     const phase = requireState();
     const failures = collectRuntimeFailures(page);
@@ -55,12 +55,12 @@ test.describe("Sprint 4 instructor mutations", () => {
     await expect(page.getByText(`${marker}: interne lesnotitie.`)).toBeVisible();
 
     await page.getByRole("tab", { name: "Badges" }).click();
-    await page.getByLabel("Badgetitel").fill(`Sprint4 Browserbadge ${marker}`);
-    await page.getByLabel("Badgenotitie").fill(`${marker}: intern bewijs.`);
+    await expect(page.getByLabel("Complimentbadge")).toBeVisible();
+    await page.getByLabel("Persoonlijke boodschap").fill(`${marker}: intern bewijs.`);
     await page.getByLabel("Zichtbaarheid").selectOption("internal");
-    await page.getByRole("button", { name: "Badge toekennen" }).click();
-    await expect(page.getByText("Badge toegekend.")).toBeVisible();
-    await expect(page.getByText(`Sprint4 Browserbadge ${marker}`)).toBeVisible();
+    await page.getByRole("checkbox", { name: /Ik bevestig dit positieve moment/ }).check();
+    await page.getByRole("button", { name: /Badge toekennen|Ter goedkeuring indienen/ }).click();
+    await expect(page.getByText(/Badge (?:wacht op menselijke goedkeuring|toegekend)\./)).toBeVisible();
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });

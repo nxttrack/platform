@@ -54,7 +54,26 @@ const tenantScopedTables = parseTableList(
       "manual_payments",
       "tenant_messages",
       "tenant_tasks",
-      "tenant_documents"
+      "tenant_documents",
+      "participant_media",
+      "media_consent_events",
+      "media_access_logs",
+      "communication_templates",
+      "message_threads",
+      "message_thread_participants",
+      "messages",
+      "newsletter_campaigns",
+      "newsletter_recipients",
+      "communication_deliveries",
+      "tenant_badge_module_settings",
+      "tenant_badge_settings",
+      "tenant_custom_badges",
+      "badge_message_suggestions",
+      "badge_collections",
+      "badge_share_template_sets",
+      "badge_share_assets",
+      "badge_analytics_events",
+      "tenant_site_pages"
     ].join(",")
 );
 
@@ -165,11 +184,11 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
   }
 
   for (const table of tenantScopedTables) {
-    const rows = await optionalRest(auth.accessToken, `/${table}?select=id,tenant_id&limit=50`, table);
+    const rows = await optionalRest(auth.accessToken, `/${table}?select=tenant_id&limit=50`, table);
     const leakedRow = rows.find((row) => row.tenant_id && !ownTenantIds.has(row.tenant_id));
 
     if (leakedRow) {
-      failures.push(`${check.key} can see ${table}.${leakedRow.id ?? "unknown"} for another tenant.`);
+      failures.push(`${check.key} can see a ${table} row for another tenant.`);
     }
   }
 }

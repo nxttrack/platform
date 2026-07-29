@@ -6,7 +6,9 @@ import { cn } from "@/lib/utils";
 const waitTimeStyles: Record<WaitTimeBand, string> = {
   short: "border-emerald-200 bg-emerald-50 text-emerald-800",
   medium: "border-orange-200 bg-orange-50 text-orange-800",
-  long: "border-rose-200 bg-rose-50 text-rose-800"
+  long: "border-rose-200 bg-rose-50 text-rose-800",
+  very_long: "border-red-300 bg-red-100 text-red-900",
+  insufficient_data: "border-slate-200 bg-slate-50 text-slate-700"
 };
 
 export function WaitTimeChip({ band, className }: { band: WaitTimeBand; className?: string }) {

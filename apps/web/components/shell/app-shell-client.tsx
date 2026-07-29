@@ -6,21 +6,26 @@ import {
   BarChart3,
   Bell,
   Bot,
+  Boxes,
   Calendar,
   ChevronDown,
   CreditCard,
   FileText,
   GraduationCap,
+  Globe2,
   Home,
   Inbox,
   ListChecks,
   MapPin,
   Menu,
   MessageSquare,
+  Newspaper,
   Palette,
   PanelLeftClose,
   PanelLeftOpen,
+  RefreshCcw,
   Settings,
+  ShieldCheck,
   TrendingUp,
   User,
   UserPlus,
@@ -34,25 +39,34 @@ import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { GlobalCommandPalette, type GlobalSearchItem } from "@/components/shell/global-command-palette";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { markAllNotificationsReadAction } from "@/lib/domain/communication-hub-actions";
 import { cn } from "@/lib/utils";
 
 const shellIcons = {
   award: Award,
   baby: Baby,
+  bell: Bell,
   bot: Bot,
+  boxes: Boxes,
   chart: BarChart3,
   calendar: Calendar,
   card: CreditCard,
   file: FileText,
   graduation: GraduationCap,
+  globe: Globe2,
   home: Home,
   inbox: Inbox,
   location: MapPin,
   message: MessageSquare,
+  newspaper: Newspaper,
   palette: Palette,
+  refresh: RefreshCcw,
   settings: Settings,
+  shield: ShieldCheck,
   tasks: ListChecks,
   trending: TrendingUp,
   user: User,
@@ -72,6 +86,20 @@ export type ShellNavItem = {
   section?: string;
 };
 
+export type ShellNotificationCenter = {
+  href: string;
+  unreadCount: number;
+  items: Array<{
+    id: string;
+    title: string;
+    body: string;
+    href: string | null;
+    createdAt: string;
+    priority: "low" | "normal" | "high" | "urgent";
+    unread: boolean;
+  }>;
+};
+
 type Props = {
   brand: { title: string; subtitle: string };
   nav: ShellNavItem[];
@@ -79,6 +107,7 @@ type Props = {
   children: ReactNode;
   accent?: ShellAccent;
   searchItems?: GlobalSearchItem[];
+  notificationCenter?: ShellNotificationCenter;
 };
 
 const accentStyles: Record<ShellAccent, string> = {
@@ -88,7 +117,7 @@ const accentStyles: Record<ShellAccent, string> = {
   platform: "from-slate-900 to-blue-800"
 };
 
-export function AppShellClient({ brand, nav, user, children, accent = "parent", searchItems }: Props) {
+export function AppShellClient({ brand, nav, user, children, accent = "parent", searchItems, notificationCenter }: Props) {
   const pathname = usePathname();
   const reduceMotion = useReducedMotion();
   const [collapsed, setCollapsed] = useState(false);
@@ -145,7 +174,9 @@ export function AppShellClient({ brand, nav, user, children, accent = "parent", 
           </div>
           <div className="ml-auto flex items-center gap-2">
             <GlobalCommandPalette items={searchItems} nav={nav} />
-            {messagesHref ? (
+            {notificationCenter ? (
+              <NotificationCenter center={notificationCenter} />
+            ) : messagesHref ? (
               <Link className="relative grid size-11 place-items-center rounded-xl border border-border bg-background transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" href={messagesHref} aria-label="Berichten en meldingen">
                 <Bell className="h-4 w-4" />
               </Link>
@@ -159,6 +190,69 @@ export function AppShellClient({ brand, nav, user, children, accent = "parent", 
       </div>
     </div>
   );
+}
+
+function NotificationCenter({ center }: { center: ShellNotificationCenter }) {
+  const badge = center.unreadCount > 99 ? "99+" : String(center.unreadCount);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          aria-label={center.unreadCount ? `Notificaties, ${center.unreadCount} ongelezen` : "Notificaties, niets ongelezen"}
+          className="relative grid size-11 place-items-center rounded-xl border border-border bg-background transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          type="button"
+        >
+          <Bell className="h-4 w-4" />
+          {center.unreadCount ? (
+            <span aria-hidden="true" className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-card bg-danger px-1 text-[10px] font-bold text-white">
+              {badge}
+            </span>
+          ) : null}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" aria-label="Recente notificaties" className="w-[min(92vw,390px)] p-0">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+          <div>
+            <p className="font-bold text-foreground">Notificaties</p>
+            <p className="text-xs text-muted-foreground">{center.unreadCount} ongelezen</p>
+          </div>
+          {center.unreadCount ? (
+            <form action={markAllNotificationsReadAction}>
+              <input name="next" type="hidden" value={center.href} />
+              <Button size="sm" type="submit" variant="ghost">Alles gelezen</Button>
+            </form>
+          ) : null}
+        </header>
+        <div className="max-h-[420px] overflow-y-auto">
+          {center.items.length ? center.items.map((item) => (
+            <Link className="block border-b border-border px-4 py-3 transition hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" href={item.href ?? center.href} key={item.id}>
+              <div className="flex items-start gap-3">
+                <span aria-hidden="true" className={cn("mt-1.5 size-2 shrink-0 rounded-full", item.unread ? item.priority === "urgent" ? "bg-danger" : "bg-primary" : "bg-muted-foreground/30")} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate text-sm font-bold text-foreground">{item.title}</p>
+                    {item.unread ? <span className="sr-only">Ongelezen</span> : null}
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted-foreground">{item.body}</p>
+                  <time className="mt-1 block text-[11px] text-muted-foreground" dateTime={item.createdAt}>{formatNotificationDate(item.createdAt)}</time>
+                </div>
+              </div>
+            </Link>
+          )) : (
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">Nog geen notificaties.</p>
+          )}
+        </div>
+        <Link className="flex min-h-11 items-center justify-center border-t border-border px-4 text-sm font-semibold text-primary hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring" href={center.href}>
+          Alles bekijken
+        </Link>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function formatNotificationDate(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
 function Sidebar({

@@ -9,6 +9,9 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { createGroupMembershipAction, createParticipantEnrollmentAction } from "@/lib/domain/actions";
 import { getTenantCoreData } from "@/lib/domain/core";
+import { detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -18,6 +21,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminStudentsPage({ searchParams }: PageProps) {
   const data = await getTenantCoreData();
+  const [smartEvents, attendanceSignals] = await Promise.all([
+    getTenantSmartEvents(),
+    detectAttendanceRisks(data.tenant.id)
+  ]);
   const params = (await searchParams) ?? {};
   const saved = getParam(params, "saved") === "1";
   const error = getParam(params, "error");
@@ -88,6 +95,14 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                 .map((assignment) => instructorById.get(assignment.instructor_user_id)?.label ?? "Onbekende instructeur")
             );
             return {
+              attendanceSignals: attendanceSignals
+                .filter((signal) => signal.participant_id === participant?.id)
+                .slice(0, 4)
+                .map((signal) => ({
+                  label: signal.reason,
+                  evidence: signal.evidence.join(" · "),
+                  confidence: signal.confidence
+                })),
               groups: groups.map((group) => group.name).join(", ") || "Nog niet geplaatst",
               guardian: participant?.guardian_user_id ? guardianById.get(participant.guardian_user_id)?.label ?? "Onbekende ouder/verzorger" : "Niet gekoppeld",
               id: enrollment.id,
@@ -95,10 +110,18 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
               isTest: enrollment.is_test,
               lesson: groups.map(formatGroupTime).join(", ") || "Nog niet gepland",
               name: participant?.display_name ?? "Onbekende leerling",
+              participantId: participant?.id ?? enrollment.participant_id,
               program: programById.get(enrollment.program_id)?.name ?? "Programma onbekend",
               stage: enrollment.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau onbekend" : "Nog geen niveau",
               startsOn: enrollment.starts_on,
-              status: enrollment.status
+              status: enrollment.status,
+              events: smartEvents
+                .filter((event) =>
+                  event.participant_id === participant?.id ||
+                  (event.entity_type === "enrollment" && event.entity_id === enrollment.id)
+                )
+                .slice(0, 20)
+                .map(toSmartActivityItem)
             };
           })}
         />
@@ -112,6 +135,11 @@ function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCor
     <DirtyForm action={createParticipantEnrollmentAction} className="grid gap-4 sm:grid-cols-2">
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
+      <SelectField label="Badge-aanspreekvorm" name="gender">
+        <option value="unknown">Neutraal / onbekend</option>
+        <option value="boy">Jongen</option>
+        <option value="girl">Meisje</option>
+      </SelectField>
       <SelectField label="Ouder/verzorger" name="guardianUserId">
         <option value="">Nog niet gekoppeld</option>
         {data.guardians.map((guardian) => <option key={guardian.userId} value={guardian.userId}>{guardian.label}</option>)}

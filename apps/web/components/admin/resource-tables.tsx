@@ -1,10 +1,11 @@
 "use client";
 
 import type { ColumnDef } from "@tanstack/react-table";
-import { CheckCircle2, Download, Mail, Users } from "lucide-react";
+import { CheckCircle2, Download, Images, Mail, Phone, SearchCheck, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { ActivityTimeline } from "@/components/admin/activity-timeline";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { StatusPill } from "@/components/shell/ui";
 import { Button } from "@/components/ui/button";
@@ -13,9 +14,17 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { updateAdminTaskStatusAction } from "@/lib/domain/admin-operations-actions";
 import { updateIntakeDuplicateStateAction } from "@/lib/domain/intake-actions";
+import type { WaitTimeBand } from "@/lib/domain/intake-recommendation-contract";
+import type { LeadScoreBand, LeadScoreEvidence } from "@/lib/domain/lead-scoring-contract";
+import type { SmartActivityItem } from "@/lib/domain/smart-event-contract";
 import { getIntakeStatusMeta, getParticipantStatusMeta, getPaymentStatusMeta, getTaskStatusMeta, type StatusMeta } from "@/lib/ui/status-meta";
 
 export type StudentTableRow = {
+  attendanceSignals: Array<{
+    label: string;
+    evidence: string;
+    confidence: string;
+  }>;
   guardian: string;
   groups: string;
   id: string;
@@ -23,10 +32,12 @@ export type StudentTableRow = {
   instructors: string;
   lesson: string;
   name: string;
+  participantId: string;
   program: string;
   stage: string;
   startsOn: string;
   status: string;
+  events: SmartActivityItem[];
 };
 
 export function StudentsTable({ initialSearch, rows }: { initialSearch?: string; rows: StudentTableRow[] }) {
@@ -38,7 +49,7 @@ export function StudentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getParticipantStatusMeta(String(getValue()))} /> },
     { accessorKey: "startsOn", header: "Start", meta: { label: "Startdatum" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "paused", "completed", "cancelled"], getParticipantStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs footer={<Link className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={`/admin/leerlingen/${row.participantId}/media`}><Images className="size-4" />Privacyveilige media openen</Link>} tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Ouder/verzorger", row.guardian], ["Programma", row.program], ["Niveau", row.stage], ["Status", getParticipantStatusMeta(row.status).label], ["Startdatum", formatDate(row.startsOn)]]} /> }, { label: "Groep & planning", value: "planning", content: <DetailList entries={[["Lesgroep", row.groups], ["Lesmoment", row.lesson], ["Instructeur(s)", row.instructors]]} /> }, { label: "Begeleiding", value: "guidance", content: <GuidanceSignals signals={row.attendanceSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="leerling" /> }]} />} searchColumn="name" searchPlaceholder="Zoek leerling of ouder…" storageKey="admin.students" />;
 }
 
 export type GroupTableRow = {
@@ -53,6 +64,8 @@ export type GroupTableRow = {
   stage: string;
   status: string;
   time: string;
+  events: SmartActivityItem[];
+  healthSignals: Array<{ label: string; detail: string; tone: "info" | "warning" }>;
 };
 
 export function GroupsTable({ initialSearch, rows }: { initialSearch?: string; rows: GroupTableRow[] }) {
@@ -65,7 +78,7 @@ export function GroupsTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : "neutral"}>{String(getValue())}</StatusPill> },
     { accessorKey: "capacityStatus", header: "Capaciteit", meta: { label: "Capaciteit" }, cell: ({ row }) => <StatusPill tone={row.original.capacityStatus === "available" ? "success" : row.original.capacityStatus === "full" ? "warning" : row.original.capacityStatus === "over_capacity" ? "danger" : "neutral"}>{row.original.capacityLabel}</StatusPill> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Status", row.status]]} /> }, { label: "Planning", value: "planning", content: <DetailList entries={[["Lesmoment", row.time], ["Resource", row.resource], ["Instructeurs", row.instructors]]} /> }, { label: "Capaciteit", value: "capacity", content: <DetailList entries={[["Bezetting", row.capacityLabel], ["Signaal", capacityStatusLabel(row.capacityStatus)]]} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="groep" /> }]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.program} · ${row.stage}`} detailTitle={(row) => row.name} filters={[statusFilter(["planned", "active", "paused", "archived"]), { column: "capacityStatus", label: "Capaciteit", options: [{ label: "Beschikbaar", value: "available" }, { label: "Vol", value: "full" }, { label: "Over capaciteit", value: "over_capacity" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Code", row.code || "—"], ["Programma", row.program], ["Niveau", row.stage], ["Status", row.status]]} /> }, { label: "Planning", value: "planning", content: <DetailList entries={[["Lesmoment", row.time], ["Resource", row.resource], ["Instructeurs", row.instructors]]} /> }, { label: "Capaciteit", value: "capacity", content: <DetailList entries={[["Bezetting", row.capacityLabel], ["Signaal", capacityStatusLabel(row.capacityStatus)]]} /> }, { label: "Group Health", value: "health", content: <GroupHealthSignals signals={row.healthSignals} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }, { label: "Dossier", value: "record", content: <DossierPlaceholder entity="groep" /> }]} />} searchColumn="name" searchPlaceholder="Zoek groep…" storageKey="admin.groups" />;
 }
 
 export type IntakeTableRow = {
@@ -77,6 +90,14 @@ export type IntakeTableRow = {
   id: string;
   isTest: boolean;
   journeyRunId: string;
+  leadScore: {
+    band: LeadScoreBand;
+    score: number;
+    confidence: number;
+    reasons: LeadScoreEvidence[];
+    blockers: LeadScoreEvidence[];
+    suggestedAction: string;
+  };
   notes: string;
   option: string;
   parent: string;
@@ -88,7 +109,8 @@ export type IntakeTableRow = {
   receivedAt: string;
   source: string;
   status: string;
-  waitBand: "short" | "medium" | "long" | null;
+  waitBand: WaitTimeBand | null;
+  events: SmartActivityItem[];
 };
 
 export function IntakeTable({ initialSearch, rows }: { initialSearch?: string; rows: IntakeTableRow[] }) {
@@ -98,10 +120,43 @@ export function IntakeTable({ initialSearch, rows }: { initialSearch?: string; r
     { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
     { accessorKey: "preferredDays", header: "Voorkeur", meta: { label: "Voorkeur" } },
     { accessorKey: "waitBand", header: "Wachttijd", meta: { label: "Wachttijd" }, cell: ({ row }) => row.original.waitBand ? <WaitTimeChip band={row.original.waitBand} /> : <span className="text-muted-foreground">Onbekend</span> },
+    { id: "leadScoreBand", accessorFn: (row) => row.leadScore.band, header: "Leadscore", meta: { label: "Leadscore" }, cell: ({ row }) => <LeadScoreBadge band={row.original.leadScore.band} score={row.original.leadScore.score} /> },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ row }) => <div className="flex flex-wrap gap-1"><StatusBadge meta={getIntakeStatusMeta(row.original.status)} />{row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}{row.original.duplicateState === "possible_duplicate" ? <StatusPill tone="warning">Mogelijk dubbel</StatusPill> : null}</div> },
     { accessorKey: "receivedAt", header: "Ontvangen", meta: { label: "Ontvangen" }, cell: ({ getValue }) => formatDateTime(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"], getIntakeStatusMeta), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <div className="grid gap-4"><div className="flex flex-wrap gap-2"><StatusBadge meta={getIntakeStatusMeta(row.status)} />{row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}</div><DetailList entries={[["Programma", row.program], ["Aanvraagtype", row.option], ["Ontvangen", formatDateTime(row.receivedAt)], ["Bron", row.source]]} /></div> }, { label: "Kind", value: "child", content: <DetailList entries={[["Naam", row.participant], ["Geboortedatum", row.birthDate ? formatDate(row.birthDate) : "Niet opgegeven"], ["Zwemervaring", row.experience || "Niet opgegeven"]]} /> }, { label: "Ouders", value: "guardians", content: <DetailList entries={[["Ouder/verzorger 1", row.parent], ["Ouder/verzorger 2", row.secondaryParent || "Niet opgegeven"], ["E-mail", row.email], ["Telefoon", row.phone || "Niet opgegeven"]]} /> }, { label: "Voorkeuren", value: "preferences", content: <DetailList entries={[["Voorkeursdagen", row.preferredDays || "Niet opgegeven"], ["Voorgesteld moment", row.choice || "Nog geen keuze"], ["Wachttijd", row.waitBand ?? "Onbekend"], ["Notities", row.notes || "Geen notities"]]} /> }, { label: "Logs", value: "logs", content: <DetailList entries={[["Bron", row.source], ["Journey run", row.journeyRunId || "Niet van toepassing"], ["Duplicaatcontrole", row.duplicateState]]} /> }]} footer={row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null} />} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.parent} · ${row.email}`} detailTitle={(row) => row.participant} filters={[statusFilter(["received", "reviewing", "converted", "closed"], getIntakeStatusMeta), { column: "waitBand", label: "Wachttijd", options: [{ label: "Kort", value: "short" }, { label: "Gemiddeld", value: "medium" }, { label: "Lang", value: "long" }, { label: "Zeer lang", value: "very_long" }, { label: "Onvoldoende data", value: "insufficient_data" }] }, { column: "leadScoreBand", label: "Leadscore", options: [{ label: "Hoog", value: "high" }, { label: "Gemiddeld", value: "average" }, { label: "Laag", value: "low" }, { label: "Wacht op informatie", value: "waiting_for_information" }, { label: "Niet plaatsbaar", value: "not_placeable" }] }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <div className="grid gap-4"><div className="flex flex-wrap gap-2"><StatusBadge meta={getIntakeStatusMeta(row.status)} />{row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}<LeadScoreBadge band={row.leadScore.band} score={row.leadScore.score} /></div><DetailList entries={[["Programma", row.program], ["Aanvraagtype", row.option], ["Ontvangen", formatDateTime(row.receivedAt)], ["Bron", row.source]]} /></div> }, { label: "Leadscore", value: "lead-score", content: <LeadScoreDetails row={row} /> }, { label: "Kind", value: "child", content: <DetailList entries={[["Naam", row.participant], ["Geboortedatum", row.birthDate ? formatDate(row.birthDate) : "Niet opgegeven"], ["Zwemervaring", row.experience || "Niet opgegeven"]]} /> }, { label: "Ouders", value: "guardians", content: <DetailList entries={[["Ouder/verzorger 1", row.parent], ["Ouder/verzorger 2", row.secondaryParent || "Niet opgegeven"], ["E-mail", row.email], ["Telefoon", row.phone || "Niet opgegeven"]]} /> }, { label: "Voorkeuren", value: "preferences", content: <DetailList entries={[["Voorkeursdagen", row.preferredDays || "Niet opgegeven"], ["Voorgesteld moment", row.choice || "Nog geen keuze"], ["Wachttijd", row.waitBand ?? "Onbekend"], ["Notities", row.notes || "Geen notities"]]} /> }, { label: "Activiteit", value: "activity", content: <div className="grid gap-4"><DetailList entries={[["Bron", row.source], ["Journey run", row.journeyRunId || "Niet van toepassing"], ["Duplicaatcontrole", row.duplicateState]]} /><ActivityTimeline events={row.events} /></div> }]} footer={row.duplicateState === "possible_duplicate" ? <div className="flex flex-wrap gap-2"><DuplicateButton id={row.id} label="Markeer als dubbel" state="confirmed_duplicate" /><DuplicateButton id={row.id} label="Markeer als uniek" state="dismissed" /></div> : null} />} searchColumn="participant" searchPlaceholder="Zoek kind of lead…" storageKey="admin.intake" />;
+}
+
+function LeadScoreBadge({ band, score }: { band: LeadScoreBand; score: number }) {
+  const label = band === "high" ? "Hoog" : band === "average" ? "Gemiddeld" : band === "low" ? "Laag" : band === "waiting_for_information" ? "Wacht op informatie" : "Niet plaatsbaar";
+  const tone = band === "high" ? "success" : band === "average" ? "info" : band === "low" ? "neutral" : "warning";
+  return <StatusPill tone={tone} title="Operationele opvolgprioriteit; geen oordeel over kind of gezin.">{label} · {score}</StatusPill>;
+}
+
+function LeadScoreDetails({ row }: { row: IntakeTableRow }) {
+  return (
+    <div className="grid gap-4">
+      <div className="rounded-xl border border-primary/15 bg-primary/5 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3"><LeadScoreBadge band={row.leadScore.band} score={row.leadScore.score} /><span className="text-xs font-semibold text-muted-foreground">{Math.round(row.leadScore.confidence * 100)}% confidence</span></div>
+        <p className="mt-3 text-sm font-semibold">{row.leadScore.suggestedAction}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Deze score gebruikt uitsluitend operationele brondata. Vrije tekst, namen, herkomst en campagnetype tellen niet mee.</p>
+      </div>
+      <div className="grid gap-3 lg:grid-cols-2">
+        <EvidenceList title="Redenen" rows={row.leadScore.reasons} />
+        <EvidenceList title="Blockers en context" rows={row.leadScore.blockers} />
+      </div>
+      {!row.isTest ? <div className="flex flex-wrap gap-2">
+        {row.phone ? <a className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`tel:${row.phone}`}><Phone className="size-4" />Bel</a> : null}
+        <a className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`mailto:${row.email}`}><Mail className="size-4" />E-mail openen</a>
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href={`/admin/wachtlijst?q=${encodeURIComponent(row.participant)}`}><SearchCheck className="size-4" />Plaatsing bekijken</Link>
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground" href={`/admin/opvolging?intake=${row.id}`}>Opvolging en taak</Link>
+      </div> : <p className="text-xs font-semibold text-muted-foreground">Journey Bot-data is uitlegbaar zichtbaar, maar kan geen echte CRM-taak of extern bericht maken.</p>}
+    </div>
+  );
+}
+
+function EvidenceList({ title, rows }: { title: string; rows: LeadScoreEvidence[] }) {
+  return <section className="rounded-xl border border-border p-4"><h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{title}</h3>{rows.length ? <ul className="mt-3 grid gap-3">{rows.map((item) => <li key={`${item.label}:${item.evidence}`}><p className="text-sm font-semibold">{item.label} <span className="text-xs text-muted-foreground">({item.weight >= 0 ? "+" : ""}{item.weight})</span></p><p className="text-xs leading-5 text-muted-foreground">{item.explanation}</p><p className="text-[11px] font-semibold text-primary">{item.source}: {item.evidence}</p></li>)}</ul> : <p className="mt-3 text-sm text-muted-foreground">Geen signalen.</p>}</section>;
 }
 
 export type DocumentTableRow = {
@@ -164,6 +219,7 @@ export type PaymentTableRow = {
   plan: string;
   reference: string;
   status: string;
+  events: SmartActivityItem[];
 };
 
 export function PaymentsTable({ initialSearch, rows }: { initialSearch?: string; rows: PaymentTableRow[] }) {
@@ -175,7 +231,7 @@ export function PaymentsTable({ initialSearch, rows }: { initialSearch?: string;
     { accessorKey: "method", header: "Methode", meta: { label: "Methode" } },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusBadge meta={getPaymentStatusMeta(String(getValue()))} /> }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.plan} · ${row.amount}`} detailTitle={(row) => row.participant} filters={[statusFilter(["due", "overdue", "paid", "waived", "cancelled", "refunded", "chargeback"], getPaymentStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DetailList entries={[["Leerling", row.participant], ["Betaalplan", row.plan], ["Bedrag", row.amount], ["Referentie", row.reference || "—"], ["Vervaldatum", formatDate(row.dueOn)], ["Betaaldatum", row.paidOn ? formatDate(row.paidOn) : "—"], ["Methode", row.method || "—"], ["Status", getPaymentStatusMeta(row.status).label]]} />} searchColumn="participant" searchPlaceholder="Zoek betaling…" storageKey="admin.payments" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.plan} · ${row.amount}`} detailTitle={(row) => row.participant} filters={[statusFilter(["due", "overdue", "paid", "waived", "cancelled", "refunded", "chargeback"], getPaymentStatusMeta)]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <DossierTabs tabs={[{ label: "Overzicht", value: "overview", content: <DetailList entries={[["Leerling", row.participant], ["Betaalplan", row.plan], ["Bedrag", row.amount], ["Referentie", row.reference || "—"], ["Vervaldatum", formatDate(row.dueOn)], ["Betaaldatum", row.paidOn ? formatDate(row.paidOn) : "—"], ["Methode", row.method || "—"], ["Status", getPaymentStatusMeta(row.status).label]]} /> }, { label: "Activiteit", value: "activity", content: <ActivityTimeline events={row.events} /> }]} />} searchColumn="participant" searchPlaceholder="Zoek betaling…" storageKey="admin.payments" />;
 }
 
 export type InvitationTableRow = {
@@ -205,7 +261,10 @@ export type PlatformTenantTableRow = {
   createdAt: string;
   domain: string;
   href: string;
+  healthScore?: number;
+  healthStatus?: string;
   id: string;
+  lastAdminLoginAt?: string | null;
   memberCount: number;
   name: string;
   sector: string;
@@ -219,10 +278,12 @@ export function PlatformTenantsTable({ initialSearch, rows }: { initialSearch?: 
     { accessorKey: "domain", header: "Primair domein", meta: { label: "Primair domein" } },
     { accessorKey: "sector", header: "Sector", meta: { label: "Sector" } },
     { accessorKey: "memberCount", header: "Gebruikers", meta: { label: "Gebruikers" }, cell: ({ getValue }) => <span className="inline-flex items-center gap-1.5"><Users className="size-4 text-primary" />{String(getValue())}</span> },
+    { accessorKey: "healthStatus", header: "Tenant health", meta: { label: "Tenant health" }, cell: ({ row }) => typeof row.original.healthScore === "number" ? <div className="flex items-center gap-2"><StatusPill tone={row.original.healthStatus === "healthy" ? "success" : row.original.healthStatus === "watch" ? "warning" : "danger"}>{row.original.healthScore}/100</StatusPill><span className="text-xs text-muted-foreground">{row.original.healthStatus}</span></div> : "—" },
+    { accessorKey: "lastAdminLoginAt", header: "Laatste beheerlogin", meta: { label: "Laatste beheerlogin" }, cell: ({ getValue }) => getValue() ? formatDateTime(String(getValue())) : "Nog niet" },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "active" ? "success" : getValue() === "suspended" ? "danger" : "warning"}>{String(getValue())}</StatusPill> },
     { accessorKey: "createdAt", header: "Aangemaakt", meta: { label: "Aangemaakt" }, cell: ({ getValue }) => formatDate(String(getValue())) }
   ];
-  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "inactive", "suspended"])]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} /><Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={row.href}>Organisatie beheren</Link></div>} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
+  return <DataTable columns={columns} data={rows} detailDescription={(row) => `${row.slug} · ${row.domain}`} detailTitle={(row) => row.name} filters={[statusFilter(["active", "inactive", "suspended"]), { column: "healthStatus", label: "Tenant health", options: ["healthy", "watch", "risk", "critical"].map((value) => ({ label: value, value })) }]} getRowId={(row) => row.id} initialSearchValue={initialSearch} renderDetails={(row) => <div className="grid gap-5"><DetailList entries={[["Slug", row.slug], ["Domein", row.domain], ["Sector", row.sector], ["Actieve gebruikers", String(row.memberCount)], ["Tenant health", typeof row.healthScore === "number" ? `${row.healthScore}/100 · ${row.healthStatus}` : "Nog niet berekend"], ["Laatste beheerlogin", row.lastAdminLoginAt ? formatDateTime(row.lastAdminLoginAt) : "Nog niet"], ["Status", row.status], ["Aangemaakt", formatDate(row.createdAt)]]} /><Link className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href={row.href}>Organisatie beheren</Link></div>} searchColumn="name" searchPlaceholder="Zoek tenant…" storageKey="platform.tenants" />;
 }
 
 function DuplicateButton({ id, label, state }: { id: string; label: string; state: "confirmed_duplicate" | "dismissed" }) {
@@ -272,6 +333,46 @@ function DossierTabs({
 
 function DossierPlaceholder({ entity }: { entity: string }) {
   return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Gerelateerde betalingen, berichten, taken, documenten en auditlogs blijven vanuit dit {entity}dossier bereikbaar zodra die bronnen gekoppeld zijn.</p>;
+}
+
+function GuidanceSignals({ signals }: { signals: StudentTableRow["attendanceSignals"] }) {
+  if (signals.length === 0) {
+    return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Geen actueel begeleidingssignaal. Dit betekent niet dat er geen persoonlijk gesprek nodig kan zijn.</p>;
+  }
+  return (
+    <div className="grid gap-3">
+      {signals.map((signal) => (
+        <article className="rounded-xl border border-warning/20 bg-warning/5 p-3" key={`${signal.label}-${signal.evidence}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">{signal.label}</p>
+            <StatusPill tone="info">{signal.confidence} vertrouwen</StatusPill>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{signal.evidence}</p>
+        </article>
+      ))}
+      <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href="/admin/rapportages/leskwaliteit">Open veilige opvolging</Link>
+    </div>
+  );
+}
+
+function GroupHealthSignals({ signals }: { signals: GroupTableRow["healthSignals"] }) {
+  if (signals.length === 0) {
+    return <p className="rounded-lg border border-dashed border-border bg-muted/35 p-4 text-[13px] leading-5 text-muted-foreground">Geen actueel groepssignaal bij voldoende brondata.</p>;
+  }
+  return (
+    <div className="grid gap-3">
+      {signals.map((signal) => (
+        <article className="rounded-xl border border-border bg-muted/35 p-3" key={`${signal.label}-${signal.detail}`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground">{signal.label}</p>
+            <StatusPill tone={signal.tone}>{signal.tone === "warning" ? "Lesfocus" : "Begeleiding"}</StatusPill>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-muted-foreground">{signal.detail}</p>
+        </article>
+      ))}
+      <Link className="inline-flex min-h-11 items-center justify-center rounded-lg border border-border px-3 text-sm font-semibold text-primary hover:bg-muted" href="/admin/rapportages/leskwaliteit">Open Group Health</Link>
+    </div>
+  );
 }
 
 function capacityStatusLabel(status: GroupTableRow["capacityStatus"]) {

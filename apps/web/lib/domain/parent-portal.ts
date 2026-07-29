@@ -30,6 +30,16 @@ export type ParentAccessRow = {
   status: string;
 };
 
+export type ParentMakeupCommunicationPreferences = {
+  makeUpInAppEnabled: boolean;
+  makeUpEmailEnabled: boolean;
+  automaticMakeUpInvitesEnabled: boolean;
+  inAppEnabled: boolean;
+  transactionalEmailEnabled: boolean;
+  newsletterEmailEnabled: boolean;
+  marketingConsentStatus: "unknown" | "granted" | "denied" | "withdrawn";
+};
+
 export type ParentPortalSettings = {
   locale: string;
   timezone: string;
@@ -184,6 +194,8 @@ export type ParentCertificateRecordRow = {
   size_bytes: number | null;
   storage_status: string;
   notes: string | null;
+  verification_public_id: string;
+  verification_status: string;
 };
 
 export type ParentPaymentPlanRow = {
@@ -551,7 +563,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("certificate_records")
-          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, file_name, mime_type, size_bytes, storage_status, notes")
+          .select("id, participant_id, enrollment_id, program_id, stage_id, event_participant_id, certificate_number, title, status, issued_on, file_path, file_name, mime_type, size_bytes, storage_status, notes, verification_public_id, verification_status")
           .eq("tenant_id", tenant.id)
           .eq("status", "issued")
           .in("participant_id", loadedParticipantIds)
@@ -818,6 +830,34 @@ export async function loadParentParticipantAccess(
     ]),
     participantIds: unique([...directIds, ...links.map((link) => link.participant_id)]),
     links
+  };
+}
+
+export async function getParentMakeupCommunicationPreferences(): Promise<ParentMakeupCommunicationPreferences> {
+  const context = await requirePrivateShellContext("/portaal/profiel");
+  const tenant = getActiveTenant(context);
+  const result = await createAdminClient()
+    .from("guardian_communication_preferences")
+    .select("make_up_in_app_enabled, make_up_email_enabled, automatic_make_up_invites_enabled, in_app_enabled, transactional_email_enabled, newsletter_email_enabled, marketing_consent_status")
+    .eq("tenant_id", tenant.id)
+    .eq("guardian_user_id", context.user.id)
+    .maybeSingle();
+
+  assertParentPortalResult(result.error, "make-up communication preferences");
+
+  return {
+    makeUpInAppEnabled: result.data?.make_up_in_app_enabled ?? true,
+    makeUpEmailEnabled: result.data?.make_up_email_enabled ?? true,
+    automaticMakeUpInvitesEnabled: result.data?.automatic_make_up_invites_enabled ?? false,
+    inAppEnabled: result.data?.in_app_enabled ?? true,
+    transactionalEmailEnabled: result.data?.transactional_email_enabled ?? true,
+    newsletterEmailEnabled: result.data?.newsletter_email_enabled ?? false,
+    marketingConsentStatus:
+      result.data?.marketing_consent_status === "granted" ||
+      result.data?.marketing_consent_status === "denied" ||
+      result.data?.marketing_consent_status === "withdrawn"
+        ? result.data.marketing_consent_status
+        : "unknown"
   };
 }
 

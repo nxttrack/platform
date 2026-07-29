@@ -79,7 +79,7 @@ export function DataTable<TData>({
   const [viewName, setViewName] = useState("");
   const [viewDefault, setViewDefault] = useState(false);
   const [viewPopoverOpen, setViewPopoverOpen] = useState(false);
-  const [viewsLoading, setViewsLoading] = useState(false);
+  const [viewsLoading, setViewsLoading] = useState(Boolean(storageKey));
   const [bulkBusy, setBulkBusy] = useState<string | null>(null);
 
   useEffect(() => {

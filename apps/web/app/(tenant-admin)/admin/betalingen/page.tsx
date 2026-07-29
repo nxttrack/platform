@@ -30,6 +30,8 @@ import {
 } from "@/lib/domain/billing-refund-actions";
 import { formatMoney, getBillingAdminData, isPaymentOverdue } from "@/lib/domain/billing";
 import { paymentProviderLabel } from "@/lib/domain/payment-provider";
+import { toSmartActivityItem } from "@/lib/domain/smart-event-contract";
+import { getTenantSmartEvents } from "@/lib/domain/smart-events";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -38,7 +40,7 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function AdminPaymentsPage({ searchParams }: PageProps) {
-  const [data, params] = await Promise.all([getBillingAdminData(), searchParams ?? Promise.resolve({})]);
+  const [data, smartEvents, params] = await Promise.all([getBillingAdminData(), getTenantSmartEvents(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const query = getParam(params, "q");
@@ -94,7 +96,15 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             participant: participant?.display_name ?? "Onbekende leerling",
             plan: plan?.name ?? "Subscription",
             reference: payment.reference ?? "",
-            status: isPaymentOverdue(payment) && payment.status === "due" ? "overdue" : payment.status
+            status: isPaymentOverdue(payment) && payment.status === "due" ? "overdue" : payment.status,
+            events: smartEvents
+              .filter((event) =>
+                (event.entity_type === "manual_payment" && event.entity_id === payment.id) ||
+                event.metadata_json.manual_payment_id === payment.id ||
+                event.metadata_json.manualPaymentId === payment.id
+              )
+              .slice(0, 20)
+              .map(toSmartActivityItem)
           };
         })} />
       </AdminSection>

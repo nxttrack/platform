@@ -6,7 +6,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 
 export const TENANT_DOCUMENTS_BUCKET = "tenant-documents";
 export const DIPLOMA_VAULT_BUCKET = "diploma-vault";
+export const PARTICIPANT_MEDIA_BUCKET = "participant-media";
+export const BADGE_STUDIO_ASSETS_BUCKET = "badge-studio-assets";
+export const TENANT_MEDIA_ASSETS_BUCKET = "tenant-media-assets";
 export const PRIVATE_FILE_MAX_BYTES = 20 * 1024 * 1024;
+export const BADGE_STUDIO_ASSET_MAX_BYTES = 5 * 1024 * 1024;
+export const TENANT_MEDIA_ASSET_MAX_BYTES = 10 * 1024 * 1024;
 
 export type PrivateFileUpload = {
   fileName: string;
@@ -33,15 +38,64 @@ export async function uploadCertificateFile(input: { certificateId: string; file
   });
 }
 
-export async function createPrivateFileSignedUrl(input: { bucket: string; path: string }) {
-  const admin = createAdminClient();
-  const { data, error } = await admin.storage.from(input.bucket).createSignedUrl(input.path, 60 * 5);
+export async function uploadParticipantMediaFile(input: {
+  file: File;
+  mediaId: string;
+  participantId: string;
+  tenantId: string;
+}): Promise<PrivateFileUpload> {
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
 
-  if (error || !data?.signedUrl) {
-    throw new Error(`Could not create signed file URL: ${error?.message ?? "missing URL"}`);
+  return uploadPrivateFile({
+    bucket: PARTICIPANT_MEDIA_BUCKET,
+    file: input.file,
+    path: `${input.tenantId}/participants/${input.participantId}/${input.mediaId}.${extension}`,
+    purpose: "participant_media",
+    upsert: false
+  });
+}
+
+export async function uploadBadgeStudioAssetFile(input: {
+  assetId: string;
+  file: File;
+  scope?: string;
+}): Promise<PrivateFileUpload> {
+  if (input.file.size > BADGE_STUDIO_ASSET_MAX_BYTES) {
+    throw new Error("De afbeelding is groter dan 5 MB.");
   }
+  if (!["image/jpeg", "image/png"].includes(input.file.type)) {
+    throw new Error("Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.");
+  }
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
 
-  return data.signedUrl;
+  return uploadPrivateFile({
+    bucket: BADGE_STUDIO_ASSETS_BUCKET,
+    file: input.file,
+    path: `${input.scope ?? "platform"}/assets/${input.assetId}.${extension}`,
+    purpose: "badge_studio",
+    upsert: false
+  });
+}
+
+export async function uploadTenantMediaAssetFile(input: {
+  assetId: string;
+  file: File;
+  tenantId: string;
+}): Promise<PrivateFileUpload> {
+  if (input.file.size > TENANT_MEDIA_ASSET_MAX_BYTES) {
+    throw new Error("De afbeelding is groter dan 10 MB.");
+  }
+  if (!["image/jpeg", "image/png"].includes(input.file.type)) {
+    throw new Error("Alleen JPEG- en PNG-afbeeldingen zijn toegestaan.");
+  }
+  const extension = input.file.type === "image/png" ? "png" : "jpg";
+  return uploadPrivateFile({
+    bucket: TENANT_MEDIA_ASSETS_BUCKET,
+    file: input.file,
+    path: `${input.tenantId}/library/${input.assetId}.${extension}`,
+    purpose: "site_media",
+    upsert: false
+  });
 }
 
 export function getFileFromFormData(formData: FormData, field: string) {
@@ -66,14 +120,20 @@ function validatePrivateFile(file: File) {
   }
 }
 
-async function uploadPrivateFile(input: { bucket: string; file: File; path: string }): Promise<PrivateFileUpload> {
+async function uploadPrivateFile(input: {
+  bucket: string;
+  file: File;
+  path: string;
+  purpose?: "badge_studio" | "participant_media" | "private_document" | "site_media";
+  upsert?: boolean;
+}): Promise<PrivateFileUpload> {
   validatePrivateFile(input.file);
-  const scan = await scanUpload(input.file, "private_document");
+  const scan = await scanUpload(input.file, input.purpose ?? "private_document");
 
   const admin = createAdminClient();
   const { error } = await admin.storage.from(input.bucket).upload(input.path, Buffer.from(await input.file.arrayBuffer()), {
     contentType: input.file.type,
-    upsert: true
+    upsert: input.upsert ?? true
   });
 
   if (error) {

@@ -18,6 +18,13 @@ const nextConfig: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    serverActions: {
+      // The application validates participant media at 20 MB; this only adds
+      // enough multipart overhead for that explicit limit.
+      bodySizeLimit: "22mb"
+    }
+  },
   turbopack: {
     root: join(projectRoot, "../..")
   },

@@ -80,6 +80,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [participantName, setParticipantName] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [participantGender, setParticipantGender] = useState<"boy" | "girl" | "unknown" | "">("");
   const [selectedOption, setSelectedOption] = useState<IntakeOption>(props.allowedOptions[0] ?? "enrollment");
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -130,6 +131,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
   const canContinue = getCanContinue({
     step: currentStep.id,
     participantName,
+    participantGender,
     birthDate,
     parentName,
     parentEmail,
@@ -197,6 +199,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
       <input name="formStartedAt" type="hidden" value={props.formStartedAt} />
       <input name="participantName" type="hidden" value={participantName} />
       <input name="participantBirthDate" type="hidden" value={birthDate} />
+      <input name="participantGender" type="hidden" value={participantGender} />
       <input name="selectedOption" type="hidden" value={selectedOption} />
       <input name="parentName" type="hidden" value={parentName} />
       <input name="parentEmail" type="hidden" value={parentEmail} />
@@ -271,8 +274,10 @@ export function IntakeWizard(props: IntakeWizardProps) {
               birthDate={birthDate}
               onBirthDateChange={setBirthDate}
               onNameChange={setParticipantName}
+              onGenderChange={setParticipantGender}
               onOptionChange={setSelectedOption}
               option={selectedOption}
+              participantGender={participantGender}
               participantName={participantName}
             />
           ) : null}
@@ -350,6 +355,12 @@ export function IntakeWizard(props: IntakeWizardProps) {
                 {selectedRecommendation.weekdayLabel} · {selectedRecommendation.startsAt}
               </p>
               <WaitTimeChip band={selectedRecommendation.waitBand} className="mt-3" />
+              {selectedRecommendation.waitExplanation ? (
+                <p className="mt-3 text-xs leading-5 text-muted-foreground">{selectedRecommendation.waitExplanation}</p>
+              ) : null}
+              {selectedRecommendation.waitTip ? (
+                <p className="mt-2 text-xs font-semibold leading-5 text-primary">{selectedRecommendation.waitTip}</p>
+              ) : null}
             </div>
           ) : null}
           <div className="mt-6 flex gap-2 rounded-2xl border border-border bg-white p-4 text-xs leading-5 text-muted-foreground">
@@ -396,9 +407,11 @@ function ChildStep(props: {
   allowedOptions: IntakeOption[];
   birthDate: string;
   onBirthDateChange: (value: string) => void;
+  onGenderChange: (value: "boy" | "girl" | "unknown") => void;
   onNameChange: (value: string) => void;
   onOptionChange: (value: IntakeOption) => void;
   option: IntakeOption;
+  participantGender: "boy" | "girl" | "unknown" | "";
   participantName: string;
 }) {
   return (
@@ -417,6 +430,24 @@ function ChildStep(props: {
           </Field>
         ) : null}
         {props.birthDate ? (
+          <fieldset className="animate-in fade-in-0 slide-in-from-bottom-2">
+            <legend className="text-sm font-semibold text-foreground">Welke badge-aanspreekvorm past?</legend>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">Alleen voor passende namen en teksten bij badges. Dit beïnvloedt nooit plaatsing, voortgang of betaling.</p>
+            <div className="mt-2 grid gap-2 sm:grid-cols-3">
+              {([
+                ["boy", "Jongen"],
+                ["girl", "Meisje"],
+                ["unknown", "Neutraal / niet zeggen"]
+              ] as const).map(([value, label]) => (
+                <label className="cursor-pointer rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold transition has-[:checked]:border-primary has-[:checked]:bg-primary/[0.06] has-[:checked]:text-primary" key={value}>
+                  <input checked={props.participantGender === value} className="sr-only" onChange={() => props.onGenderChange(value)} type="radio" />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        ) : null}
+        {props.participantGender ? (
           <fieldset className="animate-in fade-in-0 slide-in-from-bottom-2">
             <legend className="text-sm font-semibold text-foreground">Waar kunnen we bij helpen?</legend>
             <div className="mt-2 grid gap-2 sm:grid-cols-2">
@@ -739,6 +770,9 @@ function ChoiceStep(props: {
                   <span className="mt-3 block text-xs leading-5 text-muted-foreground">
                     {recommendation.reasons.slice(0, 2).join(" · ")}
                   </span>
+                  {recommendation.waitTip ? (
+                    <span className="mt-2 block text-xs font-semibold leading-5 text-primary">{recommendation.waitTip}</span>
+                  ) : null}
                 </span>
               </span>
             </label>
@@ -781,6 +815,7 @@ function SummaryItem({ children, complete, icon, label }: { children: React.Reac
 function getCanContinue(input: {
   step: WizardStep;
   participantName: string;
+  participantGender: "boy" | "girl" | "unknown" | "";
   birthDate: string;
   parentName: string;
   parentEmail: string;
@@ -795,7 +830,7 @@ function getCanContinue(input: {
 }) {
   switch (input.step) {
     case "child":
-      return input.participantName.trim().length >= 2 && !!input.birthDate && getAge(input.birthDate) !== null;
+      return input.participantName.trim().length >= 2 && !!input.birthDate && getAge(input.birthDate) !== null && !!input.participantGender;
     case "guardians":
       return input.parentName.trim().length >= 2 && isEmail(input.parentEmail);
     case "experience":

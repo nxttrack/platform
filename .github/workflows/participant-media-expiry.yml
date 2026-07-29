@@ -1,0 +1,82 @@
+name: Participant media expiry
+
+on:
+  schedule:
+    - cron: "20 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: participant-media-expiry-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 10
+    steps:
+      - name: Check internal jobs release gate
+        id: release_gate
+        env:
+          INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED }}
+        run: |
+          if [ "$INTERNAL_JOBS_ENABLED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Internal jobs are disabled for staging until its matching release is deployed."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Expire and remove due private media
+        if: steps.release_gate.outputs.enabled == 'true'
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL"
+          test "${#CRON_SECRET}" -ge 32
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --header "Content-Type: application/json" \
+            "${APP_URL%/}/api/internal/participant-media/expire" \
+            > response.json
+          node -e 'const r=require("./response.json"); if (!r.accepted || r.failed > 0) { console.error(r); process.exit(1); } console.log({attempted:r.attempted, deleted:r.deleted});'
+
+  production:
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 10
+    steps:
+      - name: Check internal jobs release gate
+        id: release_gate
+        env:
+          INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED }}
+        run: |
+          if [ "$INTERNAL_JOBS_ENABLED" != "true" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Internal jobs are disabled for production until its matching release is deployed."
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+
+      - name: Expire and remove due private media
+        if: steps.release_gate.outputs.enabled == 'true'
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+          test -n "$APP_URL"
+          test "${#CRON_SECRET}" -ge 32
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            --header "Content-Type: application/json" \
+            "${APP_URL%/}/api/internal/participant-media/expire" \
+            > response.json
+          node -e 'const r=require("./response.json"); if (!r.accepted || r.failed > 0) { console.error(r); process.exit(1); } console.log({attempted:r.attempted, deleted:r.deleted});'

@@ -62,6 +62,7 @@ behind Sprint 6 sandbox, duplicate-submit, webhook and reconciliation evidence.
 - [Operations And Incident Runbook](docs/OPERATIONS_INCIDENT_RUNBOOK.md)
 - [Communication Delivery Runbook](docs/COMMUNICATION_DELIVERY_RUNBOOK.md)
 - [Deferred Configuration Register](docs/DEFERRED_CONFIGURATION.md)
+- [Learning And Capacity Intelligence](docs/LEARNING_CAPACITY_INTELLIGENCE.md)
 - [Sprint 4 Full-Journey Quality And Security](docs/SPRINT_04_FULL_JOURNEY_QUALITY_SECURITY.md)
 
 ## Phase docs

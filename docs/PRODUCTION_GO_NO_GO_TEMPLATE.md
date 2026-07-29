@@ -27,7 +27,7 @@ This form is valid for this exact 40-character SHA only. A code, workflow, depen
 - [ ] Caddy configuration validates; apex, `www`, `admin` and wildcard tenant TLS routes are present.
 - [ ] `nxttrack-production` and port `3800` pass the read-only host audit.
 - [ ] Production Supabase is Pro and the backup retention visible in the dashboard is recorded.
-- [ ] A separate backup/export route exists for objects in `tenant-documents` and `diploma-vault`.
+- [ ] A separate backup/export route exists for objects in `tenant-documents`, `diploma-vault`, `participant-media` and `badge-studio-assets`.
 
 ## Database and security
 

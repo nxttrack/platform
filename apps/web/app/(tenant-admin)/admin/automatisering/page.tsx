@@ -1,38 +1,162 @@
-import { Bot, Pause, Play, Workflow } from "lucide-react";
+import { Activity, BookOpen, CheckCheck, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { AdminSection, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
-import { PageHeader, StatusPill } from "@/components/shell/ui";
+import { AutomationRecipeGallery } from "@/components/admin/automation-recipe-gallery";
+import {
+  AutomationRecipeRunsTable,
+  type AutomationRecipeRunTableRow
+} from "@/components/admin/automation-recipe-runs-table";
+import { AdminSection } from "@/components/admin/domain-ui";
+import { PageHeader } from "@/components/shell/ui";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
-import { createAutomationRuleAction, setAutomationRuleStatusAction } from "@/lib/domain/premium-operations-actions";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getAutomationRecipeDashboard } from "@/lib/domain/automation-recipes";
 
 export const dynamic = "force-dynamic";
 
-type Rule = { action_key: string; event_key: string; id: string; last_run_at: string | null; name: string; run_count: number; status: string };
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default async function AutomationPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function AutomationRecipeGalleryPage({ searchParams }: PageProps) {
   const context = await requirePrivateShellContext("/admin/automatisering");
-  const tenant = getActiveTenant(context);
-  const admin = createAdminClient();
-  const { data, error: loadError } = await admin.from("automation_rules").select("id, name, event_key, action_key, status, run_count, last_run_at").eq("tenant_id", tenant.id).neq("status", "archived").order("created_at", { ascending: false });
-  if (loadError) throw new Error(`Could not load automation rules: ${loadError.message}`);
-  const rules = (data ?? []) as Rule[];
-  const params = (await searchParams) ?? {};
+  const canManage = context.activeTenant?.roles.some(
+    (role) => role === "tenant_owner" || role === "tenant_admin"
+  ) ?? false;
+  if (!canManage) redirect("/admin?error=forbidden");
 
-  return <div className="space-y-6"><PageHeader kicker="Premium operations" title="Automation builder" subtitle="Bouw expliciete als-dit-dan-dat workflows. Uitvoering gebruikt per run een idempotency key." />
-    {getParam(params, "saved") ? <Feedback ok>Automatisering opgeslagen.</Feedback> : null}{getParam(params, "error") ? <Feedback>Automatisering kon niet worden opgeslagen.</Feedback> : null}
-    <div className="grid gap-4 md:grid-cols-3"><Metric label="Regels" value={rules.length} /><Metric label="Actief" value={rules.filter((rule) => rule.status === "active").length} /><Metric label="Uitvoeringen" value={rules.reduce((total, rule) => total + rule.run_count, 0)} /></div>
-    <div className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
-      <AdminSection title="Nieuwe regel" description="Start klein: één gebeurtenis, één actie en een duidelijke boodschap."><form action={createAutomationRuleAction} className="grid gap-4"><Field label="Naam" name="name" placeholder="No-show opvolging" required /><SelectField label="Als dit gebeurt" name="eventKey" required><option value="no_show">No-show geregistreerd</option><option value="birthday">Verjaardag</option><option value="milestone">Mijlpaal behaald</option><option value="offer_expiring">Aanbod verloopt bijna</option><option value="payment_failed">Betaling mislukt</option><option value="long_absence">Lange afwezigheid</option><option value="graduation_ready">Klaar voor afzwemmen</option></SelectField><SelectField label="Doe dan dit" name="actionKey" required><option value="send_email">E-mail versturen</option><option value="create_task">Taak aanmaken</option><option value="notify_parent">Ouder notificeren</option><option value="notify_admin">Admin notificeren</option><option value="add_tag">Label toevoegen</option></SelectField><TextAreaField label="Bericht of instructie" name="message" /><label className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold"><input className="size-4" name="active" type="checkbox" />Direct activeren</label><SubmitButton>Regel opslaan</SubmitButton></form></AdminSection>
-      <AdminSection title="Workflowregels" description="Pauzeren is omkeerbaar; archiveren haalt de regel uit dit overzicht.">{rules.length ? <div className="grid gap-3">{rules.map((rule) => <article className="rounded-2xl border border-border p-4" key={rule.id}><div className="flex flex-wrap items-start justify-between gap-3"><div className="flex gap-3"><span className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Workflow className="size-5" /></span><div><h3 className="font-bold text-foreground">{rule.name}</h3><p className="mt-1 text-sm text-muted-foreground">{eventLabel(rule.event_key)} → {actionLabel(rule.action_key)}</p></div></div><StatusPill tone={rule.status === "active" ? "success" : rule.status === "paused" ? "warning" : "neutral"}>{rule.status}</StatusPill></div><div className="mt-4 flex flex-wrap items-center gap-3 border-t border-border pt-3"><p className="mr-auto text-xs text-muted-foreground">{rule.run_count} runs{rule.last_run_at ? ` · laatst ${formatDate(rule.last_run_at)}` : " · nog niet uitgevoerd"}</p><form action={setAutomationRuleStatusAction}><input name="ruleId" type="hidden" value={rule.id} /><input name="status" type="hidden" value={rule.status === "active" ? "paused" : "active"} /><button className="inline-flex h-9 items-center gap-2 rounded-lg border border-border px-3 text-sm font-semibold hover:bg-muted" type="submit">{rule.status === "active" ? <Pause className="size-4" /> : <Play className="size-4" />}{rule.status === "active" ? "Pauzeren" : "Activeren"}</button></form></div></article>)}</div> : <EmptyState><Bot className="mb-2 size-5 text-primary" />Nog geen automatiseringsregels.</EmptyState>}</AdminSection>
+  const tenant = getActiveTenant(context);
+  const dashboard = await getAutomationRecipeDashboard(tenant.id);
+  const params = (await searchParams) ?? {};
+  const saved = getParam(params, "saved");
+  const error = getParam(params, "error");
+  const activeCount = dashboard.configs.filter((config) => config.enabled).length;
+  const completedReviewTasks = dashboard.runs.filter(
+    (run) => run.actions_taken_json.includes("review_task_created")
+  ).length;
+
+  const rows: AutomationRecipeRunTableRow[] = dashboard.runs.map((run) => ({
+    id: run.id,
+    recipeKey: run.recipe_key,
+    status: run.status,
+    executionMode: run.execution_mode,
+    triggerEntityType: run.trigger_entity_type,
+    reviewTaskId: run.review_task_id,
+    actions: run.actions_taken_json,
+    reasons: run.reasons_json,
+    sourceData: run.source_data_json,
+    confidence: run.confidence,
+    skippedReason: run.skipped_reason,
+    errorCode: run.error_code,
+    isTest: run.is_test,
+    startedAt: run.started_at
+  }));
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        action={(
+          <Link
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-background px-4 text-sm font-bold text-foreground shadow-soft hover:bg-muted"
+            href="/admin/automatisering/regels"
+          >
+            <BookOpen className="size-4" aria-hidden="true" />
+            Eigen regels
+          </Link>
+        )}
+        kicker="Veilige automatisering"
+        subtitle={`Kies gecontroleerde recipes voor ${tenant.name}. Iedere live uitkomst blijft een interne taak met menselijke beoordeling.`}
+        title="Automation recipegallery"
+      />
+
+      {saved ? <Feedback ok>{savedMessage(saved)}</Feedback> : null}
+      {error ? <Feedback>{errorMessage(error)}</Feedback> : null}
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Metric icon={ShieldCheck} label="Beschikbare recipes" value={dashboard.catalog.length} />
+        <Metric icon={Activity} label="Actief" value={activeCount} />
+        <Metric icon={CheckCheck} label="Reviewtaken in log" value={completedReviewTasks} />
+      </div>
+
+      <AutomationRecipeGallery
+        canManage
+        configs={dashboard.configs}
+        recipes={dashboard.catalog}
+      />
+
+      <AdminSection
+        description="Laatste 100 runs met uitlegbare brondata, redenen, confidence en veilige uitkomst. Testmodus maakt nooit een taak."
+        title="Recipe-auditlog"
+      >
+        <AutomationRecipeRunsTable rows={rows} />
+      </AdminSection>
     </div>
-  </div>;
+  );
 }
 
-function Metric({ label, value }: { label: string; value: number }) { return <div className="rounded-2xl border border-border bg-card p-4 shadow-soft"><p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p><p className="mt-2 text-3xl font-bold text-foreground">{value}</p></div>; }
-function Feedback({ children, ok = false }: { children: string; ok?: boolean }) { return <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${ok ? "border-success/20 bg-success/10 text-success" : "border-danger/20 bg-danger/10 text-danger"}`}>{children}</p>; }
-function eventLabel(value: string) { return ({ no_show: "No-show", birthday: "Verjaardag", milestone: "Mijlpaal", offer_expiring: "Aanbod verloopt", payment_failed: "Betaling mislukt", long_absence: "Lange afwezigheid", graduation_ready: "Klaar voor afzwemmen" } as Record<string, string>)[value] ?? value; }
-function actionLabel(value: string) { return ({ send_email: "E-mail", create_task: "Taak", notify_parent: "Oudermelding", notify_admin: "Adminmelding", add_tag: "Label" } as Record<string, string>)[value] ?? value; }
-function formatDate(value: string) { return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value)); }
-function getParam(params: Record<string, string | string[] | undefined>, key: string) { const value = params[key]; return Array.isArray(value) ? value[0] : value; }
+function Metric({
+  icon: Icon,
+  label,
+  value
+}: {
+  icon: typeof Activity;
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <Icon className="size-4 text-primary" aria-hidden="true" />
+      </div>
+      <p className="mt-2 text-3xl font-bold text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function Feedback({ children, ok = false }: { children: string; ok?: boolean }) {
+  return (
+    <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+      ok
+        ? "border-success/20 bg-success/10 text-success"
+        : "border-danger/20 bg-danger/10 text-danger"
+    }`}>
+      {children}
+    </p>
+  );
+}
+
+function savedMessage(value: string) {
+  const messages: Record<string, string> = {
+    activated: "Recipe geactiveerd. Alleen interne controletaken zijn toegestaan.",
+    config: "Veilige recipeconfiguratie opgeslagen.",
+    duplicate: "Dit signaal was al verwerkt; er is geen dubbele taak gemaakt.",
+    failed: "De recipe-run is gelogd, maar de interne controletaak kon niet worden gemaakt.",
+    paused: "Recipe gepauzeerd.",
+    review_task: "Interne controletaak gemaakt. Er is niets extern verstuurd of operationeel gewijzigd.",
+    skipped: "Geen veilig passend live signaal gevonden; de controle is gelogd.",
+    test: "Test afgerond zonder taak of andere bijwerking."
+  };
+  return messages[value] ?? "Automatisering verwerkt.";
+}
+
+function errorMessage(value: string) {
+  const messages: Record<string, string> = {
+    activation: "Activeren of pauzeren is niet gelukt.",
+    activation_confirmation: "Bevestig eerst de review-only veiligheidsgrens.",
+    config_lookup: "De recipeconfiguratie kon niet worden geladen.",
+    config_save: "De recipeconfiguratie kon niet worden opgeslagen.",
+    evaluation: "De recipe kon niet veilig worden geëvalueerd.",
+    forbidden: "Alleen organisatie-eigenaren en beheerders mogen recipes beheren.",
+    live_confirmation: "Bevestig eerst dat je één interne controletaak wilt laten maken.",
+    recipe: "Deze recipe bestaat niet.",
+    recipe_not_active: "Activeer de recipe voordat je een live signaal controleert."
+  };
+  return messages[value] ?? "Automatisering kon niet worden verwerkt.";
+}
+
+function getParam(params: Record<string, string | string[] | undefined>, key: string) {
+  const value = params[key];
+  return Array.isArray(value) ? value[0] : value;
+}

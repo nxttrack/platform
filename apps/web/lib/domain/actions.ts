@@ -130,6 +130,7 @@ export async function createParticipantEnrollmentAction(formData: FormData) {
       guardian_user_id: guardianUserId,
       display_name: readRequired(formData, "displayName"),
       birth_date: readOptional(formData, "birthDate"),
+      gender: readOptional(formData, "gender") ?? "unknown",
       status: "active"
     })
     .select("id")

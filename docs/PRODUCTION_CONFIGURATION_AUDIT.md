@@ -71,6 +71,8 @@ and record one controlled production test after that activation.
 - [ ] Upgrade production Supabase to Pro and record provider backup retention.
 - [x] Implement and test the encrypted off-platform Storage backup/restore route for both private buckets on
   staging; run `30012250717` proves export, encryption, restore, remote checksum and zero-object cleanup.
+- [ ] Re-run the controlled staging restore rehearsal after the `participant-media` migration; the historical
+  evidence above predates the third private bucket and is not sufficient for this release.
 - [ ] Store the production encryption passphrase independently and create the first encrypted production
   Storage recovery point during the approved release window.
 - [x] Add a production SendGrid API key and pass the non-sending provider/DNS foundation audit.
