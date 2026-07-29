@@ -169,6 +169,9 @@ jobs:
           pnpm run release:truth
           pnpm run release:assert-source
 
+      - name: Audit deployment environment contract
+        run: node scripts/release/audit-runtime-environment-contract.mjs
+
       - name: Verify production foundation evidence
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -302,7 +305,6 @@ jobs:
           pnpm run test:communication-hub
           pnpm run test:badges
           pnpm run release:audit-journey-bot
-          pnpm run release:audit-runtime-env
           pnpm run auth:audit
           pnpm run security:audit-dependencies
           pnpm run db:audit
