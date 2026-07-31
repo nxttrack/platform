@@ -13,10 +13,11 @@ export async function getPlatformBadgeData() {
     redirect("/platform?error=forbidden");
   }
   const admin = createAdminClient();
-  const [settings, definitions, collections, themes, templateSets, templates, events] = await Promise.all([
+  const [settings, definitions, collections, collectionItems, themes, templateSets, templates, events] = await Promise.all([
     admin.from("platform_badge_settings").select("*").eq("id", true).maybeSingle(),
     admin.from("badge_catalog_definitions").select("*").order("sort_order").order("name_default"),
     admin.from("badge_collections").select("*").is("tenant_id", null).order("sort_order"),
+    admin.from("badge_collection_items").select("*").order("sort_order"),
     admin.from("badge_themes").select("*").is("tenant_id", null).order("name"),
     admin.from("badge_share_template_sets").select("*").is("tenant_id", null).order("name"),
     admin.from("badge_share_templates").select("*").order("format"),
@@ -26,6 +27,7 @@ export async function getPlatformBadgeData() {
     ["platform badge settings", settings.error],
     ["badge catalog", definitions.error],
     ["badge collections", collections.error],
+    ["badge collection items", collectionItems.error],
     ["badge themes", themes.error],
     ["badge template sets", templateSets.error],
     ["badge templates", templates.error],
@@ -37,14 +39,18 @@ export async function getPlatformBadgeData() {
     : { data: [], error: null };
   assertResults([["badge analytics tenants", tenants.error]]);
 
+  const globalTemplateSetIds = new Set((templateSets.data ?? []).map((set) => set.id));
+  const globalCollectionIds = new Set((collections.data ?? []).map((collection) => collection.id));
+
   return {
     canManage: context.platform.roles.some((role) => role === "platform_owner" || role === "platform_admin"),
     settings: settings.data,
     definitions: definitions.data ?? [],
     collections: collections.data ?? [],
+    collectionItems: (collectionItems.data ?? []).filter((item) => globalCollectionIds.has(item.collection_id)),
     themes: themes.data ?? [],
     templateSets: templateSets.data ?? [],
-    templates: templates.data ?? [],
+    templates: (templates.data ?? []).filter((template) => globalTemplateSetIds.has(template.template_set_id)),
     events: events.data ?? [],
     tenants: tenants.data ?? []
   };
@@ -165,9 +171,10 @@ export async function getBadgeEditorData(templateId?: string) {
   const admin = createAdminClient();
   const assetsResult = await admin
     .from("badge_studio_assets")
-    .select("id, name, storage_bucket, storage_path, mime_type, size_bytes")
+    .select("id, name, storage_bucket, storage_path, mime_type, size_bytes, purpose")
     .is("tenant_id", null)
     .eq("status", "active")
+    .eq("purpose", "template_image")
     .order("created_at", { ascending: false });
   assertResults([["badge studio assets", assetsResult.error]]);
   const assets = (assetsResult.data ?? []).map((asset): BadgeStudioAsset => ({

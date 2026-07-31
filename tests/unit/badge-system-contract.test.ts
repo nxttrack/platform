@@ -6,7 +6,9 @@ import {
   badgeAwardKey,
   badgeMatchesAudience,
   firstNameOnly,
+  moveBadgeLayer,
   normalizeBadgeGender,
+  reorderBadgeLayers,
   resolveBadgeShortcodes,
   resolveGenderedCopy,
   selectTriggerCandidates,
@@ -75,18 +77,43 @@ test("awardkeys zijn stabiel en begrensd voor idempotente toekenning", () => {
 
 test("template-editor accepteert alleen bekende, begrensde lagen", () => {
   const layers = validateBadgeLayers([
-    { id: "title", type: "text", x: -10, y: 20, width: 9000, height: 80, text: "Hallo", opacity: 3 },
+    { id: "title", name: "Titel", type: "text", x: -10, y: 20, width: 9000, height: 80, text: "Hallo", opacity: 3, rotation: 999 },
     { id: "photo", type: "image", assetId: "5a9403a7-44d5-4d7a-a593-b341f2046b49", x: 10, y: 10, width: 500, height: 500, objectFit: "cover", alt: "Zwemillustratie" },
+    { id: "title", type: "text", x: 10, y: 10, width: 500, height: 100, text: "Dubbel" },
     { id: "unsafe-image", type: "image", assetId: "../../object", x: 10, y: 10, width: 500, height: 500 },
     { id: "script", type: "iframe", x: 0, y: 0, width: 10, height: 10 }
-  ]);
+  ], { height: 1080, width: 1080 });
 
   assert.equal(layers.length, 2);
   assert.equal(layers[0]?.x, 0);
-  assert.equal(layers[0]?.width, 2400);
+  assert.equal(layers[0]?.width, 1080);
   assert.equal(layers[0]?.opacity, 1);
+  assert.equal(layers[0]?.rotation, 180);
+  assert.equal(layers[0]?.name, "Titel");
   assert.equal(layers[1]?.type, "image");
   assert.equal(layers[1]?.objectFit, "cover");
+});
+
+test("laagvolgorde kan veilig stapsgewijs en via drag-and-drop worden aangepast", () => {
+  const layers = validateBadgeLayers([
+    { id: "background", type: "shape", x: 0, y: 0, width: 1080, height: 1080 },
+    { id: "badge", type: "badge", x: 300, y: 300, width: 480, height: 480 },
+    { id: "title", type: "text", x: 100, y: 80, width: 880, height: 120, text: "Titel" }
+  ], { height: 1080, width: 1080 });
+
+  assert.deepEqual(moveBadgeLayer(layers, "badge", "front").map((layer) => layer.id), ["background", "title", "badge"]);
+  assert.deepEqual(moveBadgeLayer(layers, "background", "back").map((layer) => layer.id), ["background", "badge", "title"]);
+  assert.deepEqual(reorderBadgeLayers(layers, "title", "background").map((layer) => layer.id), ["title", "background", "badge"]);
+  assert.deepEqual(reorderBadgeLayers(layers, "missing", "badge"), layers);
+});
+
+test("editor bewaart spaties en regeleinden tijdens tekstbewerking", () => {
+  const [layer] = validateBadgeLayers([
+    { id: "title", name: "Hoofd titel ", type: "text", x: 10, y: 10, width: 500, height: 100, text: "Hallo \nwereld " }
+  ], { height: 1080, width: 1080 });
+
+  assert.equal(layer?.name, "Hoofd titel ");
+  assert.equal(layer?.text, "Hallo \nwereld ");
 });
 
 test("engine verstuurt niets extern buiten de bestaande notificatielaag", () => {

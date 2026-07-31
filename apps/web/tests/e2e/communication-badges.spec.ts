@@ -43,10 +43,23 @@ test.describe("Communicationhub and Badge Studio", () => {
       await page.goto(route[0], { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { level: 1, name: route[1] })).toBeVisible();
       if (route[0] === "/platform/badges/share-templates") {
-        await expect(page.getByText("canvas schaalt automatisch mee", { exact: false })).toBeVisible();
-        await expect(page.getByText("Afbeeldingen", { exact: true })).toBeVisible();
+        await expect(page.getByText("sleep, resize of roteer de selectie", { exact: false })).toBeVisible();
+        await expect(page.getByText("Template-afbeeldingen", { exact: true })).toBeVisible();
         await expect(page.getByLabel("Afbeelding kiezen")).toBeVisible();
-        await expect(page.getByTestId("badge-studio-editor")).toBeVisible();
+        const editor = page.getByTestId("badge-studio-editor");
+        await expect(editor).toBeVisible();
+        await expect(page.getByRole("button", { name: "Ongedaan maken" })).toBeDisabled();
+        await page.locator("aside").first().locator('button[draggable="true"]').first().click();
+        const xPosition = page.getByLabel("X", { exact: true });
+        const initialX = await xPosition.inputValue();
+        await xPosition.fill(String(Number(initialX) + 1));
+        await expect(editor).toHaveAttribute("data-dirty", "true");
+        await page.getByRole("button", { name: "Ongedaan maken" }).click();
+        await expect(xPosition).toHaveValue(initialX);
+        await page.getByRole("button", { name: "Opnieuw uitvoeren" }).click();
+        await expect(xPosition).toHaveValue(String(Number(initialX) + 1));
+        await page.getByRole("button", { name: "Herstel" }).click();
+        await expect(editor).toHaveAttribute("data-dirty", "false");
         await expect.poll(() => page.evaluate(() => document.documentElement.scrollHeight <= window.innerHeight + 2)).toBe(true);
       }
     }

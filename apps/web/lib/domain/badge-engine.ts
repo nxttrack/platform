@@ -29,6 +29,7 @@ type CatalogBadge = {
   trigger_type: string | null;
   trigger_config_json: Record<string, unknown>;
   audience: BadgeAudience;
+  artwork_asset_id: string | null;
   notifications_enabled: boolean;
   emails_enabled: boolean;
   share_enabled: boolean;
@@ -91,7 +92,7 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
     admin.from("participants").select("id, display_name, gender, status, is_test").eq("tenant_id", input.tenantId).eq("id", input.participantId).maybeSingle(),
     admin
       .from("badge_catalog_definitions")
-      .select("id, badge_key, name_default, name_boy, name_girl, description_default, description_boy, description_girl, share_text_default, share_text_boy, share_text_girl, badge_type, trigger_type, trigger_config_json, audience, notifications_enabled, emails_enabled, share_enabled, status")
+      .select("id, badge_key, name_default, name_boy, name_girl, description_default, description_boy, description_girl, share_text_default, share_text_boy, share_text_girl, badge_type, trigger_type, trigger_config_json, audience, artwork_asset_id, notifications_enabled, emails_enabled, share_enabled, status")
       .eq("badge_type", "automatic")
       .eq("status", "active")
       .eq("trigger_type", input.eventType),
@@ -288,6 +289,7 @@ export async function awardBadge(input: BadgeAwardInput): Promise<BadgeAwardResu
       resolved_name: name,
       resolved_description: description,
       resolved_share_text: shareText,
+      resolved_artwork_asset_id: asNullableString(definition.artwork_asset_id),
       participant_gender_snapshot: gender,
       trigger_event_type: input.eventType ?? null,
       trigger_context_json: input.eventContext ?? {},
