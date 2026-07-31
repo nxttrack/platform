@@ -49,7 +49,7 @@ test.describe("Communicationhub and Badge Studio", () => {
         const editor = page.getByTestId("badge-studio-editor");
         await expect(editor).toBeVisible();
         await expect(page.getByRole("button", { name: "Ongedaan maken" })).toBeDisabled();
-        await page.locator("aside").first().locator('button[draggable="true"]').first().click();
+        await editor.locator("aside").first().locator('button[draggable="true"]').first().click();
         const xPosition = page.getByLabel("X", { exact: true });
         const initialX = await xPosition.inputValue();
         await xPosition.fill(String(Number(initialX) + 1));
