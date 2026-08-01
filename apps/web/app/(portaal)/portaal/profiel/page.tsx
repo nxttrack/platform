@@ -41,7 +41,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             <div className="rounded-lg border border-border bg-muted px-3 py-3 md:col-span-2">
               <div className="flex items-center gap-2 text-primary">
                 <Mail className="h-4 w-4" />
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">E-mail</p>
+                <p className="text-xs font-semibold uppercase tracking-wider">E-mail</p>
               </div>
               <p className="mt-1 text-sm font-bold text-foreground">{data.profile?.email ?? data.user.email ?? "Niet bekend"}</p>
             </div>
