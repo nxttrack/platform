@@ -105,7 +105,7 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.badgeTitle);
     await expectBodyToContain(page, phase.expected.progressLabel);
 
-    await page.goto("/portaal/badges", { waitUntil: "domcontentloaded" });
+    await page.goto("/portaal/ontwikkeling/badges", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
     await expectActiveShellLink(page, "Ontwikkeling");
 
@@ -116,11 +116,11 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/portaal/betalingen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.paymentReference);
 
-    await page.goto("/portaal/diplomas", { waitUntil: "domcontentloaded" });
+    await page.goto("/portaal/ontwikkeling/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
 
-    await page.goto("/portaal/media", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Media-tijdlijn" })).toBeVisible();
+    await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Besloten media" })).toBeVisible();
     await expectBodyToContain(page, phase.expected.participantName);
 
     expect(failures()).toEqual([]);
