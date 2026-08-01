@@ -1,4 +1,4 @@
-import { Mail, Phone, RefreshCcw, UserRound } from "lucide-react";
+import { Mail, Phone, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, PageHeader } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
@@ -27,14 +27,13 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
   const savedValue = getParam(params, "saved");
   const saved = savedValue === "1" || savedValue === "makeup-preferences" || savedValue === "communication-preferences";
   const error = getParam(params, "error");
-  const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available");
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Profiel" title="Profiel basics" subtitle="Basisgegevens voor het ouderportaal." />
+      <PageHeader kicker="Account" title="Profiel en voorkeuren" subtitle="Beheer je contactgegevens en bepaal hoe de zwemschool je bereikt." />
       <Feedback saved={saved} error={error} />
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-5">
         <Card>
           <form action={updateParentProfileAction} className="grid gap-4 md:grid-cols-2">
             <Field defaultValue={data.profile?.full_name ?? data.user.displayName ?? ""} icon={<UserRound className="h-4 w-4" />} label="Naam" name="fullName" />
@@ -53,17 +52,9 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             </div>
           </form>
         </Card>
-
-        <Card>
-          <div className="space-y-4">
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Inhaalcredits" value={`${activeCredits.length} beschikbaar`} />
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Annuleringstermijn" value={`${data.settings.lesson_cancellation_cutoff_hours} uur vooraf`} />
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Credit geldig" value={`${data.settings.lesson_cancellation_credit_window_days} dagen`} />
-          </div>
-        </Card>
       </div>
 
-      <Card>
+      <Card className="scroll-mt-24" >
         <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Inhaalmarktplaats</p>
@@ -100,7 +91,8 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
         </div>
       </Card>
 
-      <Card>
+      <Card className="scroll-mt-24">
+        <div id="communicatie" className="scroll-mt-24" />
         <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Communicatievoorkeuren</p>
@@ -155,16 +147,6 @@ function Field({ defaultValue, icon, label, name, type = "text" }: { defaultValu
         type={type}
       />
     </label>
-  );
-}
-
-function Detail({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-white px-3 py-3">
-      <div className="flex items-center gap-2 text-primary">{icon}</div>
-      <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
-    </div>
   );
 }
 

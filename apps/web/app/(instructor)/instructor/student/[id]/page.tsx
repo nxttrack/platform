@@ -1,6 +1,7 @@
 import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageSquare, Sparkles, Star, UserRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { FivePointAssessment } from "@/components/assessments/five-point-assessment";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { InstructorBadgeAwardForm } from "@/components/badges/instructor-badge-award-form";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,9 @@ import { installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgres
 import { getInstructorData } from "@/lib/domain/instructor";
 import { markInstructorReadinessRecommendationAction } from "@/lib/domain/learning-intelligence-actions";
 import { calculateDiplomaReadiness, detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
-import { getPositiveScoreLabel, positiveScoreLevels } from "@/lib/domain/progress-template";
+import { getPositiveScoreLabel } from "@/lib/domain/progress-template";
+import { parseLearnerAssessmentValue } from "@/lib/domain/learner-assessment";
+import { getTenantAssessmentRatingDisplay } from "@/lib/theme/portal-theme-server";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -29,6 +32,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   if (!participant) {
     notFound();
   }
+  const assessmentDisplay = await getTenantAssessmentRatingDisplay(data.tenant.id);
 
   const saved = getParam(rawParams, "saved");
   const error = getParam(rawParams, "error");
@@ -152,9 +156,14 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                           const currentScore = scoreByItemId.get(item.id);
 
                           return (
-                            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-muted/50 px-3 py-2" key={item.id}>
+                            <div className="grid gap-2 rounded-lg bg-muted/50 px-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center" key={item.id}>
                               <span className="text-sm font-semibold text-foreground">{item.name}</span>
-                              {currentScore ? <StatusPill tone={scoreTone(currentScore.score)}>{getPositiveScoreLabel(currentScore.score)}</StatusPill> : <StatusPill>Nog niet gescoord</StatusPill>}
+                              <FivePointAssessment
+                                display={assessmentDisplay}
+                                label={item.name}
+                                readOnly
+                                value={currentScore ? parseLearnerAssessmentValue(currentScore.score) : null}
+                              />
                             </div>
                           );
                         })}
@@ -203,16 +212,15 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                                 <p className="font-semibold text-foreground">{item.name}</p>
                                 {item.positive_goal ? <p className="mt-1 text-sm text-muted-foreground">{item.positive_goal}</p> : null}
                               </div>
-                              {currentScore ? <StatusPill tone={scoreTone(currentScore.score)}>{getPositiveScoreLabel(currentScore.score)}</StatusPill> : <StatusPill>Nog niet gescoord</StatusPill>}
+                              {currentScore ? <StatusPill tone={scoreTone(currentScore.score)}>{getPositiveScoreLabel(currentScore.score)}</StatusPill> : <StatusPill>Nog niet beoordeeld</StatusPill>}
                             </div>
-                            <div className="mt-3 grid gap-3 md:grid-cols-2">
-                              <SelectField defaultValue={String(currentScore?.score ?? 3)} fieldId={`score-${item.id}`} label="Score" name="score">
-                                {positiveScoreLevels.map((level) => (
-                                  <option key={level.score} value={level.score}>
-                                    {level.score} - {level.label}
-                                  </option>
-                                ))}
-                              </SelectField>
+                            <div className="mt-3 grid gap-3 md:grid-cols-[auto_1fr]">
+                              <FivePointAssessment
+                                display={assessmentDisplay}
+                                label="Beoordeling"
+                                required
+                                value={currentScore ? parseLearnerAssessmentValue(currentScore.score) : null}
+                              />
                               <SelectField defaultValue={currentScore?.visibility ?? "parent_visible"} fieldId={`visibility-${item.id}`} label="Zichtbaarheid" name="visibility">
                                 <option value="parent_visible">Zichtbaar voor ouder</option>
                                 <option value="internal">Alleen intern</option>

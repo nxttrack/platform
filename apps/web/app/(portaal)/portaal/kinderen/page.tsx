@@ -14,10 +14,10 @@ export default async function ParentChildrenPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Kinderen" title="Athletes" subtitle="Alle kinderen die via parent-mediated access aan dit account gekoppeld zijn." />
+      <PageHeader kicker="Account" title="Gezin en toegang" subtitle="Bekijk welke kinderen aan je account zijn gekoppeld en welk toegangsniveau je per kind hebt." />
 
       {data.participants.length === 0 ? (
-        <EmptyState>Er zijn nog geen athletes gekoppeld.</EmptyState>
+        <EmptyState>Er zijn nog geen kinderen aan dit account gekoppeld.</EmptyState>
       ) : (
         <div className="grid gap-5 xl:grid-cols-2">
           {data.participants.map((participant) => {
@@ -39,7 +39,7 @@ export default async function ParentChildrenPage() {
                       <p className="text-sm text-muted-foreground">{participant.birth_date ? `Geboren op ${formatDate(participant.birth_date)}` : "Geboortedatum niet ingevuld"}</p>
                     </div>
                   </div>
-                  <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status}</StatusPill>
+                  <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status === "active" ? "Actief" : participant.status}</StatusPill>
                 </div>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -48,7 +48,7 @@ export default async function ParentChildrenPage() {
                   <Detail icon={<CalendarDays className="h-4 w-4" />} label="Groep" value={memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst"} />
                   <Detail icon={<CalendarDays className="h-4 w-4" />} label="Volgende les" value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
                   <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Inhaalcredits" value={`${credits.length} beschikbaar`} />
-                  <Detail icon={<Baby className="h-4 w-4" />} label="Toegang" value={access ? `${access.relationship} - ${access.access_level}` : "Guardian"} />
+                  <Detail icon={<Baby className="h-4 w-4" />} label="Toegang" value={access ? `${relationshipLabel(access.relationship)} · ${accessLabel(access.access_level)}` : "Primaire verzorger"} />
                 </div>
               </article>
             );
@@ -75,4 +75,23 @@ function EmptyState({ children }: { children: ReactNode }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function relationshipLabel(value: string) {
+  const labels: Record<string, string> = {
+    parent: "Ouder",
+    guardian: "Verzorger",
+    grandparent: "Grootouder",
+    other: "Anders"
+  };
+  return labels[value] ?? value;
+}
+
+function accessLabel(value: string) {
+  const labels: Record<string, string> = {
+    primary: "Volledige toegang",
+    secondary: "Gedeelde toegang",
+    view_only: "Alleen bekijken"
+  };
+  return labels[value] ?? value;
 }

@@ -1,4 +1,5 @@
-import { CalendarX, MapPin, UserRound } from "lucide-react";
+import { ArrowLeft, CalendarX, MapPin, UserRound } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
@@ -7,11 +8,12 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { cancelLessonAction } from "@/lib/domain/parent-portal-actions";
 import { canCancelSession, canParentMutateParticipant, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
+import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 import type { SessionRow } from "@/lib/domain/core";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<ParentPortalSearchParams>;
 };
 
 export const dynamic = "force-dynamic";
@@ -26,7 +28,8 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
 
   const group = data.groups.find((item) => item.id === session.group_id) ?? null;
   const resource = session.resource_id ? data.resources.find((item) => item.id === session.resource_id) ?? null : null;
-  const memberships = data.groupMemberships.filter((membership) => membership.group_id === session.group_id && (membership.status === "active" || membership.status === "trial"));
+  const selectedParticipantId = getSelectedParticipantId(rawParams, data.participants.map((participant) => participant.id));
+  const memberships = data.groupMemberships.filter((membership) => (!selectedParticipantId || membership.participant_id === selectedParticipantId) && membership.group_id === session.group_id && (membership.status === "active" || membership.status === "trial"));
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const cancellationByParticipant = new Map(data.cancellations.filter((cancellation) => cancellation.session_id === session.id).map((cancellation) => [cancellation.participant_id, cancellation]));
   const saved = getParam(rawParams, "saved");
@@ -36,7 +39,12 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Lesdetails" title={formatLessonDate(session.starts_at, session.ends_at)} subtitle={group?.name ?? "Lesgroep"} />
+      <PageHeader
+        action={<Link className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-soft" href={participantContextHref("/portaal/planning", selectedParticipantId)}><ArrowLeft className="size-4" /> Terug naar planning</Link>}
+        kicker="Planning"
+        title={formatLessonDate(session.starts_at, session.ends_at)}
+        subtitle={group?.name ?? "Lesgroep"}
+      />
       <Feedback saved={saved} error={error} />
 
       <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
@@ -58,13 +66,13 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
               <article className="rounded-xl border border-border bg-card p-4 shadow-soft" key={membership.id}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">Athlete</p>
-                    <h2 className="mt-1 text-lg font-bold text-foreground">{participant?.display_name ?? "Athlete"}</h2>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-primary">Leerling</p>
+                    <h2 className="mt-1 text-lg font-bold text-foreground">{participant?.display_name ?? "Leerling"}</h2>
                   </div>
                   {cancellation ? <StatusPill tone={cancellation.eligible_for_credit ? "success" : "warning"}>{cancellation.policy_status}</StatusPill> : <StatusPill tone="info">gepland</StatusPill>}
                 </div>
                 <div className="mt-4">
-                  {future && session.status === "scheduled" && !cancellation && canParentMutateParticipant(data, membership.participant_id) ? <CancelForm participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
+                  {future && session.status === "scheduled" && !cancellation && canParentMutateParticipant(data, membership.participant_id) ? <CancelForm next={participantContextHref(`/portaal/lessen/${session.id}`, selectedParticipantId)} participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
                   {cancellation ? <p className="text-sm font-semibold text-muted-foreground">Geannuleerd op {formatShortDate(cancellation.requested_at)}</p> : null}
                 </div>
               </article>
@@ -76,7 +84,7 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
   );
 }
 
-function CancelForm({ onTime, participantId, session }: { onTime: boolean; participantId: string; session: SessionRow }) {
+function CancelForm({ next, onTime, participantId, session }: { next: string; onTime: boolean; participantId: string; session: SessionRow }) {
   return (
     <ConfirmActionForm
       action={cancelLessonAction}
@@ -87,7 +95,7 @@ function CancelForm({ onTime, participantId, session }: { onTime: boolean; parti
           ? "Deze les wordt geannuleerd. Volgens de huidige termijn ontvang je hiervoor automatisch een inhaalcredit."
           : "Deze les wordt geannuleerd buiten de geldende termijn. Je ontvangt hiervoor geen inhaalcredit."
       }
-      hiddenFields={{ sessionId: session.id, participantId, next: `/portaal/lessen/${session.id}` }}
+      hiddenFields={{ sessionId: session.id, participantId, next }}
       title="Wil je deze les annuleren?"
       triggerLabel={
         <>

@@ -1,19 +1,35 @@
 import type { NavItem } from "@/components/shell/app-shell";
 
 export const parentNav: NavItem[] = [
-  { href: "/portaal", label: "Home", icon: "home" },
-  { href: "/portaal/kinderen", label: "Kinderen", icon: "baby" },
-  { href: "/portaal/lessen", label: "Mijn lessen", icon: "waves" },
-  { href: "/portaal/voortgang", label: "Voortgang", icon: "trending" },
-  { href: "/portaal/media", label: "Media", icon: "file" },
-  { href: "/portaal/badges", label: "Badges", icon: "award" },
-  { href: "/portaal/afzwemmen", label: "Afzwemmen", icon: "calendar" },
-  { href: "/portaal/berichten", label: "Berichten", icon: "message" },
-  { href: "/portaal/feedback", label: "Feedback", icon: "chart" },
-  { href: "/portaal/diplomas", label: "Diploma's", icon: "graduation" },
-  { href: "/portaal/documenten", label: "Documenten", icon: "file" },
-  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" },
-  { href: "/portaal/profiel", label: "Profiel", icon: "user" }
+  { href: "/portaal", label: "Overzicht", icon: "home", exact: true },
+  {
+    href: "/portaal/planning",
+    label: "Planning",
+    icon: "calendar",
+    activePrefixes: ["/portaal/lessen", "/portaal/afzwemmen"]
+  },
+  {
+    href: "/portaal/ontwikkeling",
+    label: "Ontwikkeling",
+    icon: "trending",
+    activePrefixes: ["/portaal/voortgang", "/portaal/badges", "/portaal/media", "/portaal/diplomas"]
+  },
+  {
+    href: "/portaal/inbox",
+    label: "Inbox",
+    icon: "inbox",
+    activePrefixes: ["/portaal/berichten"]
+  },
+  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" }
+];
+
+export const parentMoreNav: NavItem[] = [
+  { href: "/portaal/documenten", label: "Documenten", icon: "file", section: "Informatie" },
+  { href: "/portaal/feedback", label: "Feedback", icon: "chart", section: "Informatie" },
+  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users", section: "Account" },
+  { href: "/portaal/profiel", label: "Profiel", icon: "user", section: "Account" },
+  { href: "/portaal/profiel#communicatie", label: "Meldingsvoorkeuren", icon: "bell", section: "Voorkeuren" },
+  { href: "/portaal/ontwikkeling/media#toestemming", label: "Privacy en toestemming", icon: "shield", section: "Voorkeuren" }
 ];
 
 export const instructorNav: NavItem[] = [
@@ -79,6 +95,7 @@ export const platformNav: NavItem[] = [
   { href: "/platform", label: "Overzicht", icon: "home" },
   { href: "/platform/packages", label: "Packages & features", icon: "boxes" },
   { href: "/platform/onboarding", label: "Onboarding", icon: "waves" },
+  { href: "/platform/themes", label: "Ouderportaalthema’s", icon: "palette" },
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
   { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },

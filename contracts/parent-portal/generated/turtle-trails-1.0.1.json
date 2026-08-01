@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "themeKey": "turtle-trails",
+  "release": "1.0.1",
+  "colors": {
+    "canvas": "#E5F5ED",
+    "surface": "rgba(255,255,255,.95)",
+    "surfaceAlt": "#F4FBF7",
+    "text": "#123A3C",
+    "textMuted": "#5D7978",
+    "primary": "#087F75",
+    "primaryStrong": "#06675F",
+    "secondary": "#5DBB83",
+    "reward": "#D5A947",
+    "rail": "#103B40",
+    "info": "#075EA8",
+    "success": "#146C4C",
+    "warning": "#7A4B00",
+    "danger": "#B4233D"
+  },
+  "radii": {
+    "card": "22px",
+    "hero": "31px"
+  },
+  "typography": {
+    "display": "\"Plus Jakarta Sans\", Inter, system-ui, sans-serif",
+    "body": "Inter, system-ui, sans-serif"
+  },
+  "motionMilliseconds": {
+    "microMs": 160,
+    "standardMs": 260,
+    "celebrationMs": 600
+  }
+}

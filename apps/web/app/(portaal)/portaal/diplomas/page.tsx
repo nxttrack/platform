@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { CalendarCheck, CheckCircle2, Download, FileBadge, QrCode, XCircle } from "lucide-react";
+import { Download, FileBadge, QrCode } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
-import { canParentMutateParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
+import { ParentSectionNav } from "@/components/parent/parent-section-nav";
+import { getParentPortalData } from "@/lib/domain/parent-portal";
+import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 
-type PageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
-};
+type PageProps = { searchParams?: Promise<ParentPortalSearchParams> };
 
 export const dynamic = "force-dynamic";
 
@@ -15,78 +14,37 @@ export default async function ParentDiplomaVaultPage({ searchParams }: PageProps
   const [data, params] = await Promise.all([getParentPortalData(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
-  const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
-  const eventById = new Map(data.graduationEvents.map((event) => [event.id, event]));
+  const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
+  const visibleParticipantIds = new Set(selectedParticipantId ? [selectedParticipantId] : data.participants.map((participant) => participant.id));
+  const participantById = new Map(data.participants.filter((participant) => visibleParticipantIds.has(participant.id)).map((participant) => [participant.id, participant]));
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
-  const pendingInvites = data.graduationParticipants.filter((participant) => participant.invite_status === "sent" || participant.invite_status === "confirmed" || participant.invite_status === "declined");
+  const certificates = data.certificates.filter((certificate) => visibleParticipantIds.has(certificate.participant_id));
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Diploma vault" title="Afzwemmen en diploma's" subtitle="Bekijk uitnodigingen, afzwemstatus en uitgegeven diploma's van je kinderen." />
+      <PageHeader kicker="Ontwikkeling" title="Diploma’s en certificaten" subtitle="Een veilige plek voor alle officieel behaalde resultaten." />
       <Feedback saved={saved} error={error} />
-
-      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
-        <div className="mb-4 flex items-center gap-2">
-          <CalendarCheck className="h-5 w-5 text-primary" />
-          <h2 className="text-lg font-bold text-foreground">Afzwemuitnodigingen</h2>
-        </div>
-        {pendingInvites.length === 0 ? (
-          <EmptyState>Er zijn nog geen afzwemuitnodigingen.</EmptyState>
-        ) : (
-          <div className="grid gap-3">
-            {pendingInvites.map((invite) => {
-              const participant = participantById.get(invite.participant_id);
-              const event = eventById.get(invite.event_id);
-
-              return (
-                <article className="rounded-lg border border-border bg-white p-4" key={invite.id}>
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Kind"}</p>
-                      <h3 className="mt-1 font-bold text-foreground">{event?.title ?? "Afzwemevent"}</h3>
-                      <p className="mt-1 text-sm text-muted-foreground">{event ? formatDateTime(event.starts_at) : "Datum volgt"}</p>
-                    </div>
-                    <StatusPill tone={invite.invite_status === "confirmed" ? "success" : invite.invite_status === "declined" ? "danger" : "info"}>{invite.invite_status}</StatusPill>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">Status: {invite.status}. Resultaat: {invite.result === "pending" ? "nog niet bekend" : invite.result}.</p>
-                  {invite.invite_status === "sent" && canParentMutateParticipant(data, invite.participant_id) ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <form action={respondGraduationInviteAction}>
-                        <input name="eventParticipantId" type="hidden" value={invite.id} />
-                        <input name="response" type="hidden" value="confirmed" />
-                        <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
-                          <CheckCircle2 className="h-4 w-4" />
-                          Bevestigen
-                        </button>
-                      </form>
-                      <form action={respondGraduationInviteAction}>
-                        <input name="eventParticipantId" type="hidden" value={invite.id} />
-                        <input name="response" type="hidden" value="declined" />
-                        <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 text-sm font-semibold text-foreground" type="submit">
-                          <XCircle className="h-4 w-4" />
-                          Afwijzen
-                        </button>
-                      </form>
-                    </div>
-                  ) : null}
-                </article>
-              );
-            })}
-          </div>
-        )}
-      </section>
+      <ParentSectionNav
+        items={[
+          { href: participantContextHref("/portaal/ontwikkeling", selectedParticipantId), label: "Voortgang" },
+          { href: participantContextHref("/portaal/ontwikkeling/badges", selectedParticipantId), label: "Badges" },
+          { href: participantContextHref("/portaal/ontwikkeling/media", selectedParticipantId), label: "Media" },
+          { active: true, href: participantContextHref("/portaal/ontwikkeling/diplomas", selectedParticipantId), label: "Diploma’s" }
+        ]}
+        label="Ontwikkeling onderdelen"
+      />
 
       <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="mb-4 flex items-center gap-2">
           <FileBadge className="h-5 w-5 text-primary" />
           <h2 className="text-lg font-bold text-foreground">Private diploma vault</h2>
         </div>
-        {data.certificates.length === 0 ? (
+        {certificates.length === 0 ? (
           <EmptyState>Nog geen diploma's of certificaten beschikbaar.</EmptyState>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
-            {data.certificates.map((certificate) => {
+            {certificates.map((certificate) => {
               const participant = participantById.get(certificate.participant_id);
               const program = programById.get(certificate.program_id);
               const stage = stageById.get(certificate.stage_id);
@@ -166,10 +124,6 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
-}
-
-function formatDateTime(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

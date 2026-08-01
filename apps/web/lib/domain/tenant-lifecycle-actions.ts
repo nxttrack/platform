@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteMollieCustomer, MollieApiError } from "./mollie";
 import type { MollieMode } from "./mollie-contract";
 import { eraseTenantStorageObjects } from "@/lib/storage/tenant-erasure";
+import { getThemeRelease } from "@/lib/theme/portal-theme-registry";
 
 export async function provisionTenantAction(formData: FormData) {
   const context = await requirePlatformAdministrator("/platform/onboarding");
@@ -27,8 +28,12 @@ export async function provisionTenantAction(formData: FormData) {
   const groupName = readRequired(formData, "groupName");
   const staff = splitList(readOptional(formData, "staffEmails") ?? "").map(normalizeEmail);
   const amountCents = Math.round(readPositiveNumber(formData, "monthlyAmount") * 100);
+  const portalThemeSelection = readRequired(formData, "portalThemeRelease");
+  const portalThemeSeparator = portalThemeSelection.lastIndexOf("@");
+  const portalThemeKey = portalThemeSelection.slice(0, portalThemeSeparator);
+  const portalThemeRelease = portalThemeSelection.slice(portalThemeSeparator + 1);
 
-  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || !hostname.endsWith(".nxttrack.nl")) {
+  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || !hostname.endsWith(".nxttrack.nl") || !getThemeRelease(portalThemeKey, portalThemeRelease)) {
     redirect("/platform/onboarding?error=validation");
   }
 
@@ -51,7 +56,18 @@ export async function provisionTenantAction(formData: FormData) {
     tenantId = tenant.id;
     await admin.from("tenant_onboarding_runs").update({ tenant_id: tenantId, current_step: "identity" }).eq("id", runId);
 
-    await requireWrite(admin.from("tenant_settings").insert({ tenant_id: tenantId, terminology_sector: "swim_school", locale: "nl-NL", timezone: "Europe/Amsterdam" }), "tenant settings");
+    await requireWrite(admin.from("tenant_settings").insert({ tenant_id: tenantId, terminology_sector: "swim_school", locale: "nl-NL", timezone: "Europe/Amsterdam", assessment_rating_display: "smileys" }), "tenant settings");
+    const themeAssignment = await admin.rpc("activate_tenant_portal_theme", {
+      target_actor_user_id: context.user.id,
+      target_event_type: "activated",
+      target_reason: "Expliciete keuze tijdens tenantonboarding",
+      target_request_correlation_id: runId,
+      target_tenant_id: tenantId,
+      target_theme_key: portalThemeKey,
+      target_theme_release: portalThemeRelease,
+      target_ticket_reference: `onboarding:${runId}`
+    });
+    if (themeAssignment.error) throw new Error(`portal theme: ${themeAssignment.error.message}`);
     await requireWrite(admin.from("tenant_domains").insert({
       tenant_id: tenantId,
       hostname,
@@ -145,6 +161,7 @@ export async function provisionTenantAction(formData: FormData) {
       ownerInvited: true,
       paymentPlan: true,
       programAndStages: true,
+      portalTheme: `${portalThemeKey}@${portalThemeRelease}`,
       staffInvited: true
     };
     await requireWrite(admin.from("tenant_onboarding_runs").update({

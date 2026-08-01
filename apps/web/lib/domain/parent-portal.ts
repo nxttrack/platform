@@ -43,6 +43,7 @@ export type ParentMakeupCommunicationPreferences = {
 export type ParentPortalSettings = {
   locale: string;
   timezone: string;
+  assessment_rating_display: "smileys" | "stars";
   lesson_cancellation_cutoff_hours: number;
   lesson_cancellation_credit_window_days: number;
   lesson_cancellation_grants_credit: boolean;
@@ -105,6 +106,9 @@ export type ParentProgressScoreRow = {
   item_id: string;
   session_id: string | null;
   score: number;
+  scale_version: "five_point_v1";
+  source_scale_version: "five_point_v1" | "three_point_legacy";
+  source_value: 1 | 2 | 3 | null;
   positive_label: string;
   note: string | null;
   visibility: string;
@@ -463,7 +467,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     admin.from("profiles").select("id, full_name, email, phone").eq("id", context.user.id).maybeSingle(),
     admin
       .from("tenant_settings")
-      .select("locale, timezone, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit")
+      .select("locale, timezone, assessment_rating_display, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit")
       .eq("tenant_id", tenant.id)
       .maybeSingle(),
     participantIds.length > 0
@@ -528,7 +532,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("participant_progress_scores")
-          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, positive_label, note, visibility, status, scored_at")
+          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, scale_version, source_scale_version, source_value, positive_label, note, visibility, status, scored_at")
           .eq("tenant_id", tenant.id)
           .eq("visibility", "parent_visible")
           .eq("status", "active")
@@ -903,6 +907,7 @@ function normalizeSettings(value: unknown): ParentPortalSettings {
   return {
     locale: row.locale ?? "nl-NL",
     timezone: row.timezone ?? "Europe/Amsterdam",
+    assessment_rating_display: row.assessment_rating_display === "stars" ? "stars" : "smileys",
     lesson_cancellation_cutoff_hours: Number(row.lesson_cancellation_cutoff_hours ?? 12),
     lesson_cancellation_credit_window_days: Number(row.lesson_cancellation_credit_window_days ?? 60),
     lesson_cancellation_grants_credit: row.lesson_cancellation_grants_credit ?? true

@@ -2,15 +2,17 @@ import Link from "next/link";
 import { CalendarClock, Download, Images, LockKeyhole, ShieldCheck } from "lucide-react";
 
 import { SubmitButton } from "@/components/admin/domain-ui";
+import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { recordParticipantMediaConsentAction } from "@/lib/domain/participant-media-actions";
 import { PARTICIPANT_MEDIA_POLICY_VERSION } from "@/lib/domain/participant-media-contract";
 import { getParentParticipantMediaData } from "@/lib/domain/participant-media";
+import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 
 type PageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<ParentPortalSearchParams>;
 };
 
 export const dynamic = "force-dynamic";
@@ -22,17 +24,28 @@ export default async function ParentMediaPage({ searchParams }: PageProps) {
   ]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
+  const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
+  const visibleParticipants = selectedParticipantId ? data.participants.filter((participant) => participant.id === selectedParticipantId) : data.participants;
 
   return (
     <div className="space-y-6">
       <PageHeader
-        kicker="Privé voortgang"
+        kicker="Ontwikkeling"
         subtitle="Alleen jij en het bevoegde zwemschoolteam kunnen gepubliceerde momenten bekijken. Toestemming kan hier altijd worden ingetrokken."
-        title="Media-tijdlijn"
+        title="Besloten media"
       />
       <RouteFeedback
         success={saved ? consentSuccess(saved) : null}
         error={error ? consentError(error) : null}
+      />
+      <ParentSectionNav
+        items={[
+          { href: participantContextHref("/portaal/ontwikkeling", selectedParticipantId), label: "Voortgang" },
+          { href: participantContextHref("/portaal/ontwikkeling/badges", selectedParticipantId), label: "Badges" },
+          { active: true, href: participantContextHref("/portaal/ontwikkeling/media", selectedParticipantId), label: "Media" },
+          { href: participantContextHref("/portaal/ontwikkeling/diplomas", selectedParticipantId), label: "Diploma’s" }
+        ]}
+        label="Ontwikkeling onderdelen"
       />
 
       <section className="grid gap-3 md:grid-cols-3">
@@ -41,19 +54,19 @@ export default async function ParentMediaPage({ searchParams }: PageProps) {
         <TrustCard icon={CalendarClock} label="Automatisch verwijderd" text="Na de bewaartermijn verdwijnt ook het opslagobject." />
       </section>
 
-      {data.participants.length === 0 ? (
+      {visibleParticipants.length === 0 ? (
         <Card>
           <p className="text-sm text-muted-foreground">Er is nog geen leerling aan dit ouderaccount gekoppeld.</p>
         </Card>
       ) : (
-        data.participants.map((participant) => {
+        visibleParticipants.map((participant, index) => {
           const consent = data.consents.find((item) => item.participant_id === participant.id);
           const overallConsent = data.consentStates[participant.id];
           const media = data.media.filter((item) => item.participant_id === participant.id);
           const mayDecide = participant.accessLevel !== "view_only";
 
           return (
-            <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft" key={participant.id}>
+            <section className="scroll-mt-24 overflow-hidden rounded-2xl border border-border bg-card shadow-soft" id={index === 0 ? "toestemming" : undefined} key={participant.id}>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border bg-muted/25 px-5 py-4">
                 <div>
                   <h2 className="font-display text-xl font-bold">{participant.display_name}</h2>

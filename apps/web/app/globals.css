@@ -58,6 +58,147 @@
   --shadow-glow: 0 8px 32px -8px rgb(0 119 217 / 35%);
 }
 
+/* Parent Portal Theme Engine v2.1 · one Pearl Frame driven by semantic tokens. */
+.portal-theme-root {
+  min-height: 100vh;
+  color: var(--portal-text);
+  background: var(--portal-canvas);
+  font-family: var(--portal-body-font);
+}
+
+.portal-theme-root .parent-portal-shell {
+  --background: var(--portal-canvas);
+  --foreground: var(--portal-text);
+  --card: var(--portal-surface);
+  --card-foreground: var(--portal-text);
+  --popover: var(--portal-surface);
+  --popover-foreground: var(--portal-text);
+  --primary: var(--portal-primary);
+  --secondary: var(--portal-secondary);
+  --muted-foreground: var(--portal-text-muted);
+  --sidebar: var(--portal-rail);
+  background:
+    radial-gradient(circle at 86% 4%, color-mix(in srgb, var(--portal-secondary) 18%, transparent), transparent 28rem),
+    var(--portal-canvas);
+}
+
+.portal-theme-root .parent-portal-shell h1,
+.portal-theme-root .parent-portal-shell h2,
+.portal-theme-root .parent-portal-shell h3 {
+  font-family: var(--portal-display-font);
+}
+
+.portal-theme-root .parent-portal-shell main > div {
+  position: relative;
+  isolation: isolate;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.portal-theme-root .parent-portal-shell :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: var(--portal-card-radius);
+}
+
+.portal-theme-root .parent-portal-shell[data-portal-route="/portaal"] main > div::before,
+.portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
+  position: absolute;
+  z-index: -1;
+  top: 5.75rem;
+  right: 0;
+  left: 0;
+  height: min(36rem, 62vh);
+  border-radius: var(--portal-hero-radius);
+  background-image:
+    linear-gradient(180deg, color-mix(in srgb, var(--portal-surface) 16%, transparent), color-mix(in srgb, var(--portal-canvas) 96%, transparent)),
+    var(--portal-hero-desktop);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--portal-rail) 16%, transparent);
+  content: "";
+  opacity: .2;
+  pointer-events: none;
+}
+
+.five-point-assessment {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .35rem;
+}
+
+.five-point-assessment__option {
+  cursor: pointer;
+}
+
+.five-point-assessment__button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--portal-primary, var(--primary)) 22%, var(--border));
+  border-radius: 999px;
+  color: var(--portal-primary, var(--primary));
+  background: var(--portal-surface, var(--background));
+  transition: transform var(--portal-motion-micro, 140ms), border-color var(--portal-motion-micro, 140ms), background var(--portal-motion-micro, 140ms);
+}
+
+.five-point-assessment__option:hover .five-point-assessment__button,
+.five-point-assessment__option .peer:checked + .five-point-assessment__button {
+  border-color: var(--portal-primary, var(--primary));
+  background: color-mix(in srgb, var(--portal-primary, var(--primary)) 10%, var(--portal-surface, white));
+}
+
+.five-point-assessment__option .peer:focus-visible + .five-point-assessment__button {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.five-point-assessment__star,
+.five-point-assessment__smiley {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--portal-primary, var(--primary)) 35%, var(--portal-text-muted, currentColor));
+}
+
+.five-point-assessment__star.is-active,
+.five-point-assessment__smiley.is-active {
+  color: var(--portal-reward, #f6b744);
+}
+
+.five-point-assessment__copy {
+  margin-left: .35rem;
+  color: var(--portal-text-muted, var(--muted-foreground));
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .portal-theme-root .parent-portal-shell[data-portal-route="/portaal"] main > div::before,
+  .portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
+    top: 6.5rem;
+    height: 32rem;
+    background-image:
+      linear-gradient(180deg, color-mix(in srgb, var(--portal-surface) 12%, transparent), color-mix(in srgb, var(--portal-canvas) 98%, transparent)),
+      var(--portal-hero-mobile);
+  }
+
+  .five-point-assessment {
+    gap: .2rem;
+  }
+
+  .five-point-assessment__copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .five-point-assessment__button {
+    transition: none;
+  }
+}
+
 :root {
   color-scheme: light;
   --radius: 1rem;

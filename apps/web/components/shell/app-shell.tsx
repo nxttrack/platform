@@ -7,12 +7,20 @@ export type NavItem = ShellNavItem;
 
 type Props = {
   brand: { title: string; subtitle: string };
-  nav: Array<{ href: string; label: string; icon: ShellIconName; badge?: number; section?: string }>;
+  nav: ShellNavItem[];
   user: { name: string; role: string };
   children: ReactNode;
   accent?: ShellAccent;
   searchItems?: GlobalSearchItem[];
   notificationCenter?: ShellNotificationCenter;
+  mobileBottomNav?: boolean;
+  profileMenu?: ShellNavItem[];
+  contextSelector?: {
+    label: string;
+    parameter: string;
+    allLabel: string;
+    options: Array<{ label: string; value: string }>;
+  };
 };
 
 export function AppShell(props: Props) {

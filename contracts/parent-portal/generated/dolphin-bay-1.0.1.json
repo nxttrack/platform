@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "themeKey": "dolphin-bay",
+  "release": "1.0.1",
+  "colors": {
+    "canvas": "#DFF7FB",
+    "surface": "rgba(255,255,255,.95)",
+    "surfaceAlt": "#EFFBFD",
+    "text": "#072A49",
+    "textMuted": "#5A7389",
+    "primary": "#0873B4",
+    "primaryStrong": "#07578D",
+    "secondary": "#2BBCCB",
+    "reward": "#E8A92F",
+    "rail": "#062D4B",
+    "info": "#075EA8",
+    "success": "#146C4C",
+    "warning": "#7A4B00",
+    "danger": "#B4233D"
+  },
+  "radii": {
+    "card": "22px",
+    "hero": "31px"
+  },
+  "typography": {
+    "display": "\"Nunito Sans\", Inter, system-ui, sans-serif",
+    "body": "Inter, system-ui, sans-serif"
+  },
+  "motionMilliseconds": {
+    "microMs": 140,
+    "standardMs": 220,
+    "celebrationMs": 480
+  }
+}

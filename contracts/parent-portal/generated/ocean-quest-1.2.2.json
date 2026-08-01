@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "themeKey": "ocean-quest",
+  "release": "1.2.2",
+  "colors": {
+    "canvas": "#DFF5FC",
+    "surface": "rgba(255,255,255,.93)",
+    "surfaceAlt": "#F0FAFF",
+    "text": "#071D40",
+    "textMuted": "#54708E",
+    "primary": "#0878E5",
+    "primaryStrong": "#0753BD",
+    "secondary": "#0FC4BA",
+    "reward": "#F4BE5D",
+    "rail": "#08274A",
+    "info": "#075EA8",
+    "success": "#146C4C",
+    "warning": "#7A4B00",
+    "danger": "#B4233D"
+  },
+  "radii": {
+    "card": "23px",
+    "hero": "32px"
+  },
+  "typography": {
+    "display": "\"Nunito Sans\", Inter, system-ui, sans-serif",
+    "body": "Inter, system-ui, sans-serif"
+  },
+  "motionMilliseconds": {
+    "microMs": 150,
+    "standardMs": 240,
+    "celebrationMs": 560
+  }
+}

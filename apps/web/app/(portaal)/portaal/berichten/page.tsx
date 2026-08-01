@@ -3,15 +3,17 @@ import type { ReactNode } from "react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { NewThreadForm } from "@/components/communication/communication-forms";
 import { ThreadWorkspace } from "@/components/communication/thread-workspace";
+import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { markNotificationReadAction } from "@/lib/domain/communication-actions";
 import { getParentCommunicationHub } from "@/lib/domain/communication-hub";
 import { formatCommunicationDate, getParentMessages, messageAudienceLabel } from "@/lib/domain/communications";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
+import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 
 type PageProps = {
-  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  searchParams?: Promise<ParentPortalSearchParams>;
 };
 
 export const dynamic = "force-dynamic";
@@ -22,32 +24,49 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
   const error = getParam(params, "error");
   const success = getParam(params, "success");
   const selectedThreadId = getParam(params, "thread");
-  const unreadNotifications = data.notifications.filter((notification) => notification.status === "unread");
+  const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
+  const visibleThreads = selectedParticipantId ? hub.threads.filter((thread) => thread.participant_id === selectedParticipantId) : hub.threads;
+  const visibleThreadIds = new Set(visibleThreads.map((thread) => thread.id));
+  const visibleMessages = hub.messages.filter((message) => visibleThreadIds.has(message.thread_id));
+  const visibleParticipants = selectedParticipantId ? hub.participants.filter((participant) => participant.id === selectedParticipantId) : hub.participants;
+  const visibleNotifications = data.notifications.filter((notification) => !selectedParticipantId || !notification.participant_id || notification.participant_id === selectedParticipantId);
+  const unreadNotifications = visibleNotifications.filter((notification) => notification.status === "unread");
+  const inboxHref = participantContextHref("/portaal/inbox", selectedParticipantId);
 
   return (
     <div className="space-y-6">
       <PageHeader
         action={
           <AdminActionDrawer description="Kies een kind en schrijf je vraag. De zwemschool ziet alleen de context die bij dit gesprek hoort." title="Nieuw bericht" triggerLabel="Bericht sturen" width="wide">
-            <NewThreadForm next="/portaal/berichten" parentMode participants={hub.participants} />
+            <NewThreadForm next={inboxHref} parentMode participants={visibleParticipants} />
           </AdminActionDrawer>
         }
         kicker="Communicatie"
-        title="Berichten en updates"
+        title="Inbox"
         subtitle="Persoonlijke gesprekken, meldingen en belangrijke updates van de zwemschool."
       />
       <Feedback saved={saved} error={error} />
       <RouteFeedback error={error} success={success} />
+      <ParentSectionNav
+        items={[
+          { active: true, href: `${inboxHref}#gesprekken`, label: "Gesprekken" },
+          { href: `${inboxHref}#mededelingen`, label: "Mededelingen" },
+          { href: `${inboxHref}#meldingen`, label: "Meldingen" }
+        ]}
+        label="Inbox onderdelen"
+      />
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Metric icon={<MessageSquare className="h-5 w-5" />} label="Berichten" value={messages.length} />
-        <Metric icon={<Bell className="h-5 w-5" />} label="Updates" value={data.notifications.length} />
+        <Metric icon={<MessageSquare className="h-5 w-5" />} label="Gesprekken" value={visibleThreads.length} />
+        <Metric icon={<Bell className="h-5 w-5" />} label="Updates" value={visibleNotifications.length} />
         <Metric icon={<MailOpen className="h-5 w-5" />} label="Ongelezen" value={unreadNotifications.length} />
       </div>
 
-      <ThreadWorkspace baseHref="/portaal/berichten" messages={hub.messages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={hub.threads} unreadThreadIds={hub.unreadThreadIds} />
+      <section className="scroll-mt-24" id="gesprekken">
+        <ThreadWorkspace baseHref={inboxHref} messages={visibleMessages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={visibleThreads} unreadThreadIds={hub.unreadThreadIds.filter((threadId) => visibleThreadIds.has(threadId))} />
+      </section>
 
-      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+      <section className="scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-soft" id="mededelingen">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-foreground">Ouderberichten</h2>
@@ -75,7 +94,7 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
         )}
       </section>
 
-      <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
+      <section className="scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-soft" id="meldingen">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-foreground">Meldingen</h2>
@@ -83,11 +102,11 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
           </div>
           <StatusPill tone={unreadNotifications.length > 0 ? "warning" : "success"}>{unreadNotifications.length} ongelezen</StatusPill>
         </div>
-        {data.notifications.length === 0 ? (
+        {visibleNotifications.length === 0 ? (
           <EmptyState>Je hebt nog geen meldingen.</EmptyState>
         ) : (
           <div className="grid gap-3 lg:grid-cols-2">
-            {data.notifications.map((notification) => (
+            {visibleNotifications.map((notification) => (
               <article className="rounded-lg border border-border bg-white p-4" key={notification.id}>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -100,7 +119,7 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
                 {notification.status === "unread" ? (
                   <form action={markNotificationReadAction} className="mt-3">
                     <input name="notificationId" type="hidden" value={notification.id} />
-                    <input name="next" type="hidden" value="/portaal/berichten" />
+                    <input name="next" type="hidden" value={inboxHref} />
                     <button className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold hover:bg-muted" type="submit">
                       <Check className="h-4 w-4" />
                       Gelezen

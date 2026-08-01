@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Wizard } from "@/components/ui/wizard";
 import { provisionTenantAction } from "@/lib/domain/tenant-lifecycle-actions";
+import { portalThemeCatalog } from "@/lib/theme/portal-theme-registry";
 
 export function TenantOnboardingWizard() {
   const formRef = useRef<HTMLFormElement>(null);
@@ -18,6 +19,7 @@ export function TenantOnboardingWizard() {
         { id: "organization", title: "Zwemschool", description: "De juridische en technische tenant-identiteit.", content: <StepGrid icon={Building2}><TextField label="Naam zwemschool" name="name" placeholder="Zwemacademie De Waterlijn" /><TextField label="Slug" name="slug" placeholder="de-waterlijn" /><TextField label="NXTTRACK-subdomein" name="hostname" placeholder="de-waterlijn.nxttrack.nl" /><TextField label="Eigen domein (optioneel)" name="customDomain" placeholder="mijn.zwemschool.nl" required={false} /><TextField label="Productnaam" name="productName" placeholder="De Waterlijn" /></StepGrid> },
         { id: "owner", title: "Eigenaar", description: "De eigenaar ontvangt een beveiligde uitnodiging en tijdelijke toegang.", content: <StepGrid icon={Users}><TextField autoComplete="name" label="Naam eigenaar" name="ownerName" /><TextField autoComplete="email" label="E-mail eigenaar" name="ownerEmail" type="email" /></StepGrid> },
         { id: "identity", title: "Branding", description: "Een herkenbare basis die later onder tenantbeheer verfijnd kan worden.", content: <StepGrid icon={Palette}><ColorField label="Primaire kleur" name="primaryColor" value="#1d4ed8" /><ColorField label="Accentkleur" name="accentColor" value="#06b6d4" /></StepGrid> },
+        { id: "portal-theme", title: "Ouderportaalstijl", description: "Alleen platformbeheer kan deze immutable release later wijzigen.", content: <ThemeChoice /> },
         { id: "program", title: "Programma", description: "Het eerste programma en de opeenvolgende badjes/niveaus.", content: <StepGrid icon={Waves}><TextField defaultValue="Zwem-ABC" label="Programmanaam" name="programName" /><TextField defaultValue="Watervrij, Basis, Diploma A, Diploma B, Diploma C" label="Badjes / niveaus" name="stageNames" /></StepGrid> },
         { id: "operations", title: "Planning", description: "Locatie, bad en eerste operationele groep.", content: <StepGrid icon={MapPin}><TextField label="Locatie" name="locationName" placeholder="Sportcentrum De Branding" /><TextField label="Zwembad" name="poolName" placeholder="Wedstrijdbad" /><TextField defaultValue="Zwem-ABC · maandag 16:00" label="Eerste groep" name="groupName" /><NumberField defaultValue="10" label="Capaciteit" name="groupCapacity" /><Field><FieldLabel htmlFor="weekday">Lesdag</FieldLabel><NativeSelect id="weekday" name="weekday" defaultValue="1"><option value="1">Maandag</option><option value="2">Dinsdag</option><option value="3">Woensdag</option><option value="4">Donderdag</option><option value="5">Vrijdag</option><option value="6">Zaterdag</option><option value="7">Zondag</option></NativeSelect></Field><TextField defaultValue="16:00" label="Starttijd" name="startTime" type="time" /><TextField defaultValue="16:45" label="Eindtijd" name="endTime" type="time" /></StepGrid> },
         { id: "staff", title: "Medewerkers", description: "Nodig minimaal één instructeur uit; meerdere adressen mogen komma-gescheiden.", content: <StepGrid icon={Users}><TextField label="E-mailadressen (komma-gescheiden)" name="staffEmails" placeholder="sanne@zwemschool.nl, omar@zwemschool.nl" /></StepGrid> },
@@ -37,3 +39,36 @@ function TextField({ label, name, required = true, ...props }: React.ComponentPr
 }
 function NumberField(props: React.ComponentProps<typeof TextField>) { return <TextField min="1" type="number" {...props} />; }
 function ColorField({ label, name, value }: { label: string; name: string; value: string }) { return <Field><FieldLabel htmlFor={name}>{label}</FieldLabel><div className="flex gap-2"><Input className="size-11 p-1" id={name} name={name} type="color" defaultValue={value} /><Input aria-label={`${label} hexcode`} defaultValue={value} readOnly /></div></Field>; }
+
+function ThemeChoice() {
+  return (
+    <fieldset>
+      <legend className="sr-only">Kies de ouderportaalstijl</legend>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {portalThemeCatalog.map((theme, index) => {
+          const hero = theme.assets["overview.hero.desktop"]?.path;
+          return (
+            <label className="group cursor-pointer" key={`${theme.theme.key}@${theme.theme.release}`}>
+              <input
+                className="peer sr-only"
+                defaultChecked={index === 0}
+                name="portalThemeRelease"
+                required
+                type="radio"
+                value={`${theme.theme.key}@${theme.theme.release}`}
+              />
+              <span className="block h-full overflow-hidden rounded-2xl border border-border bg-card transition peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary/20 peer-focus-visible:ring-2 peer-focus-visible:ring-ring">
+                <span className="block h-24 bg-cover bg-center" style={{ backgroundColor: theme.tokens.color.canvas, backgroundImage: hero ? `linear-gradient(180deg, transparent, ${theme.tokens.color.rail}bb), url("${hero}")` : undefined }} />
+                <span className="block p-3">
+                  <strong className="block text-sm">{theme.theme.displayName}</strong>
+                  <span className="mt-1 block text-xs text-muted-foreground">{theme.theme.release} · {theme.accessibility.minimumContrast}</span>
+                  <span className="mt-2 block text-xs font-semibold text-primary">Preview en kiezen</span>
+                </span>
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+}

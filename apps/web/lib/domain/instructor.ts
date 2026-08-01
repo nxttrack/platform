@@ -103,6 +103,9 @@ export type ProgressScoreRow = {
   item_id: string;
   session_id: string | null;
   score: number;
+  scale_version: "five_point_v1";
+  source_scale_version: "five_point_v1" | "three_point_legacy";
+  source_value: 1 | 2 | 3 | null;
   positive_label: string;
   note: string | null;
   visibility: string;
@@ -305,7 +308,7 @@ export async function getInstructorData(): Promise<InstructorData> {
     participantIds.length > 0
       ? admin
           .from("participant_progress_scores")
-          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, positive_label, note, visibility, status, scored_by_user_id, scored_at")
+          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, scale_version, source_scale_version, source_value, positive_label, note, visibility, status, scored_by_user_id, scored_at")
           .eq("tenant_id", tenant.id)
           .eq("status", "active")
           .in("participant_id", participantIds)

@@ -5,8 +5,9 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { submitParentFeedbackAction } from "@/lib/domain/feedback-actions";
 import { getParentFeedbackData } from "@/lib/domain/feedback";
+import { getSelectedParticipantId, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 
-type PageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+type PageProps = { searchParams?: Promise<ParentPortalSearchParams> };
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,9 @@ export default async function ParentFeedbackPage({ searchParams }: PageProps) {
   const campaigns = new Map((data.campaigns as Array<{ id: string; name: string; prompt: string; follow_up_question: string | null }>).map((row) => [row.id, row]));
   const participants = new Map((data.participants as Array<{ id: string; display_name: string }>).map((row) => [row.id, row.display_name]));
   const responses = new Map((data.responses as Array<{ request_id: string; score: number; submitted_at: string }>).map((row) => [row.request_id, row]));
-  const open = data.requests.filter((row) => row.status === "open" && new Date(row.expires_at).getTime() > Date.now());
+  const selectedParticipantId = getSelectedParticipantId(params, [...participants.keys()]);
+  const visibleRequests = data.requests.filter((row) => !selectedParticipantId || row.participant_id === selectedParticipantId);
+  const open = visibleRequests.filter((row) => row.status === "open" && new Date(row.expires_at).getTime() > Date.now());
 
   return (
     <div className="space-y-5">
@@ -39,7 +42,7 @@ export default async function ParentFeedbackPage({ searchParams }: PageProps) {
             </form>
           );
         })}
-        {data.requests.filter((row) => row.status === "completed").slice(0, 3).map((request) => <article className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 p-4" key={request.id}><div className="flex items-center gap-3"><ShieldCheck className="size-5 text-success" /><div><p className="font-semibold">{campaigns.get(request.campaign_id)?.name ?? "Feedback"}</p><p className="text-xs text-muted-foreground">Veilig ontvangen</p></div></div><StatusPill tone="success">score {responses.get(request.id)?.score ?? "—"}</StatusPill></article>)}
+        {visibleRequests.filter((row) => row.status === "completed").slice(0, 3).map((request) => <article className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 p-4" key={request.id}><div className="flex items-center gap-3"><ShieldCheck className="size-5 text-success" /><div><p className="font-semibold">{campaigns.get(request.campaign_id)?.name ?? "Feedback"}</p><p className="text-xs text-muted-foreground">Veilig ontvangen</p></div></div><StatusPill tone="success">score {responses.get(request.id)?.score ?? "—"}</StatusPill></article>)}
       </div>
     </div>
   );

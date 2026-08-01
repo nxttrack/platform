@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { classifyContent } from "@/lib/security/content-classification";
+import { parseLearnerAssessmentValue } from "./learner-assessment";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
 import { createTenantNotifications } from "./tenant-notifications";
@@ -339,6 +340,9 @@ export async function scoreProgressItemAction(formData: FormData) {
         item_id: itemId,
         session_id: sessionId,
         score,
+        scale_version: "five_point_v1",
+        source_scale_version: "five_point_v1",
+        source_value: null,
         positive_label: positiveLabel,
         note,
         visibility,
@@ -665,13 +669,7 @@ function readEnum(formData: FormData, field: string, allowed: Set<string>, fallb
 }
 
 function readScore(formData: FormData, field: string) {
-  const rawScore = Number(readOptional(formData, field) ?? 1);
-
-  if (!Number.isInteger(rawScore) || rawScore < 1 || rawScore > 5) {
-    return 1;
-  }
-
-  return rawScore;
+  return parseLearnerAssessmentValue(readOptional(formData, field));
 }
 
 function readRequired(formData: FormData, field: string) {
