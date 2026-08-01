@@ -1,4 +1,6 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import test from "node:test";
 
 import {
@@ -8,6 +10,8 @@ import {
   normalizeLearnerAssessment,
   parseLearnerAssessmentValue
 } from "../../apps/web/lib/domain/learner-assessment";
+
+const root = path.resolve(import.meta.dirname, "../..");
 
 test("vijfpuntscontract accepteert uitsluitend gehele waarden 1–5", () => {
   assert.deepEqual(learnerAssessmentLevels.map((level) => level.value), [1, 2, 3, 4, 5]);
@@ -26,4 +30,18 @@ test("legacyconversie bewaart bronwaarde en de ankers 0/50/100", () => {
   assert.deepEqual(migrated.map((row) => row.sourceValue), [1, 2, 3]);
   assert.ok(migrated.every((row) => row.sourceScaleVersion === "three_point_legacy"));
   assert.deepEqual(migrated.map((row) => normalizeLearnerAssessment(row.ratingValue)), [0, 50, 100]);
+});
+
+test("alle bekende assessmentwriters leggen de vijfpuntsschaal expliciet vast", async () => {
+  for (const relativePath of [
+    "apps/web/lib/domain/instructor-actions.ts",
+    "apps/web/lib/domain/journey-bot.ts",
+    "scripts/staging/phase-16-operational-flow.mjs",
+    "scripts/staging/seed-sprint31-demo.mjs"
+  ]) {
+    const source = await readFile(path.join(root, relativePath), "utf8");
+    assert.match(source, /scale_version:\s*"five_point_v1"/, relativePath);
+    assert.match(source, /source_scale_version:\s*"five_point_v1"/, relativePath);
+    assert.match(source, /source_value:\s*null/, relativePath);
+  }
 });
