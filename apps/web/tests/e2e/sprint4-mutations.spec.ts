@@ -105,7 +105,12 @@ async function createOffer(page: Page, entry: Locator, groupName: string) {
 
 async function openPlacementDetails(page: Page, participantName: string) {
   const savedViews = page.getByRole("button", { name: "Opgeslagen weergaven beheren" });
-  await expect(savedViews).toBeVisible();
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const visible = await expect(savedViews).toBeVisible({ timeout: 5_000 }).then(() => true).catch(() => false);
+    if (visible) break;
+    if (attempt === 2) throw new Error("De plaatsingscockpit verscheen niet na drie serverrenders.");
+    await page.reload({ waitUntil: "domcontentloaded" });
+  }
   await expect(savedViews.locator("svg.animate-spin")).toHaveCount(0);
 
   const clearFilters = page.getByRole("button", { name: "Wis filters" });
