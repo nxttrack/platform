@@ -23,7 +23,7 @@ const tenantName = /aquaswim/i.test(configuredTenantName) || !configuredTenantNa
   : configuredTenantName;
 const statePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 const today = new Date().toISOString().slice(0, 10);
-const phase16ProgressLabel = "Ik kan het bijna zelf";
+const phase16ProgressLabel = "Heel knap";
 
 const roleAccounts = {
   tenantAdmin: {

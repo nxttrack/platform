@@ -539,7 +539,7 @@ async function seedProgressTimeline(records, instructors) {
         scale_version: "five_point_v1",
         source_scale_version: "five_point_v1",
         source_value: null,
-        positive_label: ["Ik probeer het", "Ik groei erin", "Ik kan het bijna zelf", "Ik kan het zelfstandig"][score - 2],
+        positive_label: ["Goed bezig", "Mooi op weg", "Heel knap", "Superster"][score - 2],
         note: ["Blijft rustig oefenen.", "Mooie groei in controle en vertrouwen.", "Techniek wordt steeds stabieler."][index % 3],
         visibility: "parent_visible",
         status: "active",
