@@ -113,8 +113,10 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.participantName);
     await expectActiveShellLink(page, "Planning");
 
-    await page.goto("/portaal/betalingen", { waitUntil: "domcontentloaded" });
+    await page.getByRole("link", { name: "Betalingen", exact: true }).click();
+    await page.waitForURL((url) => url.pathname === "/portaal/betalingen");
     await expectBodyToContain(page, phase.expected.paymentReference);
+    await expectActiveShellLink(page, "Betalingen");
 
     await page.goto("/portaal/ontwikkeling/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
