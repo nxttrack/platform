@@ -127,7 +127,7 @@ test.describe("Communicationhub and Badge Studio", () => {
     await assertNoCriticalAccessibilityIssues(page);
 
     await page.goto("/portaal/berichten", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("Berichten");
+    await expect(page.getByRole("heading", { level: 1, name: "Inbox" })).toBeVisible();
     expect(failures()).toEqual([]);
   });
 });
