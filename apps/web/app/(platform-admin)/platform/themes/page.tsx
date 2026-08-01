@@ -1,6 +1,7 @@
 import { ArrowLeftRight, CalendarClock, History, Palette, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PortalThemePreview } from "@/components/platform/portal-theme-preview";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   activatePortalThemeAction,
@@ -31,14 +32,17 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
 
       <section className="grid gap-4 xl:grid-cols-5">
         {data.catalog.map((theme) => {
-          const hero = theme.assets["overview.hero.desktop"]?.path;
           return (
             <article className="overflow-hidden border border-border bg-card shadow-card" key={`${theme.theme.key}@${theme.theme.release}`} style={{ borderRadius: theme.tokens.radius.hero }}>
-              <div className="h-36 bg-cover bg-center" style={{ backgroundColor: theme.tokens.color.canvas, backgroundImage: hero ? `linear-gradient(180deg, transparent, ${theme.tokens.color.rail}cc), url("${hero}")` : undefined }} />
+              <PortalThemePreview compact manifest={theme} />
               <div className="p-4" style={portalThemeCssVariables(theme)}>
                 <div className="flex items-center gap-2"><Palette className="size-4" style={{ color: theme.tokens.color.primary }} /><h2 className="font-bold">{theme.theme.displayName}</h2></div>
                 <p className="mt-1 text-xs text-muted-foreground">{theme.theme.description}</p>
                 <div className="mt-3 flex flex-wrap gap-1"><StatusPill tone="success">{theme.theme.release}</StatusPill><StatusPill tone={theme.badges.status === "published" ? "success" : "warning"}>badges {theme.badges.status}</StatusPill></div>
+                <details className="mt-3 border-t border-border pt-3">
+                  <summary className="cursor-pointer text-sm font-bold text-primary">Desktop, mobiel en states previewen</summary>
+                  <div className="mt-4 min-w-[min(56rem,82vw)] max-w-full"><PortalThemePreview manifest={theme} /></div>
+                </details>
               </div>
             </article>
           );

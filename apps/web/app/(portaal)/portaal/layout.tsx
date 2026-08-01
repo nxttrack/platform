@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { AppShell } from "@/components/shell/app-shell";
+import { PortalRouteFrame } from "@/components/parent/portal-route-frame";
 import { privateRouteMetadata } from "@/lib/auth/access";
 import { roleLabels } from "@/lib/auth/roles";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -23,6 +24,12 @@ export default async function ParentLayout({ children }: { children: React.React
     resolveTenantPortalTheme(tenant!.tenantId)
   ]);
   const theme = resolvedTheme.manifest;
+  const activeEnrollmentByParticipant = new Map(
+    portal.enrollments
+      .filter((enrollment) => enrollment.status === "active")
+      .map((enrollment) => [enrollment.participant_id, enrollment])
+  );
+  const programById = new Map(portal.programs.map((program) => [program.id, program]));
   const themedNavigation = parentNav.map((item) =>
     item.href === "/portaal/ontwikkeling" ? { ...item, label: getProgressNavigationLabel(theme) } : item
   );
@@ -40,7 +47,14 @@ export default async function ParentLayout({ children }: { children: React.React
         contextSelector={{
           allLabel: "Alle kinderen",
           label: "Kies een kind",
-          options: portal.participants.map((participant) => ({ label: participant.display_name, value: participant.id })),
+          options: portal.participants.map((participant) => {
+            const enrollment = activeEnrollmentByParticipant.get(participant.id);
+            return {
+              description: enrollment ? programById.get(enrollment.program_id)?.name ?? "Geen actief programma" : "Geen actief programma",
+              label: compactChildName(participant.display_name),
+              value: participant.id
+            };
+          }),
           parameter: "kind"
         }}
         mobileBottomNav
@@ -49,8 +63,14 @@ export default async function ParentLayout({ children }: { children: React.React
         profileMenu={parentMoreNav}
         user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }}
       >
-        {children}
+        <PortalRouteFrame manifest={theme}>{children}</PortalRouteFrame>
       </AppShell>
     </div>
   );
+}
+
+function compactChildName(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length < 2) return parts[0] ?? "Kind";
+  return `${parts[0]} ${parts.at(-1)?.[0] ?? ""}.`;
 }

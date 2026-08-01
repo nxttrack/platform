@@ -44,7 +44,9 @@ export function BadgeVisual({
   iconName,
   locked = false,
   name,
-  surprise = false
+  surprise = false,
+  themeArtworkUrl,
+  themeFamilyKey
 }: {
   artworkUrl?: string | null;
   category?: string;
@@ -55,24 +57,26 @@ export function BadgeVisual({
   locked?: boolean;
   name: string;
   surprise?: boolean;
+  themeArtworkUrl?: string | null;
+  themeFamilyKey?: string;
 }) {
   const Icon = badgeIcon(iconName, surprise);
+  const visibleArtworkUrl = artworkUrl ?? themeArtworkUrl;
   return (
     <article className={cn(
-      "group relative overflow-hidden rounded-3xl border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-card",
+      "portal-badge-card group relative overflow-hidden rounded-3xl border bg-card p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-card",
       earned ? "border-emerald-200/80" : "border-border",
       locked && "border-dashed opacity-80",
       className
-    )}>
+    )} data-badge-family={themeFamilyKey}>
       <div aria-hidden="true" className="absolute -right-8 -top-8 size-28 rounded-full bg-aqua/10 blur-2xl" />
       <div className="relative flex items-start justify-between gap-3">
         <div className={cn(
-          "grid size-14 shrink-0 place-items-center overflow-hidden rounded-2xl text-white shadow-glow",
+          "portal-badge-medallion grid size-16 shrink-0 place-items-center overflow-hidden rounded-2xl text-white shadow-glow",
           earned ? "bg-gradient-to-br from-primary via-sky-500 to-aqua" : "bg-gradient-to-br from-slate-300 to-slate-500"
         )}>
-          {locked ? <LockKeyhole className="size-6" /> : artworkUrl ? (
-            // Badge artwork is served through the authenticated private-file proxy.
-            <img alt="" className="size-full object-contain" src={artworkUrl} />
+          {locked ? <LockKeyhole className="size-6" /> : visibleArtworkUrl ? (
+            <img alt="" className="size-full object-contain" src={visibleArtworkUrl} />
           ) : <Icon className="size-7" />}
         </div>
         <StatusPill tone={earned ? "success" : locked ? "neutral" : "info"}>

@@ -116,7 +116,7 @@ type Props = {
     label: string;
     parameter: string;
     allLabel: string;
-    options: Array<{ label: string; value: string }>;
+    options: Array<{ description?: string; label: string; value: string }>;
   };
 };
 
@@ -193,13 +193,28 @@ export function AppShellClient({
 
   return (
     <div
-      className={cn("flex min-h-screen", accent === "admin" && "admin-density", mobileBottomNav && "parent-portal-shell")}
+      className={cn(
+        "flex min-h-screen",
+        accent === "admin" && "admin-density",
+        mobileBottomNav && "parent-portal-shell md:gap-4 md:p-3"
+      )}
       data-portal-route={mobileBottomNav ? pathname : undefined}
     >
-      <aside className={cn("relative hidden shrink-0 border-r border-sidebar-border bg-sidebar/90 backdrop-blur transition-[width] duration-200 md:block", collapsed ? "w-[76px]" : "w-[248px]")}>{sidebar}</aside>
+      <aside
+        className={cn(
+          "relative hidden shrink-0 border-r border-sidebar-border bg-sidebar/90 backdrop-blur transition-[width] duration-200 md:block",
+          mobileBottomNav && "sticky top-3 h-[calc(100vh-24px)] overflow-hidden rounded-[var(--portal-hero-radius)] border shadow-card",
+          collapsed ? "w-[76px]" : mobileBottomNav ? "w-[240px]" : "w-[248px]"
+        )}
+      >
+        {sidebar}
+      </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className={cn("sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur md:gap-3 md:px-6", mobileBottomNav && "pt-[env(safe-area-inset-top)]")}>
+        <header className={cn(
+          "sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur md:gap-3 md:px-6",
+          mobileBottomNav && "pt-[env(safe-area-inset-top)] md:top-3 md:rounded-[var(--portal-card-radius)] md:border md:shadow-soft"
+        )}>
           {!mobileBottomNav ? <Sheet>
             <SheetTrigger asChild>
               <button className="grid size-11 place-items-center rounded-lg text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden" type="button" aria-label="Navigatie openen">
@@ -212,12 +227,17 @@ export function AppShellClient({
             </SheetContent>
           </Sheet> : null}
 
+          {mobileBottomNav ? (
+            <div aria-label={brand.title} className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--portal-rail)] text-white sm:hidden" role="img">
+              <Waves aria-hidden="true" className="size-5" />
+            </div>
+          ) : null}
           <div className={cn("min-w-0", mobileBottomNav && "hidden sm:block")}>
             <p className="truncate text-xs uppercase tracking-wider text-muted-foreground">{brand.title}</p>
             <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
           {contextSelector ? <ContextSelector selector={contextSelector} /> : null}
-          <div className={cn("ml-auto flex shrink-0 items-center gap-2", contextSelector && "ml-0")}>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             {!mobileBottomNav ? <GlobalCommandPalette items={searchItems} nav={nav} /> : null}
             {contextualNotificationCenter ? (
               <NotificationCenter center={contextualNotificationCenter} />
@@ -247,6 +267,7 @@ function ContextSelector({ selector }: { selector: NonNullable<Props["contextSel
   const router = useRouter();
   const searchParams = useSearchParams();
   const value = searchParams.get(selector.parameter) ?? "";
+  const selected = selector.options.find((option) => option.value === value);
 
   function selectContext(nextValue: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -258,18 +279,75 @@ function ContextSelector({ selector }: { selector: NonNullable<Props["contextSel
   }
 
   return (
-    <label className="relative min-w-0 flex-1 sm:ml-4 sm:max-w-[300px] md:ml-8" aria-label={selector.label}>
-      <Users className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-primary" />
-      <select
-        className="h-11 w-full appearance-none truncate rounded-xl border border-border bg-background pl-9 pr-8 text-sm font-semibold text-foreground shadow-soft outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/15"
-        onChange={(event) => selectContext(event.target.value)}
-        value={value}
-      >
-        <option value="">{selector.allLabel}</option>
-        {selector.options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-    </label>
+    <Popover>
+      <TooltipProvider delayDuration={250}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <PopoverTrigger asChild>
+              <button
+                aria-label={`${selector.label}: ${selected?.label ?? selector.allLabel}`}
+                className="grid size-11 shrink-0 place-items-center rounded-full border border-border bg-background text-sm font-black text-primary shadow-soft outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring md:size-12"
+                type="button"
+              >
+                {selected ? getInitials(selected.label).slice(0, 2) : <Users aria-hidden="true" className="size-5" />}
+              </button>
+            </PopoverTrigger>
+          </TooltipTrigger>
+          <TooltipContent>{selected?.label ?? selector.allLabel}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <PopoverContent align="start" className="w-[min(92vw,320px)] overflow-hidden p-1.5">
+        <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">{selector.label}</p>
+        <ContextOption
+          description="Bekijk het complete gezinsoverzicht"
+          label={selector.allLabel}
+          onSelect={() => selectContext("")}
+          selected={!value}
+        />
+        {selector.options.map((option) => (
+          <ContextOption
+            description={option.description ?? "Geen actief programma"}
+            key={option.value}
+            label={option.label}
+            onSelect={() => selectContext(option.value)}
+            selected={option.value === value}
+          />
+        ))}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ContextOption({
+  description,
+  label,
+  onSelect,
+  selected
+}: {
+  description: string;
+  label: string;
+  onSelect: () => void;
+  selected: boolean;
+}) {
+  return (
+    <button
+      aria-pressed={selected}
+      className={cn(
+        "flex min-h-14 w-full items-center gap-3 rounded-xl px-2.5 text-left outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring",
+        selected && "bg-primary/10"
+      )}
+      onClick={onSelect}
+      type="button"
+    >
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-xs font-black text-primary">
+        {getInitials(label).slice(0, 2)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <strong className="block truncate text-sm text-foreground">{label}</strong>
+        <span className="block truncate text-xs text-muted-foreground">{description}</span>
+      </span>
+      {selected ? <span className="text-xs font-bold text-primary">Gekozen</span> : null}
+    </button>
   );
 }
 

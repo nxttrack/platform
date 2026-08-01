@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "familyKey": "nxttrack-default-medallions",
+  "release": "1.0.0",
+  "themeKey": "nxttrack-default",
+  "status": "candidate",
+  "reference": "../../../reference/nxttrack-default-badges-reference-v1.png",
+  "notes": "Twelve true-alpha candidate crops from the approved reference board. Human semantic, edge and small-scale QA is required before publication.",
+  "badges": [
+    { "badgeKey": "water_friend", "asset": "water-friend.png" },
+    { "badgeKey": "first_splash", "asset": "first-splash.png" },
+    { "badgeKey": "float_champion", "asset": "float-champion.png" },
+    { "badgeKey": "power_legs", "asset": "power-legs.png" },
+    { "badgeKey": "bubble_boss", "asset": "bubble-boss.png" },
+    { "badgeKey": "dive_explorer", "asset": "dive-explorer.png" },
+    { "badgeKey": "safety_hero", "asset": "safety-hero.png" },
+    { "badgeKey": "keep_going", "asset": "keep-going.png" },
+    { "badgeKey": "back_float", "asset": "back-float.png" },
+    { "badgeKey": "lane_star", "asset": "lane-star.png" },
+    { "badgeKey": "team_buddy", "asset": "team-buddy.png" },
+    { "badgeKey": "ready_for_a", "asset": "ready-for-a.png" }
+  ]
+}

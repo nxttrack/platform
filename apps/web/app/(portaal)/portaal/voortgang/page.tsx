@@ -31,7 +31,7 @@ export default async function ParentProgressPage({ searchParams }: { searchParam
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Ontwikkeling" title="De zwemreis in beeld" subtitle="Volg vaardigheden, positieve feedback en bijzondere mijlpalen per kind." />
+      <PageHeader kicker="De zwemreis in beeld" title="Ontwikkeling" subtitle="Volg vaardigheden, positieve feedback en bijzondere mijlpalen per kind." />
       <ParentSectionNav
         items={[
           { active: true, href: participantContextHref("/portaal/ontwikkeling", selectedParticipantId), label: "Voortgang" },

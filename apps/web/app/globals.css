@@ -1,11 +1,15 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/nunito-sans";
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource-variable/manrope";
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans Variable", "Inter Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -58,6 +62,41 @@
   --shadow-glow: 0 8px 32px -8px rgb(0 119 217 / 35%);
 }
 
+@layer components {
+  .portal-badge-card[data-badge-family="nxttrack-default-medallions"] .portal-badge-medallion,
+  .portal-badge-card[data-badge-family="ocean-quest-medallions"] .portal-badge-medallion,
+  .portal-badge-card[data-badge-family="dolphin-bay-medallions"] .portal-badge-medallion {
+    border-radius: 9999px;
+  }
+
+  .portal-badge-card[data-badge-family="nxttrack-default-medallions"] .portal-badge-medallion {
+    border: 2px solid color-mix(in srgb, var(--portal-primary) 38%, white);
+    background: linear-gradient(145deg, #f8fbff, #a8bed2);
+  }
+
+  .portal-badge-card[data-badge-family="ocean-quest-medallions"] .portal-badge-medallion {
+    border: 2px solid #f5cf70;
+    background: radial-gradient(circle, #fff7c7 0 22%, #e8a72f 70%, #9f6214);
+  }
+
+  .portal-badge-card[data-badge-family="dolphin-bay-medallions"] .portal-badge-medallion {
+    border: 3px solid #ffcc68;
+    background: radial-gradient(circle at 40% 35%, #65e8f0, #0873b4 68%, #07578d);
+  }
+
+  .portal-badge-card[data-badge-family="turtle-trails-scutes"] .portal-badge-medallion {
+    border: 3px solid #8fc488;
+    border-radius: 32% 68% 42% 58% / 48% 38% 62% 52%;
+    background: repeating-radial-gradient(circle, #78b47d 0 9px, #087f75 10px 18px);
+  }
+
+  .portal-badge-card[data-badge-family="aqua-academy-crests"] .portal-badge-medallion {
+    border-radius: 0;
+    background: linear-gradient(145deg, #11b9c6, #0869d7 58%, #06284c);
+    clip-path: polygon(50% 0, 92% 18%, 84% 72%, 50% 100%, 16% 72%, 8% 18%);
+  }
+}
+
 /* Parent Portal Theme Engine v2.1 · one Pearl Frame driven by semantic tokens. */
 .portal-theme-root {
   min-height: 100vh;
@@ -95,27 +134,182 @@
   margin-inline: auto;
 }
 
-.portal-theme-root .parent-portal-shell :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
-  border-radius: var(--portal-card-radius);
+.portal-route-frame {
+  position: relative;
+  isolation: isolate;
 }
 
-.portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
+.portal-route-frame__content {
+  position: relative;
+  z-index: 1;
+}
+
+.portal-route-atmosphere {
+  position: relative;
+  min-height: 5rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 16%, var(--border));
+  border-radius: var(--portal-hero-radius);
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--portal-surface) 98%, transparent), color-mix(in srgb, var(--portal-surface) 74%, transparent)),
+    var(--portal-canvas);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--portal-rail) 10%, transparent);
+}
+
+.portal-route-atmosphere__art {
+  position: absolute;
+  inset: 0;
+  background-image: var(--portal-hero-desktop);
+  background-position: center 46%;
+  background-size: cover;
+  opacity: .2;
+}
+
+.portal-route-atmosphere__cue {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  color: var(--portal-text);
+  font-family: var(--portal-display-font);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 900;
+}
+
+.portal-route-atmosphere__trail {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 1rem;
+  display: flex;
+  width: min(48%, 34rem);
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  transform: translateY(-50%);
+}
+
+.portal-route-atmosphere__trail::before {
   position: absolute;
   z-index: -1;
-  top: 5.75rem;
-  right: 0;
-  left: 0;
-  height: min(36rem, 62vh);
-  border-radius: var(--portal-hero-radius);
-  background-image:
-    linear-gradient(180deg, color-mix(in srgb, var(--portal-surface) 16%, transparent), color-mix(in srgb, var(--portal-canvas) 96%, transparent)),
-    var(--portal-hero-desktop);
-  background-position: center;
-  background-size: cover;
-  box-shadow: 0 24px 70px color-mix(in srgb, var(--portal-rail) 16%, transparent);
+  right: 1.5rem;
+  left: 1.5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-primary) 38%, white);
   content: "";
-  opacity: .2;
-  pointer-events: none;
+}
+
+.portal-route-atmosphere__waypoint {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 25%, white);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-surface) 96%, white);
+  padding: .55rem .75rem;
+  color: var(--portal-primary-strong);
+  font-size: .7rem;
+  font-weight: 850;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--portal-rail) 12%, transparent);
+}
+
+.portal-route-atmosphere__waypoint svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--portal-reward);
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere {
+  min-height: 3.5rem;
+  border-radius: var(--portal-card-radius);
+  box-shadow: none;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__art {
+  background-image: none;
+  opacity: 1;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__art::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 9rem;
+  height: 100%;
+  background:
+    radial-gradient(circle at 72% 46%, var(--portal-secondary) 0 .35rem, transparent .4rem),
+    radial-gradient(circle at 45% 76%, color-mix(in srgb, var(--portal-primary) 38%, transparent) 0 .25rem, transparent .3rem),
+    linear-gradient(135deg, transparent 35%, color-mix(in srgb, var(--portal-secondary) 18%, transparent));
+  content: "";
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__cue {
+  min-height: 3.5rem;
+  font-size: .9rem;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__trail {
+  display: none;
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere,
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere,
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere {
+  min-height: 15rem;
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere__art {
+  opacity: .58;
+}
+
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__art {
+  background-image: var(--portal-progress-desktop);
+  opacity: .72;
+}
+
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere__art {
+  opacity: .48;
+  filter: saturate(.92);
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere__cue,
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__cue,
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere__cue {
+  align-items: flex-start;
+  padding-top: 1.25rem;
+  text-shadow: 0 1px 18px white;
+}
+
+.portal-route-frame[data-portal-motif="pearl"] .portal-route-atmosphere__waypoint {
+  border-color: color-mix(in srgb, var(--portal-reward) 58%, white);
+  background: linear-gradient(145deg, white, color-mix(in srgb, var(--portal-secondary) 16%, white));
+}
+
+.portal-route-frame[data-portal-motif="buoy"] .portal-route-atmosphere__trail::before {
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--portal-primary), var(--portal-primary) 1.2rem, white 1.2rem, white 2rem);
+}
+
+.portal-route-frame[data-portal-motif="shell"] .portal-route-atmosphere__waypoint {
+  border-radius: 55% 55% 48% 48% / 65% 65% 40% 40%;
+  background: color-mix(in srgb, var(--portal-surface) 94%, #f5dfad);
+}
+
+.portal-route-frame[data-portal-motif="lane"] .portal-route-atmosphere__trail::before {
+  height: 6px;
+  border-block: 1px solid color-mix(in srgb, var(--portal-primary) 60%, white);
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, var(--portal-primary) 0 .9rem, transparent .9rem 1.5rem);
+}
+
+.portal-theme-root .parent-portal-shell :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: var(--portal-card-radius);
 }
 
 .portal-overview-journey {
@@ -299,12 +493,39 @@
 }
 
 @media (max-width: 639px) {
-  .portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
-    top: 6.5rem;
-    height: 32rem;
-    background-image:
-      linear-gradient(180deg, color-mix(in srgb, var(--portal-surface) 12%, transparent), color-mix(in srgb, var(--portal-canvas) 98%, transparent)),
-      var(--portal-hero-mobile);
+  .portal-route-atmosphere {
+    margin-inline: -.25rem;
+  }
+
+  .portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere,
+  .portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere,
+  .portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere {
+    min-height: 26rem;
+  }
+
+  .portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__art {
+    background-image: var(--portal-progress-mobile);
+    background-position: center top;
+  }
+
+  .portal-route-atmosphere__trail {
+    right: .75rem;
+    bottom: .75rem;
+    top: auto;
+    width: calc(100% - 1.5rem);
+    transform: none;
+  }
+
+  .portal-route-atmosphere__waypoint {
+    max-width: 32%;
+    flex-direction: column;
+    justify-content: center;
+    padding: .5rem;
+    text-align: center;
+  }
+
+  .portal-route-frame--quiet .portal-route-atmosphere {
+    min-height: 3.5rem;
   }
 
   .portal-overview-journey {

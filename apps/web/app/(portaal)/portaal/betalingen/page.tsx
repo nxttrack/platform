@@ -42,7 +42,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Betalingen" title="Duidelijk inzicht in je betalingen" subtitle="Openstaande bedragen, facturen en je betaalmethode op één plek." />
+      <PageHeader kicker="Duidelijk inzicht in je betalingen" title="Betalingen" subtitle="Openstaande bedragen, facturen en je betaalmethode op één plek." />
       <Feedback saved={saved} error={error} />
       <ParentSectionNav
         items={[

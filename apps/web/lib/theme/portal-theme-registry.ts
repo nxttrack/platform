@@ -116,11 +116,12 @@ const definitions: ThemeDefinition[] = [
         primary: "#0878E5", primaryStrong: "#0759B4", secondary: "#14B8B1", reward: "#F6B744", rail: "#071D39", ...statusColors
       },
       radius: { card: "19px", hero: "27px" },
-      typography: { display: "Inter, system-ui, sans-serif", body: "Inter, system-ui, sans-serif" },
+      typography: { display: "\"Inter Variable\", system-ui, sans-serif", body: "\"Inter Variable\", system-ui, sans-serif" },
       motion: { microMs: 140, standardMs: 200, celebrationMs: 420 }
     },
     assets: {
-      "overview.hero.desktop": asset("/portal-themes/nxttrack-default/overview-landscape-1440.webp", "a6fa038007e31e549d8dd2db3e7e4aae38780666551bbd6bd75eae1756945cda", 1440, 810)
+      "overview.hero.desktop": asset("/portal-themes/nxttrack-default/overview-landscape-1440.webp", "a6fa038007e31e549d8dd2db3e7e4aae38780666551bbd6bd75eae1756945cda", 1440, 810),
+      "progress.journey.desktop": asset("/portal-themes/nxttrack-default/progress-journey-landscape-1440.webp", "08b1faa8d7dad55d3697265a718e156f164f285171cee620e7042dfb956f8c9e", 1440, 810)
     },
     haptics: "calm"
   },
@@ -144,12 +145,14 @@ const definitions: ThemeDefinition[] = [
         primary: "#0878E5", primaryStrong: "#0753BD", secondary: "#0FC4BA", reward: "#F4BE5D", rail: "#08274A", ...statusColors
       },
       radius: { card: "23px", hero: "32px" },
-      typography: { display: "\"Nunito Sans\", Inter, system-ui, sans-serif", body: "Inter, system-ui, sans-serif" },
+      typography: { display: "\"Nunito Sans Variable\", \"Inter Variable\", system-ui, sans-serif", body: "\"Inter Variable\", system-ui, sans-serif" },
       motion: { microMs: 150, standardMs: 240, celebrationMs: 560 }
     },
     assets: {
       "overview.hero.desktop": asset("/portal-themes/ocean-quest/overview-landscape-1440.webp", "de9175ba78c56e0a050606a703cc3bac47f2ffd96783bf72ca2dbac5ffe59816", 1440, 810),
-      "overview.hero.mobile": asset("/portal-themes/ocean-quest/overview-portrait-640.webp", "cc4146c25d2ef04fec30f13fec851811024cfb65572bf12865d4a64dd09db08e", 640, 1001)
+      "overview.hero.mobile": asset("/portal-themes/ocean-quest/overview-portrait-640.webp", "cc4146c25d2ef04fec30f13fec851811024cfb65572bf12865d4a64dd09db08e", 640, 1001),
+      "progress.journey.desktop": asset("/portal-themes/ocean-quest/progress-journey-landscape-1440.webp", "0697e2c99d2cafffe66a85c8d73866dc814d61a06615f4af80ec93653c49438e", 1440, 810),
+      "progress.journey.mobile": asset("/portal-themes/ocean-quest/progress-journey-portrait-640.webp", "158ed2425b1783eb43bb318a24b8ea42fa91359aafb2c70a622bce0edca9c6cf", 640, 999)
     },
     haptics: "playful"
   },
@@ -173,12 +176,14 @@ const definitions: ThemeDefinition[] = [
         primary: "#0873B4", primaryStrong: "#07578D", secondary: "#2BBCCB", reward: "#E8A92F", rail: "#062D4B", ...statusColors
       },
       radius: { card: "22px", hero: "31px" },
-      typography: { display: "\"Nunito Sans\", Inter, system-ui, sans-serif", body: "Inter, system-ui, sans-serif" },
+      typography: { display: "\"Nunito Sans Variable\", \"Inter Variable\", system-ui, sans-serif", body: "\"Inter Variable\", system-ui, sans-serif" },
       motion: { microMs: 140, standardMs: 220, celebrationMs: 480 }
     },
     assets: {
       "overview.hero.desktop": asset("/portal-themes/dolphin-bay/overview-landscape-1440.webp", "fd594669bba0a25815861e68af92289ced10a14a64c082157134b813151dc11e", 1440, 810),
-      "overview.hero.mobile": asset("/portal-themes/dolphin-bay/overview-portrait-640.webp", "a3e13396ed88e0997a602c3b816a119c3479783694db33532fb8a7430c682d2d", 640, 1137)
+      "overview.hero.mobile": asset("/portal-themes/dolphin-bay/overview-portrait-640.webp", "a3e13396ed88e0997a602c3b816a119c3479783694db33532fb8a7430c682d2d", 640, 1137),
+      "progress.journey.desktop": asset("/portal-themes/dolphin-bay/progress-journey-landscape-1440.webp", "fd594669bba0a25815861e68af92289ced10a14a64c082157134b813151dc11e", 1440, 810),
+      "progress.journey.mobile": asset("/portal-themes/dolphin-bay/progress-journey-portrait-640.webp", "a3e13396ed88e0997a602c3b816a119c3479783694db33532fb8a7430c682d2d", 640, 1137)
     },
     haptics: "playful"
   },
@@ -202,12 +207,14 @@ const definitions: ThemeDefinition[] = [
         primary: "#087F75", primaryStrong: "#06675F", secondary: "#5DBB83", reward: "#D5A947", rail: "#103B40", ...statusColors
       },
       radius: { card: "22px", hero: "31px" },
-      typography: { display: "\"Plus Jakarta Sans\", Inter, system-ui, sans-serif", body: "Inter, system-ui, sans-serif" },
+      typography: { display: "\"Plus Jakarta Sans Variable\", \"Inter Variable\", system-ui, sans-serif", body: "\"Inter Variable\", system-ui, sans-serif" },
       motion: { microMs: 160, standardMs: 260, celebrationMs: 600 }
     },
     assets: {
       "overview.hero.desktop": asset("/portal-themes/turtle-trails/overview-landscape-1440.webp", "4e533aa1f1a49924ec99760743f27df98dd8f9cbcb32feb8fe039d4130e0dbc9", 1440, 810),
-      "overview.hero.mobile": asset("/portal-themes/turtle-trails/overview-portrait-640.webp", "c0cafdf7d0d683c8d5cb43b33df19d521f7b3a339769d76acdbf13a8323ebd73", 640, 1137)
+      "overview.hero.mobile": asset("/portal-themes/turtle-trails/overview-portrait-640.webp", "c0cafdf7d0d683c8d5cb43b33df19d521f7b3a339769d76acdbf13a8323ebd73", 640, 1137),
+      "progress.journey.desktop": asset("/portal-themes/turtle-trails/progress-journey-landscape-1440.webp", "4e533aa1f1a49924ec99760743f27df98dd8f9cbcb32feb8fe039d4130e0dbc9", 1440, 810),
+      "progress.journey.mobile": asset("/portal-themes/turtle-trails/progress-journey-portrait-640.webp", "c0cafdf7d0d683c8d5cb43b33df19d521f7b3a339769d76acdbf13a8323ebd73", 640, 1137)
     },
     haptics: "calm"
   },
@@ -231,12 +238,14 @@ const definitions: ThemeDefinition[] = [
         primary: "#0869D7", primaryStrong: "#06459D", secondary: "#11B9C6", reward: "#D3A13A", rail: "#06284C", ...statusColors
       },
       radius: { card: "18px", hero: "27px" },
-      typography: { display: "Manrope, Inter, system-ui, sans-serif", body: "Inter, system-ui, sans-serif" },
+      typography: { display: "\"Manrope Variable\", \"Inter Variable\", system-ui, sans-serif", body: "\"Inter Variable\", system-ui, sans-serif" },
       motion: { microMs: 120, standardMs: 180, celebrationMs: 360 }
     },
     assets: {
       "overview.hero.desktop": asset("/portal-themes/aqua-academy/overview-landscape-1440.webp", "a596f09f3475ca7d8f2823f79f5eb47586770f4126c396b9b23d39cd5ad5c6b7", 1440, 810),
-      "overview.hero.mobile": asset("/portal-themes/aqua-academy/overview-portrait-640.webp", "82fb8009275b46c8d13456fb43b4ce66fdd48c59b34a8e58ac0b75e88fbc482c", 640, 1137)
+      "overview.hero.mobile": asset("/portal-themes/aqua-academy/overview-portrait-640.webp", "82fb8009275b46c8d13456fb43b4ce66fdd48c59b34a8e58ac0b75e88fbc482c", 640, 1137),
+      "progress.journey.desktop": asset("/portal-themes/aqua-academy/progress-journey-landscape-1440.webp", "a596f09f3475ca7d8f2823f79f5eb47586770f4126c396b9b23d39cd5ad5c6b7", 1440, 810),
+      "progress.journey.mobile": asset("/portal-themes/aqua-academy/progress-journey-portrait-640.webp", "82fb8009275b46c8d13456fb43b4ce66fdd48c59b34a8e58ac0b75e88fbc482c", 640, 1137)
     },
     haptics: "precise"
   }

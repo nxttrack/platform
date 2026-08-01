@@ -1,4 +1,4 @@
-import { Bell, Check, MailOpen, MessageSquare } from "lucide-react";
+import { Bell, Check, ListChecks, MailOpen, MessageSquare, Plus } from "lucide-react";
 import type { ReactNode } from "react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { NewThreadForm } from "@/components/communication/communication-forms";
@@ -8,6 +8,7 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import { markNotificationReadAction } from "@/lib/domain/communication-actions";
 import { getParentCommunicationHub } from "@/lib/domain/communication-hub";
+import { markAllMessageThreadsReadAction } from "@/lib/domain/communication-hub-actions";
 import { formatCommunicationDate, getParentMessages, messageAudienceLabel } from "@/lib/domain/communications";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
@@ -36,11 +37,6 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <PageHeader
-        action={
-          <AdminActionDrawer description="Kies een kind en schrijf je vraag. De zwemschool ziet alleen de context die bij dit gesprek hoort." title="Nieuw bericht" triggerLabel="Bericht sturen" width="wide">
-            <NewThreadForm next={inboxHref} parentMode participants={visibleParticipants} />
-          </AdminActionDrawer>
-        }
         kicker="Communicatie"
         title="Inbox"
         subtitle="Persoonlijke gesprekken, meldingen en belangrijke updates van de zwemschool."
@@ -63,6 +59,36 @@ export default async function ParentMessagesPage({ searchParams }: PageProps) {
       </div>
 
       <section className="scroll-mt-24" id="gesprekken">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Gesprekken</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Vragen en antwoorden rond je gezin.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <form action={markAllMessageThreadsReadAction}>
+              <input name="next" type="hidden" value={inboxHref} />
+              <button
+                aria-label="Alles als gelezen markeren"
+                className="grid size-11 place-items-center rounded-full border border-border bg-background text-primary shadow-soft outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                title="Alles als gelezen markeren"
+                type="submit"
+              >
+                <ListChecks aria-hidden="true" className="size-5" />
+              </button>
+            </form>
+            <AdminActionDrawer
+              description="Kies een kind en schrijf je vraag. De zwemschool ziet alleen de context die bij dit gesprek hoort."
+              icon={<Plus aria-hidden="true" className="size-5" />}
+              title="Nieuw bericht"
+              triggerAriaLabel="Nieuw bericht"
+              triggerIconOnly
+              triggerLabel="Nieuw bericht"
+              width="wide"
+            >
+              <NewThreadForm next={inboxHref} parentMode participants={visibleParticipants} />
+            </AdminActionDrawer>
+          </div>
+        </div>
         <ThreadWorkspace baseHref={inboxHref} messages={visibleMessages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={visibleThreads} unreadThreadIds={hub.unreadThreadIds.filter((threadId) => visibleThreadIds.has(threadId))} />
       </section>
 

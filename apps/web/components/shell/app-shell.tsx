@@ -19,7 +19,7 @@ type Props = {
     label: string;
     parameter: string;
     allLabel: string;
-    options: Array<{ label: string; value: string }>;
+    options: Array<{ description?: string; label: string; value: string }>;
   };
 };
 

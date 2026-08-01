@@ -30,7 +30,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Account" title="Profiel en voorkeuren" subtitle="Beheer je contactgegevens en bepaal hoe de zwemschool je bereikt." />
+      <PageHeader kicker="Jouw gegevens en voorkeuren" title="Profiel & meer" subtitle="Beheer je contactgegevens en bepaal hoe de zwemschool je bereikt." />
       <Feedback saved={saved} error={error} />
 
       <div className="grid gap-5">

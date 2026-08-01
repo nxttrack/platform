@@ -44,7 +44,7 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Planning" title="Lessen, inhalen en afzwemmen" subtitle={`Alles rond de planning op één plek. Annuleren kan tot ${data.settings.lesson_cancellation_cutoff_hours} uur vooraf met automatische inhaalcredit.`} />
+      <PageHeader kicker="Lessen, inhalen en afzwemmen" title="Planning" subtitle={`Alles rond de planning op één plek. Annuleren kan tot ${data.settings.lesson_cancellation_cutoff_hours} uur vooraf met automatische inhaalcredit.`} />
       <Feedback saved={saved} error={error} />
       <ParentSectionNav
         items={[

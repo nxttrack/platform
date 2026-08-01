@@ -4,6 +4,7 @@ import { Building2, CreditCard, MapPin, Palette, ShieldCheck, Users, Waves } fro
 import { useRef } from "react";
 
 import { Button } from "@/components/ui/button";
+import { PortalThemePreview } from "@/components/platform/portal-theme-preview";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -44,28 +45,26 @@ function ThemeChoice() {
   return (
     <fieldset>
       <legend className="sr-only">Kies de ouderportaalstijl</legend>
+      <p className="mb-4 text-sm text-muted-foreground">Alleen platformbeheer kan previewen en kiezen. De sandbox is read-only; activatie gebeurt pas na de openingscontrole.</p>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
         {portalThemeCatalog.map((theme, index) => {
-          const hero = theme.assets["overview.hero.desktop"]?.path;
           return (
-            <label className="group cursor-pointer" key={`${theme.theme.key}@${theme.theme.release}`}>
-              <input
-                className="peer sr-only"
-                defaultChecked={index === 0}
-                name="portalThemeRelease"
-                required
-                type="radio"
-                value={`${theme.theme.key}@${theme.theme.release}`}
-              />
-              <span className="block h-full overflow-hidden rounded-2xl border border-border bg-card transition peer-checked:border-primary peer-checked:ring-2 peer-checked:ring-primary/20 peer-focus-visible:ring-2 peer-focus-visible:ring-ring">
-                <span className="block h-24 bg-cover bg-center" style={{ backgroundColor: theme.tokens.color.canvas, backgroundImage: hero ? `linear-gradient(180deg, transparent, ${theme.tokens.color.rail}bb), url("${hero}")` : undefined }} />
-                <span className="block p-3">
+            <article className="overflow-hidden rounded-2xl border border-border bg-card" key={`${theme.theme.key}@${theme.theme.release}`}>
+              <PortalThemePreview compact manifest={theme} />
+              <div className="p-3">
                   <strong className="block text-sm">{theme.theme.displayName}</strong>
+                  <span className="mt-1 block text-xs text-muted-foreground">{theme.theme.description}</span>
                   <span className="mt-1 block text-xs text-muted-foreground">{theme.theme.release} · {theme.accessibility.minimumContrast}</span>
-                  <span className="mt-2 block text-xs font-semibold text-primary">Preview en kiezen</span>
-                </span>
-              </span>
-            </label>
+                  <details className="mt-3 border-t border-border pt-3">
+                    <summary className="cursor-pointer text-xs font-bold text-primary">Preview</summary>
+                    <div className="mt-3 min-w-[min(42rem,80vw)] max-w-full"><PortalThemePreview manifest={theme} /></div>
+                  </details>
+                  <label className="mt-3 flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-border px-3 text-sm font-bold transition has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:text-primary">
+                    <input defaultChecked={index === 0} name="portalThemeRelease" required type="radio" value={`${theme.theme.key}@${theme.theme.release}`} />
+                    Kiezen
+                  </label>
+              </div>
+            </article>
           );
         })}
       </div>
