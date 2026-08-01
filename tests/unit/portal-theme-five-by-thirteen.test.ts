@@ -121,3 +121,9 @@ test("Pearl Frame, routeframe, ronde kindselector en exacte Inboxacties zijn aan
   assert.match(inbox, /Alles als gelezen markeren/);
   assert.match(inbox, /Nieuw bericht/);
 });
+
+test("publieke theme-assets krijgen een immutable cachecontract", async () => {
+  const nextConfig = await readFile(path.join(root, "apps/web/next.config.ts"), "utf8");
+  assert.match(nextConfig, /source: "\/portal-themes\/:path\*"/);
+  assert.match(nextConfig, /public, max-age=31536000, immutable/);
+});
