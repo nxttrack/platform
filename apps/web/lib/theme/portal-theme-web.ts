@@ -7,7 +7,7 @@ export type PortalThemeCssProperties = CSSProperties & Record<`--portal-${string
 export function portalThemeCssVariables(manifest: PortalThemeManifestV2): PortalThemeCssProperties {
   const { color, radius, typography, motion } = manifest.tokens;
   const desktopHero = manifest.assets["overview.hero.desktop"]?.path;
-  const mobileHero = manifest.assets["overview.hero.mobile"]?.path;
+  const mobileHero = manifest.assets["overview.hero.mobile"]?.path ?? desktopHero;
   return {
     "--portal-canvas": color.canvas,
     "--portal-surface": color.surface,

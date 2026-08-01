@@ -12,6 +12,10 @@ import {
   parentPortalRouteIds,
   validatePortalThemeManifest
 } from "../../apps/web/lib/theme/portal-theme-contract";
+import {
+  getPortalOverviewRecipePresentation,
+  portalOverviewRecipePresentations
+} from "../../apps/web/lib/theme/portal-overview-recipes";
 
 test("catalogus bevat exact de vijf launchreleases met alle dertien routes", () => {
   assert.deepEqual(
@@ -45,6 +49,27 @@ test("manifestvalidator wijst raw onbekende recipe-ID af", () => {
 test("manifestvalidator weigert onbekende databasevelden", () => {
   const unsafe = Object.assign(structuredClone(defaultPortalTheme), { rawCss: ".tenant { display: none }" });
   assert.throws(() => validatePortalThemeManifest(unsafe), /Invalid manifest keys/);
+});
+
+test("iedere launchrelease rendert een geregistreerde overview-compositie", () => {
+  const overviewRecipes = portalThemeCatalog.map((theme) => theme.recipes.pages.overview);
+
+  assert.equal(new Set(overviewRecipes).size, 5);
+  for (const recipeId of overviewRecipes) {
+    assert.ok(recipeId in portalOverviewRecipePresentations, `${recipeId} must have a real presentation recipe`);
+    assert.ok(getPortalOverviewRecipePresentation(recipeId).ctaLabel);
+  }
+
+  const ocean = getPortalOverviewRecipePresentation("overview/pearl-route-v2");
+  assert.equal(ocean.eyebrow, "Ocean Quest");
+  assert.equal(ocean.progressLabel, "Reisvoortgang");
+
+  const overviewSource = readFileSync(
+    new URL("../../apps/web/app/(portaal)/portaal/page.tsx", import.meta.url),
+    "utf8"
+  );
+  assert.match(overviewSource, /resolvedTheme\.manifest\.recipes\.pages\.overview/);
+  assert.match(overviewSource, /PortalOverviewHero/);
 });
 
 test("badgeboards van onvolledige families blijven review met eigen fallback", () => {

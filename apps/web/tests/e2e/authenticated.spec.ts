@@ -76,6 +76,18 @@ test.describe("authenticated role workflows", () => {
       expect(currentUrl.pathname === authCase.path || currentUrl.pathname.startsWith(`${authCase.path}/`)).toBeTruthy();
 
       if (authCase.label === "parent") {
+        const themedRoot = page.locator("[data-portal-theme]");
+        const overviewJourney = page.locator(".portal-overview-journey");
+        await expect(themedRoot).toBeVisible();
+        await expect(overviewJourney).toBeVisible();
+        await expect(overviewJourney).toHaveAttribute("data-overview-recipe", /^overview\//);
+        expect(await overviewJourney.evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("/portal-themes/");
+
+        if (await themedRoot.getAttribute("data-portal-theme") === "ocean-quest") {
+          await expect(overviewJourney).toHaveAttribute("data-overview-recipe", "overview/pearl-route-v2");
+          await expect(overviewJourney.getByText("Ocean Quest", { exact: true })).toBeVisible();
+        }
+
         await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });
         await expect(page.getByRole("heading", { name: "Besloten media" })).toBeVisible();
       }

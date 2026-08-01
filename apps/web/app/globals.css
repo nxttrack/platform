@@ -99,7 +99,6 @@
   border-radius: var(--portal-card-radius);
 }
 
-.portal-theme-root .parent-portal-shell[data-portal-route="/portaal"] main > div::before,
 .portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
   position: absolute;
   z-index: -1;
@@ -117,6 +116,131 @@
   content: "";
   opacity: .2;
   pointer-events: none;
+}
+
+.portal-overview-journey {
+  position: relative;
+  min-height: 34rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--portal-surface) 78%, white);
+  border-radius: var(--portal-hero-radius);
+  background-color: var(--portal-canvas);
+  background-image: var(--portal-hero-desktop);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--portal-rail) 18%, transparent);
+  isolation: isolate;
+}
+
+.portal-overview-journey__wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--portal-canvas) 36%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, white 12%, transparent), transparent 48%, color-mix(in srgb, var(--portal-canvas) 32%, transparent));
+  pointer-events: none;
+}
+
+.portal-overview-journey__content {
+  display: flex;
+  min-height: inherit;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.portal-overview-journey__card {
+  width: min(100%, 42rem);
+  border: 1px solid color-mix(in srgb, white 82%, var(--portal-primary));
+  border-radius: var(--portal-card-radius);
+  background: color-mix(in srgb, var(--portal-surface) 92%, white);
+  padding: clamp(1rem, 3vw, 1.75rem);
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--portal-rail) 18%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.portal-overview-journey__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--portal-primary-strong);
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.portal-overview-journey__avatar {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 3px solid color-mix(in srgb, white 88%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--portal-secondary), var(--portal-primary-strong));
+  color: white;
+  font-weight: 900;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--portal-primary) 24%, transparent);
+}
+
+.portal-overview-journey__fact {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .65rem;
+  border-radius: calc(var(--portal-card-radius) * .62);
+  background: color-mix(in srgb, var(--portal-surface-alt) 90%, white);
+  padding: .7rem .8rem;
+}
+
+.portal-overview-journey__fact strong {
+  display: block;
+  overflow: hidden;
+  color: var(--portal-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview-journey__cta {
+  display: inline-flex;
+  min-height: 2.75rem;
+  margin-top: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: calc(var(--portal-card-radius) * .58);
+  background: var(--portal-primary-strong);
+  padding: .7rem 1rem;
+  color: white;
+  font-size: .875rem;
+  font-weight: 800;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--portal-primary) 28%, transparent);
+}
+
+.portal-overview-journey__milestones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.portal-overview-journey__milestone {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid color-mix(in srgb, white 82%, var(--portal-primary));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-surface) 92%, white);
+  padding: .65rem 1rem;
+  color: var(--portal-text);
+  font-size: .8rem;
+  font-weight: 800;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--portal-rail) 14%, transparent);
+  backdrop-filter: blur(10px);
 }
 
 .five-point-assessment {
@@ -175,13 +299,45 @@
 }
 
 @media (max-width: 639px) {
-  .portal-theme-root .parent-portal-shell[data-portal-route="/portaal"] main > div::before,
   .portal-theme-root .parent-portal-shell[data-portal-route="/portaal/ontwikkeling"] main > div::before {
     top: 6.5rem;
     height: 32rem;
     background-image:
       linear-gradient(180deg, color-mix(in srgb, var(--portal-surface) 12%, transparent), color-mix(in srgb, var(--portal-canvas) 98%, transparent)),
       var(--portal-hero-mobile);
+  }
+
+  .portal-overview-journey {
+    min-height: 52rem;
+    background-image: var(--portal-hero-mobile);
+    background-position: center top;
+  }
+
+  .portal-overview-journey__wash {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--portal-canvas) 18%, transparent), transparent 50%, color-mix(in srgb, var(--portal-rail) 12%, transparent));
+  }
+
+  .portal-overview-journey__content {
+    padding: .85rem;
+  }
+
+  .portal-overview-journey__card {
+    padding: 1rem;
+  }
+
+  .portal-overview-journey__milestones {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .portal-overview-journey__milestone {
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .portal-overview-journey__milestone:nth-child(even) {
+    align-self: flex-end;
   }
 
   .five-point-assessment {

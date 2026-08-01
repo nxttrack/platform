@@ -2,9 +2,11 @@ import { ArrowRight, Bell, CheckCircle2, CreditCard, GraduationCap, MessageSquar
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { FamilyCommandCenter, type FamilyChild } from "@/components/parent/family-command-center";
+import { PortalOverviewHero } from "@/components/parent/portal-overview-hero";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatLessonDate, getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getNextLesson, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
+import { resolveTenantPortalTheme } from "@/lib/theme/portal-theme-server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function ParentHomePage({ searchParams }: { searchParams?: 
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
+  const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const nextLesson = getNextLesson(data, selectedParticipantId ?? undefined);
   const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available" && visibleParticipantIds.has(credit.participant_id));
   const visibleNotifications = data.notifications.filter((notification) => !notification.participant_id || visibleParticipantIds.has(notification.participant_id));
@@ -74,10 +77,36 @@ export default async function ParentHomePage({ searchParams }: { searchParams?: 
       timeline
     };
   });
+  const resolvedTheme = await resolveTenantPortalTheme(data.tenant.id);
+  const overviewChild = selectedParticipantId
+    ? familyChildren.find((child) => child.id === selectedParticipantId) ?? null
+    : familyChildren[0] ?? null;
+  const overviewLesson = overviewChild ? getNextLesson(data, overviewChild.id) : null;
+  const overviewLocationId = overviewLesson?.resource_id
+    ?? (overviewLesson ? groupById.get(overviewLesson.group_id)?.default_resource_id : null);
+  const profileFirstName = data.profile?.full_name?.trim().split(/\s+/)[0];
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Overzicht" title={`Welkom${data.profile?.full_name ? `, ${data.profile.full_name}` : ""}`} subtitle={selectedParticipantId ? `Alles wat nu belangrijk is voor ${visibleParticipants[0]?.display_name ?? "je kind"}.` : "Alles wat nu belangrijk is voor je gezin."} />
+      <PageHeader
+        kicker={`Welkom${profileFirstName ? `, ${profileFirstName}` : ""}`}
+        title="Overzicht"
+        subtitle={selectedParticipantId ? `Alles wat nu belangrijk is voor ${visibleParticipants[0]?.display_name ?? "je kind"}.` : "Alles wat nu belangrijk is voor je gezin."}
+      />
+
+      <PortalOverviewHero
+        child={overviewChild ? {
+          initial: overviewChild.name.trim().charAt(0).toUpperCase() || "★",
+          location: overviewLocationId ? resourceById.get(overviewLocationId)?.name ?? null : null,
+          name: overviewChild.name,
+          nextLesson: overviewChild.nextLesson,
+          program: overviewChild.program,
+          progressPercent: overviewChild.progressPercent,
+          stage: overviewChild.stage
+        } : null}
+        href={participantContextHref("/portaal/ontwikkeling", selectedParticipantId ?? overviewChild?.id ?? null)}
+        recipeId={resolvedTheme.manifest.recipes.pages.overview}
+      />
 
       <section className="rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
         <div className="flex items-start justify-between gap-3">
