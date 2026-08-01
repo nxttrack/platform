@@ -104,8 +104,9 @@ async function createOffer(page: Page, entry: Locator, groupName: string) {
 }
 
 async function openPlacementDetails(page: Page, participantName: string) {
-  const savedViewsLoader = page.locator('button[aria-label="Opgeslagen weergaven beheren"] svg.animate-spin');
-  await expect(savedViewsLoader).toHaveCount(0);
+  const savedViews = page.getByRole("button", { name: "Opgeslagen weergaven beheren" });
+  await expect(savedViews).toBeVisible();
+  await expect(savedViews.locator("svg.animate-spin")).toHaveCount(0);
 
   const clearFilters = page.getByRole("button", { name: "Wis filters" });
   if (await clearFilters.isVisible()) {
@@ -115,6 +116,7 @@ async function openPlacementDetails(page: Page, participantName: string) {
   const search = page.getByPlaceholder("Zoek deelnemer…");
   await expect(search).toBeVisible();
   await search.fill(participantName);
+  await expect(search).toHaveValue(participantName);
 
   const row = page.getByRole("row").filter({ hasText: participantName });
   await expect(row).toHaveCount(1);
