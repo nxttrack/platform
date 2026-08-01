@@ -96,7 +96,7 @@ test.describe("phase 16 operational happy path", () => {
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
     await expectBodyToContain(page, phase.expected.participantName);
     await expectBodyToContain(page, phase.expected.programName);
-    await expectActiveShellLink(page, "Home");
+    await expectActiveShellLink(page, "Overzicht");
 
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.groupName);
@@ -107,11 +107,11 @@ test.describe("phase 16 operational happy path", () => {
 
     await page.goto("/portaal/badges", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
-    await expectActiveShellLink(page, "Badges");
+    await expectActiveShellLink(page, "Ontwikkeling");
 
     await page.goto("/portaal/afzwemmen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.participantName);
-    await expectActiveShellLink(page, "Afzwemmen");
+    await expectActiveShellLink(page, "Planning");
 
     await page.goto("/portaal/betalingen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.paymentReference);
@@ -157,17 +157,7 @@ async function expectBodyToContain(page: Page, text: string) {
 }
 
 async function expectActiveShellLink(page: Page, label: string) {
-  const mobile = (page.viewportSize()?.width ?? 1280) < 768;
-
-  if (mobile) {
-    await page.getByRole("button", { name: "Navigatie openen" }).click();
-  }
-
   await expect(page.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
-
-  if (mobile) {
-    await page.keyboard.press("Escape");
-  }
 }
 
 function collectRuntimeFailures(page: Page) {
