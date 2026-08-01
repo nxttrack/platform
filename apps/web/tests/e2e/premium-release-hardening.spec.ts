@@ -125,7 +125,7 @@ test.describe("premium release hardening", () => {
     const failures = collectRuntimeFailures(page);
     await signIn(page, requiredEnv("E2E_PARENT_EMAIL"), requiredEnv("E2E_PARENT_PASSWORD"), "/portaal/profiel");
 
-    await expectHeading(page, "Profiel en voorkeuren");
+    await expectHeading(page, "Profiel & meer");
     await expect(page.getByRole("heading", { name: "Directe, veilige updates" })).toBeVisible();
     await expect(page.getByText("Expliciete toestemming per apparaat", { exact: true })).toBeVisible();
 
