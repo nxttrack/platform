@@ -121,7 +121,7 @@ test.describe("Communicationhub and Badge Studio", () => {
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal/ontwikkeling/badges");
 
     await expect(page.getByRole("heading", { level: 1, name: "Badges" })).toBeVisible();
-    await expect(page.getByText(phase.expected.participantName, { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: phase.expected.participantName })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Mijn badgevoorkeuren" })).toBeVisible();
     await expect(page.getByRole("checkbox", { name: "Badge-e-mails" })).toBeVisible();
     await assertNoCriticalAccessibilityIssues(page);
