@@ -40,7 +40,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     let assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment).toHaveCount(1);
     await expect(assessment.getByRole("radio")).toHaveCount(5);
-    await assessment.getByRole("radio", { name: /5 van 5/ }).check();
+    await chooseAssessmentRating(assessment, 5);
     await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
     await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
     await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
@@ -68,7 +68,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment.getByRole("radio")).toHaveCount(5);
-    await assessment.getByRole("radio", { name: /4 van 5/ }).check();
+    await chooseAssessmentRating(assessment, 4);
     await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
     await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
     await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
@@ -96,6 +96,12 @@ async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string)
   const confirmedRedirect = page.waitForURL((url) => url.searchParams.get("saved") === saved, { timeout: 15_000 });
   await submit.click();
   await confirmedRedirect;
+}
+
+async function chooseAssessmentRating(assessment: Locator, value: 1 | 2 | 3 | 4 | 5) {
+  const radio = assessment.getByRole("radio", { name: new RegExp(`${value} van 5`) });
+  await radio.locator("..").click();
+  await expect(radio).toBeChecked();
 }
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
