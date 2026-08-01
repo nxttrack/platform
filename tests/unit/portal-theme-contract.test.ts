@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -58,3 +59,29 @@ test("badgeboards van onvolledige families blijven review met eigen fallback", (
     assert.equal(theme.badges.fallbackRecipe, expectedFallback[key as keyof typeof expectedFallback]);
   }
 });
+
+test("interactieve themakleuren halen WCAG AA met witte tekst", () => {
+  const globals = readFileSync(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");
+  assert.match(globals, /--primary:\s*var\(--portal-primary-strong\);/);
+  for (const theme of portalThemeCatalog) {
+    assert.ok(
+      contrastRatio(theme.tokens.color.primaryStrong, "#FFFFFF") >= 4.5,
+      `${theme.theme.key} primaryStrong must meet WCAG AA`
+    );
+  }
+});
+
+function contrastRatio(first: string, second: string) {
+  const [lighter, darker] = [relativeLuminance(first), relativeLuminance(second)].sort((a, b) => b - a);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+
+function relativeLuminance(hex: string) {
+  const channels = hex.slice(1).match(/.{2}/g);
+  assert.ok(channels);
+  const [red, green, blue] = channels.map((channel) => {
+    const value = Number.parseInt(channel, 16) / 255;
+    return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+}

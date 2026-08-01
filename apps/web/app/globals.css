@@ -73,7 +73,7 @@
   --card-foreground: var(--portal-text);
   --popover: var(--portal-surface);
   --popover-foreground: var(--portal-text);
-  --primary: var(--portal-primary);
+  --primary: var(--portal-primary-strong);
   --secondary: var(--portal-secondary);
   --muted-foreground: var(--portal-text-muted);
   --sidebar: var(--portal-rail);
