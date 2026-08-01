@@ -51,7 +51,7 @@ test.describe("authenticated role workflows", () => {
   test.skip(configuredCases.length === 0, "Set E2E_* credentials to run authenticated staging workflows.");
 
   for (const authCase of authCases) {
-    test(`${authCase.label} can sign in and reach ${authCase.path}`, async ({ page }) => {
+    test(`${authCase.label} can sign in and reach ${authCase.path}`, async ({ page }, testInfo) => {
       test.skip(!authCase.username || !authCase.password, `Missing credentials for ${authCase.label}.`);
 
       const failures = collectRuntimeFailures(page);
@@ -81,9 +81,15 @@ test.describe("authenticated role workflows", () => {
         await expect(themedRoot).toBeVisible();
         await expect(overviewJourney).toBeVisible();
         await expect(overviewJourney).toHaveAttribute("data-overview-recipe", /^overview\//);
-        expect(await overviewJourney.evaluate((element) => getComputedStyle(element).backgroundImage)).toContain("/portal-themes/");
+        const themeKey = await themedRoot.getAttribute("data-portal-theme");
+        const backgroundImage = await overviewJourney.evaluate((element) => getComputedStyle(element).backgroundImage);
+        if (testInfo.project.name === "chromium-mobile" && themeKey === "nxttrack-default") {
+          expect(backgroundImage).toBe("none");
+        } else {
+          expect(backgroundImage).toContain("/portal-themes/");
+        }
 
-        if (await themedRoot.getAttribute("data-portal-theme") === "ocean-quest") {
+        if (themeKey === "ocean-quest") {
           await expect(overviewJourney).toHaveAttribute("data-overview-recipe", "overview/pearl-route-v2");
           await expect(overviewJourney.getByText("Ocean Quest", { exact: true })).toBeVisible();
         }

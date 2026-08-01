@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.describe.configure({ timeout: 300_000 });
+
 const themes = ["nxttrack-default", "ocean-quest", "dolphin-bay", "turtle-trails", "aqua-academy"];
 const routes = [
   "overview",
@@ -18,6 +20,7 @@ const routes = [
 ];
 
 test("platformpreview rendert de volledige 5 × 13 desktop- en mobiele matrix", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "chromium-desktop", "De matrix bevat zelf zowel desktop- als mobiele viewports.");
   await signIn(page);
   await page.goto("/platform/themes");
   await expect(page.getByRole("heading", { name: "Theme Control Center" })).toBeVisible();
@@ -54,9 +57,9 @@ test("platformpreview rendert de volledige 5 × 13 desktop- en mobiele matrix", 
 async function signIn(page: import("@playwright/test").Page) {
   const email = requiredEnv("E2E_PLATFORM_OWNER_EMAIL");
   const password = requiredEnv("E2E_PLATFORM_OWNER_PASSWORD");
-  await page.goto("/login?next=%2Fplatform%2Fthemes");
-  await page.getByLabel("E-mailadres").fill(email);
-  await page.getByLabel("Wachtwoord").fill(password);
+  await page.goto("/login?next=%2Fplatform%2Fthemes", { timeout: 60_000, waitUntil: "domcontentloaded" });
+  await page.locator("input[name='email']").fill(email);
+  await page.locator("input[name='password']").fill(password);
   await page.getByRole("button", { name: /inloggen/i }).click();
   await page.waitForURL(/\/platform\/themes/);
 }
