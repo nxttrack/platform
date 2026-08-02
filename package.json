@@ -27,7 +27,7 @@
     "themes:import-handoff": "node scripts/theme/import-five-theme-handoff-assets.mjs",
     "themes:export-native": "tsx scripts/theme/export-native-theme-tokens.ts",
     "test:portal-themes": "tsx --test tests/unit/portal-theme-contract.test.ts tests/unit/portal-theme-five-by-thirteen.test.ts tests/unit/learner-assessment-contract.test.ts tests/unit/portal-theme-schema.test.ts",
-    "test:swim-canon": "tsx --test tests/unit/swim-progress-contract.test.ts tests/unit/swim-permissions-contract.test.ts tests/unit/swim-canon-schema.test.ts tests/unit/swim-assessment-schema.test.ts tests/unit/swim-badge-batch-schema.test.ts",
+    "test:swim-canon": "tsx --test tests/unit/swim-progress-contract.test.ts tests/unit/swim-permissions-contract.test.ts tests/unit/swim-canon-schema.test.ts tests/unit/swim-assessment-schema.test.ts tests/unit/swim-badge-batch-schema.test.ts tests/unit/swim-curriculum-wizard-schema.test.ts",
     "test:swim-canon:db": "node scripts/db/test-swim-canon-integration.mjs",
     "test:portal-themes:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/portal-theme-visual-matrix.spec.ts --project=chromium-desktop --retries=0",
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
