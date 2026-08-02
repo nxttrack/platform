@@ -12,7 +12,8 @@ const testFiles = [
   "swim_canon_curriculum_wizard_integration.sql",
   "swim_canon_transition_carryover_integration.sql",
   "swim_canon_group_planning_integration.sql",
-  "swim_canon_billing_offerings_holidays_integration.sql"
+  "swim_canon_billing_offerings_holidays_integration.sql",
+  "swim_canon_analytics_forecast_integration.sql"
 ];
 const connectionString =
   process.env.SWIM_CANON_TEST_DATABASE_URL ??
@@ -25,7 +26,7 @@ try {
     const sql = await readFile(path.join(root, "tests/sql", testFile), "utf8");
     await client.query(sql);
   }
-  console.log("[test:swim-canon:db] PASS progress, badges, immutable curriculum publication, migration parity, reviewed transitions, referenced carryover, structured planning, VAT documents, credit notes, paid offering holds, verified placement, non-destructive holidays, DST, hierarchy, capacity buckets and idempotency.");
+  console.log("[test:swim-canon:db] PASS progress, badges, immutable curriculum publication, migration parity, reviewed transitions, referenced carryover, structured planning, VAT documents, credit notes, paid offering holds, verified placement, non-destructive holidays, rolling analytics, lifecycle reconciliation, deterministic forecasts, reviewed soft holds, forecast accuracy, DST, hierarchy, capacity buckets and idempotency.");
 } finally {
   await client.end();
 }
