@@ -9,6 +9,10 @@ import {
   legacyNormalizedAssessmentScore,
   parseAssessmentValue
 } from "../../packages/swim-domain/src/progress";
+import {
+  latestFinalObservations,
+  validateCorrectionChain
+} from "../../packages/swim-domain/src/assessment";
 
 test("beoordelingen zijn uitsluitend integer 1–5 of null", () => {
   for (const value of [1, 2, 3, 4, 5, null] as const) assert.equal(parseAssessmentValue(value), value);
@@ -69,4 +73,52 @@ test("een curriculum met één badje toont alleen diploma; meerdere tonen exact 
   };
   assert.deepEqual(buildJourneyRings({ ...shared, stageCount: 1 }).map((ring) => ring.kind), ["diploma"]);
   assert.deepEqual(buildJourneyRings({ ...shared, stageCount: 3 }).map((ring) => ring.kind), ["stage", "diploma"]);
+});
+
+test("de laatste definitieve niet-ingetrokken observatie bepaalt progressie, ook bij scoreverlaging", () => {
+  const observations = [
+    {
+      id: "first",
+      itemKey: "float",
+      rating: 5 as const,
+      observedAt: "2026-08-01T10:00:00.000Z",
+      createdAt: "2026-08-01T10:00:01.000Z"
+    },
+    {
+      id: "correction",
+      itemKey: "float",
+      rating: 3 as const,
+      observedAt: "2026-08-01T10:00:00.000Z",
+      createdAt: "2026-08-01T10:02:00.000Z",
+      correctsObservationId: "first"
+    }
+  ];
+  assert.equal(validateCorrectionChain(observations).valid, true);
+  assert.equal(latestFinalObservations(observations).get("float")?.rating, 3);
+});
+
+test("correctieketens weigeren cycli, ontbrekende voorgangers en cross-itemcorrecties", () => {
+  const base = {
+    rating: 4 as const,
+    observedAt: "2026-08-01T10:00:00.000Z",
+    createdAt: "2026-08-01T10:00:00.000Z"
+  };
+  assert.deepEqual(
+    validateCorrectionChain([{ ...base, id: "a", itemKey: "a", correctsObservationId: "missing" }]),
+    { valid: false, reason: "missing_predecessor" }
+  );
+  assert.deepEqual(
+    validateCorrectionChain([
+      { ...base, id: "a", itemKey: "a", correctsObservationId: "b" },
+      { ...base, id: "b", itemKey: "a", correctsObservationId: "a" }
+    ]),
+    { valid: false, reason: "cycle" }
+  );
+  assert.deepEqual(
+    validateCorrectionChain([
+      { ...base, id: "a", itemKey: "a" },
+      { ...base, id: "b", itemKey: "b", correctsObservationId: "a" }
+    ]),
+    { valid: false, reason: "cross_item_correction" }
+  );
 });
