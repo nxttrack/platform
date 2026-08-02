@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getActiveTenant,
@@ -209,6 +210,12 @@ export type InstructorData = {
 
 export async function getInstructorData(): Promise<InstructorData> {
   const context = await requirePrivateShellContext("/instructor");
+  return getInstructorDataForContext(context);
+}
+
+export async function getInstructorDataForContext(
+  context: AuthenticatedTrustedAuthContext
+): Promise<InstructorData> {
   const tenant = getActiveTenant(context);
   const canManageTenant = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin" || role === "tenant_staff") ?? false;
   const admin = createAdminClient();

@@ -7,6 +7,7 @@ export const swimPermissionKeys = [
   "assessment.read",
   "assessment.record",
   "assessment.correct",
+  "attendance.record",
   "transition.review",
   "transition.approve",
   "transition.execute",
@@ -59,6 +60,7 @@ export function defaultPermissionsForRole(role: TenantRole): ReadonlySet<SwimPer
       ...readPermissions,
       "assessment.record",
       "assessment.correct",
+      "attendance.record",
       "transition.review",
       "carryover.complete_previous",
       "badge.award"

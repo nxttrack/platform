@@ -339,11 +339,23 @@ export async function getAdminCommunicationHub(): Promise<AdminCommunicationHubD
 
 export async function getParentCommunicationHub(): Promise<ScopedCommunicationHubData> {
   const context = await requirePrivateShellContext("/portaal/berichten");
-  return getScopedCommunicationHub(context, "parent");
+  return getParentCommunicationHubForContext(context);
 }
 
 export async function getInstructorCommunicationHub(): Promise<ScopedCommunicationHubData> {
   const context = await requirePrivateShellContext("/instructor/berichten");
+  return getInstructorCommunicationHubForContext(context);
+}
+
+export function getParentCommunicationHubForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
+  return getScopedCommunicationHub(context, "parent");
+}
+
+export function getInstructorCommunicationHubForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   return getScopedCommunicationHub(context, "instructor");
 }
 

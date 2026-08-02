@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 import {
@@ -93,6 +94,12 @@ export async function getAdminParticipantMediaData(participantId: string) {
 
 export async function getParentParticipantMediaData() {
   const context = await requirePrivateShellContext("/portaal/media");
+  return getParentParticipantMediaDataForContext(context);
+}
+
+export async function getParentParticipantMediaDataForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
   const [guardianLinksResult, legacyParticipantsResult] = await Promise.all([

@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BadgeStudioAsset } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
@@ -110,6 +111,12 @@ export async function getTenantBadgeData() {
 
 export async function getParentBadgeWallData() {
   const context = await requirePrivateShellContext("/portaal/badges");
+  return getParentBadgeWallDataForContext(context);
+}
+
+export async function getParentBadgeWallDataForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   const tenant = getActiveTenant(context);
   if (!context.activeTenant?.roles.includes("parent")) redirect("/portaal?error=forbidden");
   const admin = createAdminClient();

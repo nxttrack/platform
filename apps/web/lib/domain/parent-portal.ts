@@ -467,6 +467,12 @@ export type ParentPortalData = {
 
 export async function getParentPortalData(): Promise<ParentPortalData> {
   const context = await requirePrivateShellContext("/portaal");
+  return getParentPortalDataForContext(context);
+}
+
+export async function getParentPortalDataForContext(
+  context: AuthenticatedTrustedAuthContext
+): Promise<ParentPortalData> {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
   const access = await loadParentParticipantAccess(tenant.id, context.user.id);
