@@ -8,7 +8,7 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
-import { saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
+import { saveTenantBillingProfileAction, saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type PageProps = {
@@ -26,6 +26,26 @@ type TenantSettingsRow = {
   timezone: string | null;
 };
 
+type TenantBillingProfileRow = {
+  address_line_1: string | null;
+  address_line_2: string | null;
+  billing_email: string | null;
+  chamber_of_commerce_number: string | null;
+  city: string | null;
+  country_code: string;
+  credit_note_prefix: string;
+  default_vat_rate_basis_points: number;
+  iban: string | null;
+  invoice_prefix: string;
+  legal_name: string;
+  payment_terms_days: number;
+  phone: string | null;
+  postal_code: string | null;
+  trade_name: string | null;
+  vat_number: string | null;
+  vat_scheme: string;
+};
+
 const sectorOptions = [
   { label: "Zwemschool", value: "swim_school" },
   { label: "Voetbalschool", value: "football_school" },
@@ -39,18 +59,18 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const saved = getParam(params, "saved") === "1";
+  const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const context = await requirePrivateShellContext("/admin/instellingen");
   const tenant = getActiveTenant(context);
-  const settings = await loadSettings(tenant.id);
+  const [settings, billingProfile] = await Promise.all([loadSettings(tenant.id), loadBillingProfile(tenant.id, tenant.name)]);
   const canManage = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   return (
     <div className="space-y-5">
       <PageHeader kicker="Beheer" subtitle={`Beheer configuratie, beleid, analytics en privacy voor ${tenant.name}.`} title="Instellingen" />
 
-      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Instellingen zijn opgeslagen.</p> : null}
+      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "billing" ? "Bedrijfs- en btw-gegevens zijn opgeslagen." : "Instellingen zijn opgeslagen."}</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessage(error)}</p> : null}
 
       <AdminListSurface>
@@ -139,6 +159,52 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
           {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Instellingen opslaan</SubmitButton></div> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
         </DirtyForm>
       </AdminListSurface>
+
+      <AdminListSurface>
+        <DirtyForm action={saveTenantBillingProfileAction} className="grid gap-5">
+          <SettingsPanel
+            action={<StatusPill tone={billingProfile.complete ? "success" : "warning"}>{billingProfile.complete ? "Facturatie gereed" : "Aanvullen vereist"}</StatusPill>}
+            description="Deze gegevens worden bij uitgifte vastgelegd op de definitieve factuur of creditnota. Prijzen zijn inclusief btw; 21% is de standaard."
+            title="Bedrijfsgegevens, facturen en btw"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field defaultValue={billingProfile.legal_name} label="Juridische naam" name="legalName" required />
+              <Field defaultValue={billingProfile.trade_name ?? ""} label="Handelsnaam" name="tradeName" />
+              <Field defaultValue={billingProfile.address_line_1 ?? ""} label="Adres" name="addressLine1" required />
+              <Field defaultValue={billingProfile.address_line_2 ?? ""} label="Adresregel 2" name="addressLine2" />
+              <Field defaultValue={billingProfile.postal_code ?? ""} label="Postcode" name="postalCode" required />
+              <Field defaultValue={billingProfile.city ?? ""} label="Plaats" name="city" required />
+              <Field defaultValue={billingProfile.country_code} label="Landcode" name="countryCode" required />
+              <Field defaultValue={billingProfile.billing_email ?? ""} label="Facturatie-e-mail" name="billingEmail" required type="email" />
+              <Field defaultValue={billingProfile.chamber_of_commerce_number ?? ""} label="KvK-nummer" name="chamberOfCommerceNumber" />
+              <Field defaultValue={billingProfile.vat_number ?? ""} label="Btw-nummer" name="vatNumber" />
+              <Field defaultValue={billingProfile.iban ?? ""} label="IBAN" name="iban" />
+              <Field defaultValue={billingProfile.phone ?? ""} label="Telefoon" name="billingPhone" />
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">
+                Btw-regeling
+                <select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring" defaultValue={billingProfile.vat_scheme} disabled={!canManage} name="vatScheme">
+                  <option value="standard">Standaard btw</option>
+                  <option value="exempt">Vrijgesteld</option>
+                  <option value="small_business">Kleineondernemersregeling</option>
+                </select>
+              </label>
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">
+                Standaard btw-tarief
+                <select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring" defaultValue={String(billingProfile.default_vat_rate_basis_points)} disabled={!canManage} name="defaultVatRateBasisPoints">
+                  <option value="2100">21%</option>
+                  <option value="900">9%</option>
+                  <option value="0">0%</option>
+                </select>
+              </label>
+              <Field defaultValue={billingProfile.invoice_prefix} label="Factuurprefix" name="invoicePrefix" required />
+              <Field defaultValue={billingProfile.credit_note_prefix} label="Creditnotaprefix" name="creditNotePrefix" required />
+              <Field defaultValue={billingProfile.payment_terms_days} label="Betaaltermijn in dagen" name="paymentTermsDays" type="number" />
+              <ReadOnlyField label="Prijsmodel" value="Consumentenprijs inclusief btw" />
+            </div>
+          </SettingsPanel>
+          {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Factuurprofiel opslaan</SubmitButton></div> : null}
+        </DirtyForm>
+      </AdminListSurface>
     </div>
   );
 }
@@ -166,6 +232,44 @@ async function loadSettings(tenantId: string) {
     locale: row?.locale ?? "nl-NL",
     terminology_sector: row?.terminology_sector ?? "swim_school",
     timezone: row?.timezone ?? "Europe/Amsterdam"
+  };
+}
+
+async function loadBillingProfile(tenantId: string, tenantName: string) {
+  const { data, error } = await createAdminClient()
+    .from("tenant_billing_profiles")
+    .select("legal_name, trade_name, address_line_1, address_line_2, postal_code, city, country_code, chamber_of_commerce_number, vat_number, iban, billing_email, phone, vat_scheme, default_vat_rate_basis_points, invoice_prefix, credit_note_prefix, payment_terms_days")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Could not load billing profile: ${error.message}`);
+  }
+
+  const row = data as TenantBillingProfileRow | null;
+  const profile = row ?? {
+    address_line_1: null,
+    address_line_2: null,
+    billing_email: null,
+    chamber_of_commerce_number: null,
+    city: null,
+    country_code: "NL",
+    credit_note_prefix: "CN",
+    default_vat_rate_basis_points: 2100,
+    iban: null,
+    invoice_prefix: "INV",
+    legal_name: tenantName,
+    payment_terms_days: 14,
+    phone: null,
+    postal_code: null,
+    trade_name: null,
+    vat_number: null,
+    vat_scheme: "standard"
+  };
+
+  return {
+    ...profile,
+    complete: Boolean(profile.address_line_1 && profile.postal_code && profile.city && profile.billing_email)
   };
 }
 
@@ -200,6 +304,8 @@ function errorMessage(error: string) {
   const messages: Record<string, string> = {
     forbidden: "Je hebt geen rechten om deze instellingen te wijzigen.",
     analytics_id: "Vul een geldig GA4-meet-ID in, bijvoorbeeld G-XXXXXXXXXX, of schakel analytics uit.",
+    billing_profile: "Vul de verplichte bedrijfs- en facturatiegegevens correct in.",
+    billing_profile_save: "Het factuurprofiel kon niet worden opgeslagen.",
     save_failed: "Instellingen opslaan is niet gelukt."
   };
 

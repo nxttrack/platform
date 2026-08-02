@@ -398,6 +398,10 @@ export type ParentBillingInvoiceRow = {
   currency: string;
   export_status: string;
   notes: string | null;
+  document_type: "invoice" | "credit_note";
+  original_invoice_id: string | null;
+  default_vat_rate_basis_points: number;
+  finalized_at: string | null;
   created_at: string;
 };
 
@@ -410,6 +414,9 @@ export type ParentBillingInvoiceLineRow = {
   unit_amount_cents: number;
   tax_rate_basis_points: number;
   total_cents: number;
+  net_amount_cents: number;
+  vat_amount_cents: number;
+  gross_amount_cents: number;
   sort_order: number;
 };
 
@@ -648,7 +655,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("billing_invoices")
-          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, created_at")
+          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, document_type, original_invoice_id, default_vat_rate_basis_points, finalized_at, created_at")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("created_at", { ascending: false })
@@ -699,7 +706,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     invoiceIds.length > 0
       ? await admin
           .from("billing_invoice_lines")
-          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, sort_order")
+          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, net_amount_cents, vat_amount_cents, gross_amount_cents, sort_order")
           .eq("tenant_id", tenant.id)
           .in("invoice_id", invoiceIds)
           .order("sort_order")

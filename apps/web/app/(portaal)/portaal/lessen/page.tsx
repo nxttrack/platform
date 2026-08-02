@@ -1,6 +1,8 @@
-import { ArrowRight, CalendarCheck, CalendarX, CheckCircle2, Clock, GraduationCap, MapPin, RefreshCcw, XCircle } from "lucide-react";
+import { randomUUID } from "node:crypto";
+import { ArrowRight, CalendarCheck, CalendarX, CheckCircle2, Clock, CreditCard, GraduationCap, MapPin, RefreshCcw, XCircle } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { SelectField } from "@/components/admin/domain-ui";
 import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { WaitTimeChip } from "@/components/public/wait-time-chip";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -11,6 +13,8 @@ import { getParentCatchUpData } from "@/lib/domain/catch-up";
 import { cancelLessonAction, requestCatchUpSessionAction, respondGraduationInviteAction } from "@/lib/domain/parent-portal-actions";
 import { canCancelSession, canParentMutateParticipant, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
+import { reserveTemporaryOfferingAction } from "@/lib/domain/temporary-offering-actions";
+import { calculateOfferingDisplayPrice, loadParentTemporaryOfferings } from "@/lib/domain/temporary-offerings";
 import type { SessionRow } from "@/lib/domain/core";
 
 type PageProps = { searchParams?: Promise<ParentPortalSearchParams> };
@@ -22,6 +26,12 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
   const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
   const visibleParticipantIds = new Set(selectedParticipantId ? [selectedParticipantId] : data.participants.map((participant) => participant.id));
+  const visibleEnrollments = data.enrollments.filter((enrollment) => visibleParticipantIds.has(enrollment.participant_id));
+  const temporaryOfferings = await loadParentTemporaryOfferings({
+    enrollmentIds: visibleEnrollments.map((enrollment) => enrollment.id),
+    participantIds: [...visibleParticipantIds],
+    tenantId: data.tenant.id
+  });
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
@@ -50,7 +60,8 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
         items={[
           { active: true, href: participantContextHref("/portaal/planning#lessen", selectedParticipantId), label: "Lessen" },
           { href: participantContextHref("/portaal/planning#inhalen", selectedParticipantId), label: "Inhalen" },
-          { href: participantContextHref("/portaal/planning#afzwemmen", selectedParticipantId), label: "Afzwemmen" }
+          { href: participantContextHref("/portaal/planning#afzwemmen", selectedParticipantId), label: "Afzwemmen" },
+          { href: participantContextHref("/portaal/planning#aanbod", selectedParticipantId), label: "Vakantieaanbod" }
         ]}
         label="Planning onderdelen"
       />
@@ -62,6 +73,89 @@ export default async function ParentLessonsPage({ searchParams }: PageProps) {
       </div>
 
       <div className="flex flex-col gap-6">
+      <section className="order-4 scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-soft" id="aanbod">
+        <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-bold text-foreground">Vakantie- en turboaanbod</h2>
+            <p className="mt-1 text-sm text-muted-foreground">Tijdelijke cursussen met een echte capaciteitsreservering en veilige betaling.</p>
+          </div>
+          <StatusPill tone={temporaryOfferings.offerings.length ? "info" : "neutral"}>{temporaryOfferings.offerings.length} beschikbaar</StatusPill>
+        </div>
+        {temporaryOfferings.offerings.length === 0 ? (
+          <EmptyState>Er staat nu geen passend vakantie- of turboaanbod open.</EmptyState>
+        ) : (
+          <div className="grid gap-3 xl:grid-cols-2">
+            {temporaryOfferings.offerings.map((offering) => {
+              const group = temporaryOfferings.groups.find((item) => item.id === offering.group_id);
+              const occurrences = temporaryOfferings.sessions.filter((session) => session.group_id === offering.group_id);
+              const eligibleEnrollments = visibleEnrollments.filter((enrollment) => enrollment.program_id === group?.program_id && ["active", "paused"].includes(enrollment.status));
+              const registrations = temporaryOfferings.registrations.filter((registration) => registration.offering_id === offering.id);
+              const totalPrice = calculateOfferingDisplayPrice(offering, occurrences.length);
+
+              return (
+                <article className="rounded-xl border border-border bg-background p-4" key={offering.id}>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-primary">{group?.offering_type?.replaceAll("_", " ") ?? "Tijdelijk aanbod"}</p>
+                      <h3 className="mt-1 text-lg font-bold text-foreground">{offering.title}</h3>
+                      {offering.description ? <p className="mt-1 text-sm leading-6 text-muted-foreground">{offering.description}</p> : null}
+                    </div>
+                    <StatusPill tone={offering.pricing_model === "free" ? "success" : "info"}>
+                      {offering.pricing_model === "free" ? "Gratis" : formatCurrency(totalPrice, offering.currency)}
+                    </StatusPill>
+                  </div>
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                    <PlanningDetail icon={<CalendarCheck className="size-4" />} label="Lesmomenten" value={`${occurrences.length} lessen`} />
+                    <PlanningDetail icon={<CreditCard className="size-4" />} label="Betaling" value={paymentModeLabel(offering.payment_mode)} />
+                    {occurrences[0] ? <PlanningDetail icon={<Clock className="size-4" />} label="Eerste les" value={formatDateTime(occurrences[0].starts_at)} /> : null}
+                    <PlanningDetail icon={<CheckCircle2 className="size-4" />} label="Voorwaarden" value={offering.terms_version} />
+                  </div>
+                  {eligibleEnrollments.length === 0 ? (
+                    <p className="mt-4 rounded-lg border border-warning/20 bg-warning/5 p-3 text-sm text-muted-foreground">Dit aanbod sluit niet aan op een actieve inschrijving.</p>
+                  ) : (
+                    <div className="mt-4 grid gap-3">
+                      {eligibleEnrollments.map((enrollment) => {
+                        const participant = participantById.get(enrollment.participant_id);
+                        const registration = registrations.find((item) => item.enrollment_id === enrollment.id);
+
+                        return (
+                          <div className="rounded-lg border border-border bg-muted/20 p-3" key={enrollment.id}>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-sm font-bold text-foreground">{participant?.display_name ?? "Kind"}</p>
+                              {registration ? <StatusPill tone={registration.status === "confirmed" ? "success" : registration.status === "payment_review" ? "danger" : "warning"}>{registrationStatusLabel(registration.status)}</StatusPill> : null}
+                            </div>
+                            {registration?.hold_expires_at ? <p className="mt-1 text-xs text-muted-foreground">Plaats gereserveerd tot {formatDateTime(registration.hold_expires_at)}.</p> : null}
+                            {!registration && canParentMutateParticipant(data, enrollment.participant_id) ? (
+                              <form action={reserveTemporaryOfferingAction} className="mt-3 grid gap-3">
+                                <input name="offeringId" type="hidden" value={offering.id} />
+                                <input name="enrollmentId" type="hidden" value={enrollment.id} />
+                                <input name="idempotencyKey" type="hidden" value={randomUUID()} />
+                                <SelectField label="Plaatssoort" name="capacityBucket">
+                                  <option value="regular">Reguliere plaats</option>
+                                  <option value="flex">Flexplaats</option>
+                                  <option value="trial">Proefplaats</option>
+                                </SelectField>
+                                <label className="flex min-h-11 items-start gap-3 rounded-lg border border-border bg-background p-3 text-xs leading-5 text-muted-foreground">
+                                  <input className="mt-0.5 size-4" name="termsAccepted" required type="checkbox" value="accepted" />
+                                  Ik accepteer voorwaardenversie {offering.terms_version} en begrijp dat een betaalde plaats pas definitief is na geverifieerde betaling.
+                                </label>
+                                <button className="min-h-11 rounded-lg bg-primary px-4 text-sm font-bold text-primary-foreground" type="submit">
+                                  {offering.payment_mode === "direct_mollie" ? "Reserveer en betaal via Mollie" : offering.payment_mode === "free" ? "Definitief inschrijven" : "Plaats reserveren"}
+                                </button>
+                              </form>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
+
       <section className="order-2 scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-soft" id="inhalen">
         <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -299,6 +393,9 @@ function Metric({ icon, label, value }: { icon: ReactNode; label: string; value:
 }
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
+  if (saved === "offering-confirmed") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">De plaats in de tijdelijke cursus is definitief bevestigd.</p>;
+  }
   if (saved === "confirmed") {
     return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Afzwemuitnodiging bevestigd.</p>;
   }
@@ -324,7 +421,12 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
   }
 
   if (error) {
-    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">Actie is niet gelukt: {error}.</p>;
+    const message = error === "offering-full"
+      ? "Deze plaatssoort is intussen vol. Er is niets afgeschreven."
+      : error.startsWith("offering")
+        ? "De cursusplaats kon niet veilig worden gereserveerd. Probeer opnieuw of neem contact op met de zwemschool."
+        : `Actie is niet gelukt: ${error}.`;
+    return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">{message}</p>;
   }
 
   return null;
@@ -344,6 +446,29 @@ function formatDate(value: string) {
 
 function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function formatCurrency(cents: number, currency: string) {
+  return new Intl.NumberFormat("nl-NL", { currency, style: "currency" }).format(cents / 100);
+}
+
+function paymentModeLabel(value: string) {
+  return {
+    direct_mollie: "Direct via Mollie",
+    free: "Geen betaling",
+    manual: "Handmatige betaling",
+    periodic_debit: "Periodieke incasso"
+  }[value] ?? value;
+}
+
+function registrationStatusLabel(value: string) {
+  return {
+    confirmed: "Bevestigd",
+    expired: "Verlopen",
+    held: "Gereserveerd",
+    payment_review: "Betaling controleren",
+    pending_payment: "Wacht op betaling"
+  }[value] ?? value;
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {
