@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { FivePointAssessment } from "@/components/assessments/five-point-assessment";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { InstructorBadgeAwardForm } from "@/components/badges/instructor-badge-award-form";
+import { SwimJourneyRings } from "@/components/progress/swim-journey-rings";
 import { Button } from "@/components/ui/button";
 import { Field as FieldRoot, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
 import { getInstructorData } from "@/lib/domain/instructor";
+import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
 import { markInstructorReadinessRecommendationAction } from "@/lib/domain/learning-intelligence-actions";
 import { calculateDiplomaReadiness, detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
 import { getPositiveScoreLabel } from "@/lib/domain/progress-template";
@@ -47,6 +49,13 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   const badgeAwards = data.badgeAwards.filter((badge) => badge.participant_id === participant.id);
   const scores = data.progressScores.filter((score) => score.participant_id === participant.id);
   const scoreByItemId = new Map(scores.map((score) => [score.item_id, score]));
+  const canonicalJourney = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
+  const canonicalObservationByItemId = new Map(
+    (canonicalJourney?.effectiveObservations ?? []).map((observation) => [
+      observation.curriculum_item_id,
+      observation
+    ])
+  );
   const progressModules = data.progressModules.filter((module) => {
     const matchesProgram = !module.program_id || module.program_id === enrollment?.program_id;
     const matchesStage = !module.stage_id || module.stage_id === enrollment?.current_stage_id;
@@ -56,6 +65,34 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   const itemsByModuleId = new Map(
     progressModules.map((module) => [module.id, data.progressItems.filter((item) => item.module_id === module.id && item.status === "active")])
   );
+  const progressSections = canonicalJourney
+    ? canonicalJourney.currentStage
+      ? [{
+          canonical: true as const,
+          description: canonicalJourney.currentStage.description,
+          id: canonicalJourney.currentStage.id,
+          items: canonicalJourney.currentStageItems.map((item) => ({
+            currentObservation: canonicalObservationByItemId.get(item.id) ?? null,
+            id: item.id,
+            name: item.name,
+            positiveGoal: item.description
+          })),
+          name: canonicalJourney.currentStage.name
+        }]
+      : []
+    : progressModules.map((module) => ({
+        canonical: false as const,
+        description: module.description,
+        id: module.id,
+        items: (itemsByModuleId.get(module.id) ?? []).map((item) => ({
+          currentObservation: null,
+          id: item.id,
+          name: item.name,
+          positiveGoal: item.positive_goal
+        })),
+        name: module.name
+      }));
+  const scoreCount = canonicalJourney ? canonicalJourney.effectiveObservations.length : scores.length;
   const [attendanceRisks, diplomaReadiness] = await Promise.all([
     detectAttendanceRisks(data.tenant.id, { includeTestData: participant.is_test }),
     enrollment && program && !participant.is_test
@@ -88,7 +125,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         </div>
       </article>
 
-      {data.progressModules.length === 0 ? (
+      {data.progressModules.length === 0 && !canonicalJourney ? (
         <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
           <h2 className="text-lg font-bold text-foreground">Zwemsjabloon</h2>
           <p className="mt-2 text-sm leading-6 text-muted-foreground">Installeer de standaard NXTTRACK zwemmodules, score-items en badgecatalogus voor deze organisatie.</p>
@@ -130,30 +167,30 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
           <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
             <section className="grid content-start gap-3">
               <Detail label="Programma" value={program?.name ?? "Niet gezet"} />
-              <Detail label="Badje" value={stage?.badge_label ?? stage?.name ?? "Niet gezet"} />
-              <Detail label="Scores" value={String(scores.length)} />
+              <Detail label="Badje" value={canonicalJourney?.currentStage?.name ?? stage?.badge_label ?? stage?.name ?? "Niet gezet"} />
+              <Detail label="Scores" value={String(scoreCount)} />
               <Detail label="Notities en badges" value={`${notes.length} notities · ${badgeAwards.length} badges`} />
             </section>
             <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-bold text-foreground">Huidige voortgang</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">De laatst opgeslagen beoordeling per onderdeel.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">De laatste definitieve beoordeling per onderdeel; dekking blijft afzonderlijk zichtbaar.</p>
                 </div>
-                <StatusPill tone={scores.length > 0 ? "success" : "neutral"}>{scores.length} scores</StatusPill>
+                <StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill>
               </div>
+              {canonicalJourney ? <SwimJourneyRings className="mt-5" rings={canonicalJourney.rings} /> : null}
               <div className="mt-4 space-y-4">
-                {progressModules.length === 0 ? <EmptyState>Er zijn nog geen actieve voortgangsmodules.</EmptyState> : null}
-                {progressModules.map((module) => {
-                  const items = itemsByModuleId.get(module.id) ?? [];
-
-                  return (
-                    <section className="rounded-lg border border-border bg-white p-4" key={module.id}>
-                      <h3 className="font-bold text-foreground">{module.name}</h3>
+                {progressSections.length === 0 ? <EmptyState>Er zijn nog geen actieve voortgangsonderdelen.</EmptyState> : null}
+                {progressSections.map((section) => (
+                    <section className="rounded-lg border border-border bg-white p-4" key={section.id}>
+                      <h3 className="font-bold text-foreground">{section.name}</h3>
                       <div className="mt-3 grid gap-2">
-                        {items.length === 0 ? <EmptyState>Deze module heeft nog geen items.</EmptyState> : null}
-                        {items.map((item) => {
-                          const currentScore = scoreByItemId.get(item.id);
+                        {section.items.length === 0 ? <EmptyState>Dit badje heeft nog geen onderdelen.</EmptyState> : null}
+                        {section.items.map((item) => {
+                          const currentScore = section.canonical
+                            ? item.currentObservation?.rating ?? null
+                            : scoreByItemId.get(item.id)?.score ?? null;
 
                           return (
                             <div className="grid gap-2 rounded-lg bg-muted/50 px-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center" key={item.id}>
@@ -162,15 +199,14 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                                 display={assessmentDisplay}
                                 label={item.name}
                                 readOnly
-                                value={currentScore ? parseLearnerAssessmentValue(currentScore.score) : null}
+                                value={currentScore ? parseLearnerAssessmentValue(currentScore) : null}
                               />
                             </div>
                           );
                         })}
                       </div>
                     </section>
-                  );
-                })}
+                ))}
               </div>
             </article>
           </div>
@@ -181,47 +217,48 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h2 className="text-lg font-bold text-foreground">Progress modules</h2>
-                <p className="mt-1 text-sm text-muted-foreground">5-level scoring met positieve taal voor ouderupdates.</p>
+                <p className="mt-1 text-sm text-muted-foreground">Canonieke 1–5 beoordeling; een wijziging wordt als correctie toegevoegd en overschrijft nooit historie.</p>
               </div>
-              <StatusPill tone={scores.length > 0 ? "success" : "neutral"}>{scores.length} scores</StatusPill>
+              <StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill>
             </div>
             <div className="mt-4 space-y-4">
-              {progressModules.length === 0 ? <EmptyState>Installeer eerst het zwemsjabloon of koppel modules aan dit programma.</EmptyState> : null}
-              {progressModules.map((module) => {
-                const items = itemsByModuleId.get(module.id) ?? [];
-
-                return (
-                  <div className="rounded-lg border border-border bg-white p-3" key={module.id}>
+              {progressSections.length === 0 ? <EmptyState>Publiceer en koppel eerst een leerlijn aan deze inschrijving.</EmptyState> : null}
+              {progressSections.map((section) => (
+                  <div className="rounded-lg border border-border bg-white p-3" key={section.id}>
                     <div className="mb-3">
-                      <p className="font-bold text-foreground">{module.name}</p>
-                      {module.description ? <p className="mt-1 text-sm text-muted-foreground">{module.description}</p> : null}
+                      <p className="font-bold text-foreground">{section.name}</p>
+                      {section.description ? <p className="mt-1 text-sm text-muted-foreground">{section.description}</p> : null}
                     </div>
                     <div className="space-y-3">
-                      {items.length === 0 ? <EmptyState>Deze module heeft nog geen items.</EmptyState> : null}
-                      {items.map((item) => {
-                        const currentScore = scoreByItemId.get(item.id);
+                      {section.items.length === 0 ? <EmptyState>Dit badje heeft nog geen onderdelen.</EmptyState> : null}
+                      {section.items.map((item) => {
+                        const legacyScore = section.canonical ? null : scoreByItemId.get(item.id);
+                        const currentObservation = section.canonical ? item.currentObservation : null;
+                        const currentScore = currentObservation?.rating ?? legacyScore?.score ?? null;
 
                         return (
                           <form action={scoreProgressItemAction} className="rounded-lg border border-border bg-muted/30 p-3" key={item.id}>
                             <input name="participantId" type="hidden" value={participant.id} />
-                            <input name="moduleId" type="hidden" value={module.id} />
+                            {section.canonical ? null : <input name="moduleId" type="hidden" value={section.id} />}
                             <input name="itemId" type="hidden" value={item.id} />
+                            <input name="operationId" type="hidden" value={crypto.randomUUID()} />
+                            {currentObservation ? <input name="correctsObservationId" type="hidden" value={currentObservation.id} /> : null}
                             <input name="next" type="hidden" value={`/instructor/student/${participant.id}?tab=assessment`} />
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <p className="font-semibold text-foreground">{item.name}</p>
-                                {item.positive_goal ? <p className="mt-1 text-sm text-muted-foreground">{item.positive_goal}</p> : null}
+                                {item.positiveGoal ? <p className="mt-1 text-sm text-muted-foreground">{item.positiveGoal}</p> : null}
                               </div>
-                              {currentScore ? <StatusPill tone={scoreTone(currentScore.score)}>{getPositiveScoreLabel(currentScore.score)}</StatusPill> : <StatusPill>Nog niet beoordeeld</StatusPill>}
+                              {currentScore ? <StatusPill tone={scoreTone(currentScore)}>{getPositiveScoreLabel(currentScore)}</StatusPill> : <StatusPill>Nog niet beoordeeld</StatusPill>}
                             </div>
                             <div className="mt-3 grid gap-3 md:grid-cols-[auto_1fr]">
                               <FivePointAssessment
                                 display={assessmentDisplay}
                                 label="Beoordeling"
                                 required
-                                value={currentScore ? parseLearnerAssessmentValue(currentScore.score) : null}
+                                value={currentScore ? parseLearnerAssessmentValue(currentScore) : null}
                               />
-                              <SelectField defaultValue={currentScore?.visibility ?? "parent_visible"} fieldId={`visibility-${item.id}`} label="Zichtbaarheid" name="visibility">
+                              <SelectField defaultValue={currentObservation?.visibility ?? legacyScore?.visibility ?? "parent_visible"} fieldId={`visibility-${item.id}`} label="Zichtbaarheid" name="visibility">
                                 <option value="parent_visible">Zichtbaar voor ouder</option>
                                 <option value="internal">Alleen intern</option>
                               </SelectField>
@@ -229,17 +266,21 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                             <div className="mt-3">
                               <TextAreaField fieldId={`note-${item.id}`} label="Korte update" name="note" />
                             </div>
+                            {currentObservation ? (
+                              <div className="mt-3">
+                                <TextAreaField fieldId={`correction-${item.id}`} label="Reden voor wijziging" name="correctionReason" required />
+                              </div>
+                            ) : null}
                             <Button className="mt-3" type="submit">
                               <Star className="h-4 w-4" />
-                              Score opslaan
+                              {currentObservation ? "Correctie vastleggen" : "Beoordeling vastleggen"}
                             </Button>
                           </form>
                         );
                       })}
                     </div>
                   </div>
-                );
-              })}
+              ))}
             </div>
           </article>
         </TabsContent>

@@ -153,7 +153,7 @@ create temporary table swim_test_results (
 insert into swim_test_results
 select
   'first',
-  app_private.finalize_swim_assessment(
+  public.finalize_swim_assessment(
     '20000000-0000-4000-8000-000000000001',
     '80000000-0000-4000-8000-000000000001',
     '90000000-0000-4000-8000-000000000001',
@@ -169,7 +169,6 @@ select
     'manual',
     'device-op-first',
     'integration-device',
-    '10000000-0000-4000-8000-000000000001',
     'assessment-first-idempotency'
   );
 
@@ -192,7 +191,7 @@ begin
     raise exception 'Expected diploma coverage 1/6, got %', diploma_coverage;
   end if;
 
-  duplicate_result := app_private.finalize_swim_assessment(
+  duplicate_result := public.finalize_swim_assessment(
     '20000000-0000-4000-8000-000000000001',
     '80000000-0000-4000-8000-000000000001',
     '90000000-0000-4000-8000-000000000001',
@@ -208,7 +207,6 @@ begin
     'manual',
     'device-op-first',
     'integration-device',
-    '10000000-0000-4000-8000-000000000001',
     'assessment-first-idempotency'
   );
 
@@ -221,7 +219,7 @@ $$;
 insert into swim_test_results
 select
   'correction',
-  app_private.finalize_swim_assessment(
+  public.finalize_swim_assessment(
     '20000000-0000-4000-8000-000000000001',
     '80000000-0000-4000-8000-000000000001',
     '90000000-0000-4000-8000-000000000001',
@@ -237,7 +235,6 @@ select
     'admin_command',
     'device-op-correction',
     'integration-device',
-    '10000000-0000-4000-8000-000000000001',
     'assessment-correction-idempotency'
   );
 
@@ -259,10 +256,9 @@ $$;
 insert into swim_test_results
 select
   'retraction',
-  app_private.retract_swim_assessment(
+  public.retract_swim_assessment(
     (select result_id from swim_test_results where result_key = 'correction'),
     'Correctie bleek zelf onjuist',
-    '10000000-0000-4000-8000-000000000001',
     'assessment-retraction-idempotency'
   );
 

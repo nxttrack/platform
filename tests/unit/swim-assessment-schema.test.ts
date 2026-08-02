@@ -7,6 +7,10 @@ const migrationPath = path.resolve(
   import.meta.dirname,
   "../../supabase/migrations/20260802130000_canonical_assessments_and_progress.sql"
 );
+const commandMigrationPath = path.resolve(
+  import.meta.dirname,
+  "../../supabase/migrations/20260802160000_swim_progress_command_api.sql"
+);
 
 test("assessmentauthority is append-only 1–5 met drafts, correctieketen en retractions", async () => {
   const sql = await readFile(migrationPath, "utf8");
@@ -57,4 +61,14 @@ test("alle nieuwe assessmenttabellen forceren tenant-RLS", async () => {
   ]) {
     assert.match(sql, new RegExp(`alter table public\\.${table} force row level security`), table);
   }
+});
+
+test("web en native gebruiken een actor-gebonden publieke commandgrens", async () => {
+  const sql = await readFile(commandMigrationPath, "utf8");
+  assert.match(sql, /create or replace function public\.finalize_swim_assessment/);
+  assert.match(sql, /actor_user_id uuid := \(select auth\.uid\(\)\)/);
+  assert.match(sql, /Authenticated actor required/);
+  assert.match(sql, /security invoker/);
+  assert.match(sql, /grant execute on function public\.finalize_swim_assessment[\s\S]+to authenticated/);
+  assert.doesNotMatch(sql, /to service_role/);
 });

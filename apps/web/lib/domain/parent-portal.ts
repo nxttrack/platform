@@ -14,6 +14,10 @@ import {
   type ResourceRow,
   type SessionRow
 } from "./core";
+import {
+  loadCanonicalSwimJourneys,
+  type CanonicalSwimJourneyData
+} from "./swim-progress";
 
 export type ParentProfileRow = {
   id: string;
@@ -433,6 +437,7 @@ export type ParentPortalData = {
   progressModules: ParentProgressModuleRow[];
   progressItems: ParentProgressItemRow[];
   progressScores: ParentProgressScoreRow[];
+  swimJourneys: CanonicalSwimJourneyData;
   badgeAwards: ParentBadgeAwardRow[];
   badgeDefinitions: ParentBadgeDefinitionRow[];
   notifications: ParentNotificationRow[];
@@ -505,7 +510,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("enrollments")
-          .select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on")
+          .select("id, participant_id, guardian_user_id, program_id, current_stage_id, curriculum_version_id, status, source, starts_on")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("starts_on", { ascending: false })
@@ -684,6 +689,11 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   const refunds = (refundsResult.data ?? []) as ParentBillingRefundRow[];
   const chargebacks = (chargebacksResult.data ?? []) as ParentBillingChargebackRow[];
   const invoices = (invoicesResult.data ?? []) as ParentBillingInvoiceRow[];
+  const swimJourneys = await loadCanonicalSwimJourneys({
+    tenantId: tenant.id,
+    enrollments,
+    parentVisibleOnly: true
+  });
   const invoiceIds = invoices.map((invoice) => invoice.id);
   const invoiceLinesResult =
     invoiceIds.length > 0
@@ -788,6 +798,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     progressModules: (progressModulesResult.data ?? []) as ParentProgressModuleRow[],
     progressItems: (progressItemsResult.data ?? []) as ParentProgressItemRow[],
     progressScores: (progressScoresResult.data ?? []) as ParentProgressScoreRow[],
+    swimJourneys,
     badgeAwards: (badgeAwardsResult.data ?? []) as ParentBadgeAwardRow[],
     badgeDefinitions: (badgeDefinitionsResult.data ?? []) as ParentBadgeDefinitionRow[],
     notifications: (notificationsResult.data ?? []) as ParentNotificationRow[],

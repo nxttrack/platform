@@ -14,6 +14,10 @@ import {
   type ResourceRow,
   type SessionRow
 } from "./core";
+import {
+  loadCanonicalSwimJourneys,
+  type CanonicalSwimJourneyData
+} from "./swim-progress";
 
 export type SessionInstructorAssignmentRow = {
   id: string;
@@ -199,6 +203,7 @@ export type InstructorData = {
   progressModules: ProgressModuleRow[];
   progressItems: ProgressItemRow[];
   progressScores: ProgressScoreRow[];
+  swimJourneys: CanonicalSwimJourneyData;
   notifications: InstructorNotificationRow[];
 };
 
@@ -287,7 +292,7 @@ export async function getInstructorData(): Promise<InstructorData> {
   const [participantsResult, enrollmentsResult, notesResult, badgeAwardsResult, progressScoresResult] = await Promise.all([
     participantIds.length > 0 ? admin.from("participants").select("id, guardian_user_id, display_name, birth_date, gender, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).in("id", participantIds).order("display_name") : Promise.resolve({ data: [], error: null }),
     enrollmentIds.length > 0
-      ? admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on").eq("tenant_id", tenant.id).in("id", enrollmentIds)
+      ? admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, curriculum_version_id, status, source, starts_on").eq("tenant_id", tenant.id).in("id", enrollmentIds)
       : Promise.resolve({ data: [], error: null }),
     participantIds.length > 0
       ? admin
@@ -323,6 +328,10 @@ export async function getInstructorData(): Promise<InstructorData> {
   assertInstructorResult(progressScoresResult.error, "progress scores");
 
   const enrollments = (enrollmentsResult.data ?? []) as EnrollmentRow[];
+  const swimJourneys = await loadCanonicalSwimJourneys({
+    tenantId: tenant.id,
+    enrollments
+  });
   const programIds = unique(enrollments.map((enrollment) => enrollment.program_id).concat(groups.map((group) => group.program_id)));
   const stageIds = unique(enrollments.flatMap((enrollment) => (enrollment.current_stage_id ? [enrollment.current_stage_id] : [])).concat(groups.flatMap((group) => (group.stage_id ? [group.stage_id] : []))));
   const resourceIds = unique(groups.flatMap((group) => (group.default_resource_id ? [group.default_resource_id] : [])).concat(sessions.flatMap((session) => (session.resource_id ? [session.resource_id] : []))));
@@ -377,6 +386,7 @@ export async function getInstructorData(): Promise<InstructorData> {
     progressModules: (progressModulesResult.data ?? []) as ProgressModuleRow[],
     progressItems: (progressItemsResult.data ?? []) as ProgressItemRow[],
     progressScores: (progressScoresResult.data ?? []) as ProgressScoreRow[],
+    swimJourneys,
     notifications: (notificationsResult.data ?? []) as InstructorNotificationRow[]
   };
 }

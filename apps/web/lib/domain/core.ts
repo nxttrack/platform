@@ -78,6 +78,7 @@ export type EnrollmentRow = {
   guardian_user_id: string | null;
   program_id: string;
   current_stage_id: string | null;
+  curriculum_version_id: string | null;
   status: string;
   source: string;
   starts_on: string;
@@ -176,7 +177,7 @@ export async function getTenantCoreData(): Promise<TenantCoreData> {
       .order("name"),
     admin.from("sessions").select("id, group_id, resource_id, starts_at, ends_at, status, capacity_override, notes").eq("tenant_id", tenant.id).order("starts_at"),
     admin.from("participants").select("id, guardian_user_id, display_name, birth_date, status, source, is_test, journey_run_id").eq("tenant_id", tenant.id).order("display_name"),
-    admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on, is_test, journey_run_id").eq("tenant_id", tenant.id).order("starts_on", { ascending: false }),
+    admin.from("enrollments").select("id, participant_id, guardian_user_id, program_id, current_stage_id, curriculum_version_id, status, source, starts_on, is_test, journey_run_id").eq("tenant_id", tenant.id).order("starts_on", { ascending: false }),
     admin.from("group_memberships").select("id, group_id, enrollment_id, participant_id, status, capacity_weight, source, is_test, journey_run_id").eq("tenant_id", tenant.id),
     admin.from("group_instructor_assignments").select("id, group_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),
     admin.from("session_instructor_assignments").select("id, session_id, instructor_user_id, role, status").eq("tenant_id", tenant.id),

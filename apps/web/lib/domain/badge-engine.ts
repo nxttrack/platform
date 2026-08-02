@@ -48,6 +48,15 @@ export type BadgeEvaluationInput = {
   eventContext: Record<string, unknown>;
 };
 
+export type BadgeTriggerSetInput = {
+  tenantId: string;
+  participantId: string;
+  events: Array<{
+    eventType: string;
+    eventContext: Record<string, unknown>;
+  }>;
+};
+
 export type BadgeAwardInput = {
   tenantId: string;
   participantId: string;
@@ -73,7 +82,24 @@ export type BadgeAwardResult = {
 };
 
 export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
+  return evaluateBadgeTriggerSet({
+    tenantId: input.tenantId,
+    participantId: input.participantId,
+    events: [{ eventType: input.eventType, eventContext: input.eventContext }]
+  });
+}
+
+export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
+  const events = input.events.filter(
+    (event, index, all) =>
+      event.eventType.trim().length > 0 &&
+      all.findIndex((candidate) => candidate.eventType === event.eventType) === index
+  );
+  if (events.length === 0) {
+    return { awarded: [], skipped: ["Geen badge-events aangeboden."] };
+  }
   const admin = createAdminClient();
+  const eventTypes = events.map((event) => event.eventType);
   const [platformResult, tenantResult, participantResult, releasesResult, overrideResult] = await Promise.all([
     admin.from("platform_badge_settings").select("*").eq("id", true).maybeSingle(),
     admin.from("tenant_badge_module_settings").select("*").eq("tenant_id", input.tenantId).maybeSingle(),
@@ -83,7 +109,7 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
       .select("id, catalog_definition_id, stable_key, release_number, badge_type, trigger_type, rule_json, audience")
       .is("tenant_id", null)
       .eq("badge_type", "automatic")
-      .eq("trigger_type", input.eventType)
+      .in("trigger_type", eventTypes)
       .order("release_number", { ascending: false }),
     admin.from("tenant_badge_settings").select("*").eq("tenant_id", input.tenantId)
   ]);
@@ -109,18 +135,20 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
     if (!latestReleaseBySource.has(sourceKey)) latestReleaseBySource.set(sourceKey, release);
   }
   const releases = [...latestReleaseBySource.values()];
-  const candidates = selectTriggerCandidates(
-    releases.flatMap((release) =>
-      release.trigger_type
-        ? [{
-            badgeKey: release.stable_key,
-            triggerType: release.trigger_type,
-            triggerConfig: asObject(release.rule_json.config)
-          }]
-        : []
-    ),
-    input.eventType,
-    input.eventContext
+  const candidates = events.flatMap((event) =>
+    selectTriggerCandidates(
+      releases.flatMap((release) =>
+        release.trigger_type
+          ? [{
+              badgeKey: release.stable_key,
+              triggerType: release.trigger_type,
+              triggerConfig: asObject(release.rule_json.config)
+            }]
+          : []
+      ),
+      event.eventType,
+      event.eventContext
+    )
   );
   const releaseByKey = new Map(releases.map((release) => [release.stable_key, release]));
   const overrideByDefinition = new Map(
@@ -128,7 +156,7 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
   );
   const skipped: string[] = [];
   const gender = normalizeBadgeGender(participantResult.data.gender);
-  const eligibleReleaseIds: string[] = [];
+  const eligibleReleaseIds = new Set<string>();
 
   for (const candidate of candidates) {
     const release = releaseByKey.get(candidate.badgeKey);
@@ -144,27 +172,27 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
       skipped.push(`${release.stable_key}: past niet bij de ingestelde badgevariant.`);
       continue;
     }
-    eligibleReleaseIds.push(release.id);
+    eligibleReleaseIds.add(release.id);
   }
 
   let awarded: BadgeAwardResult[] = [];
-  if (eligibleReleaseIds.length) {
-    const sourceEventId = readUuidValue(input.eventContext.entityId);
+  if (eligibleReleaseIds.size) {
+    const sourceEventId = readUuidValue(events.find((event) => readUuidValue(event.eventContext.entityId))?.eventContext.entityId);
+    const eventType = eventTypes.slice().sort().join("+");
     const eventFingerprint = await stableDigest({
-      eventContext: input.eventContext,
-      eventType: input.eventType,
+      events,
       participantId: input.participantId
     });
     const batchResult = await admin.rpc("award_badge_batch", {
       target_actor_user_id: null,
-      target_badge_release_ids: eligibleReleaseIds,
+      target_badge_release_ids: [...eligibleReleaseIds],
       target_command_type: "automatic",
       target_enrollment_id: null,
-      target_idempotency_key: `badge:auto:${input.participantId}:${input.eventType}:${eventFingerprint}`.slice(0, 200),
+      target_idempotency_key: `badge:auto:${input.participantId}:${eventType}:${eventFingerprint}`.slice(0, 200),
       target_participant_id: input.participantId,
-      target_reason: `Automatische evaluatie: ${input.eventType}`,
+      target_reason: `Automatische evaluatie: ${eventType}`,
       target_source_event_id: sourceEventId,
-      target_source_event_type: input.eventType,
+      target_source_event_type: eventType,
       target_source_session_id: null,
       target_tenant_id: input.tenantId,
       target_visibility: "parent_visible"
@@ -196,7 +224,7 @@ export async function evaluateBadgeTriggers(input: BadgeEvaluationInput) {
     participant_id: input.participantId,
     event_type: "evaluated",
     metadata_json: {
-      eventType: input.eventType,
+      eventTypes,
       candidates: candidates.map((candidate) => candidate.badgeKey),
       awarded: awarded.filter((result) => result.awarded).length,
       skipped,
