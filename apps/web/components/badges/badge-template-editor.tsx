@@ -645,7 +645,7 @@ function previewText(value: string) {
     badgeDescription: "Een prachtige stap in het water.",
     badgeName: "Eerste Plons",
     childFirstName: "Sam de Vries",
-    gender: "unknown",
+    gender: "unknown_legacy",
     organizationName: "De Waterlijn"
   });
 }

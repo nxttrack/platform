@@ -6,7 +6,10 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
-const sql = await readFile(path.join(root, "tests/sql/swim_canon_progress_integration.sql"), "utf8");
+const testFiles = [
+  "swim_canon_progress_integration.sql",
+  "swim_canon_badge_batch_integration.sql"
+];
 const connectionString =
   process.env.SWIM_CANON_TEST_DATABASE_URL ??
   "postgresql://postgres:postgres@127.0.0.1:55422/postgres";
@@ -14,8 +17,11 @@ const client = new pg.Client({ connectionString });
 
 try {
   await client.connect();
-  await client.query(sql);
-  console.log("[test:swim-canon:db] PASS publication, immutability, 16.7%, correction, retraction and idempotency.");
+  for (const testFile of testFiles) {
+    const sql = await readFile(path.join(root, "tests/sql", testFile), "utf8");
+    await client.query(sql);
+  }
+  console.log("[test:swim-canon:db] PASS progress, correction, immutable badge releases, surprise isolation, aggregate notifications and idempotency.");
 } finally {
   await client.end();
 }

@@ -20,14 +20,14 @@ test("gendergerichte badgecopy heeft altijd een neutrale fallback", () => {
 
   assert.equal(resolveGenderedCopy(copy, "boy"), "Zwemheld jongen");
   assert.equal(resolveGenderedCopy(copy, "girl"), "Zwemheld meisje");
-  assert.equal(resolveGenderedCopy(copy, "unknown"), "Zwemheld");
+  assert.equal(resolveGenderedCopy(copy, "unknown_legacy"), "Zwemheld");
   assert.equal(resolveGenderedCopy({ default: "Neutraal", boy: "" }, "boy"), "Neutraal");
-  assert.equal(normalizeBadgeGender("anders"), "unknown");
+  assert.equal(normalizeBadgeGender("anders"), "unknown_legacy");
 });
 
 test("audiencefilter sluit onbekend geslacht uit van gendergebonden varianten", () => {
-  assert.equal(badgeMatchesAudience("unknown", "all"), true);
-  assert.equal(badgeMatchesAudience("unknown", "boys"), false);
+  assert.equal(badgeMatchesAudience("unknown_legacy", "all"), true);
+  assert.equal(badgeMatchesAudience("unknown_legacy", "boys"), false);
   assert.equal(badgeMatchesAudience("boy", "boys"), true);
   assert.equal(badgeMatchesAudience("girl", "girls"), true);
   assert.equal(badgeMatchesAudience("girl", "boys"), false);
@@ -40,7 +40,7 @@ test("shortcodes gebruiken uitsluitend de voornaam en gendergerichte badgecopy",
       badgeDescription: "Mooi gezwommen.",
       badgeName: "Eerste Plons",
       childFirstName: "Sam de Jong",
-      gender: "unknown",
+      gender: "unknown_legacy",
       organizationName: "De Waterlijn"
     }
   );

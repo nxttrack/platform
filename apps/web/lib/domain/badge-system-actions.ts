@@ -129,7 +129,8 @@ export async function saveCatalogBadgeAction(formData: FormData) {
     emails_enabled: formData.get("emailsEnabled") === "on",
     share_enabled: formData.get("shareEnabled") === "on",
     sort_order: readInteger(formData, "sortOrder", 0, 100_000, 0),
-    status: readEnum(formData, "status", ["draft", "active", "archived"] as const, "active")
+    status: readEnum(formData, "status", ["draft", "active", "archived"] as const, "active"),
+    updated_by_user_id: context.user.id
   };
   const result = id
     ? await admin.from("badge_catalog_definitions").update(values).eq("id", id).select("id").maybeSingle()
@@ -188,7 +189,8 @@ export async function duplicateCatalogBadgeAction(formData: FormData) {
     ...copy,
     badge_key: `${sourceKey}_copy_${suffix}`.slice(0, 120),
     name_default: `${source.data.name_default} (kopie)`.slice(0, 120),
-    status: "draft"
+    status: "draft",
+    updated_by_user_id: context.user.id
   }).select("id").single();
   if (result.error) redirectWith(nextPath, "error", "De badge kon niet worden gedupliceerd.");
   revalidateBadgePaths();
@@ -432,7 +434,8 @@ export async function saveCustomBadgeAction(formData: FormData) {
     icon_name: readOptional(formData, "iconName", 80) ?? "sparkles",
     artwork_asset_id: storedArtwork?.asset.id ?? currentArtworkAssetId,
     is_surprise: formData.get("isSurprise") === "on",
-    status: readEnum(formData, "status", ["draft", "active", "archived"], "draft")
+    status: readEnum(formData, "status", ["draft", "active", "archived"], "draft"),
+    updated_by_user_id: context.user.id
   };
   const result = id
     ? await admin.from("tenant_custom_badges").update(values).eq("tenant_id", tenant.id).eq("id", id).select("id").maybeSingle()
@@ -489,7 +492,8 @@ export async function duplicateCustomBadgeAction(formData: FormData) {
     badge_key: `${sourceKey}_copy_${suffix}`.slice(0, 120),
     name_default: `${source.data.name_default} (kopie)`.slice(0, 120),
     status: "draft",
-    created_by_user_id: context.user.id
+    created_by_user_id: context.user.id,
+    updated_by_user_id: context.user.id
   }).select("id").single();
   if (result.error) redirectWith(nextPath, "error", "De eigen badge kon niet worden gedupliceerd.");
   revalidateBadgePaths();

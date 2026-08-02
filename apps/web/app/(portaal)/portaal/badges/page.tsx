@@ -53,32 +53,53 @@ export default async function ParentBadgesPage({ searchParams }: { searchParams?
     {visibleParticipants.map((participant) => {
       const gender = normalizeBadgeGender(participant.gender);
       const participantAwards = visibleAwards.filter((award) => award.participant_id === participant.id);
+      const eligibleUnearned = showUnearned ? data.catalog.filter((definition) => {
+        const override = overrideByDefinition.get(definition.id);
+        if (definition.is_surprise || override?.enabled === false) return false;
+        if (awardByDefinition.has(`${participant.id}:${definition.id}`)) return false;
+        if (definition.audience === "boys" && gender !== "boy") return false;
+        if (definition.audience === "girls" && gender !== "girl") return false;
+        return true;
+      }) : [];
+      const categories = [...new Set([
+        ...participantAwards.map((award) => {
+          const definition = award.catalog_definition_id ? definitionById.get(award.catalog_definition_id) : null;
+          const custom = award.custom_badge_id ? customById.get(award.custom_badge_id) : null;
+          return definition?.category ?? custom?.category ?? "specials";
+        }),
+        ...eligibleUnearned.map((definition) => definition.category)
+      ])].sort((left, right) => badgeCategoryRank(left) - badgeCategoryRank(right));
+
       return <section className="space-y-4" key={participant.id}>
         <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Zwemreis</p><h2 className="mt-1 text-2xl font-bold">{participant.display_name}</h2><p className="mt-1 text-sm text-muted-foreground">{participantAwards.length} mooie momenten vastgelegd</p></div><StatusPill tone="success">{participantAwards.length} behaald</StatusPill></div>
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {participantAwards.map((award) => {
-            const definition = award.catalog_definition_id ? definitionById.get(award.catalog_definition_id) : null;
-            const custom = award.custom_badge_id ? customById.get(award.custom_badge_id) : null;
-            const asset = assetByAward.get(`${award.id}:square`);
-            const artworkAssetId = award.resolved_artwork_asset_id ?? definition?.artwork_asset_id ?? custom?.artwork_asset_id;
-            const override = definition ? overrideByDefinition.get(definition.id) : null;
-            const canShare = definition?.share_enabled !== false && override?.share_enabled !== false;
-            const badgeName = award.resolved_name ?? award.title;
-            return <details className="group" key={award.id}><summary className="list-none cursor-pointer"><BadgeVisual artworkUrl={badgeArtworkUrl(artworkAssetId)} category={definition?.category ?? custom?.category} description={award.resolved_description ?? award.note} earned iconName={definition?.icon_name ?? custom?.icon_name} name={badgeName} surprise={definition?.is_surprise ?? custom?.is_surprise} themeArtworkUrl={portalBadgeArtworkUrl(theme, definition?.badge_key, badgeName)} themeFamilyKey={theme.badges.familyKey} /></summary><div className="mt-2 space-y-4 rounded-2xl border border-border bg-card p-4 shadow-card"><div className="flex flex-wrap gap-2"><StatusPill tone="success">Behaald op {formatDate(award.awarded_at)}</StatusPill>{award.delivery_status === "sent" ? <StatusPill tone="info"><Bell className="size-3" /> gemeld</StatusPill> : null}</div><p className="text-sm leading-6 text-muted-foreground">{award.note || award.resolved_description}</p>{canShare && data.settings?.share_images_enabled !== false && data.preferences?.badge_sharing_enabled !== false ? asset?.status === "generated" && asset.preview_data_url ? <><img alt={`Deelafbeelding voor ${award.title}`} className="aspect-square w-full rounded-2xl border border-border object-cover" src={asset.preview_data_url} /><ParentBadgeShareActions caption={asset.caption ?? award.resolved_share_text ?? award.title} imageUrl={asset.preview_data_url} /></> : <form action={generateBadgeShareAssetAction}><input name="awardId" type="hidden" value={award.id} /><input name="format" type="hidden" value="square" /><input name="humanConfirmation" type="hidden" value="confirmed" /><input name="next" type="hidden" value={participantContextHref("/portaal/ontwikkeling/badges", selectedParticipantId)} /><Button type="submit" variant="outline"><Images className="size-4" /> Veilige deelafbeelding maken</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">De gepubliceerde Badge Studio-template wordt gebruikt met alleen veilige voorbeeldvelden.</p></form> : null}</div></details>;
-          })}
-          {showUnearned ? data.catalog.filter((definition) => {
-            const override = overrideByDefinition.get(definition.id);
-            if (override?.enabled === false) return false;
-            if (awardByDefinition.has(`${participant.id}:${definition.id}`)) return false;
-            if (definition.audience === "boys" && gender !== "boy") return false;
-            if (definition.audience === "girls" && gender !== "girl") return false;
-            return true;
-          }).slice(0, 12).map((definition) => {
-            const override = overrideByDefinition.get(definition.id);
-            const surprise = definition.is_surprise && data.settings?.show_locked_surprise_badges !== false;
-            const badgeName = resolveGenderedCopy({ default: override?.name_default ?? definition.name_default, boy: override?.name_boy ?? definition.name_boy, girl: override?.name_girl ?? definition.name_girl }, gender);
-            return <BadgeVisual artworkUrl={badgeArtworkUrl(definition.artwork_asset_id)} category={definition.category} description={override?.description_default ?? definition.description_default} iconName={definition.icon_name} key={definition.id} locked={surprise} name={badgeName} surprise={definition.is_surprise} themeArtworkUrl={portalBadgeArtworkUrl(theme, definition.badge_key, badgeName)} themeFamilyKey={theme.badges.familyKey} />;
-          }) : null}
+        <div className="space-y-5">
+          {categories.map((category) => <section className="rounded-3xl border border-border bg-card/70 p-4 shadow-soft sm:p-5" key={category}>
+            <div className="mb-4">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-primary">Categorie</p>
+              <h3 className="mt-1 text-lg font-bold">{badgeCategoryLabel(category)}</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              {participantAwards.filter((award) => {
+                const definition = award.catalog_definition_id ? definitionById.get(award.catalog_definition_id) : null;
+                const custom = award.custom_badge_id ? customById.get(award.custom_badge_id) : null;
+                return (definition?.category ?? custom?.category ?? "specials") === category;
+              }).map((award) => {
+                const definition = award.catalog_definition_id ? definitionById.get(award.catalog_definition_id) : null;
+                const custom = award.custom_badge_id ? customById.get(award.custom_badge_id) : null;
+                const asset = assetByAward.get(`${award.id}:square`);
+                const artworkAssetId = award.resolved_artwork_asset_id ?? definition?.artwork_asset_id ?? custom?.artwork_asset_id;
+                const override = definition ? overrideByDefinition.get(definition.id) : null;
+                const canShare = definition?.share_enabled !== false && override?.share_enabled !== false;
+                const badgeName = award.resolved_name ?? award.title;
+                return <details className="group min-w-0" key={award.id}><summary className="cursor-pointer list-none"><BadgeVisual artworkUrl={badgeArtworkUrl(artworkAssetId)} category={definition?.category ?? custom?.category} description={award.resolved_description ?? award.note} earned iconName={definition?.icon_name ?? custom?.icon_name} name={badgeName} surprise={definition?.is_surprise ?? custom?.is_surprise} themeArtworkUrl={portalBadgeArtworkUrl(theme, definition?.badge_key, badgeName)} themeFamilyKey={theme.badges.familyKey} /></summary><div className="mt-2 space-y-4 rounded-2xl border border-border bg-card p-4 shadow-card"><div className="flex flex-wrap gap-2"><StatusPill tone="success">Behaald op {formatDate(award.awarded_at)}</StatusPill>{award.delivery_status === "sent" ? <StatusPill tone="info"><Bell className="size-3" /> gemeld</StatusPill> : null}</div><p className="text-sm leading-6 text-muted-foreground">{award.note || award.resolved_description}</p>{canShare && data.settings?.share_images_enabled !== false && data.preferences?.badge_sharing_enabled !== false ? asset?.status === "generated" && asset.preview_data_url ? <><img alt={`Deelafbeelding voor ${award.title}`} className="aspect-square w-full rounded-2xl border border-border object-cover" src={asset.preview_data_url} /><ParentBadgeShareActions caption={asset.caption ?? award.resolved_share_text ?? award.title} imageUrl={asset.preview_data_url} /></> : <form action={generateBadgeShareAssetAction}><input name="awardId" type="hidden" value={award.id} /><input name="format" type="hidden" value="square" /><input name="humanConfirmation" type="hidden" value="confirmed" /><input name="next" type="hidden" value={participantContextHref("/portaal/ontwikkeling/badges", selectedParticipantId)} /><Button type="submit" variant="outline"><Images className="size-4" /> Veilige deelafbeelding maken</Button><p className="mt-2 text-xs leading-5 text-muted-foreground">De gepubliceerde Badge Studio-template wordt gebruikt met alleen veilige voorbeeldvelden.</p></form> : null}</div></details>;
+              })}
+              {eligibleUnearned.filter((definition) => definition.category === category).map((definition) => {
+                const override = overrideByDefinition.get(definition.id);
+                const badgeName = resolveGenderedCopy({ default: override?.name_default ?? definition.name_default, boy: override?.name_boy ?? definition.name_boy, girl: override?.name_girl ?? definition.name_girl }, gender);
+                return <BadgeVisual artworkUrl={badgeArtworkUrl(definition.artwork_asset_id)} category={definition.category} description={override?.description_default ?? definition.description_default} iconName={definition.icon_name} key={definition.id} name={badgeName} themeArtworkUrl={portalBadgeArtworkUrl(theme, definition.badge_key, badgeName)} themeFamilyKey={theme.badges.familyKey} />;
+              })}
+            </div>
+          </section>)}
         </div>
       </section>;
     })}
@@ -97,3 +118,19 @@ function countStartedCollections(items: Array<{ collection_id: string; catalog_d
 function formatDate(value: string) { return new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(value)); }
 function readParam(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
 function badgeArtworkUrl(assetId?: string | null) { return assetId ? `/api/files/badge-studio-asset/${assetId}` : null; }
+const badgeCategories = ["start", "attendance", "skills", "stages", "diplomas", "makeup", "compliments", "courage", "technique", "specials"] as const;
+function badgeCategoryRank(category: string) { const index = badgeCategories.indexOf(category as (typeof badgeCategories)[number]); return index === -1 ? badgeCategories.length : index; }
+function badgeCategoryLabel(category: string) {
+  return ({
+    attendance: "Aanwezigheid",
+    compliments: "Complimenten",
+    courage: "Moed",
+    diplomas: "Diploma’s",
+    makeup: "Inhalen",
+    skills: "Vaardigheden",
+    specials: "Bijzonder",
+    stages: "Badjes",
+    start: "Start",
+    technique: "Techniek"
+  } as Record<string, string>)[category] ?? category;
+}

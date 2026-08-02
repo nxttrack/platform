@@ -24,7 +24,7 @@ test("share-renderer volgt laagvolgorde, shortcodes, artwork en veilige SVG-outp
       badgeDescription: "Mooi gezwommen",
       badgeName: "Plons & Pret",
       childFirstName: "Sam de Vries",
-      gender: "unknown",
+      gender: "unknown_legacy",
       organizationName: "De Waterlijn"
     },
     height: 1080,
@@ -48,7 +48,7 @@ test("share-renderer levert een echte PNG-data-URL", async () => {
       badgeDescription: "Mooi gezwommen",
       badgeName: "Eerste Plons",
       childFirstName: "Sam de Vries",
-      gender: "unknown",
+      gender: "unknown_legacy",
       organizationName: "De Waterlijn"
     },
     height: 320,

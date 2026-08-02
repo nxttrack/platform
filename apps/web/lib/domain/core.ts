@@ -65,7 +65,7 @@ export type ParticipantRow = {
   guardian_user_id: string | null;
   display_name: string;
   birth_date: string | null;
-  gender: "boy" | "girl" | "unknown";
+  gender: "boy" | "girl" | "unknown_legacy";
   status: string;
   source: string;
   is_test: boolean;

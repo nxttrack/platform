@@ -1,4 +1,4 @@
-export const badgeGenders = ["boy", "girl", "unknown"] as const;
+export const badgeGenders = ["boy", "girl", "unknown_legacy"] as const;
 export const badgeAudiences = ["all", "boys", "girls"] as const;
 export const badgeFormats = ["square", "story", "landscape", "certificate"] as const;
 
@@ -56,12 +56,13 @@ export const badgeFormatDimensions: Record<BadgeFormat, { height: number; label:
 };
 
 export function normalizeBadgeGender(value: unknown): BadgeGender {
-  return badgeGenders.includes(value as BadgeGender) ? (value as BadgeGender) : "unknown";
+  if (value === "unknown") return "unknown_legacy";
+  return badgeGenders.includes(value as BadgeGender) ? (value as BadgeGender) : "unknown_legacy";
 }
 
 export function badgeMatchesAudience(gender: BadgeGender, audience: BadgeAudience) {
   if (audience === "all") return true;
-  if (gender === "unknown") return false;
+  if (gender === "unknown_legacy") return false;
   return audience === "boys" ? gender === "boy" : gender === "girl";
 }
 
