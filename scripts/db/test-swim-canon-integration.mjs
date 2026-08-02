@@ -10,7 +10,8 @@ const testFiles = [
   "swim_canon_progress_integration.sql",
   "swim_canon_badge_batch_integration.sql",
   "swim_canon_curriculum_wizard_integration.sql",
-  "swim_canon_transition_carryover_integration.sql"
+  "swim_canon_transition_carryover_integration.sql",
+  "swim_canon_group_planning_integration.sql"
 ];
 const connectionString =
   process.env.SWIM_CANON_TEST_DATABASE_URL ??
@@ -23,7 +24,7 @@ try {
     const sql = await readFile(path.join(root, "tests/sql", testFile), "utf8");
     await client.query(sql);
   }
-  console.log("[test:swim-canon:db] PASS progress, badges, immutable curriculum publication, migration parity, reviewed transitions, referenced carryover and idempotency.");
+  console.log("[test:swim-canon:db] PASS progress, badges, immutable curriculum publication, migration parity, reviewed transitions, referenced carryover, structured planning, DST, hierarchy, capacity buckets and idempotency.");
 } finally {
   await client.end();
 }

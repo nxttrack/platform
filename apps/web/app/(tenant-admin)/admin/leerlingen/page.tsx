@@ -182,6 +182,11 @@ function PlacementForm({
         <option value="trial">Proefles</option>
         <option value="paused">Gepauzeerd</option>
       </SelectField>
+      <SelectField label="Capaciteitsbucket" name="capacityBucket">
+        <option value="regular">Regulier</option>
+        <option value="flex">Flex</option>
+        <option value="trial">Proef (automatisch bij proefles)</option>
+      </SelectField>
       <Field label="Capaciteitsgewicht" name="capacityWeight" type="number" defaultValue={1} />
       <Field label="Startdatum" name="startsOn" type="date" />
       <div className="sm:col-span-2"><SubmitButton>In groep plaatsen</SubmitButton></div>
