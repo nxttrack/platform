@@ -2,9 +2,14 @@ import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageS
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { FivePointAssessment } from "@/components/assessments/five-point-assessment";
+import { RemainingBadgesCommand } from "@/components/badges/remaining-badges-command";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { InstructorBadgeAwardForm } from "@/components/badges/instructor-badge-award-form";
 import { SwimJourneyRings } from "@/components/progress/swim-journey-rings";
+import {
+  CompletePreviousStageItems,
+  SwimTransitionControls
+} from "@/components/progress/swim-student-commands";
 import { Button } from "@/components/ui/button";
 import { Field as FieldRoot, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -13,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { installSwimProgressTemplateAction, saveProgressNoteAction, scoreProgressItemAction } from "@/lib/domain/instructor-actions";
 import { getInstructorData } from "@/lib/domain/instructor";
+import { getSwimStudentCommandData } from "@/lib/domain/swim-operations";
 import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
 import { markInstructorReadinessRecommendationAction } from "@/lib/domain/learning-intelligence-actions";
 import { calculateDiplomaReadiness, detectAttendanceRisks } from "@/lib/domain/learning-intelligence";
@@ -93,6 +99,17 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         name: module.name
       }));
   const scoreCount = canonicalJourney ? canonicalJourney.effectiveObservations.length : scores.length;
+  const commandData = await getSwimStudentCommandData({
+    tenantId: data.tenant.id,
+    participantId: participant.id,
+    enrollmentId: canonicalJourney?.enrollmentId ?? null,
+    includeRemainingBadges: data.canManageTenant
+  });
+  const canonicalStageNameById = new Map(
+    (canonicalJourney?.stages ?? []).map((curriculumStage) => [curriculumStage.id, curriculumStage.name])
+  );
+  const progressNextPath = `/instructor/student/${participant.id}?tab=progress` as const;
+  const badgeNextPath = `/instructor/student/${participant.id}?tab=badges` as const;
   const [attendanceRisks, diplomaReadiness] = await Promise.all([
     detectAttendanceRisks(data.tenant.id, { includeTestData: participant.is_test }),
     enrollment && program && !participant.is_test
@@ -164,14 +181,15 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         </TabsList>
 
         <TabsContent value="progress">
-          <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-            <section className="grid content-start gap-3">
-              <Detail label="Programma" value={program?.name ?? "Niet gezet"} />
-              <Detail label="Badje" value={canonicalJourney?.currentStage?.name ?? stage?.badge_label ?? stage?.name ?? "Niet gezet"} />
-              <Detail label="Scores" value={String(scoreCount)} />
-              <Detail label="Notities en badges" value={`${notes.length} notities · ${badgeAwards.length} badges`} />
-            </section>
-            <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+          <div className="space-y-5">
+            <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+              <section className="grid content-start gap-3">
+                <Detail label="Programma" value={program?.name ?? "Niet gezet"} />
+                <Detail label="Badje" value={canonicalJourney?.currentStage?.name ?? stage?.badge_label ?? stage?.name ?? "Niet gezet"} />
+                <Detail label="Scores" value={String(scoreCount)} />
+                <Detail label="Notities en badges" value={`${notes.length} notities · ${badgeAwards.length} badges`} />
+              </section>
+              <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-bold text-foreground">Huidige voortgang</h2>
@@ -208,7 +226,26 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                     </section>
                 ))}
               </div>
-            </article>
+              </article>
+            </div>
+            {canonicalJourney ? (
+              <SwimTransitionControls
+                canApprove={data.canManageTenant}
+                enrollmentId={canonicalJourney.enrollmentId}
+                nextPath={progressNextPath}
+                participantId={participant.id}
+                stageNameById={canonicalStageNameById}
+                transitionCase={commandData.transitionCase}
+              />
+            ) : null}
+            {canonicalJourney ? (
+              <CompletePreviousStageItems
+                enrollmentId={canonicalJourney.enrollmentId}
+                items={commandData.previousStageItems}
+                nextPath={progressNextPath}
+                participantId={participant.id}
+              />
+            ) : null}
           </div>
         </TabsContent>
 
@@ -324,8 +361,9 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
         </TabsContent>
 
         <TabsContent value="badges">
-          <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
-            <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+          <div className="space-y-5">
+            <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+              <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
               <h2 className="text-lg font-bold text-foreground">Positief moment vastleggen</h2>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">Kies een passende complimentbadge. De aanspreekvorm gebruikt alleen de badgevoorkeur en beïnvloedt geen enkel operationeel besluit.</p>
               <InstructorBadgeAwardForm
@@ -359,9 +397,9 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                 participantId={participant.id}
                 suggestions={data.badgeSuggestions}
               />
-            </article>
+              </article>
 
-            <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
+              <article className="rounded-xl border border-border bg-card p-5 shadow-soft">
               <h2 className="text-lg font-bold text-foreground">Toegekende badges</h2>
               <div className="mt-4 space-y-3">
                 {badgeAwards.length === 0 ? <EmptyState>Nog geen badges.</EmptyState> : null}
@@ -376,7 +414,16 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                   </div>
                 ))}
               </div>
-            </article>
+              </article>
+            </div>
+            {canonicalJourney && data.canManageTenant ? (
+              <RemainingBadgesCommand
+                badges={commandData.remainingBadges}
+                enrollmentId={canonicalJourney.enrollmentId}
+                nextPath={badgeNextPath}
+                participantId={participant.id}
+              />
+            ) : null}
           </div>
         </TabsContent>
 
@@ -511,7 +558,23 @@ function Feedback({ saved, error, success }: { saved?: string; error?: string; s
   }
 
   if (saved === "progress") {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Progress score opgeslagen.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Beoordeling canoniek vastgelegd.</p>;
+  }
+
+  if (saved === "transition-preview") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Doorstroomimpact opnieuw berekend.</p>;
+  }
+
+  if (saved === "transition-review" || saved === "transition-approval" || saved === "transition-execution") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Doorstroomstap auditbaar vastgelegd.</p>;
+  }
+
+  if (saved === "carryover") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Geselecteerde onderdelen uit het vorige badje afgerond.</p>;
+  }
+
+  if (saved === "remaining-badges") {
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Badge-batch verwerkt; ouders ontvangen maximaal één verzamelnotificatie.</p>;
   }
 
   if (saved === "template") {

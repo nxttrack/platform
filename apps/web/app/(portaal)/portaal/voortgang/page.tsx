@@ -247,6 +247,11 @@ function CanonicalJourneyItems({
   const observationByItemId = new Map(
     journey.effectiveObservations.map((observation) => [observation.curriculum_item_id, observation])
   );
+  const openCarryoverItemIds = new Set(
+    journey.carryovers
+      .filter((carryover) => carryover.status === "open")
+      .map((carryover) => carryover.curriculum_item_id)
+  );
 
   return (
     <div className="space-y-3">
@@ -275,9 +280,12 @@ function CanonicalJourneyItems({
                         <p className="text-sm font-semibold text-foreground">{item.name}</p>
                         {item.description ? <p className="mt-1 text-xs leading-5 text-muted-foreground">{item.description}</p> : null}
                       </div>
-                      {observation
-                        ? <StatusPill tone={scoreTone(observation.rating)}>{observation.positive_label}</StatusPill>
-                        : <StatusPill>Nog niet beoordeeld</StatusPill>}
+                      <span className="flex flex-wrap gap-2">
+                        {openCarryoverItemIds.has(item.id) ? <StatusPill tone="warning">open uit vorig badje</StatusPill> : null}
+                        {observation
+                          ? <StatusPill tone={scoreTone(observation.rating)}>{observation.positive_label}</StatusPill>
+                          : <StatusPill>Nog niet beoordeeld</StatusPill>}
+                      </span>
                     </div>
                     <div className="mt-3">
                       <FivePointAssessment

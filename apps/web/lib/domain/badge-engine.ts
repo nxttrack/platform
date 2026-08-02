@@ -93,13 +93,17 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
   const events = input.events.filter(
     (event, index, all) =>
       event.eventType.trim().length > 0 &&
-      all.findIndex((candidate) => candidate.eventType === event.eventType) === index
+      all.findIndex(
+        (candidate) =>
+          candidate.eventType === event.eventType &&
+          JSON.stringify(candidate.eventContext) === JSON.stringify(event.eventContext)
+      ) === index
   );
   if (events.length === 0) {
     return { awarded: [], skipped: ["Geen badge-events aangeboden."] };
   }
   const admin = createAdminClient();
-  const eventTypes = events.map((event) => event.eventType);
+  const eventTypes = [...new Set(events.map((event) => event.eventType))];
   const [platformResult, tenantResult, participantResult, releasesResult, overrideResult] = await Promise.all([
     admin.from("platform_badge_settings").select("*").eq("id", true).maybeSingle(),
     admin.from("tenant_badge_module_settings").select("*").eq("tenant_id", input.tenantId).maybeSingle(),

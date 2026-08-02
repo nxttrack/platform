@@ -84,6 +84,20 @@ export type CanonicalProgressProjection = {
   calculated_at: string;
 };
 
+export type CanonicalItemCarryover = {
+  id: string;
+  participant_id: string;
+  enrollment_id: string;
+  curriculum_item_id: string;
+  curriculum_item_identity_id: string;
+  from_stage_id: string;
+  to_stage_id: string;
+  transition_case_id: string;
+  status: "open" | "completed" | "waived";
+  completed_observation_id: string | null;
+  completed_at: string | null;
+};
+
 export type SwimJourneyRing = {
   key: string;
   kind: "stage" | "diploma";
@@ -104,6 +118,7 @@ export type CanonicalSwimJourney = {
   items: CanonicalCurriculumItem[];
   currentStageItems: CanonicalCurriculumItem[];
   effectiveObservations: CanonicalAssessmentObservation[];
+  carryovers: CanonicalItemCarryover[];
   projectionByScopeKey: Map<string, CanonicalProgressProjection>;
   rings: SwimJourneyRing[];
 };
@@ -115,6 +130,7 @@ export type CanonicalSwimJourneyData = {
   assignments: CanonicalStageAssignment[];
   observations: CanonicalAssessmentObservation[];
   projections: CanonicalProgressProjection[];
+  carryovers: CanonicalItemCarryover[];
   byEnrollmentId: Map<string, CanonicalSwimJourney>;
 };
 
@@ -147,7 +163,7 @@ export async function loadCanonicalSwimJourneys(input: {
     .order("observed_at", { ascending: false })
     .order("finalized_at", { ascending: false });
 
-  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult] =
+  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult] =
     await Promise.all([
       admin
         .from("curriculum_versions")
@@ -186,6 +202,11 @@ export async function loadCanonicalSwimJourneys(input: {
         .from("swim_progress_projections")
         .select("enrollment_id, participant_id, curriculum_version_id, scope_kind, scope_key, scope_id, progress_fraction, coverage_fraction, assessed_count, contributing_count, formula_version, calculated_at")
         .eq("tenant_id", input.tenantId)
+        .in("enrollment_id", enrollmentIds),
+      admin
+        .from("swim_item_carryovers")
+        .select("id, participant_id, enrollment_id, curriculum_item_id, curriculum_item_identity_id, from_stage_id, to_stage_id, transition_case_id, status, completed_observation_id, completed_at")
+        .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
     ]);
 
@@ -197,6 +218,7 @@ export async function loadCanonicalSwimJourneys(input: {
   assertResult(observationsResult.error, "beoordelingen");
   assertResult(retractionsResult.error, "beoordelingsintrekkingen");
   assertResult(projectionsResult.error, "voortgangsprojecties");
+  assertResult(carryoversResult.error, "carryoveronderdelen");
 
   const versions = (versionsResult.data ?? []) as CanonicalCurriculumVersion[];
   const stages = (stagesResult.data ?? []) as CanonicalCurriculumStage[];
@@ -236,6 +258,7 @@ export async function loadCanonicalSwimJourneys(input: {
     progress_fraction: projection.progress_fraction === null ? null : Number(projection.progress_fraction),
     coverage_fraction: projection.coverage_fraction === null ? null : Number(projection.coverage_fraction)
   }));
+  const carryovers = (carryoversResult.data ?? []) as CanonicalItemCarryover[];
   const versionById = new Map(versions.map((version) => [version.id, version]));
   const assignmentByEnrollmentId = new Map(assignments.map((assignment) => [assignment.enrollment_id, assignment]));
   const byEnrollmentId = new Map<string, CanonicalSwimJourney>();
@@ -292,6 +315,7 @@ export async function loadCanonicalSwimJourneys(input: {
       effectiveObservations: effectiveObservations.filter(
         (observation) => observation.enrollment_id === enrollment.id
       ),
+      carryovers: carryovers.filter((carryover) => carryover.enrollment_id === enrollment.id),
       projectionByScopeKey,
       rings
     });
@@ -304,6 +328,7 @@ export async function loadCanonicalSwimJourneys(input: {
     assignments,
     observations: effectiveObservations,
     projections,
+    carryovers,
     byEnrollmentId
   };
 }
@@ -346,6 +371,7 @@ function emptyJourneyData(): CanonicalSwimJourneyData {
     assignments: [],
     observations: [],
     projections: [],
+    carryovers: [],
     byEnrollmentId: new Map()
   };
 }
