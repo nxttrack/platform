@@ -72,7 +72,7 @@
     "test:premium-suite": "tsx --test tests/unit/premium-suite-contract.test.ts tests/unit/premium-suite-schema.test.ts",
     "test:automation-recipes": "tsx --test tests/unit/automation-recipe-contract.test.ts tests/unit/automation-recipe-schema.test.ts",
     "test:communication-hub": "tsx --test tests/unit/communication-hub-contract.test.ts tests/unit/communication-hub-schema.test.ts",
-    "test:badges": "tsx --test tests/unit/badge-system-contract.test.ts tests/unit/badge-share-renderer.test.ts tests/unit/badge-system-schema.test.ts",
+    "test:badges": "tsx --test tests/unit/badge-system-contract.test.ts tests/unit/badge-share-renderer.test.ts tests/unit/badge-share-capabilities.test.ts tests/unit/badge-system-schema.test.ts",
     "test:communication-badges:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/communication-badges.spec.ts --project=chromium-desktop --retries=0",
     "test:premium-release:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/premium-release-hardening.spec.ts --project=chromium-desktop --retries=0",
     "test:participant-media": "tsx --test tests/unit/participant-media-contract.test.ts tests/unit/participant-media-schema.test.ts",
