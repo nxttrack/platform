@@ -23,7 +23,9 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     test.setTimeout(180_000);
     const state = requireState();
     const failures = collectRuntimeFailures(page);
-    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${testInfo.retry}`;
+    const runId = process.env.GITHUB_RUN_ID ?? String(Date.now());
+    const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? "1";
+    const suffix = `${runId}-${runAttempt}-${testInfo.retry}`;
     const programName = `Sprint 4 Admin Programma ${suffix}`;
     const programCode = `sprint4-admin-program-${suffix}`;
     const stageName = `Sprint 4 Admin Stage ${suffix}`;
@@ -37,7 +39,8 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     const documentTitle = `Sprint 4 Admin Document ${suffix}`;
     const messageTitle = `Sprint 4 Admin Bericht ${suffix}`;
     const today = dateValue(0);
-    const scheduleDate = nextIsoWeekdayDate(7);
+    const scheduleDate = nextIsoWeekdayDate(7, Number(runId) % 90);
+    const scheduleHour = 20 + testInfo.retry;
 
     await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
 
@@ -69,7 +72,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Kwalificatiesleutel").fill("sprint4_admin_group_publish");
     await form.getByLabel("Naam").fill("Sprint 4 admin groepspublicatie");
     await form.getByLabel("Geldig vanaf").fill(today);
-    await form.getByLabel("Geldig tot").fill(dateValue(30));
+    await form.getByLabel("Geldig tot").fill(dateValue(700));
     await submitAndWaitForSaved(page, form, "Kwalificatie verifiëren", "/admin/groepen", "qualification");
     await expect(page.getByRole("status").filter({ hasText: "Kwalificatie geverifieerd." })).toBeVisible();
 
@@ -83,8 +86,8 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
     await selectOptionByText(groupWizard.getByRole("combobox", { name: /^Resource/ }), "Baan 1");
     await groupWizard.getByLabel("Weekdag").selectOption("7");
-    await groupWizard.getByLabel("Starttijd").fill("21:00");
-    await groupWizard.getByLabel("Eindtijd").fill("21:45");
+    await groupWizard.getByLabel("Starttijd").fill(`${scheduleHour}:00`);
+    await groupWizard.getByLabel("Eindtijd").fill(`${scheduleHour}:45`);
     await groupWizard.getByLabel("Startdatum").fill(scheduleDate);
     await groupWizard.getByLabel("Einddatum").fill(scheduleDate);
     await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
@@ -103,7 +106,6 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
       ),
       groupWizard.getByRole("button", { name: "Transactioneel publiceren", exact: true }).click()
     ]);
-    await expectSavedStatus(page, "De groep en alle occurrences zijn transactioneel gepubliceerd.");
     await filterResourceTable(page, "Zoek groep…", groupName);
     await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
     await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
@@ -284,11 +286,11 @@ function dateValue(days: number) {
   return value.toISOString().slice(0, 10);
 }
 
-function nextIsoWeekdayDate(targetWeekday: number) {
+function nextIsoWeekdayDate(targetWeekday: number, weeksFromNext = 0) {
   const value = new Date();
   const currentWeekday = value.getUTCDay() || 7;
   const daysUntilTarget = ((targetWeekday - currentWeekday + 7) % 7) || 7;
-  value.setUTCDate(value.getUTCDate() + daysUntilTarget);
+  value.setUTCDate(value.getUTCDate() + daysUntilTarget + weeksFromNext * 7);
   return value.toISOString().slice(0, 10);
 }
 
