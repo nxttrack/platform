@@ -106,6 +106,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
       ),
       groupWizard.getByRole("button", { name: "Transactioneel publiceren", exact: true }).click()
     ]);
+    await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
     await filterResourceTable(page, "Zoek groep…", groupName);
     await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
     await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
