@@ -43,3 +43,18 @@ test("surprisebadges en legacy gender zijn afgeschermd in database en viewmodel"
   assert.match(pageSource, /grid grid-cols-2 gap-3 md:grid-cols-4/);
   assert.doesNotMatch(pageSource, /locked=\{surprise\}/);
 });
+
+test("legacy gender wordt pas herschreven nadat de oude checkconstraints zijn verwijderd", async () => {
+  const sql = await readFile(migrationPath, "utf8");
+  for (const [constraint, update] of [
+    ["participants_gender_check", "update public.participants set gender = 'unknown_legacy'"],
+    ["intake_submissions_participant_gender_check", "update public.intake_submissions set participant_gender = 'unknown_legacy'"],
+    ["waitlist_entries_participant_gender_check", "update public.waitlist_entries set participant_gender = 'unknown_legacy'"],
+    ["participant_badge_awards_gender_check", "update public.participant_badge_awards"]
+  ] as const) {
+    const droppedAt = sql.indexOf(`drop constraint ${constraint}`);
+    const updatedAt = sql.indexOf(update);
+    assert.ok(droppedAt >= 0, `${constraint} wordt verwijderd`);
+    assert.ok(updatedAt > droppedAt, `${constraint} wordt voor de legacy-update verwijderd`);
+  }
+});

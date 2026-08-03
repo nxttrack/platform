@@ -2,6 +2,15 @@
 -- boundary. Every multi-award command creates one aggregate notification per
 -- eligible recipient, never one notification per badge.
 
+alter table public.participants
+  drop constraint participants_gender_check;
+alter table public.intake_submissions
+  drop constraint intake_submissions_participant_gender_check;
+alter table public.waitlist_entries
+  drop constraint waitlist_entries_participant_gender_check;
+alter table public.participant_badge_awards
+  drop constraint participant_badge_awards_gender_check;
+
 update public.participants set gender = 'unknown_legacy' where gender = 'unknown';
 update public.intake_submissions set participant_gender = 'unknown_legacy' where participant_gender = 'unknown';
 update public.waitlist_entries set participant_gender = 'unknown_legacy' where participant_gender = 'unknown';
@@ -11,21 +20,17 @@ where participant_gender_snapshot = 'unknown';
 
 alter table public.participants
   alter column gender set default 'unknown_legacy',
-  drop constraint participants_gender_check,
   add constraint participants_gender_check check (gender in ('boy', 'girl', 'unknown_legacy'));
 alter table public.intake_submissions
   alter column participant_gender set default 'unknown_legacy',
-  drop constraint intake_submissions_participant_gender_check,
   add constraint intake_submissions_participant_gender_check
     check (participant_gender in ('boy', 'girl', 'unknown_legacy'));
 alter table public.waitlist_entries
   alter column participant_gender set default 'unknown_legacy',
-  drop constraint waitlist_entries_participant_gender_check,
   add constraint waitlist_entries_participant_gender_check
     check (participant_gender in ('boy', 'girl', 'unknown_legacy'));
 alter table public.participant_badge_awards
   alter column participant_gender_snapshot set default 'unknown_legacy',
-  drop constraint participant_badge_awards_gender_check,
   add constraint participant_badge_awards_gender_check
     check (participant_gender_snapshot in ('boy', 'girl', 'unknown_legacy'));
 
