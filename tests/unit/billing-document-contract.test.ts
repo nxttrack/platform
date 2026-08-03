@@ -61,6 +61,14 @@ test("facturen en creditnota's zijn server-side, genummerd en immutable", () => 
   assert.match(invoiceMigration, /revoke insert, update, delete on public\.billing_invoices from authenticated/i);
 });
 
+test("de factuurmigratie behoudt alle bestaande billing-eventtypen", () => {
+  assert.match(invoiceMigration, /'mandate_activated'/);
+  assert.match(invoiceMigration, /'reconciliation_exception'/);
+  assert.match(invoiceMigration, /'mandate_valid'/);
+  assert.match(invoiceMigration, /'invoice_issued'/);
+  assert.match(invoiceMigration, /'credit_note_issued'/);
+});
+
 test("tijdelijk aanbod gebruikt holds, fysieke capaciteit en providerbetaling zonder automatische plaatsing", () => {
   assert.match(offeringMigration, /offering_registrations/i);
   assert.match(offeringMigration, /hold_expires_at/i);
