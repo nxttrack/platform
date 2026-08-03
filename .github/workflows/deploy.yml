@@ -454,13 +454,25 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
+      - name: Phase 16 operational flow validation
+        run: pnpm run phase16:flow
+
       - name: Validate required six-theme portal matrix
         env:
           PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
         run: pnpm run test:portal-themes:e2e
 
-      - name: Phase 16 operational flow validation
-        run: pnpm run phase16:flow
+      - name: Upload six-theme portal matrix evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-staging-${{ github.sha }}-six-theme-portal-matrix
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Prepare Sprint 4 browser-mutation fixture
         run: pnpm run sprint4:prepare-mutations
