@@ -97,7 +97,12 @@ function CancelForm({ next, onTime, participantId, session, terminology }: { nex
           ? `Deze ${terminology.activity} wordt geannuleerd. Volgens de huidige termijn ontvang je hiervoor automatisch een credit.`
           : `Deze ${terminology.activity} wordt geannuleerd buiten de geldende termijn. Je ontvangt hiervoor geen credit.`
       }
-      hiddenFields={{ sessionId: session.id, participantId, next }}
+      hiddenFields={{
+        sessionId: session.id,
+        participantId,
+        next,
+        humanConfirmation: "confirmed"
+      }}
       title={`Wil je deze ${terminology.activity} annuleren?`}
       triggerLabel={
         <>

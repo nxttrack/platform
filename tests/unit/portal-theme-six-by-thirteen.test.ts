@@ -174,3 +174,15 @@ test("publieke theme-assets krijgen een immutable cachecontract", async () => {
   assert.match(nextConfig, /source: "\/portal-themes\/:path\*"/);
   assert.match(nextConfig, /public, max-age=31536000, immutable/);
 });
+
+test("annuleren blijft expliciet bevestigd in de canonieke planning en servercommand", async () => {
+  const [planning, lessonDetail, actions] = await Promise.all([
+    readFile(path.join(root, "apps/web/app/(portaal)/portaal/planning/parent-planning-page.tsx"), "utf8"),
+    readFile(path.join(root, "apps/web/app/(portaal)/portaal/lessen/[id]/page.tsx"), "utf8"),
+    readFile(path.join(root, "apps/web/lib/domain/parent-portal-actions.ts"), "utf8")
+  ]);
+  assert.match(planning, /ConfirmActionForm/);
+  assert.match(planning, /humanConfirmation: "confirmed"/);
+  assert.match(lessonDetail, /humanConfirmation: "confirmed"/);
+  assert.match(actions, /formData\.get\("humanConfirmation"\) !== "confirmed"/);
+});
