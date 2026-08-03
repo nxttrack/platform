@@ -89,10 +89,10 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await groupWizard.getByLabel("Einddatum").fill(scheduleDate);
     await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
     await groupWizard.getByLabel(state.users.instructor.fullName, { exact: true }).check();
-    await groupWizard.getByLabel("Regulier").fill("6");
-    await groupWizard.getByLabel("Flex").fill("1");
-    await groupWizard.getByLabel("Proef").fill("1");
-    await groupWizard.getByLabel("Fysieke limiet").fill("8");
+    await groupWizard.getByRole("spinbutton", { name: "Regulier", exact: true }).fill("6");
+    await groupWizard.getByRole("spinbutton", { name: "Flex", exact: true }).fill("1");
+    await groupWizard.getByRole("spinbutton", { name: "Proef", exact: true }).fill("1");
+    await groupWizard.getByRole("spinbutton", { name: "Fysieke limiet", exact: true }).fill("8");
     await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
     await mutationExpect(groupWizard.getByText(/\d+ lesmomenten controleerbaar · \d+ adviezen/)).toBeVisible();
     await groupWizard.getByRole("checkbox", { name: /Menselijke publicatiebevestiging/ }).check();
