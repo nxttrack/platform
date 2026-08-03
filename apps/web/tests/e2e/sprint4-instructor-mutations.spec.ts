@@ -44,7 +44,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
     await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
     await submitAssessment(page, assessment, `${marker}: gecontroleerde correctie naar 5.`);
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
+    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment.getByText("Superster", { exact: true })).toBeVisible();
 
@@ -72,7 +72,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
     await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
     await submitAssessment(page, assessment, `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
+    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
     await expect(assessment.getByText("Heel knap", { exact: true })).toBeVisible();
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
