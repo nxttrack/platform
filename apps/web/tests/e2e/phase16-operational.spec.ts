@@ -118,10 +118,10 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.participantName);
     await expectActiveShellLink(page, "Planning");
 
-    await page.getByRole("link", { name: "Betalingen", exact: true }).click();
+    await navigateToPaymentsFromShell(page);
     await page.waitForURL((url) => url.pathname === "/portaal/betalingen");
     await expectBodyToContain(page, phase.expected.paymentReference);
-    await expectActiveShellLink(page, "Betalingen");
+    await expectPaymentsShellItemActive(page);
 
     await page.goto("/portaal/ontwikkeling/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
@@ -165,6 +165,25 @@ async function expectBodyToContain(page: Page, text: string) {
 
 async function expectActiveShellLink(page: Page, label: string) {
   await expect(page.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+}
+
+async function navigateToPaymentsFromShell(page: Page) {
+  if (isMobilePortalViewport(page)) {
+    await page.getByRole("button", { name: "Meer", exact: true }).click();
+  }
+  await page.getByRole("link", { name: "Betalingen", exact: true }).click();
+}
+
+async function expectPaymentsShellItemActive(page: Page) {
+  if (isMobilePortalViewport(page)) {
+    await expect(page.getByRole("button", { name: "Meer", exact: true })).toHaveAttribute("aria-pressed", "true");
+    return;
+  }
+  await expectActiveShellLink(page, "Betalingen");
+}
+
+function isMobilePortalViewport(page: Page) {
+  return (page.viewportSize()?.width ?? 1280) < 1024;
 }
 
 function firstNameOf(displayName: string) {
