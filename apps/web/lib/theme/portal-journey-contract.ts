@@ -7,6 +7,22 @@ export type JourneyContractNode = {
   curriculumOrder?: number;
 };
 
+export function resolveJourneyDestination(input: {
+  stages: ReadonlyArray<{ id: string; name: string }>;
+  currentStageId: string | null | undefined;
+  programName: string | null | undefined;
+  fallback?: string;
+}) {
+  const currentStageIndex = input.stages.findIndex((stage) => stage.id === input.currentStageId);
+  const nextStage = currentStageIndex >= 0 ? input.stages[currentStageIndex + 1] : input.stages[0];
+  if (nextStage) return nextStage.name;
+
+  const programName = input.programName?.trim();
+  if (programName) return programName;
+
+  return input.stages[currentStageIndex]?.name ?? input.fallback ?? "jouw volgende doel";
+}
+
 export function selectDefaultJourneyNode<T extends JourneyContractNode>(nodes: readonly T[]) {
   return orderJourneyNodes(nodes)
     .filter((node) => !node.completed)

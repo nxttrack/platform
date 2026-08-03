@@ -8,6 +8,7 @@ import {
   journeyNodeFocusPosition,
   journeyNodePosition,
   orderJourneyNodes,
+  resolveJourneyDestination,
   selectDefaultJourneyNode
 } from "../../apps/web/lib/theme/portal-journey-contract";
 
@@ -54,6 +55,28 @@ test("focusvenster houdt het actieve punt exact gecentreerd met maximaal twee bu
     mobileXPercent: 53,
     mobileYPercent: 53
   });
+});
+
+test("Journey-bestemming gebruikt het volgende badje en eindigt bij het diplomadoel", () => {
+  const stages = [
+    { id: "badje-1", name: "Badje 1" },
+    { id: "badje-2", name: "Badje 2" }
+  ];
+  assert.equal(resolveJourneyDestination({
+    stages,
+    currentStageId: "badje-1",
+    programName: "Zwemdiploma A"
+  }), "Badje 2");
+  assert.equal(resolveJourneyDestination({
+    stages,
+    currentStageId: "badje-2",
+    programName: "Zwemdiploma A"
+  }), "Zwemdiploma A");
+  assert.equal(resolveJourneyDestination({
+    stages: [stages[0]!],
+    currentStageId: "badje-1",
+    programName: "Zwemdiploma A"
+  }), "Zwemdiploma A");
 });
 
 test("interactiecontract bevat deeplink, toetsenbord en uitsluitend horizontale wheel-capture", async () => {

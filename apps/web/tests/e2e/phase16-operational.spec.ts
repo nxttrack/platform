@@ -61,6 +61,7 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/admin/uitnodigingen", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Uitnodiging sturen" }).click();
     const invitationDrawer = page.getByRole("dialog", { name: "Account uitnodigen" });
+    await expect(invitationDrawer).toBeVisible({ timeout: 10_000 });
     await expect(invitationDrawer.getByLabel("E-mail")).toBeVisible();
     await expect(invitationDrawer.getByLabel("Rol")).toBeVisible();
     await expect(invitationDrawer.getByRole("button", { name: "Uitnodiging sturen" })).toBeVisible();
