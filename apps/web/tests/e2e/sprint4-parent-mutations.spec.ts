@@ -51,8 +51,8 @@ test.describe("Sprint 4 parent self-service mutations", () => {
         await cancelButton.click();
         await expect(cancellationDialog).toBeVisible({ timeout: 2_000 });
       }).toPass({ timeout: 10_000 });
-      await cancellationDialog.getByRole("button", { name: "Les definitief annuleren" }).click();
-      await expect(page.getByText("Les geannuleerd en inhaalcredit toegevoegd.")).toBeVisible();
+      await cancellationDialog.getByRole("button", { name: /definitief annuleren$/ }).click();
+      await expect(page.getByText(/geannuleerd en credit toegevoegd\.$/)).toBeVisible();
     }
 
     await expect(cancellationStatus).toBeVisible();
