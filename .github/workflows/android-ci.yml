@@ -77,7 +77,7 @@ jobs:
           set -o pipefail
           test "$license_exit" -eq 0
           "$sdkmanager_bin" \
-            "platform-tools" "platforms;android-37" "build-tools;37.0.0"
+            "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Run native quality gate
         working-directory: apps/android

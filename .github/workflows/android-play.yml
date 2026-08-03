@@ -92,7 +92,7 @@ jobs:
           set -o pipefail
           test "$license_exit" -eq 0
           "$sdkmanager_bin" \
-            "platform-tools" "platforms;android-37" "build-tools;37.0.0"
+            "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Validate protected API origin
         run: |
@@ -183,7 +183,7 @@ jobs:
           set -o pipefail
           test "$license_exit" -eq 0
           "$sdkmanager_bin" \
-            "platform-tools" "platforms;android-37" "build-tools;37.0.0"
+            "platform-tools" "platforms;android-37.0" "build-tools;37.0.0"
 
       - name: Validate protected release inputs
         run: |
