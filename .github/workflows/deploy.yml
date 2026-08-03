@@ -54,7 +54,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
 
       TARGET: ${{ inputs.target }}
       RELEASE_TARGET: ${{ inputs.target }}
@@ -386,7 +386,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
       TARGET: staging
       RELEASE_TARGET: staging
       RELEASE_CANONICAL_BRANCH: main
