@@ -8,6 +8,7 @@ const migrationPath = path.join(
   root,
   "supabase/migrations/20260802150000_curriculum_wizard_and_migrations.sql"
 );
+const phase16FixturePath = path.join(root, "scripts/staging/phase-16-operational-flow.mjs");
 
 test("wizard bewaart drafts, revisions en uitsluitend gestructureerde policies", async () => {
   const sql = await readFile(migrationPath, "utf8");
@@ -36,4 +37,18 @@ test("bestaande leerlingen blijven pinned tot preview, approval en execute", asy
   assert.match(sql, /create or replace function public\.execute_curriculum_migration/);
   assert.match(sql, /source = 'curriculum_migration'|curriculum_migration'/);
   assert.match(sql, /refresh_swim_progress_projections/);
+});
+
+test("stagingfixture publiceert zes versioned onderdelen en bewijst 16,7% via de actorcommand", async () => {
+  const source = await readFile(phase16FixturePath, "utf8");
+  const publishIndex = source.indexOf('admin.rpc("publish_curriculum_version"');
+  const enrollmentPinIndex = source.indexOf('await updateById("enrollments"');
+
+  assert.match(source, /validation_example:\s*"one_of_six_at_five_is_16_7_percent"/);
+  assert.match(source, /curriculumItemsResult\.data\?\.length !== 6/);
+  assert.ok(publishIndex >= 0);
+  assert.ok(publishIndex < enrollmentPinIndex);
+  assert.match(source, /instructor\.rpc\("finalize_swim_assessment"/);
+  assert.match(source, /target_rating:\s*5/);
+  assert.match(source, /target_idempotency_key:\s*`phase16:assessment:/);
 });
