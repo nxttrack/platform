@@ -136,7 +136,7 @@ function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCor
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
       <SelectField label="Badge-aanspreekvorm" name="gender">
-        <option value="unknown">Neutraal / onbekend</option>
+        <option value="unknown_legacy">Neutraal / onbekend</option>
         <option value="boy">Jongen</option>
         <option value="girl">Meisje</option>
       </SelectField>
