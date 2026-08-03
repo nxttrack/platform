@@ -338,6 +338,27 @@ async function ensureCoreDemoData(tenantId, users) {
   );
 
   await upsertOne(
+    "instructor_qualifications",
+    {
+      tenant_id: tenantId,
+      instructor_user_id: users.instructor.id,
+      program_id: program.id,
+      stage_id: stage.id,
+      resource_id: lane.id,
+      qualification_key: "phase16_zwemonderwijzer",
+      name: "Phase 16 zwemonderwijzer",
+      status: "active",
+      valid_from: "2026-01-01",
+      valid_until: "2035-12-31",
+      evidence_note: "Technische staging-fixture voor de transactionele planningscontrole.",
+      verified_by_user_id: users.tenantAdmin.id,
+      verified_at: new Date().toISOString()
+    },
+    "tenant_id,instructor_user_id,qualification_key,program_id,stage_id,resource_id",
+    "id"
+  );
+
+  await upsertOne(
     "group_instructor_assignments",
     {
       tenant_id: tenantId,

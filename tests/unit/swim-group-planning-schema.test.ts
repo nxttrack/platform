@@ -11,6 +11,10 @@ const migration = readFileSync(
   new URL("../../supabase/migrations/20260802190000_structured_group_planning.sql", import.meta.url),
   "utf8"
 );
+const phase16Fixture = readFileSync(
+  new URL("../../scripts/staging/phase-16-operational-flow.mjs", import.meta.url),
+  "utf8"
+);
 
 test("capaciteitsbuckets blijven afzonderlijk binnen één fysieke limiet", () => {
   assert.match(migration, /regular_capacity integer/i);
@@ -63,6 +67,18 @@ test("conflictviewmodel maakt hard en adviserend expliciet", () => {
   assert.equal(result.conflicts[0]?.blocking, true);
   assert.equal(result.conflicts[1]?.severity, "warning");
   assert.equal(result.canPublish, false);
+});
+
+test("stagingfixture legt geverifieerde kwalificatiemasterdata vast vóór actieve inzet", () => {
+  const qualification = phase16Fixture.indexOf('"instructor_qualifications"');
+  const groupAssignment = phase16Fixture.indexOf('"group_instructor_assignments"');
+  const sessionAssignment = phase16Fixture.indexOf('"session_instructor_assignments"');
+
+  assert.ok(qualification >= 0);
+  assert.ok(qualification < groupAssignment);
+  assert.ok(qualification < sessionAssignment);
+  assert.match(phase16Fixture, /verified_by_user_id:\s*users\.tenantAdmin\.id/);
+  assert.match(phase16Fixture, /status:\s*"active"/);
 });
 
 function validDraft(overrides: Record<string, unknown> = {}) {
