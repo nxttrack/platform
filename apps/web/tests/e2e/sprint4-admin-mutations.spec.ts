@@ -137,8 +137,8 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await openAction(page, "Les plannen");
     form = formWithButton(page, "Les opslaan");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
-    await form.getByLabel("Start").fill(dateTimeValue(5, 17, 0));
-    await form.getByLabel("Einde").fill(dateTimeValue(5, 17, 45));
+    await form.getByLabel("Start").fill(dateTimeValue(5, 17 + testInfo.retry, 0));
+    await form.getByLabel("Einde").fill(dateTimeValue(5, 17 + testInfo.retry, 45));
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
     await expectSavedStatus(page, "Opgeslagen: 1.");

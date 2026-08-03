@@ -107,7 +107,7 @@ function AvailabilityForm({ data }: { data: Awaited<ReturnType<typeof getPlannin
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <div className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</div>;
+    return <div className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success" role="status">Opgeslagen: {saved}.</div>;
   }
 
   if (error === "time") {
