@@ -43,7 +43,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await chooseAssessmentRating(assessment, 5);
     await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
     await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
+    await submitAssessment(page, assessment, `${marker}: gecontroleerde correctie naar 5.`);
     await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment.getByText("Superster", { exact: true })).toBeVisible();
@@ -71,7 +71,7 @@ test.describe("Sprint 4 instructor mutations", () => {
     await chooseAssessmentRating(assessment, 4);
     await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
     await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
+    await submitAssessment(page, assessment, `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
     await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
     await expect(assessment.getByText("Heel knap", { exact: true })).toBeVisible();
 
@@ -96,6 +96,19 @@ async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string)
   const confirmedRedirect = page.waitForURL((url) => url.searchParams.get("saved") === saved, { timeout: 15_000 });
   await submit.click();
   await confirmedRedirect;
+}
+
+async function submitAssessment(page: Page, assessment: Locator, correctionReason: string) {
+  const reason = assessment.getByLabel("Reden voor wijziging");
+  if (await reason.count()) {
+    await reason.fill(correctionReason);
+  }
+
+  await submitAndWaitForSaved(
+    page,
+    assessment.getByRole("button", { name: /Beoordeling vastleggen|Correctie vastleggen/ }),
+    "progress"
+  );
 }
 
 async function chooseAssessmentRating(assessment: Locator, value: 1 | 2 | 3 | 4 | 5) {
