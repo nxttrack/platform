@@ -106,6 +106,7 @@ const state = {
   expected: {
     participantName: core.participantName,
     parentName: roleAccounts.parent.fullName,
+    programId: core.program.id,
     programName: core.program.name,
     stageLabel: core.stage.badge_label,
     groupName: core.group.name,
