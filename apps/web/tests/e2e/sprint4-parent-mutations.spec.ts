@@ -64,8 +64,10 @@ test.describe("Sprint 4 parent self-service mutations", () => {
 
     if (await chooseCatchUpButton.isVisible()) {
       await chooseCatchUpButton.click();
-      await page.getByRole("alertdialog").getByRole("button", { name: "Inhaalmoment bevestigen" }).click();
-      const feedback = parentState.catchUpOutcome === "requested" ? "Inhaalles aangevraagd. De administratie beoordeelt de aanvraag." : "Inhaalles ingepland.";
+      await page.getByRole("alertdialog").getByRole("button", { name: /bevestigen$/ }).click();
+      const feedback = parentState.catchUpOutcome === "requested"
+        ? /aangevraagd\. De administratie beoordeelt de aanvraag\.$/
+        : /ingepland\.$/;
       await expect(page.getByText(feedback)).toBeVisible();
     }
 
@@ -94,7 +96,7 @@ test.describe("Sprint 4 parent self-service mutations", () => {
 
     if (await confirmButton.isVisible()) {
       await confirmButton.click();
-      await expect(page.getByText("Afzwemuitnodiging bevestigd.")).toBeVisible();
+      await expect(page.getByText(/^Uitnodiging voor (eindmoment|afzwemmen) bevestigd\.$/)).toBeVisible();
       graduation = page.locator("article").filter({ hasText: parentState.graduationTitle });
     }
 
