@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { normalizeBadgeGender } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
 
 export async function createProgramAction(formData: FormData) {
@@ -131,7 +132,7 @@ export async function createParticipantEnrollmentAction(formData: FormData) {
       guardian_user_id: guardianUserId,
       display_name: readRequired(formData, "displayName"),
       birth_date: readOptional(formData, "birthDate"),
-      gender: readOptional(formData, "gender") ?? "unknown_legacy",
+      gender: normalizeBadgeGender(readOptional(formData, "gender")),
       status: "active"
     })
     .select("id")
