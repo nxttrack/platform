@@ -71,13 +71,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          command -v sdkmanager
+          sdkmanager_bin=""
+          for candidate in \
+            "${ANDROID_SDK_ROOT:-}/cmdline-tools/latest/bin/sdkmanager" \
+            "${ANDROID_HOME:-}/cmdline-tools/latest/bin/sdkmanager" \
+            "$(command -v sdkmanager 2>/dev/null || true)"
+          do
+            if [[ -n "$candidate" && -x "$candidate" ]]; then
+              sdkmanager_bin="$candidate"
+              break
+            fi
+          done
+          if [[ -z "$sdkmanager_bin" ]]; then
+            echo "::error::sdkmanager was not found under ANDROID_SDK_ROOT, ANDROID_HOME, or PATH"
+            exit 1
+          fi
           set +o pipefail
-          yes | sdkmanager --licenses >/dev/null
+          yes | "$sdkmanager_bin" --licenses >/dev/null
           license_exit="${PIPESTATUS[1]}"
           set -o pipefail
           test "$license_exit" -eq 0
-          sdkmanager \
+          "$sdkmanager_bin" \
             "platform-tools" "platforms;android-37" "build-tools;37.0.0"
 
       - name: Validate protected API origin
@@ -148,13 +162,27 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          command -v sdkmanager
+          sdkmanager_bin=""
+          for candidate in \
+            "${ANDROID_SDK_ROOT:-}/cmdline-tools/latest/bin/sdkmanager" \
+            "${ANDROID_HOME:-}/cmdline-tools/latest/bin/sdkmanager" \
+            "$(command -v sdkmanager 2>/dev/null || true)"
+          do
+            if [[ -n "$candidate" && -x "$candidate" ]]; then
+              sdkmanager_bin="$candidate"
+              break
+            fi
+          done
+          if [[ -z "$sdkmanager_bin" ]]; then
+            echo "::error::sdkmanager was not found under ANDROID_SDK_ROOT, ANDROID_HOME, or PATH"
+            exit 1
+          fi
           set +o pipefail
-          yes | sdkmanager --licenses >/dev/null
+          yes | "$sdkmanager_bin" --licenses >/dev/null
           license_exit="${PIPESTATUS[1]}"
           set -o pipefail
           test "$license_exit" -eq 0
-          sdkmanager \
+          "$sdkmanager_bin" \
             "platform-tools" "platforms;android-37" "build-tools;37.0.0"
 
       - name: Validate protected release inputs
