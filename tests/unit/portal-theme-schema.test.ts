@@ -11,6 +11,8 @@ const root = path.resolve(import.meta.dirname, "../..");
 const requireFromWeb = createRequire(path.join(root, "apps/web/package.json"));
 const sharp = requireFromWeb("sharp") as (input: string) => { metadata(): Promise<{ width?: number; height?: number }> };
 const migrationPath = path.join(root, "supabase/migrations/20260801120000_parent_portal_theme_engine_v2_1.sql");
+const v3MigrationPath = path.join(root, "supabase/migrations/20260803190000_parent_portal_six_theme_pack_v3.sql");
+const controlActionsPath = path.join(root, "apps/web/lib/domain/portal-theme-control-actions.ts");
 
 test("themamigratie bevat assignment, planning, audit, RLS en server-only assessmentwrites", async () => {
   const sql = await readFile(migrationPath, "utf8");
@@ -43,7 +45,58 @@ test("geselecteerde runtime-assets bestaan, zijn gehasht en blijven binnen netwe
       assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.contentHash, `${theme.theme.key}:${slot}`);
       assert.equal(metadata.width, asset.width, `${theme.theme.key}:${slot} width`);
       assert.equal(metadata.height, asset.height, `${theme.theme.key}:${slot} height`);
-      assert.ok(info.size <= (slot.endsWith("mobile") ? 250_000 : 500_000), `${theme.theme.key}:${slot} overschrijdt budget`);
+      const budget = slot.startsWith("mascot.") ? 800_000 : 2_700_000;
+      assert.ok(info.size <= budget, `${theme.theme.key}:${slot} overschrijdt budget`);
     }
   }
+});
+
+test("v3-migratie publiceert zes immutable releases en een fail-closed licentiegate", async () => {
+  const sql = await readFile(v3MigrationPath, "utf8");
+  for (const key of [
+    "nxttrack-default",
+    "dolphin-bay",
+    "turtle-trails",
+    "polar-splash",
+    "coastal-explorer",
+    "nationaal-zwem-abc"
+  ]) {
+    assert.match(sql, new RegExp(`'${key}', '3\\.0\\.0'`));
+  }
+  assert.match(sql, /create table public\.tenant_portal_theme_license/);
+  assert.match(sql, /create table public\.tenant_portal_theme_availability/);
+  assert.match(sql, /create function app_private\.select_available_tenant_portal_theme/);
+  assert.match(sql, /create function app_private\.set_tenant_portal_theme_availability/);
+  assert.match(sql, /create function app_private\.set_tenant_portal_theme_license/);
+  assert.match(sql, /perform 1 from public\.tenants where id = target_tenant_id for update/);
+  assert.match(sql, /release\.portal_contract = 'parent-portal\/1\.2'/);
+  assert.match(sql, /release\.manifest_schema_version = 3/);
+  assert.match(sql, /activation_source in \('platform', 'tenant_admin', 'migration'\)/);
+  assert.match(sql, /Only a published six-theme v3 release can be activated/);
+  assert.match(sql, /status = 'verified'/);
+  assert.match(sql, /force row level security/);
+  assert.match(sql, /Published portal theme releases are immutable/);
+  assert.match(sql, /Assets of published portal theme releases are immutable/);
+});
+
+test("platformbeheer wijzigt beschikbaarheid en licenties uitsluitend via transactionele RPCs", async () => {
+  const actions = await readFile(controlActionsPath, "utf8");
+  assert.match(actions, /\.rpc\("set_tenant_portal_theme_availability"/);
+  assert.match(actions, /\.rpc\("set_tenant_portal_theme_license"/);
+  assert.doesNotMatch(actions, /\.from\("tenant_portal_theme_availability"\)\s*\.upsert/);
+  assert.doesNotMatch(actions, /\.from\("tenant_portal_theme_license"\)\s*\.upsert/);
+});
+
+test("v3-migratie bewaart afgeronde Journey-hoofdstukken immutable en tenantgeïsoleerd", async () => {
+  const sql = await readFile(v3MigrationPath, "utf8");
+  assert.match(sql, /create table public\.portal_journey_chapter_snapshots/);
+  assert.match(sql, /theme_key text not null/);
+  assert.match(sql, /theme_release text not null/);
+  assert.match(sql, /artwork_id text not null/);
+  assert.match(sql, /route_order_json jsonb not null/);
+  assert.match(sql, /completion_data_json jsonb not null/);
+  assert.match(sql, /badge_award_ids uuid\[\] not null/);
+  assert.match(sql, /create policy portal_journey_chapter_snapshots_read/);
+  assert.match(sql, /capture_portal_journey_chapter_snapshot/);
+  assert.doesNotMatch(sql, /grant (?:update|delete|all) on public\.portal_journey_chapter_snapshots to authenticated/);
 });

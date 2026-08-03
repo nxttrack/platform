@@ -4,6 +4,10 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  resolveTenantPortalTheme,
+  type ResolvedPortalTheme
+} from "@/lib/theme/portal-theme-server";
+import {
   getActiveTenant,
   type EnrollmentRow,
   type GroupMembershipRow,
@@ -429,6 +433,7 @@ export type ParentPortalData = {
   user: AuthenticatedTrustedAuthContext["user"];
   profile: ParentProfileRow | null;
   settings: ParentPortalSettings;
+  portalTheme: ResolvedPortalTheme;
   accessLinks: ParentAccessRow[];
   mutableParticipantIds: string[];
   participants: ParticipantRow[];
@@ -475,7 +480,10 @@ export async function getParentPortalDataForContext(
 ): Promise<ParentPortalData> {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
-  const access = await loadParentParticipantAccess(tenant.id, context.user.id);
+  const [access, portalTheme] = await Promise.all([
+    loadParentParticipantAccess(tenant.id, context.user.id),
+    resolveTenantPortalTheme(tenant.id)
+  ]);
   const participantIds = access.participantIds;
   const since = new Date();
 
@@ -796,6 +804,7 @@ export async function getParentPortalDataForContext(
     user: context.user,
     profile: (profileResult.data as ParentProfileRow | null) ?? null,
     settings: normalizeSettings(settingsResult.data),
+    portalTheme,
     accessLinks: access.links,
     mutableParticipantIds: access.mutableParticipantIds,
     participants,

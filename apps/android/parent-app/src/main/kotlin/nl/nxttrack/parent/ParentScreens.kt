@@ -19,7 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Mail
-import androidx.compose.material.icons.filled.Payments
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -55,18 +55,33 @@ import nl.nxttrack.mobile.domain.EarnedBadge
 import nl.nxttrack.mobile.domain.JourneyPresentation
 import nl.nxttrack.mobile.domain.Lesson
 import nl.nxttrack.mobile.domain.ParentBootstrap
+import nl.nxttrack.mobile.domain.PortalTerminology
 import nl.nxttrack.mobile.domain.RepositoryState
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-private val destinations = listOf(
+private fun destinations(terminology: PortalTerminology) = listOf(
     PearlDestination("overview", "Home", Icons.Default.Home),
     PearlDestination("planning", "Planning", Icons.Default.CalendarMonth),
-    PearlDestination("progress", "Zwemreis", Icons.Default.Route),
+    PearlDestination("development", titleCase(terminology.journey), Icons.Default.Route),
     PearlDestination("inbox", "Inbox", Icons.Default.Mail),
-    PearlDestination("payments", "Betalen", Icons.Default.Payments)
+    PearlDestination("more", "Meer", Icons.Default.MoreHoriz)
 )
+
+private fun pageTitle(page: ParentPage, terminology: PortalTerminology): String =
+    when (page) {
+        ParentPage.LESSON_DETAIL -> titleCase(terminology.activity)
+        ParentPage.PROGRESS -> titleCase(terminology.journey)
+        ParentPage.DIPLOMAS -> titleCase(terminology.finalCredentials)
+        else -> page.title
+    }
+
+private fun titleCase(value: String): String =
+    value.replaceFirstChar { character ->
+        if (character.isLowerCase()) character.titlecase(Locale("nl", "NL"))
+        else character.toString()
+    }
 
 @Composable
 fun ParentShell(
@@ -80,8 +95,8 @@ fun ParentShell(
         it.id == localState.selectedChildId
     } ?: data.children.firstOrNull()
     PearlFrame(
-        title = localState.page.title,
-        destinations = destinations,
+        title = pageTitle(localState.page, data.terminology),
+        destinations = destinations(data.terminology),
         selectedId = localState.page.primaryDestination,
         onDestinationSelected = viewModel::navigatePrimary,
         syncState = repositoryState.syncState,
@@ -104,6 +119,7 @@ fun ParentShell(
             ParentPage.LESSON_DETAIL -> LessonDetailScreen(
                 data.lessons.firstOrNull { it.id == localState.selectedLessonId },
                 selectedChild,
+                data.terminology,
                 contentModifier,
                 viewModel
             )
@@ -144,6 +160,7 @@ fun ParentShell(
                 contentModifier
             )
             ParentPage.PROFILE -> ProfileScreen(
+                data.terminology,
                 repositoryState,
                 contentModifier,
                 viewModel
@@ -179,7 +196,7 @@ private fun OverviewScreen(
         item {
             SectionHeading(
                 "Fijn dat je er bent",
-                "De actuele zwemreis, lessen en berichten van ${data.tenant.name}."
+                "De actuele ${data.terminology.journey}, ${data.terminology.activities} en berichten van ${data.tenant.name}."
             )
         }
         if (data.children.size > 1) {
@@ -191,7 +208,7 @@ private fun OverviewScreen(
             item {
                 EmptyState(
                     "Nog geen leerling gekoppeld",
-                    "Vraag de zwemschool om gezinstoegang te controleren."
+                    "Vraag de ${data.terminology.organization} om gezinstoegang te controleren."
                 )
             }
         } else {
@@ -207,7 +224,7 @@ private fun OverviewScreen(
                             ?.let(JourneyPresentation::visibleRings)
                             .orEmpty()
                         if (rings.isEmpty()) {
-                            Text("De zwemreis wordt klaargezet.")
+                            Text("De ${data.terminology.journey} wordt klaargezet.")
                         } else {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -235,7 +252,7 @@ private fun OverviewScreen(
                             OutlinedButton(
                                 onClick = { viewModel.openLesson(nextLesson.id) }
                             ) {
-                                Text("Bekijk les")
+                                Text("Bekijk ${data.terminology.activity}")
                             }
                         }
                     )
@@ -250,8 +267,8 @@ private fun OverviewScreen(
                     NxtCard(Modifier.fillMaxWidth()) {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             SectionHeading(
-                                "Afzwemuitnodiging",
-                                "Bevestig zelf; een percentage geeft nooit automatisch een diploma."
+                                "${titleCase(data.terminology.finalMoment)}uitnodiging",
+                                "Bevestig zelf; een percentage geeft nooit automatisch een ${data.terminology.finalCredential}."
                             )
                             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                 Button(onClick = {
@@ -287,7 +304,7 @@ private fun OverviewScreen(
             SectionHeading("Meer")
         }
         item {
-            QuickRoutes(viewModel)
+            QuickRoutes(viewModel, data.terminology)
         }
     }
 }
@@ -317,13 +334,13 @@ private fun ChildPicker(
 }
 
 @Composable
-private fun QuickRoutes(viewModel: ParentViewModel) {
+private fun QuickRoutes(viewModel: ParentViewModel, terminology: PortalTerminology) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RouteButton("Badges", Modifier.weight(1f)) {
                 viewModel.navigate(ParentPage.BADGES)
             }
-            RouteButton("Diploma's", Modifier.weight(1f)) {
+            RouteButton(titleCase(terminology.finalCredentials), Modifier.weight(1f)) {
                 viewModel.navigate(ParentPage.DIPLOMAS)
             }
         }
@@ -336,15 +353,20 @@ private fun QuickRoutes(viewModel: ParentViewModel) {
             }
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            RouteButton("Betalingen", Modifier.weight(1f)) {
+                viewModel.navigate(ParentPage.PAYMENTS)
+            }
             RouteButton("Media", Modifier.weight(1f)) {
                 viewModel.navigate(ParentPage.MEDIA)
             }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RouteButton("Gezinstoegang", Modifier.weight(1f)) {
                 viewModel.navigate(ParentPage.FAMILY_ACCESS)
             }
-        }
-        RouteButton("Feedback", Modifier.fillMaxWidth()) {
-            viewModel.navigate(ParentPage.FEEDBACK)
+            RouteButton("Feedback", Modifier.weight(1f)) {
+                viewModel.navigate(ParentPage.FEEDBACK)
+            }
         }
     }
 }
@@ -379,13 +401,16 @@ private fun PlanningScreen(
     ) {
         item {
             SectionHeading(
-                "Lessen",
+                titleCase(data.terminology.activities),
                 "Roostergeschiedenis blijft bewaard bij annuleringen en vakanties."
             )
         }
         if (lessons.isEmpty()) {
             item {
-                EmptyState("Geen lessen", "Er staan geen lessen in deze periode.")
+                EmptyState(
+                    "Geen ${data.terminology.activities}",
+                    "Er staan geen ${data.terminology.activities} in deze periode."
+                )
             }
         } else {
             items(lessons, key = { it.id }) { lesson ->
@@ -406,6 +431,7 @@ private fun PlanningScreen(
 private fun LessonDetailScreen(
     lesson: Lesson?,
     child: Child?,
+    terminology: PortalTerminology,
     modifier: Modifier,
     viewModel: ParentViewModel
 ) {
@@ -419,16 +445,19 @@ private fun LessonDetailScreen(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         if (lesson == null) {
-            EmptyState("Les niet gevonden", "Ververs de planning en probeer opnieuw.")
+            EmptyState(
+                "${titleCase(terminology.activity)} niet gevonden",
+                "Ververs de planning en probeer opnieuw."
+            )
         } else {
             LessonCard(lesson)
             Text(
-                "Een annulering wijzigt de historische les niet. Het recht op een inhaalles wordt server-side volgens het organisatiebeleid bepaald.",
+                "Een annulering wijzigt de historische ${terminology.activity} niet. Het recht op een ${terminology.makeUpActivity} wordt server-side volgens het organisatiebeleid bepaald.",
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (child?.canMutate == true && lesson.status == "scheduled") {
                 OutlinedButton(onClick = { confirmCancellation = true }) {
-                    Text("Les afmelden")
+                    Text("${titleCase(terminology.activity)} afmelden")
                 }
             }
         }
@@ -436,7 +465,7 @@ private fun LessonDetailScreen(
     if (confirmCancellation && lesson != null && child != null) {
         AlertDialog(
             onDismissRequest = { confirmCancellation = false },
-            title = { Text("Les afmelden?") },
+            title = { Text("${titleCase(terminology.activity)} afmelden?") },
             text = {
                 OutlinedTextField(
                     value = reason,
@@ -478,14 +507,18 @@ private fun ProgressScreen(
     ) {
         item {
             SectionHeading(
-                child?.let { "De zwemreis van ${it.displayName}" } ?: "De zwemreis",
-                "Alleen definitieve beoordelingen tellen mee; doorstroom en diploma blijven aparte besluiten."
+                child?.let { "De ${data.terminology.journey} van ${it.displayName}" }
+                    ?: "De ${data.terminology.journey}",
+                "Alleen definitieve beoordelingen tellen mee; doorstroom en ${data.terminology.finalCredential} blijven aparte besluiten."
             )
         }
         val journey = child?.journey
         if (journey == null) {
             item {
-                EmptyState("Nog geen zwemreis", "De zwemschool zet de leerlijn klaar.")
+                EmptyState(
+                    "Nog geen ${data.terminology.journey}",
+                    "De ${data.terminology.organization} zet de leerlijn klaar."
+                )
             }
         } else {
             item {
@@ -524,7 +557,7 @@ private fun ProgressScreen(
                         )
                         if (item.carryover) {
                             Text(
-                                "Openstaand uit vorig badje",
+                                "Openstaand uit vorig ${data.terminology.stage}",
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -761,13 +794,16 @@ private fun DiplomasScreen(
     ) {
         item {
             SectionHeading(
-                "Diplomakluis",
-                "Alleen daadwerkelijk uitgegeven diploma's staan hier."
+                "${titleCase(data.terminology.finalCredential)}kluis",
+                "Alleen daadwerkelijk uitgegeven ${data.terminology.finalCredentials} staan hier."
             )
         }
         if (data.diplomas.isEmpty()) {
             item {
-                EmptyState("Nog geen diploma's", "Uitgegeven diploma's verschijnen hier.")
+                EmptyState(
+                    "Nog geen ${data.terminology.finalCredentials}",
+                    "Uitgegeven ${data.terminology.finalCredentials} verschijnen hier."
+                )
             }
         }
         items(data.diplomas, key = { it.id }) { diploma ->
@@ -778,7 +814,7 @@ private fun DiplomasScreen(
                     diploma.issuedOn?.let { Text("Uitgegeven op $it") }
                     diploma.downloadPath?.let { path ->
                         OutlinedButton(onClick = { viewModel.download(path) }) {
-                            Text("Open diploma")
+                            Text("Open ${data.terminology.finalCredential}")
                         }
                     }
                 }
@@ -830,7 +866,7 @@ private fun FamilyAccessScreen(data: ParentBootstrap, modifier: Modifier) {
         item {
             SectionHeading(
                 "Gezinstoegang",
-                "Wijzigrechten worden per leerling door de zwemschool gecontroleerd."
+                "Wijzigrechten worden per leerling door de ${data.terminology.organization} gecontroleerd."
             )
         }
         items(data.children, key = { it.id }) { child ->
@@ -1122,6 +1158,7 @@ private fun FeedbackSurveyCard(
 
 @Composable
 private fun ProfileScreen(
+    terminology: PortalTerminology,
     repositoryState: RepositoryState,
     modifier: Modifier,
     viewModel: ParentViewModel
@@ -1144,6 +1181,8 @@ private fun ProfileScreen(
                 Text(repositoryState.session?.tenant?.name.orEmpty())
             }
         }
+        SectionHeading("Meer")
+        QuickRoutes(viewModel, terminology)
         OutlinedButton(
             onClick = viewModel::signOut,
             modifier = Modifier.fillMaxWidth()

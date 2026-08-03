@@ -488,6 +488,6 @@ class MobileRepository internal constructor(
 
     private companion object {
         const val REFRESH_MARGIN_SECONDS = 5 * 60L
-        const val DEFAULT_THEME_ASSET = "nxttrack-default-2.2.2.json"
+        const val DEFAULT_THEME_ASSET = "nxttrack-default-3.0.0.json"
     }
 }

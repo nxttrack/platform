@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 when {
                     repositoryState.session == null -> NativeLoginScreen(
                         title = "Ouderportaal",
-                        subtitle = "Planning, zwemreis, badges en betalingen in één veilige app.",
+                        subtitle = "Planning, ontwikkeling, badges en betalingen in één veilige app.",
                         email = localState.email,
                         password = localState.password,
                         isLoading = repositoryState.isLoading,

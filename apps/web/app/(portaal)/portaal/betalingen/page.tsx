@@ -9,6 +9,7 @@ import { revokeMollieMandateAction, startMollieMandateAction } from "@/lib/domai
 import { getSafeMollieCheckoutUrl } from "@/lib/domain/mollie-contract";
 import { canParentMutateParticipant, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
 
@@ -40,11 +41,12 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
   const paidPayments = manualPayments.filter((payment) => payment.status === "paid");
   const openAmount = openPayments.reduce((total, payment) => total + payment.amount_cents, 0);
   const overdueAmount = overduePayments.reduce((total, payment) => total + payment.amount_cents, 0);
+  const terminology = getPortalTerminology(data.portalTheme.manifest);
 
   return (
     <div className="space-y-6">
       <PageHeader kicker="Duidelijk inzicht in je betalingen" title="Betalingen" subtitle="Openstaande bedragen, facturen en je betaalmethode op één plek." />
-      <Feedback saved={saved} error={error} />
+      <Feedback saved={saved} error={error} organization={terminology.organization} />
       <ParentSectionNav
         items={[
           { active: true, href: participantContextHref("/portaal/betalingen#overzicht", selectedParticipantId), label: "Overzicht" },
@@ -54,7 +56,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
         label="Betalingen onderdelen"
       />
 
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-4">
         <Metric label="Abonnementen" value={subscriptions.length.toString()} />
         <Metric label="Openstaand" value={formatMoney(openAmount)} />
         <Metric label="Te laat" tone={overdueAmount > 0 ? "danger" : "success"} value={formatMoney(overdueAmount)} />
@@ -103,7 +105,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                       <p className="mt-1 text-xs leading-5 text-muted-foreground">
                         Vastgelegd {mandate.consent_recorded_at ? formatDateTime(mandate.consent_recorded_at) : "via Mollie"}; toekomstige bedragen worden vooraf aangekondigd.
                       </p>
-                      <form action={revokeMollieMandateAction} className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+                      <form action={revokeMollieMandateAction} className="mt-3 grid gap-2 sm:grid-cols-2">
                         <input name="mandateId" type="hidden" value={mandate.id} />
                         <label className="text-xs font-semibold text-muted-foreground">
                           Typ REVOKE om de machtiging in te trekken
@@ -416,7 +418,7 @@ function EmptyState({ children }: { children: ReactNode }) {
   return <p className="rounded-lg border border-dashed border-border bg-muted/50 px-3 py-4 text-sm text-muted-foreground">{children}</p>;
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
+function Feedback({ saved, error, organization }: { saved?: string; error?: string; organization: string }) {
   const savedMessages: Record<string, string> = {
     "incasso-started": "Mollie is geopend voor de eerste betaling en incassomachtiging.",
     "mandate-revoked": "De incassomachtiging is ingetrokken; betalingen staan weer op handmatig.",
@@ -426,7 +428,7 @@ function Feedback({ saved, error }: { saved?: string; error?: string }) {
     "incasso-already-started": "Er loopt al een betaalpoging. Gebruik de bestaande Mollie-link hieronder.",
     "incasso-consent": "Bevestig expliciet dat je akkoord gaat met de terugkerende incasso.",
     "incasso-customer": "Het Mollie-klantprofiel kon niet veilig worden aangemaakt.",
-    "incasso-disabled": "Automatische incasso is nog niet door de zwemschool ingeschakeld.",
+    "incasso-disabled": `Automatische incasso is nog niet door de ${organization} ingeschakeld.`,
     "incasso-not-ready": "Dit abonnement of deze betaling is nog niet klaar voor incasso.",
     "incasso-provider": "De Mollie-configuratie is niet compleet.",
     "incasso-provider-api": "Mollie kon de aanvraag niet verwerken. Probeer later opnieuw.",

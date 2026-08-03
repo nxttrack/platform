@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readdir, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { portalThemeCatalog } from "../../apps/web/lib/theme/portal-theme-registry";
@@ -8,6 +8,9 @@ const outputDirectory = path.resolve(import.meta.dirname, "../../contracts/paren
 
 async function main() {
   await mkdir(outputDirectory, { recursive: true });
+  for (const file of await readdir(outputDirectory)) {
+    if (file.endsWith(".json")) await unlink(path.join(outputDirectory, file));
+  }
   for (const manifest of portalThemeCatalog) {
     const output = toNativeThemeTokenExport(manifest);
     const file = path.join(outputDirectory, `${manifest.theme.key}-${manifest.theme.release}.json`);

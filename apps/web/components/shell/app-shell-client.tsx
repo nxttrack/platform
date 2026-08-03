@@ -103,7 +103,7 @@ export type ShellNotificationCenter = {
 };
 
 type Props = {
-  brand: { title: string; subtitle: string };
+  brand: { title: string; subtitle: string; logoUrl?: string | null };
   nav: ShellNavItem[];
   user: { name: string; role: string };
   children: ReactNode;
@@ -196,14 +196,16 @@ export function AppShellClient({
       className={cn(
         "flex min-h-screen",
         accent === "admin" && "admin-density",
-        mobileBottomNav && "parent-portal-shell md:gap-4 md:p-3"
+        mobileBottomNav && "parent-portal-shell"
       )}
       data-portal-route={mobileBottomNav ? pathname : undefined}
     >
       <aside
         className={cn(
-          "relative hidden shrink-0 border-r border-sidebar-border bg-sidebar/90 backdrop-blur transition-[width] duration-200 md:block",
-          mobileBottomNav && "sticky top-3 h-[calc(100vh-24px)] overflow-hidden rounded-[var(--portal-hero-radius)] border shadow-card",
+          "relative shrink-0 border-r border-sidebar-border bg-sidebar/90 backdrop-blur transition-[width] duration-200",
+          mobileBottomNav
+            ? "portal-parent-sidebar sidebar hidden overflow-hidden border shadow-card lg:block"
+            : "hidden md:block",
           collapsed ? "w-[76px]" : mobileBottomNav ? "w-[240px]" : "w-[248px]"
         )}
       >
@@ -213,7 +215,7 @@ export function AppShellClient({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className={cn(
           "sticky top-0 z-40 flex min-h-14 items-center gap-2 border-b border-border bg-card/90 px-3 backdrop-blur md:gap-3 md:px-6",
-          mobileBottomNav && "pt-[env(safe-area-inset-top)] md:top-3 md:rounded-[var(--portal-card-radius)] md:border md:shadow-soft"
+          mobileBottomNav && "portal-parent-header topbar"
         )}>
           {!mobileBottomNav ? <Sheet>
             <SheetTrigger asChild>
@@ -228,11 +230,26 @@ export function AppShellClient({
           </Sheet> : null}
 
           {mobileBottomNav ? (
-            <div aria-label={brand.title} className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--portal-rail)] text-white sm:hidden" role="img">
-              <Waves aria-hidden="true" className="size-5" />
+            <div aria-label={`${brand.title}, ${brand.subtitle}`} className="portal-mobile-brand lg:hidden">
+              <span aria-hidden="true" className="portal-mobile-brand__mark">
+                {getInitials(brand.title).slice(0, 2)}
+                {brand.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    alt=""
+                    className="portal-mobile-brand__logo"
+                    onError={(event) => { event.currentTarget.hidden = true; }}
+                    src={brand.logoUrl}
+                  />
+                ) : null}
+              </span>
+              <span className="min-w-0">
+                <strong className="portal-mobile-brand__title">{brand.title}</strong>
+                <span className="portal-mobile-brand__subtitle">{brand.subtitle}</span>
+              </span>
             </div>
           ) : null}
-          <div className={cn("min-w-0", mobileBottomNav && "hidden sm:block")}>
+          <div className={cn("min-w-0", mobileBottomNav && "hidden lg:block")}>
             <p className="truncate text-xs uppercase tracking-wider text-muted-foreground">{brand.title}</p>
             <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
@@ -255,9 +272,20 @@ export function AppShellClient({
             )}
           </div>
         </header>
-        <main className={cn("min-w-0 flex-1 p-4 md:p-6 2xl:p-8", mobileBottomNav && "pb-[calc(6rem+env(safe-area-inset-bottom))] md:pb-6 2xl:pb-8")}>{children}</main>
+        <main className={cn(
+          "min-w-0 flex-1",
+          mobileBottomNav
+            ? "portal-parent-main"
+            : "p-4 md:p-6 2xl:p-8"
+        )}>{children}</main>
       </div>
-      {mobileBottomNav ? <MobileBottomNavigation activeHref={activeHref} nav={contextualNav} /> : null}
+      {mobileBottomNav ? (
+        <MobileBottomNavigation
+          activeHref={activeHref}
+          nav={contextualNav}
+          profileMenu={contextualProfileMenu}
+        />
+      ) : null}
     </div>
   );
 }
@@ -408,19 +436,32 @@ function ProfileMenu({
   );
 }
 
-function MobileBottomNavigation({ activeHref, nav }: { activeHref?: string; nav: ShellNavItem[] }) {
+function MobileBottomNavigation({
+  activeHref,
+  nav,
+  profileMenu
+}: {
+  activeHref?: string;
+  nav: ShellNavItem[];
+  profileMenu?: ShellNavItem[];
+}) {
+  const primaryItems = nav.filter((item) => item.icon !== "card").slice(0, 4);
+  const paymentItem = nav.find((item) => item.icon === "card");
+  const moreItems = [...(paymentItem ? [paymentItem] : []), ...(profileMenu ?? [])];
+  const moreActive = moreItems.some((item) => activeHref === stripContextParameter(item.href));
+
   return (
     <nav
       aria-label="Mobiele hoofdnavigatie"
-      className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgb(11_47_107_/_35%)] backdrop-blur md:hidden"
+      className="portal-mobile-navigation mobile-bottom-nav fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-border bg-card/95 px-1 pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_30px_-18px_rgb(11_47_107_/_35%)] backdrop-blur lg:hidden"
     >
-      {nav.map((item) => {
+      {primaryItems.map((item) => {
         const Icon = shellIcons[item.icon];
         const active = activeHref === stripContextParameter(item.href);
         return (
           <Link
             aria-current={active ? "page" : undefined}
-            className={cn("relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-[9px] font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", active ? "text-primary" : "text-muted-foreground")}
+            className={cn("mobile-nav-item relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-[9px] font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", active ? "text-primary" : "text-muted-foreground")}
             href={item.href}
             key={item.href}
           >
@@ -430,6 +471,39 @@ function MobileBottomNavigation({ activeHref, nav }: { activeHref?: string; nav:
           </Link>
         );
       })}
+      <Popover>
+        <PopoverTrigger asChild>
+          <button
+            aria-label="Meer"
+            aria-pressed={moreActive}
+            className={cn(
+              "mobile-nav-item relative flex min-h-[64px] min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-0.5 text-[9px] font-semibold leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              moreActive ? "text-primary" : "text-muted-foreground"
+            )}
+            type="button"
+          >
+            {moreActive ? <span aria-hidden="true" className="absolute inset-x-3 top-0 h-0.5 rounded-full bg-primary" /> : null}
+            <User className={cn("size-5", moreActive && "stroke-[2.5]")} />
+            <span>Meer</span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" className="mb-2 w-[min(92vw,340px)] overflow-hidden p-2">
+          <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Profiel en meer</p>
+          {moreItems.map((item) => {
+            const Icon = shellIcons[item.icon];
+            return (
+              <Link
+                className="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground outline-none transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+                href={item.href}
+                key={item.href}
+              >
+                <Icon className="size-[18px] text-primary" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </PopoverContent>
+      </Popover>
     </nav>
   );
 }

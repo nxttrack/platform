@@ -14,7 +14,7 @@ const previewRoutes: Array<{ id: ParentPortalRouteId; label: string }> = [
   { id: "overview", label: "Overzicht" },
   { id: "planning", label: "Planning" },
   { id: "lesson-detail", label: "Lesdetail" },
-  { id: "progress", label: "Ontwikkeling" },
+  { id: "development", label: "Ontwikkeling" },
   { id: "badges", label: "Badges" },
   { id: "media", label: "Media" },
   { id: "diplomas", label: "Diploma’s" },
@@ -22,7 +22,7 @@ const previewRoutes: Array<{ id: ParentPortalRouteId; label: string }> = [
   { id: "payments", label: "Betalingen" },
   { id: "documents", label: "Documenten" },
   { id: "feedback", label: "Feedback" },
-  { id: "family-access", label: "Gezin & toegang" },
+  { id: "children", label: "Gezin & toegang" },
   { id: "profile", label: "Profiel & meer" }
 ];
 
@@ -129,7 +129,7 @@ function PreviewViewport({
   const progress = mode === "mobile"
     ? manifest.assets["progress.journey.mobile"]?.path
     : manifest.assets["progress.journey.desktop"]?.path;
-  const artwork = state === "error" ? null : routeId === "progress" ? progress : routeId === "overview" ? overview : null;
+  const artwork = state === "error" ? null : routeId === "development" ? progress : routeId === "overview" ? overview : null;
   const icon = state === "locked"
     ? <LockKeyhole />
     : state === "error"

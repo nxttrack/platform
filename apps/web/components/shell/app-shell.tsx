@@ -6,7 +6,7 @@ import type { GlobalSearchItem } from "@/components/shell/global-command-palette
 export type NavItem = ShellNavItem;
 
 type Props = {
-  brand: { title: string; subtitle: string };
+  brand: { title: string; subtitle: string; logoUrl?: string | null };
   nav: ShellNavItem[];
   user: { name: string; role: string };
   children: ReactNode;

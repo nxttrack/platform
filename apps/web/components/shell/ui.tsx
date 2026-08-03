@@ -39,7 +39,17 @@ export function StatusPill({ tone, className, children, ...props }: ComponentPro
   return <span className={cn(statusPillVariants({ tone }), className)} {...props}>{children}</span>;
 }
 
-export function ProgressRing({ value, size = 96, label }: { value: number; size?: number; label?: string }) {
+export function ProgressRing({
+  value,
+  size = 96,
+  label,
+  className
+}: {
+  value: number;
+  size?: number;
+  label?: string;
+  className?: string;
+}) {
   const normalizedValue = Math.min(100, Math.max(0, value));
   const radius = (size - 10) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -47,8 +57,8 @@ export function ProgressRing({ value, size = 96, label }: { value: number; size?
   const accessibleLabel = label ? `${label}: ${normalizedValue}%` : `${normalizedValue}% voortgang`;
 
   return (
-    <div aria-label={accessibleLabel} className="relative inline-flex items-center justify-center" role="img" style={{ width: size, height: size }}>
-      <svg aria-hidden="true" className="-rotate-90" height={size} width={size}>
+    <div aria-label={accessibleLabel} className={cn("relative inline-flex items-center justify-center", className)} role="img" style={{ width: size, height: size }}>
+      <svg aria-hidden="true" className="-rotate-90" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
         <circle className="fill-none stroke-muted" cx={size / 2} cy={size / 2} r={radius} strokeWidth={8} />
         <circle
           className="fill-none stroke-primary transition-[stroke-dashoffset] duration-500 motion-reduce:transition-none"

@@ -36,6 +36,7 @@ const authCases: AuthCase[] = [
 
 const configuredCases = authCases.filter((authCase) => authCase.username && authCase.password);
 const requireAuthenticatedWorkflows = process.env.E2E_REQUIRE_AUTHENTICATED_WORKFLOWS === "true";
+const themeKeyPattern = /^(nxttrack-default|dolphin-bay|turtle-trails|polar-splash|coastal-explorer|nationaal-zwem-abc)$/;
 
 test.describe("authenticated role workflows", () => {
   test.beforeAll(() => {
@@ -51,7 +52,7 @@ test.describe("authenticated role workflows", () => {
   test.skip(configuredCases.length === 0, "Set E2E_* credentials to run authenticated staging workflows.");
 
   for (const authCase of authCases) {
-    test(`${authCase.label} can sign in and reach ${authCase.path}`, async ({ page }, testInfo) => {
+    test(`${authCase.label} can sign in and reach ${authCase.path}`, async ({ page }) => {
       test.skip(!authCase.username || !authCase.password, `Missing credentials for ${authCase.label}.`);
 
       const failures = collectRuntimeFailures(page);
@@ -77,21 +78,20 @@ test.describe("authenticated role workflows", () => {
 
       if (authCase.label === "parent") {
         const themedRoot = page.locator("[data-portal-theme]");
-        const overviewJourney = page.locator(".portal-overview-journey");
+        const overviewJourney = page.locator(".portal-journey");
         await expect(themedRoot).toBeVisible();
         await expect(overviewJourney).toBeVisible();
-        await expect(overviewJourney).toHaveAttribute("data-overview-recipe", /^overview\//);
+        await expect(overviewJourney).toHaveAttribute("data-theme-key", themeKeyPattern);
         const themeKey = await themedRoot.getAttribute("data-portal-theme");
-        const backgroundImage = await overviewJourney.evaluate((element) => getComputedStyle(element).backgroundImage);
-        if (testInfo.project.name === "chromium-mobile" && themeKey === "nxttrack-default") {
-          expect(backgroundImage).toBe("none");
-        } else {
-          expect(backgroundImage).toContain("/portal-themes/");
-        }
+        const backgroundImage = await overviewJourney.locator(".portal-journey__scene").evaluate((element) => getComputedStyle(element).backgroundImage);
+        expect(backgroundImage).toContain("/portal-themes/");
 
-        if (themeKey === "ocean-quest") {
-          await expect(overviewJourney).toHaveAttribute("data-overview-recipe", "overview/pearl-route-v2");
-          await expect(overviewJourney.getByText("Ocean Quest", { exact: true })).toBeVisible();
+        if (themeKey === "nationaal-zwem-abc") {
+          const license = await themedRoot.getAttribute("data-portal-theme-license");
+          await expect(overviewJourney.getByText(
+            license === "verified" ? "Nationaal Zwem ABC" : "Diplomareis A–B–C",
+            { exact: false }
+          )).toBeVisible();
         }
 
         await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });

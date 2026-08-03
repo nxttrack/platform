@@ -94,6 +94,9 @@ export async function updateParentCommunicationPreferencesAction(formData: FormD
 
 export async function cancelLessonAction(formData: FormData) {
   const nextPath = getFormNextPath(formData, "/portaal/lessen");
+  if (formData.get("humanConfirmation") !== "confirmed") {
+    redirectWithStatus(nextPath, "error", "confirmation");
+  }
   const context = await requirePrivateShellContext("/portaal/lessen");
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();

@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 3,
+  "portalContract": "parent-portal/1.2",
+  "themeKey": "dolphin-bay",
+  "release": "3.0.0",
+  "compatibility": {
+    "portalContract": "parent-portal/1.2",
+    "minimumWebBuild": "2026.08.03",
+    "requiredFeatureFlags": [
+      "parent_portal_theme_pack_v3"
+    ]
+  },
+  "navigation": {
+    "primaryDestinations": [
+      "overview",
+      "planning",
+      "development",
+      "inbox",
+      "more"
+    ],
+    "routeIds": [
+      "overview",
+      "planning",
+      "lesson-detail",
+      "development",
+      "badges",
+      "media",
+      "diplomas",
+      "inbox",
+      "payments",
+      "documents",
+      "feedback",
+      "children",
+      "profile"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "canvas": "#EFFCFF",
+      "surface": "rgba(255,255,255,.96)",
+      "surfaceAlt": "#D7F8FB",
+      "text": "#073351",
+      "textMuted": "#617F91",
+      "primary": "#087BD5",
+      "primaryStrong": "#073351",
+      "secondary": "#0DC3C8",
+      "reward": "#FFC857",
+      "rail": "#052B4D",
+      "info": "#087BD5",
+      "success": "#24B88A",
+      "warning": "#7A4B00",
+      "danger": "#FF7F73"
+    },
+    "gradients": {
+      "page": [
+        "#EFFCFF",
+        "#D7F8FB",
+        "#EEFBFF"
+      ],
+      "sidebar": [
+        "#075071",
+        "#063D61",
+        "#052B4D"
+      ]
+    },
+    "radii": {
+      "card": "22px",
+      "hero": "29px"
+    },
+    "typography": {
+      "display": "\"Inter Variable\", Inter, system-ui, sans-serif",
+      "body": "\"Inter Variable\", Inter, system-ui, sans-serif"
+    },
+    "motionMilliseconds": {
+      "microMs": 140,
+      "standardMs": 220,
+      "celebrationMs": 480
+    }
+  },
+  "recipes": {
+    "shell": "portal-shell/shared-v1",
+    "pages": {
+      "overview": "overview/journey-engine-v1",
+      "planning": "planning/timeline-v1",
+      "lesson-detail": "page/data-first-v2",
+      "development": "development/progress-v1",
+      "badges": "badges/placeholder-wall-v1",
+      "media": "page/data-first-v2",
+      "diplomas": "page/data-first-v2",
+      "inbox": "page/data-first-v2",
+      "payments": "page/data-first-v2",
+      "documents": "page/data-first-v2",
+      "feedback": "page/data-first-v2",
+      "children": "page/data-first-v2",
+      "profile": "page/data-first-v2"
+    },
+    "components": {
+      "assessment": "assessment/five-point-v1",
+      "childPicker": "child-picker/pearl-v1",
+      "inboxActions": "inbox-actions/icon-pair-v1",
+      "mediaBlend": "media-blend/surface-fade-v1"
+    }
+  },
+  "assets": {
+    "overview.hero.desktop": {
+      "path": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "contentHash": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "overview.hero.mobile": {
+      "path": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "contentHash": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.desktop": {
+      "path": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "contentHash": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.mobile": {
+      "path": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "contentHash": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "mascot.idle": {
+      "path": "/portal-themes/dolphin-bay/mascot.png",
+      "contentHash": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5",
+      "width": 1254,
+      "height": 1254,
+      "mimeType": "image/png",
+      "decorative": true
+    }
+  },
+  "badges": {
+    "familyKey": "neutral-artwork-placeholders",
+    "release": "1.0.0",
+    "fallbackRecipe": "badge-fallback/neutral-placeholder-v1",
+    "status": "review"
+  },
+  "behavior": {
+    "hapticsProfile": "playful",
+    "soundProfile": "off-by-default",
+    "offlineCacheKey": "tenantId+themeKey+release",
+    "unknownRecipe": "fallback-to-default-and-report",
+    "childPicker": "native-popover-or-sheet",
+    "secureExternalNavigationOnly": true
+  },
+  "assessment": {
+    "scaleVersion": "five_point_v1",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unratedValue": null,
+    "displayModes": [
+      "smileys",
+      "stars"
+    ],
+    "optionCount": 5
+  },
+  "accessibility": {
+    "colorMode": "light",
+    "minimumContrast": "WCAG-AA",
+    "supportsReducedMotion": true,
+    "supportsDynamicType": true
+  }
+}

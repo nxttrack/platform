@@ -34,7 +34,7 @@ test("surprisebadges en legacy gender zijn afgeschermd in database en viewmodel"
   const [sql, domainSource, pageSource] = await Promise.all([
     readFile(migrationPath, "utf8"),
     readFile(path.join(root, "apps/web/lib/domain/badge-system.ts"), "utf8"),
-    readFile(path.join(root, "apps/web/app/(portaal)/portaal/badges/page.tsx"), "utf8")
+    readFile(path.join(root, "apps/web/app/(portaal)/portaal/ontwikkeling/badges/parent-badges-page.tsx"), "utf8")
   ]);
   assert.match(sql, /unknown_legacy/);
   assert.match(sql, /badge_catalog_surprise_safe_read/);

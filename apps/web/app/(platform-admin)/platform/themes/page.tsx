@@ -6,7 +6,9 @@ import { PageHeader, StatusPill } from "@/components/shell/ui";
 import {
   activatePortalThemeAction,
   rollbackPortalThemeAction,
-  schedulePortalThemeAction
+  schedulePortalThemeAction,
+  setPortalThemeAvailabilityAction,
+  setPortalThemeLicenseAction
 } from "@/lib/domain/portal-theme-control-actions";
 import { getPortalThemeControlCenterData } from "@/lib/domain/portal-theme-control";
 import { portalThemeCssVariables } from "@/lib/theme/portal-theme-web";
@@ -21,6 +23,17 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
   if (!data.authorized) return <p className="rounded-xl border border-danger/20 bg-danger/10 p-5 text-danger">Geen toegang.</p>;
   const assignmentByTenant = new Map(data.assignments.map((row) => [row.tenant_id, row]));
   const scheduleByTenant = new Map(data.schedules.map((row) => [row.tenant_id, row]));
+  const nationalLicenseByTenant = new Map(
+    data.licenses
+      .filter((row) => row.theme_key === "nationaal-zwem-abc")
+      .map((row) => [row.tenant_id, row])
+  );
+  const availabilityByTenantAndRelease = new Map(
+    data.availability.map((row) => [
+      `${row.tenant_id}:${row.theme_key}@${row.theme_release}`,
+      row
+    ])
+  );
   const saved = first(params.saved);
   const error = first(params.error);
 
@@ -30,7 +43,7 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
       {saved ? <p className="rounded-xl border border-success/25 bg-success/10 p-4 text-sm font-semibold text-success">Theme-operatie is transactioneel opgeslagen.</p> : null}
       {error ? <p className="rounded-xl border border-danger/25 bg-danger/10 p-4 text-sm font-semibold text-danger">Theme-operatie is veilig gestopt; de vorige actieve release bleef behouden.</p> : null}
 
-      <section className="grid gap-4 xl:grid-cols-5">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.catalog.map((theme) => {
           return (
             <article className="overflow-hidden border border-border bg-card shadow-card" key={`${theme.theme.key}@${theme.theme.release}`} style={{ borderRadius: theme.tokens.radius.hero }}>
@@ -55,6 +68,7 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
           {data.tenants.map((tenant) => {
             const active = assignmentByTenant.get(tenant.id);
             const schedule = scheduleByTenant.get(tenant.id);
+            const nationalLicense = nationalLicenseByTenant.get(tenant.id);
             return (
               <article className="grid gap-4 rounded-xl border border-border p-4 xl:grid-cols-[1fr_2fr]" key={tenant.id}>
                 <div>
@@ -66,6 +80,31 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
                   </div>
                 </div>
                 <div className="grid gap-3">
+                  <div className="grid gap-2 rounded-xl border border-border bg-muted/20 p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">Beschikbaar voor organisatiebeheer</p>
+                    <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+                      {data.catalog.map((theme) => {
+                        const availability = availabilityByTenantAndRelease.get(
+                          `${tenant.id}:${theme.theme.key}@${theme.theme.release}`
+                        );
+                        const enabled = availability?.is_enabled ?? false;
+                        return (
+                          <form action={setPortalThemeAvailabilityAction} className="rounded-lg border border-border bg-background p-2" key={`${tenant.id}:${theme.theme.key}`}>
+                            <input name="tenantId" type="hidden" value={tenant.id} />
+                            <input name="themeRelease" type="hidden" value={`${theme.theme.key}@${theme.theme.release}`} />
+                            <input name="availability" type="hidden" value={enabled ? "disabled" : "enabled"} />
+                            <input name="reason" type="hidden" value={`${enabled ? "Uitgeschakeld" : "Beschikbaar gesteld"} via Theme Control Center`} />
+                            <div className="flex min-h-11 items-center justify-between gap-2">
+                              <span className="min-w-0 truncate text-xs font-semibold">{theme.theme.displayName}</span>
+                              <Button size="sm" type="submit" variant={enabled ? "outline" : "default"}>
+                                {enabled ? "Uitschakelen" : "Inschakelen"}
+                              </Button>
+                            </div>
+                          </form>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <form action={activatePortalThemeAction} className="grid gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
                     <input name="tenantId" type="hidden" value={tenant.id} />
                     <ReleaseSelect catalog={data.catalog} />
@@ -89,6 +128,16 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
                       <Button type="submit" variant="outline"><History className="size-4" />Rol terug</Button>
                     </form>
                   ) : null}
+                  <form action={setPortalThemeLicenseAction} className="grid gap-2 border-t border-border pt-3 md:grid-cols-[1fr_1fr_auto]">
+                    <input name="tenantId" type="hidden" value={tenant.id} />
+                    <select className="h-11 rounded-lg border border-input bg-background px-3 text-sm font-semibold" defaultValue={nationalLicense?.status === "verified" ? "verified" : "revoked"} name="licenseStatus">
+                      <option value="verified">Naamlicentie geverifieerd</option>
+                      <option value="revoked">Naamlicentie intrekken</option>
+                    </select>
+                    <input className="h-11 rounded-lg border border-input bg-background px-3 text-sm" defaultValue={nationalLicense?.evidence_reference ?? ""} maxLength={500} name="evidenceReference" placeholder="Bewijsreferentie (verplicht bij verificatie)" />
+                    <input name="reason" type="hidden" value="Naamlicentie door platformbeheer ingetrokken" />
+                    <Button type="submit" variant="outline"><ShieldCheck className="size-4" />Naamgate opslaan</Button>
+                  </form>
                 </div>
               </article>
             );

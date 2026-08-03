@@ -1,0 +1,326 @@
+{
+  "manifestVersion": "1.0.0",
+  "canonicalRouteCount": 13,
+  "compatibilityRouteCount": 7,
+  "canonicalRoutes": [
+    {
+      "id": "overview",
+      "route": "/portaal",
+      "prototypeState": "overview",
+      "navigation": "primary",
+      "functions": [
+        "family-dashboard",
+        "profile-child-switch",
+        "interactive-journey",
+        "current-goal",
+        "level-progress-ring",
+        "final-progress-ring",
+        "next-session",
+        "open-actions",
+        "updates",
+        "messages",
+        "direct-deeplinks"
+      ]
+    },
+    {
+      "id": "planning",
+      "route": "/portaal/planning",
+      "prototypeState": "planning",
+      "navigation": "primary",
+      "substates": [
+        "lessons",
+        "make-up",
+        "assessment",
+        "holiday-offer"
+      ],
+      "functions": [
+        "upcoming-lessons",
+        "cancel-lesson",
+        "make-up-credits",
+        "book-make-up",
+        "assessment-invitation",
+        "assessment-response",
+        "temporary-offer",
+        "seat-hold",
+        "payment-flow"
+      ]
+    },
+    {
+      "id": "lesson-detail",
+      "route": "/portaal/lessen/[id]",
+      "prototypeState": "lesson",
+      "navigation": "planning-child",
+      "functions": [
+        "date-time",
+        "participant",
+        "group",
+        "trainer",
+        "resource",
+        "location",
+        "status",
+        "note",
+        "cancel-confirmation",
+        "optional-cancel-reason",
+        "previous-next"
+      ]
+    },
+    {
+      "id": "development",
+      "route": "/portaal/ontwikkeling",
+      "prototypeState": "development",
+      "navigation": "primary",
+      "functions": [
+        "program",
+        "current-level",
+        "group",
+        "start-date",
+        "latest-compliment",
+        "curriculum-version",
+        "skills",
+        "ratings-1-5",
+        "not-assessed",
+        "carryover",
+        "level-progress-ring",
+        "final-progress-ring",
+        "assessment-coverage",
+        "current-chapter",
+        "completed-chapters",
+        "badge-placeholder-preview",
+        "skill-deeplink"
+      ]
+    },
+    {
+      "id": "badges",
+      "route": "/portaal/ontwikkeling/badges",
+      "prototypeState": "badges",
+      "navigation": "development-child",
+      "artworkMode": "placeholder-only",
+      "functions": [
+        "categories",
+        "earned",
+        "locked-standard",
+        "surprise-hidden-unearned",
+        "earned-surprise-category",
+        "detail",
+        "share-single-instance",
+        "square-preview-placeholder",
+        "story-preview-placeholder",
+        "native-share",
+        "download-fallback",
+        "multi-badge-celebration-placeholder",
+        "notification-preferences"
+      ]
+    },
+    {
+      "id": "media",
+      "route": "/portaal/ontwikkeling/media",
+      "prototypeState": "media",
+      "navigation": "development-child",
+      "functions": [
+        "private-media",
+        "published-at",
+        "expires-at",
+        "secure-view",
+        "conditional-download",
+        "consent-grant",
+        "consent-refuse",
+        "consent-revoke",
+        "policy-version",
+        "view-only"
+      ]
+    },
+    {
+      "id": "diplomas",
+      "route": "/portaal/ontwikkeling/diplomas",
+      "prototypeState": "diplomas",
+      "navigation": "development-child",
+      "functions": [
+        "private-vault",
+        "title",
+        "program",
+        "level",
+        "issued-date",
+        "number",
+        "notes",
+        "secure-download",
+        "public-verification-link"
+      ]
+    },
+    {
+      "id": "inbox",
+      "route": "/portaal/inbox",
+      "prototypeState": "inbox",
+      "navigation": "primary",
+      "substates": [
+        "threads",
+        "announcements",
+        "notifications"
+      ],
+      "functions": [
+        "thread-list",
+        "thread-detail-query",
+        "search",
+        "status",
+        "new-parent-thread",
+        "reply",
+        "mark-one-read",
+        "mark-all-read",
+        "published-announcements",
+        "progress-notifications",
+        "badge-notifications",
+        "document-notifications",
+        "payment-notifications",
+        "assessment-notifications"
+      ],
+      "attachments": false
+    },
+    {
+      "id": "payments",
+      "route": "/portaal/betalingen",
+      "prototypeState": "payments",
+      "navigation": "desktop-primary-mobile-more",
+      "substates": [
+        "overview",
+        "invoices",
+        "payment-method"
+      ],
+      "functions": [
+        "subscriptions",
+        "open",
+        "overdue",
+        "paid",
+        "manual-payment",
+        "mollie-checkout",
+        "first-payment",
+        "sepa-mandate",
+        "revoke-mandate",
+        "announced-debits",
+        "refunds",
+        "chargebacks",
+        "invoices",
+        "credit-notes",
+        "vat",
+        "secure-pdf",
+        "payment-attempts",
+        "event-history"
+      ]
+    },
+    {
+      "id": "documents",
+      "route": "/portaal/documenten",
+      "prototypeState": "documents",
+      "navigation": "more",
+      "functions": [
+        "title",
+        "description",
+        "audience",
+        "filename",
+        "size",
+        "published-date",
+        "storage-status",
+        "secure-download"
+      ]
+    },
+    {
+      "id": "feedback",
+      "route": "/portaal/feedback",
+      "prototypeState": "feedback",
+      "navigation": "more",
+      "functions": [
+        "open-campaign",
+        "participant-context",
+        "score-0-10",
+        "optional-comment",
+        "follow-up-consent",
+        "expired-closed",
+        "recent-read-only",
+        "anti-duplicate"
+      ]
+    },
+    {
+      "id": "children",
+      "route": "/portaal/kinderen",
+      "prototypeState": "children",
+      "navigation": "more",
+      "functions": [
+        "all-linked-children",
+        "status",
+        "birth-date",
+        "program",
+        "level",
+        "group",
+        "next-session",
+        "make-up-credits",
+        "relationship",
+        "full-access",
+        "shared-access",
+        "view-only-access"
+      ]
+    },
+    {
+      "id": "profile",
+      "route": "/portaal/profiel",
+      "prototypeState": "profile",
+      "navigation": "more",
+      "functions": [
+        "edit-name",
+        "edit-phone",
+        "read-only-email",
+        "active-child",
+        "make-up-invitations",
+        "in-app-notifications",
+        "service-emails",
+        "newsletter",
+        "marketing-consent",
+        "web-push",
+        "unsaved-changes-warning",
+        "logout"
+      ]
+    }
+  ],
+  "compatibilityRoutes": [
+    {
+      "from": "/portaal/lessen",
+      "to": "/portaal/planning",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/voortgang",
+      "to": "/portaal/ontwikkeling",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/badges",
+      "to": "/portaal/ontwikkeling/badges",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/media",
+      "to": "/portaal/ontwikkeling/media",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/diplomas",
+      "to": "/portaal/ontwikkeling/diplomas",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/berichten",
+      "to": "/portaal/inbox",
+      "preserve": ["kind", "query", "hash"]
+    },
+    {
+      "from": "/portaal/afzwemmen",
+      "to": "/portaal/planning#afzwemmen",
+      "preserve": ["kind", "query"]
+    }
+  ],
+  "publicSupportingRoutes": [
+    {
+      "id": "diploma-verification",
+      "route": "/diploma-verificatie/[code]",
+      "privateFileAccessible": false,
+      "themeIntensity": "low"
+    }
+  ]
+}

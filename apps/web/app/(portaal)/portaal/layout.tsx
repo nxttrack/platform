@@ -8,7 +8,7 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { parentMoreNav, parentNav } from "@/lib/navigation";
 import { getNotificationCenter } from "@/lib/domain/communication-hub";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
-import { resolveTenantPortalTheme } from "@/lib/theme/portal-theme-server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getProgressNavigationLabel, portalThemeCssVariables } from "@/lib/theme/portal-theme-web";
 
 export const metadata: Metadata = privateRouteMetadata;
@@ -18,12 +18,19 @@ export default async function ParentLayout({ children }: { children: React.React
   const context = await requirePrivateShellContext("/portaal");
   const tenant = context.activeTenant;
   const role = tenant?.roles.map((item) => roleLabels[item]).join(", ") ?? "Portaal";
-  const [notificationCenter, portal, resolvedTheme] = await Promise.all([
+  const [notificationCenter, portal, brandingResult] = await Promise.all([
     getNotificationCenter(context, "/portaal/inbox"),
     getParentPortalData(),
-    resolveTenantPortalTheme(tenant!.tenantId)
+    createAdminClient()
+      .from("tenant_branding")
+      .select("logo_url, product_name")
+      .eq("tenant_id", tenant!.tenantId)
+      .eq("status", "active")
+      .maybeSingle()
   ]);
+  const resolvedTheme = portal.portalTheme;
   const theme = resolvedTheme.manifest;
+  const branding = brandingResult.data;
   const activeEnrollmentByParticipant = new Map(
     portal.enrollments
       .filter((enrollment) => enrollment.status === "active")
@@ -38,12 +45,18 @@ export default async function ParentLayout({ children }: { children: React.React
     <div
       className="portal-theme-root"
       data-portal-theme={theme.theme.key}
+      data-portal-theme-display-name={resolvedTheme.displayName}
+      data-portal-theme-license={resolvedTheme.verifiedLicense ? "verified" : "fallback"}
       data-portal-theme-release={theme.theme.release}
       style={portalThemeCssVariables(theme)}
     >
       <AppShell
         accent="parent"
-        brand={{ title: tenant?.name ?? "Organisatie", subtitle: "Ouderportaal" }}
+        brand={{
+          logoUrl: normalizeSafeLogoUrl(branding?.logo_url),
+          title: branding?.product_name?.trim() || tenant?.name || "Organisatie",
+          subtitle: `${resolvedTheme.displayName} · Ouderportaal`
+        }}
         contextSelector={{
           allLabel: "Alle kinderen",
           label: "Kies een kind",
@@ -73,4 +86,14 @@ function compactChildName(name: string) {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length < 2) return parts[0] ?? "Kind";
   return `${parts[0]} ${parts.at(-1)?.[0] ?? ""}.`;
+}
+
+function normalizeSafeLogoUrl(value: string | null | undefined) {
+  if (!value || value.length > 2000) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !url.username && !url.password ? url.toString() : null;
+  } catch {
+    return null;
+  }
 }

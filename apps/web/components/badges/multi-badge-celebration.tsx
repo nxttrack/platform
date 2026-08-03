@@ -64,7 +64,7 @@ export function MultiBadgeCelebration({
         )}
       </div>
     </div>
-    <div className="grid gap-5 p-5 sm:grid-cols-[minmax(0,220px)_1fr]">
+    <div className="grid gap-5 p-5 sm:grid-cols-2">
       <div className="aspect-square overflow-hidden rounded-2xl border border-border bg-card">
         {selected.shareAsset?.previewDataUrl || selected.imageUrl
           ? <img

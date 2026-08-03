@@ -11,6 +11,7 @@ export type PortalThemeCssProperties = CSSProperties & Record<`--portal-${string
 
 export function portalThemeCssVariables(manifest: PortalThemeManifestV2): PortalThemeCssProperties {
   const { color, radius, typography, motion } = manifest.tokens;
+  const { page, sidebar } = manifest.tokens.gradient;
   const desktopHero = manifest.assets["overview.hero.desktop"]?.path;
   const mobileHero = manifest.assets["overview.hero.mobile"]?.path;
   const desktopProgress =
@@ -20,6 +21,7 @@ export function portalThemeCssVariables(manifest: PortalThemeManifestV2): Portal
   const mobileProgress =
     manifest.assets["progress.journey.mobile"]?.path ??
     manifest.assets["progress.hero.mobile"]?.path;
+  const mascot = manifest.assets["mascot.idle"]?.path;
   return {
     "--portal-canvas": color.canvas,
     "--portal-surface": color.surface,
@@ -31,6 +33,10 @@ export function portalThemeCssVariables(manifest: PortalThemeManifestV2): Portal
     "--portal-secondary": color.secondary,
     "--portal-reward": color.reward,
     "--portal-rail": color.rail,
+    "--portal-attention": color.danger,
+    "--portal-success": color.success,
+    "--portal-page-gradient": `linear-gradient(135deg, ${page[0]}, ${page[1]} 52%, ${page[2]})`,
+    "--portal-sidebar-gradient": `linear-gradient(180deg, ${sidebar[0]}, ${sidebar[1]} 52%, ${sidebar[2]})`,
     "--portal-card-radius": radius.card,
     "--portal-hero-radius": radius.hero,
     "--portal-display-font": typography.display,
@@ -41,33 +47,28 @@ export function portalThemeCssVariables(manifest: PortalThemeManifestV2): Portal
     "--portal-hero-desktop": desktopHero ? `url("${desktopHero}")` : "none",
     "--portal-hero-mobile": mobileHero ? `url("${mobileHero}")` : "none",
     "--portal-progress-desktop": desktopProgress ? `url("${desktopProgress}")` : "none",
-    "--portal-progress-mobile": mobileProgress ? `url("${mobileProgress}")` : "none"
+    "--portal-progress-mobile": mobileProgress ? `url("${mobileProgress}")` : "none",
+    "--portal-mascot": mascot ? `url("${mascot}")` : "none"
   };
 }
 
-const progressLabels: Record<string, string> = {
-  "ocean-quest": "Zwemreis",
-  "dolphin-bay": "Zwemroute",
-  "turtle-trails": "Zwemtrail",
-  "aqua-academy": "Training"
-};
-
 export function getProgressNavigationLabel(manifest: PortalThemeManifestV2) {
-  return progressLabels[manifest.theme.key] ?? "Ontwikkeling";
+  return manifest.experience.developmentLabel;
 }
 
 export type NativeThemeTokenExport = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   portalContract: typeof PARENT_PORTAL_CONTRACT;
   themeKey: string;
   release: string;
   compatibility: PortalThemeManifestV2["compatibility"];
   navigation: {
-    primaryDestinations: readonly ["overview", "planning", "progress", "inbox", "payments"];
+    primaryDestinations: readonly ["overview", "planning", "development", "inbox", "more"];
     routeIds: typeof parentPortalRouteIds;
   };
   tokens: {
     colors: PortalThemeManifestV2["tokens"]["color"];
+    gradients: PortalThemeManifestV2["tokens"]["gradient"];
     radii: PortalThemeManifestV2["tokens"]["radius"];
     typography: PortalThemeManifestV2["tokens"]["typography"];
     motionMilliseconds: PortalThemeManifestV2["tokens"]["motion"];
@@ -93,17 +94,18 @@ export type NativeThemeTokenExport = {
 
 export function toNativeThemeTokenExport(manifest: PortalThemeManifestV2): NativeThemeTokenExport {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     portalContract: PARENT_PORTAL_CONTRACT,
     themeKey: manifest.theme.key,
     release: manifest.theme.release,
     compatibility: manifest.compatibility,
     navigation: {
-      primaryDestinations: ["overview", "planning", "progress", "inbox", "payments"],
+      primaryDestinations: ["overview", "planning", "development", "inbox", "more"],
       routeIds: parentPortalRouteIds
     },
     tokens: {
       colors: manifest.tokens.color,
+      gradients: manifest.tokens.gradient,
       radii: manifest.tokens.radius,
       typography: manifest.tokens.typography,
       motionMilliseconds: manifest.tokens.motion

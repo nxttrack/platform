@@ -273,12 +273,28 @@ data class GraduationInvite(
     val result: String
 )
 
+data class PortalTerminology(
+    val activity: String = "activiteit",
+    val activities: String = "activiteiten",
+    val finalCredential: String = "certificaat",
+    val finalCredentials: String = "certificaten",
+    val finalMoment: String = "eindmoment",
+    val instructor: String = "begeleider",
+    val journey: String = "leerreis",
+    val makeUpActivity: String = "alternatief moment",
+    val makeUpActivities: String = "alternatieve momenten",
+    val organization: String = "organisatie",
+    val route: String = "leerroute",
+    val stage: String = "niveau"
+)
+
 data class ParentBootstrap(
     val contractVersion: Int,
     val generatedAt: String,
     val tenant: ActiveTenant,
     val assessmentDisplay: AssessmentDisplay,
     val theme: ThemeBundle,
+    val terminology: PortalTerminology,
     val children: List<Child>,
     val lessons: List<Lesson>,
     val announcements: List<Announcement>,

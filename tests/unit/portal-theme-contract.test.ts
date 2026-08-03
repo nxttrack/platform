@@ -4,6 +4,7 @@ import test from "node:test";
 
 import {
   defaultPortalTheme,
+  getThemeDisplayName,
   getThemeRelease,
   portalThemeCatalog,
   resolveRegisteredTheme
@@ -17,15 +18,16 @@ import {
   portalOverviewRecipePresentations
 } from "../../apps/web/lib/theme/portal-overview-recipes";
 
-test("catalogus bevat exact de vijf launchreleases met alle dertien routes", () => {
+test("catalogus bevat exact de zes v3-releases met alle dertien routes", () => {
   assert.deepEqual(
     portalThemeCatalog.map((theme) => `${theme.theme.key}@${theme.theme.release}`),
     [
-      "nxttrack-default@2.2.2",
-      "ocean-quest@1.2.2",
-      "dolphin-bay@1.0.1",
-      "turtle-trails@1.0.1",
-      "aqua-academy@1.0.1"
+      "nxttrack-default@3.0.0",
+      "dolphin-bay@3.0.0",
+      "turtle-trails@3.0.0",
+      "polar-splash@3.0.0",
+      "coastal-explorer@3.0.0",
+      "nationaal-zwem-abc@3.0.0"
     ]
   );
   for (const theme of portalThemeCatalog) {
@@ -36,7 +38,7 @@ test("catalogus bevat exact de vijf launchreleases met alle dertien routes", () 
 });
 
 test("registry is open voor keys maar valt veilig terug bij onbekende releases", () => {
-  assert.equal(getThemeRelease("dolphin-bay", "1.0.1")?.theme.displayName, "Dolphin Bay");
+  assert.equal(getThemeRelease("dolphin-bay", "3.0.0")?.theme.displayName, "Dolphin Bay");
   assert.equal(resolveRegisteredTheme("future-pack", "9.0.0"), defaultPortalTheme);
 });
 
@@ -51,38 +53,39 @@ test("manifestvalidator weigert onbekende databasevelden", () => {
   assert.throws(() => validatePortalThemeManifest(unsafe), /Invalid manifest keys/);
 });
 
-test("iedere launchrelease rendert een geregistreerde overview-compositie", () => {
+test("iedere release gebruikt exact dezelfde geregistreerde Journey Engine", () => {
   const overviewRecipes = portalThemeCatalog.map((theme) => theme.recipes.pages.overview);
 
-  assert.equal(new Set(overviewRecipes).size, 5);
+  assert.equal(new Set(overviewRecipes).size, 1);
   for (const recipeId of overviewRecipes) {
     assert.ok(recipeId in portalOverviewRecipePresentations, `${recipeId} must have a real presentation recipe`);
     assert.ok(getPortalOverviewRecipePresentation(recipeId).ctaLabel);
   }
 
-  const ocean = getPortalOverviewRecipePresentation("overview/pearl-route-v2");
-  assert.equal(ocean.eyebrow, "Ocean Quest");
-  assert.equal(ocean.progressLabel, "Reisvoortgang");
+  const journey = getPortalOverviewRecipePresentation("overview/journey-engine-v1");
+  assert.equal(journey.eyebrow, "NXTTRACK");
+  assert.equal(journey.progressLabel, "Voortgang");
 
   const overviewSource = readFileSync(
     new URL("../../apps/web/app/(portaal)/portaal/page.tsx", import.meta.url),
     "utf8"
   );
-  assert.match(overviewSource, /resolvedTheme\.manifest\.recipes\.pages\.overview/);
+  assert.match(overviewSource, /resolvedTheme\.displayName/);
   assert.match(overviewSource, /PortalOverviewHero/);
 });
 
-test("badgeboards van onvolledige families blijven review met eigen fallback", () => {
-  const expectedFallback = {
-    "dolphin-bay": "badge-fallback/bay-medallion-v1",
-    "turtle-trails": "badge-fallback/turtle-scute-v1",
-    "aqua-academy": "badge-fallback/academy-crest-v1"
-  } as const;
-  for (const key of ["dolphin-bay", "turtle-trails", "aqua-academy"]) {
-    const theme = portalThemeCatalog.find((entry) => entry.theme.key === key)!;
+test("alle thema's gebruiken uitsluitend de neutrale badgeplaceholderfamilie", () => {
+  for (const theme of portalThemeCatalog) {
     assert.equal(theme.badges.status, "review");
-    assert.equal(theme.badges.fallbackRecipe, expectedFallback[key as keyof typeof expectedFallback]);
+    assert.equal(theme.badges.familyKey, "neutral-artwork-placeholders");
+    assert.equal(theme.badges.fallbackRecipe, "badge-fallback/neutral-placeholder-v1");
   }
+});
+
+test("beschermde naam valt dicht zonder aantoonbare licentie", () => {
+  const national = portalThemeCatalog.find((theme) => theme.theme.key === "nationaal-zwem-abc")!;
+  assert.equal(getThemeDisplayName(national), "Diplomareis A–B–C");
+  assert.equal(getThemeDisplayName(national, true), "Nationaal Zwem ABC");
 });
 
 test("interactieve themakleuren halen WCAG AA met witte tekst", () => {

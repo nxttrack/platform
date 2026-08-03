@@ -98,6 +98,22 @@ export type CanonicalItemCarryover = {
   completed_at: string | null;
 };
 
+export type CanonicalJourneyChapterSnapshot = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  curriculum_version_id: string;
+  curriculum_stage_id: string;
+  transition_case_id: string;
+  theme_key: string;
+  theme_release: string;
+  artwork_id: string;
+  route_order_json: string[];
+  completion_data_json: Record<string, unknown>;
+  badge_award_ids: string[];
+  completed_at: string;
+};
+
 export type SwimJourneyRing = {
   key: string;
   kind: "stage" | "diploma";
@@ -119,6 +135,7 @@ export type CanonicalSwimJourney = {
   currentStageItems: CanonicalCurriculumItem[];
   effectiveObservations: CanonicalAssessmentObservation[];
   carryovers: CanonicalItemCarryover[];
+  chapterSnapshots: CanonicalJourneyChapterSnapshot[];
   projectionByScopeKey: Map<string, CanonicalProgressProjection>;
   rings: SwimJourneyRing[];
 };
@@ -131,6 +148,7 @@ export type CanonicalSwimJourneyData = {
   observations: CanonicalAssessmentObservation[];
   projections: CanonicalProgressProjection[];
   carryovers: CanonicalItemCarryover[];
+  chapterSnapshots: CanonicalJourneyChapterSnapshot[];
   byEnrollmentId: Map<string, CanonicalSwimJourney>;
 };
 
@@ -163,7 +181,7 @@ export async function loadCanonicalSwimJourneys(input: {
     .order("observed_at", { ascending: false })
     .order("finalized_at", { ascending: false });
 
-  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult] =
+  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, chapterSnapshotsResult] =
     await Promise.all([
       admin
         .from("curriculum_versions")
@@ -207,7 +225,13 @@ export async function loadCanonicalSwimJourneys(input: {
         .from("swim_item_carryovers")
         .select("id, participant_id, enrollment_id, curriculum_item_id, curriculum_item_identity_id, from_stage_id, to_stage_id, transition_case_id, status, completed_observation_id, completed_at")
         .eq("tenant_id", input.tenantId)
+        .in("enrollment_id", enrollmentIds),
+      admin
+        .from("portal_journey_chapter_snapshots")
+        .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, transition_case_id, theme_key, theme_release, artwork_id, route_order_json, completion_data_json, badge_award_ids, completed_at")
+        .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
+        .order("completed_at", { ascending: false })
     ]);
 
   assertResult(versionsResult.error, "curriculumversies");
@@ -219,6 +243,7 @@ export async function loadCanonicalSwimJourneys(input: {
   assertResult(retractionsResult.error, "beoordelingsintrekkingen");
   assertResult(projectionsResult.error, "voortgangsprojecties");
   assertResult(carryoversResult.error, "carryoveronderdelen");
+  assertResult(chapterSnapshotsResult.error, "historische journeyhoofdstukken");
 
   const versions = (versionsResult.data ?? []) as CanonicalCurriculumVersion[];
   const stages = (stagesResult.data ?? []) as CanonicalCurriculumStage[];
@@ -259,6 +284,16 @@ export async function loadCanonicalSwimJourneys(input: {
     coverage_fraction: projection.coverage_fraction === null ? null : Number(projection.coverage_fraction)
   }));
   const carryovers = (carryoversResult.data ?? []) as CanonicalItemCarryover[];
+  const chapterSnapshots = ((chapterSnapshotsResult.data ?? []) as Array<
+    Omit<CanonicalJourneyChapterSnapshot, "route_order_json" | "completion_data_json">
+    & { route_order_json: unknown; completion_data_json: unknown }
+  >).map((snapshot) => ({
+    ...snapshot,
+    route_order_json: Array.isArray(snapshot.route_order_json)
+      ? snapshot.route_order_json.filter((value): value is string => typeof value === "string")
+      : [],
+    completion_data_json: asObject(snapshot.completion_data_json)
+  }));
   const versionById = new Map(versions.map((version) => [version.id, version]));
   const assignmentByEnrollmentId = new Map(assignments.map((assignment) => [assignment.enrollment_id, assignment]));
   const byEnrollmentId = new Map<string, CanonicalSwimJourney>();
@@ -316,6 +351,7 @@ export async function loadCanonicalSwimJourneys(input: {
         (observation) => observation.enrollment_id === enrollment.id
       ),
       carryovers: carryovers.filter((carryover) => carryover.enrollment_id === enrollment.id),
+      chapterSnapshots: chapterSnapshots.filter((snapshot) => snapshot.enrollment_id === enrollment.id),
       projectionByScopeKey,
       rings
     });
@@ -329,6 +365,7 @@ export async function loadCanonicalSwimJourneys(input: {
     observations: effectiveObservations,
     projections,
     carryovers,
+    chapterSnapshots,
     byEnrollmentId
   };
 }
@@ -372,6 +409,7 @@ function emptyJourneyData(): CanonicalSwimJourneyData {
     observations: [],
     projections: [],
     carryovers: [],
+    chapterSnapshots: [],
     byEnrollmentId: new Map()
   };
 }

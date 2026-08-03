@@ -23,7 +23,7 @@ object NativeFileActions {
         require(badge.earned && badge.awardId != null)
         val caption = badge.shareCaption
             ?.takeIf { it.isNotBlank() }
-            ?: "Ik heb de badge ${badge.name} behaald bij mijn zwemschool."
+            ?: "Ik heb de badge ${badge.name} behaald bij mijn organisatie."
         val image = artwork
             ?.takeIf { it.contentType.startsWith("image/") }
             ?.let { prepareFile(context, it) }

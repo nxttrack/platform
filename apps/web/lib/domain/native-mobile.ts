@@ -1,8 +1,8 @@
 import "server-only";
 
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 import { toNativeThemeTokenExport } from "@/lib/theme/portal-theme-web";
-import { resolveTenantPortalTheme } from "@/lib/theme/portal-theme-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getParentBadgeWallDataForContext
@@ -49,7 +49,6 @@ export async function buildParentNativeBootstrap(
     badgeData,
     hub,
     documents,
-    resolvedTheme,
     announcements,
     mediaData,
     feedbackData
@@ -59,12 +58,13 @@ export async function buildParentNativeBootstrap(
       getParentBadgeWallDataForContext(context),
       getParentCommunicationHubForContext(context),
       getParentDocumentsForTenant(tenantId),
-      resolveTenantPortalTheme(tenantId),
       loadAnnouncements(tenantId, "parent"),
       getParentParticipantMediaDataForContext(context),
       getParentFeedbackDataForContext(context)
     ]);
-    const groupById = new Map(data.groups.map((group) => [group.id, group]));
+  const resolvedTheme = data.portalTheme;
+  const terminology = getPortalTerminology(resolvedTheme.manifest);
+  const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const enrollmentById = new Map(
     data.enrollments.map((enrollment) => [enrollment.id, enrollment])
@@ -96,7 +96,7 @@ export async function buildParentNativeBootstrap(
     return {
       endsAt: session.ends_at,
       groupId: session.group_id,
-      groupName: group?.name ?? "Lesgroep",
+      groupName: group?.name ?? "Groep",
       id: session.id,
       notes: session.notes,
       resourceName: resource?.name ?? null,
@@ -154,7 +154,7 @@ export async function buildParentNativeBootstrap(
               id: activeEnrollment.id,
               programId: activeEnrollment.program_id,
               programName:
-                programById.get(activeEnrollment.program_id)?.name ?? "Zwemprogramma",
+                programById.get(activeEnrollment.program_id)?.name ?? "Programma",
               stageId: activeEnrollment.current_stage_id,
               stageName: activeEnrollment.current_stage_id
                 ? stageById.get(activeEnrollment.current_stage_id)?.name ?? null
@@ -188,6 +188,17 @@ export async function buildParentNativeBootstrap(
                 kind: ring.kind,
                 label: ring.label,
                 progressPercent: ring.progressPercent
+              })),
+              completedChapters: journey.chapterSnapshots.map((snapshot) => ({
+                artworkPath: snapshot.artwork_id,
+                badgeAwardIds: snapshot.badge_award_ids,
+                completedAt: snapshot.completed_at,
+                completion: snapshot.completion_data_json,
+                id: snapshot.id,
+                itemOrder: snapshot.route_order_json,
+                stageId: snapshot.curriculum_stage_id,
+                themeKey: snapshot.theme_key,
+                themeRelease: snapshot.theme_release
               })),
               items: journey.currentStageItems.map((item) => {
                 const observation = journey.effectiveObservations.find(
@@ -273,6 +284,7 @@ export async function buildParentNativeBootstrap(
       result: participant.result,
       status: participant.status
     })),
+    terminology,
     documents: documents.map((document) => ({
       createdAt: document.created_at,
       description: document.description,

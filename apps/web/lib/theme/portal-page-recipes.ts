@@ -11,14 +11,14 @@ export type PortalRoutePresentation = {
   recipeId: RegisteredPageRecipeId;
   intensity: PortalRouteIntensity;
   cue: string;
-  motif: "wave" | "pearl" | "buoy" | "shell" | "lane";
+  motif: "momentum" | "bay" | "current" | "ice" | "coast" | "lanes";
   milestones: readonly [string, string, string];
 };
 
 type ThemeVisualProfile = {
   motif: PortalRoutePresentation["motif"];
   routeCues: Record<ParentPortalRouteId, string>;
-  milestones: Record<"planning" | "progress" | "badges", readonly [string, string, string]>;
+  milestones: Record<"planning" | "development" | "badges", readonly [string, string, string]>;
 };
 
 const routeIdsByPath: Array<[RegExp, ParentPortalRouteId]> = [
@@ -27,12 +27,12 @@ const routeIdsByPath: Array<[RegExp, ParentPortalRouteId]> = [
   [/^\/portaal\/ontwikkeling\/badges$|^\/portaal\/badges$/, "badges"],
   [/^\/portaal\/ontwikkeling\/media$|^\/portaal\/media$/, "media"],
   [/^\/portaal\/ontwikkeling\/diplomas$|^\/portaal\/diplomas$/, "diplomas"],
-  [/^\/portaal\/(?:ontwikkeling|voortgang)$/, "progress"],
+  [/^\/portaal\/(?:ontwikkeling|voortgang)$/, "development"],
   [/^\/portaal\/(?:inbox|berichten)$/, "inbox"],
   [/^\/portaal\/betalingen$/, "payments"],
   [/^\/portaal\/documenten$/, "documents"],
   [/^\/portaal\/feedback$/, "feedback"],
-  [/^\/portaal\/kinderen$/, "family-access"],
+  [/^\/portaal\/kinderen$/, "children"],
   [/^\/portaal\/profiel$/, "profile"],
   [/^\/portaal$/, "overview"]
 ];
@@ -45,60 +45,70 @@ const commonQuietCues = {
   payments: "Duidelijk en veilig geregeld",
   documents: "Belangrijke informatie bij elkaar",
   feedback: "Jouw ervaring telt",
-  "family-access": "Samen verbonden",
+  children: "Samen verbonden",
   profile: "Jouw gegevens en voorkeuren"
 } as const;
 
 const profiles: Record<string, ThemeVisualProfile> = {
-  "nxttrack-default": profile("wave", {
-    overview: "Jouw zwemschool in beeld",
+  "nxttrack-default": profile("momentum", {
+    overview: "Jouw ontwikkeling in beeld",
     planning: "Klaar voor de volgende les",
-    progress: "Elke stap telt",
+    development: "Elke stap telt",
     badges: "Mooie momenten om te vieren"
   }, {
     planning: ["Gepland", "Inhalen", "Afzwemmen"],
-    progress: ["Start", "Groei", "Volgende stap"],
+    development: ["Start", "Groei", "Volgende stap"],
     badges: ["Ontdekt", "Behaald", "Gevierd"]
   }),
-  "ocean-quest": profile("pearl", {
-    overview: "Jouw parelreis",
-    planning: "Nieuwe waypoints in zicht",
-    progress: "Volg de Pearl Trail",
-    badges: "Schatten uit jouw zwemreis"
-  }, {
-    planning: ["Vertrekpunt", "Nieuwe waypoint", "Parel in zicht"],
-    progress: ["Eerste parel", "Manta-route", "Eiland bereikt"],
-    badges: ["Ontdekt", "Verzameld", "Trots gedeeld"]
-  }),
-  "dolphin-bay": profile("buoy", {
+  "dolphin-bay": profile("bay", {
     overview: "Op koers door de baai",
     planning: "Van boei naar boei",
-    progress: "Volg jouw Buoy Course",
+    development: "Volg jouw zwemreis",
     badges: "Nieuwe boeien bereikt"
   }, {
     planning: ["Startboei", "Lesboei", "Finishboei"],
-    progress: ["Te water", "Op koers", "Nieuwe baai"],
+    development: ["Te water", "Op koers", "Nieuwe baai"],
     badges: ["Gespot", "Bereikt", "Gevierd"]
   }),
-  "turtle-trails": profile("shell", {
+  "turtle-trails": profile("current", {
     overview: "Stap voor stap",
     planning: "Een rustige trail vooruit",
-    progress: "Volg jouw Shell Trail",
+    development: "Volg jouw zwemroute",
     badges: "Nieuwe schelpstappen"
   }, {
     planning: ["Vandaag", "Volgende stap", "Nieuwe schelp"],
-    progress: ["Begin", "Vertrouwen", "Verder groeien"],
+    development: ["Begin", "Vertrouwen", "Verder groeien"],
     badges: ["Gevonden", "Verdiend", "Bewaard"]
   }),
-  "aqua-academy": profile("lane", {
-    overview: "Op weg naar je volgende checkpoint",
-    planning: "Jouw training op koers",
-    progress: "Bekijk jouw Academy Pass",
-    badges: "Checkpoints om trots op te zijn"
+  "polar-splash": profile("ice", {
+    overview: "Op expeditie naar je volgende ijsschots",
+    planning: "Jouw poolreis op koers",
+    development: "Volg jouw poolreis",
+    badges: "Mijlpalen uit jouw expeditie"
   }, {
-    planning: ["Startblok", "Training", "Checkpoint"],
-    progress: ["Basis", "Techniek", "Diplomaklaar"],
-    badges: ["Geopend", "Behaald", "Geregistreerd"]
+    planning: ["Vertrek", "Volgende ijsschots", "Pooldoel"],
+    development: ["Start", "Ontdekken", "Verder reizen"],
+    badges: ["Gespot", "Behaald", "Gevierd"]
+  }),
+  "coastal-explorer": profile("coast", {
+    overview: "Op ontdekking langs de kust",
+    planning: "Jouw kustreis op koers",
+    development: "Volg jouw kustreis",
+    badges: "Mijlpalen langs de kust"
+  }, {
+    planning: ["Strandpost", "Volgende punt", "Vuurtoren"],
+    development: ["Vertrek", "Op koers", "Volgende haven"],
+    badges: ["Ontdekt", "Behaald", "Gevierd"]
+  }),
+  "nationaal-zwem-abc": profile("lanes", {
+    overview: "Op weg naar het zwemdiploma",
+    planning: "De volgende zwemles",
+    development: "Volg de diplomareis",
+    badges: "Mijlpalen in de diplomareis"
+  }, {
+    planning: ["Startniveau", "Volgende les", "Diplomamoment"],
+    development: ["Start A", "A naar B", "B naar C"],
+    badges: ["Ontdekt", "Behaald", "Gevierd"]
   })
 };
 
@@ -111,10 +121,10 @@ export function getPortalRoutePresentation(
   routeId: ParentPortalRouteId
 ): PortalRoutePresentation {
   const visual = profiles[manifest.theme.key] ?? profiles["nxttrack-default"]!;
-  const intensity: PortalRouteIntensity = ["overview", "planning", "progress", "badges"].includes(routeId)
+  const intensity: PortalRouteIntensity = ["overview", "planning", "development", "badges"].includes(routeId)
     ? "rich"
     : "quiet";
-  const milestones = routeId === "planning" || routeId === "progress" || routeId === "badges"
+  const milestones = routeId === "planning" || routeId === "development" || routeId === "badges"
     ? visual.milestones[routeId]
     : ["Veilig", "Duidelijk", "Vertrouwd"] as const;
 
@@ -130,7 +140,7 @@ export function getPortalRoutePresentation(
 
 function profile(
   motif: ThemeVisualProfile["motif"],
-  richCues: Pick<ThemeVisualProfile["routeCues"], "overview" | "planning" | "progress" | "badges">,
+  richCues: Pick<ThemeVisualProfile["routeCues"], "overview" | "planning" | "development" | "badges">,
   milestones: ThemeVisualProfile["milestones"]
 ): ThemeVisualProfile {
   return {

@@ -28,6 +28,7 @@ import nl.nxttrack.mobile.domain.MediaConsent
 import nl.nxttrack.mobile.domain.MediaOverview
 import nl.nxttrack.mobile.domain.NativeContract
 import nl.nxttrack.mobile.domain.ParentBootstrap
+import nl.nxttrack.mobile.domain.PortalTerminology
 import nl.nxttrack.mobile.domain.ParticipantMedia
 import nl.nxttrack.mobile.domain.Payment
 import nl.nxttrack.mobile.domain.RingKind
@@ -85,6 +86,7 @@ internal object NativeJsonParser {
             tenant = session.tenant,
             assessmentDisplay = assessmentDisplay(root),
             theme = theme,
+            terminology = portalTerminology(root.optJSONObject("terminology")),
             children = root.getJSONArray("children").objects().map(::child),
             lessons = root.getJSONArray("lessons").objects().map(::lesson),
             announcements = root.getJSONArray("announcements")
@@ -211,6 +213,24 @@ internal object NativeJsonParser {
         )
         require(NativeContract.isCompatible(bundle))
         return bundle
+    }
+
+    private fun portalTerminology(source: JSONObject?): PortalTerminology {
+        if (source == null) return PortalTerminology()
+        return PortalTerminology(
+            activity = source.optString("activity", "activiteit"),
+            activities = source.optString("activities", "activiteiten"),
+            finalCredential = source.optString("finalCredential", "certificaat"),
+            finalCredentials = source.optString("finalCredentials", "certificaten"),
+            finalMoment = source.optString("finalMoment", "eindmoment"),
+            instructor = source.optString("instructor", "begeleider"),
+            journey = source.optString("journey", "leerreis"),
+            makeUpActivity = source.optString("makeUpActivity", "alternatief moment"),
+            makeUpActivities = source.optString("makeUpActivities", "alternatieve momenten"),
+            organization = source.optString("organization", "organisatie"),
+            route = source.optString("route", "leerroute"),
+            stage = source.optString("stage", "niveau")
+        )
     }
 
     private fun assessmentDisplay(root: JSONObject): AssessmentDisplay =
