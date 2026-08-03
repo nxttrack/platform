@@ -27,7 +27,10 @@ import {
   type ParentPortalSearchParams
 } from "@/lib/domain/parent-portal-selection";
 import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
-import { orderJourneyNodes } from "@/lib/theme/portal-journey-contract";
+import {
+  orderJourneyNodes,
+  resolveJourneyDestination
+} from "@/lib/theme/portal-journey-contract";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
@@ -96,13 +99,12 @@ export default async function ParentHomePage({
         : null
     };
   }));
-  const currentStageIndex = journey?.currentStage
-    ? journey.stages.findIndex((stage) => stage.id === journey.currentStage?.id)
-    : -1;
-  const destinationStage = journey?.stages[currentStageIndex + 1]?.name
-    ?? journey?.currentStage?.name
-    ?? programById.get(enrollment?.program_id ?? "")?.name
-    ?? "jouw volgende doel";
+  const destinationStage = resolveJourneyDestination({
+    stages: journey?.stages ?? [],
+    currentStageId: journey?.currentStage?.id,
+    programName: programById.get(enrollment?.program_id ?? "")?.name,
+    fallback: "jouw volgende doel"
+  });
   const visibleNotifications = data.notifications.filter(
     (notification) =>
       !notification.participant_id || visibleParticipantIds.has(notification.participant_id)
