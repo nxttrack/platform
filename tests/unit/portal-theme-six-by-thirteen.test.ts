@@ -186,3 +186,14 @@ test("annuleren blijft expliciet bevestigd in de canonieke planning en servercom
   assert.match(lessonDetail, /humanConfirmation: "confirmed"/);
   assert.match(actions, /formData\.get\("humanConfirmation"\) !== "confirmed"/);
 });
+
+test("staging seedt de ouderreis vóór de visuele matrix en bewaart het screenshotbewijs", async () => {
+  const workflow = await readFile(path.join(root, ".github/workflows/deploy.yml"), "utf8");
+  const seedAt = workflow.indexOf("Phase 16 operational flow validation");
+  const matrixAt = workflow.indexOf("Validate required six-theme portal matrix");
+  assert.ok(seedAt >= 0);
+  assert.ok(matrixAt > seedAt);
+  assert.match(workflow, /Upload six-theme portal matrix evidence[\s\S]+if: always\(\)/);
+  assert.match(workflow, /apps\/web\/playwright-report/);
+  assert.match(workflow, /apps\/web\/test-results/);
+});
