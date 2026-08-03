@@ -15,7 +15,7 @@ const defaultPresentation: PortalOverviewRecipePresentation = {
   titlePrefix: "Groeien naar",
   ctaLabel: "Bekijk ontwikkeling",
   progressLabel: "Voortgang",
-  milestoneLabels: ["Je zwemreis is gestart", "Volgende stap in zicht"]
+  milestoneLabels: ["Actuele beoordelingen", "Reis naar diploma"]
 };
 
 export const portalOverviewRecipePresentations = Object.freeze({
@@ -26,7 +26,7 @@ export const portalOverviewRecipePresentations = Object.freeze({
     titlePrefix: "Op avontuur naar",
     ctaLabel: "Bekijk zwemreis",
     progressLabel: "Reisvoortgang",
-    milestoneLabels: ["Avontuur in beweging", "Nieuwe parel in zicht"]
+    milestoneLabels: ["Actuele beoordelingen", "Parelreis naar diploma"]
   },
   "overview/bay-route-v1": {
     eyebrow: "Dolphin Bay",
@@ -34,7 +34,7 @@ export const portalOverviewRecipePresentations = Object.freeze({
     titlePrefix: "Op koers naar",
     ctaLabel: "Bekijk zwemroute",
     progressLabel: "Koersvoortgang",
-    milestoneLabels: ["Goed op koers", "Nieuwe boei in zicht"]
+    milestoneLabels: ["Actuele beoordelingen", "Boeienroute naar diploma"]
   },
   "overview/shell-route-v1": {
     eyebrow: "Turtle Trails",
@@ -42,7 +42,7 @@ export const portalOverviewRecipePresentations = Object.freeze({
     titlePrefix: "Stap voor stap naar",
     ctaLabel: "Bekijk zwemtrail",
     progressLabel: "Trailvoortgang",
-    milestoneLabels: ["Een mooie stap gezet", "Nieuwe schelp in zicht"]
+    milestoneLabels: ["Actuele beoordelingen", "Schelpenpad naar diploma"]
   },
   "overview/academy-checkpoints-v1": {
     eyebrow: "Aqua Academy",
@@ -50,7 +50,7 @@ export const portalOverviewRecipePresentations = Object.freeze({
     titlePrefix: "Op weg naar",
     ctaLabel: "Bekijk training",
     progressLabel: "Trainingsvoortgang",
-    milestoneLabels: ["Checkpoint behaald", "Volgende techniek klaar"]
+    milestoneLabels: ["Actuele beoordelingen", "Academy-route naar diploma"]
   }
 } satisfies Partial<Record<RegisteredPageRecipeId, PortalOverviewRecipePresentation>>);
 

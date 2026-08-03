@@ -7,7 +7,7 @@ import {
   getLearnerAssessmentAccessibleLabel,
   learnerAssessmentLevels,
   migrateLegacyThreePointValue,
-  normalizeLearnerAssessment,
+  legacyNormalizedAssessmentScore,
   parseLearnerAssessmentValue
 } from "../../apps/web/lib/domain/learner-assessment";
 
@@ -24,12 +24,12 @@ test("vijfpuntscontract accepteert uitsluitend gehele waarden 1–5", () => {
   }
 });
 
-test("legacyconversie bewaart bronwaarde en de ankers 0/50/100", () => {
+test("legacyconversie bewaart bronwaarde en de genormaliseerde ankers 0/0,5/1", () => {
   const migrated = ([1, 2, 3] as const).map(migrateLegacyThreePointValue);
   assert.deepEqual(migrated.map((row) => row.ratingValue), [1, 3, 5]);
   assert.deepEqual(migrated.map((row) => row.sourceValue), [1, 2, 3]);
   assert.ok(migrated.every((row) => row.sourceScaleVersion === "three_point_legacy"));
-  assert.deepEqual(migrated.map((row) => normalizeLearnerAssessment(row.ratingValue)), [0, 50, 100]);
+  assert.deepEqual(migrated.map((row) => legacyNormalizedAssessmentScore(row.ratingValue)), [0, 0.5, 1]);
 });
 
 test("alle bekende assessmentwriters leggen de vijfpuntsschaal expliciet vast", async () => {

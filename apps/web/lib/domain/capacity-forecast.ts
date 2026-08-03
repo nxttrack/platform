@@ -15,6 +15,106 @@ export type CapacityForecastFilters = {
   instructorId?: string;
 };
 
+export type CapacityForecastOperations = {
+  waitlistCandidates: Array<{
+    id: string;
+    label: string;
+    programId: string;
+    stageId: string | null;
+  }>;
+  reservations: Array<{
+    id: string;
+    groupId: string;
+    waitlistEntryId: string;
+    capacityBucket: string;
+    capacityWeight: number;
+    status: string;
+    reason: string;
+    expiresAt: string;
+    requestedAt: string;
+    reviewReason: string | null;
+  }>;
+  accuracy: {
+    evaluated: number;
+    meanAbsoluteErrorDays: number | null;
+    withinRangePercentage: number | null;
+    noOpening: number;
+    insufficientEvidence: number;
+    modelVersions: string[];
+  };
+};
+
+export async function getCapacityForecastOperations(
+  tenantId: string
+): Promise<CapacityForecastOperations> {
+  const admin = createAdminClient();
+  const [waitlist, reservations, accuracy] = await Promise.all([
+    admin
+      .from("waitlist_entries")
+      .select("id, participant_name, program_id, recommended_stage_id, status")
+      .eq("tenant_id", tenantId)
+      .in("status", ["waiting", "reviewing", "offered"])
+      .eq("is_test", false)
+      .order("priority_date")
+      .limit(250),
+    admin
+      .from("capacity_soft_reservations")
+      .select("id, group_id, waitlist_entry_id, capacity_bucket, capacity_weight, status, reason, expires_at, requested_at, review_reason")
+      .eq("tenant_id", tenantId)
+      .in("status", ["pending_approval", "approved", "released", "expired", "rejected"])
+      .order("requested_at", { ascending: false })
+      .limit(100),
+    admin
+      .from("capacity_forecast_accuracy")
+      .select("absolute_error_days, within_predicted_range, evaluation_status, model_version")
+      .eq("tenant_id", tenantId)
+      .order("evaluated_at", { ascending: false })
+      .limit(500)
+  ]);
+  for (const [label, result] of [
+    ["waitlist candidates", waitlist],
+    ["soft reservations", reservations],
+    ["forecast accuracy", accuracy]
+  ] as const) assertResult(result.error, label);
+
+  const accuracyRows = (accuracy.data ?? []) as AccuracyRow[];
+  const measured = accuracyRows.filter((row) =>
+    row.evaluation_status === "observed" && row.absolute_error_days !== null
+  );
+  return {
+    waitlistCandidates: ((waitlist.data ?? []) as WaitlistCandidateRow[]).map((row) => ({
+      id: row.id,
+      label: row.participant_name,
+      programId: row.program_id,
+      stageId: row.recommended_stage_id
+    })),
+    reservations: ((reservations.data ?? []) as ReservationRow[]).map((row) => ({
+      id: row.id,
+      groupId: row.group_id,
+      waitlistEntryId: row.waitlist_entry_id,
+      capacityBucket: row.capacity_bucket,
+      capacityWeight: Number(row.capacity_weight),
+      status: row.status,
+      reason: row.reason,
+      expiresAt: row.expires_at,
+      requestedAt: row.requested_at,
+      reviewReason: row.review_reason
+    })),
+    accuracy: {
+      evaluated: measured.length,
+      meanAbsoluteErrorDays: measured.length
+        ? roundOne(measured.reduce((total, row) => total + Number(row.absolute_error_days), 0) / measured.length)
+        : null,
+      withinRangePercentage: measured.length
+        ? Math.round((measured.filter((row) => row.within_predicted_range).length / measured.length) * 100)
+        : null,
+      noOpening: accuracyRows.filter((row) => row.evaluation_status === "no_opening").length,
+      insufficientEvidence: accuracyRows.filter((row) => row.evaluation_status === "insufficient_evidence").length,
+      modelVersions: [...new Set(accuracyRows.map((row) => row.model_version))].sort()
+    }
+  };
+}
+
 export async function forecastCapacity(input: {
   tenantId: string;
   horizonWeeks: 4 | 8 | 12;
@@ -38,11 +138,13 @@ export async function forecastCapacity(input: {
     assignmentsResult,
     availabilityResult,
     resourcesResult,
-    sessionsResult
+    sessionsResult,
+    softReservationsResult,
+    dataQualityResult
   ] = await Promise.all([
     admin
       .from("groups")
-      .select("id, name, program_id, stage_id, default_resource_id, default_weekday, default_start_time, default_end_time, capacity, status")
+      .select("id, name, program_id, stage_id, default_resource_id, default_weekday, default_start_time, default_end_time, capacity, hard_capacity, status")
       .eq("tenant_id", input.tenantId)
       .eq("status", "active"),
     admin
@@ -90,7 +192,19 @@ export async function forecastCapacity(input: {
       .eq("tenant_id", input.tenantId)
       .in("status", ["draft", "scheduled"])
       .gte("starts_at", now.toISOString())
-      .lte("starts_at", horizon.toISOString())
+      .lte("starts_at", horizon.toISOString()),
+    admin
+      .from("capacity_soft_reservations")
+      .select("group_id, capacity_weight, status, expires_at")
+      .eq("tenant_id", input.tenantId)
+      .eq("status", "approved")
+      .gt("expires_at", now.toISOString()),
+    admin
+      .from("data_quality_issues")
+      .select("entity_id, severity, status")
+      .eq("tenant_id", input.tenantId)
+      .eq("entity_type", "group")
+      .in("status", ["open", "ignored"])
   ]);
 
   for (const [label, result] of [
@@ -103,7 +217,9 @@ export async function forecastCapacity(input: {
     ["instructor assignments", assignmentsResult],
     ["instructor availability", availabilityResult],
     ["resources", resourcesResult],
-    ["sessions", sessionsResult]
+    ["sessions", sessionsResult],
+    ["soft reservations", softReservationsResult],
+    ["data quality", dataQualityResult]
   ] as const) {
     assertResult(result.error, label);
   }
@@ -121,6 +237,8 @@ export async function forecastCapacity(input: {
   const sessions = ((sessionsResult.data ?? []) as SessionRow[]).filter(
     (row) => includeTestData || !row.is_test
   );
+  const softReservations = (softReservationsResult.data ?? []) as SoftReservationRow[];
+  const dataQualityIssues = (dataQualityResult.data ?? []) as DataQualityRow[];
   const preferences = (preferencesResult.data ?? []) as PreferenceRow[];
   const stages = (stagesResult.data ?? []) as StageRow[];
   const assignments = (assignmentsResult.data ?? []) as AssignmentRow[];
@@ -230,8 +348,8 @@ export async function forecastCapacity(input: {
         resourceId: group.default_resource_id,
         locationId: resolveLocationId(group.default_resource_id, resourceById),
         fixedCapacity: resource?.capacity === null || resource?.capacity === undefined
-          ? Number(group.capacity)
-          : Math.min(Number(group.capacity), Number(resource.capacity)),
+          ? Number(group.hard_capacity)
+          : Math.min(Number(group.hard_capacity), Number(resource.capacity)),
         occupiedCapacity: currentMemberships.reduce(
           (total, row) => total + Number(row.capacity_weight),
           0
@@ -247,11 +365,32 @@ export async function forecastCapacity(input: {
         hasInstructor,
         instructorAvailable: hasInstructor && instructorAvailable,
         resourceAvailable,
-        isTest
+        isTest,
+        knownOpeningDates: currentMemberships.flatMap((row) =>
+          row.ends_on && row.ends_on > today && row.ends_on <= horizon.toISOString().slice(0, 10)
+            ? [row.ends_on]
+            : []
+        ),
+        readinessReviewDates: targetStageReadiness.flatMap((row) =>
+          row.next_review_on &&
+          row.next_review_on >= today &&
+          row.next_review_on <= horizon.toISOString().slice(0, 10)
+            ? [row.next_review_on]
+            : []
+        ),
+        activeSoftReservations: softReservations
+          .filter((row) => row.group_id === group.id)
+          .reduce((total, row) => total + Number(row.capacity_weight), 0),
+        historySampleSize: historicalExits,
+        dataQualityIssueCount: dataQualityIssues.filter((row) => row.entity_id === group.id).length
       };
     });
 
-  return computeCapacityForecast({ groups: model, horizonWeeks: input.horizonWeeks });
+  return computeCapacityForecast({
+    asOfDate: today,
+    groups: model,
+    horizonWeeks: input.horizonWeeks
+  });
 }
 
 type GroupRow = {
@@ -264,6 +403,7 @@ type GroupRow = {
   default_start_time: string | null;
   default_end_time: string | null;
   capacity: number;
+  hard_capacity: number;
   status: string;
 };
 type MembershipRow = {
@@ -334,6 +474,42 @@ type SessionRow = {
   ends_at: string;
   status: string;
   is_test: boolean;
+};
+type SoftReservationRow = {
+  group_id: string;
+  capacity_weight: number;
+  status: string;
+  expires_at: string;
+};
+type DataQualityRow = {
+  entity_id: string;
+  severity: string;
+  status: string;
+};
+type WaitlistCandidateRow = {
+  id: string;
+  participant_name: string;
+  program_id: string;
+  recommended_stage_id: string | null;
+  status: string;
+};
+type ReservationRow = {
+  id: string;
+  group_id: string;
+  waitlist_entry_id: string;
+  capacity_bucket: string;
+  capacity_weight: number;
+  status: string;
+  reason: string;
+  expires_at: string;
+  requested_at: string;
+  review_reason: string | null;
+};
+type AccuracyRow = {
+  absolute_error_days: number | null;
+  within_predicted_range: boolean | null;
+  evaluation_status: string;
+  model_version: string;
 };
 
 function matchesFilters(

@@ -3,6 +3,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BadgeStudioAsset } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
@@ -110,6 +111,12 @@ export async function getTenantBadgeData() {
 
 export async function getParentBadgeWallData() {
   const context = await requirePrivateShellContext("/portaal/badges");
+  return getParentBadgeWallDataForContext(context);
+}
+
+export async function getParentBadgeWallDataForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   const tenant = getActiveTenant(context);
   if (!context.activeTenant?.roles.includes("parent")) redirect("/portaal?error=forbidden");
   const admin = createAdminClient();
@@ -148,20 +155,59 @@ export async function getParentBadgeWallData() {
     : { data: [], error: null };
   assertResults([["linked participants", linkedParticipants.error]]);
 
+  // This function intentionally uses the service client because the parent
+  // portal combines multiple tenant-scoped sources. Re-apply the surprise
+  // boundary before constructing the view model: an unearned surprise may not
+  // influence payload rows, relationship rows, counts, metadata or assets.
+  const linkedAwards = (awards.data ?? []).filter((award) => participantIds.has(award.participant_id));
+  const earnedCatalogIds = new Set(linkedAwards.flatMap((award) =>
+    award.catalog_definition_id ? [award.catalog_definition_id] : []
+  ));
+  const earnedCustomBadgeIds = new Set(linkedAwards.flatMap((award) =>
+    award.custom_badge_id ? [award.custom_badge_id] : []
+  ));
+  const safeCatalog = (catalog.data ?? []).filter((definition) =>
+    !definition.is_surprise || earnedCatalogIds.has(definition.id)
+  );
+  const safeCatalogIds = new Set(safeCatalog.map((definition) => definition.id));
+  const safeCustomBadges = (customBadges.data ?? []).filter((badge) =>
+    !badge.is_surprise || earnedCustomBadgeIds.has(badge.id)
+  );
+  const safeCustomBadgeIds = new Set(safeCustomBadges.map((badge) => badge.id));
+  const earnedCollectionIds = new Set((collectionItems.data ?? []).flatMap((item) => {
+    const containsEarnedBadge = (
+      item.catalog_definition_id && earnedCatalogIds.has(item.catalog_definition_id)
+    ) || (
+      item.custom_badge_id && earnedCustomBadgeIds.has(item.custom_badge_id)
+    );
+    return containsEarnedBadge ? [item.collection_id] : [];
+  }));
+  const safeCollections = (collections.data ?? []).filter((collection) =>
+    !collection.is_surprise || earnedCollectionIds.has(collection.id)
+  );
+  const safeCollectionIds = new Set(safeCollections.map((collection) => collection.id));
+  const safeCollectionItems = (collectionItems.data ?? []).filter((item) =>
+    safeCollectionIds.has(item.collection_id)
+    && (
+      (item.catalog_definition_id !== null && safeCatalogIds.has(item.catalog_definition_id))
+      || (item.custom_badge_id !== null && safeCustomBadgeIds.has(item.custom_badge_id))
+    )
+  );
+
   return {
     tenant,
     userId: context.user.id,
     settings: settings.data,
     preferences: preferences.data,
     participants: linkedParticipants.data ?? [],
-    catalog: catalog.data ?? [],
-    overrides: overrides.data ?? [],
-    customBadges: customBadges.data ?? [],
-    awards: (awards.data ?? []).filter((award) => participantIds.has(award.participant_id)),
-    collections: collections.data ?? [],
-    collectionItems: collectionItems.data ?? [],
+    catalog: safeCatalog,
+    overrides: (overrides.data ?? []).filter((override) => safeCatalogIds.has(override.catalog_definition_id)),
+    customBadges: safeCustomBadges,
+    awards: linkedAwards,
+    collections: safeCollections,
+    collectionItems: safeCollectionItems,
     shareAssets: (shareAssets.data ?? []).filter((asset) =>
-      (awards.data ?? []).some((award) => award.id === asset.award_id && participantIds.has(award.participant_id))
+      linkedAwards.some((award) => award.id === asset.award_id)
     )
   };
 }

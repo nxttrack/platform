@@ -3,9 +3,11 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { FamilyCommandCenter, type FamilyChild } from "@/components/parent/family-command-center";
 import { PortalOverviewHero } from "@/components/parent/portal-overview-hero";
+import { SwimJourneyRings } from "@/components/progress/swim-journey-rings";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatLessonDate, getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getNextLesson, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
+import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
 import { resolveTenantPortalTheme } from "@/lib/theme/portal-theme-server";
 
 export const dynamic = "force-dynamic";
@@ -58,22 +60,38 @@ export default async function ParentHomePage({ searchParams }: { searchParams?: 
     const memberships = getActiveMembershipsForParticipant(data, participant.id);
     const next = getNextLesson(data, participant.id);
     const scores = data.progressScores.filter((score) => score.participant_id === participant.id);
+    const journey = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
     const badges = data.badgeAwards.filter((badge) => badge.participant_id === participant.id);
+    const progressTimeline = journey
+      ? journey.effectiveObservations.map((observation) => ({
+          date: observation.observed_at,
+          detail: observation.note || observation.positive_label,
+          kind: "progress" as const,
+          title: observation.positive_label
+        }))
+      : scores.map((score) => ({
+          date: score.scored_at,
+          detail: score.note || score.positive_label,
+          kind: "progress" as const,
+          title: score.positive_label
+        }));
     const timeline: FamilyChild["timeline"] = [
-      ...scores.map((score) => ({ date: score.scored_at, detail: score.note || score.positive_label, kind: "progress" as const, title: score.positive_label })),
+      ...progressTimeline,
       ...badges.map((badge) => ({ date: badge.awarded_at, detail: badge.note || "Een nieuwe mijlpaal is behaald.", kind: "badge" as const, title: badge.title })),
       ...data.sessions.filter((session) => memberships.some((membership) => membership.group_id === session.group_id) && new Date(session.ends_at).getTime() < Date.now()).slice(-3).map((session) => ({ date: session.ends_at, detail: groupById.get(session.group_id)?.name ?? "Lesgroep", kind: "lesson" as const, title: "Les gevolgd" }))
     ].sort((left, right) => new Date(right.date).getTime() - new Date(left.date).getTime());
     const averageScore = scores.length ? scores.reduce((total, score) => total + Number(score.score), 0) / scores.length : 0;
+    const diplomaProgress = journey?.rings.find((ring) => ring.kind === "diploma")?.progressPercent;
 
     return {
       id: participant.id,
       name: participant.display_name,
       program: enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Nog geen programma",
-      stage: enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau" : "Startniveau",
+      stage: journey?.currentStage?.name
+        ?? (enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Niveau" : "Startniveau"),
       group: memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst",
       nextLesson: next ? formatLessonDate(next.starts_at, next.ends_at) : null,
-      progressPercent: Math.max(0, Math.min(100, Math.round((averageScore / 5) * 100))),
+      progressPercent: diplomaProgress ?? Math.max(0, Math.min(100, Math.round((averageScore / 5) * 100))),
       timeline
     };
   });
@@ -81,6 +99,13 @@ export default async function ParentHomePage({ searchParams }: { searchParams?: 
   const overviewChild = selectedParticipantId
     ? familyChildren.find((child) => child.id === selectedParticipantId) ?? null
     : familyChildren[0] ?? null;
+  const overviewParticipant = overviewChild
+    ? data.participants.find((participant) => participant.id === overviewChild.id) ?? null
+    : null;
+  const overviewEnrollment = overviewParticipant
+    ? getActiveEnrollmentForParticipant(data, overviewParticipant.id)
+    : null;
+  const overviewJourney = getJourneyForEnrollment(data.swimJourneys, overviewEnrollment?.id);
   const overviewLesson = overviewChild ? getNextLesson(data, overviewChild.id) : null;
   const overviewLocationId = overviewLesson?.resource_id
     ?? (overviewLesson ? groupById.get(overviewLesson.group_id)?.default_resource_id : null);
@@ -107,6 +132,22 @@ export default async function ParentHomePage({ searchParams }: { searchParams?: 
         href={participantContextHref("/portaal/ontwikkeling", selectedParticipantId ?? overviewChild?.id ?? null)}
         recipeId={resolvedTheme.manifest.recipes.pages.overview}
       />
+
+      {overviewJourney ? (
+        <section className="rounded-2xl border border-border bg-card p-5 shadow-soft">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Live zwemreis</p>
+              <h2 className="mt-1 text-xl font-bold text-foreground">{overviewChild?.name}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Voortgang en beoordelingsdekking volgens {overviewJourney.version.name}.</p>
+            </div>
+            <Link className="text-sm font-semibold text-primary hover:underline" href={participantContextHref("/portaal/ontwikkeling", overviewParticipant?.id ?? null)}>
+              Bekijk onderdelen
+            </Link>
+          </div>
+          <SwimJourneyRings className="mt-5" rings={overviewJourney.rings} />
+        </section>
+      ) : null}
 
       <section className="rounded-2xl border border-border bg-card p-4 shadow-soft sm:p-5">
         <div className="flex items-start justify-between gap-3">

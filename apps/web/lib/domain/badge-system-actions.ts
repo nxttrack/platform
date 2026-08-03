@@ -129,7 +129,8 @@ export async function saveCatalogBadgeAction(formData: FormData) {
     emails_enabled: formData.get("emailsEnabled") === "on",
     share_enabled: formData.get("shareEnabled") === "on",
     sort_order: readInteger(formData, "sortOrder", 0, 100_000, 0),
-    status: readEnum(formData, "status", ["draft", "active", "archived"] as const, "active")
+    status: readEnum(formData, "status", ["draft", "active", "archived"] as const, "active"),
+    updated_by_user_id: context.user.id
   };
   const result = id
     ? await admin.from("badge_catalog_definitions").update(values).eq("id", id).select("id").maybeSingle()
@@ -188,7 +189,8 @@ export async function duplicateCatalogBadgeAction(formData: FormData) {
     ...copy,
     badge_key: `${sourceKey}_copy_${suffix}`.slice(0, 120),
     name_default: `${source.data.name_default} (kopie)`.slice(0, 120),
-    status: "draft"
+    status: "draft",
+    updated_by_user_id: context.user.id
   }).select("id").single();
   if (result.error) redirectWith(nextPath, "error", "De badge kon niet worden gedupliceerd.");
   revalidateBadgePaths();
@@ -432,7 +434,8 @@ export async function saveCustomBadgeAction(formData: FormData) {
     icon_name: readOptional(formData, "iconName", 80) ?? "sparkles",
     artwork_asset_id: storedArtwork?.asset.id ?? currentArtworkAssetId,
     is_surprise: formData.get("isSurprise") === "on",
-    status: readEnum(formData, "status", ["draft", "active", "archived"], "draft")
+    status: readEnum(formData, "status", ["draft", "active", "archived"], "draft"),
+    updated_by_user_id: context.user.id
   };
   const result = id
     ? await admin.from("tenant_custom_badges").update(values).eq("tenant_id", tenant.id).eq("id", id).select("id").maybeSingle()
@@ -489,7 +492,8 @@ export async function duplicateCustomBadgeAction(formData: FormData) {
     badge_key: `${sourceKey}_copy_${suffix}`.slice(0, 120),
     name_default: `${source.data.name_default} (kopie)`.slice(0, 120),
     status: "draft",
-    created_by_user_id: context.user.id
+    created_by_user_id: context.user.id,
+    updated_by_user_id: context.user.id
   }).select("id").single();
   if (result.error) redirectWith(nextPath, "error", "De eigen badge kon niet worden gedupliceerd.");
   revalidateBadgePaths();
@@ -889,7 +893,7 @@ export async function generateBadgeShareAssetAction(formData: FormData) {
     tenant_id: tenant.id,
     participant_id: award.participant_id,
     award_id: awardId,
-    event_type: "shared",
+    event_type: "asset_generated",
     actor_profile_id: context.user.id,
     metadata_json: {
       format,
@@ -900,6 +904,123 @@ export async function generateBadgeShareAssetAction(formData: FormData) {
   });
   revalidateBadgePaths();
   redirectWith(nextPath, "success", "Veilige deelafbeelding gemaakt.");
+}
+
+export async function recordBadgeShareEventAction(input: {
+  assetId: string;
+  eventType: "downloaded" | "share_started" | "share_fallback" | "share_handed_off";
+  provider:
+    | "system"
+    | "whatsapp"
+    | "facebook"
+    | "instagram"
+    | "tiktok"
+    | "snapchat"
+    | "x"
+    | "copy"
+    | "download";
+  capability:
+    | "native_file"
+    | "native_text"
+    | "provider_text_intent"
+    | "download_copy_fallback"
+    | "download";
+}) {
+  const context = await requirePrivateShellContext("/portaal/badges");
+  const tenant = getActiveTenant(context);
+  if (!context.activeTenant?.roles.includes("parent")) {
+    return { ok: false };
+  }
+  if (
+    ![
+      "downloaded",
+      "share_started",
+      "share_fallback",
+      "share_handed_off"
+    ].includes(input.eventType)
+    || ![
+      "system",
+      "whatsapp",
+      "facebook",
+      "instagram",
+      "tiktok",
+      "snapchat",
+      "x",
+      "copy",
+      "download"
+    ].includes(input.provider)
+    || ![
+      "native_file",
+      "native_text",
+      "provider_text_intent",
+      "download_copy_fallback",
+      "download"
+    ].includes(input.capability)
+  ) {
+    return { ok: false };
+  }
+
+  const admin = createAdminClient();
+  const assetResult = await admin
+    .from("badge_share_assets")
+    .select("id, award_id, format, status")
+    .eq("tenant_id", tenant.id)
+    .eq("id", input.assetId)
+    .eq("status", "generated")
+    .maybeSingle();
+  if (assetResult.error || !assetResult.data) {
+    return { ok: false };
+  }
+  const awardResult = await admin
+    .from("participant_badge_awards")
+    .select("id, participant_id, status, visibility, is_test")
+    .eq("tenant_id", tenant.id)
+    .eq("id", assetResult.data.award_id)
+    .eq("status", "awarded")
+    .eq("visibility", "parent_visible")
+    .maybeSingle();
+  if (awardResult.error || !awardResult.data) {
+    return { ok: false };
+  }
+  const [participantResult, guardianResult] = await Promise.all([
+    admin
+      .from("participants")
+      .select("guardian_user_id")
+      .eq("tenant_id", tenant.id)
+      .eq("id", awardResult.data.participant_id)
+      .maybeSingle(),
+    admin
+      .from("participant_guardians")
+      .select("id")
+      .eq("tenant_id", tenant.id)
+      .eq("participant_id", awardResult.data.participant_id)
+      .eq("guardian_user_id", context.user.id)
+      .eq("status", "active")
+      .maybeSingle()
+  ]);
+  const linked =
+    participantResult.data?.guardian_user_id === context.user.id
+    || Boolean(guardianResult.data);
+  if (participantResult.error || guardianResult.error || !linked) {
+    return { ok: false };
+  }
+
+  const result = await admin.from("badge_analytics_events").insert({
+    tenant_id: tenant.id,
+    participant_id: awardResult.data.participant_id,
+    award_id: awardResult.data.id,
+    event_type: input.eventType,
+    actor_profile_id: context.user.id,
+    metadata_json: {
+      assetFormat: assetResult.data.format,
+      capability: input.capability,
+      provider: input.provider,
+      telemetryContract: "share_capability_v1"
+    },
+    is_test: awardResult.data.is_test === true
+  });
+
+  return { ok: !result.error };
 }
 
 async function requireTenantBadgeAdmin(path: `/${string}`) {

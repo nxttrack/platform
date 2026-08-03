@@ -18,9 +18,17 @@ const routes = [
   "family-access",
   "profile"
 ];
+const platformOwnerCredentialsConfigured = Boolean(
+  process.env.E2E_PLATFORM_OWNER_EMAIL && process.env.E2E_PLATFORM_OWNER_PASSWORD
+);
+const visualMatrixRequired = process.env.PORTAL_THEME_VISUAL_MATRIX_REQUIRED === "true";
 
 test("platformpreview rendert de volledige 5 × 13 desktop- en mobiele matrix", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium-desktop", "De matrix bevat zelf zowel desktop- als mobiele viewports.");
+  test.skip(
+    !visualMatrixRequired && !platformOwnerCredentialsConfigured,
+    "Set platform-owner E2E credentials or require the matrix from the guarded staging validation."
+  );
   await signIn(page);
   await page.goto("/platform/themes");
   await expect(page.getByRole("heading", { name: "Theme Control Center" })).toBeVisible();

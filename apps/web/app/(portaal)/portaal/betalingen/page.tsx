@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { CreditCard, ReceiptText } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -268,11 +269,17 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider text-primary">{invoice.invoice_number ?? "Conceptfactuur"}</p>
                     <h3 className="mt-1 font-bold text-foreground">{formatMoney(invoice.total_cents, invoice.currency)}</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">{invoice.document_type === "credit_note" ? "Creditnota" : "Factuur"} · btw {formatMoney(invoice.tax_cents, invoice.currency)}</p>
                     <p className="mt-1 text-sm text-muted-foreground">Vervalt {invoice.due_on ? formatDate(invoice.due_on) : "n.v.t."}</p>
                   </div>
                   <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "issued" || invoice.status === "sent" ? "warning" : "neutral"}>{statusLabel(invoice.status)}</StatusPill>
                 </div>
                 {invoice.notes ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{invoice.notes}</p> : null}
+                {invoice.status !== "draft" ? (
+                  <Link className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-border bg-white px-4 text-sm font-bold text-foreground hover:bg-muted" href={`/api/files/invoice/${invoice.id}`}>
+                    Download PDF
+                  </Link>
+                ) : null}
               </article>
             ))}
           </div>
@@ -412,7 +419,8 @@ function EmptyState({ children }: { children: ReactNode }) {
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   const savedMessages: Record<string, string> = {
     "incasso-started": "Mollie is geopend voor de eerste betaling en incassomachtiging.",
-    "mandate-revoked": "De incassomachtiging is ingetrokken; betalingen staan weer op handmatig."
+    "mandate-revoked": "De incassomachtiging is ingetrokken; betalingen staan weer op handmatig.",
+    "offering-held": "De cursusplaats is tijdelijk gereserveerd. Rond de betaling of incassomachtiging vóór de getoonde vervaltijd af."
   };
   const errorMessages: Record<string, string> = {
     "incasso-already-started": "Er loopt al een betaalpoging. Gebruik de bestaande Mollie-link hieronder.",

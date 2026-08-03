@@ -50,6 +50,7 @@ export async function createResourceAction(formData: FormData) {
     name: readRequired(formData, "name"),
     code: readOptional(formData, "code"),
     capacity: readInteger(formData, "capacity"),
+    safety_capacity: readInteger(formData, "safetyCapacity"),
     status: readOptional(formData, "status") ?? "active",
     sort_order: readInteger(formData, "sortOrder") ?? 0
   });
@@ -130,7 +131,7 @@ export async function createParticipantEnrollmentAction(formData: FormData) {
       guardian_user_id: guardianUserId,
       display_name: readRequired(formData, "displayName"),
       birth_date: readOptional(formData, "birthDate"),
-      gender: readOptional(formData, "gender") ?? "unknown",
+      gender: readOptional(formData, "gender") ?? "unknown_legacy",
       status: "active"
     })
     .select("id")
@@ -177,6 +178,10 @@ export async function createGroupMembershipAction(formData: FormData) {
   const enrollmentId = readRequired(formData, "enrollmentId");
   const capacityWeight = readNumber(formData, "capacityWeight") ?? 1;
   const status = readOptional(formData, "status") ?? "active";
+  const requestedBucket = readOptional(formData, "capacityBucket") ?? "regular";
+  const capacityBucket = status === "trial"
+    ? "trial"
+    : requestedBucket === "flex" ? "flex" : "regular";
 
   if (status === "active" || status === "trial") {
     const capacityOk = await groupHasCapacity({
@@ -204,7 +209,8 @@ export async function createGroupMembershipAction(formData: FormData) {
     participant_id: participantId,
     status,
     starts_on: readOptional(formData, "startsOn") ?? new Date().toISOString().slice(0, 10),
-    capacity_weight: capacityWeight
+    capacity_weight: capacityWeight,
+    capacity_bucket: capacityBucket
   });
 
   redirectAfterWrite("/admin/leerlingen", error);

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { getActiveTenant } from "@/lib/domain/core";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -91,6 +92,12 @@ export async function getFeedbackAdminData(): Promise<FeedbackAdminData> {
 
 export async function getParentFeedbackData() {
   const context = await requirePrivateShellContext("/portaal/feedback");
+  return getParentFeedbackDataForContext(context);
+}
+
+export async function getParentFeedbackDataForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
   const requests = await admin
@@ -98,7 +105,8 @@ export async function getParentFeedbackData() {
     .select("id, campaign_id, participant_id, status, requested_at, expires_at, completed_at")
     .eq("tenant_id", tenant.id)
     .eq("guardian_user_id", context.user.id)
-    .order("requested_at", { ascending: false });
+    .order("requested_at", { ascending: false })
+    .limit(100);
   assertResult(requests.error, "parent feedback requests");
   const requestRows = (requests.data ?? []) as Array<FeedbackRequest>;
   const campaignIds = [...new Set(requestRows.map((row) => row.campaign_id))];

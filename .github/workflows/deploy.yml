@@ -454,6 +454,11 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
+      - name: Validate required five-theme portal matrix
+        env:
+          PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
+        run: pnpm run test:portal-themes:e2e
+
       - name: Phase 16 operational flow validation
         run: pnpm run phase16:flow
 

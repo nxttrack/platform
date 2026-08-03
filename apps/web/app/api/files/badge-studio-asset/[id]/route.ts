@@ -23,8 +23,8 @@ type BadgeStudioAssetRow = {
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, context: RouteContext) {
-  const guard = await requireApiAuthenticatedContext();
+export async function GET(request: Request, context: RouteContext) {
+  const guard = await requireApiAuthenticatedContext(request);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;

@@ -22,10 +22,14 @@ export async function getParentDocuments(): Promise<PortalDocumentRow[]> {
   const context = await requirePrivateShellContext("/portaal");
   const tenant = getActiveTenant(context);
 
+  return getParentDocumentsForTenant(tenant.id);
+}
+
+export function getParentDocumentsForTenant(tenantId: string) {
   return getDocuments({
     audiences: ["parents", "all_tenant"],
     requirePortalVisibility: true,
-    tenantId: tenant.id
+    tenantId
   });
 }
 
@@ -33,10 +37,14 @@ export async function getInstructorDocuments(): Promise<PortalDocumentRow[]> {
   const context = await requirePrivateShellContext("/instructor");
   const tenant = getActiveTenant(context);
 
+  return getInstructorDocumentsForTenant(tenant.id);
+}
+
+export function getInstructorDocumentsForTenant(tenantId: string) {
   return getDocuments({
     audiences: ["instructors", "all_tenant"],
     requirePortalVisibility: false,
-    tenantId: tenant.id
+    tenantId
   });
 }
 

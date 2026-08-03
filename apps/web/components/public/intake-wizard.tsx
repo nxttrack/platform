@@ -80,7 +80,7 @@ export function IntakeWizard(props: IntakeWizardProps) {
   const [stepIndex, setStepIndex] = useState(0);
   const [participantName, setParticipantName] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [participantGender, setParticipantGender] = useState<"boy" | "girl" | "unknown" | "">("");
+  const [participantGender, setParticipantGender] = useState<"boy" | "girl" | "unknown_legacy" | "">("");
   const [selectedOption, setSelectedOption] = useState<IntakeOption>(props.allowedOptions[0] ?? "enrollment");
   const [parentName, setParentName] = useState("");
   const [parentEmail, setParentEmail] = useState("");
@@ -407,11 +407,11 @@ function ChildStep(props: {
   allowedOptions: IntakeOption[];
   birthDate: string;
   onBirthDateChange: (value: string) => void;
-  onGenderChange: (value: "boy" | "girl" | "unknown") => void;
+  onGenderChange: (value: "boy" | "girl" | "unknown_legacy") => void;
   onNameChange: (value: string) => void;
   onOptionChange: (value: IntakeOption) => void;
   option: IntakeOption;
-  participantGender: "boy" | "girl" | "unknown" | "";
+  participantGender: "boy" | "girl" | "unknown_legacy" | "";
   participantName: string;
 }) {
   return (
@@ -437,7 +437,7 @@ function ChildStep(props: {
               {([
                 ["boy", "Jongen"],
                 ["girl", "Meisje"],
-                ["unknown", "Neutraal / niet zeggen"]
+                ["unknown_legacy", "Niet ingevuld"]
               ] as const).map(([value, label]) => (
                 <label className="cursor-pointer rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold transition has-[:checked]:border-primary has-[:checked]:bg-primary/[0.06] has-[:checked]:text-primary" key={value}>
                   <input checked={props.participantGender === value} className="sr-only" onChange={() => props.onGenderChange(value)} type="radio" />
@@ -815,7 +815,7 @@ function SummaryItem({ children, complete, icon, label }: { children: React.Reac
 function getCanContinue(input: {
   step: WizardStep;
   participantName: string;
-  participantGender: "boy" | "girl" | "unknown" | "";
+  participantGender: "boy" | "girl" | "unknown_legacy" | "";
   birthDate: string;
   parentName: string;
   parentEmail: string;

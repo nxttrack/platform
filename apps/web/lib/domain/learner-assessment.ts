@@ -35,8 +35,8 @@ export function getLearnerAssessmentAccessibleLabel(value: LearnerAssessmentValu
   return `${value} van 5 — ${level.label}, ${level.meaning}`;
 }
 
-export function normalizeLearnerAssessment(value: LearnerAssessmentValue) {
-  return ((value - 1) / 4) * 100;
+export function legacyNormalizedAssessmentScore(value: LearnerAssessmentValue) {
+  return (value - 1) / 4;
 }
 
 export function migrateLegacyThreePointValue(value: LearnerAssessmentSourceValue): LearnerAssessmentRating {
