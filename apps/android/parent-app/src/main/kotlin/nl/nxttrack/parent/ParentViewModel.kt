@@ -15,16 +15,16 @@ enum class ParentPage(val title: String, val primaryDestination: String) {
     OVERVIEW("Overzicht", "overview"),
     PLANNING("Planning", "planning"),
     LESSON_DETAIL("Les", "planning"),
-    PROGRESS("Live Zwemreis", "progress"),
-    BADGES("Badges", "progress"),
-    MEDIA("Foto's en media", "overview"),
-    DIPLOMAS("Diploma's", "overview"),
+    PROGRESS("Ontwikkeling", "development"),
+    BADGES("Badges", "development"),
+    MEDIA("Foto's en media", "more"),
+    DIPLOMAS("Diploma's", "more"),
     INBOX("Inbox", "inbox"),
-    PAYMENTS("Betalingen", "payments"),
-    DOCUMENTS("Documenten", "overview"),
-    FEEDBACK("Feedback", "overview"),
-    FAMILY_ACCESS("Gezinstoegang", "overview"),
-    PROFILE("Profiel", "overview")
+    PAYMENTS("Betalingen", "more"),
+    DOCUMENTS("Documenten", "more"),
+    FEEDBACK("Feedback", "more"),
+    FAMILY_ACCESS("Gezinstoegang", "more"),
+    PROFILE("Profiel en meer", "more")
 }
 
 data class ParentLocalState(
@@ -87,9 +87,9 @@ class ParentViewModel : ViewModel() {
         navigate(
             when (id) {
                 "planning" -> ParentPage.PLANNING
-                "progress" -> ParentPage.PROGRESS
+                "development" -> ParentPage.PROGRESS
                 "inbox" -> ParentPage.INBOX
-                "payments" -> ParentPage.PAYMENTS
+                "more" -> ParentPage.PROFILE
                 else -> ParentPage.OVERVIEW
             }
         )

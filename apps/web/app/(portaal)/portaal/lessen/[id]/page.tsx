@@ -10,6 +10,7 @@ import { cancelLessonAction } from "@/lib/domain/parent-portal-actions";
 import { canCancelSession, canParentMutateParticipant, formatLessonDate, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 import type { SessionRow } from "@/lib/domain/core";
+import { getPortalTerminology, type PortalTerminology } from "@/lib/theme/portal-terminology";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -36,6 +37,7 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
   const error = getParam(rawParams, "error");
   const future = new Date(session.starts_at).getTime() > Date.now();
   const onTime = canCancelSession(data.settings, session.starts_at);
+  const terminology = getPortalTerminology(data.portalTheme.manifest);
 
   return (
     <div className="space-y-6">
@@ -43,11 +45,11 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
         action={<Link className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border bg-card px-4 text-sm font-semibold shadow-soft" href={participantContextHref("/portaal/planning", selectedParticipantId)}><ArrowLeft className="size-4" /> Terug naar planning</Link>}
         kicker="Planning"
         title={formatLessonDate(session.starts_at, session.ends_at)}
-        subtitle={group?.name ?? "Lesgroep"}
+        subtitle={group?.name ?? "Groep"}
       />
-      <Feedback saved={saved} error={error} />
+      <Feedback saved={saved} error={error} terminology={terminology} />
 
-      <div className="grid gap-5 xl:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-5 xl:grid-cols-2">
         <Card>
           <div className="space-y-4">
             <Detail icon={<MapPin className="h-4 w-4" />} label="Locatie/resource" value={resource?.name ?? "Nog niet gezet"} />
@@ -72,7 +74,7 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
                   {cancellation ? <StatusPill tone={cancellation.eligible_for_credit ? "success" : "warning"}>{cancellation.policy_status}</StatusPill> : <StatusPill tone="info">gepland</StatusPill>}
                 </div>
                 <div className="mt-4">
-                  {future && session.status === "scheduled" && !cancellation && canParentMutateParticipant(data, membership.participant_id) ? <CancelForm next={participantContextHref(`/portaal/lessen/${session.id}`, selectedParticipantId)} participantId={membership.participant_id} session={session} onTime={onTime} /> : null}
+                  {future && session.status === "scheduled" && !cancellation && canParentMutateParticipant(data, membership.participant_id) ? <CancelForm next={participantContextHref(`/portaal/lessen/${session.id}`, selectedParticipantId)} participantId={membership.participant_id} session={session} onTime={onTime} terminology={terminology} /> : null}
                   {cancellation ? <p className="text-sm font-semibold text-muted-foreground">Geannuleerd op {formatShortDate(cancellation.requested_at)}</p> : null}
                 </div>
               </article>
@@ -84,19 +86,19 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
   );
 }
 
-function CancelForm({ next, onTime, participantId, session }: { next: string; onTime: boolean; participantId: string; session: SessionRow }) {
+function CancelForm({ next, onTime, participantId, session, terminology }: { next: string; onTime: boolean; participantId: string; session: SessionRow; terminology: PortalTerminology }) {
   return (
     <ConfirmActionForm
       action={cancelLessonAction}
       className="flex flex-wrap items-end gap-2"
-      confirmLabel="Les definitief annuleren"
+      confirmLabel={`${titleCase(terminology.activity)} definitief annuleren`}
       description={
         onTime
-          ? "Deze les wordt geannuleerd. Volgens de huidige termijn ontvang je hiervoor automatisch een inhaalcredit."
-          : "Deze les wordt geannuleerd buiten de geldende termijn. Je ontvangt hiervoor geen inhaalcredit."
+          ? `Deze ${terminology.activity} wordt geannuleerd. Volgens de huidige termijn ontvang je hiervoor automatisch een credit.`
+          : `Deze ${terminology.activity} wordt geannuleerd buiten de geldende termijn. Je ontvangt hiervoor geen credit.`
       }
       hiddenFields={{ sessionId: session.id, participantId, next }}
-      title="Wil je deze les annuleren?"
+      title={`Wil je deze ${terminology.activity} annuleren?`}
       triggerLabel={
         <>
           <CalendarX className="h-4 w-4" />
@@ -125,13 +127,13 @@ function Detail({ icon, label, value }: { icon: ReactNode; label: string; value:
   );
 }
 
-function Feedback({ saved, error }: { saved?: string; error?: string }) {
+function Feedback({ saved, error, terminology }: { saved?: string; error?: string; terminology: PortalTerminology }) {
   if (saved === "cancelled") {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">Les geannuleerd en inhaalcredit toegevoegd.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-semibold text-success">{titleCase(terminology.activity)} geannuleerd en credit toegevoegd.</p>;
   }
 
   if (saved === "late") {
-    return <p className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-sm font-semibold text-warning">Les geannuleerd buiten de credittermijn.</p>;
+    return <p className="rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-sm font-semibold text-warning">{titleCase(terminology.activity)} geannuleerd buiten de credittermijn.</p>;
   }
 
   if (error) {
@@ -149,4 +151,8 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
   const value = params[key];
 
   return Array.isArray(value) ? value[0] : value;
+}
+
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

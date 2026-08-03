@@ -5,18 +5,20 @@ import { cn } from "@/lib/utils";
 export function SwimJourneyRings({
   compact = false,
   rings,
-  className
+  className,
+  labels = { stage: "badje", diploma: "diploma" }
 }: {
   compact?: boolean;
   rings: SwimJourneyRing[];
   className?: string;
+  labels?: { stage: string; diploma: string };
 }) {
   return (
     <div className={cn("flex flex-wrap items-start gap-4", className)} data-formula-version="swim_progress_v3">
       {rings.map((ring) => (
         <div className="flex min-w-28 flex-col items-center text-center" key={`${ring.kind}:${ring.key}`}>
           <ProgressRing
-            label={ring.kind === "stage" ? "badje" : "diploma"}
+            label={labels[ring.kind]}
             size={compact ? 88 : 104}
             value={ring.progressPercent}
           />

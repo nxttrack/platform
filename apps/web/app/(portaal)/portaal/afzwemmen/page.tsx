@@ -1,7 +1,11 @@
-import { redirect } from "next/navigation";
+import { redirectCompatibilityRoute } from "@/lib/navigation/portal-compatibility";
 
 export const dynamic = "force-dynamic";
 
-export default function LegacyGraduationPage() {
-  redirect("/portaal/planning#afzwemmen");
+export default async function LegacyGraduationPage({
+  searchParams
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  redirectCompatibilityRoute("/portaal/planning", await searchParams, "afzwemmen");
 }

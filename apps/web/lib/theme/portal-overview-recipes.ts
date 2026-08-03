@@ -19,39 +19,7 @@ const defaultPresentation: PortalOverviewRecipePresentation = {
 };
 
 export const portalOverviewRecipePresentations = Object.freeze({
-  "overview/swim-school-v2": defaultPresentation,
-  "overview/pearl-route-v2": {
-    eyebrow: "Ocean Quest",
-    journeyLabel: "Jouw parelreis",
-    titlePrefix: "Op avontuur naar",
-    ctaLabel: "Bekijk zwemreis",
-    progressLabel: "Reisvoortgang",
-    milestoneLabels: ["Actuele beoordelingen", "Parelreis naar diploma"]
-  },
-  "overview/bay-route-v1": {
-    eyebrow: "Dolphin Bay",
-    journeyLabel: "Jouw boeienroute",
-    titlePrefix: "Op koers naar",
-    ctaLabel: "Bekijk zwemroute",
-    progressLabel: "Koersvoortgang",
-    milestoneLabels: ["Actuele beoordelingen", "Boeienroute naar diploma"]
-  },
-  "overview/shell-route-v1": {
-    eyebrow: "Turtle Trails",
-    journeyLabel: "Jouw schelpenpad",
-    titlePrefix: "Stap voor stap naar",
-    ctaLabel: "Bekijk zwemtrail",
-    progressLabel: "Trailvoortgang",
-    milestoneLabels: ["Actuele beoordelingen", "Schelpenpad naar diploma"]
-  },
-  "overview/academy-checkpoints-v1": {
-    eyebrow: "Aqua Academy",
-    journeyLabel: "Jouw academy-pass",
-    titlePrefix: "Op weg naar",
-    ctaLabel: "Bekijk training",
-    progressLabel: "Trainingsvoortgang",
-    milestoneLabels: ["Actuele beoordelingen", "Academy-route naar diploma"]
-  }
+  "overview/journey-engine-v1": defaultPresentation
 } satisfies Partial<Record<RegisteredPageRecipeId, PortalOverviewRecipePresentation>>);
 
 export function getPortalOverviewRecipePresentation(recipeId: RegisteredPageRecipeId) {

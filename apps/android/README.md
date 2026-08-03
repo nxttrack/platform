@@ -18,7 +18,7 @@ als het webplatform.
   progressringselectie en gedeelde modellen.
 - `core:data`: HTTPS-client, tokenrefresh, versleutelde sessie- en
   snapshotopslag, SQLite-commandqueue en WorkManager-sync.
-- `core:design`: Pearl Frame, semantic tokens, vijf theme recipes,
+- `core:design`: gedeelde portalshell, semantic tokens, zes theme recipes,
   scoreprimitives, progressringen en responsieve badgegrid.
 - `instructor-app`: vandaag, agenda, groepen, leerlingen, lesregistratie,
   beoordelingen, inbox, taken, documenten en profiel.
@@ -71,9 +71,11 @@ Ondersteunde commands:
 - Earned badges delen afbeelding en tekst via de Android Sharesheet; de app
   belooft geen publicatie bij een specifieke provider.
 
-De vijf bestaande ouderportaalthemes worden als versiegebonden native
-themebundle geladen. Elke bundle moet het actuele Pearl Frame-contract, alle
-routes en alle page recipes bevatten voordat de client hem accepteert.
+De zes ouderportaalthemes worden als immutable `3.0.0` native themebundles
+geladen. Elke bundle moet schema 3, `parent-portal/1.2`, de gedeelde shell,
+alle dertien routes en alle page recipes bevatten voordat de client hem
+accepteert. Een onbekende of onvolledige bundle valt dicht naar de meegeleverde
+NXTTRACK Default 3.0.0-bundle.
 
 ## Offline en beveiliging
 

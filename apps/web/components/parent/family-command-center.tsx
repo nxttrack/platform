@@ -32,7 +32,7 @@ export function FamilyCommandCenter({ children, contextParticipantId }: { childr
         </div>
       </div>
 
-      <div className="grid gap-0 lg:grid-cols-[0.8fr_1.2fr]">
+      <div className="grid gap-0 lg:grid-cols-2">
         <div className="border-b border-border p-4 sm:p-5 lg:border-b-0 lg:border-r">
           <h2 className="text-2xl font-bold text-foreground">{child.name}</h2>
           <p className="mt-1 text-sm text-muted-foreground">{child.program} · {child.group}</p>

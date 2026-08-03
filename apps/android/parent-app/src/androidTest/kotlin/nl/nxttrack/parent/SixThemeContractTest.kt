@@ -10,14 +10,14 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class FiveThemeContractTest {
+class SixThemeContractTest {
     @Test
-    fun allFiveImmutableThemeBundlesPassTheNativeContract() {
+    fun allSixImmutableThemeBundlesPassTheNativeContract() {
         val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val files = context.assets.list("").orEmpty()
             .filter { it.endsWith(".json") }
             .sorted()
-        assertEquals(5, files.size)
+        assertEquals(6, files.size)
         files.forEach { file ->
             val raw = context.assets.open(file).bufferedReader().use { it.readText() }
             val theme = NativeThemeContractReader.parse(raw)

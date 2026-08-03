@@ -2,6 +2,7 @@ import { Baby, CalendarDays, RefreshCcw, Waves } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatLessonDate, getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getNextLesson, getParentPortalData } from "@/lib/domain/parent-portal";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function ParentChildrenPage() {
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const accessByParticipant = new Map(data.accessLinks.map((link) => [link.participant_id, link]));
+  const terminology = getPortalTerminology(data.portalTheme.manifest);
 
   return (
     <div className="space-y-6">
@@ -44,10 +46,10 @@ export default async function ParentChildrenPage() {
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <Detail icon={<Waves className="h-4 w-4" />} label="Programma" value={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Geen actieve inschrijving"} />
-                  <Detail icon={<Waves className="h-4 w-4" />} label="Badje" value={enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Badje" : "Nog niet gezet"} />
+                  <Detail icon={<Waves className="h-4 w-4" />} label={titleCase(terminology.stage)} value={enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? titleCase(terminology.stage) : "Nog niet gezet"} />
                   <Detail icon={<CalendarDays className="h-4 w-4" />} label="Groep" value={memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst"} />
-                  <Detail icon={<CalendarDays className="h-4 w-4" />} label="Volgende les" value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
-                  <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Inhaalcredits" value={`${credits.length} beschikbaar`} />
+                  <Detail icon={<CalendarDays className="h-4 w-4" />} label={`Volgende ${terminology.activity}`} value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
+                  <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Beschikbare credits" value={`${credits.length} beschikbaar`} />
                   <Detail icon={<Baby className="h-4 w-4" />} label="Toegang" value={access ? `${relationshipLabel(access.relationship)} · ${accessLabel(access.access_level)}` : "Primaire verzorger"} />
                 </div>
               </article>
@@ -94,4 +96,8 @@ function accessLabel(value: string) {
     view_only: "Alleen bekijken"
   };
   return labels[value] ?? value;
+}
+
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

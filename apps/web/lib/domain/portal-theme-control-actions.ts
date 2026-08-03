@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { getActiveTenant } from "@/lib/domain/core";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getThemeRelease } from "@/lib/theme/portal-theme-registry";
 
@@ -73,6 +74,69 @@ export async function rollbackPortalThemeAction(formData: FormData) {
     target_ticket_reference: optional(formData, "ticketReference", 160)
   });
   finish(result.error, "rollback");
+}
+
+export async function setPortalThemeLicenseAction(formData: FormData) {
+  const context = await requireThemeManager();
+  const tenantId = uuid(formData, "tenantId");
+  const status = required(formData, "licenseStatus", 16);
+  if (status !== "verified" && status !== "revoked") {
+    redirect("/platform/themes?error=license_status");
+  }
+  const evidenceReference = optional(formData, "evidenceReference", 500);
+  if (status === "verified" && !evidenceReference) {
+    redirect("/platform/themes?error=license_evidence");
+  }
+  const result = await createAdminClient().rpc("set_tenant_portal_theme_license", {
+    target_actor_user_id: context.user.id,
+    target_evidence_reference: evidenceReference ?? "",
+    target_reason: status === "verified"
+      ? "Naamlicentie door platformbeheer geverifieerd"
+      : required(formData, "reason", 1000),
+    target_status: status,
+    target_tenant_id: tenantId
+  });
+  finish(result.error, "license");
+}
+
+export async function setPortalThemeAvailabilityAction(formData: FormData) {
+  const context = await requireThemeManager();
+  const tenantId = uuid(formData, "tenantId");
+  const [themeKey, themeRelease] = release(formData);
+  const availability = required(formData, "availability", 16);
+  if (availability !== "enabled" && availability !== "disabled") {
+    redirect("/platform/themes?error=availability");
+  }
+  const reason = required(formData, "reason", 1000);
+  const result = await createAdminClient().rpc("set_tenant_portal_theme_availability", {
+    target_actor_user_id: context.user.id,
+    target_is_enabled: availability === "enabled",
+    target_reason: reason,
+    target_tenant_id: tenantId,
+    target_theme_key: themeKey,
+    target_theme_release: themeRelease
+  });
+  finish(result.error, "availability");
+}
+
+export async function selectTenantPortalThemeAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/admin/branding");
+  if (!context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")) {
+    redirect("/admin?error=forbidden");
+  }
+  const tenant = getActiveTenant(context);
+  const [themeKey, themeRelease] = release(formData);
+  const result = await createAdminClient().rpc("select_available_tenant_portal_theme", {
+    target_actor_user_id: context.user.id,
+    target_reason: required(formData, "reason", 1000),
+    target_tenant_id: tenant.id,
+    target_theme_key: themeKey,
+    target_theme_release: themeRelease
+  });
+  if (result.error) redirect("/admin/branding?error=theme");
+  revalidatePath("/admin/branding");
+  revalidatePath("/portaal");
+  redirect("/admin/branding?saved=theme");
 }
 
 async function requireThemeManager() {

@@ -31,6 +31,7 @@ import nl.nxttrack.mobile.domain.MobileNotification
 import nl.nxttrack.mobile.domain.ParentBootstrap
 import nl.nxttrack.mobile.domain.ParticipantMedia
 import nl.nxttrack.mobile.domain.Payment
+import nl.nxttrack.mobile.domain.PortalTerminology
 import nl.nxttrack.mobile.domain.RepositoryState
 import nl.nxttrack.mobile.domain.RingKind
 import nl.nxttrack.mobile.domain.SyncState
@@ -95,22 +96,22 @@ class VisualEvidenceTest {
 
 private fun parentFixture(): ParentBootstrap {
     val theme = ThemeBundle(
-        schemaVersion = 2,
-        portalContract = "parent-portal/1.1",
-        themeKey = "ocean-quest",
-        release = "2.1.0",
+        schemaVersion = 3,
+        portalContract = "parent-portal/1.2",
+        themeKey = "dolphin-bay",
+        release = "3.0.0",
         primaryDestinations = listOf(
             "overview",
             "planning",
-            "progress",
+            "development",
             "inbox",
-            "payments"
+            "more"
         ),
         routeIds = listOf(
             "overview",
             "planning",
             "lesson-detail",
-            "progress",
+            "development",
             "badges",
             "media",
             "diplomas",
@@ -118,15 +119,15 @@ private fun parentFixture(): ParentBootstrap {
             "payments",
             "documents",
             "feedback",
-            "family-access",
+            "children",
             "profile"
         ),
-        shellRecipe = "pearl-frame/ocean-quest",
+        shellRecipe = "portal-shell/shared-v1",
         pageRecipes = listOf(
             "overview",
             "planning",
             "lesson-detail",
-            "progress",
+            "development",
             "badges",
             "media",
             "diplomas",
@@ -134,9 +135,17 @@ private fun parentFixture(): ParentBootstrap {
             "payments",
             "documents",
             "feedback",
-            "family-access",
+            "children",
             "profile"
-        ).associateWith { "ocean-quest/$it" },
+        ).associateWith { route ->
+            when (route) {
+                "overview" -> "overview/journey-engine-v1"
+                "planning" -> "planning/timeline-v1"
+                "development" -> "development/progress-v1"
+                "badges" -> "badges/placeholder-wall-v1"
+                else -> "page/data-first-v2"
+            }
+        },
         tokens = ThemeTokens(
             canvas = "#EAF7FB",
             primary = "#0878E5",
@@ -232,6 +241,20 @@ private fun parentFixture(): ParentBootstrap {
         ),
         assessmentDisplay = AssessmentDisplay.SMILEYS,
         theme = theme,
+        terminology = PortalTerminology(
+            activity = "les",
+            activities = "lessen",
+            finalCredential = "diploma",
+            finalCredentials = "diploma's",
+            finalMoment = "afzwemmen",
+            instructor = "trainer",
+            journey = "zwemreis",
+            makeUpActivity = "inhaalles",
+            makeUpActivities = "inhaallessen",
+            organization = "zwemschool",
+            route = "zwemroute",
+            stage = "badje"
+        ),
         children = listOf(child),
         lessons = listOf(
             Lesson(

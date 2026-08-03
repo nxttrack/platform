@@ -34,10 +34,9 @@ export function resolvePortalBadgeArtworkKey(badgeKey?: string | null, name?: st
 }
 
 export function portalBadgeArtworkUrl(
-  manifest: PortalThemeManifestV2,
-  badgeKey?: string | null,
-  name?: string | null
+  _manifest: PortalThemeManifestV2,
+  _badgeKey?: string | null,
+  _name?: string | null
 ) {
-  if (manifest.theme.key !== "nxttrack-default" && manifest.theme.key !== "ocean-quest") return null;
-  return `/portal-themes/${manifest.theme.key}/badges/${resolvePortalBadgeArtworkKey(badgeKey, name)}-256.webp`;
+  return null;
 }

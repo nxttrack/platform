@@ -1,11 +1,11 @@
-export const PARENT_PORTAL_CONTRACT = "parent-portal/1.1" as const;
+export const PARENT_PORTAL_CONTRACT = "parent-portal/1.2" as const;
 export const LEARNER_ASSESSMENT_SCALE = 5 as const;
 
 export const parentPortalRouteIds = [
   "overview",
   "planning",
   "lesson-detail",
-  "progress",
+  "development",
   "badges",
   "media",
   "diplomas",
@@ -13,7 +13,7 @@ export const parentPortalRouteIds = [
   "payments",
   "documents",
   "feedback",
-  "family-access",
+  "children",
   "profile"
 ] as const;
 
@@ -34,10 +34,14 @@ export type PortalThemeTokenSet = {
     secondary: string;
     reward: string;
     rail: string;
-    info: "#075EA8";
-    success: "#146C4C";
-    warning: "#7A4B00";
-    danger: "#B4233D";
+    info: string;
+    success: string;
+    warning: string;
+    danger: string;
+  };
+  gradient: {
+    page: readonly [string, string, string];
+    sidebar: readonly [string, string, string];
   };
   radius: { card: string; hero: string };
   typography: { display: string; body: string };
@@ -45,35 +49,15 @@ export type PortalThemeTokenSet = {
 };
 
 export const registeredShellRecipeIds = [
-  "pearl-frame/default-v2",
-  "pearl-frame/ocean-v2",
-  "pearl-frame/bay-v1",
-  "pearl-frame/trail-v1",
-  "pearl-frame/academy-v1"
+  "portal-shell/shared-v1"
 ] as const;
 
 export const registeredPageRecipeIds = [
-  "page/data-first-v1",
-  "overview/swim-school-v2",
-  "overview/pearl-route-v2",
-  "overview/bay-route-v1",
-  "overview/shell-route-v1",
-  "overview/academy-checkpoints-v1",
-  "planning/standard-timeline-v2",
-  "planning/quest-waypoints-v2",
-  "planning/bay-buoys-v1",
-  "planning/shell-calendar-v1",
-  "planning/academy-lanes-v1",
-  "progress/growth-cards-v2",
-  "progress/pearl-trail-v2",
-  "progress/bay-course-v1",
-  "progress/shell-trail-v1",
-  "progress/academy-pass-v1",
-  "badges/default-medallions-v1",
-  "badges/ocean-medallions-v1",
-  "badges/bay-medallions-v1",
-  "badges/turtle-scutes-v1",
-  "badges/academy-crests-v1"
+  "page/data-first-v2",
+  "overview/journey-engine-v1",
+  "planning/timeline-v1",
+  "development/progress-v1",
+  "badges/placeholder-wall-v1"
 ] as const;
 
 export const registeredComponentVariantIds = [
@@ -84,11 +68,7 @@ export const registeredComponentVariantIds = [
 ] as const;
 
 export const registeredBadgeFallbackRecipeIds = [
-  "badge-fallback/default-medallion-v1",
-  "badge-fallback/ocean-medallion-v1",
-  "badge-fallback/bay-medallion-v1",
-  "badge-fallback/turtle-scute-v1",
-  "badge-fallback/academy-crest-v1"
+  "badge-fallback/neutral-placeholder-v1"
 ] as const;
 
 export type RegisteredShellRecipeId = (typeof registeredShellRecipeIds)[number];
@@ -136,8 +116,8 @@ export type PortalThemeAssetRef = {
   decorative: true;
 };
 
-export interface PortalThemeManifestV2 {
-  schemaVersion: 2;
+export interface PortalThemeManifestV3 {
+  schemaVersion: 3;
   theme: {
     key: string;
     displayName: string;
@@ -156,6 +136,14 @@ export interface PortalThemeManifestV2 {
     strategy: "safe-palette" | "accent-only" | "locked";
     allowedTenantOverrides: BrandingOverride[];
     maximumAccentCoveragePercent: number;
+  };
+  experience: {
+    publicDisplayName: string;
+    requiresVerifiedLicenseForDisplayName: boolean;
+    sectorMode: "generic" | "swim" | "swim-abc-gated";
+    mascot: "dolphin" | "sea-turtle" | "penguin" | "beach-lifeguard" | null;
+    journeyMetaphor: string;
+    developmentLabel: string;
   };
   tokens: PortalThemeTokenSet;
   recipes: {
@@ -189,8 +177,10 @@ const themeKeyPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const semverPattern = /^\d+\.\d+\.\d+$/;
 const colorPattern = /^(#[0-9a-f]{6}|rgba?\([^)]+\))$/i;
 
-export function validatePortalThemeManifest(input: PortalThemeManifestV2): PortalThemeManifestV2 {
-  assertExactKeys(input, ["schemaVersion", "theme", "compatibility", "branding", "tokens", "recipes", "assets", "badges", "native", "accessibility"], "manifest");
+export type PortalThemeManifestV2 = PortalThemeManifestV3;
+
+export function validatePortalThemeManifest(input: PortalThemeManifestV3): PortalThemeManifestV3 {
+  assertExactKeys(input, ["schemaVersion", "theme", "compatibility", "branding", "experience", "tokens", "recipes", "assets", "badges", "native", "accessibility"], "manifest");
   assertExactKeys(input.theme, ["key", "displayName", "release", "status", "description"], "theme");
   assertExactKeys(
     input.compatibility,
@@ -199,14 +189,16 @@ export function validatePortalThemeManifest(input: PortalThemeManifestV2): Porta
     ["portalContract"]
   );
   assertExactKeys(input.branding, ["strategy", "allowedTenantOverrides", "maximumAccentCoveragePercent"], "branding");
-  assertExactKeys(input.tokens, ["color", "radius", "typography", "motion"], "tokens");
+  assertExactKeys(input.experience, ["publicDisplayName", "requiresVerifiedLicenseForDisplayName", "sectorMode", "mascot", "journeyMetaphor", "developmentLabel"], "experience");
+  assertExactKeys(input.tokens, ["color", "gradient", "radius", "typography", "motion"], "tokens");
+  assertExactKeys(input.tokens.gradient, ["page", "sidebar"], "token gradients");
   assertExactKeys(input.recipes, ["shell", "pages", "components"], "recipes");
   assertExactKeys(input.recipes.pages, parentPortalRouteIds, "page recipes");
   assertExactKeys(input.recipes.components, ["assessment", "childPicker", "inboxActions", "mediaBlend"], "component recipes");
   assertExactKeys(input.badges, ["familyKey", "release", "fallbackRecipe", "status"], "badges");
   assertExactKeys(input.native, ["hapticsProfile", "soundProfile"], "native");
   assertExactKeys(input.accessibility, ["colorMode", "minimumContrast", "supportsReducedMotion", "supportsDynamicType"], "accessibility");
-  if (input.schemaVersion !== 2) throw new Error("Unsupported portal theme schema");
+  if (input.schemaVersion !== 3) throw new Error("Unsupported portal theme schema");
   if (!themeKeyPattern.test(input.theme.key)) throw new Error("Invalid portal theme key");
   if (!semverPattern.test(input.theme.release)) throw new Error("Invalid portal theme release");
   if (!semverPattern.test(input.badges.release)) throw new Error("Invalid badge family release");
@@ -226,6 +218,11 @@ export function validatePortalThemeManifest(input: PortalThemeManifestV2): Porta
   if (!registeredBadgeFallbackRecipeIds.includes(input.badges.fallbackRecipe)) throw new Error("Unknown badge fallback recipe");
   for (const value of Object.values(input.tokens.color)) {
     if (!colorPattern.test(value)) throw new Error("Invalid semantic color token");
+  }
+  for (const gradient of Object.values(input.tokens.gradient)) {
+    if (gradient.length !== 3 || gradient.some((value) => !colorPattern.test(value))) {
+      throw new Error("Invalid semantic gradient token");
+    }
   }
   for (const [slot, asset] of Object.entries(input.assets)) {
     if (!themeAssetSlots.includes(slot as ThemeAssetSlot)) throw new Error(`Unknown asset slot: ${slot}`);

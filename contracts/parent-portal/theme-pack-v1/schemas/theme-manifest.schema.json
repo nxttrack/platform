@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nxttrack.example/schemas/theme-manifest.schema.json",
+  "title": "NXTTRACK parent portal theme manifest",
+  "type": "object",
+  "required": ["manifestVersion", "themeCount", "sharedContract", "themes"],
+  "properties": {
+    "manifestVersion": { "type": "string", "const": "1.0.0" },
+    "themeCount": { "type": "integer", "const": 6 },
+    "sharedContract": {
+      "type": "object",
+      "required": ["shell", "journeyEngine", "badgeArtworkMode", "allowedContentGrids", "mobileNavigation"],
+      "properties": {
+        "shell": { "type": "string" },
+        "journeyEngine": { "type": "string" },
+        "badgeArtworkMode": { "const": "placeholder-only" },
+        "allowedContentGrids": {
+          "type": "array",
+          "const": ["25/25/25/25", "33.333/33.333/33.333", "50/50", "100"]
+        },
+        "mobileNavigation": {
+          "type": "array",
+          "const": ["overview", "planning", "development", "inbox", "more"]
+        },
+        "paymentsMobileLocation": { "const": "more" }
+      },
+      "additionalProperties": true
+    },
+    "themes": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": ["id", "displayName", "publicFallbackName", "sectorMode", "mascot", "journeyMetaphor", "developmentLabel", "tokens", "assets"],
+        "properties": {
+          "id": {
+            "enum": ["nxttrack-default", "dolphin-bay", "turtle-trails", "polar-splash", "coastal-explorer", "nationaal-zwem-abc"]
+          },
+          "displayName": { "type": "string", "minLength": 1 },
+          "publicFallbackName": { "type": "string", "minLength": 1 },
+          "sectorMode": { "type": "string", "minLength": 1 },
+          "mascot": { "type": ["string", "null"] },
+          "journeyMetaphor": { "type": "string", "minLength": 1 },
+          "developmentLabel": { "type": "string", "minLength": 1 },
+          "tokens": { "type": "object", "minProperties": 8 },
+          "assets": {
+            "type": "object",
+            "required": ["journeyDesktop", "journeyMobile"],
+            "properties": {
+              "journeyDesktop": { "type": "string", "pattern": "journey-desktop\\.png$" },
+              "journeyMobile": { "type": "string", "pattern": "journey-mobile\\.png$" },
+              "mascot": { "type": "string", "pattern": "mascot\\.png$" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

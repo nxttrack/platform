@@ -2,24 +2,24 @@ package nl.nxttrack.mobile.domain
 
 object NativeContract {
     const val VERSION = 1
-    const val THEME_SCHEMA_VERSION = 2
-    const val PORTAL_CONTRACT = "parent-portal/1.1"
+    const val THEME_SCHEMA_VERSION = 3
+    const val PORTAL_CONTRACT = "parent-portal/1.2"
     const val PROGRESS_FORMULA_VERSION = "swim_progress_v3"
     const val ASSESSMENT_SCALE_VERSION = "five_point_v1"
 
     val primaryDestinations = listOf(
         "overview",
         "planning",
-        "progress",
+        "development",
         "inbox",
-        "payments"
+        "more"
     )
 
     val routeIds = listOf(
         "overview",
         "planning",
         "lesson-detail",
-        "progress",
+        "development",
         "badges",
         "media",
         "diplomas",
@@ -27,19 +27,28 @@ object NativeContract {
         "payments",
         "documents",
         "feedback",
-        "family-access",
+        "children",
         "profile"
+    )
+
+    val themeKeys = setOf(
+        "nxttrack-default",
+        "dolphin-bay",
+        "turtle-trails",
+        "polar-splash",
+        "coastal-explorer",
+        "nationaal-zwem-abc"
     )
 
     fun isCompatible(theme: ThemeBundle): Boolean =
         theme.schemaVersion == THEME_SCHEMA_VERSION &&
             theme.portalContract == PORTAL_CONTRACT &&
-            theme.themeKey.isNotBlank() &&
-            theme.release.isNotBlank() &&
+            theme.themeKey in themeKeys &&
+            theme.release == "3.0.0" &&
             theme.primaryDestinations == primaryDestinations &&
             theme.routeIds.toSet() == routeIds.toSet() &&
             theme.routeIds.size == routeIds.size &&
-            theme.shellRecipe.startsWith("pearl-frame/") &&
+            theme.shellRecipe == "portal-shell/shared-v1" &&
             routeIds.all { theme.pageRecipes.containsKey(it) }
 }
 
