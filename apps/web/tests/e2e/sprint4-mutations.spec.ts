@@ -5,7 +5,7 @@ import path from "node:path";
 type Phase16State = {
   tenant: { hostname: string };
   users: { tenantAdmin: { email: string } };
-  expected: { groupName: string };
+  expected: { groupName: string; programId: string };
 };
 
 type Sprint4EdgeState = Record<string, never>;
@@ -26,11 +26,11 @@ test.describe("Sprint 4 browser-driven mutations", () => {
     const phase = requireState();
     requireEdgeState();
     const failures = collectRuntimeFailures(page);
-    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${testInfo.retry}`;
+    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? "1"}-${testInfo.retry}`;
     const participantName = `Sprint4 Browser ${suffix}`;
     const tenantUrl = `https://${phase.tenant.hostname}`;
 
-    await submitIntake(page, tenantUrl, participantName, suffix);
+    await submitIntake(page, tenantUrl, phase.expected.programId, participantName, suffix);
 
     await signIn(page, phase.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/wachtlijst");
     let entry = await convertIntake(page, participantName);
@@ -54,8 +54,8 @@ test.describe("Sprint 4 browser-driven mutations", () => {
   });
 });
 
-async function submitIntake(page: Page, tenantUrl: string, participantName: string, marker: string) {
-  await page.goto(`${tenantUrl}/intake`, { waitUntil: "domcontentloaded" });
+async function submitIntake(page: Page, tenantUrl: string, programId: string, participantName: string, marker: string) {
+  await page.goto(`${tenantUrl}/intake?programma=${encodeURIComponent(programId)}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("form[data-intake-wizard]")).toHaveAttribute("data-hydrated", "true");
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
