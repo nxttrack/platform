@@ -103,7 +103,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
       ),
       groupWizard.getByRole("button", { name: "Transactioneel publiceren", exact: true }).click()
     ]);
-    await expect(page.getByText("De groep en alle occurrences zijn transactioneel gepubliceerd.")).toBeVisible();
+    await expectSavedStatus(page, "De groep en alle occurrences zijn transactioneel gepubliceerd.");
     await filterResourceTable(page, "Zoek groep…", groupName);
     await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
     await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
@@ -138,7 +138,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Einde").fill(dateTimeValue(5, 17, 45));
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
-    await expect(page.getByText("Opgeslagen: 1.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: 1.");
     await expect(page.getByRole("button").filter({ hasText: groupName })).toHaveCount(1);
 
     await page.goto("/admin/betalingen", { waitUntil: "domcontentloaded" });
@@ -198,7 +198,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Titel").fill(messageTitle);
     await form.getByLabel("Bericht").fill("Interne conceptcommunicatie uit de Sprint 4 browserjourney.");
     await submitAndWaitForSaved(page, form, "Bericht opslaan", "/admin/berichten", "message");
-    await expect(page.getByText("Opgeslagen: message.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: message.");
     await expect(page.getByRole("list").getByText(messageTitle, { exact: true })).toBeVisible();
 
     expect(failures()).toEqual([]);
