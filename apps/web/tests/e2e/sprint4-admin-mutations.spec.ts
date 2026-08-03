@@ -38,9 +38,13 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     const paymentReference = `sprint4-admin-payment-${suffix}`;
     const documentTitle = `Sprint 4 Admin Document ${suffix}`;
     const messageTitle = `Sprint 4 Admin Bericht ${suffix}`;
+    const numericRunId = Number.parseInt(runId, 10) || Date.now();
     const today = dateValue(0);
     const scheduleDate = nextIsoWeekdayDate(7, Number(runId) % 90);
     const scheduleHour = 20 + testInfo.retry;
+    const sessionDays = 1 + (numericRunId % 13);
+    const sessionHour = 2 + (Math.floor(numericRunId / 13) % 3);
+    const sessionMinute = (Math.floor(numericRunId / 39) % 50) + testInfo.retry * 5;
 
     await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
 
@@ -137,8 +141,8 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await openAction(page, "Les plannen");
     form = formWithButton(page, "Les opslaan");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
-    await form.getByLabel("Start").fill(dateTimeValue(5, 17 + testInfo.retry, 0));
-    await form.getByLabel("Einde").fill(dateTimeValue(5, 17 + testInfo.retry, 45));
+    await form.getByLabel("Start").fill(dateTimeValue(sessionDays, sessionHour, sessionMinute));
+    await form.getByLabel("Einde").fill(dateTimeValue(sessionDays, sessionHour, sessionMinute + 45));
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
     await expectSavedStatus(page, "Opgeslagen: 1.");

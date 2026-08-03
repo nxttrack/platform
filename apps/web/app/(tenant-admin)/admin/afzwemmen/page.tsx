@@ -269,7 +269,7 @@ function GraduationEventForm({ data }: { data: Awaited<ReturnType<typeof getGrad
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success" role="status">Opgeslagen: {saved}.</p>;
   }
 
   if (error === "capacity") {
