@@ -113,7 +113,7 @@ const state = {
     groupId: core.group.id,
     participantId: intake.participant.id,
     badgeTitle: learning.badgeAward.title,
-    progressLabel: learning.progressScore.positive_label,
+    progressLabel: learning.curriculum.progressLabel,
     certificateTitle: graduation.certificate.title,
     paymentReference: billing.manualPayment.reference,
     declinedParticipantName: intake.declinedEntry.participant_name
@@ -1186,14 +1186,106 @@ async function ensureVersionedCurriculum(tenantId, users, core, intake, legacyIt
     target_device_id: "phase16-staging",
     target_idempotency_key: `phase16:assessment:${intake.enrollment.id}:${assessedItem.id}`
   });
-  const observationId = checked(assessment, "finalize swim_assessment");
+  checked(assessment, "finalize swim_assessment");
+  const effectiveObservation = await ensureCanonicalAssessmentBaseline({
+    assessedItemId: assessedItem.id,
+    core,
+    enrollmentId: intake.enrollment.id,
+    instructor,
+    participantId: intake.participant.id,
+    tenantId
+  });
 
   return {
     version,
     stage: curriculumStage,
     items: curriculumItemsResult.data,
-    observationId
+    observationId: effectiveObservation.id,
+    progressLabel: effectiveObservation.positive_label
   };
+}
+
+async function ensureCanonicalAssessmentBaseline({
+  assessedItemId,
+  core,
+  enrollmentId,
+  instructor,
+  participantId,
+  tenantId
+}) {
+  let current = await loadEffectiveAssessmentObservation(tenantId, enrollmentId, assessedItemId);
+  if (current.rating === 5 && current.visibility === "parent_visible") {
+    return current;
+  }
+
+  const correction = await instructor.rpc("finalize_swim_assessment", {
+    target_tenant_id: tenantId,
+    target_participant_id: participantId,
+    target_enrollment_id: enrollmentId,
+    target_curriculum_item_id: assessedItemId,
+    target_rating: 5,
+    target_note: "Phase 16 canonieke vijfpuntbaseline hersteld.",
+    target_visibility: "parent_visible",
+    target_context_json: {
+      fixture: "phase16_operational_flow",
+      baseline_recovery: true,
+      scale: "five_point_v1"
+    },
+    target_observed_at: new Date().toISOString(),
+    target_session_id: core.session.id,
+    target_corrects_observation_id: current.id,
+    target_correction_reason: "Phase 16 stagingbaseline opnieuw op vijf gezet.",
+    target_source: "manual",
+    target_client_operation_id: `phase16-baseline-${current.id}`,
+    target_device_id: "phase16-staging",
+    target_idempotency_key: `phase16:assessment:baseline:${current.id}:5:parent_visible`
+  });
+  checked(correction, "restore canonical swim assessment baseline");
+
+  current = await loadEffectiveAssessmentObservation(tenantId, enrollmentId, assessedItemId);
+  if (current.rating !== 5 || current.visibility !== "parent_visible" || current.positive_label !== phase16ProgressLabel) {
+    throw new Error("[phase16] Canonical assessment baseline recovery did not become effective.");
+  }
+  return current;
+}
+
+async function loadEffectiveAssessmentObservation(tenantId, enrollmentId, curriculumItemId) {
+  const observations = checked(
+    await admin
+      .from("swim_assessment_observations")
+      .select("id, rating, positive_label, visibility, corrects_observation_id, finalized_at")
+      .eq("tenant_id", tenantId)
+      .eq("enrollment_id", enrollmentId)
+      .eq("curriculum_item_id", curriculumItemId)
+      .order("finalized_at", { ascending: false }),
+    "load canonical swim assessment observations"
+  );
+  if (observations.length === 0) {
+    throw new Error("[phase16] Canonical assessment baseline is missing.");
+  }
+
+  const retractions = checked(
+    await admin
+      .from("swim_assessment_retractions")
+      .select("observation_id")
+      .eq("tenant_id", tenantId)
+      .in("observation_id", observations.map((observation) => observation.id)),
+    "load canonical swim assessment retractions"
+  );
+  const retractedIds = new Set(retractions.map((retraction) => retraction.observation_id));
+  const correctedIds = new Set(
+    observations
+      .filter((observation) => !retractedIds.has(observation.id))
+      .map((observation) => observation.corrects_observation_id)
+      .filter(Boolean)
+  );
+  const effective = observations.filter(
+    (observation) => !retractedIds.has(observation.id) && !correctedIds.has(observation.id)
+  );
+  if (effective.length !== 1) {
+    throw new Error(`[phase16] Expected exactly one effective canonical assessment observation, found ${effective.length}.`);
+  }
+  return effective[0];
 }
 
 async function ensureBillingFlow(tenantId, users, core, intake) {
