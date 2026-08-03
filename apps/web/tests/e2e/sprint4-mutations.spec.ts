@@ -59,7 +59,7 @@ async function submitIntake(page: Page, tenantUrl: string, participantName: stri
   await expect(page.locator("form[data-intake-wizard]")).toHaveAttribute("data-hydrated", "true");
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
-  await page.getByText("Neutraal / niet zeggen", { exact: true }).click();
+  await page.getByText("Niet ingevuld", { exact: true }).click();
   await page.getByText("Wachtlijst", { exact: true }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
 
