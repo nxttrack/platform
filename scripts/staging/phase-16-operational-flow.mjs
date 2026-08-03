@@ -23,7 +23,7 @@ const tenantName = /aquaswim/i.test(configuredTenantName) || !configuredTenantNa
   : configuredTenantName;
 const statePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 const today = new Date().toISOString().slice(0, 10);
-const phase16ProgressLabel = "Heel knap";
+const phase16ProgressLabel = "Superster";
 
 const roleAccounts = {
   tenantAdmin: {
@@ -838,7 +838,7 @@ async function ensureLearningFlow(tenantId, users, core, intake) {
       module_id: module.id,
       item_id: item.id,
       session_id: core.session.id,
-      score: 4,
+      score: 5,
       scale_version: "five_point_v1",
       source_scale_version: "five_point_v1",
       source_value: null,
@@ -852,6 +852,7 @@ async function ensureLearningFlow(tenantId, users, core, intake) {
     "tenant_id,participant_id,item_id",
     "id, positive_label, note"
   );
+  const curriculum = await ensureVersionedCurriculum(tenantId, users, core, intake, item);
 
   const note = await ensureByFilter(
     "progress_notes",
@@ -918,7 +919,281 @@ async function ensureLearningFlow(tenantId, users, core, intake) {
     related_badge_award_id: badgeAward.id
   });
 
-  return { attendance, module, item, progressScore, note, badgeDefinition, badgeAward };
+  return { attendance, module, item, progressScore, curriculum, note, badgeDefinition, badgeAward };
+}
+
+async function ensureVersionedCurriculum(tenantId, users, core, intake, legacyItem) {
+  let version = await findFirst(
+    "curriculum_versions",
+    [
+      ["tenant_id", tenantId],
+      ["program_id", core.program.id],
+      ["version_number", 16]
+    ],
+    "id, status, revision"
+  );
+
+  if (!version) {
+    version = await insertOne(
+      "curriculum_versions",
+      {
+        tenant_id: tenantId,
+        program_id: core.program.id,
+        version_number: 16,
+        name: "Phase 16 Zwemdiploma A",
+        status: "draft",
+        formula_version: "swim_progress_v3",
+        weighting_enabled: false,
+        wizard_step: "review",
+        wizard_state_json: {
+          source: "phase16_operational_flow",
+          validation_example: "one_of_six_at_five_is_16_7_percent"
+        },
+        revision: 1,
+        created_by_user_id: users.tenantAdmin.id
+      },
+      "id, status, revision"
+    );
+  }
+
+  if (version.status === "draft") {
+    const curriculumStage = await upsertOne(
+      "curriculum_stages",
+      {
+        tenant_id: tenantId,
+        curriculum_version_id: version.id,
+        legacy_stage_id: core.stage.id,
+        stable_key: "phase16_badje_1",
+        name: "Badje 1",
+        description: "Watervertrouwen en de eerste veilige basisvaardigheden.",
+        color_hex: "#0EA5E9",
+        sort_order: 1
+      },
+      "tenant_id,curriculum_version_id,stable_key",
+      "id, stable_key, name"
+    );
+    const competency = await upsertOne(
+      "curriculum_competencies",
+      {
+        tenant_id: tenantId,
+        curriculum_version_id: version.id,
+        stable_key: "watervertrouwen",
+        name: "Watervertrouwen",
+        description: "Beweegt rustig, veilig en zelfstandig in het water.",
+        sort_order: 1
+      },
+      "tenant_id,curriculum_version_id,stable_key",
+      "id"
+    );
+    const itemDefinitions = [
+      {
+        stableKey: "zelfstandig_drijven",
+        name: "Zelfstandig drijven",
+        description: "Kan rustig op de rug drijven.",
+        legacyProgressItemId: legacyItem.id
+      },
+      {
+        stableKey: "bellen_blazen",
+        name: "Bellen blazen",
+        description: "Blaast ontspannen en gecontroleerd uit onder water."
+      },
+      {
+        stableKey: "veilig_springen",
+        name: "Veilig in het water springen",
+        description: "Springt gecontroleerd en komt zelfstandig boven."
+      },
+      {
+        stableKey: "drijven_op_de_buik",
+        name: "Drijven op de buik",
+        description: "Blijft gestrekt en rustig op de buik drijven."
+      },
+      {
+        stableKey: "eerste_beenbeweging",
+        name: "Eerste beenbeweging",
+        description: "Maakt een rustige, herhaalbare beenbeweging."
+      },
+      {
+        stableKey: "veilig_uitstappen",
+        name: "Veilig uit het water",
+        description: "Verlaat het water zelfstandig via de afgesproken route."
+      }
+    ];
+
+    for (const [index, definition] of itemDefinitions.entries()) {
+      const identity = await upsertOne(
+        "curriculum_item_identities",
+        {
+          tenant_id: tenantId,
+          program_id: core.program.id,
+          stable_key: `phase16_${definition.stableKey}`
+        },
+        "tenant_id,program_id,stable_key",
+        "id"
+      );
+      const curriculumItem = await upsertOne(
+        "curriculum_items",
+        {
+          tenant_id: tenantId,
+          curriculum_version_id: version.id,
+          curriculum_stage_id: curriculumStage.id,
+          identity_id: identity.id,
+          legacy_progress_item_id: definition.legacyProgressItemId ?? null,
+          name: definition.name,
+          description: definition.description,
+          context_json: {
+            environment: "pool",
+            fixture: "phase16_operational_flow"
+          },
+          weight: 1,
+          mastery_threshold: 4,
+          contributes_to_stage: true,
+          contributes_to_diploma: true,
+          required_for_transition: true,
+          required_for_graduation: true,
+          sort_order: index + 1
+        },
+        "tenant_id,curriculum_version_id,identity_id",
+        "id"
+      );
+
+      await upsertOne(
+        "curriculum_item_competencies",
+        {
+          tenant_id: tenantId,
+          curriculum_version_id: version.id,
+          curriculum_item_id: curriculumItem.id,
+          competency_id: competency.id,
+          contribution_weight: 1
+        },
+        "tenant_id,curriculum_item_id,competency_id",
+        "curriculum_item_id"
+      );
+    }
+
+    for (const requirement of [
+      {
+        key: "phase16_diploma_coverage",
+        kind: "coverage",
+        rule: { kind: "coverage", minimumFraction: 1 }
+      },
+      {
+        key: "phase16_manual_review",
+        kind: "manual_review",
+        rule: { kind: "manual_review", required: true }
+      }
+    ]) {
+      await upsertOne(
+        "curriculum_graduation_requirements",
+        {
+          tenant_id: tenantId,
+          curriculum_version_id: version.id,
+          requirement_key: requirement.key,
+          requirement_kind: requirement.kind,
+          target_id: null,
+          threshold: null,
+          rule_json: requirement.rule,
+          sort_order: requirement.kind === "coverage" ? 1 : 2
+        },
+        "tenant_id,curriculum_version_id,requirement_key",
+        "id"
+      );
+    }
+
+    const publication = await admin.rpc("publish_curriculum_version", {
+      target_version_id: version.id,
+      expected_revision: version.revision,
+      actor_user_id: users.tenantAdmin.id,
+      target_idempotency_key: `phase16:curriculum:publish:${version.id}`
+    });
+
+    checked(publication, "publish curriculum_versions");
+    version = { ...version, status: "published" };
+  }
+
+  if (version.status !== "published") {
+    throw new Error(`[phase16] Versioned curriculum ${version.id} is not published.`);
+  }
+
+  const curriculumStage = await findFirst(
+    "curriculum_stages",
+    [
+      ["tenant_id", tenantId],
+      ["curriculum_version_id", version.id],
+      ["stable_key", "phase16_badje_1"]
+    ],
+    "id, stable_key, name"
+  );
+  const curriculumItemsResult = await admin
+    .from("curriculum_items")
+    .select("id, legacy_progress_item_id, sort_order")
+    .eq("tenant_id", tenantId)
+    .eq("curriculum_version_id", version.id)
+    .order("sort_order");
+
+  if (curriculumItemsResult.error || curriculumItemsResult.data?.length !== 6 || !curriculumStage) {
+    throw new Error(
+      `[phase16] Versioned curriculum is incomplete: ${curriculumItemsResult.error?.message ?? "expected one stage and six items"}.`
+    );
+  }
+
+  await updateById("enrollments", tenantId, intake.enrollment.id, {
+    curriculum_version_id: version.id
+  });
+  await ensureByFilter(
+    "enrollment_stage_assignments",
+    [
+      ["tenant_id", tenantId],
+      ["enrollment_id", intake.enrollment.id]
+    ],
+    {
+      tenant_id: tenantId,
+      enrollment_id: intake.enrollment.id,
+      participant_id: intake.participant.id,
+      curriculum_version_id: version.id,
+      curriculum_stage_id: curriculumStage.id,
+      status: "active",
+      starts_at: new Date().toISOString(),
+      ends_at: null,
+      assigned_by_user_id: users.tenantAdmin.id
+    },
+    "id"
+  );
+
+  const assessedItem = curriculumItemsResult.data.find((item) => item.legacy_progress_item_id === legacyItem.id);
+  if (!assessedItem) {
+    throw new Error("[phase16] Versioned assessment item is missing its legacy compatibility link.");
+  }
+
+  const instructor = await roleClient(roleAccounts.instructor.email, roleAccounts.instructor.password);
+  const assessment = await instructor.rpc("finalize_swim_assessment", {
+    target_tenant_id: tenantId,
+    target_participant_id: intake.participant.id,
+    target_enrollment_id: intake.enrollment.id,
+    target_curriculum_item_id: assessedItem.id,
+    target_rating: 5,
+    target_note: "Phase 16: zelfstandig en ontspannen gedreven.",
+    target_visibility: "parent_visible",
+    target_context_json: {
+      fixture: "phase16_operational_flow",
+      scale: "five_point_v1"
+    },
+    target_observed_at: new Date().toISOString(),
+    target_session_id: core.session.id,
+    target_corrects_observation_id: null,
+    target_correction_reason: null,
+    target_source: "manual",
+    target_client_operation_id: `phase16-assessment-${intake.enrollment.id}`,
+    target_device_id: "phase16-staging",
+    target_idempotency_key: `phase16:assessment:${intake.enrollment.id}:${assessedItem.id}`
+  });
+  const observationId = checked(assessment, "finalize swim_assessment");
+
+  return {
+    version,
+    stage: curriculumStage,
+    items: curriculumItemsResult.data,
+    observationId
+  };
 }
 
 async function ensureBillingFlow(tenantId, users, core, intake) {
@@ -1095,6 +1370,9 @@ async function validateDatabaseState(input) {
     ["group membership", input.intake.groupMembership?.id],
     ["attendance", input.learning.attendance.status === "present"],
     ["progress score", input.learning.progressScore.positive_label],
+    ["published curriculum", input.learning.curriculum.version.status === "published"],
+    ["six curriculum items", input.learning.curriculum.items.length === 6],
+    ["canonical observation", input.learning.curriculum.observationId],
     ["badge award", input.learning.badgeAward.title],
     ["subscription", input.billing.subscription.status === "active"],
     ["manual payment", input.billing.manualPayment.status === "due"],
@@ -1134,12 +1412,20 @@ async function validateRoleVisibility(input) {
     "instructor progress"
   );
   await expectRows(
+    instructor.from("swim_assessment_observations").select("id, rating").eq("tenant_id", input.tenant.id).eq("id", input.learning.curriculum.observationId),
+    "instructor canonical assessment"
+  );
+  await expectRows(
     parent.from("participants").select("id, display_name").eq("tenant_id", input.tenant.id).eq("id", input.intake.participant.id),
     "parent participant"
   );
   await expectRows(
     parent.from("participant_progress_scores").select("id, positive_label").eq("tenant_id", input.tenant.id).eq("participant_id", input.intake.participant.id),
     "parent progress"
+  );
+  await expectRows(
+    parent.from("swim_assessment_observations").select("id, rating").eq("tenant_id", input.tenant.id).eq("id", input.learning.curriculum.observationId),
+    "parent canonical assessment"
   );
   await expectRows(
     parent.from("certificate_records").select("id, title").eq("tenant_id", input.tenant.id).eq("participant_id", input.intake.participant.id),
