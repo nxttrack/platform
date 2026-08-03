@@ -94,7 +94,12 @@ test.describe("phase 16 operational happy path", () => {
     const failures = collectRuntimeFailures(page);
 
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
-    await expectBodyToContain(page, phase.expected.participantName);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: `De leerreis van ${firstNameOf(phase.expected.participantName)}!`
+      })
+    ).toBeVisible();
     await expectBodyToContain(page, phase.expected.programName);
     await expectActiveShellLink(page, "Overzicht");
 
@@ -160,6 +165,10 @@ async function expectBodyToContain(page: Page, text: string) {
 
 async function expectActiveShellLink(page: Page, label: string) {
   await expect(page.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+}
+
+function firstNameOf(displayName: string) {
+  return displayName.trim().split(/\s+/)[0] || displayName;
 }
 
 function collectRuntimeFailures(page: Page) {
