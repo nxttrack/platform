@@ -71,7 +71,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Geldig vanaf").fill(today);
     await form.getByLabel("Geldig tot").fill(dateValue(30));
     await submitAndWaitForSaved(page, form, "Kwalificatie verifiëren", "/admin/groepen", "qualification");
-    await expect(page.getByText("Kwalificatie geverifieerd.")).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Kwalificatie geverifieerd." })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
     await openAction(page, "Nieuwe groep");
@@ -81,7 +81,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await selectOptionByText(groupWizard.getByLabel("Programma"), programName);
     await selectOptionByText(groupWizard.getByLabel("Huidig badje"), stageName);
     await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
-    await selectOptionByText(groupWizard.getByLabel("Resource"), "Baan 1");
+    await selectOptionByText(groupWizard.getByRole("combobox", { name: /^Resource/ }), "Baan 1");
     await groupWizard.getByLabel("Weekdag").selectOption("7");
     await groupWizard.getByLabel("Starttijd").fill("21:00");
     await groupWizard.getByLabel("Eindtijd").fill("21:45");
