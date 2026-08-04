@@ -521,7 +521,7 @@ function NotificationCenter({ center }: { center: ShellNotificationCenter }) {
         >
           <Bell className="h-4 w-4" />
           {center.unreadCount ? (
-            <span aria-hidden="true" className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-card bg-danger px-1 text-[10px] font-bold text-white">
+            <span aria-hidden="true" className="shell-notification-count absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full border-2 border-card px-1 text-[10px] font-bold">
               {badge}
             </span>
           ) : null}
