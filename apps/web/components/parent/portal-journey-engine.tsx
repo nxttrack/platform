@@ -22,6 +22,7 @@ import {
 } from "react";
 
 import { ProgressRing } from "@/components/shell/ui";
+import { firstNameOnly } from "@/lib/domain/badge-system-contract";
 import type { SwimJourneyRing } from "@/lib/domain/swim-progress";
 import {
   focusedJourneyWindow,
@@ -96,10 +97,10 @@ export function PortalJourneyEngine({
   const wheelDeltaRef = useRef(0);
   const dragStartRef = useRef<{ x: number; y: number } | null>(null);
   const title = theme.sectorMode === "generic"
-    ? `De leerreis van ${firstName(childName)}!`
+    ? `De leerreis van ${firstNameOnly(childName)}!`
     : theme.sectorMode === "swim-abc-gated"
       ? `Op weg naar ${program}!`
-      : `De zwemreis van ${firstName(childName)}!`;
+      : `De zwemreis van ${firstNameOnly(childName)}!`;
 
   useEffect(() => {
     const nextId = orderedNodes.some((node) => node.id === deepLinkedId)
@@ -336,10 +337,6 @@ export function PortalJourneyEngine({
       </div>
     </section>
   );
-}
-
-function firstName(value: string) {
-  return value.trim().split(/\s+/)[0] || "jou";
 }
 
 function formatDate(value: string) {
