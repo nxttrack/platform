@@ -186,9 +186,14 @@
 
 .portal-mobile-brand__subtitle {
   margin-top: .12rem;
-  color: var(--portal-text-muted);
+  color: color-mix(in srgb, var(--portal-text-muted) 78%, var(--portal-text));
   font-size: .62rem;
   line-height: 1.1;
+}
+
+.shell-notification-count {
+  color: white;
+  background: color-mix(in srgb, var(--danger) 68%, black);
 }
 
 .portal-route-frame {
