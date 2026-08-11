@@ -75,8 +75,23 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(phase16, /Transactional \(resource hierarchy\|instructor\) conflict/);
   assert.match(fixture, /aquaswim-demo/);
   assert.match(fixture, /createRequire\(new URL\("\.\.\/\.\.\/apps\/web\/package\.json"/);
+  assert.match(fixture, /tenant_portal_theme_availability/);
+  assert.match(fixture, /E2E_PLATFORM_THEME_ACTOR_USER_ID/);
+  assert.match(fixture, /E2E_TENANT_ID/);
   assert.match(fixture, /resolveCleanupContext/);
   assert.match(fixture, /configure_child_portal_rollout_for_service/);
   assert.match(fixture, /swim\.portal\.direct_child_login/);
   assert.match(fixture, /status !== "disabled"/);
+});
+
+test("stagingmatrix opent de eigen platformpreview en activeert releases via de publieke platform-RPC", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(
+    new URL("../../apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts", import.meta.url),
+    "utf8"
+  );
+  assert.match(source, /locator\("details"\)\.filter\(\{ has: card \}\)/);
+  assert.match(source, /activate_tenant_portal_theme/);
+  assert.match(source, /target_ticket_reference: "staging-preview-580c995"/);
+  assert.match(source, /waitForURL\(\/saved=theme\/, \{ timeout: 60_000 \}\)/);
 });

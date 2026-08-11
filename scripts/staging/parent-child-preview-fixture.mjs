@@ -11,6 +11,15 @@ const mode = process.argv[2] ?? "prepare";
 const appUrl = String(process.env.APP_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/+$/, "");
 const statePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH ?? "artifacts/phase16-state.json");
 const evidencePath = path.resolve(process.cwd(), "artifacts/parent-child-preview-fixture.json");
+const visualThemes = [
+  "nxttrack-default",
+  "dolphin-bay",
+  "turtle-trails",
+  "polar-splash",
+  "coastal-explorer",
+  "nationaal-zwem-abc",
+  "ocean-quest"
+];
 
 if (!['prepare', 'cleanup'].includes(mode)) throw new Error(`Unsupported preview fixture mode: ${mode}`);
 if (process.env.APP_ENV !== "staging" || process.env.TARGET !== "staging" || appUrl !== "https://staging.nxttrack.nl") {
@@ -61,6 +70,39 @@ if (!state) throw new Error(`Phase 16 fixture state is missing at ${statePath}.`
 const tenantId = requiredUuid(state?.tenant?.id, "tenant.id");
 const participantId = requiredUuid(state?.expected?.participantId, "expected.participantId");
 const parentUserId = requiredUuid(state?.users?.parent?.id, "users.parent.id");
+const platformThemeActor = await admin
+  .from("platform_memberships")
+  .select("user_id")
+  .eq("status", "active")
+  .in("role", ["platform_owner", "platform_admin"])
+  .order("created_at")
+  .limit(1)
+  .maybeSingle();
+if (platformThemeActor.error || !platformThemeActor.data) {
+  throw new Error(`Could not resolve the preserved platform theme manager: ${platformThemeActor.error?.message ?? "membership missing"}`);
+}
+const platformThemeActorUserId = requiredUuid(platformThemeActor.data.user_id, "platformThemeActor.user_id");
+const themeAvailability = await admin
+  .from("tenant_portal_theme_availability")
+  .upsert(
+    visualThemes.map((themeKey) => ({
+      enabled_by_platform_admin_id: platformThemeActorUserId,
+      is_enabled: true,
+      reason: "AquaSwim Demo staging visual matrix seed",
+      tenant_id: tenantId,
+      theme_key: themeKey,
+      theme_release: "3.0.0"
+    })),
+    { onConflict: "tenant_id,theme_key,theme_release" }
+  )
+  .select("theme_key, theme_release, is_enabled");
+if (
+  themeAvailability.error
+  || themeAvailability.data?.length !== visualThemes.length
+  || themeAvailability.data.some((entry) => entry.theme_release !== "3.0.0" || !entry.is_enabled)
+) {
+  throw new Error(`Seven-theme tenant availability could not be seeded: ${themeAvailability.error?.message ?? JSON.stringify(themeAvailability.data ?? [])}`);
+}
 
 const [guardian, certificate, award, groupMembership] = await Promise.all([
   admin
@@ -115,17 +157,26 @@ const upcoming = await admin
 if (upcoming.error || !upcoming.data?.length) throw new Error("An upcoming child-safe lesson fixture is required.");
 
 const publicCode = requiredUuid(certificate.data.verification_public_id, "certificate.verification_public_id");
-if (process.env.GITHUB_ENV) appendFileSync(process.env.GITHUB_ENV, `E2E_CERTIFICATE_CODE=${publicCode}\n`);
+if (process.env.GITHUB_ENV) {
+  appendFileSync(process.env.GITHUB_ENV, [
+    `E2E_CERTIFICATE_CODE=${publicCode}`,
+    `E2E_PLATFORM_THEME_ACTOR_USER_ID=${platformThemeActorUserId}`,
+    `E2E_TENANT_ID=${tenantId}`,
+    ""
+  ].join("\n"));
+}
 mkdirSync(path.dirname(evidencePath), { recursive: true });
 writeFileSync(evidencePath, `${JSON.stringify({
   certificateCode: publicCode,
   guardianAccess: guardian.data.access_level,
   participantId,
+  platformThemeActorUserId,
   preparedAt: new Date().toISOString(),
   tenantId,
+  themes: themeAvailability.data.map((entry) => `${entry.theme_key}@${entry.theme_release}`).sort(),
   upcomingSessionId: upcoming.data[0].id
 }, null, 2)}\n`);
-console.log("[parent-child-preview] PASS parent, child, lesson, badge and certificate fixtures are ready.");
+console.log("[parent-child-preview] PASS parent, child, lesson, badge, certificate and seven-theme fixtures are ready.");
 
 function requiredUuid(value, label) {
   if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {

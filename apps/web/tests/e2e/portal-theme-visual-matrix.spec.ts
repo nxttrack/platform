@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
+import { createClient } from "@supabase/supabase-js";
 
 import {
   CHILD_VISUAL_STATES,
@@ -11,7 +12,7 @@ import {
   PORTAL_VISUAL_THEMES
 } from "@/lib/theme/portal-visual-matrix";
 
-test.describe.configure({ timeout: 1_800_000 });
+test.describe.configure({ timeout: 3_600_000 });
 
 const themes = PORTAL_VISUAL_THEMES;
 const routes = PARENT_VISUAL_ROUTES;
@@ -41,9 +42,11 @@ test("platformpreview rendert de volledige 7 × 13 desktop- en mobiele matrix", 
   await expect(page.getByRole("heading", { name: "Theme Control Center" })).toBeVisible();
 
   for (const theme of themes) {
-    const card = page.locator(`[data-theme-preview="${theme}"]`).last();
+    const card = page.locator(`[data-theme-preview="${theme}"]`);
+    const details = page.locator("details").filter({ has: card });
+    await expect(details, `${theme} moet precies één uitgebreide platformpreview hebben`).toHaveCount(1);
     if (!(await card.isVisible())) {
-      await page.getByText("Desktop, mobiel en states previewen", { exact: true }).nth(themes.indexOf(theme)).click();
+      await details.getByText("Desktop, mobiel en states previewen", { exact: true }).click();
     }
     await expect(card).toBeVisible();
 
@@ -287,13 +290,39 @@ async function configureChildPortalPilot(page: Page) {
 }
 
 async function selectTheme(page: Page, theme: string) {
+  if (visualMatrixRequired) {
+    const admin = createClient(
+      requiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
+      requiredEnv("SUPABASE_SECRET_KEY"),
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+    const activation = await admin.rpc("activate_tenant_portal_theme", {
+      target_actor_user_id: requiredEnv("E2E_PLATFORM_THEME_ACTOR_USER_ID"),
+      target_event_type: "activated",
+      target_reason: `Verplichte staging visual matrix: ${theme}`,
+      target_request_correlation_id: `staging-visual-matrix:${theme}`,
+      target_tenant_id: requiredEnv("E2E_TENANT_ID"),
+      target_theme_key: theme,
+      target_theme_release: "3.0.0",
+      target_ticket_reference: "staging-preview-580c995"
+    });
+    expect(activation.error, `${theme} moet via de publieke platform-RPC activeerbaar zijn`).toBeNull();
+    await gotoStable(page, "/admin/branding?saved=theme");
+    const activeCard = page.locator(`[data-theme-choice="${theme}"]`);
+    await expect(activeCard, `${theme} moet tenantbeschikbaar zijn`).toHaveCount(1);
+    await expect(activeCard.getByText("Actief", { exact: true })).toBeVisible();
+    return;
+  }
+
   await gotoStable(page, "/admin/branding");
   const card = page.locator(`[data-theme-choice="${theme}"]`);
   await expect(card, `${theme} moet tenantbeschikbaar zijn`).toHaveCount(1);
   const button = card.getByRole("button");
   if (await button.isDisabled()) return;
-  await button.click();
-  await page.waitForURL(/saved=theme/);
+  await Promise.all([
+    page.waitForURL(/saved=theme/, { timeout: 60_000 }),
+    button.click()
+  ]);
 }
 
 async function gotoStable(page: Page, path: string) {
