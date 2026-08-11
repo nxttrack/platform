@@ -58,6 +58,9 @@ jobs:
       - name: Test swim-school canon and native API contracts
         run: pnpm run test:swim-canon
 
+      - name: Test parent and child portal security contracts
+        run: pnpm run test:parent-child-portals
+
       - name: Audit Journey Bot foundation
         run: pnpm run release:audit-journey-bot
 

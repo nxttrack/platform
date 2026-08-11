@@ -457,17 +457,17 @@ jobs:
       - name: Phase 16 operational flow validation
         run: pnpm run phase16:flow
 
-      - name: Validate required six-theme portal matrix
+      - name: Validate required seven-theme parent and child portal matrix
         env:
           PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
         run: pnpm run test:portal-themes:e2e
 
-      - name: Upload six-theme portal matrix evidence
+      - name: Upload seven-theme parent and child portal matrix evidence
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
-          name: nxttrack-staging-${{ github.sha }}-six-theme-portal-matrix
+          name: nxttrack-staging-${{ github.sha }}-seven-theme-parent-child-portal-matrix
           path: |
             apps/web/playwright-report
             apps/web/test-results

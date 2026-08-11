@@ -12,6 +12,7 @@ const requireFromWeb = createRequire(path.join(root, "apps/web/package.json"));
 const sharp = requireFromWeb("sharp") as (input: string) => { metadata(): Promise<{ width?: number; height?: number }> };
 const migrationPath = path.join(root, "supabase/migrations/20260801120000_parent_portal_theme_engine_v2_1.sql");
 const v3MigrationPath = path.join(root, "supabase/migrations/20260803190000_parent_portal_six_theme_pack_v3.sql");
+const oceanMigrationPath = path.join(root, "supabase/migrations/20260811130000_ocean_quest_seventh_theme.sql");
 const controlActionsPath = path.join(root, "apps/web/lib/domain/portal-theme-control-actions.ts");
 
 test("themamigratie bevat assignment, planning, audit, RLS en server-only assessmentwrites", async () => {
@@ -45,10 +46,27 @@ test("geselecteerde runtime-assets bestaan, zijn gehasht en blijven binnen netwe
       assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.contentHash, `${theme.theme.key}:${slot}`);
       assert.equal(metadata.width, asset.width, `${theme.theme.key}:${slot} width`);
       assert.equal(metadata.height, asset.height, `${theme.theme.key}:${slot} height`);
-      const budget = slot.startsWith("mascot.") ? 800_000 : 2_700_000;
+      const budget = theme.theme.key === "ocean-quest" ? 2_800_000 : slot.startsWith("mascot.") ? 800_000 : 2_700_000;
       assert.ok(info.size <= budget, `${theme.theme.key}:${slot} overschrijdt budget`);
     }
   }
+});
+
+test("Ocean Quest publiceert de vier definitieve bronassets byte-voor-byte", async () => {
+  const sql = await readFile(oceanMigrationPath, "utf8");
+  const expected = {
+    "journey-desktop.png": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+    "journey-mobile.png": "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615",
+    "mascot.png": "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0",
+    "journey-completed.png": "8183dc2282b61b234b103095774d813171b63d5f9b1207ed4f18d95ef7d619ca"
+  } as const;
+  for (const [fileName, hash] of Object.entries(expected)) {
+    const bytes = await readFile(path.join(root, "apps/web/public/portal-themes/ocean-quest", fileName));
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), hash);
+    assert.match(sql, new RegExp(hash));
+  }
+  assert.match(sql, /'ocean-quest',\s*'3\.0\.0',\s*'published'/);
+  assert.match(sql, /"childContract":"child-portal\/1\.0"/);
 });
 
 test("v3-migratie publiceert zes immutable releases en een fail-closed licentiegate", async () => {

@@ -12,7 +12,7 @@ import { portalThemeCssVariables, toNativeThemeTokenExport } from "../../apps/we
 
 const root = path.resolve(import.meta.dirname, "../..");
 
-test("de volledige 6 × 13 matrix heeft een geregistreerde renderpresentatie", () => {
+test("de volledige 7 × 13 matrix heeft een geregistreerde renderpresentatie", () => {
   const combinations = new Set<string>();
   const motifs = new Set<string>();
 
@@ -29,8 +29,8 @@ test("de volledige 6 × 13 matrix heeft een geregistreerde renderpresentatie", (
     }
   }
 
-  assert.equal(combinations.size, 78);
-  assert.equal(motifs.size, 6);
+  assert.equal(combinations.size, 91);
+  assert.equal(motifs.size, 7);
 });
 
 test("alle canonieke paden resolven naar de dertien route-ID’s", () => {
@@ -187,13 +187,13 @@ test("annuleren blijft expliciet bevestigd in de canonieke planning en servercom
   assert.match(actions, /formData\.get\("humanConfirmation"\) !== "confirmed"/);
 });
 
-test("staging seedt de ouderreis vóór de visuele matrix en bewaart het screenshotbewijs", async () => {
+test("staging seedt de ouder- en kindreis vóór de zeven-theme matrix en bewaart het screenshotbewijs", async () => {
   const workflow = await readFile(path.join(root, ".github/workflows/deploy.yml"), "utf8");
   const seedAt = workflow.indexOf("Phase 16 operational flow validation");
-  const matrixAt = workflow.indexOf("Validate required six-theme portal matrix");
+  const matrixAt = workflow.indexOf("Validate required seven-theme parent and child portal matrix");
   assert.ok(seedAt >= 0);
   assert.ok(matrixAt > seedAt);
-  assert.match(workflow, /Upload six-theme portal matrix evidence[\s\S]+if: always\(\)/);
+  assert.match(workflow, /Upload seven-theme parent and child portal matrix evidence[\s\S]+if: always\(\)/);
   assert.match(workflow, /apps\/web\/playwright-report/);
   assert.match(workflow, /apps\/web\/test-results/);
 });
