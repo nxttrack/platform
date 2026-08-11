@@ -34,7 +34,7 @@ export default async function ParentBadgeWallPage({ searchParams }: { searchPara
   const showUnearned = data.settings?.show_unearned_badges !== false && data.preferences?.show_unearned_badges !== false;
   const success = readParam(params.success);
   const error = readParam(params.error);
-  const terminology = getPortalTerminology(theme);
+  const terminology = getPortalTerminology(theme, data.tenant.sector);
 
   return <div className="space-y-6">
     <PageHeader kicker="Ontwikkeling" title="Badges" subtitle="Vier behaalde momenten, ontdek collecties en maak veilig een deelafbeelding." />

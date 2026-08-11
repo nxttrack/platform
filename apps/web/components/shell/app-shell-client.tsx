@@ -118,6 +118,7 @@ type Props = {
     allLabel: string;
     options: Array<{ description?: string; label: string; value: string }>;
   };
+  contextSelectorPlacement?: "header" | "profile";
 };
 
 const accentStyles: Record<ShellAccent, string> = {
@@ -137,12 +138,14 @@ export function AppShellClient({
   notificationCenter,
   mobileBottomNav = false,
   profileMenu,
-  contextSelector
+  contextSelector,
+  contextSelectorPlacement = "header"
 }: Props) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const reduceMotion = useReducedMotion();
   const [collapsed, setCollapsed] = useState(false);
+  const [portalTransition, setPortalTransition] = useState(false);
   const activeHref = findActiveHref(pathname, nav);
   const initials = getInitials(user.name);
   const messagesHref = nav.find((item) => item.icon === "message")?.href;
@@ -170,6 +173,35 @@ export function AppShellClient({
     setCollapsed(window.localStorage.getItem("nxttrack.sidebar.collapsed") === "true");
   }, []);
 
+  useEffect(() => {
+    const channel = "BroadcastChannel" in window ? new BroadcastChannel("nxttrack.portal-session") : null;
+    const lock = (mode: unknown) => {
+      if (mode !== "child" && mode !== "locked") return;
+      document.documentElement.dataset.portalSessionTransition = "true";
+      setPortalTransition(true);
+      window.location.replace(mode === "child" ? "/kind" : "/login?error=child_session_locked");
+    };
+    const onMessage = (event: MessageEvent) => lock((event.data as { mode?: unknown } | null)?.mode);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "nxttrack.portal-session.mode" || !event.newValue) return;
+      try { lock((JSON.parse(event.newValue) as { mode?: unknown }).mode); } catch { /* fail closed at the server guard */ }
+    };
+    channel?.addEventListener("message", onMessage);
+    window.addEventListener("storage", onStorage);
+    const state = JSON.stringify({ mode: "parent", changedAt: Date.now() });
+    window.localStorage.setItem("nxttrack.portal-session.mode", state);
+    channel?.postMessage({ mode: "parent" });
+    void navigator.serviceWorker?.ready.then((registration) => {
+      registration.active?.postMessage({ type: "PORTAL_MODE", mode: "parent" });
+    });
+    delete document.documentElement.dataset.portalSessionTransition;
+    return () => {
+      channel?.removeEventListener("message", onMessage);
+      channel?.close();
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
   function toggleCollapsed() {
     setCollapsed((current) => {
       const next = !current;
@@ -190,6 +222,8 @@ export function AppShellClient({
       user={user}
     />
   );
+
+  if (portalTransition) return <div aria-live="assertive" className="portal-session-transition">Portaalcontext wordt veilig vergrendeld…</div>;
 
   return (
     <div
@@ -253,7 +287,7 @@ export function AppShellClient({
             <p className="truncate text-xs uppercase tracking-wider text-muted-foreground">{brand.title}</p>
             <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
-          {contextSelector ? <ContextSelector selector={contextSelector} /> : null}
+          {contextSelector && contextSelectorPlacement === "header" ? <ContextSelector selector={contextSelector} /> : null}
           <div className="ml-auto flex shrink-0 items-center gap-2">
             {!mobileBottomNav ? <GlobalCommandPalette items={searchItems} nav={nav} /> : null}
             {contextualNotificationCenter ? (
@@ -264,7 +298,7 @@ export function AppShellClient({
               </Link>
             ) : null}
             {contextualProfileMenu?.length ? (
-              <ProfileMenu accent={accent} initials={initials} items={contextualProfileMenu} user={user} />
+              <ProfileMenu accent={accent} contextSelector={contextSelectorPlacement === "profile" ? contextSelector : undefined} initials={initials} items={contextualProfileMenu} user={user} />
             ) : (
               <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-xs font-semibold text-white", accentStyles[accent])} aria-label={user.name} role="img">
                 {initials}
@@ -381,17 +415,24 @@ function ContextOption({
 
 function ProfileMenu({
   accent,
+  contextSelector,
   initials,
   items,
   user
 }: {
   accent: ShellAccent;
+  contextSelector?: NonNullable<Props["contextSelector"]>;
   initials: string;
   items: ShellNavItem[];
   user: Props["user"];
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const groups = groupNavigation(items);
+  const selectedContextValue = contextSelector ? searchParams.get(contextSelector.parameter) : null;
+  const selectedContext = contextSelector?.options.find((option) => option.value === selectedContextValue)
+    ?? contextSelector?.options[0]
+    ?? null;
 
   return (
     <Popover>
@@ -409,6 +450,11 @@ function ProfileMenu({
           <p className="truncate font-bold text-foreground">{user.name}</p>
           <p className="mt-0.5 truncate text-xs text-muted-foreground">{user.role}</p>
         </div>
+        {contextSelector && selectedContext ? <div className="border-b border-border p-2">
+          <div className="rounded-xl bg-primary/5 px-3 py-2.5"><p className="text-[10px] font-bold uppercase tracking-[.14em] text-muted-foreground">Actief kind</p><p className="mt-1 truncate text-sm font-bold text-foreground">{selectedContext.label}</p></div>
+          <Link className="mt-1 flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-muted" href={withContextParameter("/portaal/kinderen", contextSelector.parameter, selectedContext.value)}><Users className="size-4 text-primary" />Ander kind…</Link>
+          <Link className="flex min-h-12 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-foreground hover:bg-muted" href={`${withContextParameter("/portaal/kinderen", contextSelector.parameter, selectedContext.value)}#kindmodus`}><Baby className="size-4 text-primary" />Open kinderportaal</Link>
+        </div> : null}
         <div className="max-h-[min(70vh,520px)] overflow-y-auto p-2">
           {groups.map((group, index) => (
             <section className={cn(index > 0 && "mt-2 border-t border-border pt-2")} key={group.label}>

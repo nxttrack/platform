@@ -70,6 +70,7 @@ export default async function ParentLayout({ children }: { children: React.React
           }),
           parameter: "kind"
         }}
+        contextSelectorPlacement="profile"
         mobileBottomNav
         nav={themedNavigation}
         notificationCenter={notificationCenter}

@@ -28,7 +28,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
   const savedValue = getParam(params, "saved");
   const saved = savedValue === "1" || savedValue === "makeup-preferences" || savedValue === "communication-preferences";
   const error = getParam(params, "error");
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

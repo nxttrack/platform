@@ -46,8 +46,10 @@ const swimTerminology: PortalTerminology = {
 };
 
 export function getPortalTerminology(
-  manifest: Pick<PortalThemeManifestV3, "experience">
+  manifest: Pick<PortalThemeManifestV3, "experience">,
+  tenantSector?: string | null
 ): PortalTerminology {
+  if (tenantSector) return tenantSector === "swim_school" ? swimTerminology : genericTerminology;
   return manifest.experience.sectorMode === "generic"
     ? genericTerminology
     : swimTerminology;

@@ -1,5 +1,7 @@
 const CACHE = "nxttrack-static-v1";
 const STATIC = ["/lovable/nxttrack-logo.svg"];
+const PORTAL_MODE_CACHE = "nxttrack-portal-mode-v1";
+const PORTAL_MODE_KEY = "/__nxttrack_portal_mode__";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC)));
@@ -7,8 +9,16 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))));
+  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => ![CACHE, PORTAL_MODE_CACHE].includes(key)).map((key) => caches.delete(key)))));
   self.clients.claim();
+});
+
+self.addEventListener("message", (event) => {
+  if (!event.data || event.data.type !== "PORTAL_MODE" || !["parent", "child", "locked"].includes(event.data.mode)) return;
+  event.waitUntil(caches.open(PORTAL_MODE_CACHE).then((cache) => cache.put(
+    PORTAL_MODE_KEY,
+    new Response(JSON.stringify({ mode: event.data.mode }), { headers: { "Content-Type": "application/json" } })
+  )));
 });
 
 self.addEventListener("fetch", (event) => {
@@ -39,21 +49,37 @@ self.addEventListener("push", (event) => {
       };
     }
   } catch {}
-  event.waitUntil(self.registration.showNotification(payload.title, {
-    body: payload.body,
-    icon: "/lovable/nxttrack-logo.svg",
-    badge: "/lovable/nxttrack-logo.svg",
-    data: { url: payload.url },
-    tag: "nxttrack-service-update"
+  event.waitUntil(readPortalMode().then((mode) => {
+    if (mode !== "parent") return;
+    return self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/lovable/nxttrack-logo.svg",
+      badge: "/lovable/nxttrack-logo.svg",
+      data: { url: payload.url },
+      tag: "nxttrack-service-update"
+    });
   }));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const path = event.notification.data && typeof event.notification.data.url === "string" ? event.notification.data.url : "/";
-  event.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+  event.waitUntil(Promise.all([readPortalMode(), self.clients.matchAll({ type: "window", includeUncontrolled: true })]).then(([mode, clients]) => {
+    if (mode !== "parent") return self.clients.openWindow("/kind");
     const existing = clients.find((client) => new URL(client.url).pathname === path);
     if (existing) return existing.focus();
     return self.clients.openWindow(path);
   }));
 });
+
+async function readPortalMode() {
+  const cache = await caches.open(PORTAL_MODE_CACHE);
+  const response = await cache.match(PORTAL_MODE_KEY);
+  if (!response) return "locked";
+  try {
+    const value = await response.json();
+    return value && ["parent", "child", "locked"].includes(value.mode) ? value.mode : "locked";
+  } catch {
+    return "locked";
+  }
+}

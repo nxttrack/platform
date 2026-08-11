@@ -60,6 +60,7 @@ export type IdentityBoundaryRows = {
   activeTenantId?: string | null;
   activeTenantSlug?: string | null;
   checkedAt?: string;
+  sessionId?: string | null;
 };
 
 const sectorKeys = ["swim_school", "football_school", "sports_club", "martial_arts_school", "dance_school", "generic_lessons"] as const satisfies readonly SectorKey[];
@@ -85,7 +86,8 @@ export function mapIdentityRowsToTrustedAuthContext(rows: IdentityBoundaryRows):
     tenantMemberships: mapTenantMemberships(rows.tenantMemberships ?? []),
     activeTenantId: rows.activeTenantId ?? null,
     activeTenantSlug: rows.activeTenantSlug ?? null,
-    checkedAt: rows.checkedAt
+    checkedAt: rows.checkedAt,
+    sessionId: rows.sessionId ?? null
   });
 }
 

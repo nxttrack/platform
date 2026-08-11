@@ -167,6 +167,7 @@ function ItemsStep({ data, editable, editId }: StepProps & { editId?: string }) 
   const selected = data.items.find((item) => item.id === editId);
   const selectedLinks = new Set(data.itemCompetencies.filter((link) => link.curriculum_item_id === selected?.id).map((link) => link.competency_id));
   const context = asRecord(selected?.context_json);
+  const childInstructionVideo = asRecord(context.childInstructionVideo);
   return (
     <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(25rem,0.85fr)]">
       <AdminSection title="Curriculumonderdelen" description="Een onderdeel heeft één stabiele identiteit; carryover verwijst later naar deze identiteit en maakt geen kopie.">
@@ -198,6 +199,16 @@ function ItemsStep({ data, editable, editId }: StepProps & { editId?: string }) 
               <Field defaultValue={stringValue(context.environment)} label="Omgeving/context" name="environment" />
             </div>
             <TextAreaField defaultValue={stringValue(context.notes)} label="Contextnotitie" name="contextNotes" />
+            <fieldset className="rounded-xl border border-border p-4">
+              <legend className="px-1 text-sm font-bold">Kinderportaal · instructievideo</legend>
+              <div className="mt-2 grid gap-4">
+                <Field defaultValue={stringValue(childInstructionVideo.title)} label="Kindveilige titel" name="childVideoTitle" />
+                <Field defaultValue={stringValue(childInstructionVideo.url)} description="HTTPS- of interne URL naar de goedgekeurde videorendition." label="Video-URL" name="childVideoUrl" />
+                <Field defaultValue={stringValue(childInstructionVideo.captionsUrl)} description="WebVTT-captions zijn verplicht vóór goedkeuring." label="Captions-URL" name="childVideoCaptionsUrl" />
+                <TextAreaField defaultValue={stringValue(childInstructionVideo.transcript)} label="Transcript" name="childVideoTranscript" />
+                <Checkbox defaultChecked={childInstructionVideo.status === "approved"} label="Goedgekeurd voor het kinderportaal" name="childVideoApproved" />
+              </div>
+            </fieldset>
             <fieldset className="rounded-xl border border-border p-4">
               <legend className="px-1 text-sm font-bold">Competenties</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">{data.competencies.map((competency) => <Checkbox defaultChecked={selectedLinks.has(competency.id)} key={competency.id} label={competency.name} name="competencyIds" value={competency.id} />)}</div>

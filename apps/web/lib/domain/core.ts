@@ -141,6 +141,7 @@ export type TenantCoreData = {
     id: string;
     slug: string;
     name: string;
+    sector: NonNullable<AuthenticatedTrustedAuthContext["activeTenant"]>["sector"];
   };
   programs: ProgramRow[];
   stages: ProgramStageRow[];
@@ -236,7 +237,8 @@ export function getActiveTenant(context: AuthenticatedTrustedAuthContext) {
   return {
     id: context.activeTenant.tenantId,
     slug: context.activeTenant.slug,
-    name: context.activeTenant.name
+    name: context.activeTenant.name,
+    sector: context.activeTenant.sector
   };
 }
 

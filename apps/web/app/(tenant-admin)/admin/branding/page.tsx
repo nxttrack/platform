@@ -60,7 +60,7 @@ export default async function BrandingPage({ searchParams }: { searchParams?: Pr
               const releaseKey = `${theme.theme.key}@${theme.theme.release}`;
               const active = releaseKey === activeThemeKey;
               return (
-                <article className={`overflow-hidden rounded-2xl border bg-background ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`} key={releaseKey}>
+                <article className={`overflow-hidden rounded-2xl border bg-background ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`} data-theme-choice={theme.theme.key} key={releaseKey}>
                   <PortalThemePreview compact manifest={theme} />
                   <form action={selectTenantPortalThemeAction} className="grid gap-3 p-4">
                     <input name="themeRelease" type="hidden" value={releaseKey} />

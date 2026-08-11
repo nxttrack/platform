@@ -21,7 +21,7 @@ export default async function ParentDiplomasPage({ searchParams }: PageProps) {
   const programById = new Map(data.programs.map((program) => [program.id, program]));
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const certificates = data.certificates.filter((certificate) => visibleParticipantIds.has(certificate.participant_id));
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

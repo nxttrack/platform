@@ -54,7 +54,7 @@ export default async function ParentDevelopmentPage({ searchParams }: { searchPa
   const averageScore = visibleAssessmentRatings.length > 0
     ? Math.round((visibleAssessmentRatings.reduce((total, rating) => total + rating, 0) / visibleAssessmentRatings.length) * 10) / 10
     : null;
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

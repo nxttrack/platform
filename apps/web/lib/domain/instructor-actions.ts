@@ -303,6 +303,7 @@ export async function scoreProgressItemAction(formData: FormData) {
   const score = readScore(formData, "score");
   const note = readOptional(formData, "note");
   const visibility = readEnum(formData, "visibility", noteVisibilities, "parent_visible");
+  const childVisible = visibility === "parent_visible" && formData.get("childVisible") === "on";
   const operationId = readOptional(formData, "operationId") ?? crypto.randomUUID();
   const correctsObservationId = readOptional(formData, "correctsObservationId");
   const correctionReason = readOptional(formData, "correctionReason");
@@ -360,6 +361,7 @@ export async function scoreProgressItemAction(formData: FormData) {
       target_client_operation_id: operationId,
       target_context_json: {
         channel: "instructor_web",
+        childVisible,
         formulaVersion: "swim_progress_v3"
       },
       target_corrects_observation_id: correctsObservationId,

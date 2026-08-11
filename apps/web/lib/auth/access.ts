@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import type { AppRole } from "./roles";
 
-export type PrivateShellKey = "parent" | "instructor" | "tenant_admin" | "platform_admin";
+export type PrivateShellKey = "child" | "parent" | "instructor" | "tenant_admin" | "platform_admin";
 
 export type PrivateShellAccess = {
   shell: PrivateShellKey;
@@ -27,6 +27,14 @@ export const privateRouteMetadata: Metadata = {
 };
 
 export const privateShellAccess = {
+  child: {
+    shell: "child",
+    pathPrefix: "/kind",
+    tenantRequired: true,
+    platformOnly: false,
+    allowedRoles: ["parent", "athlete"],
+    description: "Session-bound child-safe portal with an explicit capability allowlist."
+  },
   parent: {
     shell: "parent",
     pathPrefix: "/portaal",

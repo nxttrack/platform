@@ -15,6 +15,7 @@ export type MediaLibraryRow = {
   createdAt: string;
   accessCount: number;
   lastAccessAt: string | null;
+  mediaType: "image" | "video";
   searchText: string;
 };
 
@@ -23,7 +24,7 @@ export async function getTenantMediaLibrary(): Promise<MediaLibraryRow[]> {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
   const [media, participants, access] = await Promise.all([
-    admin.from("participant_media").select("id, participant_id, caption, status, consent_checked_at, expires_at, created_at").eq("tenant_id", tenant.id).order("created_at", { ascending: false }).limit(1000),
+    admin.from("participant_media").select("id, participant_id, caption, media_type, status, consent_checked_at, expires_at, created_at").eq("tenant_id", tenant.id).order("created_at", { ascending: false }).limit(1000),
     admin.from("participants").select("id, display_name").eq("tenant_id", tenant.id),
     admin.from("media_access_logs").select("media_id, occurred_at").eq("tenant_id", tenant.id).in("action", ["view", "download"]).order("occurred_at", { ascending: false }).limit(5000)
   ]);
@@ -47,6 +48,7 @@ export async function getTenantMediaLibrary(): Promise<MediaLibraryRow[]> {
       createdAt: row.created_at,
       accessCount: views.length,
       lastAccessAt: views[0] ?? null,
+      mediaType: row.media_type === "video" ? "video" : "image",
       searchText: `${participantName} ${row.caption ?? ""} ${row.status}`.toLowerCase()
     };
   });

@@ -24,12 +24,10 @@ export const parentNav: NavItem[] = [
 ];
 
 export const parentMoreNav: NavItem[] = [
-  { href: "/portaal/documenten", label: "Documenten", icon: "file", section: "Informatie" },
-  { href: "/portaal/feedback", label: "Feedback", icon: "chart", section: "Informatie" },
-  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users", section: "Account" },
-  { href: "/portaal/profiel", label: "Profiel", icon: "user", section: "Account" },
-  { href: "/portaal/profiel#communicatie", label: "Meldingsvoorkeuren", icon: "bell", section: "Voorkeuren" },
-  { href: "/portaal/ontwikkeling/media#toestemming", label: "Privacy en toestemming", icon: "shield", section: "Voorkeuren" }
+  { href: "/portaal/documenten", label: "Documenten", icon: "file" },
+  { href: "/portaal/feedback", label: "Feedback", icon: "chart" },
+  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users" },
+  { href: "/portaal/profiel", label: "Profiel", icon: "user" }
 ];
 
 export const instructorNav: NavItem[] = [

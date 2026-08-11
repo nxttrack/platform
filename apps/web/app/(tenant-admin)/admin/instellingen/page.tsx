@@ -8,6 +8,7 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
+import { configureChildPortalRolloutAction } from "@/lib/domain/portal-feature-actions";
 import { saveTenantBillingProfileAction, saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -63,14 +64,18 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
   const error = getParam(params, "error");
   const context = await requirePrivateShellContext("/admin/instellingen");
   const tenant = getActiveTenant(context);
-  const [settings, billingProfile] = await Promise.all([loadSettings(tenant.id), loadBillingProfile(tenant.id, tenant.name)]);
+  const [settings, billingProfile, childPortalRollout] = await Promise.all([
+    loadSettings(tenant.id),
+    loadBillingProfile(tenant.id, tenant.name),
+    loadChildPortalRollout(tenant.id)
+  ]);
   const canManage = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   return (
     <div className="space-y-5">
       <PageHeader kicker="Beheer" subtitle={`Beheer configuratie, beleid, analytics en privacy voor ${tenant.name}.`} title="Instellingen" />
 
-      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "billing" ? "Bedrijfs- en btw-gegevens zijn opgeslagen." : "Instellingen zijn opgeslagen."}</p> : null}
+      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "billing" ? "Bedrijfs- en btw-gegevens zijn opgeslagen." : saved === "child_portal" ? "Kinderportaalrollout is veilig opgeslagen." : "Instellingen zijn opgeslagen."}</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessage(error)}</p> : null}
 
       <AdminListSurface>
@@ -157,6 +162,26 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
           </Tabs>
 
           {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Instellingen opslaan</SubmitButton></div> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
+        </DirtyForm>
+      </AdminListSurface>
+
+      <AdminListSurface>
+        <DirtyForm action={configureChildPortalRolloutAction} className="grid gap-5">
+          <SettingsPanel
+            action={<StatusPill tone={["pilot", "enabled"].includes(childPortalRollout.status) ? "success" : childPortalRollout.status === "paused" ? "warning" : "neutral"}>{childPortalRollout.status}</StatusPill>}
+            description="Tenantgewijze rollout met een directe kill switch. Uitschakelen of pauzeren vergrendelt bestaande kindsessies; terugkeer vereist daarna opnieuw inloggen. Directe kindlogin blijft in v1 altijd uit."
+            title="Ouder- en kinderportaal"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">Rolloutstatus<select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={childPortalRollout.status} disabled={!canManage} name="childPortalStatus"><option value="disabled">Uitgeschakeld</option><option value="pilot">Pilot</option><option value="enabled">Ingeschakeld</option><option value="paused">Gepauzeerd / kill switch</option></select></label>
+              <Field defaultValue={childPortalRollout.absoluteTtlMinutes} description="15–720 minuten; daarna valt de sessie fail-closed dicht." label="Absolute kindmodustijd in minuten" min={15} name="childPortalTtlMinutes" type="number" />
+              <label className="flex min-h-12 items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[13px] font-semibold"><input className="mt-0.5 size-4" defaultChecked={childPortalRollout.securityReviewed} disabled={!canManage} name="childPortalSecurityReviewed" type="checkbox" /><span>Securitymatrix beoordeeld<span className="mt-1 block text-xs font-normal text-muted-foreground">Verplicht voor pilot/aan.</span></span></label>
+              <label className="flex min-h-12 items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[13px] font-semibold"><input className="mt-0.5 size-4" defaultChecked={childPortalRollout.visualMatrixReviewed} disabled={!canManage} name="childPortalVisualReviewed" type="checkbox" /><span>Visuele matrix beoordeeld<span className="mt-1 block text-xs font-normal text-muted-foreground">Verplicht voor pilot/aan.</span></span></label>
+              <ReadOnlyField label="Directe kindlogin" value="Uitgeschakeld (v1)" />
+              <ReadOnlyField label="Capabilities" value="Exact 8 child-safe rechten" />
+            </div>
+          </SettingsPanel>
+          {canManage ? <div className="flex justify-end"><SubmitButton>Rollout opslaan</SubmitButton></div> : null}
         </DirtyForm>
       </AdminListSurface>
 
@@ -273,6 +298,29 @@ async function loadBillingProfile(tenantId: string, tenantName: string) {
   };
 }
 
+async function loadChildPortalRollout(tenantId: string) {
+  const { data, error } = await createAdminClient()
+    .from("tenant_swim_rollouts")
+    .select("feature_key, status, readiness_json, config_json")
+    .eq("tenant_id", tenantId)
+    .in("feature_key", ["swim.portal.child_mode", "swim.portal.direct_child_login"]);
+  if (error) throw new Error(`Could not load child portal rollout: ${error.message}`);
+  const childMode = (data ?? []).find((row) => row.feature_key === "swim.portal.child_mode");
+  const readiness = asObject(childMode?.readiness_json);
+  const config = asObject(childMode?.config_json);
+  const ttl = Number(config.absoluteTtlMinutes);
+  return {
+    absoluteTtlMinutes: Number.isInteger(ttl) && ttl >= 15 && ttl <= 720 ? ttl : 240,
+    securityReviewed: readiness.security_reviewed === true,
+    status: ["disabled", "paused", "pilot", "enabled"].includes(childMode?.status ?? "") ? childMode!.status : "disabled",
+    visualMatrixReviewed: readiness.visual_matrix_reviewed === true
+  };
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
+}
+
 function SettingsPanel({ action, children, description, title }: { action?: ReactNode; children: ReactNode; description: string; title: string }) {
   return (
     <section className="max-w-4xl rounded-xl border border-border bg-card p-4">
@@ -306,6 +354,9 @@ function errorMessage(error: string) {
     analytics_id: "Vul een geldig GA4-meet-ID in, bijvoorbeeld G-XXXXXXXXXX, of schakel analytics uit.",
     billing_profile: "Vul de verplichte bedrijfs- en facturatiegegevens correct in.",
     billing_profile_save: "Het factuurprofiel kon niet worden opgeslagen.",
+    child_portal_config: "De kinderportaalrollout kon niet veilig worden opgeslagen.",
+    child_portal_permission: "Alleen een organisatie-eigenaar of -beheerder mag de kinderportaalrollout wijzigen.",
+    child_portal_readiness: "Pilot of inschakelen vereist een afgeronde security- én visuele beoordeling.",
     save_failed: "Instellingen opslaan is niet gelukt."
   };
 
