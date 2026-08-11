@@ -102,6 +102,7 @@ test("322 canonieke renders en 196 dashboard-viewportcases zijn werkelijk routeg
       captureChildCanonical(browser, baseURL, theme, testInfo),
       captureChildDashboardsAndStates(browser, baseURL, theme, testInfo)
     ]);
+    themeResults.push(await captureThemeAccessibility(browser, baseURL, theme));
     themeResults.push(await captureChildParentReauth(browser, baseURL, theme, testInfo));
     for (const result of themeResults) {
       canonicalRenders += result.canonicalRenders;
@@ -181,9 +182,6 @@ async function captureParentCanonical(
     }
   }
   await attachBoard(testInfo, page, `${theme}-parent-board`, boardImages);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await gotoStable(page, "/portaal");
-  await assertA11y(page, `${theme} parent dashboard`);
   await context.close();
   return { canonicalRenders: evidence.length, dashboardViewportCases: 0, evidence };
 }
@@ -295,9 +293,29 @@ async function captureChildDashboardsAndStates(
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoStable(page, "/kind");
   await expect(page.locator(".child-journey-map")).toBeVisible();
-  await assertA11y(page, `${theme} child dashboard`);
   await context.close();
   return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
+}
+
+async function captureThemeAccessibility(
+  browser: Browser,
+  baseURL: string,
+  theme: string
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  await signInParent(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoStable(page, "/portaal");
+  await expect(page.locator('[data-portal-route-id="overview"]')).toBeVisible();
+  await assertA11y(page, `${theme} parent dashboard`);
+  await enterChildPortal(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await gotoStable(page, "/kind");
+  await expect(page.locator('[data-child-route-state="today"]')).toBeVisible();
+  await assertA11y(page, `${theme} child dashboard`);
+  await context.close();
+  return { canonicalRenders: 0, dashboardViewportCases: 0, evidence: [] };
 }
 
 async function captureChildParentReauth(
