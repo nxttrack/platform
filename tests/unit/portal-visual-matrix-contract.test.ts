@@ -53,6 +53,17 @@ test("E2E-harnas maakt per thema een parent- en childboard", async () => {
   assert.match(source, /attachBoard/);
 });
 
+test("gedeelde paginaheaders laten lange mobiele lesnamen en datums veilig afbreken", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(
+    new URL("../../apps/web/components/shell/ui.tsx", import.meta.url),
+    "utf8"
+  );
+  const pageHeader = source.slice(source.indexOf("export function PageHeader"), source.indexOf("export function Card"));
+  assert.match(pageHeader, /break-words/);
+  assert.doesNotMatch(pageHeader, /whitespace-nowrap/);
+});
+
 test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridentiteiten", async () => {
   const { readFile } = await import("node:fs/promises");
   const [workflow, phase16, fixture] = await Promise.all([
