@@ -542,6 +542,8 @@ jobs:
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
       - name: Phase 16 operational flow validation
+        env:
+          PHASE16_SKIP_PLAYWRIGHT: ${{ inputs.staging_preview_sha != '' && 'true' || 'false' }}
         run: pnpm run phase16:flow
 
       - name: Prepare parent and child preview fixture
@@ -571,65 +573,79 @@ jobs:
         run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
 
       - name: Prepare Sprint 4 browser-mutation fixture
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-mutations
 
       - name: Prepare Sprint 4 offer-edge fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-offer-edges
 
       - name: Prepare Sprint 4 parent self-service fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-parent
 
       - name: Prepare Sprint 4 tenant-admin fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-admin
 
       - name: Prepare Sprint 4 isolation fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-isolation
 
       - name: Sprint 4 intake-to-placement browser mutation
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-mutations
 
       - name: Sprint 4 instructor browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-instructor
 
       - name: Sprint 4 parent self-service browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_PARENT_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-parent
 
       - name: Sprint 4 tenant-admin browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_ADMIN_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-admin
 
       - name: Sprint 4 role and tenant isolation
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_ISOLATION_ENABLED: "true"
         run: pnpm run sprint4:test-isolation
 
       - name: Sprint 4 accessibility and performance budgets
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
         run: pnpm run sprint4:test-quality
 
       - name: Communicationhub and Badge Studio browser validation
+        if: inputs.staging_preview_sha == ''
         env:
           BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
         run: pnpm run test:communication-badges:e2e
 
       - name: Premium release browser validation
+        if: inputs.staging_preview_sha == ''
         env:
           PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run test:premium-release:e2e
 
       - name: Capture Priority A staging visual evidence
+        if: inputs.staging_preview_sha == ''
         run: pnpm run design:capture-production
 
       - name: Upload Priority A staging visual evidence
-        if: always()
+        if: always() && inputs.staging_preview_sha == ''
         id: upload-priority-a-visuals
         continue-on-error: true
         uses: actions/upload-artifact@v6
@@ -640,17 +656,20 @@ jobs:
           retention-days: 14
 
       - name: Emit compact visual review fallback
-        if: steps.upload-priority-a-visuals.outcome == 'failure'
+        if: inputs.staging_preview_sha == '' && steps.upload-priority-a-visuals.outcome == 'failure'
         continue-on-error: true
         run: pnpm run design:log-visual-review
 
       - name: Phase 15 staging truth and security validation
+        if: inputs.staging_preview_sha == ''
         run: pnpm run phase15:staging
 
       - name: Write release evidence
+        if: inputs.staging_preview_sha == ''
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
+        if: inputs.staging_preview_sha == ''
         id: upload-release-evidence
         continue-on-error: true
         uses: actions/upload-artifact@v6
@@ -661,7 +680,7 @@ jobs:
           retention-days: 14
 
       - name: Confirm release evidence fallback
-        if: steps.upload-release-evidence.outcome == 'failure'
+        if: inputs.staging_preview_sha == '' && steps.upload-release-evidence.outcome == 'failure'
         run: |
           test -s artifacts/release-evidence.json
           echo "Artifact upload unavailable; release evidence is preserved in this job summary."

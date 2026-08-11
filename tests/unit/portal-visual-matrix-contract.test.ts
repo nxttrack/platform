@@ -67,6 +67,8 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(workflow, /Refusing unexpected staging migrations/);
   assert.match(workflow, /PHASE16_RESET_E2E_PASSWORDS:[\s\S]+false/);
   assert.match(workflow, /PHASE16_PRESERVE_ADMIN_IDENTITIES/);
+  assert.match(workflow, /PHASE16_SKIP_PLAYWRIGHT:[\s\S]+inputs\.staging_preview_sha/);
+  assert.match(workflow, /Prepare Sprint 4 browser-mutation fixture[\s\S]+if: inputs\.staging_preview_sha == ''/);
   assert.match(workflow, /Roll back failed preview validation/);
   assert.match(phase16, /Preserved tenant administrator/);
   assert.match(phase16, /Could not release fixture session reservations/);
@@ -75,5 +77,6 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(fixture, /createRequire\(new URL\("\.\.\/\.\.\/apps\/web\/package\.json"/);
   assert.match(fixture, /resolveCleanupContext/);
   assert.match(fixture, /configure_child_portal_rollout_for_service/);
+  assert.match(fixture, /swim\.portal\.direct_child_login/);
   assert.match(fixture, /status !== "disabled"/);
 });

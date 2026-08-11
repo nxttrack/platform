@@ -46,12 +46,12 @@ if (mode === "cleanup") {
     .eq("tenant_id", tenantId)
     .in("feature_key", [
       "swim.portal.child_mode",
-      "swim.portal.child_media",
+      "swim.portal.direct_child_login",
       "swim.portal.parent_child_split",
       "swim.portal.parent_requests"
     ]);
   if (disabled.error || disabled.data?.length !== 4 || disabled.data.some((entry) => entry.status !== "disabled")) {
-    throw new Error("Child portal rollout did not return to its disabled state.");
+    throw new Error(`Child portal rollout did not return to its disabled state: ${disabled.error?.message ?? JSON.stringify(disabled.data ?? [])}`);
   }
   console.log("[parent-child-preview] PASS rollout disabled and active child sessions revoked.");
   process.exit(0);
