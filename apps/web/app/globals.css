@@ -688,7 +688,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
 
 .portal-mobile-brand__subtitle {
   margin-top: .12rem;
-  color: var(--portal-text-muted);
+  color: var(--portal-text);
   font-size: .62rem;
   line-height: 1.1;
 }
@@ -2562,7 +2562,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
 .parent-overview-planning__facts p span { min-width: 0; }
 .parent-overview-planning__facts small,
 .parent-overview-planning__facts strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.parent-overview-planning__facts small { color: var(--portal-text-muted); font-size: 7px; font-weight: 800; text-transform: uppercase; }
+.parent-overview-planning__facts small { color: var(--portal-text); font-size: 7px; font-weight: 800; text-transform: uppercase; }
 .parent-overview-planning__facts strong { margin-top: 3px; font-size: 10px; }
 
 .parent-overview-progress { isolation: isolate; }

@@ -64,6 +64,18 @@ test("gedeelde paginaheaders laten lange mobiele lesnamen en datums veilig afbre
   assert.doesNotMatch(pageHeader, /whitespace-nowrap/);
 });
 
+test("microcopy en notificatiebadges houden op het ouderdashboard WCAG AA-contrast", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [styles, shell] = await Promise.all([
+    readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../../apps/web/components/shell/app-shell-client.tsx", import.meta.url), "utf8")
+  ]);
+  assert.match(styles, /\.portal-mobile-brand__subtitle\s*\{[^}]*color:\s*var\(--portal-text\)/s);
+  assert.match(styles, /\.parent-overview-planning__facts small\s*\{[^}]*color:\s*var\(--portal-text\)/s);
+  assert.match(shell, /bg-danger[^"\n]*text-foreground/);
+  assert.doesNotMatch(shell, /bg-danger[^"\n]*text-white/);
+});
+
 test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridentiteiten", async () => {
   const { readFile } = await import("node:fs/promises");
   const [workflow, phase16, fixture] = await Promise.all([
