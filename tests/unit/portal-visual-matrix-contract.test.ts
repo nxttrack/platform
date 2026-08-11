@@ -51,6 +51,8 @@ test("E2E-harnas maakt per thema een parent- en childboard", async () => {
   assert.match(source, /`\$\{theme\}-parent-board`/);
   assert.match(source, /`\$\{theme\}-child-board`/);
   assert.match(source, /attachBoard/);
+  assert.match(source, /\.child-safe-feedback\[role="status"\]/);
+  assert.doesNotMatch(source, /parentPage\.locator\('\[role="status"\]'\)/);
 });
 
 test("gedeelde paginaheaders laten lange mobiele lesnamen en datums veilig afbreken", async () => {

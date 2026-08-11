@@ -228,7 +228,7 @@ test("322 canonieke renders en 196 dashboard-viewportcases zijn werkelijk routeg
     await attachViewport(testInfo, parentPage, `${theme}-child-badge-locked-mobile`);
     for (const requestState of ["verstuurd", "limiet", "mislukt"]) {
       await gotoStable(parentPage, `/kind/ik?tab=instellingen&verzoek=${requestState}`);
-      await expect(parentPage.locator('[role="status"]')).toBeVisible();
+      await expect(parentPage.locator('.child-safe-feedback[role="status"]')).toBeVisible();
       await attachViewport(testInfo, parentPage, `${theme}-child-parent-request-${requestState}-mobile`);
     }
     await parentPage.emulateMedia({ reducedMotion: "reduce" });
