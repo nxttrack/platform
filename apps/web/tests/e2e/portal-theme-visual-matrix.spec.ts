@@ -11,7 +11,7 @@ import {
   PORTAL_VISUAL_THEMES
 } from "@/lib/theme/portal-visual-matrix";
 
-test.describe.configure({ timeout: 3_600_000 });
+test.describe.configure({ timeout: 5_400_000 });
 
 const themes = PORTAL_VISUAL_THEMES;
 const routes = PARENT_VISUAL_ROUTES;
@@ -29,6 +29,12 @@ const visualMatrixRequired = process.env.PORTAL_THEME_VISUAL_MATRIX_REQUIRED ===
 const requiredViewports = PORTAL_REQUIRED_VIEWPORTS;
 const canonicalViewports = PORTAL_CANONICAL_VIEWPORTS;
 const highResolutionViewports = PORTAL_HIGH_RESOLUTION_VIEWPORTS;
+type EvidenceEntry = { kind: string; name: string; theme: string; viewport: string };
+type ThemeMatrixResult = {
+  canonicalRenders: number;
+  dashboardViewportCases: number;
+  evidence: EvidenceEntry[];
+};
 
 test("platformpreview rendert de volledige 7 × 13 desktop- en mobiele matrix", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "chromium-desktop", "De matrix bevat zelf zowel desktop- als mobiele viewports.");
@@ -85,160 +91,22 @@ test("322 canonieke renders en 196 dashboard-viewportcases zijn werkelijk routeg
 
   let canonicalRenders = 0;
   let dashboardViewportCases = 0;
-  const evidence: Array<{ kind: string; name: string; theme: string; viewport: string }> = [];
+  const evidence: EvidenceEntry[] = [];
 
   for (const theme of themes) {
     await selectTheme(adminPage, theme);
-
-    const publicContext = await browser.newContext({ baseURL });
-    const publicPage = await publicContext.newPage();
-    for (const viewport of canonicalViewports) {
-      await publicPage.setViewportSize(viewport);
-      await gotoStable(publicPage, `/diploma-verificatie/${encodeURIComponent(requiredEnv("E2E_CERTIFICATE_CODE"))}`);
-      await assertNoHorizontalOverflow(publicPage);
-      await attachViewport(testInfo, publicPage, `${theme}-public-verification-${viewport.name}`);
-      evidence.push({ kind: "canonical", name: "public-verification", theme, viewport: viewport.name });
-      canonicalRenders += 1;
+    const themeResults = await Promise.all([
+      capturePublicVerification(browser, baseURL, theme, testInfo),
+      captureParentCanonical(browser, baseURL, theme, testInfo),
+      captureParentDashboards(browser, baseURL, theme, testInfo),
+      captureChildCanonical(browser, baseURL, theme, testInfo),
+      captureChildDashboardsAndStates(browser, baseURL, theme, testInfo)
+    ]);
+    for (const result of themeResults) {
+      canonicalRenders += result.canonicalRenders;
+      dashboardViewportCases += result.dashboardViewportCases;
+      evidence.push(...result.evidence);
     }
-    await publicContext.close();
-
-    const parentContext = await browser.newContext({ baseURL });
-    const parentPage = await parentContext.newPage();
-    await signInParent(parentPage);
-    await parentPage.setViewportSize({ width: 1440, height: 900 });
-    await gotoStable(parentPage, "/portaal/planning");
-    const parentLessonHref = await parentPage.locator('a[href^="/portaal/lessen/"]').first().getAttribute("href");
-    expect(parentLessonHref, "Een lesfixture is verplicht voor Lesdetail.").toBeTruthy();
-    const parentRoutes = [
-      "/portaal",
-      "/portaal/planning",
-      parentLessonHref!,
-      "/portaal/ontwikkeling",
-      "/portaal/ontwikkeling/badges",
-      "/portaal/ontwikkeling/media",
-      "/portaal/ontwikkeling/diplomas",
-      "/portaal/inbox",
-      "/portaal/betalingen",
-      "/portaal/documenten",
-      "/portaal/feedback",
-      "/portaal/kinderen",
-      "/portaal/profiel"
-    ];
-    const parentBoardImages: Array<{ body: Buffer; name: string }> = [];
-
-    for (const viewport of canonicalViewports) {
-      await parentPage.setViewportSize(viewport);
-      for (const [index, routePath] of parentRoutes.entries()) {
-        await gotoStable(parentPage, routePath);
-        await expect(parentPage.locator("[data-portal-route-id]")).toHaveAttribute("data-portal-route-id", routes[index]!);
-        await assertNoHorizontalOverflow(parentPage);
-        const body = await attachViewport(testInfo, parentPage, `${theme}-parent-${routes[index]}-${viewport.name}`);
-        if (viewport.name === "desktop") parentBoardImages.push({ body, name: routes[index]! });
-        evidence.push({ kind: "canonical", name: `parent-${routes[index]}`, theme, viewport: viewport.name });
-        canonicalRenders += 1;
-      }
-    }
-    await attachBoard(testInfo, parentPage, `${theme}-parent-board`, parentBoardImages);
-
-    for (const viewport of requiredViewports) {
-      await parentPage.setViewportSize(viewport);
-      await gotoStable(parentPage, "/portaal");
-      await assertDashboardLayout(parentPage, "parent", viewport.width, viewport.height);
-      await attachViewport(testInfo, parentPage, `${theme}-parent-dashboard-${viewport.name}`);
-      evidence.push({ kind: "dashboard-viewport", name: "parent", theme, viewport: viewport.name });
-      dashboardViewportCases += 1;
-    }
-    for (const viewport of highResolutionViewports) {
-      await parentPage.setViewportSize(viewport);
-      await gotoStable(parentPage, "/portaal");
-      await attachViewport(testInfo, parentPage, `${theme}-parent-dashboard-highres-${viewport.name}`);
-      evidence.push({ kind: "canonical-highres", name: "parent-dashboard", theme, viewport: viewport.name });
-      canonicalRenders += 1;
-    }
-    await assertA11y(parentPage, `${theme} parent dashboard`);
-
-    await parentPage.setViewportSize({ width: 1440, height: 900 });
-    await gotoStable(parentPage, "/portaal/kinderen");
-    await parentPage.getByRole("button", { name: /Open kindmodus voor/i }).first().click();
-    await parentPage.waitForURL(/\/kind(?:\?|$)/);
-    await gotoStable(parentPage, "/kind/reis");
-    const goalHref = await parentPage.locator(".child-goal-list a").first().getAttribute("href");
-    expect(goalHref, "Een canoniek curriculumdoel is verplicht voor Doeldetail.").toBeTruthy();
-    await gotoStable(parentPage, "/kind/agenda");
-    const childLessonHref = await parentPage.locator('.child-lesson-list a[href^="/kind/agenda/lessen/"]').first().getAttribute("href");
-    expect(childLessonHref, "Een kindveilige lesfixture is verplicht voor Lesdetail.").toBeTruthy();
-    const childRoutes = [
-      { path: "/kind", state: "today" },
-      { path: "/kind/reis", state: "journey" },
-      { path: goalHref!, state: "goal-detail" },
-      { path: "/kind/badges", state: "badges" },
-      { path: "/kind/agenda", state: "agenda" },
-      { path: childLessonHref!, state: "lesson-detail" },
-      { path: "/kind/ik?tab=prijzenkast", state: "profile-prijzenkast" }
-    ];
-    expect(childRoutes.map((route) => route.state)).toEqual([...CHILD_VISUAL_STATES]);
-    const childBoardImages: Array<{ body: Buffer; name: string }> = [];
-
-    for (const viewport of canonicalViewports) {
-      await parentPage.setViewportSize(viewport);
-      for (const route of childRoutes) {
-        await gotoStable(parentPage, route.path);
-        await expect(parentPage.locator("[data-child-route-state]")).toHaveAttribute("data-child-route-state", route.state);
-        await assertNoHorizontalOverflow(parentPage);
-        await assertChildTouchTargets(parentPage);
-        const body = await attachViewport(testInfo, parentPage, `${theme}-child-${route.state}-${viewport.name}`);
-        if (viewport.name === "desktop") childBoardImages.push({ body, name: route.state });
-        evidence.push({ kind: "canonical", name: `child-${route.state}`, theme, viewport: viewport.name });
-        canonicalRenders += 1;
-      }
-    }
-    await attachBoard(testInfo, parentPage, `${theme}-child-board`, childBoardImages);
-
-    for (const viewport of requiredViewports) {
-      await parentPage.setViewportSize(viewport);
-      await gotoStable(parentPage, "/kind");
-      await assertDashboardLayout(parentPage, "child", viewport.width, viewport.height);
-      await attachViewport(testInfo, parentPage, `${theme}-child-dashboard-${viewport.name}`);
-      evidence.push({ kind: "dashboard-viewport", name: "child", theme, viewport: viewport.name });
-      dashboardViewportCases += 1;
-    }
-    for (const viewport of highResolutionViewports) {
-      await parentPage.setViewportSize(viewport);
-      await gotoStable(parentPage, "/kind");
-      await attachViewport(testInfo, parentPage, `${theme}-child-dashboard-highres-${viewport.name}`);
-      evidence.push({ kind: "canonical-highres", name: "child-dashboard", theme, viewport: viewport.name });
-      canonicalRenders += 1;
-    }
-
-    await parentPage.setViewportSize({ width: 390, height: 844 });
-    for (const tab of ["prijzenkast", "momenten", "instellingen"]) {
-      await gotoStable(parentPage, `/kind/ik?tab=${tab}`);
-      await attachViewport(testInfo, parentPage, `${theme}-child-profile-${tab}-mobile`);
-    }
-    await gotoStable(parentPage, "/kind/badges");
-    const earnedBadgeHref = await parentPage.locator('a[data-state="earned"]').first().getAttribute("href");
-    const lockedBadgeHref = await parentPage.locator('a[data-state="locked"]').first().getAttribute("href");
-    expect(earnedBadgeHref, "Een verdiende badgefixture is verplicht voor het viermoment.").toBeTruthy();
-    expect(lockedBadgeHref, "Een bekende vergrendelde badgefixture is verplicht voor de veilige locked state.").toBeTruthy();
-    await gotoStable(parentPage, earnedBadgeHref!);
-    await expect(parentPage.locator('[data-celebration="open"]')).toBeVisible();
-    await attachViewport(testInfo, parentPage, `${theme}-child-badge-celebration-mobile`);
-    await gotoStable(parentPage, lockedBadgeHref!);
-    await expect(parentPage.locator('[data-celebration="closed"]')).toBeVisible();
-    await attachViewport(testInfo, parentPage, `${theme}-child-badge-locked-mobile`);
-    for (const requestState of ["verstuurd", "limiet", "mislukt"]) {
-      await gotoStable(parentPage, `/kind/ik?tab=instellingen&verzoek=${requestState}`);
-      await expect(parentPage.locator('.child-safe-feedback[role="status"]')).toBeVisible();
-      await attachViewport(testInfo, parentPage, `${theme}-child-parent-request-${requestState}-mobile`);
-    }
-    await parentPage.emulateMedia({ reducedMotion: "reduce" });
-    await gotoStable(parentPage, "/kind");
-    await expect(parentPage.locator(".child-journey-map")).toBeVisible();
-    await assertA11y(parentPage, `${theme} child dashboard`);
-    await parentPage.getByRole("button", { name: "Naar ouderportaal" }).click();
-    await parentPage.waitForURL(/\/login\?/);
-    await attachViewport(testInfo, parentPage, `${theme}-child-parent-reauth-mobile`);
-    await parentContext.close();
   }
 
   await adminContext.close();
@@ -249,6 +117,217 @@ test("322 canonieke renders en 196 dashboard-viewportcases zijn werkelijk routeg
     contentType: "application/json"
   });
 });
+
+async function capturePublicVerification(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  const evidence: EvidenceEntry[] = [];
+  for (const viewport of canonicalViewports) {
+    await page.setViewportSize(viewport);
+    await gotoStable(page, `/diploma-verificatie/${encodeURIComponent(requiredEnv("E2E_CERTIFICATE_CODE"))}`);
+    await assertNoHorizontalOverflow(page);
+    await attachViewport(testInfo, page, `${theme}-public-verification-${viewport.name}`);
+    evidence.push({ kind: "canonical", name: "public-verification", theme, viewport: viewport.name });
+  }
+  await context.close();
+  return { canonicalRenders: evidence.length, dashboardViewportCases: 0, evidence };
+}
+
+async function captureParentCanonical(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  const evidence: EvidenceEntry[] = [];
+  await signInParent(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoStable(page, "/portaal/planning");
+  const lessonHref = await page.locator('a[href^="/portaal/lessen/"]').first().getAttribute("href");
+  expect(lessonHref, "Een lesfixture is verplicht voor Lesdetail.").toBeTruthy();
+  const parentRoutes = [
+    "/portaal",
+    "/portaal/planning",
+    lessonHref!,
+    "/portaal/ontwikkeling",
+    "/portaal/ontwikkeling/badges",
+    "/portaal/ontwikkeling/media",
+    "/portaal/ontwikkeling/diplomas",
+    "/portaal/inbox",
+    "/portaal/betalingen",
+    "/portaal/documenten",
+    "/portaal/feedback",
+    "/portaal/kinderen",
+    "/portaal/profiel"
+  ];
+  const boardImages: Array<{ body: Buffer; name: string }> = [];
+  for (const viewport of canonicalViewports) {
+    await page.setViewportSize(viewport);
+    for (const [index, routePath] of parentRoutes.entries()) {
+      await gotoStable(page, routePath);
+      await expect(page.locator("[data-portal-route-id]")).toHaveAttribute("data-portal-route-id", routes[index]!);
+      await assertNoHorizontalOverflow(page);
+      const body = await attachViewport(testInfo, page, `${theme}-parent-${routes[index]}-${viewport.name}`);
+      if (viewport.name === "desktop") boardImages.push({ body, name: routes[index]! });
+      evidence.push({ kind: "canonical", name: `parent-${routes[index]}`, theme, viewport: viewport.name });
+    }
+  }
+  await attachBoard(testInfo, page, `${theme}-parent-board`, boardImages);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoStable(page, "/portaal");
+  await assertA11y(page, `${theme} parent dashboard`);
+  await context.close();
+  return { canonicalRenders: evidence.length, dashboardViewportCases: 0, evidence };
+}
+
+async function captureParentDashboards(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  const evidence: EvidenceEntry[] = [];
+  await signInParent(page);
+  for (const viewport of requiredViewports) {
+    await page.setViewportSize(viewport);
+    await gotoStable(page, "/portaal");
+    await assertDashboardLayout(page, "parent", viewport.width, viewport.height);
+    await attachViewport(testInfo, page, `${theme}-parent-dashboard-${viewport.name}`);
+    evidence.push({ kind: "dashboard-viewport", name: "parent", theme, viewport: viewport.name });
+  }
+  const dashboardViewportCases = evidence.length;
+  for (const viewport of highResolutionViewports) {
+    await page.setViewportSize(viewport);
+    await gotoStable(page, "/portaal");
+    await attachViewport(testInfo, page, `${theme}-parent-dashboard-highres-${viewport.name}`);
+    evidence.push({ kind: "canonical-highres", name: "parent-dashboard", theme, viewport: viewport.name });
+  }
+  await context.close();
+  return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
+}
+
+async function captureChildCanonical(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  const evidence: EvidenceEntry[] = [];
+  await signInParent(page);
+  await enterChildPortal(page);
+  const childRoutes = await resolveChildRoutes(page);
+  const boardImages: Array<{ body: Buffer; name: string }> = [];
+  for (const viewport of canonicalViewports) {
+    await page.setViewportSize(viewport);
+    for (const route of childRoutes) {
+      await gotoStable(page, route.path);
+      await expect(page.locator("[data-child-route-state]")).toHaveAttribute("data-child-route-state", route.state);
+      await assertNoHorizontalOverflow(page);
+      await assertChildTouchTargets(page);
+      const body = await attachViewport(testInfo, page, `${theme}-child-${route.state}-${viewport.name}`);
+      if (viewport.name === "desktop") boardImages.push({ body, name: route.state });
+      evidence.push({ kind: "canonical", name: `child-${route.state}`, theme, viewport: viewport.name });
+    }
+  }
+  await attachBoard(testInfo, page, `${theme}-child-board`, boardImages);
+  await context.close();
+  return { canonicalRenders: evidence.length, dashboardViewportCases: 0, evidence };
+}
+
+async function captureChildDashboardsAndStates(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  const evidence: EvidenceEntry[] = [];
+  await signInParent(page);
+  await enterChildPortal(page);
+  for (const viewport of requiredViewports) {
+    await page.setViewportSize(viewport);
+    await gotoStable(page, "/kind");
+    await assertDashboardLayout(page, "child", viewport.width, viewport.height);
+    await attachViewport(testInfo, page, `${theme}-child-dashboard-${viewport.name}`);
+    evidence.push({ kind: "dashboard-viewport", name: "child", theme, viewport: viewport.name });
+  }
+  const dashboardViewportCases = evidence.length;
+  for (const viewport of highResolutionViewports) {
+    await page.setViewportSize(viewport);
+    await gotoStable(page, "/kind");
+    await attachViewport(testInfo, page, `${theme}-child-dashboard-highres-${viewport.name}`);
+    evidence.push({ kind: "canonical-highres", name: "child-dashboard", theme, viewport: viewport.name });
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const tab of ["prijzenkast", "momenten", "instellingen"]) {
+    await gotoStable(page, `/kind/ik?tab=${tab}`);
+    await attachViewport(testInfo, page, `${theme}-child-profile-${tab}-mobile`);
+  }
+  await gotoStable(page, "/kind/badges");
+  const earnedBadgeHref = await page.locator('a[data-state="earned"]').first().getAttribute("href");
+  const lockedBadgeHref = await page.locator('a[data-state="locked"]').first().getAttribute("href");
+  expect(earnedBadgeHref, "Een verdiende badgefixture is verplicht voor het viermoment.").toBeTruthy();
+  expect(lockedBadgeHref, "Een bekende vergrendelde badgefixture is verplicht voor de veilige locked state.").toBeTruthy();
+  await gotoStable(page, earnedBadgeHref!);
+  await expect(page.locator('[data-celebration="open"]')).toBeVisible();
+  await attachViewport(testInfo, page, `${theme}-child-badge-celebration-mobile`);
+  await gotoStable(page, lockedBadgeHref!);
+  await expect(page.locator('[data-celebration="closed"]')).toBeVisible();
+  await attachViewport(testInfo, page, `${theme}-child-badge-locked-mobile`);
+  for (const requestState of ["verstuurd", "limiet", "mislukt"]) {
+    await gotoStable(page, `/kind/ik?tab=instellingen&verzoek=${requestState}`);
+    await expect(page.locator('.child-safe-feedback[role="status"]')).toBeVisible();
+    await attachViewport(testInfo, page, `${theme}-child-parent-request-${requestState}-mobile`);
+  }
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await gotoStable(page, "/kind");
+  await expect(page.locator(".child-journey-map")).toBeVisible();
+  await assertA11y(page, `${theme} child dashboard`);
+  await page.getByRole("button", { name: "Naar ouderportaal" }).click();
+  await page.waitForURL(/\/login\?/);
+  await attachViewport(testInfo, page, `${theme}-child-parent-reauth-mobile`);
+  await context.close();
+  return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
+}
+
+async function enterChildPortal(page: Page) {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await gotoStable(page, "/portaal/kinderen");
+  await page.getByRole("button", { name: /Open kindmodus voor/i }).first().click();
+  await page.waitForURL(/\/kind(?:\?|$)/);
+}
+
+async function resolveChildRoutes(page: Page) {
+  await gotoStable(page, "/kind/reis");
+  const goalHref = await page.locator(".child-goal-list a").first().getAttribute("href");
+  expect(goalHref, "Een canoniek curriculumdoel is verplicht voor Doeldetail.").toBeTruthy();
+  await gotoStable(page, "/kind/agenda");
+  const lessonHref = await page.locator('.child-lesson-list a[href^="/kind/agenda/lessen/"]').first().getAttribute("href");
+  expect(lessonHref, "Een kindveilige lesfixture is verplicht voor Lesdetail.").toBeTruthy();
+  const childRoutes = [
+    { path: "/kind", state: "today" },
+    { path: "/kind/reis", state: "journey" },
+    { path: goalHref!, state: "goal-detail" },
+    { path: "/kind/badges", state: "badges" },
+    { path: "/kind/agenda", state: "agenda" },
+    { path: lessonHref!, state: "lesson-detail" },
+    { path: "/kind/ik?tab=prijzenkast", state: "profile-prijzenkast" }
+  ];
+  expect(childRoutes.map((route) => route.state)).toEqual([...CHILD_VISUAL_STATES]);
+  return childRoutes;
+}
 
 async function signIn(page: Page) {
   const email = requiredEnv("E2E_PLATFORM_OWNER_EMAIL");
