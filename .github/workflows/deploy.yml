@@ -54,7 +54,7 @@ jobs:
       github.ref_name == 'main' ||
       (inputs.target == 'staging' &&
       github.ref_name == 'codex/parent-child-portals-v1' &&
-      inputs.staging_preview_sha == '5b132c94a049a5af33826468068cb5a505424614')
+      inputs.staging_preview_sha == '5ac0119a8426d11695accb2500225eaa1df00352')
     runs-on: [self-hosted, linux, x64, nxttrack]
 
     environment: ${{ inputs.target }}
@@ -181,7 +181,7 @@ jobs:
           if [[ -n "$STAGING_PREVIEW_SHA" ]]; then
             test "$TARGET" = "staging"
             test "$GITHUB_REF_NAME" = "codex/parent-child-portals-v1"
-            test "$STAGING_PREVIEW_SHA" = "5b132c94a049a5af33826468068cb5a505424614"
+            test "$STAGING_PREVIEW_SHA" = "5ac0119a8426d11695accb2500225eaa1df00352"
             test "$DEPLOYED_SOURCE_SHA" = "$STAGING_PREVIEW_SHA"
             test "${BOOTSTRAP_PLATFORM_OWNER:-false}" != "true"
           else
