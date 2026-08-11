@@ -92,7 +92,7 @@ test("de veilige oudervraag op een kindles heeft een volwaardig touch target", a
 test("het mobiele kinddashboard begrenst de reis tussen header en vaste navigatie", async () => {
   const { readFile } = await import("node:fs/promises");
   const styles = await readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");
-  assert.match(styles, /\.child-today \.child-journey-map\s*\{[^}]*100svh - 292px[^}]*min-height:\s*0/s);
+  assert.match(styles, /\.child-today \.child-journey-map\s*\{[^}]*100svh - 306px[^}]*min-height:\s*0/s);
   assert.match(styles, /@media \(max-width: 767px\) and \(max-height: 700px\)[\s\S]*\.child-today__mobile-lesson\s*\{\s*display:\s*none/s);
 });
 
