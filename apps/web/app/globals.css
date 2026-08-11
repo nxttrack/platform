@@ -442,7 +442,8 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .child-lesson-detail-card p strong { color: var(--portal-text); font-size: 11px; }
   .child-safe-message { padding: 18px 20px; }
   .child-safe-message p { margin: 4px 0 0; color: var(--portal-text-muted); font-size: 11px; }
-  .child-safe-message a { min-height: 48px; display: inline-flex; align-items: center; margin-top: 5px; color: var(--portal-primary); font-size: 11px; font-weight: 850; }
+  .child-safe-message a,
+  .child-safe-message button { min-height: 48px; display: inline-flex; align-items: center; margin-top: 5px; border: 0; padding: 0; color: var(--portal-primary); background: transparent; font-size: 11px; font-weight: 850; cursor: pointer; }
 
   .child-profile-heading { display: flex; align-items: center; gap: 14px; }
   .child-profile-exit { display: none; }

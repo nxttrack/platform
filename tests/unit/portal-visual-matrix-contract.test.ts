@@ -83,6 +83,12 @@ test("de merklink in de kindheader is een volwaardig touch target met leesbare m
   assert.match(styles, /\.child-shell__brand small\s*\{[^}]*color:\s*var\(--portal-text\)/s);
 });
 
+test("de veilige oudervraag op een kindles heeft een volwaardig touch target", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const styles = await readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");
+  assert.match(styles, /\.child-safe-message button\s*\{[^}]*min-height:\s*48px/s);
+});
+
 test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridentiteiten", async () => {
   const { readFile } = await import("node:fs/promises");
   const [workflow, phase16, fixture] = await Promise.all([
