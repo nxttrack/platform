@@ -281,7 +281,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .child-today__info section > span { margin-top: 3px; color: var(--portal-text-muted); font-size: 10px; }
   .child-today__quest-rings { position: absolute; z-index: 15; left: 17px; bottom: 15px; display: flex; gap: 7px; }
   .child-today__quest-rings > div { min-width: 82px; display: grid; justify-items: center; padding: 7px; border: 1px solid rgb(255 255 255 / 94%); border-radius: 17px; background: rgb(255 255 255 / 91%); box-shadow: 0 10px 24px rgb(4 61 91 / 14%); backdrop-filter: blur(10px); }
-  .child-today__quest-rings small { margin-top: 3px; color: var(--portal-text-muted); font-size: 7px; font-weight: 850; text-align: center; text-transform: uppercase; }
+  .child-today__quest-rings small { margin-top: 3px; color: var(--portal-text); font-size: 7px; font-weight: 850; text-align: center; text-transform: uppercase; }
 
   .child-journey-map {
     position: relative;
@@ -334,11 +334,11 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .child-journey-map__mascot { position: absolute; left: 36%; bottom: 8%; width: min(25%, 300px); pointer-events: none; filter: drop-shadow(0 14px 20px rgb(2 65 95 / 22%)); }
   .child-journey-map__detail { position: absolute; top: 18px; left: 18px; width: min(360px, calc(100% - 36px)); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px; border: 1px solid rgb(255 255 255 / 90%); border-radius: 18px; background: rgb(255 255 255 / 91%); box-shadow: 0 13px 28px rgb(4 61 91 / 15%); backdrop-filter: blur(14px); }
   .child-journey-map__detail small, .child-journey-map__detail strong { display: block; }
-  .child-journey-map__detail small { color: var(--portal-text-muted); font-size: 9px; font-weight: 800; text-transform: uppercase; }
+  .child-journey-map__detail small { color: var(--portal-text); font-size: 9px; font-weight: 800; text-transform: uppercase; }
   .child-journey-map__detail strong { margin-top: 3px; font-size: 14px; }
   .child-journey-map__detail a { min-height: 48px; display: inline-flex; align-items: center; margin-top: 2px; color: var(--portal-primary); font-size: 9px; font-weight: 850; text-decoration: none; }
   .child-journey-map__detail b { color: var(--portal-primary); font-size: 18px; }
-  .child-journey-map__controls { position: absolute; right: 16px; bottom: 15px; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 15px; color: white; background: rgb(4 52 81 / 34%); backdrop-filter: blur(10px); }
+  .child-journey-map__controls { position: absolute; right: 16px; bottom: 15px; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 15px; color: white; background: color-mix(in srgb, var(--portal-primary-strong) 88%, black); backdrop-filter: blur(10px); }
   .child-journey-map__controls button { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; background: rgb(255 255 255 / 17%); }
   .child-journey-map__controls button:disabled { opacity: .35; }
   .child-journey-map__controls span { min-width: 56px; text-align: center; font-size: 10px; font-weight: 800; }
@@ -503,7 +503,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
     .child-shell__bottom-nav a { min-width: 0; min-height: 54px; display: grid; place-items: center; align-content: center; gap: 3px; border-radius: 14px; color: var(--portal-text-muted); text-decoration: none; }
     .child-shell__bottom-nav a svg { width: 21px; height: 21px; }
     .child-shell__bottom-nav a span { font-size: 9px; font-weight: 800; }
-    .child-shell__bottom-nav a.is-active { color: var(--portal-primary); background: color-mix(in srgb, var(--portal-secondary) 12%, white); }
+    .child-shell__bottom-nav a.is-active { color: var(--portal-primary-strong); background: color-mix(in srgb, var(--portal-secondary) 12%, white); }
     .child-today__grid { grid-template-columns: 1fr; }
     .child-today__quest, .child-today__info { grid-column: auto; }
     .child-today__info { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; gap: 14px; }
@@ -544,7 +544,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
     .child-today__mobile-lesson { position: absolute; z-index: 16; top: 104px; left: 12px; max-width: calc(100% - 24px); min-height: 48px; display: flex; align-items: center; gap: 9px; padding: 8px 11px; border: 1px solid rgb(255 255 255 / 90%); border-radius: 15px; background: rgb(255 255 255 / 91%); box-shadow: 0 10px 22px rgb(4 61 91 / 13%); backdrop-filter: blur(10px); }
     .child-today__mobile-lesson > svg { width: 18px; height: 18px; color: var(--portal-primary); }
     .child-today__mobile-lesson small, .child-today__mobile-lesson strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .child-today__mobile-lesson small { color: var(--portal-text-muted); font-size: 8px; font-weight: 850; text-transform: uppercase; }
+    .child-today__mobile-lesson small { color: var(--portal-text); font-size: 8px; font-weight: 850; text-transform: uppercase; }
     .child-today__mobile-lesson strong { margin-top: 2px; font-size: 10px; }
     .child-badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .child-detail-grid, .child-settings-grid, .child-goal-detail, .child-journey-support-grid, .child-agenda-highlight-grid { grid-template-columns: 1fr; gap: 12px; }

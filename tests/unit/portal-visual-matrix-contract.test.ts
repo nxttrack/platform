@@ -98,6 +98,18 @@ test("het mobiele kinddashboard begrenst de reis tussen header en vaste navigati
   assert.match(styles, /@media \(max-width: 767px\) and \(max-height: 700px\)[\s\S]*\.child-today__mobile-lesson\s*\{\s*display:\s*none/s);
 });
 
+test("het kinddashboard gebruikt contrastrijke semantische tokens voor microcopy en controls", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const styles = await readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");
+  for (const selector of [
+    "\\.child-today__quest-rings small",
+    "\\.child-journey-map__detail small",
+    "\\.child-today__mobile-lesson small"
+  ]) assert.match(styles, new RegExp(`${selector}\\s*\\{[^}]*color:\\s*var\\(--portal-text\\)`, "s"));
+  assert.match(styles, /\.child-journey-map__controls\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--portal-primary-strong\) 88%, black\)/s);
+  assert.match(styles, /\.child-shell__bottom-nav a\.is-active\s*\{[^}]*color:\s*var\(--portal-primary-strong\)/s);
+});
+
 test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridentiteiten", async () => {
   const { readFile } = await import("node:fs/promises");
   const [workflow, phase16, fixture] = await Promise.all([
