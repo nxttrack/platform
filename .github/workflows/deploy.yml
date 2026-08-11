@@ -458,6 +458,7 @@ jobs:
           retention-days: ${{ inputs.target == 'production' && 90 || 14 }}
 
       - name: Cleanup old releases
+        if: env.STAGING_PREVIEW_SHA == ''
         run: |
           set -euo pipefail
           ls -1dt "$BASE_DIR/releases"/* 2>/dev/null | tail -n +6 | xargs -r rm -rf

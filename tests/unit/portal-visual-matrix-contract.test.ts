@@ -69,6 +69,7 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(workflow, /PHASE16_PRESERVE_ADMIN_IDENTITIES/);
   assert.match(workflow, /PHASE16_SKIP_PLAYWRIGHT:[\s\S]+inputs\.staging_preview_sha/);
   assert.match(workflow, /Prepare Sprint 4 browser-mutation fixture[\s\S]+if: inputs\.staging_preview_sha == ''/);
+  assert.match(workflow, /Cleanup old releases\n\s+if: env\.STAGING_PREVIEW_SHA == ''/);
   assert.match(workflow, /Roll back failed preview validation/);
   assert.match(phase16, /Preserved tenant administrator/);
   assert.match(phase16, /Could not release fixture session reservations/);
