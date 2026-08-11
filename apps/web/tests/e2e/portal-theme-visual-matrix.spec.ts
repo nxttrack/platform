@@ -102,6 +102,7 @@ test("322 canonieke renders en 196 dashboard-viewportcases zijn werkelijk routeg
       captureChildCanonical(browser, baseURL, theme, testInfo),
       captureChildDashboardsAndStates(browser, baseURL, theme, testInfo)
     ]);
+    themeResults.push(await captureChildParentReauth(browser, baseURL, theme, testInfo));
     for (const result of themeResults) {
       canonicalRenders += result.canonicalRenders;
       dashboardViewportCases += result.dashboardViewportCases;
@@ -295,11 +296,27 @@ async function captureChildDashboardsAndStates(
   await gotoStable(page, "/kind");
   await expect(page.locator(".child-journey-map")).toBeVisible();
   await assertA11y(page, `${theme} child dashboard`);
+  await context.close();
+  return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
+}
+
+async function captureChildParentReauth(
+  browser: Browser,
+  baseURL: string,
+  theme: string,
+  testInfo: TestInfo
+): Promise<ThemeMatrixResult> {
+  const context = await browser.newContext({ baseURL });
+  const page = await context.newPage();
+  await signInParent(page);
+  await enterChildPortal(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await gotoStable(page, "/kind");
   await page.getByRole("button", { name: "Naar ouderportaal" }).click();
   await page.waitForURL(/\/login\?/);
   await attachViewport(testInfo, page, `${theme}-child-parent-reauth-mobile`);
   await context.close();
-  return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
+  return { canonicalRenders: 0, dashboardViewportCases: 0, evidence: [] };
 }
 
 async function enterChildPortal(page: Page) {
