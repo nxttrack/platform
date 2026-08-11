@@ -1405,6 +1405,10 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   box-shadow: 0 12px 34px color-mix(in srgb, var(--portal-rail) 12%, transparent);
 }
 
+.portal-parent-brand-title {
+  color: var(--portal-text);
+}
+
 .portal-parent-main {
   min-height: 0;
   padding: 14px 0 0;

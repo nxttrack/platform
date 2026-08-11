@@ -284,7 +284,10 @@ export function AppShellClient({
             </div>
           ) : null}
           <div className={cn("min-w-0", mobileBottomNav && "hidden lg:block")}>
-            <p className="truncate text-xs uppercase tracking-wider text-muted-foreground">{brand.title}</p>
+            <p className={cn(
+              "truncate text-xs uppercase tracking-wider",
+              mobileBottomNav ? "portal-parent-brand-title" : "text-muted-foreground"
+            )}>{brand.title}</p>
             <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
           </div>
           {contextSelector && contextSelectorPlacement === "header" ? <ContextSelector selector={contextSelector} /> : null}
