@@ -293,7 +293,7 @@ async function selectTheme(page: Page, theme: string) {
   if (visualMatrixRequired) {
     const admin = createClient(
       requiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-      requiredEnv("SUPABASE_SECRET_KEY"),
+      requiredEnvOneOf("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
     const activation = await admin.rpc("activate_tenant_portal_theme", {
@@ -460,5 +460,11 @@ async function assertDashboardLayout(
 function requiredEnv(name: string) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is required`);
+  return value;
+}
+
+function requiredEnvOneOf(...names: string[]) {
+  const value = names.map((name) => process.env[name]).find(Boolean);
+  if (!value) throw new Error(`${names.join(" or ")} is required`);
   return value;
 }

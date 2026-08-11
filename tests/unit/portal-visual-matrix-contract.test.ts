@@ -92,6 +92,7 @@ test("stagingmatrix opent de eigen platformpreview en activeert releases via de 
   );
   assert.match(source, /locator\("details"\)\.filter\(\{ has: card \}\)/);
   assert.match(source, /activate_tenant_portal_theme/);
+  assert.match(source, /requiredEnvOneOf\("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"\)/);
   assert.match(source, /target_ticket_reference: "staging-preview-580c995"/);
   assert.match(source, /waitForURL\(\/saved=theme\/, \{ timeout: 60_000 \}\)/);
 });
