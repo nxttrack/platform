@@ -99,6 +99,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   }
 
   .child-shell__brand {
+    min-height: 48px;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -128,7 +129,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .child-shell__brand strong,
   .child-shell__brand small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .child-shell__brand strong { font-size: 14px; }
-  .child-shell__brand small { margin-top: 2px; color: var(--portal-text-muted); font-size: 10px; }
+  .child-shell__brand small { margin-top: 2px; color: var(--portal-text); font-size: 10px; }
 
   .child-shell__mode {
     min-height: 42px;
