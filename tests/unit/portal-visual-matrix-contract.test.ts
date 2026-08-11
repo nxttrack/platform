@@ -106,6 +106,9 @@ test("het kinddashboard gebruikt contrastrijke semantische tokens voor microcopy
     "\\.child-journey-map__detail small",
     "\\.child-today__mobile-lesson small"
   ]) assert.match(styles, new RegExp(`${selector}\\s*\\{[^}]*color:\\s*var\\(--portal-text\\)`, "s"));
+  for (const selector of ["\\.child-journey-map__detail a", "\\.child-journey-map__detail b"]) {
+    assert.match(styles, new RegExp(`${selector}\\s*\\{[^}]*color:\\s*var\\(--portal-primary-strong\\)`, "s"));
+  }
   assert.match(styles, /\.child-journey-map__controls\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--portal-primary-strong\) 88%, black\)/s);
   assert.match(styles, /\.child-shell__bottom-nav a\.is-active\s*\{[^}]*color:\s*var\(--portal-primary-strong\)/s);
 });

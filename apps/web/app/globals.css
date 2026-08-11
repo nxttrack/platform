@@ -336,8 +336,8 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .child-journey-map__detail small, .child-journey-map__detail strong { display: block; }
   .child-journey-map__detail small { color: var(--portal-text); font-size: 9px; font-weight: 800; text-transform: uppercase; }
   .child-journey-map__detail strong { margin-top: 3px; font-size: 14px; }
-  .child-journey-map__detail a { min-height: 48px; display: inline-flex; align-items: center; margin-top: 2px; color: var(--portal-primary); font-size: 9px; font-weight: 850; text-decoration: none; }
-  .child-journey-map__detail b { color: var(--portal-primary); font-size: 18px; }
+  .child-journey-map__detail a { min-height: 48px; display: inline-flex; align-items: center; margin-top: 2px; color: var(--portal-primary-strong); font-size: 9px; font-weight: 850; text-decoration: none; }
+  .child-journey-map__detail b { color: var(--portal-primary-strong); font-size: 18px; }
   .child-journey-map__controls { position: absolute; right: 16px; bottom: 15px; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 15px; color: white; background: color-mix(in srgb, var(--portal-primary-strong) 88%, black); backdrop-filter: blur(10px); }
   .child-journey-map__controls button { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 12px; background: rgb(255 255 255 / 17%); }
   .child-journey-map__controls button:disabled { opacity: .35; }
