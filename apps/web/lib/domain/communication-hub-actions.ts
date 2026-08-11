@@ -654,6 +654,35 @@ export async function markMessageThreadReadAction(formData: FormData) {
   redirectWithFeedback(nextPath, "success", "Gesprek gemarkeerd als gelezen.");
 }
 
+export async function markAllMessageThreadsReadAction(formData: FormData) {
+  const nextPath = getFormNextPath(formData, "/portaal/inbox");
+  const context = await requirePrivateShellContext(nextPath);
+  const tenant = getActiveTenant(context);
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const participants = await admin
+    .from("message_thread_participants")
+    .update({ last_read_at: now })
+    .eq("tenant_id", tenant.id)
+    .eq("user_id", context.user.id)
+    .eq("status", "active");
+  if (participants.error) {
+    redirectWithFeedback(nextPath, "error", "De gesprekken konden niet worden bijgewerkt.");
+  }
+  const notifications = await admin
+    .from("tenant_notifications")
+    .update({ status: "read", read_at: now })
+    .eq("tenant_id", tenant.id)
+    .eq("recipient_user_id", context.user.id)
+    .eq("entity_type", "message_thread")
+    .eq("status", "unread");
+  if (notifications.error) {
+    redirectWithFeedback(nextPath, "error", "De gespreksmeldingen konden niet worden bijgewerkt.");
+  }
+  revalidateCommunicationHub();
+  redirectWithFeedback(nextPath, "success", "Alle gesprekken zijn gelezen.");
+}
+
 async function upsertThreadParticipants(input: {
   tenantId: string;
   threadId: string;

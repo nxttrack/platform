@@ -125,7 +125,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
     !participantName ||
     !participantBirthDate ||
     !isValidBirthDate(participantBirthDate) ||
-    !["boy", "girl", "unknown"].includes(participantGender ?? "") ||
+    !["boy", "girl", "unknown_legacy"].includes(participantGender ?? "") ||
     !isSwimmingExperience(swimmingExperience) ||
     (secondaryParentEmail && !isEmail(secondaryParentEmail))
   ) {

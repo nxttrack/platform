@@ -4,11 +4,13 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { classifyContent } from "@/lib/security/content-classification";
+import { parseLearnerAssessmentValue } from "./learner-assessment";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
 import { createTenantNotifications } from "./tenant-notifications";
-import { evaluateBadgeTriggers } from "./badge-engine";
+import { evaluateBadgeTriggers, evaluateBadgeTriggerSet } from "./badge-engine";
 
 const attendanceStatuses = new Set(["present", "absent", "late", "excused", "trial"]);
 const noteVisibilities = new Set(["internal", "parent_visible"]);
@@ -295,12 +297,15 @@ export async function scoreProgressItemAction(formData: FormData) {
   const context = await requirePrivateShellContext("/instructor");
   const tenant = getActiveTenant(context);
   const participantId = readRequired(formData, "participantId");
-  const moduleId = readRequired(formData, "moduleId");
+  const moduleId = readOptional(formData, "moduleId");
   const itemId = readRequired(formData, "itemId");
   const sessionId = readOptional(formData, "sessionId");
   const score = readScore(formData, "score");
   const note = readOptional(formData, "note");
   const visibility = readEnum(formData, "visibility", noteVisibilities, "parent_visible");
+  const operationId = readOptional(formData, "operationId") ?? crypto.randomUUID();
+  const correctsObservationId = readOptional(formData, "correctsObservationId");
+  const correctionReason = readOptional(formData, "correctionReason");
   const membership = sessionId
     ? await getSessionMembership({
         tenantId: tenant.id,
@@ -321,6 +326,113 @@ export async function scoreProgressItemAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
+  const enrollmentResult = await admin
+    .from("enrollments")
+    .select("id, curriculum_version_id")
+    .eq("tenant_id", tenant.id)
+    .eq("id", membership.enrollment_id)
+    .eq("participant_id", participantId)
+    .maybeSingle();
+
+  if (enrollmentResult.error || !enrollmentResult.data) {
+    redirectWithStatus(nextPath, "error", "progress");
+  }
+
+  if (enrollmentResult.data.curriculum_version_id) {
+    const itemResult = await admin
+      .from("curriculum_items")
+      .select("id, identity_id, name, mastery_threshold")
+      .eq("tenant_id", tenant.id)
+      .eq("curriculum_version_id", enrollmentResult.data.curriculum_version_id)
+      .eq("id", itemId)
+      .maybeSingle();
+
+    if (itemResult.error || !itemResult.data) {
+      redirectWithStatus(nextPath, "error", "progress");
+    }
+    if (correctsObservationId && (!correctionReason || correctionReason.length < 3)) {
+      redirectWithStatus(nextPath, "error", "correction-reason");
+    }
+
+    const supabase = await createClient();
+    const observedAt = new Date().toISOString();
+    const assessmentResult = await supabase.rpc("finalize_swim_assessment", {
+      target_client_operation_id: operationId,
+      target_context_json: {
+        channel: "instructor_web",
+        formulaVersion: "swim_progress_v3"
+      },
+      target_corrects_observation_id: correctsObservationId,
+      target_correction_reason: correctsObservationId ? correctionReason : null,
+      target_curriculum_item_id: itemId,
+      target_device_id: "instructor-web",
+      target_enrollment_id: membership.enrollment_id,
+      target_idempotency_key: `assessment:web:${operationId}`,
+      target_note: note,
+      target_observed_at: observedAt,
+      target_participant_id: participantId,
+      target_rating: score,
+      target_session_id: sessionId,
+      target_source: correctsObservationId ? "admin_command" : "manual",
+      target_tenant_id: tenant.id,
+      target_visibility: visibility
+    });
+
+    revalidateInstructorPaths(nextPath);
+
+    if (assessmentResult.error || !assessmentResult.data) {
+      redirectWithStatus(nextPath, "error", "progress");
+    }
+
+    const positiveLabel = getPositiveScoreLabel(score);
+    if (visibility === "parent_visible") {
+      await createParentNotificationsForParticipant({
+        tenantId: tenant.id,
+        organizationName: tenant.name,
+        participantId,
+        type: "progress_score",
+        title: correctsObservationId ? "Voortgang bijgewerkt" : "Nieuwe voortgang",
+        message: `${itemResult.data.name}: ${positiveLabel}`
+      });
+    }
+
+    if (score >= Number(itemResult.data.mastery_threshold)) {
+      const [completedCountResult, identityResult] = await Promise.all([
+        admin
+          .from("swim_progress_projections")
+          .select("id", { count: "exact", head: true })
+          .eq("tenant_id", tenant.id)
+          .eq("participant_id", participantId)
+          .eq("scope_kind", "item")
+          .gte("progress_fraction", 0.8),
+        admin
+          .from("curriculum_item_identities")
+          .select("stable_key")
+          .eq("tenant_id", tenant.id)
+          .eq("id", itemResult.data.identity_id)
+          .maybeSingle()
+      ]);
+      const triggerContext = {
+        count: completedCountResult.count ?? 1,
+        entityId: String(assessmentResult.data),
+        skill: identityResult.data?.stable_key ?? itemResult.data.id
+      };
+      await evaluateBadgeTriggerSet({
+        tenantId: tenant.id,
+        participantId,
+        events: [
+          { eventType: "progress_item_completed", eventContext: triggerContext },
+          { eventType: "skill_completed", eventContext: triggerContext }
+        ]
+      });
+    }
+
+    redirectWithStatus(nextPath, "saved", "progress");
+  }
+
+  if (!moduleId) {
+    redirectWithStatus(nextPath, "error", "progress");
+  }
   const itemResult = await admin.from("progress_items").select("id, module_id, name, code").eq("tenant_id", tenant.id).eq("module_id", moduleId).eq("id", itemId).eq("status", "active").maybeSingle();
 
   if (itemResult.error || !itemResult.data) {
@@ -339,6 +451,9 @@ export async function scoreProgressItemAction(formData: FormData) {
         item_id: itemId,
         session_id: sessionId,
         score,
+        scale_version: "five_point_v1",
+        source_scale_version: "five_point_v1",
+        source_value: null,
         positive_label: positiveLabel,
         note,
         visibility,
@@ -382,10 +497,14 @@ export async function scoreProgressItemAction(formData: FormData) {
       entityId: scoreResult.data.id,
       skill: itemResult.data.code?.replace(/_completed$/, "") ?? itemResult.data.id
     };
-    await Promise.all([
-      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "progress_item_completed", eventContext: triggerContext }),
-      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "skill_completed", eventContext: triggerContext })
-    ]);
+    await evaluateBadgeTriggerSet({
+      tenantId: tenant.id,
+      participantId,
+      events: [
+        { eventType: "progress_item_completed", eventContext: triggerContext },
+        { eventType: "skill_completed", eventContext: triggerContext }
+      ]
+    });
   }
 
   redirectWithStatus(nextPath, "saved", "progress");
@@ -665,13 +784,7 @@ function readEnum(formData: FormData, field: string, allowed: Set<string>, fallb
 }
 
 function readScore(formData: FormData, field: string) {
-  const rawScore = Number(readOptional(formData, field) ?? 1);
-
-  if (!Number.isInteger(rawScore) || rawScore < 1 || rawScore > 5) {
-    return 1;
-  }
-
-  return rawScore;
+  return parseLearnerAssessmentValue(readOptional(formData, field));
 }
 
 function readRequired(formData: FormData, field: string) {

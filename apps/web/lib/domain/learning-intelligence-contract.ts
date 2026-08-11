@@ -15,6 +15,8 @@ export type IntelligenceReason = {
   evidence: string;
 };
 
+export const CAPACITY_FORECAST_MODEL_VERSION = "capacity_forecast_v3.0.0";
+
 export type CapacityForecastGroup = {
   id: string;
   name: string;
@@ -35,6 +37,11 @@ export type CapacityForecastGroup = {
   instructorAvailable: boolean;
   resourceAvailable: boolean;
   isTest: boolean;
+  knownOpeningDates?: string[];
+  readinessReviewDates?: string[];
+  activeSoftReservations?: number;
+  historySampleSize?: number;
+  dataQualityIssueCount?: number;
 };
 
 export type CapacityForecast = {
@@ -48,6 +55,7 @@ export type CapacityForecast = {
   resource_id: string | null;
   current_capacity: number;
   current_occupied: number;
+  active_soft_reservations: number;
   expected_openings: number;
   expected_bottlenecks: number;
   waitlist_demand: number;
@@ -56,15 +64,37 @@ export type CapacityForecast = {
   reasons: IntelligenceReason[];
   recommended_actions: Array<{ label: string; href: string }>;
   is_test: boolean;
+  model_version: typeof CAPACITY_FORECAST_MODEL_VERSION;
+  horizon_weeks: 4 | 8 | 12;
+  confidence_score: number;
+  availability_range: {
+    earliest: string | null;
+    likely: string | null;
+    latest: string | null;
+  };
+  opening_scenarios: {
+    conservative: number;
+    likely: number;
+    optimistic: number;
+  };
+  data_quality: {
+    historicalExitSampleSize: number;
+    issueCount: number;
+    hasHistory: boolean;
+  };
 };
 
 export function computeCapacityForecast(input: {
   groups: CapacityForecastGroup[];
   horizonWeeks: 4 | 8 | 12;
+  asOfDate?: string;
 }): CapacityForecast[] {
+  const asOfDate = input.asOfDate ?? new Date().toISOString().slice(0, 10);
   return input.groups
     .map((group) => {
-      const currentOpen = Math.max(0, group.fixedCapacity - group.occupiedCapacity);
+      const activeSoftReservations = Math.max(0, group.activeSoftReservations ?? 0);
+      const effectiveOccupied = group.occupiedCapacity + activeSoftReservations;
+      const currentOpen = Math.max(0, group.fixedCapacity - effectiveOccupied);
       const historicalOpenings = Math.min(
         group.occupiedCapacity,
         group.historicalExitsPerWeek * input.horizonWeeks * 0.5
@@ -80,7 +110,7 @@ export function computeCapacityForecast(input: {
       const operatingBlockers = Number(!group.hasInstructor || !group.instructorAvailable) +
         Number(!group.resourceAvailable);
       const pressure = group.fixedCapacity > 0
-        ? (group.occupiedCapacity + demand - expectedOpenings) / group.fixedCapacity
+        ? (effectiveOccupied + demand - expectedOpenings) / group.fixedCapacity
         : 2;
       const riskLevel = capacityRisk({
         expectedBottlenecks,
@@ -88,19 +118,49 @@ export function computeCapacityForecast(input: {
         pressure,
         waitlistDemand: group.waitlistDemand
       });
+      const historicalExitSampleSize = Math.max(0, group.historySampleSize ?? 0);
+      const dataQualityIssueCount = Math.max(0, group.dataQualityIssueCount ?? 0);
       const sampleSignals = [
         group.fixedCapacity > 0,
         group.occupiedCapacity >= 0,
-        group.historicalExitsPerWeek > 0,
+        historicalExitSampleSize >= 5,
         group.waitlistDemand > 0 || group.expectedTransfersIn > 0,
         group.hasInstructor,
         group.resourceAvailable
       ].filter(Boolean).length;
-      const confidence: IntelligenceConfidence = sampleSignals >= 5
+      const rawConfidenceScore = Math.max(
+        0.1,
+        Math.min(0.95, roundTwo(0.2 + sampleSignals * 0.13 - dataQualityIssueCount * 0.08))
+      );
+      const confidenceScore = historicalExitSampleSize === 0
+        ? Math.min(rawConfidenceScore, 0.45)
+        : rawConfidenceScore;
+      const confidence: IntelligenceConfidence = confidenceScore >= 0.75
         ? "hoog"
-        : sampleSignals >= 3
+        : confidenceScore >= 0.5
           ? "middel"
           : "laag";
+      const availabilityRange = deriveAvailabilityRange({
+        asOfDate,
+        currentOpen,
+        historicalExitsPerWeek: group.historicalExitsPerWeek,
+        horizonWeeks: input.horizonWeeks,
+        knownOpeningDates: group.knownOpeningDates ?? [],
+        readinessReviewDates: group.readinessReviewDates ?? []
+      });
+      const openingScenarios = {
+        conservative: roundOne(Math.min(
+          group.occupiedCapacity,
+          group.datedOpenings + historicalOpenings * 0.5
+        )),
+        likely: expectedOpenings,
+        optimistic: roundOne(Math.min(
+          group.occupiedCapacity,
+          group.datedOpenings +
+          group.graduationOpenings * 0.85 +
+          Math.min(group.occupiedCapacity, group.historicalExitsPerWeek * input.horizonWeeks * 0.75)
+        ))
+      };
       const reasons: IntelligenceReason[] = [
         reason(
           "occupancy",
@@ -119,6 +179,14 @@ export function computeCapacityForecast(input: {
           "Voorzichtige uitstroom",
           "Geplande einddata, beoordeelde afzwemgereedheid en historische uitstroom tellen gewogen mee. No-shows tellen nooit als vrijgekomen plek.",
           `${expectedOpenings} verwachte opening(en) in ${input.horizonWeeks} weken`
+        ),
+        reason(
+          "range",
+          "Bandbreedte",
+          "De vroegste, waarschijnlijke en uiterste datum zijn deterministisch afgeleid uit vrije capaciteit, vastgelegde einddata en uitsluitend geaggregeerde historie. De band verplaatst niemand.",
+          availabilityRange.likely
+            ? `${availabilityRange.earliest ?? "—"} · ${availabilityRange.likely} · ${availabilityRange.latest ?? "—"}`
+            : "Onvoldoende betrouwbare historie voor een datumvenster"
         )
       ];
 
@@ -138,6 +206,22 @@ export function computeCapacityForecast(input: {
           "Resource vraagt planningscontrole"
         ));
       }
+      if (activeSoftReservations > 0) {
+        reasons.push(reason(
+          "soft_reservations",
+          "Goedgekeurde zachte reserveringen",
+          "Een zachte reservering verlaagt tijdelijk de planbare ruimte, verloopt automatisch en plaatst geen leerling.",
+          `${roundOne(activeSoftReservations)} capaciteitsplaats(en) tijdelijk gereserveerd`
+        ));
+      }
+      if (dataQualityIssueCount > 0) {
+        reasons.push(reason(
+          "data_quality",
+          "Datakwaliteit",
+          "Ontbrekende of tegenstrijdige bronvelden verlagen de zekerheid; de prognose blijft adviserend.",
+          `${dataQualityIssueCount} kwaliteitsissue(s) in de gebruikte groepsbron`
+        ));
+      }
 
       return {
         group_id: group.id,
@@ -150,6 +234,7 @@ export function computeCapacityForecast(input: {
         resource_id: group.resourceId,
         current_capacity: group.fixedCapacity,
         current_occupied: roundOne(group.occupiedCapacity),
+        active_soft_reservations: roundOne(activeSoftReservations),
         expected_openings: expectedOpenings,
         expected_bottlenecks: expectedBottlenecks,
         waitlist_demand: group.waitlistDemand,
@@ -157,7 +242,17 @@ export function computeCapacityForecast(input: {
         confidence,
         reasons,
         recommended_actions: capacityActions(riskLevel, group.id),
-        is_test: group.isTest
+        is_test: group.isTest,
+        model_version: CAPACITY_FORECAST_MODEL_VERSION as typeof CAPACITY_FORECAST_MODEL_VERSION,
+        horizon_weeks: input.horizonWeeks,
+        confidence_score: confidenceScore,
+        availability_range: availabilityRange,
+        opening_scenarios: openingScenarios,
+        data_quality: {
+          historicalExitSampleSize,
+          issueCount: dataQualityIssueCount,
+          hasHistory: historicalExitSampleSize > 0
+        }
       };
     })
     .sort((left, right) =>
@@ -755,6 +850,50 @@ function capacityRisk(input: {
   return "healthy";
 }
 
+function deriveAvailabilityRange(input: {
+  asOfDate: string;
+  currentOpen: number;
+  historicalExitsPerWeek: number;
+  horizonWeeks: 4 | 8 | 12;
+  knownOpeningDates: string[];
+  readinessReviewDates: string[];
+}) {
+  if (input.currentOpen > 0) {
+    return {
+      earliest: input.asOfDate,
+      likely: input.asOfDate,
+      latest: input.asOfDate
+    };
+  }
+  const horizonEnd = addIsoDays(input.asOfDate, input.horizonWeeks * 7);
+  const known = input.knownOpeningDates
+    .filter((date) => isIsoDate(date) && date >= input.asOfDate && date <= horizonEnd)
+    .sort();
+  if (known[0]) {
+    return { earliest: known[0], likely: known[0], latest: known[0] };
+  }
+  const readiness = input.readinessReviewDates
+    .filter((date) => isIsoDate(date) && date >= input.asOfDate && date <= horizonEnd)
+    .sort();
+  if (readiness[0]) {
+    const earliest = readiness[0];
+    return {
+      earliest,
+      likely: clampIsoDate(addIsoDays(earliest, 14), horizonEnd),
+      latest: clampIsoDate(addIsoDays(earliest, 28), horizonEnd)
+    };
+  }
+  if (input.historicalExitsPerWeek <= 0) {
+    return { earliest: null, likely: null, latest: null };
+  }
+  const intervalDays = Math.max(1, Math.ceil(7 / input.historicalExitsPerWeek));
+  return {
+    earliest: clampIsoDate(addIsoDays(input.asOfDate, Math.max(1, Math.ceil(intervalDays * 0.5))), horizonEnd),
+    likely: clampIsoDate(addIsoDays(input.asOfDate, intervalDays), horizonEnd),
+    latest: clampIsoDate(addIsoDays(input.asOfDate, intervalDays * 2), horizonEnd)
+  };
+}
+
 function capacityActions(
   riskLevel: CapacityRiskLevel,
   groupId: string
@@ -901,6 +1040,21 @@ function daysBetween(older: string, newer: string) {
     0,
     Math.floor((new Date(newer).getTime() - new Date(older).getTime()) / 86_400_000)
   );
+}
+
+function addIsoDays(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function clampIsoDate(value: string, maximum: string) {
+  return value > maximum ? maximum : value;
+}
+
+function isIsoDate(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    !Number.isNaN(Date.parse(`${value}T00:00:00.000Z`));
 }
 
 function capacityRiskRank(value: CapacityRiskLevel) {

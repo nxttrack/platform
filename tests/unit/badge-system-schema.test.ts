@@ -10,6 +10,10 @@ const imageAssetMigration = readFileSync(
   new URL("../../supabase/migrations/20260728100000_badge_studio_image_assets.sql", import.meta.url),
   "utf8"
 );
+const completionMigration = readFileSync(
+  new URL("../../supabase/migrations/20260731100000_badge_studio_completion.sql", import.meta.url),
+  "utf8"
+);
 const badgeActions = readFileSync(
   new URL("../../apps/web/lib/domain/badge-system-actions.ts", import.meta.url),
   "utf8"
@@ -17,6 +21,14 @@ const badgeActions = readFileSync(
 const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
 const badgeAssetRoute = readFileSync(
   new URL("../../apps/web/app/api/files/badge-studio-asset/[id]/route.ts", import.meta.url),
+  "utf8"
+);
+const badgeRenderer = readFileSync(
+  new URL("../../apps/web/lib/domain/badge-share-renderer.ts", import.meta.url),
+  "utf8"
+);
+const badgeEditor = readFileSync(
+  new URL("../../apps/web/components/badges/badge-template-editor.tsx", import.meta.url),
   "utf8"
 );
 
@@ -132,4 +144,31 @@ test("studio-afbeeldingen zijn privé, gescand, begrensd en RLS-beveiligd", () =
 test("studio-afbeeldingen vallen onder de objectbackup en herstelrehearsal", () => {
   assert.match(backupScript, /tenant-documents,diploma-vault,participant-media,badge-studio-assets/);
   assert.match(backupScript, /badge-studio-assets/);
+});
+
+test("badge-artwork heeft een volledige snapshot- en renderketen", () => {
+  assert.match(completionMigration, /purpose in \('badge_artwork', 'template_image'\)/);
+  assert.match(completionMigration, /badge_catalog_definitions[\s\S]+artwork_asset_id/);
+  assert.match(completionMigration, /tenant_custom_badges[\s\S]+artwork_asset_id/);
+  assert.match(completionMigration, /participant_badge_awards[\s\S]+resolved_artwork_asset_id/);
+  assert.match(completionMigration, /template_version integer/);
+  assert.match(completionMigration, /rendered_at timestamptz/);
+  assert.match(completionMigration, /enforce_badge_artwork_scope/);
+  assert.match(completionMigration, /asset_purpose <> 'badge_artwork'/);
+  assert.match(badgeActions, /renderBadgeSharePngDataUrl/);
+  assert.match(badgeActions, /template_version: template\.version/);
+  assert.match(badgeActions, /resolved_artwork_asset_id/);
+  assert.doesNotMatch(badgeActions, /buildSafeSharePreview/);
+  assert.match(badgeRenderer, /input\.layers[\s\S]+renderLayer/);
+  assert.match(badgeRenderer, /sharp\(Buffer\.from\(svg\)/);
+});
+
+test("template-editor ondersteunt echte laagbewerking en conflictveilig opslaan", () => {
+  assert.match(badgeEditor, /reorderBadgeLayers/);
+  assert.match(badgeEditor, /Undo2/);
+  assert.match(badgeEditor, /startResize/);
+  assert.match(badgeEditor, /startRotate/);
+  assert.match(badgeEditor, /beforeunload/);
+  assert.match(badgeActions, /\.eq\("version", submittedVersion\)/);
+  assert.match(badgeActions, /templateResult\.data\.version !== submittedVersion/);
 });

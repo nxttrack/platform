@@ -61,7 +61,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     parent_phone: string | null;
     participant_name: string;
     participant_birth_date: string | null;
-    participant_gender: "boy" | "girl" | "unknown";
+    participant_gender: "boy" | "girl" | "unknown_legacy";
     preferred_days: string[];
     preferred_dayparts: unknown;
     preferred_notes: string | null;
@@ -713,7 +713,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       guardian_user_id: guardianUserId,
       display_name: entry.participant_name,
       birth_date: entry.participant_birth_date,
-      gender: entry.participant_gender ?? "unknown",
+      gender: entry.participant_gender ?? "unknown_legacy",
       status: "active",
       source: entry.is_test ? "journey_simulation_bot" : "intake",
       is_test: entry.is_test,

@@ -39,13 +39,14 @@ test.describe("Sprint 4 instructor mutations", () => {
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
     let assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
     await expect(assessment).toHaveCount(1);
-    await assessment.getByLabel("Score").selectOption("5");
+    await expect(assessment.getByRole("radio")).toHaveCount(5);
+    await chooseAssessmentRating(assessment, 5);
     await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
     await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
+    await submitAssessment(page, assessment, `${marker}: gecontroleerde correctie naar 5.`);
+    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment.getByText("Ik kan het zelfstandig", { exact: true })).toBeVisible();
+    await expect(assessment.getByText("Superster", { exact: true })).toBeVisible();
 
     await page.getByRole("tab", { name: "Notities" }).click();
     await page.getByLabel("Notitie", { exact: true }).fill(`${marker}: interne lesnotitie.`);
@@ -66,12 +67,13 @@ test.describe("Sprint 4 instructor mutations", () => {
     // must never inherit a private assessment from a partially completed run.
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
     assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await assessment.getByLabel("Score").selectOption("4");
+    await expect(assessment.getByRole("radio")).toHaveCount(5);
+    await chooseAssessmentRating(assessment, 4);
     await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
     await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
-    await expect(assessment.getByText("Ik kan het bijna zelf", { exact: true })).toBeVisible();
+    await submitAssessment(page, assessment, `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
+    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
+    await expect(assessment.getByText("Heel knap", { exact: true })).toBeVisible();
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
@@ -94,6 +96,25 @@ async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string)
   const confirmedRedirect = page.waitForURL((url) => url.searchParams.get("saved") === saved, { timeout: 15_000 });
   await submit.click();
   await confirmedRedirect;
+}
+
+async function submitAssessment(page: Page, assessment: Locator, correctionReason: string) {
+  const reason = assessment.getByLabel("Reden voor wijziging");
+  if (await reason.count()) {
+    await reason.fill(correctionReason);
+  }
+
+  await submitAndWaitForSaved(
+    page,
+    assessment.getByRole("button", { name: /Beoordeling vastleggen|Correctie vastleggen/ }),
+    "progress"
+  );
+}
+
+async function chooseAssessmentRating(assessment: Locator, value: 1 | 2 | 3 | 4 | 5) {
+  const radio = assessment.getByRole("radio", { name: new RegExp(`${value} van 5`) });
+  await radio.locator("..").click();
+  await expect(radio).toBeChecked();
 }
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {

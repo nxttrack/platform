@@ -3,7 +3,10 @@ import "server-only";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
-import { getTrustedAuthContext } from "./server-context";
+import {
+  getTrustedAuthContext,
+  getTrustedAuthContextForAccessToken
+} from "./server-context";
 import { evaluatePrivateShellAccessForContext, type AuthenticatedTrustedAuthContext } from "./trusted-context";
 import { buildLoginRedirect, getDefaultRedirectForRoles, sanitizeRelativePath } from "./redirects";
 
@@ -35,8 +38,13 @@ export async function requireAuthenticatedContext(nextPath: `/${string}`): Promi
   return context;
 }
 
-export async function requireApiAuthenticatedContext() {
-  const context = await getTrustedAuthContextForRequest();
+export async function requireApiAuthenticatedContext(request?: Request) {
+  const bearerToken = request ? readBearerToken(request) : null;
+  const context = bearerToken
+    ? await getTrustedAuthContextForAccessToken(bearerToken, {
+        activeTenantId: request?.headers.get("x-nxttrack-tenant-id")
+      })
+    : await getTrustedAuthContextForRequest();
 
   if (context.status === "anonymous") {
     return {
@@ -59,6 +67,13 @@ export async function requireApiAuthenticatedContext() {
   }
 
   return { context, ok: true } as const;
+}
+
+function readBearerToken(request: Request) {
+  const authorization = request.headers.get("authorization");
+  if (!authorization?.startsWith("Bearer ")) return null;
+  const token = authorization.slice(7).trim();
+  return token.length > 0 ? token : null;
 }
 
 export async function requirePrivateShellContext(pathname: `/${string}`): Promise<AuthenticatedTrustedAuthContext> {

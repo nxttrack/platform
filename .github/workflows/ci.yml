@@ -55,6 +55,9 @@ jobs:
       - name: Test premium badge contracts
         run: pnpm run test:badges
 
+      - name: Test swim-school canon and native API contracts
+        run: pnpm run test:swim-canon
+
       - name: Audit Journey Bot foundation
         run: pnpm run release:audit-journey-bot
 

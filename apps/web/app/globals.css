@@ -1,11 +1,15 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/nunito-sans";
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource-variable/manrope";
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans Variable", "Inter Variable", system-ui, sans-serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -56,6 +60,1864 @@
   --shadow-soft: 0 1px 2px rgb(11 47 107 / 4%), 0 8px 24px -8px rgb(11 47 107 / 8%);
   --shadow-card: 0 1px 3px rgb(11 47 107 / 5%), 0 12px 32px -12px rgb(11 47 107 / 12%);
   --shadow-glow: 0 8px 32px -8px rgb(0 119 217 / 35%);
+}
+
+@layer components {
+  .portal-badge-card[data-badge-family="nxttrack-default-medallions"] .portal-badge-medallion,
+  .portal-badge-card[data-badge-family="ocean-quest-medallions"] .portal-badge-medallion,
+  .portal-badge-card[data-badge-family="dolphin-bay-medallions"] .portal-badge-medallion {
+    border-radius: 9999px;
+  }
+
+  .portal-badge-card[data-badge-family="nxttrack-default-medallions"] .portal-badge-medallion {
+    border: 2px solid color-mix(in srgb, var(--portal-primary) 38%, white);
+    background: linear-gradient(145deg, #f8fbff, #a8bed2);
+  }
+
+  .portal-badge-card[data-badge-family="ocean-quest-medallions"] .portal-badge-medallion {
+    border: 2px solid #f5cf70;
+    background: radial-gradient(circle, #fff7c7 0 22%, #e8a72f 70%, #9f6214);
+  }
+
+  .portal-badge-card[data-badge-family="dolphin-bay-medallions"] .portal-badge-medallion {
+    border: 3px solid #ffcc68;
+    background: radial-gradient(circle at 40% 35%, #65e8f0, #0873b4 68%, #07578d);
+  }
+
+  .portal-badge-card[data-badge-family="turtle-trails-scutes"] .portal-badge-medallion {
+    border: 3px solid #8fc488;
+    border-radius: 32% 68% 42% 58% / 48% 38% 62% 52%;
+    background: repeating-radial-gradient(circle, #78b47d 0 9px, #087f75 10px 18px);
+  }
+
+  .portal-badge-card[data-badge-family="aqua-academy-crests"] .portal-badge-medallion {
+    border-radius: 0;
+    background: linear-gradient(145deg, #11b9c6, #0869d7 58%, #06284c);
+    clip-path: polygon(50% 0, 92% 18%, 84% 72%, 50% 100%, 16% 72%, 8% 18%);
+  }
+}
+
+/* Legacy v2.1 badge-family renderers remain read-only for historical awards. */
+.portal-theme-root {
+  min-height: 100vh;
+  color: var(--portal-text);
+  background: var(--portal-canvas);
+  font-family: var(--portal-body-font);
+}
+
+.portal-theme-root .parent-portal-shell {
+  --background: var(--portal-canvas);
+  --foreground: var(--portal-text);
+  --card: var(--portal-surface);
+  --card-foreground: var(--portal-text);
+  --popover: var(--portal-surface);
+  --popover-foreground: var(--portal-text);
+  --primary: var(--portal-primary-strong);
+  --secondary: var(--portal-secondary);
+  --muted-foreground: var(--portal-text-muted);
+  --sidebar: var(--portal-rail);
+  background:
+    radial-gradient(circle at 86% 4%, color-mix(in srgb, var(--portal-secondary) 18%, transparent), transparent 28rem),
+    var(--portal-canvas);
+}
+
+.portal-theme-root .parent-portal-shell h1,
+.portal-theme-root .parent-portal-shell h2,
+.portal-theme-root .parent-portal-shell h3 {
+  font-family: var(--portal-display-font);
+}
+
+.portal-theme-root .parent-portal-shell main > div {
+  position: relative;
+  isolation: isolate;
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.portal-mobile-brand {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: .65rem;
+}
+
+.portal-mobile-brand__mark {
+  position: relative;
+  display: grid;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, white 82%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--portal-secondary), var(--portal-primary-strong));
+  color: white;
+  font-size: .7rem;
+  font-weight: 900;
+  letter-spacing: -.02em;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--portal-primary) 22%, transparent);
+  overflow: hidden;
+}
+
+.portal-mobile-brand__logo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  object-fit: contain;
+  padding: .2rem;
+}
+
+.portal-mobile-brand__title,
+.portal-mobile-brand__subtitle {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-mobile-brand__title {
+  color: var(--portal-text);
+  font-size: .77rem;
+  line-height: 1.15;
+}
+
+.portal-mobile-brand__subtitle {
+  margin-top: .12rem;
+  color: var(--portal-text-muted);
+  font-size: .62rem;
+  line-height: 1.1;
+}
+
+.portal-route-frame {
+  position: relative;
+  isolation: isolate;
+}
+
+.portal-route-frame__content {
+  position: relative;
+  z-index: 1;
+}
+
+.portal-route-atmosphere {
+  position: relative;
+  min-height: 5rem;
+  margin-bottom: 1rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 16%, var(--border));
+  border-radius: var(--portal-hero-radius);
+  background:
+    linear-gradient(110deg, color-mix(in srgb, var(--portal-surface) 98%, transparent), color-mix(in srgb, var(--portal-surface) 74%, transparent)),
+    var(--portal-canvas);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--portal-rail) 10%, transparent);
+}
+
+.portal-route-atmosphere__art {
+  position: absolute;
+  inset: 0;
+  background-image: var(--portal-hero-desktop);
+  background-position: center 46%;
+  background-size: cover;
+  opacity: .2;
+}
+
+.portal-route-atmosphere__cue {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 5rem;
+  align-items: center;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  color: var(--portal-text);
+  font-family: var(--portal-display-font);
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 900;
+}
+
+.portal-route-atmosphere__trail {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  right: 1rem;
+  display: flex;
+  width: min(48%, 34rem);
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+  transform: translateY(-50%);
+}
+
+.portal-route-atmosphere__trail::before {
+  position: absolute;
+  z-index: -1;
+  right: 1.5rem;
+  left: 1.5rem;
+  height: 3px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-primary) 38%, white);
+  content: "";
+}
+
+.portal-route-atmosphere__waypoint {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .4rem;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 25%, white);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-surface) 96%, white);
+  padding: .55rem .75rem;
+  color: var(--portal-primary-strong);
+  font-size: .7rem;
+  font-weight: 850;
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--portal-rail) 12%, transparent);
+}
+
+.portal-route-atmosphere__waypoint svg {
+  width: 1rem;
+  height: 1rem;
+  color: var(--portal-reward);
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere {
+  min-height: 3.5rem;
+  border-radius: var(--portal-card-radius);
+  box-shadow: none;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__art {
+  background-image: none;
+  opacity: 1;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__art::before {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 9rem;
+  height: 100%;
+  background:
+    radial-gradient(circle at 72% 46%, var(--portal-secondary) 0 .35rem, transparent .4rem),
+    radial-gradient(circle at 45% 76%, color-mix(in srgb, var(--portal-primary) 38%, transparent) 0 .25rem, transparent .3rem),
+    linear-gradient(135deg, transparent 35%, color-mix(in srgb, var(--portal-secondary) 18%, transparent));
+  content: "";
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__cue {
+  min-height: 3.5rem;
+  font-size: .9rem;
+}
+
+.portal-route-frame--quiet .portal-route-atmosphere__trail {
+  display: none;
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere,
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere,
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere {
+  min-height: 15rem;
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere__art {
+  opacity: .58;
+}
+
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__art {
+  background-image: var(--portal-progress-desktop);
+  opacity: .72;
+}
+
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere__art {
+  opacity: .48;
+  filter: saturate(.92);
+}
+
+.portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere__cue,
+.portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__cue,
+.portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere__cue {
+  align-items: flex-start;
+  padding-top: 1.25rem;
+  text-shadow: 0 1px 18px white;
+}
+
+.portal-route-frame[data-portal-motif="pearl"] .portal-route-atmosphere__waypoint {
+  border-color: color-mix(in srgb, var(--portal-reward) 58%, white);
+  background: linear-gradient(145deg, white, color-mix(in srgb, var(--portal-secondary) 16%, white));
+}
+
+.portal-route-frame[data-portal-motif="buoy"] .portal-route-atmosphere__trail::before {
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--portal-primary), var(--portal-primary) 1.2rem, white 1.2rem, white 2rem);
+}
+
+.portal-route-frame[data-portal-motif="shell"] .portal-route-atmosphere__waypoint {
+  border-radius: 55% 55% 48% 48% / 65% 65% 40% 40%;
+  background: color-mix(in srgb, var(--portal-surface) 94%, #f5dfad);
+}
+
+.portal-route-frame[data-portal-motif="lane"] .portal-route-atmosphere__trail::before {
+  height: 6px;
+  border-block: 1px solid color-mix(in srgb, var(--portal-primary) 60%, white);
+  border-radius: 0;
+  background: repeating-linear-gradient(90deg, var(--portal-primary) 0 .9rem, transparent .9rem 1.5rem);
+}
+
+.portal-theme-root .parent-portal-shell :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: var(--portal-card-radius);
+}
+
+.portal-overview-journey {
+  position: relative;
+  min-height: 34rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--portal-surface) 78%, white);
+  border-radius: var(--portal-hero-radius);
+  background-color: var(--portal-canvas);
+  background-image: var(--portal-hero-desktop);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--portal-rail) 18%, transparent);
+  isolation: isolate;
+}
+
+.portal-overview-journey__wash {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--portal-canvas) 36%, transparent), transparent 68%),
+    linear-gradient(180deg, color-mix(in srgb, white 12%, transparent), transparent 48%, color-mix(in srgb, var(--portal-canvas) 32%, transparent));
+  pointer-events: none;
+}
+
+.portal-overview-journey__content {
+  display: flex;
+  min-height: inherit;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.portal-overview-journey__card {
+  width: min(100%, 42rem);
+  border: 1px solid color-mix(in srgb, white 82%, var(--portal-primary));
+  border-radius: var(--portal-card-radius);
+  background: color-mix(in srgb, var(--portal-surface) 92%, white);
+  padding: clamp(1rem, 3vw, 1.75rem);
+  box-shadow: 0 20px 48px color-mix(in srgb, var(--portal-rail) 18%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.portal-overview-journey__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  color: var(--portal-primary-strong);
+  font-size: .75rem;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.portal-overview-journey__avatar {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 3px solid color-mix(in srgb, white 88%, transparent);
+  border-radius: 999px;
+  background: linear-gradient(145deg, var(--portal-secondary), var(--portal-primary-strong));
+  color: white;
+  font-weight: 900;
+  box-shadow: 0 10px 24px color-mix(in srgb, var(--portal-primary) 24%, transparent);
+}
+
+.portal-overview-journey__summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.portal-overview-journey__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .75rem;
+}
+
+.portal-overview-journey__label {
+  color: var(--portal-text-muted);
+  font-size: .875rem;
+  font-weight: 700;
+}
+
+.portal-overview-journey__name {
+  overflow: hidden;
+  color: var(--portal-text);
+  font-size: 1.25rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview-journey__title {
+  max-width: 36rem;
+  margin-top: 1.25rem;
+  color: var(--portal-text);
+  font-size: clamp(1.5rem, 3vw, 1.875rem);
+  font-weight: 900;
+  line-height: 1.12;
+}
+
+.portal-overview-journey__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .5rem;
+  margin-top: 1.25rem;
+  font-size: .875rem;
+}
+
+.portal-overview-journey__fact {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .65rem;
+  border-radius: calc(var(--portal-card-radius) * .62);
+  background: color-mix(in srgb, var(--portal-surface-alt) 90%, white);
+  padding: .7rem .8rem;
+}
+
+.portal-overview-journey__fact strong {
+  display: block;
+  overflow: hidden;
+  color: var(--portal-text);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-overview-journey__cta {
+  display: inline-flex;
+  min-height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  border-radius: calc(var(--portal-card-radius) * .58);
+  background: var(--portal-primary-strong);
+  padding: .7rem 1rem;
+  color: white;
+  font-size: .875rem;
+  font-weight: 800;
+  box-shadow: 0 10px 28px color-mix(in srgb, var(--portal-primary) 28%, transparent);
+}
+
+.portal-overview-journey__milestones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: .75rem;
+}
+
+.portal-overview-journey__milestone {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: .5rem;
+  border: 1px solid color-mix(in srgb, white 82%, var(--portal-primary));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-surface) 92%, white);
+  padding: .65rem 1rem;
+  color: var(--portal-text);
+  font-size: .8rem;
+  font-weight: 800;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--portal-rail) 14%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.portal-overview-journey__image-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.five-point-assessment {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: .35rem;
+}
+
+.five-point-assessment__option {
+  cursor: pointer;
+}
+
+.five-point-assessment__button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--portal-primary, var(--primary)) 22%, var(--border));
+  border-radius: 999px;
+  color: var(--portal-primary, var(--primary));
+  background: var(--portal-surface, var(--background));
+  transition: transform var(--portal-motion-micro, 140ms), border-color var(--portal-motion-micro, 140ms), background var(--portal-motion-micro, 140ms);
+}
+
+.five-point-assessment__option:hover .five-point-assessment__button,
+.five-point-assessment__option .peer:checked + .five-point-assessment__button {
+  border-color: var(--portal-primary, var(--primary));
+  background: color-mix(in srgb, var(--portal-primary, var(--primary)) 10%, var(--portal-surface, white));
+}
+
+.five-point-assessment__option .peer:focus-visible + .five-point-assessment__button {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.five-point-assessment__star,
+.five-point-assessment__smiley {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--portal-primary, var(--primary)) 35%, var(--portal-text-muted, currentColor));
+}
+
+.five-point-assessment__star.is-active,
+.five-point-assessment__smiley.is-active {
+  color: var(--portal-reward, #f6b744);
+}
+
+.five-point-assessment__copy {
+  margin-left: .35rem;
+  color: var(--portal-text-muted, var(--muted-foreground));
+  font-size: .75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 639px) {
+  .portal-parent-header {
+    top: max(.5rem, env(safe-area-inset-top));
+    min-height: 3.5rem;
+    margin: .5rem .75rem 0;
+    border: 1px solid color-mix(in srgb, var(--portal-primary) 13%, var(--border));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--portal-surface) 95%, white);
+    padding: .35rem .45rem .35rem .4rem;
+    box-shadow: 0 12px 34px color-mix(in srgb, var(--portal-rail) 13%, transparent);
+  }
+
+  .portal-parent-header > .ml-auto {
+    gap: .35rem;
+    margin-left: 0;
+  }
+
+  .portal-parent-header button {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .portal-parent-header > .ml-auto button {
+    border-radius: 999px;
+  }
+
+  .portal-route-atmosphere {
+    margin-inline: -.25rem;
+  }
+
+  .portal-route-frame[data-portal-route-id="planning"] .portal-route-atmosphere,
+  .portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere,
+  .portal-route-frame[data-portal-route-id="badges"] .portal-route-atmosphere {
+    min-height: 26rem;
+  }
+
+  .portal-route-frame[data-portal-route-id="progress"] .portal-route-atmosphere__art {
+    background-image: var(--portal-progress-mobile);
+    background-position: center top;
+  }
+
+  .portal-route-atmosphere__trail {
+    right: .75rem;
+    bottom: .75rem;
+    top: auto;
+    width: calc(100% - 1.5rem);
+    transform: none;
+  }
+
+  .portal-route-atmosphere__waypoint {
+    max-width: 32%;
+    flex-direction: column;
+    justify-content: center;
+    padding: .5rem;
+    text-align: center;
+  }
+
+  .portal-route-frame--quiet .portal-route-atmosphere {
+    min-height: 3.5rem;
+  }
+
+  .portal-overview-journey {
+    min-height: 36rem;
+    background-image: var(--portal-hero-mobile);
+    background-position: center top;
+  }
+
+  .portal-overview-journey__wash {
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--portal-canvas) 18%, transparent), transparent 50%, color-mix(in srgb, var(--portal-rail) 12%, transparent));
+  }
+
+  .portal-overview-journey__content {
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .85rem;
+  }
+
+  .portal-overview-journey__card {
+    width: 100%;
+    padding: .85rem;
+    box-shadow: 0 16px 38px color-mix(in srgb, var(--portal-rail) 16%, transparent);
+  }
+
+  .portal-overview-journey[data-overview-recipe="overview/pearl-route-v2"] .portal-overview-journey__card {
+    border-color: color-mix(in srgb, white 68%, var(--portal-primary));
+    background: color-mix(in srgb, var(--portal-surface) 40%, transparent);
+    backdrop-filter: blur(8px) saturate(1.08);
+  }
+
+  .portal-overview-journey__eyebrow {
+    font-size: .68rem;
+  }
+
+  .portal-overview-journey__summary {
+    gap: .65rem;
+    margin-top: .65rem;
+  }
+
+  .portal-overview-journey__identity {
+    gap: .55rem;
+  }
+
+  .portal-overview-journey__avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-width: 2px;
+    font-size: .8rem;
+  }
+
+  .portal-overview-journey__label {
+    font-size: .7rem;
+  }
+
+  .portal-overview-journey__name {
+    font-size: .95rem;
+  }
+
+  .portal-overview-journey__title {
+    margin-top: .65rem;
+    font-size: 1.18rem;
+    line-height: 1.1;
+  }
+
+  .portal-overview-journey[data-overview-recipe="overview/pearl-route-v2"] .portal-overview-journey__title {
+    max-width: 13rem;
+    font-size: 1.02rem;
+    line-height: 1.08;
+  }
+
+  .portal-overview-journey__progress {
+    width: 4.5rem !important;
+    height: 4.5rem !important;
+  }
+
+  .portal-overview-journey__progress svg {
+    width: 4.5rem;
+    height: 4.5rem;
+  }
+
+  .portal-overview-journey__progress .font-display {
+    font-size: 1rem;
+  }
+
+  .portal-overview-journey[data-overview-recipe="overview/pearl-route-v2"] .portal-overview-journey__progress .text-\[10px\] {
+    display: none;
+  }
+
+  .portal-overview-journey__facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .4rem;
+    margin-top: .65rem;
+    font-size: .72rem;
+  }
+
+  .portal-overview-journey__fact {
+    gap: .4rem;
+    padding: .5rem .55rem;
+  }
+
+  .portal-overview-journey__fact .text-xs {
+    font-size: .6rem;
+    line-height: .8rem;
+  }
+
+  .portal-overview-journey__cta {
+    min-height: 2.35rem;
+    padding: .5rem .8rem;
+    font-size: .75rem;
+  }
+
+  .portal-overview-journey__image-footer {
+    width: 100%;
+    gap: .5rem;
+  }
+
+  .portal-overview-journey__milestones {
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: flex-end;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: .45rem;
+  }
+
+  .portal-overview-journey__milestone {
+    min-height: 2.15rem;
+    max-width: 100%;
+    padding: .45rem .65rem;
+    font-size: .66rem;
+  }
+
+  .portal-overview-journey[data-overview-recipe="overview/pearl-route-v2"] .portal-overview-journey__cta {
+    align-self: flex-end;
+    margin-left: auto;
+    box-shadow: 0 14px 34px color-mix(in srgb, var(--portal-primary) 38%, transparent);
+  }
+
+  .five-point-assessment {
+    gap: .2rem;
+  }
+
+  .five-point-assessment__copy {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .five-point-assessment__button {
+    transition: none;
+  }
+}
+
+/* Parent Portal Theme Pack v3 · one shell and one data-driven Journey Engine. */
+.portal-theme-root {
+  min-height: 100dvh;
+  color: var(--portal-text);
+  background: var(--portal-page-gradient);
+  font-family: var(--portal-body-font);
+}
+
+.portal-theme-root .parent-portal-shell {
+  --background: var(--portal-canvas);
+  --foreground: var(--portal-text);
+  --card: var(--portal-surface);
+  --card-foreground: var(--portal-text);
+  --popover: white;
+  --popover-foreground: var(--portal-text);
+  --primary: var(--portal-primary-strong);
+  --primary-foreground: white;
+  --secondary: var(--portal-secondary);
+  --muted-foreground: var(--portal-text-muted);
+  --success: var(--portal-success);
+  --danger: var(--portal-attention);
+  background: var(--portal-page-gradient);
+}
+
+.portal-theme-root .parent-portal-shell :is(.rounded-xl, .rounded-2xl, .rounded-3xl) {
+  border-radius: var(--portal-card-radius);
+}
+
+.portal-theme-root .parent-portal-shell h1,
+.portal-theme-root .parent-portal-shell h2,
+.portal-theme-root .parent-portal-shell h3 {
+  font-family: var(--portal-display-font);
+}
+
+.portal-parent-sidebar {
+  --foreground: white;
+  --muted-foreground: rgb(255 255 255 / 72%);
+  --border: rgb(255 255 255 / 14%);
+  --sidebar-border: rgb(255 255 255 / 14%);
+  --primary: var(--portal-secondary);
+  background: var(--portal-sidebar-gradient);
+  color: white;
+}
+
+.portal-parent-sidebar :is(p, a, button) {
+  color: inherit;
+}
+
+.portal-parent-sidebar nav a[aria-current="page"] {
+  border: 1px solid rgb(255 255 255 / 24%);
+  color: white;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--portal-primary) 78%, transparent), color-mix(in srgb, var(--portal-secondary) 24%, transparent));
+}
+
+.portal-parent-sidebar nav a[aria-current="page"] > span:first-child {
+  background: var(--portal-secondary);
+}
+
+.portal-parent-sidebar > div > div:first-child button[aria-label*="Navigatie"] {
+  display: none;
+}
+
+.portal-parent-header {
+  min-height: 70px;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 14%, white);
+  border-radius: 23px;
+  background: color-mix(in srgb, white 94%, var(--portal-canvas));
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--portal-rail) 12%, transparent);
+}
+
+.portal-parent-main {
+  min-height: 0;
+  padding: 14px 0 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.portal-route-frame,
+.portal-route-frame__content {
+  min-height: 100%;
+}
+
+.portal-route-frame__content > div {
+  max-width: none;
+  margin-inline: 0;
+}
+
+.portal-route-frame__content > .space-y-6,
+.portal-route-frame__content > .space-y-5 {
+  padding-bottom: 1rem;
+}
+
+.portal-route-frame__content > :not(.portal-dashboard) {
+  max-width: 1180px;
+  margin-inline: auto;
+}
+
+.portal-dashboard {
+  display: grid;
+  min-height: 100%;
+  gap: 14px;
+}
+
+.portal-journey {
+  position: relative;
+  min-height: 570px;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 72%);
+  border-radius: var(--portal-hero-radius);
+  background: var(--portal-canvas);
+  box-shadow: 0 22px 60px color-mix(in srgb, var(--portal-rail) 18%, transparent);
+  isolation: isolate;
+}
+
+.portal-journey__scene {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--portal-hero-desktop);
+  background-position: center;
+  background-size: auto 109%;
+}
+
+.portal-journey::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgb(7 29 57 / 9%), transparent 36%),
+    linear-gradient(180deg, rgb(255 255 255 / 3%), transparent 70%, rgb(7 29 57 / 11%));
+  content: "";
+  pointer-events: none;
+}
+
+.portal-journey__intro {
+  position: absolute;
+  z-index: 8;
+  top: 16px;
+  left: 16px;
+  width: min(360px, 38%);
+  border: 1px solid rgb(255 255 255 / 84%);
+  border-radius: 21px;
+  background: rgb(255 255 255 / 91%);
+  padding: 16px;
+  box-shadow: 0 16px 38px rgb(7 29 57 / 16%);
+  backdrop-filter: blur(12px) saturate(1.05);
+}
+
+.portal-journey__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--portal-primary-strong);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.portal-journey__eyebrow-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--portal-secondary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--portal-secondary) 16%, transparent);
+}
+
+.portal-journey__intro h1 {
+  margin: 7px 0 10px;
+  color: var(--portal-text);
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 900;
+  letter-spacing: -.035em;
+  line-height: 1.02;
+}
+
+.portal-journey__goal {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--portal-secondary) 11%, white);
+  padding: 8px 11px;
+}
+
+.portal-journey__goal span {
+  min-width: 0;
+}
+
+.portal-journey__goal small,
+.portal-journey__goal strong {
+  display: block;
+}
+
+.portal-journey__goal small {
+  color: var(--portal-text-muted);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.portal-journey__goal strong {
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-journey__goal b {
+  color: var(--portal-primary);
+  font-size: 13px;
+}
+
+.portal-journey__fact {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  color: var(--portal-text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.portal-journey__fact strong {
+  color: var(--portal-text);
+}
+
+.portal-journey__rail {
+  position: absolute;
+  inset: 12% 4% 8% 22%;
+  z-index: 3;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.portal-journey__rail::-webkit-scrollbar {
+  display: none;
+}
+
+.portal-journey__path {
+  position: absolute;
+  top: 66%;
+  right: 5%;
+  left: 4%;
+  height: 11px;
+  border: 3px solid rgb(255 255 255 / 82%);
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, transparent 0 17px, white 17px 22px);
+  box-shadow: 0 2px 0 rgb(7 29 57 / 24%);
+  opacity: .92;
+  transform: rotate(-24deg);
+  transform-origin: center;
+}
+
+.portal-journey__node {
+  position: absolute;
+  top: var(--journey-y);
+  left: var(--journey-x);
+  display: grid;
+  min-width: 72px;
+  justify-items: center;
+  border: 0;
+  color: var(--portal-text);
+  background: transparent;
+  font: inherit;
+  transform: translate(-50%, -50%);
+  transition:
+    top var(--portal-motion-standard) ease,
+    left var(--portal-motion-standard) ease,
+    opacity var(--portal-motion-micro) ease;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+
+.portal-journey__orb {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  border: 4px solid rgb(255 255 255 / 92%);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 35% 30%, white, color-mix(in srgb, var(--portal-secondary) 28%, white) 52%, var(--portal-primary));
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--portal-primary) 24%, transparent),
+    0 10px 24px rgb(7 29 57 / 20%);
+  transition: transform var(--portal-motion-standard), box-shadow var(--portal-motion-standard);
+}
+
+.portal-journey__orb svg {
+  width: 22px;
+  color: var(--portal-primary-strong);
+}
+
+.portal-journey__node:hover .portal-journey__orb,
+.portal-journey__node:focus-visible .portal-journey__orb {
+  transform: translateY(-3px) scale(1.04);
+}
+
+.portal-journey__node:focus-visible {
+  border-radius: 16px;
+  outline: 3px solid white;
+  outline-offset: 4px;
+}
+
+.portal-journey__node.is-current .portal-journey__orb {
+  width: 72px;
+  height: 72px;
+  border-color: white;
+  box-shadow:
+    0 0 0 4px var(--portal-reward),
+    0 0 0 8px color-mix(in srgb, var(--portal-secondary) 40%, transparent),
+    0 14px 28px rgb(7 29 57 / 24%);
+}
+
+.portal-journey__node.is-completed .portal-journey__orb {
+  background: radial-gradient(circle at 35% 30%, white, color-mix(in srgb, var(--portal-success) 48%, white) 55%, var(--portal-success));
+}
+
+.portal-journey__node[data-state="not_assessed"] .portal-journey__orb {
+  border-style: dashed;
+  background: color-mix(in srgb, var(--portal-surface-alt) 78%, white);
+}
+
+.portal-journey__node[data-state="carryover"] .portal-journey__orb {
+  border-style: double;
+  border-color: var(--portal-attention);
+}
+
+.portal-journey__node[data-state="blocked"] .portal-journey__orb {
+  border-style: solid;
+  background: color-mix(in srgb, var(--portal-text-muted) 18%, white);
+}
+
+.portal-journey__node-label {
+  max-width: 110px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 92%);
+  padding: 4px 9px;
+  font-size: 9px;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: 0 4px 13px rgb(7 29 57 / 13%);
+}
+
+.portal-journey__node-state {
+  max-width: 116px;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--portal-text);
+  font-size: 8px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 2px rgb(255 255 255 / 90%);
+  white-space: nowrap;
+}
+
+.portal-journey__node-check {
+  position: absolute;
+  top: 40px;
+  right: 4px;
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: var(--portal-primary);
+  color: white;
+}
+
+.portal-journey__node-check svg {
+  width: 10px;
+}
+
+.portal-journey__empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(320px, 80%);
+  margin: 0;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 90%);
+  padding: 16px;
+  color: var(--portal-text-muted);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.portal-journey__mascot {
+  position: absolute;
+  z-index: 5;
+  top: 50%;
+  left: 49%;
+  width: clamp(110px, 14vw, 225px);
+  max-height: 42%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 14px rgb(7 29 57 / 23%));
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.portal-journey__detail {
+  --portal-detail-x: -50%;
+  position: absolute;
+  z-index: 7;
+  top: 24%;
+  left: 50%;
+  display: grid;
+  width: min(300px, 29%);
+  grid-template-columns: 46px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgb(255 255 255 / 86%);
+  border-radius: 16px;
+  background: rgb(255 255 255 / 94%);
+  padding: 10px;
+  box-shadow: 0 12px 30px rgb(7 29 57 / 17%);
+  backdrop-filter: blur(10px);
+  transform: translateX(var(--portal-detail-x));
+  animation: portal-journey-detail-in var(--portal-motion-standard) ease both;
+}
+
+.portal-journey__detail-orb {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  place-items: center;
+  border: 3px solid var(--portal-reward);
+  border-radius: 50%;
+  color: var(--portal-primary);
+  background: white;
+}
+
+.portal-journey__detail > span:nth-child(2) {
+  min-width: 0;
+}
+
+.portal-journey__detail strong,
+.portal-journey__detail small,
+.portal-journey__detail a {
+  display: block;
+}
+
+.portal-journey__detail strong {
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-journey__detail small {
+  display: none;
+  color: var(--portal-text-muted);
+  font-size: 8px;
+}
+
+.portal-journey__detail b {
+  align-self: start;
+  color: var(--portal-primary);
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.portal-journey__detail a {
+  margin-top: 5px;
+  color: var(--portal-primary-strong);
+  font-size: 8px;
+  font-weight: 850;
+}
+
+.portal-journey__detail a svg {
+  display: inline;
+  width: 10px;
+}
+
+.portal-journey__progress-track {
+  display: block;
+  height: 6px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--portal-primary) 12%, white);
+}
+
+.portal-journey__progress-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--portal-secondary), var(--portal-primary));
+}
+
+.portal-journey__controls {
+  position: absolute;
+  z-index: 8;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgb(255 255 255 / 82%);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 90%);
+  padding: 4px;
+  box-shadow: 0 10px 24px rgb(7 29 57 / 14%);
+  backdrop-filter: blur(10px);
+}
+
+.portal-journey__controls button {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  color: white;
+  background: var(--portal-primary-strong);
+  cursor: pointer;
+}
+
+.portal-journey__controls button:disabled {
+  color: var(--portal-text-muted);
+  background: var(--portal-surface-alt);
+  cursor: not-allowed;
+}
+
+.portal-journey__controls button:focus-visible {
+  outline: 3px solid var(--portal-reward);
+  outline-offset: 2px;
+}
+
+.portal-journey__controls svg {
+  width: 20px;
+}
+
+.portal-journey__controls span {
+  max-width: 180px;
+  color: var(--portal-text-muted);
+  font-size: 8px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.portal-journey__rings {
+  position: absolute;
+  z-index: 7;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.portal-journey__ring {
+  display: flex;
+  width: 102px;
+  min-height: 128px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 88%);
+  border-radius: 17px;
+  background: rgb(255 255 255 / 93%);
+  padding: 8px 6px;
+  text-align: center;
+  box-shadow: 0 12px 28px rgb(7 29 57 / 16%);
+  backdrop-filter: blur(10px);
+}
+
+.portal-journey__ring small {
+  min-height: 20px;
+  color: var(--portal-text-muted);
+  font-size: 7px;
+  font-weight: 850;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.portal-journey__ring .font-display {
+  font-size: 18px;
+}
+
+.portal-journey__ring .text-\[10px\] {
+  display: none;
+}
+
+.portal-journey__ring strong {
+  max-width: 86px;
+  overflow: hidden;
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-dashboard__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.portal-dashboard-card {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 10%, white);
+  border-radius: var(--portal-card-radius);
+  background: rgb(255 255 255 / 92%);
+  padding: 12px;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--portal-rail) 10%, transparent);
+}
+
+.portal-dashboard-card > header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.portal-dashboard-card h2 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.portal-dashboard-card header p {
+  margin: 2px 0 0;
+  color: var(--portal-text-muted);
+  font-size: 8px;
+}
+
+.portal-dashboard-card header a {
+  color: var(--portal-primary-strong);
+  font-size: 8px;
+  font-weight: 800;
+}
+
+.portal-dashboard-card__items {
+  display: grid;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.portal-dashboard-card__item {
+  display: grid;
+  min-height: 38px;
+  grid-template-columns: 28px minmax(0, 1fr) 14px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--portal-primary) 10%, var(--border));
+  border-radius: 10px;
+  background: rgb(255 255 255 / 76%);
+  padding: 5px 7px;
+}
+
+.portal-dashboard-card__item > span:first-child {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  color: var(--portal-primary);
+  background: color-mix(in srgb, var(--portal-primary) 10%, white);
+}
+
+.portal-dashboard-card__item svg {
+  width: 14px;
+}
+
+.portal-dashboard-card__item strong,
+.portal-dashboard-card__item small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.portal-dashboard-card__item strong {
+  font-size: 9px;
+}
+
+.portal-dashboard-card__item small {
+  margin-top: 1px;
+  color: var(--portal-text-muted);
+  font-size: 7px;
+}
+
+.portal-dashboard-card__item > svg {
+  color: var(--portal-primary);
+}
+
+.portal-dashboard-card__empty {
+  display: flex;
+  min-height: 82px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--portal-text-muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+.portal-dashboard-card__empty svg {
+  width: 18px;
+  color: var(--portal-success);
+}
+
+.portal-badge-card[data-badge-family="neutral-artwork-placeholders"] .portal-badge-medallion {
+  border: 2px dashed color-mix(in srgb, var(--portal-primary) 32%, white);
+  border-radius: 50%;
+  color: var(--portal-primary-strong);
+  background:
+    radial-gradient(circle at 36% 30%, white, color-mix(in srgb, var(--portal-secondary) 14%, white) 64%, color-mix(in srgb, var(--portal-primary) 28%, white));
+}
+
+@media (min-width: 1280px) {
+  .portal-theme-root {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .portal-theme-root .parent-portal-shell {
+    height: 100dvh;
+    gap: 18px;
+    overflow: hidden;
+    padding: 22px;
+  }
+
+  .portal-parent-sidebar {
+    position: relative;
+    top: 0;
+    width: 238px !important;
+    height: calc(100dvh - 44px);
+    border-radius: 28px;
+  }
+
+  .portal-parent-header {
+    position: relative;
+    top: 0;
+    height: 72px;
+    min-height: 72px;
+    border-radius: 23px;
+    padding-inline: 16px;
+  }
+
+  .portal-parent-main {
+    height: calc(100dvh - 116px);
+    padding-top: 16px;
+  }
+
+  .parent-portal-shell[data-portal-route="/portaal"] .portal-parent-main {
+    overflow: hidden;
+  }
+
+  .parent-portal-shell[data-portal-route="/portaal"] .portal-route-frame,
+  .parent-portal-shell[data-portal-route="/portaal"] .portal-route-frame__content,
+  .parent-portal-shell[data-portal-route="/portaal"] .portal-dashboard {
+    height: 100%;
+  }
+
+  .portal-dashboard {
+    grid-template-rows: minmax(0, 1fr) 176px;
+  }
+
+  .portal-journey {
+    min-height: 0;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .portal-theme-root .parent-portal-shell {
+    min-height: 100dvh;
+    gap: 16px;
+    padding: 16px;
+  }
+
+  .portal-parent-sidebar {
+    position: sticky;
+    top: 16px;
+    width: 86px !important;
+    height: calc(100dvh - 32px);
+    border-radius: 26px;
+  }
+
+  .portal-parent-sidebar > div > div:first-child {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .portal-parent-sidebar > div > div:first-child > div:nth-child(2),
+  .portal-parent-sidebar nav section > button,
+  .portal-parent-sidebar nav a > span.flex-1,
+  .portal-parent-sidebar > div > div:last-child > div > div:last-child {
+    display: none;
+  }
+
+  .portal-parent-sidebar nav {
+    padding-inline: 8px;
+  }
+
+  .portal-parent-sidebar nav a {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .portal-parent-header {
+    top: 0;
+    height: 72px;
+    min-height: 72px;
+  }
+
+  .portal-parent-main {
+    padding-top: 16px;
+  }
+
+  .portal-journey__intro {
+    width: 330px;
+  }
+
+  .portal-dashboard__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .portal-theme-root .parent-portal-shell {
+    display: block;
+    min-height: 100dvh;
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .portal-parent-header {
+    position: sticky;
+    top: max(8px, env(safe-area-inset-top));
+    min-height: 70px;
+    margin: 8px 12px 0;
+    padding: 8px 9px;
+  }
+
+  .portal-parent-header > .ml-auto {
+    gap: 5px;
+    margin-left: 0;
+  }
+
+  .portal-parent-header button {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+  }
+
+  .portal-mobile-brand {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 9px;
+  }
+
+  .portal-mobile-brand__mark {
+    width: 40px;
+    height: 40px;
+  }
+
+  .portal-mobile-brand__title {
+    font-size: 11px;
+  }
+
+  .portal-mobile-brand__subtitle {
+    font-size: 8px;
+  }
+
+  .portal-parent-main {
+    overflow: visible;
+    padding: 10px 12px calc(90px + env(safe-area-inset-bottom));
+  }
+
+  .portal-mobile-navigation {
+    inset-inline: 12px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--portal-primary) 13%, white);
+    border-radius: 23px;
+    padding-bottom: 0;
+    background: rgb(255 255 255 / 96%);
+  }
+
+  .portal-dashboard {
+    display: block;
+  }
+
+  .portal-journey {
+    min-height: calc(100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    border-radius: 25px;
+  }
+
+  .portal-journey__scene {
+    background-image: var(--portal-hero-mobile);
+    background-position: center top;
+    background-size: auto 109%;
+  }
+
+  .portal-journey__intro {
+    top: 12px;
+    left: 12px;
+    width: min(82%, 330px);
+    border-radius: 19px;
+    padding: 13px;
+  }
+
+  .portal-journey__intro h1 {
+    margin-block: 6px 8px;
+    font-size: clamp(19px, 6vw, 25px);
+  }
+
+  .portal-journey__fact {
+    margin-top: 6px;
+    font-size: 9px;
+  }
+
+  .portal-journey__rail {
+    inset: 23% 3% 9%;
+    overflow: visible;
+  }
+
+  .portal-journey__path {
+    top: 48%;
+    right: 19%;
+    left: 19%;
+    transform: rotate(88deg);
+  }
+
+  .portal-journey__node {
+    top: var(--journey-mobile-y);
+    left: var(--journey-mobile-x);
+  }
+
+  .portal-journey__orb {
+    width: 50px;
+    height: 50px;
+  }
+
+  .portal-journey__node.is-current .portal-journey__orb {
+    width: 64px;
+    height: 64px;
+  }
+
+  .portal-journey__node-label {
+    max-width: 92px;
+  }
+
+  .portal-journey__node-state {
+    max-width: 94px;
+  }
+
+  .portal-journey__node-check {
+    top: 36px;
+  }
+
+  .portal-journey__mascot {
+    top: 56%;
+    left: 37%;
+    width: clamp(92px, 31vw, 160px);
+    max-height: 25%;
+  }
+
+  .portal-journey__detail {
+    --portal-detail-x: 0%;
+    top: 52%;
+    left: auto;
+    right: 12px;
+    width: min(52%, 210px);
+    grid-template-columns: 42px minmax(0, 1fr);
+    padding: 9px;
+    transform: none;
+  }
+
+  .portal-journey__detail > b {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+  }
+
+  .portal-journey__detail-orb {
+    width: 42px;
+    height: 42px;
+  }
+
+  .portal-journey__rings {
+    right: 10px;
+    bottom: 10px;
+    gap: 5px;
+  }
+
+  .portal-journey__controls {
+    bottom: 10px;
+    left: 10px;
+    gap: 4px;
+  }
+
+  .portal-journey__controls span {
+    position: absolute;
+    overflow: hidden;
+    width: 1px;
+    height: 1px;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+
+  .portal-journey__ring {
+    width: 78px;
+    min-height: 106px;
+    border-radius: 15px;
+    padding: 5px 3px;
+  }
+
+  .portal-journey__ring small {
+    min-height: 17px;
+    font-size: 6px;
+  }
+
+  .portal-journey__ring > div {
+    width: 62px !important;
+    height: 62px !important;
+  }
+
+  .portal-journey__ring svg {
+    width: 62px;
+    height: 62px;
+  }
+
+  .portal-journey__ring .font-display {
+    font-size: 15px;
+  }
+
+  .portal-dashboard__cards {
+    grid-template-columns: 1fr;
+    margin-top: 12px;
+  }
+
+  .portal-dashboard-card {
+    min-height: 150px;
+  }
+
+  .portal-route-frame__content > .space-y-6,
+  .portal-route-frame__content > .space-y-5 {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 430px) {
+  .portal-parent-header {
+    margin-inline: 8px;
+  }
+
+  .portal-parent-main {
+    padding-inline: 8px;
+  }
+
+  .portal-mobile-navigation {
+    inset-inline: 8px;
+  }
+
+  .portal-mobile-brand__subtitle {
+    max-width: 118px;
+  }
+
+  .portal-journey__intro {
+    width: calc(100% - 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-journey__detail,
+  .portal-journey__node,
+  .portal-journey__orb,
+  .portal-journey__progress-track > span {
+    animation-duration: 1ms;
+    transition-duration: 1ms;
+  }
+}
+
+@keyframes portal-journey-detail-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--portal-detail-x)) translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(var(--portal-detail-x)) translateY(0);
+  }
 }
 
 :root {

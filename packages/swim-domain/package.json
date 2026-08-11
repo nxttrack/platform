@@ -1,0 +1,13 @@
+{
+  "name": "@nxttrack/swim-domain",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./events": "./src/events.ts",
+    "./permissions": "./src/permissions.ts",
+    "./progress": "./src/progress.ts"
+  },
+  "types": "./src/index.ts"
+}

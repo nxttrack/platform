@@ -54,7 +54,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
 
       TARGET: ${{ inputs.target }}
       RELEASE_TARGET: ${{ inputs.target }}
@@ -386,7 +386,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
       TARGET: staging
       RELEASE_TARGET: staging
       RELEASE_CANONICAL_BRANCH: main
@@ -456,6 +456,23 @@ jobs:
 
       - name: Phase 16 operational flow validation
         run: pnpm run phase16:flow
+
+      - name: Validate required six-theme portal matrix
+        env:
+          PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
+        run: pnpm run test:portal-themes:e2e
+
+      - name: Upload six-theme portal matrix evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-staging-${{ github.sha }}-six-theme-portal-matrix
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Prepare Sprint 4 browser-mutation fixture
         run: pnpm run sprint4:prepare-mutations

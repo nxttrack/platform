@@ -29,7 +29,16 @@ const nextConfig: NextConfig = {
     root: join(projectRoot, "../..")
   },
   async headers() {
-    return [{ source: "/:path*", headers: [...securityHeaders] }];
+    return [
+      {
+        source: "/portal-themes/:path*",
+        headers: [
+          ...securityHeaders,
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" }
+        ]
+      },
+      { source: "/:path*", headers: [...securityHeaders] }
+    ];
   },
   async redirects() {
     return [

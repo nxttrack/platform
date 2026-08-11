@@ -44,12 +44,13 @@ if (groupResult.error || !groupResult.data) {
 const tenantId = phase.tenant.id;
 const programId = groupResult.data.program_id;
 const stageId = groupResult.data.stage_id;
+const runKey = `${process.env.GITHUB_RUN_ID || Date.now()}-${randomBytes(6).toString("hex")}`;
 const fullGroup = await insertOne("groups", {
   tenant_id: tenantId,
   program_id: programId,
   stage_id: stageId,
-  name: "Sprint 4 Volle Randgroep",
-  code: "sprint4-edge-full",
+  name: `Sprint 4 Volle Randgroep ${runKey}`,
+  code: `sprint4-edge-full-${runKey}`,
   status: "active",
   capacity: 1,
   default_weekday: 7,
@@ -58,9 +59,9 @@ const fullGroup = await insertOne("groups", {
 });
 const capacityParticipant = await insertOne("participants", {
   tenant_id: tenantId,
-  display_name: "Sprint 4 Capaciteitsvuller",
+  display_name: `Sprint 4 Capaciteitsvuller ${runKey}`,
   birth_date: "2018-01-01",
-  external_reference: "sprint4-edge-full-participant",
+  external_reference: `sprint4-edge-full-participant-${runKey}`,
   status: "active"
 });
 const capacityEnrollment = await insertOne("enrollments", {
@@ -83,7 +84,6 @@ await insertOne("group_memberships", {
   capacity_weight: 1
 });
 
-const runKey = `${process.env.GITHUB_RUN_ID || Date.now()}-${randomBytes(6).toString("hex")}`;
 const expired = await createEdgeOffer({
   participantName: `Sprint4 Verlopen ${runKey}`,
   marker: `sprint4-browser:edge-expired:${runKey}`,
