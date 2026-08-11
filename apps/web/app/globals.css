@@ -704,6 +704,11 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   line-height: 1.1;
 }
 
+.portal-notification-count {
+  color: white;
+  background: color-mix(in srgb, var(--portal-attention) 60%, black);
+}
+
 .portal-route-frame {
   position: relative;
   isolation: isolate;

@@ -74,8 +74,9 @@ test("microcopy en notificatiebadges houden op het ouderdashboard WCAG AA-contra
   ]);
   assert.match(styles, /\.portal-mobile-brand__subtitle\s*\{[^}]*color:\s*var\(--portal-text\)/s);
   assert.match(styles, /\.parent-overview-planning__facts small\s*\{[^}]*color:\s*var\(--portal-text\)/s);
-  assert.match(shell, /bg-danger[^"\n]*text-foreground/);
-  assert.doesNotMatch(shell, /bg-danger[^"\n]*text-white/);
+  assert.match(shell, /portal-notification-count/);
+  assert.match(styles, /\.portal-notification-count\s*\{[^}]*color:\s*white;[^}]*background:\s*color-mix\(in srgb, var\(--portal-attention\) 60%, black\)/s);
+  assert.doesNotMatch(shell, /bg-danger[^"\n]*(?:text-foreground|text-white)/);
 });
 
 test("de merklink in de kindheader is een volwaardig touch target met leesbare microcopy", async () => {
