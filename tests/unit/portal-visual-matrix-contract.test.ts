@@ -61,9 +61,10 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
     readFile(new URL("../../scripts/staging/parent-child-preview-fixture.mjs", import.meta.url), "utf8")
   ]);
   assert.match(workflow, /inputs\.target == 'staging'/);
-  assert.match(workflow, /580c995bcbbea63662d943bb8ad7ef4815f20598/);
+  assert.match(workflow, /23a715b5bf3bfea9de2ff4956ffed04c0c5cdd70/);
   assert.match(workflow, /test "\$TARGET" = "staging"/);
-  assert.match(workflow, /20260811120000[\s\S]+20260811130000[\s\S]+20260811140000/);
+  assert.match(workflow, /20260811120000[\s\S]+20260811130000[\s\S]+20260811140000[\s\S]+20260811180455/);
+  assert.match(workflow, /theme wrappers service-only/);
   assert.match(workflow, /Refusing unexpected staging migrations/);
   assert.match(workflow, /PHASE16_RESET_E2E_PASSWORDS:[\s\S]+false/);
   assert.match(workflow, /PHASE16_PRESERVE_ADMIN_IDENTITIES/);
@@ -77,23 +78,22 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(fixture, /aquaswim-demo/);
   assert.match(fixture, /createRequire\(new URL\("\.\.\/\.\.\/apps\/web\/package\.json"/);
   assert.match(fixture, /tenant_portal_theme_availability/);
-  assert.match(fixture, /E2E_PLATFORM_THEME_ACTOR_USER_ID/);
-  assert.match(fixture, /E2E_TENANT_ID/);
+  assert.match(fixture, /set_tenant_portal_theme_availability/);
+  assert.match(fixture, /set_tenant_portal_theme_license/);
   assert.match(fixture, /resolveCleanupContext/);
   assert.match(fixture, /configure_child_portal_rollout_for_service/);
   assert.match(fixture, /swim\.portal\.direct_child_login/);
   assert.match(fixture, /status !== "disabled"/);
 });
 
-test("stagingmatrix opent de eigen platformpreview en activeert releases via de publieke platform-RPC", async () => {
+test("stagingmatrix opent de eigen platformpreview en activeert releases via de tenant-admin-UI", async () => {
   const { readFile } = await import("node:fs/promises");
   const source = await readFile(
     new URL("../../apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts", import.meta.url),
     "utf8"
   );
   assert.match(source, /locator\("details"\)\.filter\(\{ has: card \}\)/);
-  assert.match(source, /activate_tenant_portal_theme/);
-  assert.match(source, /requiredEnvOneOf\("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"\)/);
-  assert.match(source, /target_ticket_reference: "staging-preview-580c995"/);
+  assert.doesNotMatch(source, /activate_tenant_portal_theme/);
+  assert.match(source, /data-theme-choice/);
   assert.match(source, /waitForURL\(\/saved=theme\/, \{ timeout: 60_000 \}\)/);
 });

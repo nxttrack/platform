@@ -54,7 +54,7 @@ jobs:
       github.ref_name == 'main' ||
       (inputs.target == 'staging' &&
       github.ref_name == 'codex/parent-child-portals-v1' &&
-      inputs.staging_preview_sha == '580c995bcbbea63662d943bb8ad7ef4815f20598')
+      inputs.staging_preview_sha == '23a715b5bf3bfea9de2ff4956ffed04c0c5cdd70')
     runs-on: [self-hosted, linux, x64, nxttrack]
 
     environment: ${{ inputs.target }}
@@ -181,7 +181,7 @@ jobs:
           if [[ -n "$STAGING_PREVIEW_SHA" ]]; then
             test "$TARGET" = "staging"
             test "$GITHUB_REF_NAME" = "codex/parent-child-portals-v1"
-            test "$STAGING_PREVIEW_SHA" = "580c995bcbbea63662d943bb8ad7ef4815f20598"
+            test "$STAGING_PREVIEW_SHA" = "23a715b5bf3bfea9de2ff4956ffed04c0c5cdd70"
             test "$DEPLOYED_SOURCE_SHA" = "$STAGING_PREVIEW_SHA"
             test "${BOOTSTRAP_PLATFORM_OWNER:-false}" != "true"
           else
@@ -357,7 +357,8 @@ jobs:
           const allowed = new Set([
             "20260811120000",
             "20260811130000",
-            "20260811140000"
+            "20260811140000",
+            "20260811180455"
           ]);
           const local = readdirSync("supabase/migrations")
             .filter((file) => !file.endsWith("_legacy_remote_history.sql"))
@@ -386,18 +387,40 @@ jobs:
           set -euo pipefail
           node --input-type=module <<'NODE'
           import pg from "pg";
-          const expected = ["20260811120000", "20260811130000", "20260811140000"];
+          const expected = ["20260811120000", "20260811130000", "20260811140000", "20260811180455"];
           const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
           await client.connect();
           const result = await client.query(
             "select version::text from supabase_migrations.schema_migrations where version::text = any($1::text[])",
             [expected]
           );
-          await client.end();
           const applied = new Set(result.rows.map((row) => row.version));
           const missing = expected.filter((version) => !applied.has(version));
           if (missing.length) throw new Error(`Preview migrations missing after db push: ${missing.join(",")}`);
+          const wrapperPrivileges = await client.query(`
+            select
+              p.oid::regprocedure::text as signature,
+              has_function_privilege('anon', p.oid, 'execute') as anon_execute,
+              has_function_privilege('authenticated', p.oid, 'execute') as authenticated_execute,
+              has_function_privilege('service_role', p.oid, 'execute') as service_execute
+            from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public'
+              and p.proname in (
+                'select_available_tenant_portal_theme',
+                'set_tenant_portal_theme_availability',
+                'set_tenant_portal_theme_license'
+              )
+          `);
+          await client.end();
+          if (
+            wrapperPrivileges.rows.length !== 3
+            || wrapperPrivileges.rows.some((row) => row.anon_execute || row.authenticated_execute || !row.service_execute)
+          ) {
+            throw new Error(`Portal theme wrapper grants are not fail-closed: ${JSON.stringify(wrapperPrivileges.rows)}`);
+          }
           console.log(`[preview:migrations] PASS applied=${expected.join(",")}`);
+          console.log(`[preview:migrations] PASS theme wrappers service-only=${wrapperPrivileges.rows.map((row) => row.signature).join(",")}`);
           NODE
 
       - name: Bootstrap platform owner

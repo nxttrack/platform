@@ -82,20 +82,35 @@ if (platformThemeActor.error || !platformThemeActor.data) {
   throw new Error(`Could not resolve the preserved platform theme manager: ${platformThemeActor.error?.message ?? "membership missing"}`);
 }
 const platformThemeActorUserId = requiredUuid(platformThemeActor.data.user_id, "platformThemeActor.user_id");
+for (const themeKey of visualThemes) {
+  const availability = await admin.rpc("set_tenant_portal_theme_availability", {
+    target_actor_user_id: platformThemeActorUserId,
+    target_is_enabled: true,
+    target_reason: "AquaSwim Demo staging visual matrix seed",
+    target_tenant_id: tenantId,
+    target_theme_key: themeKey,
+    target_theme_release: "3.0.0"
+  });
+  if (availability.error) {
+    throw new Error(`Could not enable ${themeKey} through the public platform wrapper: ${availability.error.message}`);
+  }
+}
+const nationalLicense = await admin.rpc("set_tenant_portal_theme_license", {
+  target_actor_user_id: platformThemeActorUserId,
+  target_evidence_reference: "",
+  target_reason: "AquaSwim Demo staging preview keeps protected naming fail-closed",
+  target_status: "revoked",
+  target_tenant_id: tenantId
+});
+if (nationalLicense.error) {
+  throw new Error(`Could not reset the protected theme license through the public platform wrapper: ${nationalLicense.error.message}`);
+}
 const themeAvailability = await admin
   .from("tenant_portal_theme_availability")
-  .upsert(
-    visualThemes.map((themeKey) => ({
-      enabled_by_platform_admin_id: platformThemeActorUserId,
-      is_enabled: true,
-      reason: "AquaSwim Demo staging visual matrix seed",
-      tenant_id: tenantId,
-      theme_key: themeKey,
-      theme_release: "3.0.0"
-    })),
-    { onConflict: "tenant_id,theme_key,theme_release" }
-  )
-  .select("theme_key, theme_release, is_enabled");
+  .select("theme_key, theme_release, is_enabled")
+  .eq("tenant_id", tenantId)
+  .eq("theme_release", "3.0.0")
+  .in("theme_key", visualThemes);
 if (
   themeAvailability.error
   || themeAvailability.data?.length !== visualThemes.length
@@ -160,8 +175,6 @@ const publicCode = requiredUuid(certificate.data.verification_public_id, "certif
 if (process.env.GITHUB_ENV) {
   appendFileSync(process.env.GITHUB_ENV, [
     `E2E_CERTIFICATE_CODE=${publicCode}`,
-    `E2E_PLATFORM_THEME_ACTOR_USER_ID=${platformThemeActorUserId}`,
-    `E2E_TENANT_ID=${tenantId}`,
     ""
   ].join("\n"));
 }
@@ -171,6 +184,7 @@ writeFileSync(evidencePath, `${JSON.stringify({
   guardianAccess: guardian.data.access_level,
   participantId,
   platformThemeActorUserId,
+  protectedThemeLicense: "revoked",
   preparedAt: new Date().toISOString(),
   tenantId,
   themes: themeAvailability.data.map((entry) => `${entry.theme_key}@${entry.theme_release}`).sort(),

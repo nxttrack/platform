@@ -1,6 +1,5 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
 
 import {
   CHILD_VISUAL_STATES,
@@ -290,30 +289,6 @@ async function configureChildPortalPilot(page: Page) {
 }
 
 async function selectTheme(page: Page, theme: string) {
-  if (visualMatrixRequired) {
-    const admin = createClient(
-      requiredEnv("NEXT_PUBLIC_SUPABASE_URL"),
-      requiredEnvOneOf("SUPABASE_SECRET_KEY", "SUPABASE_SERVICE_ROLE_KEY"),
-      { auth: { autoRefreshToken: false, persistSession: false } }
-    );
-    const activation = await admin.rpc("activate_tenant_portal_theme", {
-      target_actor_user_id: requiredEnv("E2E_PLATFORM_THEME_ACTOR_USER_ID"),
-      target_event_type: "activated",
-      target_reason: `Verplichte staging visual matrix: ${theme}`,
-      target_request_correlation_id: `staging-visual-matrix:${theme}`,
-      target_tenant_id: requiredEnv("E2E_TENANT_ID"),
-      target_theme_key: theme,
-      target_theme_release: "3.0.0",
-      target_ticket_reference: "staging-preview-580c995"
-    });
-    expect(activation.error, `${theme} moet via de publieke platform-RPC activeerbaar zijn`).toBeNull();
-    await gotoStable(page, "/admin/branding?saved=theme");
-    const activeCard = page.locator(`[data-theme-choice="${theme}"]`);
-    await expect(activeCard, `${theme} moet tenantbeschikbaar zijn`).toHaveCount(1);
-    await expect(activeCard.getByText("Actief", { exact: true })).toBeVisible();
-    return;
-  }
-
   await gotoStable(page, "/admin/branding");
   const card = page.locator(`[data-theme-choice="${theme}"]`);
   await expect(card, `${theme} moet tenantbeschikbaar zijn`).toHaveCount(1);
@@ -460,11 +435,5 @@ async function assertDashboardLayout(
 function requiredEnv(name: string) {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is required`);
-  return value;
-}
-
-function requiredEnvOneOf(...names: string[]) {
-  const value = names.map((name) => process.env[name]).find(Boolean);
-  if (!value) throw new Error(`${names.join(" or ")} is required`);
   return value;
 }
