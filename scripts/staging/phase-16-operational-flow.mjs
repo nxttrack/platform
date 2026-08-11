@@ -392,9 +392,11 @@ async function ensureCoreDemoData(tenantId, users) {
     "id"
   );
 
-  const sessionWindow = futureWindow(2, 16, 45);
-  const session = await ensureByFilter(
-    "sessions",
+  const session = await ensureAvailableFixtureSession(
+    tenantId,
+    group.id,
+    lane.id,
+    users.instructor.id,
     [
       ["tenant_id", tenantId],
       ["group_id", group.id],
@@ -404,8 +406,6 @@ async function ensureCoreDemoData(tenantId, users) {
       tenant_id: tenantId,
       group_id: group.id,
       resource_id: lane.id,
-      starts_at: sessionWindow.startsAt,
-      ends_at: sessionWindow.endsAt,
       status: "scheduled",
       capacity_override: 8,
       notes: "phase16:primary-session"
@@ -1703,6 +1703,47 @@ async function ensureByFilter(table, filters, row, select) {
   }
 
   return insertOne(table, row, select);
+}
+
+async function ensureAvailableFixtureSession(tenantId, groupId, resourceId, instructorUserId, filters, row, select) {
+  let fixtureQuery = admin.from("sessions").select("id");
+  for (const [column, value] of filters) fixtureQuery = fixtureQuery.eq(column, value);
+  const fixtures = await fixtureQuery;
+  if (fixtures.error) throw new Error(`[phase16] Could not reset fixture sessions: ${fixtures.error.message}`);
+
+  const fixtureIds = (fixtures.data ?? []).map((fixture) => fixture.id);
+  if (fixtureIds.length > 0) {
+    const cancelled = await admin
+      .from("sessions")
+      .update({ status: "cancelled" })
+      .eq("tenant_id", tenantId)
+      .in("id", fixtureIds);
+    if (cancelled.error) throw new Error(`[phase16] Could not release fixture session reservations: ${cancelled.error.message}`);
+  }
+
+  const reusableId = fixtureIds[0] ?? null;
+  for (let offsetDays = 2; offsetDays <= 90; offsetDays += 1) {
+    const sessionWindow = futureWindow(offsetDays, 16, 0);
+    const candidate = {
+      ...row,
+      tenant_id: tenantId,
+      group_id: groupId,
+      resource_id: resourceId,
+      starts_at: sessionWindow.startsAt,
+      ends_at: sessionWindow.endsAt,
+      status: "scheduled"
+    };
+    const result = reusableId
+      ? await admin.from("sessions").update(candidate).eq("tenant_id", tenantId).eq("id", reusableId).select(select).single()
+      : await admin.from("sessions").insert(candidate).select(select).single();
+
+    if (!result.error && result.data) return result.data;
+    if (!/Transactional (resource hierarchy|instructor) conflict/.test(result.error?.message ?? "")) {
+      throw new Error(`[phase16] seed conflict-free fixture session failed: ${result.error?.message ?? "no data returned"}`);
+    }
+  }
+
+  throw new Error(`[phase16] No conflict-free fixture session was available for instructor ${instructorUserId}.`);
 }
 
 async function findFirst(table, filters, select = "*") {

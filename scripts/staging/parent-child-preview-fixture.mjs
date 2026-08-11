@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
+
+const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
+const { createClient } = requireFromWeb("@supabase/supabase-js");
 
 const mode = process.argv[2] ?? "prepare";
 const appUrl = String(process.env.APP_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? "").replace(/\/+$/, "");
@@ -21,16 +24,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !serviceKey) throw new Error("Supabase staging service credentials are required.");
 
-const state = JSON.parse(readFileSync(statePath, "utf8"));
-const tenantId = requiredUuid(state?.tenant?.id, "tenant.id");
-const participantId = requiredUuid(state?.expected?.participantId, "expected.participantId");
-const parentUserId = requiredUuid(state?.users?.parent?.id, "users.parent.id");
-const tenantAdminUserId = requiredUuid(state?.users?.tenantAdmin?.id, "users.tenantAdmin.id");
 const admin = createClient(supabaseUrl, serviceKey, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
+const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath, "utf8")) : null;
 
 if (mode === "cleanup") {
+  const { tenantId, tenantAdminUserId } = await resolveCleanupContext();
   const rollout = await admin.rpc("configure_child_portal_rollout_for_service", {
     p_absolute_ttl_minutes: 240,
     p_actor_user_id: tenantAdminUserId,
@@ -56,6 +56,11 @@ if (mode === "cleanup") {
   console.log("[parent-child-preview] PASS rollout disabled and active child sessions revoked.");
   process.exit(0);
 }
+
+if (!state) throw new Error(`Phase 16 fixture state is missing at ${statePath}.`);
+const tenantId = requiredUuid(state?.tenant?.id, "tenant.id");
+const participantId = requiredUuid(state?.expected?.participantId, "expected.participantId");
+const parentUserId = requiredUuid(state?.users?.parent?.id, "users.parent.id");
 
 const [guardian, certificate, award, groupMembership] = await Promise.all([
   admin
@@ -127,4 +132,39 @@ function requiredUuid(value, label) {
     throw new Error(`A valid ${label} UUID is required.`);
   }
   return value;
+}
+
+async function resolveCleanupContext() {
+  let tenantId = optionalUuid(state?.tenant?.id);
+  let tenantAdminUserId = optionalUuid(state?.users?.tenantAdmin?.id);
+
+  if (!tenantId) {
+    const tenant = await admin.from("tenants").select("id").eq("slug", "aquaswim-demo").maybeSingle();
+    if (tenant.error || !tenant.data) throw new Error(`Could not resolve AquaSwim Demo: ${tenant.error?.message ?? "tenant missing"}`);
+    tenantId = requiredUuid(tenant.data.id, "tenant.id");
+  }
+
+  if (!tenantAdminUserId) {
+    const membership = await admin
+      .from("tenant_memberships")
+      .select("user_id")
+      .eq("tenant_id", tenantId)
+      .eq("status", "active")
+      .in("role", ["tenant_owner", "tenant_admin"])
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+    if (membership.error || !membership.data) {
+      throw new Error(`Could not resolve the preserved AquaSwim administrator: ${membership.error?.message ?? "membership missing"}`);
+    }
+    tenantAdminUserId = requiredUuid(membership.data.user_id, "tenantAdmin.user_id");
+  }
+
+  return { tenantId, tenantAdminUserId };
+}
+
+function optionalUuid(value) {
+  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    ? value
+    : null;
 }

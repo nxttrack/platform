@@ -69,7 +69,11 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
   assert.match(workflow, /PHASE16_PRESERVE_ADMIN_IDENTITIES/);
   assert.match(workflow, /Roll back failed preview validation/);
   assert.match(phase16, /Preserved tenant administrator/);
+  assert.match(phase16, /Could not release fixture session reservations/);
+  assert.match(phase16, /Transactional \(resource hierarchy\|instructor\) conflict/);
   assert.match(fixture, /aquaswim-demo/);
+  assert.match(fixture, /createRequire\(new URL\("\.\.\/\.\.\/apps\/web\/package\.json"/);
+  assert.match(fixture, /resolveCleanupContext/);
   assert.match(fixture, /configure_child_portal_rollout_for_service/);
   assert.match(fixture, /status !== "disabled"/);
 });
