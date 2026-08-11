@@ -234,6 +234,25 @@ async function ensureTenant() {
 async function ensureRoleUsers(tenantId) {
   const entries = await Promise.all(
     Object.entries(roleAccounts).map(async ([key, account]) => {
+      if (key === "tenantAdmin" && process.env.PHASE16_PRESERVE_ADMIN_IDENTITIES === "true") {
+        const user = await findUserByEmail(normalizeEmail(account.email));
+        if (!user) {
+          throw new Error(`[phase16] Preserved tenant administrator ${account.email} does not exist.`);
+        }
+        const membership = await admin
+          .from("tenant_memberships")
+          .select("id")
+          .eq("tenant_id", tenantId)
+          .eq("user_id", user.id)
+          .eq("role", account.role)
+          .eq("status", "active")
+          .maybeSingle();
+        if (membership.error || !membership.data) {
+          throw new Error(`[phase16] Preserved tenant administrator ${account.email} has no active ${account.role} membership.`);
+        }
+        await assertCanSignIn(normalizeEmail(account.email), account.password);
+        return [key, { id: user.id, email: normalizeEmail(account.email), fullName: account.fullName }];
+      }
       const user = await ensureUser(account.email, account.password, account.fullName);
 
       await upsertOne(

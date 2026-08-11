@@ -52,3 +52,24 @@ test("E2E-harnas maakt per thema een parent- en childboard", async () => {
   assert.match(source, /`\$\{theme\}-child-board`/);
   assert.match(source, /attachBoard/);
 });
+
+test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridentiteiten", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const [workflow, phase16, fixture] = await Promise.all([
+    readFile(new URL("../../.github/workflows/deploy.yml", import.meta.url), "utf8"),
+    readFile(new URL("../../scripts/staging/phase-16-operational-flow.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../../scripts/staging/parent-child-preview-fixture.mjs", import.meta.url), "utf8")
+  ]);
+  assert.match(workflow, /inputs\.target == 'staging'/);
+  assert.match(workflow, /580c995bcbbea63662d943bb8ad7ef4815f20598/);
+  assert.match(workflow, /test "\$TARGET" = "staging"/);
+  assert.match(workflow, /20260811120000[\s\S]+20260811130000[\s\S]+20260811140000/);
+  assert.match(workflow, /Refusing unexpected staging migrations/);
+  assert.match(workflow, /PHASE16_RESET_E2E_PASSWORDS:[\s\S]+false/);
+  assert.match(workflow, /PHASE16_PRESERVE_ADMIN_IDENTITIES/);
+  assert.match(workflow, /Roll back failed preview validation/);
+  assert.match(phase16, /Preserved tenant administrator/);
+  assert.match(fixture, /aquaswim-demo/);
+  assert.match(fixture, /configure_child_portal_rollout_for_service/);
+  assert.match(fixture, /status !== "disabled"/);
+});
