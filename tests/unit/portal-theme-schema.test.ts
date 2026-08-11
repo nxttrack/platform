@@ -13,7 +13,9 @@ const sharp = requireFromWeb("sharp") as (input: string) => { metadata(): Promis
 const migrationPath = path.join(root, "supabase/migrations/20260801120000_parent_portal_theme_engine_v2_1.sql");
 const v3MigrationPath = path.join(root, "supabase/migrations/20260803190000_parent_portal_six_theme_pack_v3.sql");
 const oceanMigrationPath = path.join(root, "supabase/migrations/20260811130000_ocean_quest_seventh_theme.sql");
+const publicRpcMigrationPath = path.join(root, "supabase/migrations/20260811180455_portal_theme_public_rpc_wrappers.sql");
 const controlActionsPath = path.join(root, "apps/web/lib/domain/portal-theme-control-actions.ts");
+const parentSectionNavPath = path.join(root, "apps/web/components/parent/parent-section-nav.tsx");
 
 test("themamigratie bevat assignment, planning, audit, RLS en server-only assessmentwrites", async () => {
   const sql = await readFile(migrationPath, "utf8");
@@ -103,6 +105,31 @@ test("platformbeheer wijzigt beschikbaarheid en licenties uitsluitend via transa
   assert.match(actions, /\.rpc\("set_tenant_portal_theme_license"/);
   assert.doesNotMatch(actions, /\.from\("tenant_portal_theme_availability"\)\s*\.upsert/);
   assert.doesNotMatch(actions, /\.from\("tenant_portal_theme_license"\)\s*\.upsert/);
+});
+
+test("publieke theme-RPCs zijn dunne service-only invokerwrappers", async () => {
+  const sql = await readFile(publicRpcMigrationPath, "utf8");
+  for (const name of [
+    "select_available_tenant_portal_theme",
+    "set_tenant_portal_theme_availability",
+    "set_tenant_portal_theme_license"
+  ]) {
+    assert.match(sql, new RegExp(`create function public\\.${name}`));
+    assert.match(sql, new RegExp(`select app_private\\.${name}`));
+    assert.match(sql, new RegExp(`revoke all on function public\\.${name}`));
+    assert.match(sql, new RegExp(`grant execute on function public\\.${name}`));
+  }
+  assert.equal((sql.match(/security invoker/g) ?? []).length, 3);
+  assert.equal((sql.match(/set search_path = ''/g) ?? []).length, 3);
+  assert.doesNotMatch(sql, /security definer/);
+  assert.match(sql, /from public, anon, authenticated/);
+  assert.match(sql, /to service_role/);
+});
+
+test("ouderportaal-sectienavigatie blijft binnen de mobiele viewport", async () => {
+  const source = await readFile(parentSectionNavPath, "utf8");
+  assert.match(source, /min-w-0 max-w-full overflow-x-auto/);
+  assert.doesNotMatch(source, /-mx-4/);
 });
 
 test("v3-migratie bewaart afgeronde Journey-hoofdstukken immutable en tenantgeïsoleerd", async () => {
