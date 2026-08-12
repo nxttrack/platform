@@ -76,6 +76,7 @@ test("tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe", 
   await revisit.goto(page.url(), { waitUntil: "domcontentloaded" });
   await page.close();
   await expect(revisit.getByRole("status").filter({ hasText: "Sleep, veeg" })).toHaveCount(0);
+  await expect(revisit.locator(".child-journey-map")).toHaveAttribute("data-visual-ready", "true");
   await revisit.locator('[data-child-journey-entry="event:surprise-tussen"]').click();
   const dialog = revisit.getByRole("dialog");
   await expect(dialog).toContainText("Verrassingsbadge verdiend");
