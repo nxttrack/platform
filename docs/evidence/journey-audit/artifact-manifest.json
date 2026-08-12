@@ -1,0 +1,93 @@
+{
+  "version": "1.1.0",
+  "fixture": "/test-harness/journey",
+  "productionComponent": "apps/web/components/child/child-journey-map.tsx",
+  "generatedBy": "apps/web/tests/e2e/journey-visual.spec.ts",
+  "counts": {
+    "existingCanonicalRenderContract": 322,
+    "existingCanonicalRendersExecutedThisRun": 0,
+    "existingCanonicalRendersLatestApprovedStagingRun": 322,
+    "journeyRenders": 86,
+    "journeyRendersExecutedThisRun": 86,
+    "uniqueComposedRenderContract": 408,
+    "uniqueComposedRendersExecutedThisRun": 86,
+    "dashboardViewportContract": 196,
+    "dashboardViewportCasesExecutedThisRun": 0,
+    "dashboardViewportCasesLatestApprovedStagingRun": 196,
+    "collisionEndpoints": 630
+  },
+  "journeyRenderSets": [
+    {
+      "namePattern": "journey-{theme}-{desktop|mobile}-{state}",
+      "count": 56,
+      "themes": ["nxttrack-default", "dolphin-bay", "turtle-trails", "polar-splash", "coastal-explorer", "nationaal-zwem-abc", "ocean-quest"],
+      "viewports": ["1440x900", "390x844"],
+      "states": ["initial-current", "first-visit-tooltip", "oldest-completion", "milestone-popup"]
+    },
+    {
+      "namePattern": "journey-ocean-quest-{viewport}-selected-doel-{1..7}",
+      "count": 21,
+      "viewports": ["1280x720", "390x844", "320x568"]
+    },
+    {
+      "namePattern": "journey-{mascot-theme}-dense-12-popup",
+      "count": 5,
+      "viewport": "390x844"
+    },
+    {
+      "namePattern": "journey-{no-mascot-theme}-no-mascot-no-reserved-layer",
+      "count": 2,
+      "viewport": "390x844"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-landscape",
+      "count": 1,
+      "viewport": "844x390"
+    },
+    {
+      "name": "journey-ocean-quest-200-percent-reflow",
+      "count": 1,
+      "viewport": "640x900@200%"
+    }
+  ],
+  "collisionMatrix": {
+    "themes": ["dolphin-bay", "turtle-trails", "polar-splash", "coastal-explorer", "ocean-quest"],
+    "viewports": ["2560x1440", "1920x1080", "1600x900", "1440x900", "1366x768", "1280x720", "1180x820", "1024x768", "820x1180", "768x1024", "430x932", "390x844", "360x800", "320x568"],
+    "statesPerThemeViewport": 9,
+    "states": ["first-focus", "first-popup", "current-focus", "current-popup", "last-focus", "last-popup", "interstitial-focus", "interstitial-popup", "tooltip-open"]
+  },
+  "runtimeArtifacts": {
+    "policy": "Playwright attachments; do not commit screenshots, videos or traces",
+    "traceOnFailure": true,
+    "videoOnFailure": true,
+    "githubRetentionDays": 14,
+    "githubWorkflow": ".github/workflows/ci.yml"
+  },
+  "executedEvidence": {
+    "chromiumCoreTests": 10,
+    "chromiumCoreFailures": 0,
+    "collisionEndpoints": 630,
+    "collisionFailures": 0,
+    "journeyScreenshots": 86,
+    "screenshotFailures": 0,
+    "playwrightPerformance": {
+      "profile": "Chromium production build, 1280x720",
+      "lcpMs": 180,
+      "cls": 0,
+      "maximumEventTimingMs": 72
+    },
+    "lighthousePerformance": {
+      "profile": "Chrome for Testing 151, desktop preset, 1280x720, DPR 1",
+      "score": 100,
+      "lcpMs": 655,
+      "cls": 0,
+      "tbtMs": 0,
+      "speedIndexMs": 452
+    }
+  },
+  "externalReleaseGates": {
+    "firefoxLocal": "blocked: host GTK/Pango libraries unavailable; CI installs dependencies",
+    "webkitLocal": "blocked: host GTK/GStreamer/WebKit libraries unavailable; CI installs dependencies",
+    "canonical322AndDashboard196": "latest approved evidence is GitHub Actions run 31539440995; not re-executed against this commit because authenticated staging fixtures are unavailable locally and this task forbids remote database access"
+  }
+}

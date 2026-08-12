@@ -88,8 +88,22 @@ jobs:
       - name: Package standalone runtime assets
         run: pnpm run deploy:package-standalone-assets
 
-      - name: Install Playwright Chromium
-        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+      - name: Install Playwright browser engines
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium firefox webkit
 
       - name: Run browser smoke tests
         run: pnpm run test:e2e
+
+      - name: Validate Journey timeline in Chromium Firefox and WebKit
+        run: pnpm run test:journey:e2e
+
+      - name: Upload Journey timeline evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ github.sha }}-journey-timeline-evidence
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: warn
+          retention-days: 14
