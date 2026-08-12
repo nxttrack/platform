@@ -60,6 +60,9 @@ export type ChildSafeJourneyDto = {
   stages: Array<{ id: string; name: string; sortOrder: number }>;
   currentStage: { id: string; name: string } | null;
   currentStageItems: Array<{
+    completedAt: string | null;
+    completionOrderStatus: "event_sequence" | "legacy_inferred" | null;
+    completionSequence: number | null;
     description: string | null;
     id: string;
     instructionalVideo: ChildSafeInstructionalVideoDto | null;
@@ -82,6 +85,14 @@ export type ChildSafeJourneyDto = {
     id: string;
     themeKey: string;
     themeRelease: string;
+  }>;
+  events: Array<{
+    anchorNodeId: string | null;
+    description: string | null;
+    earnedAt: string;
+    eventType: "badge" | "surprise_badge";
+    id: string;
+    label: string;
   }>;
   rings: SwimJourneyRing[];
 };
@@ -190,7 +201,6 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     parentVisibleOnly: true
   });
   const canonicalJourney = getJourneyForEnrollment(journeys, enrollment?.id);
-  const journey = projectChildSafeJourney(canonicalJourney);
 
   const [membershipResult, awardResult, mediaApprovalResult, programResult, stageResult, standardReleasesResult, certificatesResult, graduationInvitesResult] = await Promise.all([
     admin
@@ -201,7 +211,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .in("status", ["active", "trial"]),
     admin
       .from("participant_badge_awards")
-      .select("id, badge_release_id, title, awarded_at")
+      .select("id, badge_release_id, title, awarded_at, resolved_description, trigger_event_type, trigger_context_json")
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .eq("status", "awarded")
@@ -349,6 +359,39 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   }
   const earnedReleaseIds = new Set(releaseIds);
   const displayName = participantResult.data.display_name;
+  const earnedBadges: ChildSafeBadgeDto[] = awards.map((award) => {
+    const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
+    return {
+      id: award.id,
+      title: release ? genderedBadgeTitle(release, participantGender) : award.title,
+      category: release?.category ?? "compliments",
+      earned: true,
+      earnedAt: award.awarded_at,
+      isSurprise: release?.is_surprise === true
+    };
+  });
+  const lockedBadges: ChildSafeBadgeDto[] = [...currentStandardReleaseByKey.values()]
+    .filter((release) => !earnedReleaseIds.has(release.id))
+    .map((release) => ({
+      id: `locked:${release.id}`,
+      title: genderedBadgeTitle(release, participantGender),
+      category: release.category,
+      earned: false,
+      earnedAt: null,
+      isSurprise: false
+    }));
+  const journey = projectChildSafeJourney(canonicalJourney, awards.map((award) => {
+    const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
+    return {
+      id: award.id,
+      title: release ? genderedBadgeTitle(release, participantGender) : award.title,
+      awardedAt: award.awarded_at,
+      description: boundedString(award.resolved_description, 280),
+      isSurprise: release?.is_surprise === true,
+      triggerEventType: award.trigger_event_type,
+      triggerContext: asObject(award.trigger_context_json)
+    };
+  }));
 
   return {
     sessionExpiresAt: childSession.expiresAt,
@@ -397,26 +440,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       trainerFirstName: null
       };
     })].sort((first, second) => first.startsAt.localeCompare(second.startsAt)),
-    badges: awards.map((award) => {
-      const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
-      return {
-        id: award.id,
-        title: release ? genderedBadgeTitle(release, participantGender) : award.title,
-        category: release?.category ?? "compliments",
-        earned: true,
-        earnedAt: award.awarded_at,
-        isSurprise: release?.is_surprise === true
-      };
-    }).concat([...currentStandardReleaseByKey.values()]
-      .filter((release) => !earnedReleaseIds.has(release.id))
-      .map((release) => ({
-        id: `locked:${release.id}`,
-        title: genderedBadgeTitle(release, participantGender),
-        category: release.category,
-        earned: false,
-        earnedAt: null,
-        isSurprise: false
-      }))),
+    badges: earnedBadges.concat(lockedBadges),
     certificates: (certificatesResult.data ?? []).flatMap((certificate) => certificate.issued_on ? [{
       id: certificate.id,
       title: certificate.title,
@@ -452,8 +476,29 @@ function firstName(value: string | null) {
   return value?.trim().split(/\s+/)[0] || "Trainer";
 }
 
-function projectChildSafeJourney(journey: CanonicalSwimJourney | null): ChildSafeJourneyDto | null {
+function projectChildSafeJourney(
+  journey: CanonicalSwimJourney | null,
+  earnedAwards: Array<{
+    awardedAt: string;
+    description: string | null;
+    id: string;
+    isSurprise: boolean;
+    title: string;
+    triggerContext: Record<string, unknown>;
+    triggerEventType: string | null;
+  }>
+): ChildSafeJourneyDto | null {
   if (!journey) return null;
+  const stableKeyByItemId = new Map(journey.currentStageItems.map((item) => [item.id, item.stable_key]));
+  const stableKeyByObservationId = new Map(
+    journey.effectiveObservations.map((observation) => [
+      observation.id,
+      stableKeyByItemId.get(observation.curriculum_item_id) ?? null
+    ])
+  );
+  const completionByItemId = new Map(
+    journey.itemCompletions.map((completion) => [completion.curriculum_item_id, completion])
+  );
   return {
     stages: journey.stages.map((stage) => ({
       id: stage.id,
@@ -465,12 +510,15 @@ function projectChildSafeJourney(journey: CanonicalSwimJourney | null): ChildSaf
       name: journey.currentStage.name
     } : null,
     currentStageItems: journey.currentStageItems.map((item) => ({
+      completedAt: completionByItemId.get(item.id)?.completed_at ?? null,
       description: item.description,
       id: item.id,
       instructionalVideo: childSafeInstructionalVideo(item.context_json),
       name: item.name,
       sortOrder: item.sort_order,
-      stableKey: item.stable_key
+      stableKey: item.stable_key,
+      completionSequence: completionByItemId.get(item.id)?.completion_sequence ?? null,
+      completionOrderStatus: completionByItemId.get(item.id)?.order_status ?? null
     })),
     effectiveObservations: journey.effectiveObservations.map((observation) => {
       const childVisible = observation.context_json.childVisible === true;
@@ -491,6 +539,26 @@ function projectChildSafeJourney(journey: CanonicalSwimJourney | null): ChildSaf
       themeKey: snapshot.theme_key,
       themeRelease: snapshot.theme_release
     })),
+    events: earnedAwards.flatMap((award) => {
+      const journeyEligible = award.isSurprise
+        || award.triggerEventType === "progress_item_completed"
+        || award.triggerEventType === "skill_completed"
+        || award.triggerContext.showInJourney === true;
+      if (!journeyEligible) return [];
+      const contextEntityId = typeof award.triggerContext.entityId === "string"
+        ? award.triggerContext.entityId
+        : typeof award.triggerContext.eventId === "string"
+          ? award.triggerContext.eventId
+          : null;
+      return [{
+        anchorNodeId: contextEntityId ? stableKeyByObservationId.get(contextEntityId) ?? null : null,
+        description: award.description,
+        earnedAt: award.awardedAt,
+        eventType: award.isSurprise ? "surprise_badge" as const : "badge" as const,
+        id: award.id,
+        label: award.title
+      }];
+    }),
     rings: journey.rings.map((ring) => ({ ...ring }))
   };
 }
@@ -559,6 +627,12 @@ function boundedString(value: unknown, maximum: number) {
   if (typeof value !== "string") return null;
   const normalized = value.trim();
   return normalized && normalized.length <= maximum ? normalized : null;
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
 }
 
 function safeContentUrl(value: unknown) {

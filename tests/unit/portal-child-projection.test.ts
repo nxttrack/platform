@@ -46,12 +46,13 @@ test("child shell exposes exactly five primary destinations and expires fail-clo
   assert.match(childSessionRoute, /requireChildApiAuthenticatedContext/);
 });
 
-test("child gebruikt dezelfde Journey Engine-selectie en focus als parent", () => {
-  assert.match(childJourney, /selectDefaultJourneyNode/);
-  assert.match(childJourney, /orderJourneyNodes/);
-  assert.match(childJourney, /focusedJourneyWindow/);
-  assert.match(childJourney, /ArrowLeft/);
-  assert.match(childJourney, /ArrowRight/);
+test("child gebruikt het centrale Journey Engine-, camera- en gesturecontract", () => {
+  assert.match(childJourney, /buildJourneyTimeline/);
+  assert.match(childJourney, /journeyRouteGeometry/);
+  assert.match(childJourney, /classifyJourneyGesture/);
+  assert.match(childJourney, /timeline\.currentGoalId/);
+  assert.match(childJourney, /selectedEntryId/);
+  assert.match(childJourney, /data-child-journey-entry/);
   assert.match(childJourney, /Math\.abs\(event\.deltaX\) <= Math\.abs\(event\.deltaY\)/);
 });
 

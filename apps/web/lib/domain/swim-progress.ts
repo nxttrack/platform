@@ -98,6 +98,19 @@ export type CanonicalItemCarryover = {
   completed_at: string | null;
 };
 
+export type CanonicalJourneyItemCompletion = {
+  id: string;
+  enrollment_id: string;
+  participant_id: string;
+  curriculum_version_id: string;
+  curriculum_stage_id: string;
+  curriculum_item_id: string;
+  completion_observation_id: string;
+  completion_sequence: number;
+  completed_at: string;
+  order_status: "event_sequence" | "legacy_inferred";
+};
+
 export type CanonicalJourneyChapterSnapshot = {
   id: string;
   enrollment_id: string;
@@ -135,6 +148,7 @@ export type CanonicalSwimJourney = {
   currentStageItems: CanonicalCurriculumItem[];
   effectiveObservations: CanonicalAssessmentObservation[];
   carryovers: CanonicalItemCarryover[];
+  itemCompletions: CanonicalJourneyItemCompletion[];
   chapterSnapshots: CanonicalJourneyChapterSnapshot[];
   projectionByScopeKey: Map<string, CanonicalProgressProjection>;
   rings: SwimJourneyRing[];
@@ -148,6 +162,7 @@ export type CanonicalSwimJourneyData = {
   observations: CanonicalAssessmentObservation[];
   projections: CanonicalProgressProjection[];
   carryovers: CanonicalItemCarryover[];
+  itemCompletions: CanonicalJourneyItemCompletion[];
   chapterSnapshots: CanonicalJourneyChapterSnapshot[];
   byEnrollmentId: Map<string, CanonicalSwimJourney>;
 };
@@ -181,7 +196,7 @@ export async function loadCanonicalSwimJourneys(input: {
     .order("observed_at", { ascending: false })
     .order("finalized_at", { ascending: false });
 
-  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, chapterSnapshotsResult] =
+  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, itemCompletionsResult, chapterSnapshotsResult] =
     await Promise.all([
       admin
         .from("curriculum_versions")
@@ -227,6 +242,12 @@ export async function loadCanonicalSwimJourneys(input: {
         .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds),
       admin
+        .from("portal_journey_item_completions")
+        .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, curriculum_item_id, completion_observation_id, completion_sequence, completed_at, order_status")
+        .eq("tenant_id", input.tenantId)
+        .in("enrollment_id", enrollmentIds)
+        .order("completion_sequence"),
+      admin
         .from("portal_journey_chapter_snapshots")
         .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, transition_case_id, theme_key, theme_release, artwork_id, route_order_json, completion_data_json, badge_award_ids, completed_at")
         .eq("tenant_id", input.tenantId)
@@ -243,6 +264,7 @@ export async function loadCanonicalSwimJourneys(input: {
   assertResult(retractionsResult.error, "beoordelingsintrekkingen");
   assertResult(projectionsResult.error, "voortgangsprojecties");
   assertResult(carryoversResult.error, "carryoveronderdelen");
+  assertResult(itemCompletionsResult.error, "vaste journeyvolgorde");
   assertResult(chapterSnapshotsResult.error, "historische journeyhoofdstukken");
 
   const versions = (versionsResult.data ?? []) as CanonicalCurriculumVersion[];
@@ -284,6 +306,7 @@ export async function loadCanonicalSwimJourneys(input: {
     coverage_fraction: projection.coverage_fraction === null ? null : Number(projection.coverage_fraction)
   }));
   const carryovers = (carryoversResult.data ?? []) as CanonicalItemCarryover[];
+  const itemCompletions = (itemCompletionsResult.data ?? []) as CanonicalJourneyItemCompletion[];
   const chapterSnapshots = ((chapterSnapshotsResult.data ?? []) as Array<
     Omit<CanonicalJourneyChapterSnapshot, "route_order_json" | "completion_data_json">
     & { route_order_json: unknown; completion_data_json: unknown }
@@ -351,6 +374,7 @@ export async function loadCanonicalSwimJourneys(input: {
         (observation) => observation.enrollment_id === enrollment.id
       ),
       carryovers: carryovers.filter((carryover) => carryover.enrollment_id === enrollment.id),
+      itemCompletions: itemCompletions.filter((completion) => completion.enrollment_id === enrollment.id),
       chapterSnapshots: chapterSnapshots.filter((snapshot) => snapshot.enrollment_id === enrollment.id),
       projectionByScopeKey,
       rings
@@ -365,6 +389,7 @@ export async function loadCanonicalSwimJourneys(input: {
     observations: effectiveObservations,
     projections,
     carryovers,
+    itemCompletions,
     chapterSnapshots,
     byEnrollmentId
   };
@@ -409,6 +434,7 @@ function emptyJourneyData(): CanonicalSwimJourneyData {
     observations: [],
     projections: [],
     carryovers: [],
+    itemCompletions: [],
     chapterSnapshots: [],
     byEnrollmentId: new Map()
   };
