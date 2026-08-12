@@ -1,6 +1,6 @@
 import { ChildJourneyMap } from "@/components/child/child-journey-map";
 import { SwimJourneyRings } from "@/components/progress/swim-journey-rings";
-import { childJourneyNodes } from "@/lib/domain/child-journey-view";
+import { childJourneyEvents, childJourneyNodes } from "@/lib/domain/child-journey-view";
 import { getChildPortalData } from "@/lib/domain/child-portal";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -17,7 +17,7 @@ export default async function ChildJourneyPage({ searchParams }: { searchParams?
   const childVisibleTip = observation?.childVisible ? observation.positiveLabel : null;
   return <div className="child-page" data-child-route-state={selectedItem ? "goal-detail" : "journey"}>
     <header className="child-page__heading"><span>Mijn reis</span><h1>Kijk eens hoe ver je al bent!</h1><p>Iedere stap die je oefent brengt je dichter bij je volgende doel.</p></header>
-    <ChildJourneyMap desktopArtwork={theme.assets["progress.journey.desktop"]?.path ?? null} mascotUrl={theme.assets["mascot.idle"]?.path ?? null} mobileArtwork={theme.assets["progress.journey.mobile"]?.path ?? null} nodes={childJourneyNodes(data.journey)} />
+    <ChildJourneyMap desktopArtwork={theme.assets["progress.journey.desktop"]?.path ?? null} events={childJourneyEvents(data.journey)} mascotKind={theme.experience.mascot} mascotUrl={theme.assets["mascot.idle"]?.path ?? null} mobileArtwork={theme.assets["progress.journey.mobile"]?.path ?? null} nodes={childJourneyNodes(data.journey)} />
     <div className="child-journey-support-grid">
       <section className="child-card"><small>Mijn doelen</small><h2>{data.journey?.currentStage?.name ?? "Mijn huidige reis"}</h2>{data.journey?.currentStageItems.length ? <ol className="child-goal-list">{data.journey.currentStageItems.map((item) => {
         const itemObservation = data.journey?.effectiveObservations.find((entry) => entry.curriculumItemId === item.id);

@@ -54,6 +54,38 @@ test("geselecteerde runtime-assets bestaan, zijn gehasht en blijven binnen netwe
   }
 });
 
+test("responsive journey-renditions zijn sourcegebonden, immutable en gebudgetteerd", async () => {
+  const manifest = JSON.parse(await readFile(path.join(root, "apps/web/public/portal-themes/rendition-manifest.json"), "utf8")) as {
+    assets: Array<{ bytes: number; path: string; sha256: string; sourcePath: string; sourceSha256: string; width: number }>;
+    immutableSources: boolean;
+    schemaVersion: number;
+  };
+  assert.equal(manifest.schemaVersion, 1);
+  assert.equal(manifest.immutableSources, true);
+  assert.equal(new Set(manifest.assets.map((asset) => asset.path)).size, manifest.assets.length);
+  for (const asset of manifest.assets) {
+    const [bytes, sourceBytes] = await Promise.all([
+      readFile(path.join(root, "apps/web/public", asset.path)),
+      readFile(path.join(root, "apps/web/public", asset.sourcePath))
+    ]);
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), asset.sha256, asset.path);
+    assert.equal(createHash("sha256").update(sourceBytes).digest("hex"), asset.sourceSha256, asset.sourcePath);
+    assert.equal(bytes.byteLength, asset.bytes, asset.path);
+    assert.ok(asset.width >= 256 && asset.width <= 1920, asset.path);
+    assert.ok(bytes.byteLength <= 220_000, `${asset.path} overschrijdt renditionbudget`);
+  }
+  for (const theme of portalThemeCatalog) {
+    const prefix = `/portal-themes/${theme.theme.key}`;
+    for (const path of [
+      `${prefix}/progress-journey-landscape-1440.avif`,
+      `${prefix}/progress-journey-portrait-640.avif`
+    ]) assert.ok(manifest.assets.some((asset) => asset.path === path), path);
+    if (theme.experience.mascot) {
+      assert.ok(manifest.assets.some((asset) => asset.path === `${prefix}/mascot-256.webp`), theme.theme.key);
+    }
+  }
+});
+
 test("Ocean Quest publiceert de vier definitieve bronassets byte-voor-byte", async () => {
   const sql = await readFile(oceanMigrationPath, "utf8");
   const expected = {

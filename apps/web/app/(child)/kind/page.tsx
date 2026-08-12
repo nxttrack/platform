@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { ChildJourneyMap } from "@/components/child/child-journey-map";
 import { ProgressRing } from "@/components/shell/ui";
-import { childJourneyNodes } from "@/lib/domain/child-journey-view";
+import { childJourneyEvents, childJourneyNodes } from "@/lib/domain/child-journey-view";
 import { getChildPortalData } from "@/lib/domain/child-portal";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
@@ -30,12 +30,14 @@ export default async function ChildTodayPage() {
       <div className="child-today__quest">
         <ChildJourneyMap
           desktopArtwork={theme.assets["overview.hero.desktop"]?.path ?? null}
+          events={childJourneyEvents(data.journey)}
+          mascotKind={theme.experience.mascot}
           mascotUrl={theme.assets["mascot.idle"]?.path ?? null}
           mobileArtwork={theme.assets["overview.hero.mobile"]?.path ?? null}
           nodes={childJourneyNodes(data.journey)}
         />
-        <section className="child-today__mobile-lesson"><CalendarDays aria-hidden="true" /><span><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt) : "Nog niet gepland"}</strong></span></section>
-        {rings.length ? <section aria-label="Mijn voortgang" className="child-today__quest-rings">
+        <section className="child-today__mobile-lesson" data-journey-exclusion><CalendarDays aria-hidden="true" /><span><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt) : "Nog niet gepland"}</strong></span></section>
+        {rings.length ? <section aria-label="Mijn voortgang" className="child-today__quest-rings" data-journey-exclusion>
           {rings.map((ring) => <div key={`${ring.kind}:${ring.key}`}>
             <ProgressRing label={ring.kind === "stage" ? "badje" : "diploma"} size={62} value={ring.progressPercent} />
             <small>{ring.kind === "stage" ? "Dit badje" : "Naar diploma"}</small>

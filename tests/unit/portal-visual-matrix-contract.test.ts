@@ -106,13 +106,12 @@ test("het kinddashboard gebruikt contrastrijke semantische tokens voor microcopy
   const styles = await readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");
   for (const selector of [
     "\\.child-today__quest-rings small",
-    "\\.child-journey-map__detail small",
     "\\.child-today__mobile-lesson small"
   ]) assert.match(styles, new RegExp(`${selector}\\s*\\{[^}]*color:\\s*var\\(--portal-text\\)`, "s"));
-  for (const selector of ["\\.child-journey-map__detail a", "\\.child-journey-map__detail b"]) {
+  for (const selector of ["\\.child-journey-map__popup > strong", "\\.child-journey-map__popup > a"]) {
     assert.match(styles, new RegExp(`${selector}\\s*\\{[^}]*color:\\s*var\\(--portal-primary-strong\\)`, "s"));
   }
-  assert.match(styles, /\.child-journey-map__controls\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--portal-primary-strong\) 88%, black\)/s);
+  assert.match(styles, /\.child-journey-map__help\s*\{[^}]*background:\s*color-mix\(in srgb, var\(--portal-primary-strong\) 88%, black\)/s);
   assert.match(styles, /\.child-shell__bottom-nav a\.is-active\s*\{[^}]*color:\s*var\(--portal-primary-strong\)/s);
 });
 
