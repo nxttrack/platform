@@ -110,6 +110,8 @@ Rollback vóór rollout: featurebranch terugdraaien en de additieve tabel, twee 
 - DOM-collisionmatrix: exact 630/630 groen (5 mascotthema's × 14 viewports × 9 states), harde 12px-clearance.
 - Swept-motion: current→first, first→last, last→interstitial, popupinterruptie en resizeinterruptie groen.
 - Journeyvisuals: exact 86/86 groen; 56 basis + 21 Ocean-selecties + 5 dense + 2 no-mascot + landscape + 200%-reflow.
+- GitHub cross-browser Journey-gate: 31 geslaagd, 17 bewust engine-/staginggebonden overgeslagen; Chromium, Firefox en WebKit groen in run `31561050025`. De Chromiummatrix omvat 630/630 DOM-eindstates en 86/86 renders; Firefox/WebKit voeren alle gedeelde kerninteracties uit.
+- Android native CI: quality gate, debug- en instrumentatie-APK's, unsigned releasebundles en artifactupload groen in run `31561050043`.
 - Playwright performance: LCP 180 ms, CLS 0, maximale Event Timing 72 ms, geen overflow/consolefouten/kapotte runtime-images.
 - Lighthouse: Performance 100, LCP 655 ms, CLS 0, TBT 0 ms, Speed Index 452 ms op het hierboven beschreven vaste profiel.
 
@@ -117,11 +119,12 @@ Artifactnamen, fixtures, viewports en tellers staan machineleesbaar in `docs/evi
 
 ### Open releasegates
 
-1. Firefox en WebKit konden lokaal niet starten door ontbrekende hostlibraries (Firefox: GTK/Pango; WebKit: GTK/GStreamer/WebKit-libraries) en er is geen sudo. `.github/workflows/ci.yml` installeert nu Chromium, Firefox en WebKit met dependencies en draait de volledige journeysuite. De draft PR blijft niet-mergeklaar totdat deze run groen is.
-2. De bestaande authenticated stagingmatrix van 322 canonieke renders en 196 dashboardviewportcases is in deze lokale run niet opnieuw uitgevoerd: de benodigde accounts/fixturestate ontbreken en deze opdracht verbiedt remote-databasetoegang. De contracttellers blijven exact 322/196 en zijn niet verlaagd; feitelijk deze run: 0/322 en 0/196. De unieke samengestelde contractunion is 408 (322 + de afzonderlijke 86 journey-artifacts); feitelijk lokaal gegenereerde union: 86.
-3. Fysieke trackpad- en NVDA/VoiceOver/TalkBack-smokes zijn niet uitgevoerd; WheelEvent/CDP-touch, axe en focustests claimen alleen hun geautomatiseerde bereik.
+1. De bestaande authenticated stagingmatrix van 322 canonieke renders en 196 dashboardviewportcases is in deze run niet opnieuw uitgevoerd: de benodigde accounts/fixturestate ontbreken en deze opdracht verbiedt remote-databasetoegang. De contracttellers blijven exact 322/196 en zijn niet verlaagd; feitelijk deze run: 0/322 en 0/196. De unieke samengestelde contractunion is 408 (322 + de afzonderlijke 86 journey-artifacts); feitelijk lokaal gegenereerde union: 86.
+2. Fysieke trackpad- en NVDA/VoiceOver/TalkBack-smokes zijn niet uitgevoerd; WheelEvent/CDP-touch, axe en focustests claimen alleen hun geautomatiseerde bereik.
 
-Er is niets gemerged of gedeployed; rolloutflags blijven uit. De branch mag worden gepusht om CI en PR-artifactopslag te laten draaien, maar de draft PR mag pas mergeklaar na beide bovenstaande geautomatiseerde releasegates.
+Firefox en WebKit konden lokaal niet starten door ontbrekende hostlibraries, maar die enginegate is niet langer open: GitHub Actions installeerde de dependencies en sloot Chromium, Firefox en WebKit groen af in run `31561050025`. Tijdens deze gate zijn een stale compositor-eindframe, pointerfocus/camera-race en testhydratatiegrens hersteld en opnieuw aantoonbaar doorgelopen.
+
+Er is niets gemerged of gedeployed; rolloutflags blijven uit. De branch is uitsluitend gepusht voor CI en PR-artifactopslag. De draft PR blijft niet-mergeklaar totdat de authenticated stagingmatrix en de afgesproken handmatige smokes zijn afgerond of expliciet als uitzondering zijn geaccepteerd.
 
 | Bevestiging | Ja / Nee / Geblokkeerd | Bewijs |
 | --- | --- | --- |
@@ -138,5 +141,5 @@ Er is niets gemerged of gedeployed; rolloutflags blijven uit. De branch mag word
 | Default en Nationaal correct zonder mascotte | Ja | no-mascot E2E en gerichte renders |
 | Responsive en reduced motion groen | Ja | 14 viewports, landscape, 200% en reduced motion |
 | Parent/child-isolatie en surpriseprivacy behouden | Ja | contracttests 27/27 en serverqueryboundary |
-| Alle tests, renders en bewijsartifacts groen | Geblokkeerd | lokale Chromiumsets groen; Firefox/WebKit en authenticated 322/196 wachten op CI/staging |
-| Resterende afwijkingen: geen | Nee | twee expliciete externe releasegates hierboven |
+| Alle tests, renders en bewijsartifacts groen | Geblokkeerd | lokale en cross-browser CI-sets groen; authenticated 322/196 en fysieke smokes staan nog open |
+| Resterende afwijkingen: geen | Nee | twee expliciete releasechecks hierboven |
