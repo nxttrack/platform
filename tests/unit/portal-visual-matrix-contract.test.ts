@@ -123,9 +123,12 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
     readFile(new URL("../../scripts/staging/parent-child-preview-fixture.mjs", import.meta.url), "utf8")
   ]);
   assert.match(workflow, /inputs\.target == 'staging'/);
-  assert.match(workflow, /88953f676ac8970ab97bdfc61088c6021854fd3e/);
+  assert.match(workflow, /1615678e069b5052a488528142c5e6402c614d16/);
   assert.match(workflow, /test "\$TARGET" = "staging"/);
-  assert.match(workflow, /20260811120000[\s\S]+20260811130000[\s\S]+20260811140000[\s\S]+20260811180455/);
+  assert.match(
+    workflow,
+    /20260811120000[\s\S]+20260811130000[\s\S]+20260811140000[\s\S]+20260811180455[\s\S]+20260812120000/
+  );
   assert.match(workflow, /theme wrappers service-only/);
   assert.match(workflow, /Refusing unexpected staging migrations/);
   assert.match(workflow, /PHASE16_RESET_E2E_PASSWORDS:[\s\S]+false/);
