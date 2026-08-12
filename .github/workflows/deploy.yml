@@ -54,7 +54,7 @@ jobs:
       github.ref_name == 'main' ||
       (inputs.target == 'staging' &&
       github.ref_name == 'codex/parent-child-portals-v1' &&
-      inputs.staging_preview_sha == '88953f676ac8970ab97bdfc61088c6021854fd3e')
+      inputs.staging_preview_sha == '1615678e069b5052a488528142c5e6402c614d16')
     runs-on: [self-hosted, linux, x64, nxttrack]
 
     environment: ${{ inputs.target }}
@@ -358,7 +358,8 @@ jobs:
             "20260811120000",
             "20260811130000",
             "20260811140000",
-            "20260811180455"
+            "20260811180455",
+            "20260812120000"
           ]);
           const local = readdirSync("supabase/migrations")
             .filter((file) => !file.endsWith("_legacy_remote_history.sql"))
@@ -387,7 +388,13 @@ jobs:
           set -euo pipefail
           node --input-type=module <<'NODE'
           import pg from "pg";
-          const expected = ["20260811120000", "20260811130000", "20260811140000", "20260811180455"];
+          const expected = [
+            "20260811120000",
+            "20260811130000",
+            "20260811140000",
+            "20260811180455",
+            "20260812120000"
+          ];
           const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
           await client.connect();
           const result = await client.query(
