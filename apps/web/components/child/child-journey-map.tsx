@@ -269,8 +269,10 @@ export function ChildJourneyMap({
       });
       if (samePlacement(previousMascotPlacementRef.current, placement)) {
         pendingMascotEntryRef.current = selectedEntryId;
-        setMascotSettledEntryId(selectedEntryId);
-        setMotionSettled(true);
+        // A compositor can still be painting the previous WAAPI endpoint even
+        // when layout already exposes the new left/top values. Re-enter the
+        // endpoint verifier instead of publishing a premature settled signal.
+        setMascotPlacement({ ...placement });
         return;
       }
       pendingMascotEntryRef.current = selectedEntryId;
@@ -290,17 +292,43 @@ export function ChildJourneyMap({
     const targetEntryId = pendingMascotEntryRef.current;
     const previous = previousMascotPlacementRef.current;
     previousMascotPlacementRef.current = mascotPlacement;
-    if (!previous || previous.mode === "hidden" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      let settledFrame = 0;
-      const paintFrame = requestAnimationFrame(() => {
-        settledFrame = requestAnimationFrame(() => {
+    let active = true;
+    let paintFrame = 0;
+    let endpointAttempts = 0;
+    let stableEndpointFrames = 0;
+    const settleAfterRenderedEndpoint = () => {
+      if (!active) return;
+      paintFrame = requestAnimationFrame(() => {
+        if (!active) return;
+        const viewportElement = viewportRef.current;
+        if (!viewportElement) return;
+        const viewportBox = viewportElement.getBoundingClientRect();
+        const mascotBox = element.getBoundingClientRect();
+        const endpointMatches = Math.abs(mascotBox.left - (viewportBox.left + mascotPlacement.x)) <= 1
+          && Math.abs(mascotBox.top - (viewportBox.top + mascotPlacement.y)) <= 1
+          && Math.abs(mascotBox.width - mascotPlacement.width) <= 1
+          && Math.abs(mascotBox.height - mascotPlacement.height) <= 1;
+        stableEndpointFrames = endpointMatches ? stableEndpointFrames + 1 : 0;
+        endpointAttempts += 1;
+        if (stableEndpointFrames >= 2) {
           setMascotSettledEntryId(targetEntryId);
           setMotionSettled(true);
-        });
+          return;
+        }
+        if (endpointAttempts >= 90) {
+          // Re-measure all live blockers instead of ever publishing a stale
+          // compositor position as collision-safe.
+          setCameraEpoch((value) => value + 1);
+          return;
+        }
+        settleAfterRenderedEndpoint();
       });
+    };
+    if (!previous || previous.mode === "hidden" || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      settleAfterRenderedEndpoint();
       return () => {
+        active = false;
         cancelAnimationFrame(paintFrame);
-        cancelAnimationFrame(settledFrame);
       };
     }
     const plan = mascotMotionPlan({ from: previous, to: mascotPlacement, exclusions: collisionRectsRef.current });
@@ -314,24 +342,10 @@ export function ChildJourneyMap({
           })),
       { duration: plan.mode === "crossfade" ? 180 : 420, easing: "cubic-bezier(.2,.8,.2,1)" }
     );
-    let active = true;
-    let paintFrame = 0;
-    let settledFrame = 0;
-    const settleAfterPaint = () => {
-      if (!active) return;
-      paintFrame = requestAnimationFrame(() => {
-        settledFrame = requestAnimationFrame(() => {
-          if (!active) return;
-          setMascotSettledEntryId(targetEntryId);
-          setMotionSettled(true);
-        });
-      });
-    };
-    animation.finished.then(settleAfterPaint).catch(settleAfterPaint);
+    animation.finished.then(settleAfterRenderedEndpoint).catch(settleAfterRenderedEndpoint);
     return () => {
       active = false;
       cancelAnimationFrame(paintFrame);
-      cancelAnimationFrame(settledFrame);
       animation.cancel();
     };
   }, [mascotPlacement]);

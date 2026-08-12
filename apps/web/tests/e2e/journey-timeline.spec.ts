@@ -72,7 +72,7 @@ test("tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe", 
   const help = page.getByRole("status").filter({ hasText: "Sleep, veeg" });
   await expect(help).toBeVisible();
   await help.getByRole("button", { name: "Uitleg sluiten" }).click();
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(help).toHaveCount(0);
   await page.locator('[data-child-journey-entry="event:surprise-tussen"]').click();
   const dialog = page.getByRole("dialog");
