@@ -72,10 +72,12 @@ test("tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe", 
   const help = page.getByRole("status").filter({ hasText: "Sleep, veeg" });
   await expect(help).toBeVisible();
   await help.getByRole("button", { name: "Uitleg sluiten" }).click();
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await expect(help).toHaveCount(0);
-  await page.locator('[data-child-journey-entry="event:surprise-tussen"]').click();
-  const dialog = page.getByRole("dialog");
+  const revisit = await page.context().newPage();
+  await revisit.goto(page.url(), { waitUntil: "domcontentloaded" });
+  await page.close();
+  await expect(revisit.getByRole("status").filter({ hasText: "Sleep, veeg" })).toHaveCount(0);
+  await revisit.locator('[data-child-journey-entry="event:surprise-tussen"]').click();
+  const dialog = revisit.getByRole("dialog");
   await expect(dialog).toContainText("Verrassingsbadge verdiend");
   await expect(dialog.getByRole("link", { name: "Vier dit moment" })).toHaveAttribute("href", "/kind/badges?badge=surprise-tussen&vier=1");
   await expect(dialog.locator('a[href^="/portaal"]')).toHaveCount(0);
