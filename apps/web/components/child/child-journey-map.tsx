@@ -564,7 +564,12 @@ export function ChildJourneyMap({
                   onFocus={() => {
                     viewportRef.current?.scrollTo({ left: 0, top: 0 });
                     setPreviewEntryId(entry.id);
-                    setSelectedEntryId(entry.id);
+                    // Pointer focus happens between pointerdown and click. Moving
+                    // the camera in that window can move the target far enough
+                    // for WebKit to cancel click. Keyboard/programmatic focus
+                    // still selects immediately; pointer click remains atomic in
+                    // `activateEntry` after the target is released.
+                    if (!pointerRef.current) setSelectedEntryId(entry.id);
                   }}
                   onKeyDown={(event) => moveSelection(event, index)}
                   onMouseEnter={() => setPreviewEntryId(entry.id)}
