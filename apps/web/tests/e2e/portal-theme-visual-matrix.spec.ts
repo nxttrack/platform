@@ -330,8 +330,10 @@ async function captureChildParentReauth(
   await enterChildPortal(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await gotoStable(page, "/kind");
-  await page.getByRole("button", { name: "Naar ouderportaal" }).click();
-  await page.waitForURL(/\/login\?/);
+  await Promise.all([
+    page.waitForURL(/\/login\?/, { timeout: 60_000, waitUntil: "domcontentloaded" }),
+    page.getByRole("button", { name: "Naar ouderportaal" }).click()
+  ]);
   await attachViewport(testInfo, page, `${theme}-child-parent-reauth-mobile`);
   await context.close();
   return { canonicalRenders: 0, dashboardViewportCases: 0, evidence: [] };

@@ -73,6 +73,7 @@ export function ChildPortalShell({
     const channel = "BroadcastChannel" in window ? new BroadcastChannel("nxttrack.portal-session") : null;
     const hideAndReplace = (mode: unknown) => {
       if (mode !== "parent" && mode !== "locked") return;
+      if (document.documentElement.dataset.portalSessionTransition === "true") return;
       document.documentElement.dataset.portalSessionTransition = "true";
       window.location.replace(mode === "parent" ? "/portaal" : "/login?error=child_session_locked");
     };

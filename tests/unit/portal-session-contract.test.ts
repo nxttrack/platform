@@ -16,6 +16,7 @@ const migration = readFileSync(
 const proxy = readFileSync(new URL("../../apps/web/proxy.ts", import.meta.url), "utf8");
 const serverGuard = readFileSync(new URL("../../apps/web/lib/auth/server-guard.ts", import.meta.url), "utf8");
 const serverContext = readFileSync(new URL("../../apps/web/lib/auth/server-context.ts", import.meta.url), "utf8");
+const childShell = readFileSync(new URL("../../apps/web/components/child/child-portal-shell.tsx", import.meta.url), "utf8");
 
 describe("session-bound child portal", () => {
   it("publishes exactly the approved capability allowlist", () => {
@@ -104,6 +105,8 @@ describe("session-bound child portal", () => {
     assert.match(migration, /expires_at <= created_at \+ interval '5 minutes'/);
     assert.match(migration, /consumed_at is null/);
     assert.match(migration, /parent_reauth_completed/);
+    assert.match(childShell, /dataset\.portalSessionTransition === "true"/);
+    assert.match(childShell, /onSubmit=\{lockForParentReauthentication\}/);
   });
 
   it("marks private routes no-store and globally redirects an active child session", () => {
