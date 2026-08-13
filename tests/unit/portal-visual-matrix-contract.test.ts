@@ -123,7 +123,7 @@ test("stagingpreview is exact-SHA, migration-allowlisted en behoudt beheeridenti
     readFile(new URL("../../scripts/staging/parent-child-preview-fixture.mjs", import.meta.url), "utf8")
   ]);
   assert.match(workflow, /inputs\.target == 'staging'/);
-  assert.match(workflow, /f4fde88b091a488327cad211e747e63b8b778882/);
+  assert.match(workflow, /9977f6fc4418c8bbb492be9e285a916b2c88c559/);
   assert.match(workflow, /test "\$TARGET" = "staging"/);
   assert.match(
     workflow,
