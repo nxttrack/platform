@@ -111,6 +111,8 @@ test("gedeelde PortalShell, routeframe, ronde kindselector en exacte Inboxacties
   ]);
   assert.match(layout, /PortalRouteFrame/);
   assert.match(layout, /Alle kinderen/);
+  assert.match(layout, /nav=\{parentNav\}/);
+  assert.doesNotMatch(layout, /getProgressNavigationLabel/);
   assert.match(shell, /rounded-full/);
   assert.match(inbox, /Alles als gelezen markeren/);
   assert.match(inbox, /Nieuw bericht/);

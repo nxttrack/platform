@@ -9,7 +9,7 @@ import { parentMoreNav, parentNav } from "@/lib/navigation";
 import { getNotificationCenter } from "@/lib/domain/communication-hub";
 import { getParentPortalData } from "@/lib/domain/parent-portal";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getProgressNavigationLabel, portalThemeCssVariables } from "@/lib/theme/portal-theme-web";
+import { portalThemeCssVariables } from "@/lib/theme/portal-theme-web";
 
 export const metadata: Metadata = privateRouteMetadata;
 export const dynamic = "force-dynamic";
@@ -37,10 +37,6 @@ export default async function ParentLayout({ children }: { children: React.React
       .map((enrollment) => [enrollment.participant_id, enrollment])
   );
   const programById = new Map(portal.programs.map((program) => [program.id, program]));
-  const themedNavigation = parentNav.map((item) =>
-    item.href === "/portaal/ontwikkeling" ? { ...item, label: getProgressNavigationLabel(theme) } : item
-  );
-
   return (
     <div
       className="portal-theme-root"
@@ -72,7 +68,7 @@ export default async function ParentLayout({ children }: { children: React.React
         }}
         contextSelectorPlacement="profile"
         mobileBottomNav
-        nav={themedNavigation}
+        nav={parentNav}
         notificationCenter={notificationCenter}
         profileMenu={parentMoreNav}
         user={{ name: context.user.displayName ?? context.user.email ?? "NXTTRACK gebruiker", role }}
