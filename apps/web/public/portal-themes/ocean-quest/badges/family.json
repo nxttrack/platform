@@ -1,0 +1,35 @@
+{
+  "family_id": "ocean-quest",
+  "family_version": "1.0.0",
+  "theme_release": "ocean-quest@1.2.2",
+  "prompt_version": "1.0.0",
+  "reference_board": {
+    "file": "ocean-quest-badge-family-v1-8k.png",
+    "width": 7680,
+    "height": 5760,
+    "sha256": "c7799753cc0c922a34761596bc0e07c5b347aa5616453c6cce7c11d0cb94a6c6"
+  },
+  "asset_contract": {
+    "format": "png",
+    "color_space": "sRGB",
+    "alpha": true,
+    "native_width": 1254,
+    "native_height": 1254,
+    "text_in_artwork": false,
+    "audience_scope_default": "all"
+  },
+  "badges": [
+    { "badge_key": "water_friend", "name": "Watervriend", "collection": "Mijn Zwemstart", "file": "watervriend.png", "sha256": "d4b09709487f1c73b820b9819682d4ec43065125bab505ab3fd193b16ee65814" },
+    { "badge_key": "first_splash", "name": "Eerste plons", "collection": "Mijn Zwemstart", "file": "eerste-plons.png", "sha256": "20d03eb7442f34af95b62b81b5b04f05efba828ce02c44a3c3d5ba1a3a1ac1a1" },
+    { "badge_key": "float_champion", "name": "Drijfkampioen", "collection": "Mijn Zwemskills", "file": "drijfkampioen.png", "sha256": "1d2f1414267b74a7073ec9777c1488b5c099e56bc7a3d2bc359dbd74b642840e" },
+    { "badge_key": "power_legs", "name": "Sterke benen", "collection": "Mijn Zwemskills", "file": "sterke-benen.png", "sha256": "71b547d36da9ffdf41110650c0b14a2a66f6d88f158b6b38218507081280d7be" },
+    { "badge_key": "bubble_boss", "name": "Bellenbaas", "collection": "Mijn Zwemskills", "file": "bellenbaas.png", "sha256": "2993a59d89767d4e578c0ff1e87fcbb76e57007c4d6085e7c444ccd4d2817340" },
+    { "badge_key": "dive_explorer", "name": "Duikontdekker", "collection": "Mijn Zwemskills", "file": "duikontdekker.png", "sha256": "adb362c2ca09c5da4baa27715be4b185c57100e2999e686c94f6bdd286105356" },
+    { "badge_key": "safety_hero", "name": "Veiligheidsheld", "collection": "Veilig & Sterk", "file": "veiligheidsheld.png", "sha256": "21a0a935a8d9d3009c490f5259f333b47df87747c424ffd26355fad550723347" },
+    { "badge_key": "keep_going", "name": "Doorzetter", "collection": "Mijn Groeikracht", "file": "doorzetter.png", "sha256": "dc8ce59ecf108d915631d0b72b0881cc9ea7a809c6993fa476f718ed69e1f78d" },
+    { "badge_key": "back_float", "name": "Rugzwemmer", "collection": "Mijn Zwemskills", "file": "rugzwemmer.png", "sha256": "6121656dfc0ab290a6e583c3f90410e9b1f080083f1d0fe93121f3c38a28e5e3" },
+    { "badge_key": "lane_star", "name": "Baantjeskanjer", "collection": "Mijn Zwemskills", "file": "baantjeskanjer.png", "sha256": "2d429baf254258f5fdab621b2593e9389383e548d6e678361c4cab4ab84a693d" },
+    { "badge_key": "team_buddy", "name": "Teammaatje", "collection": "Mijn Groeikracht", "file": "teammaatje.png", "sha256": "43160ba322b3a4811fcb4b5f5aee433dafd9df5d3a9271d28a8402cece08778b" },
+    { "badge_key": "ready_for_a", "name": "Klaar voor A", "collection": "Mijlpalen", "file": "klaar-voor-a.png", "sha256": "eb57f34bee04e0ef40c1d7cf4ca24f59ee6cbf6d993621c6961392889f7a2769" }
+  ]
+}

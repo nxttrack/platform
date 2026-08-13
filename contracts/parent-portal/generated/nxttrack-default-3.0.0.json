@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 3,
+  "portalContract": "parent-portal/1.2",
+  "themeKey": "nxttrack-default",
+  "release": "3.0.0",
+  "compatibility": {
+    "portalContract": "parent-portal/1.2",
+    "minimumWebBuild": "2026.08.03",
+    "requiredFeatureFlags": [
+      "parent_portal_theme_pack_v3"
+    ]
+  },
+  "navigation": {
+    "primaryDestinations": [
+      "overview",
+      "planning",
+      "development",
+      "inbox",
+      "more"
+    ],
+    "routeIds": [
+      "overview",
+      "planning",
+      "lesson-detail",
+      "development",
+      "badges",
+      "media",
+      "diplomas",
+      "inbox",
+      "payments",
+      "documents",
+      "feedback",
+      "children",
+      "profile"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "canvas": "#F7F9FF",
+      "surface": "rgba(255,255,255,.96)",
+      "surfaceAlt": "#EAF1FF",
+      "text": "#172A46",
+      "textMuted": "#6B7C93",
+      "primary": "#4D63E6",
+      "primaryStrong": "#172A46",
+      "secondary": "#15B8A6",
+      "reward": "#F0B447",
+      "rail": "#172640",
+      "info": "#4D63E6",
+      "success": "#1EAF82",
+      "warning": "#7A4B00",
+      "danger": "#EF6C75"
+    },
+    "gradients": {
+      "page": [
+        "#F7F9FF",
+        "#EAF1FF",
+        "#EFFBF8"
+      ],
+      "sidebar": [
+        "#26365B",
+        "#1E2E50",
+        "#172640"
+      ]
+    },
+    "radii": {
+      "card": "22px",
+      "hero": "29px"
+    },
+    "typography": {
+      "display": "\"Inter Variable\", Inter, system-ui, sans-serif",
+      "body": "\"Inter Variable\", Inter, system-ui, sans-serif"
+    },
+    "motionMilliseconds": {
+      "microMs": 140,
+      "standardMs": 220,
+      "celebrationMs": 480
+    }
+  },
+  "recipes": {
+    "shell": "portal-shell/shared-v1",
+    "pages": {
+      "overview": "overview/journey-engine-v1",
+      "planning": "planning/timeline-v1",
+      "lesson-detail": "page/data-first-v2",
+      "development": "development/progress-v1",
+      "badges": "badges/placeholder-wall-v1",
+      "media": "page/data-first-v2",
+      "diplomas": "page/data-first-v2",
+      "inbox": "page/data-first-v2",
+      "payments": "page/data-first-v2",
+      "documents": "page/data-first-v2",
+      "feedback": "page/data-first-v2",
+      "children": "page/data-first-v2",
+      "profile": "page/data-first-v2"
+    },
+    "components": {
+      "assessment": "assessment/five-point-v1",
+      "childPicker": "child-picker/pearl-v1",
+      "inboxActions": "inbox-actions/icon-pair-v1",
+      "mediaBlend": "media-blend/surface-fade-v1"
+    }
+  },
+  "assets": {
+    "overview.hero.desktop": {
+      "path": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "contentHash": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "overview.hero.mobile": {
+      "path": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "contentHash": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.desktop": {
+      "path": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "contentHash": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.mobile": {
+      "path": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "contentHash": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    }
+  },
+  "badges": {
+    "familyKey": "neutral-artwork-placeholders",
+    "release": "1.0.0",
+    "fallbackRecipe": "badge-fallback/neutral-placeholder-v1",
+    "status": "review"
+  },
+  "behavior": {
+    "hapticsProfile": "calm",
+    "soundProfile": "off-by-default",
+    "offlineCacheKey": "tenantId+themeKey+release",
+    "unknownRecipe": "fallback-to-default-and-report",
+    "childPicker": "native-popover-or-sheet",
+    "secureExternalNavigationOnly": true
+  },
+  "assessment": {
+    "scaleVersion": "five_point_v1",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unratedValue": null,
+    "displayModes": [
+      "smileys",
+      "stars"
+    ],
+    "optionCount": 5
+  },
+  "accessibility": {
+    "colorMode": "light",
+    "minimumContrast": "WCAG-AA",
+    "supportsReducedMotion": true,
+    "supportsDynamicType": true
+  }
+}

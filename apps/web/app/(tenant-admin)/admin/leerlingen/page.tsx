@@ -136,7 +136,7 @@ function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCor
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
       <SelectField label="Badge-aanspreekvorm" name="gender">
-        <option value="unknown">Neutraal / onbekend</option>
+        <option value="unknown_legacy">Neutraal / onbekend</option>
         <option value="boy">Jongen</option>
         <option value="girl">Meisje</option>
       </SelectField>
@@ -181,6 +181,11 @@ function PlacementForm({
         <option value="active">Actief</option>
         <option value="trial">Proefles</option>
         <option value="paused">Gepauzeerd</option>
+      </SelectField>
+      <SelectField label="Capaciteitsbucket" name="capacityBucket">
+        <option value="regular">Regulier</option>
+        <option value="flex">Flex</option>
+        <option value="trial">Proef (automatisch bij proefles)</option>
       </SelectField>
       <Field label="Capaciteitsgewicht" name="capacityWeight" type="number" defaultValue={1} />
       <Field label="Startdatum" name="startsOn" type="date" />

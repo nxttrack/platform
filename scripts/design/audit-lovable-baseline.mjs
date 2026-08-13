@@ -94,7 +94,8 @@ requireText("apps/web/components/ui/tabs.tsx", "TabsPrimitive.Trigger", "Radix T
 requireText("apps/web/components/ui/alert-dialog.tsx", "AlertDialogPrimitive.Description", "AlertDialog accessible description composition is missing.");
 requireText("apps/web/components/ui/confirm-action-form.tsx", 'type="submit"', "Confirmed actions do not submit through the owning server-action form.");
 requireText("apps/web/app/(instructor)/instructor/student/[id]/page.tsx", "getDossierTab", "Instructor student dossier does not preserve a safe active tab across server-action redirects.");
-requireText("apps/web/app/(portaal)/portaal/lessen/page.tsx", "ConfirmActionForm", "Lesson cancellation is missing explicit confirmation.");
+requireText("apps/web/app/(portaal)/portaal/planning/parent-planning-page.tsx", "ConfirmActionForm", "Lesson cancellation is missing explicit confirmation.");
+requireText("apps/web/lib/domain/parent-portal-actions.ts", 'formData.get("humanConfirmation") !== "confirmed"', "Lesson cancellation confirmation is not enforced server-side.");
 requireText("apps/web/components/shell/ui.tsx", "export function ProgressRing", "ProgressRing primitive is missing.");
 requireText("apps/web/components/shell/ui.tsx", "export function WaitlistDot", "WaitlistDot primitive is missing.");
 requireText("apps/web/components/lovable/page-kit.tsx", "export function Photo", "Photo primitive is missing.");

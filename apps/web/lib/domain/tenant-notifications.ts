@@ -42,6 +42,7 @@ export async function createTenantNotifications(input: {
   entityType?: string | null;
   entityId?: string | null;
   actionHref?: string | null;
+  dedupeKey?: string | null;
 }) {
   const recipientIds = unique(input.recipientIds);
 
@@ -50,10 +51,7 @@ export async function createTenantNotifications(input: {
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("tenant_notifications")
-    .insert(
-      recipientIds.map((recipientId) => ({
+  const rows = recipientIds.map((recipientId) => ({
         tenant_id: input.tenantId,
         recipient_user_id: recipientId,
         participant_id: input.participantId ?? null,
@@ -66,9 +64,18 @@ export async function createTenantNotifications(input: {
         entity_id: input.entityId ?? null,
         action_href: input.actionHref ?? null,
         related_progress_score_id: input.relatedProgressScoreId ?? null,
-        related_badge_award_id: input.relatedBadgeAwardId ?? null
-      }))
-    )
+        related_badge_award_id: input.relatedBadgeAwardId ?? null,
+        dedupe_key: input.dedupeKey ?? null
+      }));
+  const query = input.dedupeKey
+    ? admin
+        .from("tenant_notifications")
+        .upsert(rows, {
+          ignoreDuplicates: true,
+          onConflict: "tenant_id,recipient_user_id,dedupe_key"
+        })
+    : admin.from("tenant_notifications").insert(rows);
+  const { data, error } = await query
     .select("id, recipient_user_id, title, message");
 
   if (error || !data) {

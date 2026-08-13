@@ -11,6 +11,8 @@ export function AdminActionDrawer({
   children,
   description,
   icon,
+  triggerAriaLabel,
+  triggerIconOnly = false,
   title,
   triggerLabel,
   triggerVariant = "default",
@@ -19,17 +21,25 @@ export function AdminActionDrawer({
   children: ReactNode;
   description?: string;
   icon?: ReactNode;
+  triggerAriaLabel?: string;
+  triggerIconOnly?: boolean;
   title: string;
-  triggerLabel: string;
+  triggerLabel: ReactNode;
   triggerVariant?: "default" | "outline";
   width?: "default" | "wide";
 }) {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant={triggerVariant}>
+        <Button
+          aria-label={triggerAriaLabel}
+          className={triggerIconOnly ? "size-11 rounded-full p-0" : undefined}
+          size={triggerIconOnly ? "icon" : "default"}
+          title={triggerAriaLabel}
+          variant={triggerVariant}
+        >
           {icon ?? <Plus className="size-4" aria-hidden="true" />}
-          {triggerLabel}
+          {triggerIconOnly ? <span className="sr-only">{triggerLabel}</span> : triggerLabel}
         </Button>
       </SheetTrigger>
       <SheetContent

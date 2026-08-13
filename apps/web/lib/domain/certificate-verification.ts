@@ -11,6 +11,7 @@ export type PublicCertificateVerification = {
   programName: string;
   stageName: string;
   status: "valid" | "revoked";
+  tenantId: string;
   title: string;
   verifiedAt: string;
 };
@@ -49,6 +50,7 @@ export async function verifyPublicCertificate(code: string): Promise<PublicCerti
     programName: program.data.name,
     stageName: stage.data.name,
     status,
+    tenantId: certificate.data.tenant_id,
     title: certificate.data.title,
     verifiedAt: new Date().toISOString()
   };

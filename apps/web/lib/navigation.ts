@@ -1,18 +1,35 @@
 import type { NavItem } from "@/components/shell/app-shell";
 
 export const parentNav: NavItem[] = [
-  { href: "/portaal", label: "Home", icon: "home" },
-  { href: "/portaal/kinderen", label: "Kinderen", icon: "baby" },
-  { href: "/portaal/lessen", label: "Mijn lessen", icon: "waves" },
-  { href: "/portaal/voortgang", label: "Voortgang", icon: "trending" },
-  { href: "/portaal/media", label: "Media", icon: "file" },
-  { href: "/portaal/badges", label: "Badges", icon: "award" },
-  { href: "/portaal/afzwemmen", label: "Afzwemmen", icon: "calendar" },
-  { href: "/portaal/berichten", label: "Berichten", icon: "message" },
-  { href: "/portaal/feedback", label: "Feedback", icon: "chart" },
-  { href: "/portaal/diplomas", label: "Diploma's", icon: "graduation" },
+  { href: "/portaal", label: "Overzicht", icon: "home", exact: true, section: "Portaal" },
+  {
+    href: "/portaal/planning",
+    label: "Planning",
+    icon: "calendar",
+    section: "Portaal",
+    activePrefixes: ["/portaal/lessen", "/portaal/afzwemmen"]
+  },
+  {
+    href: "/portaal/ontwikkeling",
+    label: "Ontwikkeling",
+    icon: "trending",
+    section: "Portaal",
+    activePrefixes: ["/portaal/voortgang", "/portaal/badges", "/portaal/media", "/portaal/diplomas"]
+  },
+  {
+    href: "/portaal/inbox",
+    label: "Inbox",
+    icon: "inbox",
+    section: "Portaal",
+    activePrefixes: ["/portaal/berichten"]
+  },
+  { href: "/portaal/betalingen", label: "Betalingen", icon: "card", section: "Portaal" }
+];
+
+export const parentMoreNav: NavItem[] = [
   { href: "/portaal/documenten", label: "Documenten", icon: "file" },
-  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" },
+  { href: "/portaal/feedback", label: "Feedback", icon: "chart" },
+  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users" },
   { href: "/portaal/profiel", label: "Profiel", icon: "user" }
 ];
 
@@ -79,6 +96,7 @@ export const platformNav: NavItem[] = [
   { href: "/platform", label: "Overzicht", icon: "home" },
   { href: "/platform/packages", label: "Packages & features", icon: "boxes" },
   { href: "/platform/onboarding", label: "Onboarding", icon: "waves" },
+  { href: "/platform/themes", label: "Ouderportaalthema’s", icon: "palette" },
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
   { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },

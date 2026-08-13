@@ -20,10 +20,12 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
   });
 
   test("admin creates the core, planning, billing, document and communication chain", async ({ page }, testInfo) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const state = requireState();
     const failures = collectRuntimeFailures(page);
-    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${testInfo.retry}`;
+    const runId = process.env.GITHUB_RUN_ID ?? String(Date.now());
+    const runAttempt = process.env.GITHUB_RUN_ATTEMPT ?? "1";
+    const suffix = `${runId}-${runAttempt}-${testInfo.retry}`;
     const programName = `Sprint 4 Admin Programma ${suffix}`;
     const programCode = `sprint4-admin-program-${suffix}`;
     const stageName = `Sprint 4 Admin Stage ${suffix}`;
@@ -36,7 +38,13 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     const paymentReference = `sprint4-admin-payment-${suffix}`;
     const documentTitle = `Sprint 4 Admin Document ${suffix}`;
     const messageTitle = `Sprint 4 Admin Bericht ${suffix}`;
+    const numericRunId = Number.parseInt(runId, 10) || Date.now();
     const today = dateValue(0);
+    const scheduleDate = nextIsoWeekdayDate(7, Number(runId) % 90);
+    const scheduleHour = 20 + testInfo.retry;
+    const sessionDays = 1 + (numericRunId % 13);
+    const sessionHour = 2 + (Math.floor(numericRunId / 13) % 3);
+    const sessionMinute = (Math.floor(numericRunId / 39) % 50) + testInfo.retry * 5;
 
     await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
 
@@ -49,7 +57,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(page.locator("article").filter({ hasText: programName })).toHaveCount(1);
 
     await page.goto("/admin/programma", { waitUntil: "domcontentloaded" });
-    await openAction(page, "Niveau toevoegen");
+    await openAction(page, "Legacy niveau");
     form = formWithButton(page, "Stage opslaan");
     await selectOptionByText(form.getByLabel("Programma"), programName);
     await form.getByLabel("Naam").fill(stageName);
@@ -59,28 +67,52 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await mutationExpect(page.locator("article").filter({ hasText: programName }).getByText("1 badje(s)", { exact: false })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
-    await openAction(page, "Nieuwe groep");
-    form = formWithButton(page, "Lesgroep opslaan");
-    await form.getByLabel("Naam").fill(groupName);
-    await form.getByLabel("Code").fill(groupCode);
+    await openAction(page, "Masterdata");
+    await page.getByText("Geverifieerde instructeurkwalificatie", { exact: true }).click();
+    form = formWithButton(page, "Kwalificatie verifiëren");
+    await selectOptionByText(form.getByLabel("Instructeur"), state.users.instructor.fullName);
     await selectOptionByText(form.getByLabel("Programma"), programName);
-    await selectOptionByText(form.getByLabel("Niveau"), stageName);
-    await form.getByLabel("Capaciteit").fill("6");
-    await form.getByLabel("Vaste dag").selectOption("3");
-    await form.getByLabel("Starttijd").fill("17:00");
-    await form.getByLabel("Eindtijd").fill("17:45");
-    await submitAndWaitForSaved(page, form, "Lesgroep opslaan", "/admin/groepen", "1");
-    await filterResourceTable(page, "Zoek groep…", groupName);
-    await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
+    await selectOptionByText(form.getByLabel("Badje (optioneel)"), stageName);
+    await form.getByLabel("Kwalificatiesleutel").fill("sprint4_admin_group_publish");
+    await form.getByLabel("Naam").fill("Sprint 4 admin groepspublicatie");
+    await form.getByLabel("Geldig vanaf").fill(today);
+    await form.getByLabel("Geldig tot").fill(dateValue(700));
+    await submitAndWaitForSaved(page, form, "Kwalificatie verifiëren", "/admin/groepen", "qualification");
+    await expect(page.getByRole("status").filter({ hasText: "Kwalificatie geverifieerd." })).toBeVisible();
 
     await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
-    await openAction(page, "Instructeur koppelen");
-    form = formWithButton(page, "Instructeur koppelen");
-    await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
-    await selectOptionByText(form.getByLabel("Instructeur"), state.users.instructor.fullName);
-    await form.getByLabel("Vanaf").fill(today);
-    await submitAndWaitForSaved(page, form, "Instructeur koppelen", "/admin/groepen", "1");
+    await openAction(page, "Nieuwe groep");
+    const groupWizard = page.getByRole("dialog");
+    await groupWizard.getByLabel("Naam").fill(groupName);
+    await groupWizard.getByLabel("Code").fill(groupCode);
+    await selectOptionByText(groupWizard.getByLabel("Programma"), programName);
+    await selectOptionByText(groupWizard.getByLabel("Huidig badje"), stageName);
+    await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
+    await selectOptionByText(groupWizard.getByRole("combobox", { name: /^Resource/ }), "Baan 1");
+    await groupWizard.getByLabel("Weekdag").selectOption("7");
+    await groupWizard.getByLabel("Starttijd").fill(`${scheduleHour}:00`);
+    await groupWizard.getByLabel("Eindtijd").fill(`${scheduleHour}:45`);
+    await groupWizard.getByLabel("Startdatum").fill(scheduleDate);
+    await groupWizard.getByLabel("Einddatum").fill(scheduleDate);
+    await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
+    await groupWizard.getByLabel(state.users.instructor.fullName, { exact: true }).check();
+    await groupWizard.getByRole("spinbutton", { name: "Regulier", exact: true }).fill("6");
+    await groupWizard.getByRole("spinbutton", { name: "Flex", exact: true }).fill("1");
+    await groupWizard.getByRole("spinbutton", { name: "Proef", exact: true }).fill("1");
+    await groupWizard.getByRole("spinbutton", { name: "Fysieke limiet", exact: true }).fill("8");
+    await groupWizard.getByRole("button", { name: "Volgende", exact: true }).click();
+    await mutationExpect(groupWizard.getByText(/\d+ lesmomenten controleerbaar · \d+ adviezen/)).toBeVisible();
+    await groupWizard.getByRole("checkbox", { name: /Menselijke publicatiebevestiging/ }).check();
+    await Promise.all([
+      page.waitForURL(
+        (url) => url.pathname === "/admin/groepen" && url.searchParams.get("saved") === "published",
+        { timeout: 20_000 }
+      ),
+      groupWizard.getByRole("button", { name: "Transactioneel publiceren", exact: true }).click()
+    ]);
+    await page.goto("/admin/groepen", { waitUntil: "domcontentloaded" });
     await filterResourceTable(page, "Zoek groep…", groupName);
+    await mutationExpect(resourceRow(page, groupName)).toHaveCount(1);
     await mutationExpect(resourceRow(page, groupName).getByText("1 instructeur", { exact: true })).toBeVisible();
 
     await page.goto("/admin/leerlingen", { waitUntil: "domcontentloaded" });
@@ -109,11 +141,11 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await openAction(page, "Les plannen");
     form = formWithButton(page, "Les opslaan");
     await selectOptionByText(form.getByLabel("Lesgroep"), groupName);
-    await form.getByLabel("Start").fill(dateTimeValue(5, 17, 0));
-    await form.getByLabel("Einde").fill(dateTimeValue(5, 17, 45));
+    await form.getByLabel("Start").fill(dateTimeValue(sessionDays, sessionHour, sessionMinute));
+    await form.getByLabel("Einde").fill(dateTimeValue(sessionDays, sessionHour, sessionMinute + 45));
     await form.getByLabel("Notitie").fill(`sprint4-admin:${suffix}:session`);
     await submitAndWaitForSaved(page, form, "Les opslaan", "/admin/agenda", "1");
-    await expect(page.getByText("Opgeslagen: 1.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: 1.");
     await expect(page.getByRole("button").filter({ hasText: groupName })).toHaveCount(1);
 
     await page.goto("/admin/betalingen", { waitUntil: "domcontentloaded" });
@@ -173,7 +205,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     await form.getByLabel("Titel").fill(messageTitle);
     await form.getByLabel("Bericht").fill("Interne conceptcommunicatie uit de Sprint 4 browserjourney.");
     await submitAndWaitForSaved(page, form, "Bericht opslaan", "/admin/berichten", "message");
-    await expect(page.getByText("Opgeslagen: message.")).toBeVisible();
+    await expectSavedStatus(page, "Opgeslagen: message.");
     await expect(page.getByRole("list").getByText(messageTitle, { exact: true })).toBeVisible();
 
     expect(failures()).toEqual([]);
@@ -256,6 +288,14 @@ function requireState() {
 function dateValue(days: number) {
   const value = new Date();
   value.setDate(value.getDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
+function nextIsoWeekdayDate(targetWeekday: number, weeksFromNext = 0) {
+  const value = new Date();
+  const currentWeekday = value.getUTCDay() || 7;
+  const daysUntilTarget = ((targetWeekday - currentWeekday + 7) % 7) || 7;
+  value.setUTCDate(value.getUTCDate() + daysUntilTarget + weeksFromNext * 7);
   return value.toISOString().slice(0, 10);
 }
 

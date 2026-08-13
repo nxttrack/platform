@@ -250,6 +250,17 @@ export type BillingInvoiceRow = {
   currency: string;
   export_status: string;
   notes: string | null;
+  document_type: "invoice" | "credit_note";
+  original_invoice_id: string | null;
+  template_version: string;
+  renderer_version: string;
+  issuer_snapshot_json: Record<string, unknown>;
+  recipient_snapshot_json: Record<string, unknown>;
+  vat_scheme: string;
+  default_vat_rate_basis_points: number;
+  finalized_at: string | null;
+  correction_reason: string | null;
+  content_hash: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -263,7 +274,44 @@ export type BillingInvoiceLineRow = {
   unit_amount_cents: number;
   tax_rate_basis_points: number;
   total_cents: number;
+  net_amount_cents: number;
+  vat_amount_cents: number;
+  gross_amount_cents: number;
   sort_order: number;
+};
+
+export type TenantBillingProfileRow = {
+  tenant_id: string;
+  legal_name: string;
+  trade_name: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country_code: string;
+  chamber_of_commerce_number: string | null;
+  vat_number: string | null;
+  iban: string | null;
+  billing_email: string | null;
+  phone: string | null;
+  vat_scheme: string;
+  default_vat_rate_basis_points: number;
+  invoice_prefix: string;
+  credit_note_prefix: string;
+  payment_terms_days: number;
+};
+
+export type BillingDocumentAdjustmentRow = {
+  id: string;
+  original_invoice_id: string;
+  credit_note_id: string;
+  billing_refund_id: string | null;
+  adjustment_type: string;
+  status: string;
+  amount_cents: number;
+  currency: string;
+  reason: string;
+  created_at: string;
 };
 
 export type BillingExportBatchRow = {
@@ -297,13 +345,15 @@ export type BillingAdminData = TenantCoreData & {
   providerEvents: PaymentProviderEventRow[];
   invoices: BillingInvoiceRow[];
   invoiceLines: BillingInvoiceLineRow[];
+  billingProfile: TenantBillingProfileRow | null;
+  documentAdjustments: BillingDocumentAdjustmentRow[];
   exportBatches: BillingExportBatchRow[];
 };
 
 export async function getBillingAdminData(): Promise<BillingAdminData> {
   const core = await getTenantCoreData();
   const admin = createAdminClient();
-  const [providerConfigsResult, providerCustomersResult, mandatesResult, collectionAttemptsResult, refundsResult, chargebacksResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, exportBatchesResult] = await Promise.all([
+  const [providerConfigsResult, providerCustomersResult, mandatesResult, collectionAttemptsResult, refundsResult, chargebacksResult, plansResult, subscriptionsResult, paymentsResult, eventsResult, paymentSessionsResult, providerEventsResult, invoicesResult, billingProfileResult, adjustmentsResult, exportBatchesResult] = await Promise.all([
     admin
       .from("billing_provider_configs")
       .select("id, provider, mode, status, display_name, secret_reference, webhook_secret_reference, public_config, created_at, updated_at")
@@ -374,7 +424,17 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
       .limit(80),
     admin
       .from("billing_invoices")
-      .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, created_at, updated_at")
+      .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, document_type, original_invoice_id, template_version, renderer_version, issuer_snapshot_json, recipient_snapshot_json, vat_scheme, default_vat_rate_basis_points, finalized_at, correction_reason, content_hash, created_at, updated_at")
+      .eq("tenant_id", core.tenant.id)
+      .order("created_at", { ascending: false }),
+    admin
+      .from("tenant_billing_profiles")
+      .select("tenant_id, legal_name, trade_name, address_line_1, address_line_2, postal_code, city, country_code, chamber_of_commerce_number, vat_number, iban, billing_email, phone, vat_scheme, default_vat_rate_basis_points, invoice_prefix, credit_note_prefix, payment_terms_days")
+      .eq("tenant_id", core.tenant.id)
+      .maybeSingle(),
+    admin
+      .from("billing_document_adjustments")
+      .select("id, original_invoice_id, credit_note_id, billing_refund_id, adjustment_type, status, amount_cents, currency, reason, created_at")
       .eq("tenant_id", core.tenant.id)
       .order("created_at", { ascending: false }),
     admin
@@ -398,6 +458,8 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
   assertBillingResult(paymentSessionsResult.error, "payment sessions");
   assertBillingResult(providerEventsResult.error, "payment provider events");
   assertBillingResult(invoicesResult.error, "billing invoices");
+  assertBillingResult(billingProfileResult.error, "tenant billing profile");
+  assertBillingResult(adjustmentsResult.error, "billing document adjustments");
   assertBillingResult(exportBatchesResult.error, "billing export batches");
 
   const invoices = (invoicesResult.data ?? []) as BillingInvoiceRow[];
@@ -406,7 +468,7 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
     invoiceIds.length > 0
       ? await admin
           .from("billing_invoice_lines")
-          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, sort_order")
+          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, net_amount_cents, vat_amount_cents, gross_amount_cents, sort_order")
           .eq("tenant_id", core.tenant.id)
           .in("invoice_id", invoiceIds)
           .order("sort_order")
@@ -430,6 +492,8 @@ export async function getBillingAdminData(): Promise<BillingAdminData> {
     providerEvents: (providerEventsResult.data ?? []) as PaymentProviderEventRow[],
     invoices,
     invoiceLines: (invoiceLinesResult.data ?? []) as BillingInvoiceLineRow[],
+    billingProfile: (billingProfileResult.data as TenantBillingProfileRow | null) ?? null,
+    documentAdjustments: (adjustmentsResult.data ?? []) as BillingDocumentAdjustmentRow[],
     exportBatches: (exportBatchesResult.data ?? []) as BillingExportBatchRow[]
   };
 }

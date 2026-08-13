@@ -8,7 +8,8 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
-import { saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
+import { configureChildPortalRolloutAction } from "@/lib/domain/portal-feature-actions";
+import { saveTenantBillingProfileAction, saveTenantSettingsAction } from "@/lib/domain/tenant-settings-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 type PageProps = {
@@ -26,6 +27,26 @@ type TenantSettingsRow = {
   timezone: string | null;
 };
 
+type TenantBillingProfileRow = {
+  address_line_1: string | null;
+  address_line_2: string | null;
+  billing_email: string | null;
+  chamber_of_commerce_number: string | null;
+  city: string | null;
+  country_code: string;
+  credit_note_prefix: string;
+  default_vat_rate_basis_points: number;
+  iban: string | null;
+  invoice_prefix: string;
+  legal_name: string;
+  payment_terms_days: number;
+  phone: string | null;
+  postal_code: string | null;
+  trade_name: string | null;
+  vat_number: string | null;
+  vat_scheme: string;
+};
+
 const sectorOptions = [
   { label: "Zwemschool", value: "swim_school" },
   { label: "Voetbalschool", value: "football_school" },
@@ -39,18 +60,22 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage({ searchParams }: PageProps) {
   const params = (await searchParams) ?? {};
-  const saved = getParam(params, "saved") === "1";
+  const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const context = await requirePrivateShellContext("/admin/instellingen");
   const tenant = getActiveTenant(context);
-  const settings = await loadSettings(tenant.id);
+  const [settings, billingProfile, childPortalRollout] = await Promise.all([
+    loadSettings(tenant.id),
+    loadBillingProfile(tenant.id, tenant.name),
+    loadChildPortalRollout(tenant.id)
+  ]);
   const canManage = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   return (
     <div className="space-y-5">
       <PageHeader kicker="Beheer" subtitle={`Beheer configuratie, beleid, analytics en privacy voor ${tenant.name}.`} title="Instellingen" />
 
-      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Instellingen zijn opgeslagen.</p> : null}
+      {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "billing" ? "Bedrijfs- en btw-gegevens zijn opgeslagen." : saved === "child_portal" ? "Kinderportaalrollout is veilig opgeslagen." : "Instellingen zijn opgeslagen."}</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessage(error)}</p> : null}
 
       <AdminListSurface>
@@ -139,6 +164,72 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
           {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Instellingen opslaan</SubmitButton></div> : <p className="text-sm font-medium text-muted-foreground">Alleen organisatiebeheerders kunnen instellingen wijzigen.</p>}
         </DirtyForm>
       </AdminListSurface>
+
+      <AdminListSurface>
+        <DirtyForm action={configureChildPortalRolloutAction} className="grid gap-5">
+          <SettingsPanel
+            action={<StatusPill tone={["pilot", "enabled"].includes(childPortalRollout.status) ? "success" : childPortalRollout.status === "paused" ? "warning" : "neutral"}>{childPortalRollout.status}</StatusPill>}
+            description="Tenantgewijze rollout met een directe kill switch. Uitschakelen of pauzeren vergrendelt bestaande kindsessies; terugkeer vereist daarna opnieuw inloggen. Directe kindlogin blijft in v1 altijd uit."
+            title="Ouder- en kinderportaal"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">Rolloutstatus<select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={childPortalRollout.status} disabled={!canManage} name="childPortalStatus"><option value="disabled">Uitgeschakeld</option><option value="pilot">Pilot</option><option value="enabled">Ingeschakeld</option><option value="paused">Gepauzeerd / kill switch</option></select></label>
+              <Field defaultValue={childPortalRollout.absoluteTtlMinutes} description="15–720 minuten; daarna valt de sessie fail-closed dicht." label="Absolute kindmodustijd in minuten" min={15} name="childPortalTtlMinutes" type="number" />
+              <label className="flex min-h-12 items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[13px] font-semibold"><input className="mt-0.5 size-4" defaultChecked={childPortalRollout.securityReviewed} disabled={!canManage} name="childPortalSecurityReviewed" type="checkbox" /><span>Securitymatrix beoordeeld<span className="mt-1 block text-xs font-normal text-muted-foreground">Verplicht voor pilot/aan.</span></span></label>
+              <label className="flex min-h-12 items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-3 text-[13px] font-semibold"><input className="mt-0.5 size-4" defaultChecked={childPortalRollout.visualMatrixReviewed} disabled={!canManage} name="childPortalVisualReviewed" type="checkbox" /><span>Visuele matrix beoordeeld<span className="mt-1 block text-xs font-normal text-muted-foreground">Verplicht voor pilot/aan.</span></span></label>
+              <ReadOnlyField label="Directe kindlogin" value="Uitgeschakeld (v1)" />
+              <ReadOnlyField label="Capabilities" value="Exact 8 child-safe rechten" />
+            </div>
+          </SettingsPanel>
+          {canManage ? <div className="flex justify-end"><SubmitButton>Rollout opslaan</SubmitButton></div> : null}
+        </DirtyForm>
+      </AdminListSurface>
+
+      <AdminListSurface>
+        <DirtyForm action={saveTenantBillingProfileAction} className="grid gap-5">
+          <SettingsPanel
+            action={<StatusPill tone={billingProfile.complete ? "success" : "warning"}>{billingProfile.complete ? "Facturatie gereed" : "Aanvullen vereist"}</StatusPill>}
+            description="Deze gegevens worden bij uitgifte vastgelegd op de definitieve factuur of creditnota. Prijzen zijn inclusief btw; 21% is de standaard."
+            title="Bedrijfsgegevens, facturen en btw"
+          >
+            <div className="grid gap-4 md:grid-cols-2">
+              <Field defaultValue={billingProfile.legal_name} label="Juridische naam" name="legalName" required />
+              <Field defaultValue={billingProfile.trade_name ?? ""} label="Handelsnaam" name="tradeName" />
+              <Field defaultValue={billingProfile.address_line_1 ?? ""} label="Adres" name="addressLine1" required />
+              <Field defaultValue={billingProfile.address_line_2 ?? ""} label="Adresregel 2" name="addressLine2" />
+              <Field defaultValue={billingProfile.postal_code ?? ""} label="Postcode" name="postalCode" required />
+              <Field defaultValue={billingProfile.city ?? ""} label="Plaats" name="city" required />
+              <Field defaultValue={billingProfile.country_code} label="Landcode" name="countryCode" required />
+              <Field defaultValue={billingProfile.billing_email ?? ""} label="Facturatie-e-mail" name="billingEmail" required type="email" />
+              <Field defaultValue={billingProfile.chamber_of_commerce_number ?? ""} label="KvK-nummer" name="chamberOfCommerceNumber" />
+              <Field defaultValue={billingProfile.vat_number ?? ""} label="Btw-nummer" name="vatNumber" />
+              <Field defaultValue={billingProfile.iban ?? ""} label="IBAN" name="iban" />
+              <Field defaultValue={billingProfile.phone ?? ""} label="Telefoon" name="billingPhone" />
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">
+                Btw-regeling
+                <select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring" defaultValue={billingProfile.vat_scheme} disabled={!canManage} name="vatScheme">
+                  <option value="standard">Standaard btw</option>
+                  <option value="exempt">Vrijgesteld</option>
+                  <option value="small_business">Kleineondernemersregeling</option>
+                </select>
+              </label>
+              <label className="grid gap-1.5 text-[13px] font-semibold text-foreground">
+                Standaard btw-tarief
+                <select className="h-10 rounded-lg border border-border bg-background px-3 text-sm font-normal outline-none focus:ring-2 focus:ring-ring" defaultValue={String(billingProfile.default_vat_rate_basis_points)} disabled={!canManage} name="defaultVatRateBasisPoints">
+                  <option value="2100">21%</option>
+                  <option value="900">9%</option>
+                  <option value="0">0%</option>
+                </select>
+              </label>
+              <Field defaultValue={billingProfile.invoice_prefix} label="Factuurprefix" name="invoicePrefix" required />
+              <Field defaultValue={billingProfile.credit_note_prefix} label="Creditnotaprefix" name="creditNotePrefix" required />
+              <Field defaultValue={billingProfile.payment_terms_days} label="Betaaltermijn in dagen" name="paymentTermsDays" type="number" />
+              <ReadOnlyField label="Prijsmodel" value="Consumentenprijs inclusief btw" />
+            </div>
+          </SettingsPanel>
+          {canManage ? <div className="sticky bottom-3 flex justify-end rounded-xl border border-border bg-card/95 p-3 shadow-card backdrop-blur"><SubmitButton>Factuurprofiel opslaan</SubmitButton></div> : null}
+        </DirtyForm>
+      </AdminListSurface>
     </div>
   );
 }
@@ -167,6 +258,67 @@ async function loadSettings(tenantId: string) {
     terminology_sector: row?.terminology_sector ?? "swim_school",
     timezone: row?.timezone ?? "Europe/Amsterdam"
   };
+}
+
+async function loadBillingProfile(tenantId: string, tenantName: string) {
+  const { data, error } = await createAdminClient()
+    .from("tenant_billing_profiles")
+    .select("legal_name, trade_name, address_line_1, address_line_2, postal_code, city, country_code, chamber_of_commerce_number, vat_number, iban, billing_email, phone, vat_scheme, default_vat_rate_basis_points, invoice_prefix, credit_note_prefix, payment_terms_days")
+    .eq("tenant_id", tenantId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Could not load billing profile: ${error.message}`);
+  }
+
+  const row = data as TenantBillingProfileRow | null;
+  const profile = row ?? {
+    address_line_1: null,
+    address_line_2: null,
+    billing_email: null,
+    chamber_of_commerce_number: null,
+    city: null,
+    country_code: "NL",
+    credit_note_prefix: "CN",
+    default_vat_rate_basis_points: 2100,
+    iban: null,
+    invoice_prefix: "INV",
+    legal_name: tenantName,
+    payment_terms_days: 14,
+    phone: null,
+    postal_code: null,
+    trade_name: null,
+    vat_number: null,
+    vat_scheme: "standard"
+  };
+
+  return {
+    ...profile,
+    complete: Boolean(profile.address_line_1 && profile.postal_code && profile.city && profile.billing_email)
+  };
+}
+
+async function loadChildPortalRollout(tenantId: string) {
+  const { data, error } = await createAdminClient()
+    .from("tenant_swim_rollouts")
+    .select("feature_key, status, readiness_json, config_json")
+    .eq("tenant_id", tenantId)
+    .in("feature_key", ["swim.portal.child_mode", "swim.portal.direct_child_login"]);
+  if (error) throw new Error(`Could not load child portal rollout: ${error.message}`);
+  const childMode = (data ?? []).find((row) => row.feature_key === "swim.portal.child_mode");
+  const readiness = asObject(childMode?.readiness_json);
+  const config = asObject(childMode?.config_json);
+  const ttl = Number(config.absoluteTtlMinutes);
+  return {
+    absoluteTtlMinutes: Number.isInteger(ttl) && ttl >= 15 && ttl <= 720 ? ttl : 240,
+    securityReviewed: readiness.security_reviewed === true,
+    status: ["disabled", "paused", "pilot", "enabled"].includes(childMode?.status ?? "") ? childMode!.status : "disabled",
+    visualMatrixReviewed: readiness.visual_matrix_reviewed === true
+  };
+}
+
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
 }
 
 function SettingsPanel({ action, children, description, title }: { action?: ReactNode; children: ReactNode; description: string; title: string }) {
@@ -200,6 +352,11 @@ function errorMessage(error: string) {
   const messages: Record<string, string> = {
     forbidden: "Je hebt geen rechten om deze instellingen te wijzigen.",
     analytics_id: "Vul een geldig GA4-meet-ID in, bijvoorbeeld G-XXXXXXXXXX, of schakel analytics uit.",
+    billing_profile: "Vul de verplichte bedrijfs- en facturatiegegevens correct in.",
+    billing_profile_save: "Het factuurprofiel kon niet worden opgeslagen.",
+    child_portal_config: "De kinderportaalrollout kon niet veilig worden opgeslagen.",
+    child_portal_permission: "Alleen een organisatie-eigenaar of -beheerder mag de kinderportaalrollout wijzigen.",
+    child_portal_readiness: "Pilot of inschakelen vereist een afgeronde security- én visuele beoordeling.",
     save_failed: "Instellingen opslaan is niet gelukt."
   };
 

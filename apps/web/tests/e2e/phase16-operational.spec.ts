@@ -61,6 +61,7 @@ test.describe("phase 16 operational happy path", () => {
     await page.goto("/admin/uitnodigingen", { waitUntil: "domcontentloaded" });
     await page.getByRole("button", { name: "Uitnodiging sturen" }).click();
     const invitationDrawer = page.getByRole("dialog", { name: "Account uitnodigen" });
+    await expect(invitationDrawer).toBeVisible({ timeout: 10_000 });
     await expect(invitationDrawer.getByLabel("E-mail")).toBeVisible();
     await expect(invitationDrawer.getByLabel("Rol")).toBeVisible();
     await expect(invitationDrawer.getByRole("button", { name: "Uitnodiging sturen" })).toBeVisible();
@@ -94,9 +95,14 @@ test.describe("phase 16 operational happy path", () => {
     const failures = collectRuntimeFailures(page);
 
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
-    await expectBodyToContain(page, phase.expected.participantName);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: `De leerreis van ${firstNameOf(phase.expected.participantName)}!`
+      })
+    ).toBeVisible();
     await expectBodyToContain(page, phase.expected.programName);
-    await expectActiveShellLink(page, "Home");
+    await expectActiveShellLink(page, "Overzicht");
 
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.groupName);
@@ -105,22 +111,24 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.badgeTitle);
     await expectBodyToContain(page, phase.expected.progressLabel);
 
-    await page.goto("/portaal/badges", { waitUntil: "domcontentloaded" });
+    await page.goto("/portaal/ontwikkeling/badges", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
-    await expectActiveShellLink(page, "Badges");
+    await expectActiveShellLink(page, "Ontwikkeling");
 
     await page.goto("/portaal/afzwemmen", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.participantName);
-    await expectActiveShellLink(page, "Afzwemmen");
+    await expectActiveShellLink(page, "Planning");
 
-    await page.goto("/portaal/betalingen", { waitUntil: "domcontentloaded" });
+    await navigateToPaymentsFromShell(page);
+    await page.waitForURL((url) => url.pathname === "/portaal/betalingen");
     await expectBodyToContain(page, phase.expected.paymentReference);
+    await expectPaymentsShellItemActive(page);
 
-    await page.goto("/portaal/diplomas", { waitUntil: "domcontentloaded" });
+    await page.goto("/portaal/ontwikkeling/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
 
-    await page.goto("/portaal/media", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Media-tijdlijn" })).toBeVisible();
+    await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Besloten media" })).toBeVisible();
     await expectBodyToContain(page, phase.expected.participantName);
 
     expect(failures()).toEqual([]);
@@ -157,17 +165,30 @@ async function expectBodyToContain(page: Page, text: string) {
 }
 
 async function expectActiveShellLink(page: Page, label: string) {
-  const mobile = (page.viewportSize()?.width ?? 1280) < 768;
-
-  if (mobile) {
-    await page.getByRole("button", { name: "Navigatie openen" }).click();
-  }
-
   await expect(page.getByRole("link", { name: label, exact: true })).toHaveAttribute("aria-current", "page");
+}
 
-  if (mobile) {
-    await page.keyboard.press("Escape");
+async function navigateToPaymentsFromShell(page: Page) {
+  if (isMobilePortalViewport(page)) {
+    await page.getByRole("button", { name: "Meer", exact: true }).click();
   }
+  await page.getByRole("link", { name: "Betalingen", exact: true }).click();
+}
+
+async function expectPaymentsShellItemActive(page: Page) {
+  if (isMobilePortalViewport(page)) {
+    await expect(page.getByRole("button", { name: "Meer", exact: true })).toHaveAttribute("aria-pressed", "true");
+    return;
+  }
+  await expectActiveShellLink(page, "Betalingen");
+}
+
+function isMobilePortalViewport(page: Page) {
+  return (page.viewportSize()?.width ?? 1280) < 1024;
+}
+
+function firstNameOf(displayName: string) {
+  return displayName.trim().split(/\s+/)[0] || displayName;
 }
 
 function collectRuntimeFailures(page: Page) {

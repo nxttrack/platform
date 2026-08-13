@@ -2,6 +2,9 @@ import { Baby, CalendarDays, RefreshCcw, Waves } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { formatLessonDate, getActiveEnrollmentForParticipant, getActiveMembershipsForParticipant, getNextLesson, getParentPortalData } from "@/lib/domain/parent-portal";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
+import { startChildPortalSessionAction } from "@/lib/auth/portal-session-actions";
+import { getPortalFeatureFlags } from "@/lib/domain/portal-features";
 
 export const dynamic = "force-dynamic";
 
@@ -11,13 +14,21 @@ export default async function ParentChildrenPage() {
   const stageById = new Map(data.stages.map((stage) => [stage.id, stage]));
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const accessByParticipant = new Map(data.accessLinks.map((link) => [link.participant_id, link]));
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
+  const portalFeatures = await getPortalFeatureFlags(data.tenant.id);
+  const childModeEnabled = portalFeatures["swim.portal.parent_child_split"] && portalFeatures["swim.portal.child_mode"];
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Kinderen" title="Athletes" subtitle="Alle kinderen die via parent-mediated access aan dit account gekoppeld zijn." />
+      <PageHeader kicker="Account" title="Gezin en toegang" subtitle="Bekijk welke kinderen aan je account zijn gekoppeld en welk toegangsniveau je per kind hebt." />
+
+      {childModeEnabled ? <section className="scroll-mt-24 rounded-xl border border-primary/15 bg-primary/5 p-4" id="kindmodus">
+        <p className="font-bold text-foreground">Veilige kindmodus</p>
+        <p className="mt-1 text-sm text-muted-foreground">Kies per kind hieronder voor <strong>Open kindmodus</strong>. De volledige sessie wordt dan vergrendeld tot je opnieuw inlogt als ouder.</p>
+      </section> : null}
 
       {data.participants.length === 0 ? (
-        <EmptyState>Er zijn nog geen athletes gekoppeld.</EmptyState>
+        <EmptyState>Er zijn nog geen kinderen aan dit account gekoppeld.</EmptyState>
       ) : (
         <div className="grid gap-5 xl:grid-cols-2">
           {data.participants.map((participant) => {
@@ -39,17 +50,21 @@ export default async function ParentChildrenPage() {
                       <p className="text-sm text-muted-foreground">{participant.birth_date ? `Geboren op ${formatDate(participant.birth_date)}` : "Geboortedatum niet ingevuld"}</p>
                     </div>
                   </div>
-                  <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status}</StatusPill>
+                  <StatusPill tone={participant.status === "active" ? "success" : "neutral"}>{participant.status === "active" ? "Actief" : participant.status}</StatusPill>
                 </div>
 
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <Detail icon={<Waves className="h-4 w-4" />} label="Programma" value={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Geen actieve inschrijving"} />
-                  <Detail icon={<Waves className="h-4 w-4" />} label="Badje" value={enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? "Badje" : "Nog niet gezet"} />
+                  <Detail icon={<Waves className="h-4 w-4" />} label={titleCase(terminology.stage)} value={enrollment?.current_stage_id ? stageById.get(enrollment.current_stage_id)?.name ?? titleCase(terminology.stage) : "Nog niet gezet"} />
                   <Detail icon={<CalendarDays className="h-4 w-4" />} label="Groep" value={memberships.map((membership) => groupById.get(membership.group_id)?.name ?? "Groep").join(", ") || "Nog niet geplaatst"} />
-                  <Detail icon={<CalendarDays className="h-4 w-4" />} label="Volgende les" value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
-                  <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Inhaalcredits" value={`${credits.length} beschikbaar`} />
-                  <Detail icon={<Baby className="h-4 w-4" />} label="Toegang" value={access ? `${access.relationship} - ${access.access_level}` : "Guardian"} />
+                  <Detail icon={<CalendarDays className="h-4 w-4" />} label={`Volgende ${terminology.activity}`} value={next ? formatLessonDate(next.starts_at, next.ends_at) : "Nog niet gepland"} />
+                  <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Beschikbare credits" value={`${credits.length} beschikbaar`} />
+                  <Detail icon={<Baby className="h-4 w-4" />} label="Toegang" value={access ? `${relationshipLabel(access.relationship)} · ${accessLabel(access.access_level)}` : "Primaire verzorger"} />
                 </div>
+                {childModeEnabled && access?.access_level !== "view_only" ? <form action={startChildPortalSessionAction} className="mt-4">
+                  <input name="participantId" type="hidden" value={participant.id} />
+                  <button className="min-h-12 w-full rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground shadow-soft" type="submit">Open kindmodus voor {participant.display_name.split(/\s+/)[0]}</button>
+                </form> : null}
               </article>
             );
           })}
@@ -75,4 +90,27 @@ function EmptyState({ children }: { children: ReactNode }) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(value));
+}
+
+function relationshipLabel(value: string) {
+  const labels: Record<string, string> = {
+    parent: "Ouder",
+    guardian: "Verzorger",
+    grandparent: "Grootouder",
+    other: "Anders"
+  };
+  return labels[value] ?? value;
+}
+
+function accessLabel(value: string) {
+  const labels: Record<string, string> = {
+    primary: "Volledige toegang",
+    secondary: "Gedeelde toegang",
+    view_only: "Alleen bekijken"
+  };
+  return labels[value] ?? value;
+}
+
+function titleCase(value: string) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
 }

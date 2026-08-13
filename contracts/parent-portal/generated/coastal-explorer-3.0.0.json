@@ -1,0 +1,182 @@
+{
+  "schemaVersion": 3,
+  "portalContract": "parent-portal/1.2",
+  "themeKey": "coastal-explorer",
+  "release": "3.0.0",
+  "compatibility": {
+    "portalContract": "parent-portal/1.2",
+    "minimumWebBuild": "2026.08.03",
+    "requiredFeatureFlags": [
+      "parent_portal_theme_pack_v3"
+    ]
+  },
+  "navigation": {
+    "primaryDestinations": [
+      "overview",
+      "planning",
+      "development",
+      "inbox",
+      "more"
+    ],
+    "routeIds": [
+      "overview",
+      "planning",
+      "lesson-detail",
+      "development",
+      "badges",
+      "media",
+      "diplomas",
+      "inbox",
+      "payments",
+      "documents",
+      "feedback",
+      "children",
+      "profile"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "canvas": "#F8FBF7",
+      "surface": "rgba(255,255,255,.96)",
+      "surfaceAlt": "#E9F2EA",
+      "text": "#173A55",
+      "textMuted": "#6C7E8D",
+      "primary": "#176BB3",
+      "primaryStrong": "#173A55",
+      "secondary": "#1DA8A5",
+      "reward": "#F1BA57",
+      "rail": "#17364C",
+      "info": "#176BB3",
+      "success": "#2C9C75",
+      "warning": "#7A4B00",
+      "danger": "#EF6E4F"
+    },
+    "gradients": {
+      "page": [
+        "#F8FBF7",
+        "#E9F2EA",
+        "#EAF7FA"
+      ],
+      "sidebar": [
+        "#244F67",
+        "#1D4159",
+        "#17364C"
+      ]
+    },
+    "radii": {
+      "card": "22px",
+      "hero": "29px"
+    },
+    "typography": {
+      "display": "\"Inter Variable\", Inter, system-ui, sans-serif",
+      "body": "\"Inter Variable\", Inter, system-ui, sans-serif"
+    },
+    "motionMilliseconds": {
+      "microMs": 140,
+      "standardMs": 220,
+      "celebrationMs": 480
+    }
+  },
+  "recipes": {
+    "shell": "portal-shell/shared-v1",
+    "pages": {
+      "overview": "overview/journey-engine-v1",
+      "planning": "planning/timeline-v1",
+      "lesson-detail": "page/data-first-v2",
+      "development": "development/progress-v1",
+      "badges": "badges/placeholder-wall-v1",
+      "media": "page/data-first-v2",
+      "diplomas": "page/data-first-v2",
+      "inbox": "page/data-first-v2",
+      "payments": "page/data-first-v2",
+      "documents": "page/data-first-v2",
+      "feedback": "page/data-first-v2",
+      "children": "page/data-first-v2",
+      "profile": "page/data-first-v2"
+    },
+    "components": {
+      "assessment": "assessment/five-point-v1",
+      "childPicker": "child-picker/pearl-v1",
+      "inboxActions": "inbox-actions/icon-pair-v1",
+      "mediaBlend": "media-blend/surface-fade-v1"
+    }
+  },
+  "assets": {
+    "overview.hero.desktop": {
+      "path": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "contentHash": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "overview.hero.mobile": {
+      "path": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "contentHash": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.desktop": {
+      "path": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "contentHash": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.mobile": {
+      "path": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "contentHash": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "mascot.idle": {
+      "path": "/portal-themes/coastal-explorer/mascot.png",
+      "contentHash": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6",
+      "width": 1024,
+      "height": 1536,
+      "mimeType": "image/png",
+      "decorative": true
+    }
+  },
+  "badges": {
+    "familyKey": "neutral-artwork-placeholders",
+    "release": "1.0.0",
+    "fallbackRecipe": "badge-fallback/neutral-placeholder-v1",
+    "status": "review"
+  },
+  "behavior": {
+    "hapticsProfile": "precise",
+    "soundProfile": "off-by-default",
+    "offlineCacheKey": "tenantId+themeKey+release",
+    "unknownRecipe": "fallback-to-default-and-report",
+    "childPicker": "native-popover-or-sheet",
+    "secureExternalNavigationOnly": true
+  },
+  "assessment": {
+    "scaleVersion": "five_point_v1",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unratedValue": null,
+    "displayModes": [
+      "smileys",
+      "stars"
+    ],
+    "optionCount": 5
+  },
+  "accessibility": {
+    "colorMode": "light",
+    "minimumContrast": "WCAG-AA",
+    "supportsReducedMotion": true,
+    "supportsDynamicType": true
+  }
+}

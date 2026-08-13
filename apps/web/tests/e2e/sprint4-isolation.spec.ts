@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { firstNameOnly } from "@/lib/domain/badge-system-contract";
 
 type Phase16State = {
   tenant: { hostname: string };
@@ -38,7 +39,9 @@ test.describe("Sprint 4 role and tenant isolation", () => {
 
     await signIn(page, state.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/admin");
     await expectPath(page, "/portaal");
-    await expect(page.locator("body")).toContainText(state.expected.participantName);
+    await expect(
+      page.getByRole("heading", { level: 1 }).filter({ hasText: firstNameOnly(state.expected.participantName) })
+    ).toBeVisible();
 
     await page.goto("/instructor", { waitUntil: "domcontentloaded" });
     await expectPath(page, "/portaal");

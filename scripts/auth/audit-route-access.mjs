@@ -5,6 +5,12 @@ const root = process.cwd();
 
 const shellContracts = [
   {
+    shell: "child",
+    prefix: "/kind",
+    routePath: "apps/web/app/(child)/kind",
+    metadataFiles: ["layout.tsx"]
+  },
+  {
     shell: "parent",
     prefix: "/portaal",
     routePath: "apps/web/app/(portaal)/portaal",

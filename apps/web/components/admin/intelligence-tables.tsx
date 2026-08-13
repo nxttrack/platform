@@ -30,6 +30,7 @@ export type CapacityForecastTableRow = {
   resource: string;
   capacity: number;
   occupied: number;
+  activeSoftReservations: number;
   expectedOpenings: number;
   expectedBottlenecks: number;
   waitlistDemand: number;
@@ -43,6 +44,23 @@ export type CapacityForecastTableRow = {
   }>;
   actions: Array<{ label: string; href: string }>;
   isTest: boolean;
+  modelVersion: string;
+  confidenceScore: number;
+  availabilityRange: {
+    earliest: string | null;
+    likely: string | null;
+    latest: string | null;
+  };
+  openingScenarios: {
+    conservative: number;
+    likely: number;
+    optimistic: number;
+  };
+  dataQuality: {
+    historicalExitSampleSize: number;
+    issueCount: number;
+    hasHistory: boolean;
+  };
 };
 
 export function CapacityForecastTable({
@@ -79,6 +97,17 @@ export function CapacityForecastTable({
       header: "Openingen",
       meta: { label: "Verwachte openingen" },
       cell: ({ getValue }) => <span className="text-success">{String(getValue())}</span>
+    },
+    {
+      id: "likelyAvailability",
+      header: "Waarschijnlijk",
+      meta: { label: "Waarschijnlijke beschikbaarheid" },
+      accessorFn: (row) => row.availabilityRange.likely ?? "",
+      cell: ({ row }) => (
+        <span className="text-xs font-semibold">
+          {formatForecastDate(row.original.availabilityRange.likely)}
+        </span>
+      )
     },
     {
       accessorKey: "waitlistDemand",
@@ -142,9 +171,18 @@ export function CapacityForecastTable({
           </div>
           <dl className="grid gap-3 sm:grid-cols-2">
             <Detail label="Huidig" value={`${row.occupied} van ${row.capacity}`} />
+            <Detail label="Zachte reserveringen" value={String(row.activeSoftReservations)} />
             <Detail label="Wachtlijstvraag" value={String(row.waitlistDemand)} />
             <Detail label="Voorzichtige openingen" value={String(row.expectedOpenings)} />
             <Detail label="Onvervulde verwachte vraag" value={String(row.expectedBottlenecks)} />
+            <Detail label="Vroegst" value={formatForecastDate(row.availabilityRange.earliest)} />
+            <Detail label="Waarschijnlijk" value={formatForecastDate(row.availabilityRange.likely)} />
+            <Detail label="Uiterlijk" value={formatForecastDate(row.availabilityRange.latest)} />
+            <Detail label="Scenario’s" value={`${row.openingScenarios.conservative} / ${row.openingScenarios.likely} / ${row.openingScenarios.optimistic}`} />
+            <Detail label="Model" value={row.modelVersion} />
+            <Detail label="Confidence" value={`${Math.round(row.confidenceScore * 100)}%`} />
+            <Detail label="Historische steekproef" value={String(row.dataQuality.historicalExitSampleSize)} />
+            <Detail label="Datakwaliteitsissues" value={String(row.dataQuality.issueCount)} />
             <Detail label="Locatie" value={row.location} />
             <Detail label="Resource" value={row.resource} />
           </dl>
@@ -161,7 +199,7 @@ export function CapacityForecastTable({
             </div>
           </section>
           <p className="rounded-xl border border-warning/20 bg-warning/10 p-3 text-xs leading-5 text-muted-foreground">
-            Dit is een operationele voorspelling, geen toezegging aan ouders. No-shows zijn niet als vrijgekomen plek gerekend.
+            Dit is een operationele voorspelling, geen toezegging aan ouders. No-shows zijn niet als vrijgekomen plek gerekend en deze voorspelling verplaatst nooit zelfstandig een leerling.
           </p>
           <div className="flex flex-wrap gap-2">
             {row.actions.map((action) => (
@@ -458,4 +496,13 @@ function Detail({ label, value }: { label: string; value: string }) {
       <dd className="mt-1 text-sm font-semibold text-foreground">{value}</dd>
     </div>
   );
+}
+
+function formatForecastDate(value: string | null) {
+  if (!value) return "onvoldoende historie";
+  return new Intl.DateTimeFormat("nl-NL", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC"
+  }).format(new Date(`${value}T00:00:00.000Z`));
 }

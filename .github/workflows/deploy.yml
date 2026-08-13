@@ -35,6 +35,10 @@ on:
         required: false
         default: false
         type: boolean
+      staging_preview_sha:
+        description: Exact allowlisted feature SHA for a staging-only preview
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -46,7 +50,11 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.ref_name == 'main'
+    if: >-
+      github.ref_name == 'main' ||
+      (inputs.target == 'staging' &&
+      github.ref_name == 'codex/parent-child-portals-v1' &&
+      inputs.staging_preview_sha == 'd30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b')
     runs-on: [self-hosted, linux, x64, nxttrack]
 
     environment: ${{ inputs.target }}
@@ -54,12 +62,13 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
 
       TARGET: ${{ inputs.target }}
       RELEASE_TARGET: ${{ inputs.target }}
       RELEASE_CANONICAL_BRANCH: main
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+      STAGING_PREVIEW_SHA: ${{ inputs.staging_preview_sha }}
       PRODUCTION_RELEASE_CONFIRMATION: ${{ inputs.production_confirmation }}
       PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
       PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
@@ -162,8 +171,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.staging_preview_sha || github.sha }}
+
+      - name: Enforce release source boundary
+        run: |
+          set -euo pipefail
+          DEPLOYED_SOURCE_SHA="$(git rev-parse HEAD)"
+          if [[ -n "$STAGING_PREVIEW_SHA" ]]; then
+            test "$TARGET" = "staging"
+            test "$GITHUB_REF_NAME" = "codex/parent-child-portals-v1"
+            test "$STAGING_PREVIEW_SHA" = "d30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b"
+            test "$DEPLOYED_SOURCE_SHA" = "$STAGING_PREVIEW_SHA"
+            test "${BOOTSTRAP_PLATFORM_OWNER:-false}" != "true"
+          else
+            test "$GITHUB_REF_NAME" = "main"
+          fi
+          echo "DEPLOYED_SOURCE_SHA=$DEPLOYED_SOURCE_SHA" >> "$GITHUB_ENV"
 
       - name: Assert canonical release source
+        if: env.STAGING_PREVIEW_SHA == ''
         run: |
           set -euo pipefail
           pnpm run release:truth
@@ -194,7 +221,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          RELEASE="$BASE_DIR/releases/$(date -u +%Y%m%d%H%M%S)-${GITHUB_SHA::7}"
+          RELEASE="$BASE_DIR/releases/$(date -u +%Y%m%d%H%M%S)-${DEPLOYED_SOURCE_SHA::7}"
 
           mkdir -p "$RELEASE"
           mkdir -p "$BASE_DIR/shared"
@@ -238,7 +265,7 @@ jobs:
             printf 'TENANT_BASE_DOMAINS=%s\n' "$TENANT_BASE_DOMAINS"
             printf 'RESERVED_TENANT_SUBDOMAINS=%s\n' "$RESERVED_TENANT_SUBDOMAINS"
             printf 'BASE_PATH=%s\n' "$BASE_PATH"
-            printf 'RELEASE_COMMIT_SHA=%s\n' "$GITHUB_SHA"
+            printf 'RELEASE_COMMIT_SHA=%s\n' "$DEPLOYED_SOURCE_SHA"
             printf 'RELEASE_BUILD_TIME=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
             printf 'HEALTH_CHECK_DATABASE=%s\n' "$HEALTH_CHECK_DATABASE"
             printf 'HEALTH_STRICT=%s\n' "$HEALTH_STRICT"
@@ -319,11 +346,89 @@ jobs:
           pnpm build
           pnpm run deploy:package-standalone-assets
 
+      - name: Enforce staging preview migration allowlist
+        if: env.STAGING_PREVIEW_SHA != ''
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { readdirSync } from "node:fs";
+          import pg from "pg";
+          const allowed = new Set([
+            "20260811120000",
+            "20260811130000",
+            "20260811140000",
+            "20260811180455",
+            "20260812120000"
+          ]);
+          const local = readdirSync("supabase/migrations")
+            .filter((file) => !file.endsWith("_legacy_remote_history.sql"))
+            .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? []);
+          const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+          await client.connect();
+          const result = await client.query("select version::text from supabase_migrations.schema_migrations");
+          await client.end();
+          const applied = new Set(result.rows.map((row) => row.version));
+          const pending = local.filter((version) => !applied.has(version));
+          const unexpected = pending.filter((version) => !allowed.has(version));
+          console.log(`[preview:migrations] pending=${pending.join(",") || "none"}`);
+          if (unexpected.length) throw new Error(`Refusing unexpected staging migrations: ${unexpected.join(",")}`);
+          NODE
+
       - name: Run database migrations
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
           pnpm run db:migrate
+
+      - name: Verify staging preview migrations
+        if: env.STAGING_PREVIEW_SHA != ''
+        working-directory: ${{ env.RELEASE }}
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import pg from "pg";
+          const expected = [
+            "20260811120000",
+            "20260811130000",
+            "20260811140000",
+            "20260811180455",
+            "20260812120000"
+          ];
+          const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+          await client.connect();
+          const result = await client.query(
+            "select version::text from supabase_migrations.schema_migrations where version::text = any($1::text[])",
+            [expected]
+          );
+          const applied = new Set(result.rows.map((row) => row.version));
+          const missing = expected.filter((version) => !applied.has(version));
+          if (missing.length) throw new Error(`Preview migrations missing after db push: ${missing.join(",")}`);
+          const wrapperPrivileges = await client.query(`
+            select
+              p.oid::regprocedure::text as signature,
+              has_function_privilege('anon', p.oid, 'execute') as anon_execute,
+              has_function_privilege('authenticated', p.oid, 'execute') as authenticated_execute,
+              has_function_privilege('service_role', p.oid, 'execute') as service_execute
+            from pg_proc p
+            join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public'
+              and p.proname in (
+                'select_available_tenant_portal_theme',
+                'set_tenant_portal_theme_availability',
+                'set_tenant_portal_theme_license'
+              )
+          `);
+          await client.end();
+          if (
+            wrapperPrivileges.rows.length !== 3
+            || wrapperPrivileges.rows.some((row) => row.anon_execute || row.authenticated_execute || !row.service_execute)
+          ) {
+            throw new Error(`Portal theme wrapper grants are not fail-closed: ${JSON.stringify(wrapperPrivileges.rows)}`);
+          }
+          console.log(`[preview:migrations] PASS applied=${expected.join(",")}`);
+          console.log(`[preview:migrations] PASS theme wrappers service-only=${wrapperPrivileges.rows.map((row) => row.signature).join(",")}`);
+          NODE
 
       - name: Bootstrap platform owner
         if: env.BOOTSTRAP_PLATFORM_OWNER == 'true'
@@ -331,6 +436,17 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run auth:bootstrap-platform-owner
+
+      - name: Snapshot staging preview rollback target
+        if: env.STAGING_PREVIEW_SHA != ''
+        run: |
+          set -euo pipefail
+          PREVIOUS_RELEASE="$(readlink -f "$BASE_DIR/current")"
+          case "$PREVIOUS_RELEASE" in
+            "$BASE_DIR"/releases/*) ;;
+            *) echo "Refusing invalid preview rollback target: $PREVIOUS_RELEASE"; exit 1 ;;
+          esac
+          printf '%s\n' "$PREVIOUS_RELEASE" > "$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
 
       - name: Activate release
         run: |
@@ -372,6 +488,7 @@ jobs:
           retention-days: ${{ inputs.target == 'production' && 90 || 14 }}
 
       - name: Cleanup old releases
+        if: env.STAGING_PREVIEW_SHA == ''
         run: |
           set -euo pipefail
           ls -1dt "$BASE_DIR/releases"/* 2>/dev/null | tail -n +6 | xargs -r rm -rf
@@ -386,7 +503,7 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
       TARGET: staging
       RELEASE_TARGET: staging
       RELEASE_CANONICAL_BRANCH: main
@@ -404,7 +521,8 @@ jobs:
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
-      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ inputs.staging_preview_sha != '' && 'false' || vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: ${{ inputs.staging_preview_sha != '' && 'true' || 'false' }}
       PHASE16_SKIP_PLAYWRIGHT_INSTALL: "true"
       PHASE15_SKIP_PLAYWRIGHT_INSTALL: "true"
       RUN_DB_MIGRATIONS: "true"
@@ -455,68 +573,110 @@ jobs:
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
       - name: Phase 16 operational flow validation
+        env:
+          PHASE16_SKIP_PLAYWRIGHT: ${{ inputs.staging_preview_sha != '' && 'true' || 'false' }}
         run: pnpm run phase16:flow
 
+      - name: Prepare parent and child preview fixture
+        if: inputs.staging_preview_sha != ''
+        run: node scripts/staging/parent-child-preview-fixture.mjs prepare
+
+      - name: Validate required seven-theme parent and child portal matrix
+        env:
+          PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
+        run: pnpm run test:portal-themes:e2e
+
+      - name: Upload seven-theme parent and child portal matrix evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-staging-${{ github.sha }}-seven-theme-parent-child-portal-matrix
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+            artifacts/parent-child-preview-fixture.json
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Disable parent and child preview rollout
+        if: always() && inputs.staging_preview_sha != ''
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
+
       - name: Prepare Sprint 4 browser-mutation fixture
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-mutations
 
       - name: Prepare Sprint 4 offer-edge fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-offer-edges
 
       - name: Prepare Sprint 4 parent self-service fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-parent
 
       - name: Prepare Sprint 4 tenant-admin fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-admin
 
       - name: Prepare Sprint 4 isolation fixtures
+        if: inputs.staging_preview_sha == ''
         run: pnpm run sprint4:prepare-isolation
 
       - name: Sprint 4 intake-to-placement browser mutation
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-mutations
 
       - name: Sprint 4 instructor browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-instructor
 
       - name: Sprint 4 parent self-service browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_PARENT_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-parent
 
       - name: Sprint 4 tenant-admin browser mutations
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_ADMIN_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-admin
 
       - name: Sprint 4 role and tenant isolation
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_ISOLATION_ENABLED: "true"
         run: pnpm run sprint4:test-isolation
 
       - name: Sprint 4 accessibility and performance budgets
+        if: inputs.staging_preview_sha == ''
         env:
           SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
         run: pnpm run sprint4:test-quality
 
       - name: Communicationhub and Badge Studio browser validation
+        if: inputs.staging_preview_sha == ''
         env:
           BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
         run: pnpm run test:communication-badges:e2e
 
       - name: Premium release browser validation
+        if: inputs.staging_preview_sha == ''
         env:
           PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run test:premium-release:e2e
 
       - name: Capture Priority A staging visual evidence
+        if: inputs.staging_preview_sha == ''
         run: pnpm run design:capture-production
 
       - name: Upload Priority A staging visual evidence
-        if: always()
+        if: always() && inputs.staging_preview_sha == ''
         id: upload-priority-a-visuals
         continue-on-error: true
         uses: actions/upload-artifact@v6
@@ -527,17 +687,20 @@ jobs:
           retention-days: 14
 
       - name: Emit compact visual review fallback
-        if: steps.upload-priority-a-visuals.outcome == 'failure'
+        if: inputs.staging_preview_sha == '' && steps.upload-priority-a-visuals.outcome == 'failure'
         continue-on-error: true
         run: pnpm run design:log-visual-review
 
       - name: Phase 15 staging truth and security validation
+        if: inputs.staging_preview_sha == ''
         run: pnpm run phase15:staging
 
       - name: Write release evidence
+        if: inputs.staging_preview_sha == ''
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
+        if: inputs.staging_preview_sha == ''
         id: upload-release-evidence
         continue-on-error: true
         uses: actions/upload-artifact@v6
@@ -548,7 +711,46 @@ jobs:
           retention-days: 14
 
       - name: Confirm release evidence fallback
-        if: steps.upload-release-evidence.outcome == 'failure'
+        if: inputs.staging_preview_sha == '' && steps.upload-release-evidence.outcome == 'failure'
         run: |
           test -s artifacts/release-evidence.json
           echo "Artifact upload unavailable; release evidence is preserved in this job summary."
+
+  finalize-staging-preview:
+    name: finalize staging preview
+    if: always() && inputs.staging_preview_sha != ''
+    needs:
+      - deploy
+      - staging-browser-validation
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+    env:
+      BASE_DIR: /var/www/nxttrack/staging
+      SERVICE_NAME: ${{ vars.SERVICE_NAME }}
+    steps:
+      - name: Roll back failed preview validation
+        if: needs.deploy.result != 'success' || needs.staging-browser-validation.result != 'success'
+        run: |
+          set -euo pipefail
+          STATE_FILE="$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
+          if [[ ! -s "$STATE_FILE" ]]; then
+            echo "No activated preview rollback target was recorded."
+            exit 0
+          fi
+          PREVIOUS_RELEASE="$(tr -d '\r\n' < "$STATE_FILE")"
+          case "$PREVIOUS_RELEASE" in
+            "$BASE_DIR"/releases/*) ;;
+            *) echo "Refusing invalid preview rollback target: $PREVIOUS_RELEASE"; exit 1 ;;
+          esac
+          test -d "$PREVIOUS_RELEASE"
+          ln -sfn "$PREVIOUS_RELEASE" "$BASE_DIR/current.new"
+          mv -Tf "$BASE_DIR/current.new" "$BASE_DIR/current"
+          sudo systemctl restart "$SERVICE_NAME"
+          sudo systemctl reload caddy
+
+      - name: Remove preview rollback marker
+        if: always()
+        run: |
+          set -euo pipefail
+          STATE_FILE="$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
+          rm -f "$STATE_FILE"

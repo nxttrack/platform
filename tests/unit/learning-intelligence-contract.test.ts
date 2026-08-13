@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildLessonFocusCards,
+  CAPACITY_FORECAST_MODEL_VERSION,
   computeCapacityForecast,
   computeDiplomaReadiness,
   detectAttendanceRiskSignals,
@@ -99,6 +100,87 @@ test("capacity forecast distinguishes healthy availability from an operational b
 
   assert.equal(rows.find((row) => row.group_id === "healthy")?.risk_level, "healthy");
   assert.equal(rows.find((row) => row.group_id === "blocked")?.risk_level, "critical");
+});
+
+test("capacity forecast publishes deterministic date bands, scenarios and soft holds", () => {
+  const [forecast] = computeCapacityForecast({
+    asOfDate: "2026-08-02",
+    horizonWeeks: 8,
+    groups: [{
+      id: "forecast",
+      name: "Badje 3",
+      programId: "program",
+      stageId: "stage",
+      weekday: 2,
+      startsAt: "16:00",
+      resourceId: "lane",
+      locationId: "pool",
+      fixedCapacity: 8,
+      occupiedCapacity: 7,
+      activeSoftReservations: 1,
+      datedOpenings: 0,
+      knownOpeningDates: [],
+      readinessReviewDates: [],
+      historicalExitsPerWeek: 0.5,
+      historySampleSize: 8,
+      graduationOpenings: 1,
+      waitlistDemand: 2,
+      expectedTransfersIn: 1,
+      hasInstructor: true,
+      instructorAvailable: true,
+      resourceAvailable: true,
+      isTest: false
+    }]
+  });
+
+  assert.ok(forecast);
+  assert.equal(forecast.model_version, CAPACITY_FORECAST_MODEL_VERSION);
+  assert.equal(forecast.active_soft_reservations, 1);
+  assert.deepEqual(forecast.availability_range, {
+    earliest: "2026-08-09",
+    likely: "2026-08-16",
+    latest: "2026-08-30"
+  });
+  assert.ok(forecast.opening_scenarios.conservative <= forecast.opening_scenarios.likely);
+  assert.ok(forecast.opening_scenarios.likely <= forecast.opening_scenarios.optimistic);
+  assert.equal(forecast.data_quality.hasHistory, true);
+  assert.ok(forecast.reasons.some((reason) => reason.code === "soft_reservations"));
+});
+
+test("forecast never invents a date when history and dated openings are absent", () => {
+  const [forecast] = computeCapacityForecast({
+    asOfDate: "2026-08-02",
+    horizonWeeks: 4,
+    groups: [{
+      id: "no-history",
+      name: "Nieuwe groep",
+      programId: "program",
+      stageId: "stage",
+      weekday: 2,
+      startsAt: "16:00",
+      resourceId: "lane",
+      locationId: "pool",
+      fixedCapacity: 8,
+      occupiedCapacity: 8,
+      datedOpenings: 0,
+      historicalExitsPerWeek: 0,
+      historySampleSize: 0,
+      graduationOpenings: 0,
+      waitlistDemand: 1,
+      expectedTransfersIn: 0,
+      hasInstructor: true,
+      instructorAvailable: true,
+      resourceAvailable: true,
+      isTest: false
+    }]
+  });
+
+  assert.deepEqual(forecast?.availability_range, {
+    earliest: null,
+    likely: null,
+    latest: null
+  });
+  assert.equal(forecast?.confidence, "laag");
 });
 
 test("attendance detection is neutral, explainable and never auto-decides", () => {

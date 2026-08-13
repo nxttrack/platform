@@ -15,6 +15,10 @@ export type UserSecurityContext = {
   lastInvitedAt: string | null;
 };
 
+export type AuthSessionContext = {
+  id: string;
+};
+
 export type TenantMembershipContext = {
   tenantId: string;
   slug: string;
@@ -35,6 +39,7 @@ export type AnonymousTrustedAuthContext = {
   tenants: readonly [];
   activeTenant: null;
   security: null;
+  session: null;
   roles: readonly [];
 };
 
@@ -46,6 +51,7 @@ export type AuthenticatedTrustedAuthContext = {
   tenants: readonly TenantMembershipContext[];
   activeTenant: TenantMembershipContext | null;
   security: UserSecurityContext;
+  session: AuthSessionContext | null;
   roles: readonly AppRole[];
 };
 
@@ -59,6 +65,7 @@ export type TrustedAuthContextInput = {
   activeTenantId?: string | null;
   activeTenantSlug?: string | null;
   checkedAt?: string;
+  sessionId?: string | null;
 };
 
 export function createAnonymousAuthContext(checkedAt = new Date().toISOString()): AnonymousTrustedAuthContext {
@@ -70,6 +77,7 @@ export function createAnonymousAuthContext(checkedAt = new Date().toISOString())
     tenants: [],
     activeTenant: null,
     security: null,
+    session: null,
     roles: []
   };
 }
@@ -93,6 +101,7 @@ export function createTrustedAuthContext(input: TrustedAuthContextInput): Authen
     tenants: tenantMemberships,
     activeTenant,
     security,
+    session: input.sessionId ? { id: input.sessionId } : null,
     roles: uniqueRoles([...platformRoles, ...tenantRoles])
   };
 }

@@ -1,4 +1,4 @@
-import { Mail, Phone, RefreshCcw, UserRound } from "lucide-react";
+import { Mail, Phone, UserRound } from "lucide-react";
 import type { ReactNode } from "react";
 import { Card, PageHeader } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
@@ -10,6 +10,7 @@ import {
 } from "@/lib/domain/parent-portal-actions";
 import { getParentMakeupCommunicationPreferences, getParentPortalData } from "@/lib/domain/parent-portal";
 import { getOwnWebPushSettings } from "@/lib/domain/web-push";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -27,14 +28,14 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
   const savedValue = getParam(params, "saved");
   const saved = savedValue === "1" || savedValue === "makeup-preferences" || savedValue === "communication-preferences";
   const error = getParam(params, "error");
-  const activeCredits = data.catchUpCredits.filter((credit) => credit.status === "available");
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Profiel" title="Profiel basics" subtitle="Basisgegevens voor het ouderportaal." />
+      <PageHeader kicker="Jouw gegevens en voorkeuren" title="Profiel & meer" subtitle={`Beheer je contactgegevens en bepaal hoe de ${terminology.organization} je bereikt.`} />
       <Feedback saved={saved} error={error} />
 
-      <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+      <div className="grid gap-5">
         <Card>
           <form action={updateParentProfileAction} className="grid gap-4 md:grid-cols-2">
             <Field defaultValue={data.profile?.full_name ?? data.user.displayName ?? ""} icon={<UserRound className="h-4 w-4" />} label="Naam" name="fullName" />
@@ -42,7 +43,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             <div className="rounded-lg border border-border bg-muted px-3 py-3 md:col-span-2">
               <div className="flex items-center gap-2 text-primary">
                 <Mail className="h-4 w-4" />
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">E-mail</p>
+                <p className="text-xs font-semibold uppercase tracking-wider">E-mail</p>
               </div>
               <p className="mt-1 text-sm font-bold text-foreground">{data.profile?.email ?? data.user.email ?? "Niet bekend"}</p>
             </div>
@@ -53,29 +54,21 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             </div>
           </form>
         </Card>
-
-        <Card>
-          <div className="space-y-4">
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Inhaalcredits" value={`${activeCredits.length} beschikbaar`} />
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Annuleringstermijn" value={`${data.settings.lesson_cancellation_cutoff_hours} uur vooraf`} />
-            <Detail icon={<RefreshCcw className="h-4 w-4" />} label="Credit geldig" value={`${data.settings.lesson_cancellation_credit_window_days} dagen`} />
-          </div>
-        </Card>
       </div>
 
-      <Card>
-        <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+      <Card className="scroll-mt-24" >
+        <div className="grid gap-5 lg:grid-cols-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Inhaalmarktplaats</p>
-            <h2 className="mt-2 text-xl font-bold text-foreground">Uitnodigingen voor passende inhaallessen</h2>
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Beschikbare momenten</p>
+            <h2 className="mt-2 text-xl font-bold text-foreground">Uitnodigingen voor passende {terminology.makeUpActivities}</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Jij bepaalt hoe de zwemschool je mag wijzen op een vrijgekomen, passende plek. Een uitnodiging boekt nooit automatisch.
+              Jij bepaalt hoe de {terminology.organization} je mag wijzen op een vrijgekomen, passende plek. Een uitnodiging boekt nooit automatisch.
             </p>
           </div>
           <DirtyForm action={updateParentMakeupPreferencesAction} className="gap-3">
             <PreferenceToggle
               defaultChecked={communication.makeUpInAppEnabled}
-              description="Toon passende inhaalmomenten veilig in het ouderportaal."
+              description={`Toon passende ${terminology.makeUpActivities} veilig in het ouderportaal.`}
               label="Uitnodigingen in het portaal"
               name="makeUpInAppEnabled"
             />
@@ -87,7 +80,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
             />
             <PreferenceToggle
               defaultChecked={communication.automaticMakeUpInvitesEnabled}
-              description="Voorbereid voor een later door de zwemschool geconfigureerd recept; staat standaard uit en boekt nooit zelfstandig."
+              description={`Voorbereid voor een later door de ${terminology.organization} geconfigureerd recept; staat standaard uit en boekt nooit zelfstandig.`}
               label="Automatische uitnodigingsrecepten toestaan"
               name="automaticMakeUpInvitesEnabled"
             />
@@ -100,19 +93,20 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
         </div>
       </Card>
 
-      <Card>
-        <div className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+      <Card className="scroll-mt-24">
+        <div id="communicatie" className="scroll-mt-24" />
+        <div className="grid gap-5 lg:grid-cols-2">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">Communicatievoorkeuren</p>
             <h2 className="mt-2 text-xl font-bold text-foreground">Kies hoe we je bereiken</h2>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Servicemails gaan over je lessen en account. Nieuwsbrieven zijn optioneel en kun je hier altijd weer uitzetten.
+              Servicemails gaan over je {terminology.activities} en account. Nieuwsbrieven zijn optioneel en kun je hier altijd weer uitzetten.
             </p>
           </div>
           <DirtyForm action={updateParentCommunicationPreferencesAction} className="gap-3">
             <PreferenceToggle defaultChecked={communication.inAppEnabled} description="Meldingen en nieuwe berichten in het beveiligde ouderportaal." label="In-app meldingen" name="inAppEnabled" />
-            <PreferenceToggle defaultChecked={communication.transactionalEmailEnabled} description="Belangrijke service-informatie over lessen, planning en account." label="Servicemails" name="transactionalEmailEnabled" />
-            <PreferenceToggle defaultChecked={communication.newsletterEmailEnabled} description="Redactioneel nieuws en updates van de zwemschool. Dit is altijd optioneel." label="Nieuwsbrieven per e-mail" name="newsletterEmailEnabled" />
+            <PreferenceToggle defaultChecked={communication.transactionalEmailEnabled} description={`Belangrijke service-informatie over ${terminology.activities}, planning en account.`} label="Servicemails" name="transactionalEmailEnabled" />
+            <PreferenceToggle defaultChecked={communication.newsletterEmailEnabled} description={`Redactioneel nieuws en updates van de ${terminology.organization}. Dit is altijd optioneel.`} label="Nieuwsbrieven per e-mail" name="newsletterEmailEnabled" />
             <label className="flex min-h-14 items-start gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm">
               <input className="mt-1 size-5 accent-primary" name="marketingConsentConfirmation" type="checkbox" value="confirmed" />
               <span><strong className="block text-foreground">Toestemming bevestigen</strong><span className="mt-1 block text-xs leading-5 text-muted-foreground">Alleen nodig als je nieuwsbrieven inschakelt. Je kunt de toestemming later intrekken.</span></span>
@@ -123,7 +117,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
       </Card>
 
       <Card>
-        <WebPushSettings {...pushSettings} />
+        <WebPushSettings {...pushSettings} activities={terminology.activities} organization={terminology.organization} />
       </Card>
     </div>
   );
@@ -155,16 +149,6 @@ function Field({ defaultValue, icon, label, name, type = "text" }: { defaultValu
         type={type}
       />
     </label>
-  );
-}
-
-function Detail({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-border bg-white px-3 py-3">
-      <div className="flex items-center gap-2 text-primary">{icon}</div>
-      <p className="mt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-bold text-foreground">{value}</p>
-    </div>
   );
 }
 

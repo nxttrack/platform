@@ -8,7 +8,7 @@ export function PageHeader({ kicker, title, subtitle, action }: { kicker?: strin
     <div className="mb-5 flex flex-col gap-3 border-b border-border/70 pb-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         {kicker ? <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-primary">{kicker}</p> : null}
-        <h1 className="mt-0.5 font-display text-2xl font-bold leading-tight tracking-tight md:text-[30px]">{title}</h1>
+        <h1 className="mt-0.5 break-words font-display text-[clamp(1.45rem,7vw,1.875rem)] font-bold leading-tight tracking-tight">{title}</h1>
         {subtitle ? <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted-foreground md:text-sm">{subtitle}</p> : null}
       </div>
       {action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}
@@ -39,7 +39,17 @@ export function StatusPill({ tone, className, children, ...props }: ComponentPro
   return <span className={cn(statusPillVariants({ tone }), className)} {...props}>{children}</span>;
 }
 
-export function ProgressRing({ value, size = 96, label }: { value: number; size?: number; label?: string }) {
+export function ProgressRing({
+  value,
+  size = 96,
+  label,
+  className
+}: {
+  value: number;
+  size?: number;
+  label?: string;
+  className?: string;
+}) {
   const normalizedValue = Math.min(100, Math.max(0, value));
   const radius = (size - 10) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -47,8 +57,8 @@ export function ProgressRing({ value, size = 96, label }: { value: number; size?
   const accessibleLabel = label ? `${label}: ${normalizedValue}%` : `${normalizedValue}% voortgang`;
 
   return (
-    <div aria-label={accessibleLabel} className="relative inline-flex items-center justify-center" role="img" style={{ width: size, height: size }}>
-      <svg aria-hidden="true" className="-rotate-90" height={size} width={size}>
+    <div aria-label={accessibleLabel} className={cn("relative inline-flex items-center justify-center", className)} role="img" style={{ width: size, height: size }}>
+      <svg aria-hidden="true" className="-rotate-90" height={size} viewBox={`0 0 ${size} ${size}`} width={size}>
         <circle className="fill-none stroke-muted" cx={size / 2} cy={size / 2} r={radius} strokeWidth={8} />
         <circle
           className="fill-none stroke-primary transition-[stroke-dashoffset] duration-500 motion-reduce:transition-none"

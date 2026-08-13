@@ -1,0 +1,838 @@
+{
+  "schemaVersion": 1,
+  "immutableSources": true,
+  "assets": [
+    {
+      "bytes": 20524,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-640.avif",
+      "sha256": "03a6bfbc393d05fffd82297766541ef5451b697b1109530fe10df8ffb6ea9ac0",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 640
+    },
+    {
+      "bytes": 20106,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-640.webp",
+      "sha256": "b7bdd21bde9d794abf6eedb400788d07009f5fa3bf5fdea6c6df1537a8dd2221",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 640
+    },
+    {
+      "bytes": 42145,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-960.avif",
+      "sha256": "f1a94c6de9a366c730c684d3db380557a77ee2a756f29689ab8267955389463a",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 960
+    },
+    {
+      "bytes": 40992,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-960.webp",
+      "sha256": "98f023a3e4f57f21c420c450790915eb11696602a5d7ca60466e3e5f3ebcca60",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 960
+    },
+    {
+      "bytes": 80772,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-1440.avif",
+      "sha256": "4771806810b841641d5fb0a760ef4abb27adefac635fb56ec47235007d960975",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1440
+    },
+    {
+      "bytes": 79720,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-1440.webp",
+      "sha256": "877edb86a3abe9167636854143faaeba6e7348f3b86b0e59fd52499d1911c7da",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1440
+    },
+    {
+      "bytes": 100129,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-1920.avif",
+      "sha256": "0cd6fdec152ef8365ff9658644dca1ded0d594d01f0ad8e85a0f5d7d16d05a6c",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1920
+    },
+    {
+      "bytes": 97736,
+      "path": "/portal-themes/coastal-explorer/progress-journey-landscape-1920.webp",
+      "sha256": "dd344bb44f8af786fde8d64431a840a39ea479553a7af9ffa893af10fcb83cc1",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sourceSha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1",
+      "width": 1920
+    },
+    {
+      "bytes": 78148,
+      "path": "/portal-themes/coastal-explorer/progress-journey-portrait-640.avif",
+      "sha256": "c1854da6e5d41bdc4f154f61117bdeb007b659d0676d03f40a487acb2a4d7db7",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "sourceSha256": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 640
+    },
+    {
+      "bytes": 79594,
+      "path": "/portal-themes/coastal-explorer/progress-journey-portrait-640.webp",
+      "sha256": "8a0f6705ddb617e9b1ea4174049d28bbf9a6b7633af9cbd1ae80e65b4a009608",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "sourceSha256": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 640
+    },
+    {
+      "bytes": 139838,
+      "path": "/portal-themes/coastal-explorer/progress-journey-portrait-960.avif",
+      "sha256": "9bcb21970b0501f6023f3984e343615620bf856029474dc41a74883354a99a97",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "sourceSha256": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 960
+    },
+    {
+      "bytes": 141412,
+      "path": "/portal-themes/coastal-explorer/progress-journey-portrait-960.webp",
+      "sha256": "bd487964fd7203e00c0b0b15f83ef5b426856f58dedf4ce1dc8f1c2e66350f9b",
+      "sourcePath": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "sourceSha256": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d",
+      "width": 960
+    },
+    {
+      "bytes": 11541,
+      "path": "/portal-themes/coastal-explorer/mascot-256.avif",
+      "sha256": "66af09846647613bf1effad067a34f060a36f7533e1c9f20466b04815464d202",
+      "sourcePath": "/portal-themes/coastal-explorer/mascot.png",
+      "sourceSha256": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6",
+      "width": 256
+    },
+    {
+      "bytes": 14090,
+      "path": "/portal-themes/coastal-explorer/mascot-256.webp",
+      "sha256": "9853ff8949c8cc27ba32b3a2900a66ed94f11de1346a962ffdb98f3334f0743e",
+      "sourcePath": "/portal-themes/coastal-explorer/mascot.png",
+      "sourceSha256": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6",
+      "width": 256
+    },
+    {
+      "bytes": 25469,
+      "path": "/portal-themes/coastal-explorer/mascot-512.avif",
+      "sha256": "21d0c0ec98d141f3ba7a539ff396560e582269684f9046480ea110e60df07c98",
+      "sourcePath": "/portal-themes/coastal-explorer/mascot.png",
+      "sourceSha256": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6",
+      "width": 512
+    },
+    {
+      "bytes": 30656,
+      "path": "/portal-themes/coastal-explorer/mascot-512.webp",
+      "sha256": "1ba5153a695952725386a5a4057b912fdf2087d2f252f6788290e37997b09bf1",
+      "sourcePath": "/portal-themes/coastal-explorer/mascot.png",
+      "sourceSha256": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6",
+      "width": 512
+    },
+    {
+      "bytes": 24727,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-640.avif",
+      "sha256": "dd8900da7d0dc82310c3349f6054c1eaa2cd14237407d3a9e4cc2c54275b04d2",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 640
+    },
+    {
+      "bytes": 41508,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-640.webp",
+      "sha256": "c19de4b3242a5867a61a3119affaf861d4c9c50f74c5955e9ca10e84606bca06",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 640
+    },
+    {
+      "bytes": 47315,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-960.avif",
+      "sha256": "396a37147adb9dbce9ad8ad0c98299ca0be8eb5a8b225af82754cc5b41728e80",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 960
+    },
+    {
+      "bytes": 78558,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-960.webp",
+      "sha256": "c08089a7ca768107972b681e8b9861f5963bb271d274022ddb26a9b7ca9968a5",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 960
+    },
+    {
+      "bytes": 84556,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-1440.avif",
+      "sha256": "fffe4b12435fae85ed4235e1704b2a97482c8866f58a9b96d6e0213180cefbdf",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1440
+    },
+    {
+      "bytes": 143636,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-1440.webp",
+      "sha256": "fd594669bba0a25815861e68af92289ced10a14a64c082157134b813151dc11e",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1440
+    },
+    {
+      "bytes": 103245,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-1920.avif",
+      "sha256": "3a2602c54dfbf4a3cf8d96455ae9c8a7ba286106dcca94d10b72e46077006eef",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1920
+    },
+    {
+      "bytes": 173526,
+      "path": "/portal-themes/dolphin-bay/progress-journey-landscape-1920.webp",
+      "sha256": "9e78430bddd05cd58ff5c8d32a53ac162048d2dffd0e7709afc93fd8629d89bd",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sourceSha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58",
+      "width": 1920
+    },
+    {
+      "bytes": 53779,
+      "path": "/portal-themes/dolphin-bay/progress-journey-portrait-640.avif",
+      "sha256": "39de51dcb645ca85168c6798b949d26880f982bd3253965d2206b89567b46236",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "sourceSha256": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 640
+    },
+    {
+      "bytes": 92272,
+      "path": "/portal-themes/dolphin-bay/progress-journey-portrait-640.webp",
+      "sha256": "a3e13396ed88e0997a602c3b816a119c3479783694db33532fb8a7430c682d2d",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "sourceSha256": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 640
+    },
+    {
+      "bytes": 89744,
+      "path": "/portal-themes/dolphin-bay/progress-journey-portrait-960.avif",
+      "sha256": "3a5eba12d6e40e34054bd8f4753fcfea01a383e1386ed70c2555e23f97815193",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "sourceSha256": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 960
+    },
+    {
+      "bytes": 153508,
+      "path": "/portal-themes/dolphin-bay/progress-journey-portrait-960.webp",
+      "sha256": "469f5179e8c2556df92de7f31c2250d54623a7b4fa59dc79e9701c516d2bf350",
+      "sourcePath": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "sourceSha256": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719",
+      "width": 960
+    },
+    {
+      "bytes": 7940,
+      "path": "/portal-themes/dolphin-bay/mascot-256.avif",
+      "sha256": "e7f98e1072a57c3fd26b1d875a59b0a051b5377ee13adb490057448d0331c0c7",
+      "sourcePath": "/portal-themes/dolphin-bay/mascot.png",
+      "sourceSha256": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5",
+      "width": 256
+    },
+    {
+      "bytes": 8394,
+      "path": "/portal-themes/dolphin-bay/mascot-256.webp",
+      "sha256": "295ec93e989c7cdf186abf6be33627e09b56665afc765b057508a30b063d10f4",
+      "sourcePath": "/portal-themes/dolphin-bay/mascot.png",
+      "sourceSha256": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5",
+      "width": 256
+    },
+    {
+      "bytes": 16417,
+      "path": "/portal-themes/dolphin-bay/mascot-512.avif",
+      "sha256": "bf8e6bc274131ca28e4dd491d2c634f1218ca881a73bcfaedf5457fe675a39f7",
+      "sourcePath": "/portal-themes/dolphin-bay/mascot.png",
+      "sourceSha256": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5",
+      "width": 512
+    },
+    {
+      "bytes": 18128,
+      "path": "/portal-themes/dolphin-bay/mascot-512.webp",
+      "sha256": "72e9bc050599fa1a168bc8b205e83196abbf6e2e172fd44211d501fd0dbf2381",
+      "sourcePath": "/portal-themes/dolphin-bay/mascot.png",
+      "sourceSha256": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5",
+      "width": 512
+    },
+    {
+      "bytes": 26223,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.avif",
+      "sha256": "52ddee2bbdb198f1e974dde78072fbeb4d50f24088ee72ca2c1004f31a89e3be",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 640
+    },
+    {
+      "bytes": 27560,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.webp",
+      "sha256": "7f027088765cf06a54a5c00d58037d7aa7d9b10a92992ab2645c07b440dbb705",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 640
+    },
+    {
+      "bytes": 46513,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.avif",
+      "sha256": "169a4887e9eb984a711cb28972b6eddedf930fd733c29b3415756fc20479d4f9",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 960
+    },
+    {
+      "bytes": 51540,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.webp",
+      "sha256": "be030462f11cb0c63e58fa6d064ce3a601f15c3ea1d6f8e4fe1a1c52910d5fe3",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 960
+    },
+    {
+      "bytes": 79561,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.avif",
+      "sha256": "878e1555b05d6dae266c5f5404d9096184730ecd4467b03d5abd4036e638b9ce",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1440
+    },
+    {
+      "bytes": 91318,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.webp",
+      "sha256": "3790ee44ce2e09bc91caf5af94b46ac114ce131747bcdec51bd0826b81c7aa25",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1440
+    },
+    {
+      "bytes": 96385,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.avif",
+      "sha256": "10be85ec5213058757ca2a86712df45fcf53ae0bcb01c4056281a37a46da668b",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1920
+    },
+    {
+      "bytes": 112066,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.webp",
+      "sha256": "aa0a7490d490b16b82026ecf29ba1c6154e100ab71da896104c89c1023ec63c5",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sourceSha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1920
+    },
+    {
+      "bytes": 61938,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.avif",
+      "sha256": "96cf6df55f6857b903323af2110b0ce0c5a241d890f2652bf51a0e5ce09ef26e",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "sourceSha256": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 640
+    },
+    {
+      "bytes": 69148,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.webp",
+      "sha256": "14f80dab675e5c583e27f61b6eed65f412fc1c4878e356c9eaa653a6fb156fe8",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "sourceSha256": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 640
+    },
+    {
+      "bytes": 107327,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.avif",
+      "sha256": "870fcabf84209f84395dd047568f9cf4938af274deb2471a55c28886711b5d4f",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "sourceSha256": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 960
+    },
+    {
+      "bytes": 117714,
+      "path": "/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.webp",
+      "sha256": "2cecebf416c0161f5123ce524bf2f2bf5d69076ff63048fdb8ef4667cadb926e",
+      "sourcePath": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "sourceSha256": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 960
+    },
+    {
+      "bytes": 10172,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-640.avif",
+      "sha256": "2d16073a030e882aa8d86c2940054ba27ad7120732a7aa750863a867b298f349",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 640
+    },
+    {
+      "bytes": 14896,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-640.webp",
+      "sha256": "98447c573e8e576dfb4f337ff128194cc2c1a2dac1e20bfbb90561add05e3285",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 640
+    },
+    {
+      "bytes": 18396,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-960.avif",
+      "sha256": "2f5869a3828dccc80eee0ae1adba7073afcd8ddcaaf9ebf949916c0ffb0363e6",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 960
+    },
+    {
+      "bytes": 26468,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-960.webp",
+      "sha256": "175da0dc2af9e0ede7aa9c6588ab037e21299551cf9042ee1483160c8bef61c2",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 960
+    },
+    {
+      "bytes": 32296,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-1440.avif",
+      "sha256": "15b5ba9418a04a4f02c57ff00bb3aded3ad79b056063ff3f1c1d4e6968aad830",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1440
+    },
+    {
+      "bytes": 47446,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-1440.webp",
+      "sha256": "08b1faa8d7dad55d3697265a718e156f164f285171cee620e7042dfb956f8c9e",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1440
+    },
+    {
+      "bytes": 39492,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-1920.avif",
+      "sha256": "c01f26158fa4b0d722a25c0d6cf4a4edb03017fc01b897c5ee1c91cc82518f0c",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1920
+    },
+    {
+      "bytes": 58706,
+      "path": "/portal-themes/nxttrack-default/progress-journey-landscape-1920.webp",
+      "sha256": "6fbc5bd2baeb6b38e3f8efa71cbf3d42ebdee07f7abbac15801ea9f8464a8bc0",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sourceSha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12",
+      "width": 1920
+    },
+    {
+      "bytes": 27582,
+      "path": "/portal-themes/nxttrack-default/progress-journey-portrait-640.avif",
+      "sha256": "274cb57f681ef2f275f5f36d3bd7458ec05cf7a033038ac0ab39aae391e47fd6",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "sourceSha256": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 640
+    },
+    {
+      "bytes": 26650,
+      "path": "/portal-themes/nxttrack-default/progress-journey-portrait-640.webp",
+      "sha256": "18113052e676d2cc196c6652c51504d53a042f4aa9d68e23ea441426cd3f9ca9",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "sourceSha256": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 640
+    },
+    {
+      "bytes": 43948,
+      "path": "/portal-themes/nxttrack-default/progress-journey-portrait-960.avif",
+      "sha256": "1524c52b2eb04accdad4dee69de8b38afde2a868eecea3a5ffc7d7d4ea0f7b4e",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "sourceSha256": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 960
+    },
+    {
+      "bytes": 42846,
+      "path": "/portal-themes/nxttrack-default/progress-journey-portrait-960.webp",
+      "sha256": "6d6508f9fb9e931e3d23a531c0431b83dd84e8f4362c3e3102b3894f4d5771b3",
+      "sourcePath": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "sourceSha256": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518",
+      "width": 960
+    },
+    {
+      "bytes": 22026,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-640.avif",
+      "sha256": "764681ecd44accb39313db96c4ef5dacdce3006add8d06de3e8823e32d1c3c8b",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 640
+    },
+    {
+      "bytes": 35948,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-640.webp",
+      "sha256": "5e61ab814f9e4c5d745f14a670e8743c4669c410cc178506c2fda6124ad3358c",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 640
+    },
+    {
+      "bytes": 39804,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-960.avif",
+      "sha256": "7df984b2a183116483fd047577a164e3b9f9438589870d7c9d5f12bde392fc59",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 960
+    },
+    {
+      "bytes": 65792,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-960.webp",
+      "sha256": "3b0ad712019466d55b6df0317b5573d1d7a696c96a75d541b42d478059901be9",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 960
+    },
+    {
+      "bytes": 66918,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-1440.avif",
+      "sha256": "d5ec0e6181443246706f61844bd11106d67be27288b3f6316c03fbce46e2e83f",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 1440
+    },
+    {
+      "bytes": 111066,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-1440.webp",
+      "sha256": "0697e2c99d2cafffe66a85c8d73866dc814d61a06615f4af80ec93653c49438e",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 1440
+    },
+    {
+      "bytes": 80107,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-1920.avif",
+      "sha256": "4d34cf9b8d03a3aebe456c7de10467b471b51438fe2555f1e5f60cae6b90d57f",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 1920
+    },
+    {
+      "bytes": 132304,
+      "path": "/portal-themes/ocean-quest/progress-journey-landscape-1920.webp",
+      "sha256": "04681186ab74a5fc404f255334d7dd6494594296808cd0394e57d4a6fdda4120",
+      "sourcePath": "/portal-themes/ocean-quest/journey-desktop.png",
+      "sourceSha256": "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b",
+      "width": 1920
+    },
+    {
+      "bytes": 68986,
+      "path": "/portal-themes/ocean-quest/progress-journey-portrait-640.avif",
+      "sha256": "66302fa6f34c0e144b862a96a6a67f028f9351124d31fa44cbe21744cd4585b3",
+      "sourcePath": "/portal-themes/ocean-quest/journey-mobile.png",
+      "sourceSha256": "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615",
+      "width": 640
+    },
+    {
+      "bytes": 119556,
+      "path": "/portal-themes/ocean-quest/progress-journey-portrait-640.webp",
+      "sha256": "158ed2425b1783eb43bb318a24b8ea42fa91359aafb2c70a622bce0edca9c6cf",
+      "sourcePath": "/portal-themes/ocean-quest/journey-mobile.png",
+      "sourceSha256": "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615",
+      "width": 640
+    },
+    {
+      "bytes": 116062,
+      "path": "/portal-themes/ocean-quest/progress-journey-portrait-960.avif",
+      "sha256": "21703715054eada0d11d663ef0787884fd1a3b5c91d36bf9eaf3e1680ea6d875",
+      "sourcePath": "/portal-themes/ocean-quest/journey-mobile.png",
+      "sourceSha256": "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615",
+      "width": 960
+    },
+    {
+      "bytes": 201844,
+      "path": "/portal-themes/ocean-quest/progress-journey-portrait-960.webp",
+      "sha256": "b4b060e946b33cd54201633bb1fc625b35133a214f19671aac8e1fafb5615783",
+      "sourcePath": "/portal-themes/ocean-quest/journey-mobile.png",
+      "sourceSha256": "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615",
+      "width": 960
+    },
+    {
+      "bytes": 6242,
+      "path": "/portal-themes/ocean-quest/mascot-256.avif",
+      "sha256": "dfa480e956c2a7a73ed5b451b3664530c276f2cc4ad92298c148a2774754db6e",
+      "sourcePath": "/portal-themes/ocean-quest/mascot.png",
+      "sourceSha256": "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0",
+      "width": 256
+    },
+    {
+      "bytes": 6722,
+      "path": "/portal-themes/ocean-quest/mascot-256.webp",
+      "sha256": "42a6a547cea531606ac678ff5707aab443cf4d97538e51ad707a2bb2aeefbbc1",
+      "sourcePath": "/portal-themes/ocean-quest/mascot.png",
+      "sourceSha256": "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0",
+      "width": 256
+    },
+    {
+      "bytes": 13130,
+      "path": "/portal-themes/ocean-quest/mascot-512.avif",
+      "sha256": "e46741b910758bebacad03eefe4947f3a6431137a55f713bffac1155c9c78b4d",
+      "sourcePath": "/portal-themes/ocean-quest/mascot.png",
+      "sourceSha256": "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0",
+      "width": 512
+    },
+    {
+      "bytes": 15216,
+      "path": "/portal-themes/ocean-quest/mascot-512.webp",
+      "sha256": "d522fc4f8fe8c7f5b7ef602fe6b0610241d0c5a32c10c2220400307f91830c9e",
+      "sourcePath": "/portal-themes/ocean-quest/mascot.png",
+      "sourceSha256": "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0",
+      "width": 512
+    },
+    {
+      "bytes": 30037,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-640.avif",
+      "sha256": "5a730adfdfe0faa33a7653d0e16f6a38a61423612b12bf20e6f09dfcd47ab291",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 640
+    },
+    {
+      "bytes": 28540,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-640.webp",
+      "sha256": "5a031ac45fdb441346911a558607a252b9403d6c68b7718e2f5d66c6f6b7ed57",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 640
+    },
+    {
+      "bytes": 58787,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-960.avif",
+      "sha256": "24dc5b77f4ec0e5071e5e2c516cb96f9bc337cb946a3690e5a9dccda24fbd4cc",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 960
+    },
+    {
+      "bytes": 54658,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-960.webp",
+      "sha256": "2fffb8645ec274e4fdf158c4e5504d41dc3d1bec96348408d7bfd87b5e947761",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 960
+    },
+    {
+      "bytes": 106294,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-1440.avif",
+      "sha256": "4249fc0ad8cffa4d01f428b04fcd2011851e9924c12f8589ca5cc9b261851f45",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 1440
+    },
+    {
+      "bytes": 100438,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-1440.webp",
+      "sha256": "4efefc8a8bb2bec5abc33bab6480d2eaaba8de0f2f0bd7dd056b5438e60f1844",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 1440
+    },
+    {
+      "bytes": 128289,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-1920.avif",
+      "sha256": "086089620e1c933ecb29f234251085c3d9d269b19a7c69bdeedfe5fe0622bf6c",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 1920
+    },
+    {
+      "bytes": 121956,
+      "path": "/portal-themes/polar-splash/progress-journey-landscape-1920.webp",
+      "sha256": "a38cd99c9df7a00ad1da1af3a077a41aa590b3c98258c113600b3a0c6abd1073",
+      "sourcePath": "/portal-themes/polar-splash/journey-desktop.png",
+      "sourceSha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51",
+      "width": 1920
+    },
+    {
+      "bytes": 93331,
+      "path": "/portal-themes/polar-splash/progress-journey-portrait-640.avif",
+      "sha256": "21314c2f70fb1fac2d9f8db1950d38d58b623128bc57a093dd9fa456dac18300",
+      "sourcePath": "/portal-themes/polar-splash/journey-mobile.png",
+      "sourceSha256": "903f56d660b460d7a57e43f6440c1190e3bcf4e0a11642bc77265771951c17d1",
+      "width": 640
+    },
+    {
+      "bytes": 88234,
+      "path": "/portal-themes/polar-splash/progress-journey-portrait-640.webp",
+      "sha256": "10c871672a835c92027980d49b17be9894873a9bfda196c952288cc345ffd2df",
+      "sourcePath": "/portal-themes/polar-splash/journey-mobile.png",
+      "sourceSha256": "903f56d660b460d7a57e43f6440c1190e3bcf4e0a11642bc77265771951c17d1",
+      "width": 640
+    },
+    {
+      "bytes": 159430,
+      "path": "/portal-themes/polar-splash/progress-journey-portrait-960.avif",
+      "sha256": "daa2eaca9c52a61b99403dd9b31a22b374c3df3e709aa628ba0592fd3eb84e3f",
+      "sourcePath": "/portal-themes/polar-splash/journey-mobile.png",
+      "sourceSha256": "903f56d660b460d7a57e43f6440c1190e3bcf4e0a11642bc77265771951c17d1",
+      "width": 960
+    },
+    {
+      "bytes": 152774,
+      "path": "/portal-themes/polar-splash/progress-journey-portrait-960.webp",
+      "sha256": "5763fdf33f943b11994a37208abfdf90493f08434ed85bc04703007170d0383d",
+      "sourcePath": "/portal-themes/polar-splash/journey-mobile.png",
+      "sourceSha256": "903f56d660b460d7a57e43f6440c1190e3bcf4e0a11642bc77265771951c17d1",
+      "width": 960
+    },
+    {
+      "bytes": 7972,
+      "path": "/portal-themes/polar-splash/mascot-256.avif",
+      "sha256": "ff3a1518ea77f3eb4710cf438bfd69ea891f7bb77fe27139d1c1daf9c86a409c",
+      "sourcePath": "/portal-themes/polar-splash/mascot.png",
+      "sourceSha256": "af24557e10ed39c052c8e515bb42572693e55b580c254df1c32068807c1cd7ec",
+      "width": 256
+    },
+    {
+      "bytes": 10740,
+      "path": "/portal-themes/polar-splash/mascot-256.webp",
+      "sha256": "4a6cba208425a6c31f225a7a2c3a6a91c7b25d833a6bae0ceca45462a8dcc98a",
+      "sourcePath": "/portal-themes/polar-splash/mascot.png",
+      "sourceSha256": "af24557e10ed39c052c8e515bb42572693e55b580c254df1c32068807c1cd7ec",
+      "width": 256
+    },
+    {
+      "bytes": 17492,
+      "path": "/portal-themes/polar-splash/mascot-512.avif",
+      "sha256": "3908f62fa9035847cb78fb3e0ec1b91effa6d151b11059e683876fa35eb22b2f",
+      "sourcePath": "/portal-themes/polar-splash/mascot.png",
+      "sourceSha256": "af24557e10ed39c052c8e515bb42572693e55b580c254df1c32068807c1cd7ec",
+      "width": 512
+    },
+    {
+      "bytes": 22242,
+      "path": "/portal-themes/polar-splash/mascot-512.webp",
+      "sha256": "46c5a53ff7cee72e2577657a7bb9e19945f197c4db10e3c274752c99dad27b02",
+      "sourcePath": "/portal-themes/polar-splash/mascot.png",
+      "sourceSha256": "af24557e10ed39c052c8e515bb42572693e55b580c254df1c32068807c1cd7ec",
+      "width": 512
+    },
+    {
+      "bytes": 25232,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-640.avif",
+      "sha256": "6f2424a206097b71742509329857b2f9904f7d0e5f5d4c4b35b8fb3dd420cde1",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 640
+    },
+    {
+      "bytes": 39506,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-640.webp",
+      "sha256": "c3b425b7ceb34e8b837fc3846d014ff66e1df465c93f368bc90f25d450649bc2",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 640
+    },
+    {
+      "bytes": 50969,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-960.avif",
+      "sha256": "a522a6f40fcffe393b2e1f77e666bb436b45e06b9be0be1a7abfb5e6f2bc45f6",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 960
+    },
+    {
+      "bytes": 77842,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-960.webp",
+      "sha256": "8ac7c3d1e23c40d2d957dc2389be4493c6b2ba9bdc3c32180dbbd11f9e1b67a1",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 960
+    },
+    {
+      "bytes": 96601,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-1440.avif",
+      "sha256": "92e847080bb52f425e8afbd3a8d533f7b2fbb5648fce2e6c12c39a66461576d9",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 1440
+    },
+    {
+      "bytes": 141736,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-1440.webp",
+      "sha256": "4e533aa1f1a49924ec99760743f27df98dd8f9cbcb32feb8fe039d4130e0dbc9",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 1440
+    },
+    {
+      "bytes": 119701,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-1920.avif",
+      "sha256": "95de4858a2ebbfcf457cd097044f1195ecaa29ddb4362ea5418d4df722e2445b",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 1920
+    },
+    {
+      "bytes": 175112,
+      "path": "/portal-themes/turtle-trails/progress-journey-landscape-1920.webp",
+      "sha256": "c8488ffd775494ecbe2b07aaed0ebfdcebf4ba68a463c5abe2c372353694825d",
+      "sourcePath": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sourceSha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2",
+      "width": 1920
+    },
+    {
+      "bytes": 62698,
+      "path": "/portal-themes/turtle-trails/progress-journey-portrait-640.avif",
+      "sha256": "d67b3d53149a6fccbee610902d84a7be30fe7c7df6e0c4a9fc23483e7bd39df4",
+      "sourcePath": "/portal-themes/turtle-trails/journey-mobile.png",
+      "sourceSha256": "4eefe146e8723ff0a3ccfdfe5d4d665ac24862e86533fbc9379c142bbf7a05fd",
+      "width": 640
+    },
+    {
+      "bytes": 98758,
+      "path": "/portal-themes/turtle-trails/progress-journey-portrait-640.webp",
+      "sha256": "c0cafdf7d0d683c8d5cb43b33df19d521f7b3a339769d76acdbf13a8323ebd73",
+      "sourcePath": "/portal-themes/turtle-trails/journey-mobile.png",
+      "sourceSha256": "4eefe146e8723ff0a3ccfdfe5d4d665ac24862e86533fbc9379c142bbf7a05fd",
+      "width": 640
+    },
+    {
+      "bytes": 111255,
+      "path": "/portal-themes/turtle-trails/progress-journey-portrait-960.avif",
+      "sha256": "152b016e6c3456a4aa9420d424bb531842c9f74c28c191277ce0235ca5d6551c",
+      "sourcePath": "/portal-themes/turtle-trails/journey-mobile.png",
+      "sourceSha256": "4eefe146e8723ff0a3ccfdfe5d4d665ac24862e86533fbc9379c142bbf7a05fd",
+      "width": 960
+    },
+    {
+      "bytes": 169864,
+      "path": "/portal-themes/turtle-trails/progress-journey-portrait-960.webp",
+      "sha256": "69c5a26c3a4252991ad451bc00a931db6845dc0c436e0bd81ad6c32361ab004c",
+      "sourcePath": "/portal-themes/turtle-trails/journey-mobile.png",
+      "sourceSha256": "4eefe146e8723ff0a3ccfdfe5d4d665ac24862e86533fbc9379c142bbf7a05fd",
+      "width": 960
+    },
+    {
+      "bytes": 8241,
+      "path": "/portal-themes/turtle-trails/mascot-256.avif",
+      "sha256": "8477662a4dc0ea643df1b5be266b50246009568a8fab7639344b7613b1342dcd",
+      "sourcePath": "/portal-themes/turtle-trails/mascot.png",
+      "sourceSha256": "4876ed4c2b5fb924d2f5ff25c348d0babe07892a6b945afea8ee8db4bc483d8e",
+      "width": 256
+    },
+    {
+      "bytes": 9550,
+      "path": "/portal-themes/turtle-trails/mascot-256.webp",
+      "sha256": "c565b6d8d3db31ea99504e90bde6040fe878747197679266d36fbf41e91d4b7e",
+      "sourcePath": "/portal-themes/turtle-trails/mascot.png",
+      "sourceSha256": "4876ed4c2b5fb924d2f5ff25c348d0babe07892a6b945afea8ee8db4bc483d8e",
+      "width": 256
+    },
+    {
+      "bytes": 19823,
+      "path": "/portal-themes/turtle-trails/mascot-512.avif",
+      "sha256": "71b358ecba29dffa32ff5084f0e43bcee52d2b170bd750049045cbd58e2bf95e",
+      "sourcePath": "/portal-themes/turtle-trails/mascot.png",
+      "sourceSha256": "4876ed4c2b5fb924d2f5ff25c348d0babe07892a6b945afea8ee8db4bc483d8e",
+      "width": 512
+    },
+    {
+      "bytes": 23710,
+      "path": "/portal-themes/turtle-trails/mascot-512.webp",
+      "sha256": "faf369c01ac723b13a8ee8d4e4cd83a20b0602f2dd5c6ff8e4c044c3c0e2a233",
+      "sourcePath": "/portal-themes/turtle-trails/mascot.png",
+      "sourceSha256": "4876ed4c2b5fb924d2f5ff25c348d0babe07892a6b945afea8ee8db4bc483d8e",
+      "width": 512
+    }
+  ]
+}

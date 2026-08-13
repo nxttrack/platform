@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 import {
@@ -18,6 +19,7 @@ export type ParticipantMediaRow = {
   file_name: string;
   id: string;
   malware_scan_status: string;
+  media_type: "image" | "video";
   mime_type: string;
   participant_id: string;
   published_at: string | null;
@@ -57,7 +59,7 @@ export async function getAdminParticipantMediaData(participantId: string) {
     admin
       .from("participant_media")
       .select(
-        "id, tenant_id, participant_id, caption, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at"
+        "id, tenant_id, participant_id, caption, media_type, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at"
       )
       .eq("tenant_id", tenant.id)
       .eq("participant_id", participantId)
@@ -93,6 +95,12 @@ export async function getAdminParticipantMediaData(participantId: string) {
 
 export async function getParentParticipantMediaData() {
   const context = await requirePrivateShellContext("/portaal/media");
+  return getParentParticipantMediaDataForContext(context);
+}
+
+export async function getParentParticipantMediaDataForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
   const [guardianLinksResult, legacyParticipantsResult] = await Promise.all([
@@ -122,10 +130,18 @@ export async function getParentParticipantMediaData() {
 
   const participantIds = [...accessByParticipant.keys()];
   if (participantIds.length === 0) {
-    return { tenant, participants: [], media: [], consents: [], consentStates: {} };
+    return {
+      tenant,
+      participants: [],
+      media: [],
+      consents: [],
+      consentStates: {},
+      childMediaApprovalIds: [],
+      childModeEnabled: false
+    };
   }
 
-  const [participantsResult, mediaResult, consentsResult] = await Promise.all([
+  const [participantsResult, mediaResult, consentsResult, childApprovalsResult, childModeResult] = await Promise.all([
     admin
       .from("participants")
       .select("id, display_name, guardian_user_id, is_test")
@@ -136,7 +152,7 @@ export async function getParentParticipantMediaData() {
     admin
       .from("participant_media")
       .select(
-        "id, tenant_id, participant_id, caption, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at"
+        "id, tenant_id, participant_id, caption, media_type, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at"
       )
       .eq("tenant_id", tenant.id)
       .in("participant_id", participantIds)
@@ -149,12 +165,27 @@ export async function getParentParticipantMediaData() {
       .eq("tenant_id", tenant.id)
       .eq("guardian_user_id", context.user.id)
       .eq("purpose", PARTICIPANT_MEDIA_PURPOSE)
+      .in("participant_id", participantIds),
+    admin
+      .from("portal_child_media_approvals")
+      .select("media_id")
+      .eq("tenant_id", tenant.id)
       .in("participant_id", participantIds)
+      .is("revoked_at", null),
+    admin
+      .from("tenant_swim_rollouts")
+      .select("status")
+      .eq("tenant_id", tenant.id)
+      .eq("feature_key", "swim.portal.child_mode")
+      .in("status", ["pilot", "enabled"])
+      .maybeSingle()
   ]);
 
   assertResult(participantsResult.error, "leerlingen");
   assertResult(mediaResult.error, "media");
   assertResult(consentsResult.error, "toestemmingen");
+  assertResult(childApprovalsResult.error, "kindmodus-mediagoedkeuringen");
+  assertResult(childModeResult.error, "kindmodusstatus");
   const consentStates = new Map(
     await Promise.all(
       participantIds.map(async (participantId) => [
@@ -174,7 +205,9 @@ export async function getParentParticipantMediaData() {
       (item) => consentStates.get(item.participant_id)?.valid
     ),
     consents: (consentsResult.data ?? []) as ConsentRow[],
-    consentStates: Object.fromEntries(consentStates)
+    consentStates: Object.fromEntries(consentStates),
+    childMediaApprovalIds: (childApprovalsResult.data ?? []).map((approval) => approval.media_id),
+    childModeEnabled: Boolean(childModeResult.data)
   };
 }
 

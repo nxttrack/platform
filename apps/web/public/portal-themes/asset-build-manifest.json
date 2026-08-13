@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "bytes": 1609207,
+      "path": "/portal-themes/nxttrack-default/journey-desktop.png",
+      "sha256": "63bf886e4fc43d99f7ded594cfe419abe0de9ebe946dcfd2f0b2fa2c4f6cda12"
+    },
+    {
+      "bytes": 1484943,
+      "path": "/portal-themes/nxttrack-default/journey-mobile.png",
+      "sha256": "8a1b4bbdb33967f70dce1e0a7b97a614296d214c8cf0b91715c005a802308518"
+    },
+    {
+      "bytes": 2226956,
+      "path": "/portal-themes/dolphin-bay/journey-desktop.png",
+      "sha256": "d2294e3ce995c2fc2d9a0b0962ac058e1a9f46dc3a289a37844a10b0e81c1c58"
+    },
+    {
+      "bytes": 2573991,
+      "path": "/portal-themes/dolphin-bay/journey-mobile.png",
+      "sha256": "6718a238c5787a20a582fe8d2f0ea71f2ce27065f4eac6d15a92970c0e7ed719"
+    },
+    {
+      "bytes": 692734,
+      "path": "/portal-themes/dolphin-bay/mascot.png",
+      "sha256": "03d852ba7b0d2e3a430222f1250a2479fc9a05119ce75479205cfc750e53b7d5"
+    },
+    {
+      "bytes": 2257774,
+      "path": "/portal-themes/turtle-trails/journey-desktop.png",
+      "sha256": "6634b7b7eb9d4ebc6f2f0dd08172266e3489a3fce1f866d1b7096e7511a41de2"
+    },
+    {
+      "bytes": 2534614,
+      "path": "/portal-themes/turtle-trails/journey-mobile.png",
+      "sha256": "4eefe146e8723ff0a3ccfdfe5d4d665ac24862e86533fbc9379c142bbf7a05fd"
+    },
+    {
+      "bytes": 749093,
+      "path": "/portal-themes/turtle-trails/mascot.png",
+      "sha256": "4876ed4c2b5fb924d2f5ff25c348d0babe07892a6b945afea8ee8db4bc483d8e"
+    },
+    {
+      "bytes": 2053391,
+      "path": "/portal-themes/polar-splash/journey-desktop.png",
+      "sha256": "8b26b922f823872e8d8a390cec67b89861c09fa723a11ae7d72e4aa46f23fa51"
+    },
+    {
+      "bytes": 2210516,
+      "path": "/portal-themes/polar-splash/journey-mobile.png",
+      "sha256": "903f56d660b460d7a57e43f6440c1190e3bcf4e0a11642bc77265771951c17d1"
+    },
+    {
+      "bytes": 733867,
+      "path": "/portal-themes/polar-splash/mascot.png",
+      "sha256": "af24557e10ed39c052c8e515bb42572693e55b580c254df1c32068807c1cd7ec"
+    },
+    {
+      "bytes": 1987143,
+      "path": "/portal-themes/coastal-explorer/journey-desktop.png",
+      "sha256": "a70b067e64ef50143788a2c1bdd5c87be9c2487edcde260f768e0a0ac44f1fd1"
+    },
+    {
+      "bytes": 2306079,
+      "path": "/portal-themes/coastal-explorer/journey-mobile.png",
+      "sha256": "d3ac6cb81a806820b1591f6f236e5b5f48c2abf13f6d5eada737f69f95796a7d"
+    },
+    {
+      "bytes": 683249,
+      "path": "/portal-themes/coastal-explorer/mascot.png",
+      "sha256": "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6"
+    },
+    {
+      "bytes": 1901870,
+      "path": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "sha256": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6"
+    },
+    {
+      "bytes": 2009138,
+      "path": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "sha256": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2"
+    }
+  ]
+}

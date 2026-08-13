@@ -36,6 +36,7 @@ const authCases: AuthCase[] = [
 
 const configuredCases = authCases.filter((authCase) => authCase.username && authCase.password);
 const requireAuthenticatedWorkflows = process.env.E2E_REQUIRE_AUTHENTICATED_WORKFLOWS === "true";
+const themeKeyPattern = /^(nxttrack-default|dolphin-bay|turtle-trails|polar-splash|coastal-explorer|nationaal-zwem-abc)$/;
 
 test.describe("authenticated role workflows", () => {
   test.beforeAll(() => {
@@ -76,8 +77,25 @@ test.describe("authenticated role workflows", () => {
       expect(currentUrl.pathname === authCase.path || currentUrl.pathname.startsWith(`${authCase.path}/`)).toBeTruthy();
 
       if (authCase.label === "parent") {
-        await page.goto("/portaal/media", { waitUntil: "domcontentloaded" });
-        await expect(page.getByRole("heading", { name: "Media-tijdlijn" })).toBeVisible();
+        const themedRoot = page.locator("[data-portal-theme]");
+        const overviewJourney = page.locator(".portal-journey");
+        await expect(themedRoot).toBeVisible();
+        await expect(overviewJourney).toBeVisible();
+        await expect(overviewJourney).toHaveAttribute("data-theme-key", themeKeyPattern);
+        const themeKey = await themedRoot.getAttribute("data-portal-theme");
+        const backgroundImage = await overviewJourney.locator(".portal-journey__scene").evaluate((element) => getComputedStyle(element).backgroundImage);
+        expect(backgroundImage).toContain("/portal-themes/");
+
+        if (themeKey === "nationaal-zwem-abc") {
+          const license = await themedRoot.getAttribute("data-portal-theme-license");
+          await expect(overviewJourney.getByText(
+            license === "verified" ? "Nationaal Zwem ABC" : "Diplomareis A–B–C",
+            { exact: false }
+          )).toBeVisible();
+        }
+
+        await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });
+        await expect(page.getByRole("heading", { name: "Besloten media" })).toBeVisible();
       }
 
       expect(failures()).toEqual([]);

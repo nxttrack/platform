@@ -27,9 +27,52 @@ export async function proxy(request: NextRequest) {
     }
   });
 
-  await supabase.auth.getClaims();
+  const claimsResult = await supabase.auth.getClaims();
+  const sessionId = claimsResult.data?.claims?.session_id;
+  if (typeof sessionId === "string") {
+    const portalSessionResult = await supabase.rpc("resolve_current_portal_session");
+    if (portalSessionResult.error) {
+      return privateFailureResponse(request);
+    }
+    const portalMode = getPortalSessionMode(portalSessionResult.data);
+    const pathname = request.nextUrl.pathname;
+    if (portalMode === "locked") {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "portal_session_locked" },
+          { status: 403, headers: privateHeaders() }
+        );
+      }
+      if (!isPortalSessionRecoveryPath(pathname)) {
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("next", "/portaal");
+        loginUrl.searchParams.set("error", "child_session_locked");
+        const response = NextResponse.redirect(loginUrl);
+        copyResponseCookies(supabaseResponse, response);
+        return applyPrivateHeaders(response);
+      }
+    }
+    if (portalMode === "child" && !isChildAllowedPath(pathname)) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json(
+          { error: "child_session_capability_required" },
+          { status: 403, headers: privateHeaders() }
+        );
+      }
+      const response = NextResponse.redirect(new URL("/kind", request.url));
+      copyResponseCookies(supabaseResponse, response);
+      return applyPrivateHeaders(response);
+    }
+    if (portalMode === "parent" && (pathname === "/kind" || pathname.startsWith("/kind/"))) {
+      const response = NextResponse.redirect(new URL("/portaal", request.url));
+      copyResponseCookies(supabaseResponse, response);
+      return applyPrivateHeaders(response);
+    }
+  }
 
-  return supabaseResponse;
+  return isPrivatePath(request.nextUrl.pathname)
+    ? applyPrivateHeaders(supabaseResponse)
+    : supabaseResponse;
 }
 
 export const config = {
@@ -79,5 +122,60 @@ function getHostRewritePath(pathname: string, resolution: TenantHostResolution):
 }
 
 function isTenantShellPath(pathname: string) {
-  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/portaal" || pathname.startsWith("/portaal/") || pathname === "/instructor" || pathname.startsWith("/instructor/");
+  return pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/portaal" || pathname.startsWith("/portaal/") || pathname === "/kind" || pathname.startsWith("/kind/") || pathname === "/instructor" || pathname.startsWith("/instructor/");
+}
+
+function isPrivatePath(pathname: string) {
+  return ["/admin", "/instructor", "/kind", "/platform", "/portaal"].some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  ) || pathname.startsWith("/api/files/");
+}
+
+function isChildAllowedPath(pathname: string) {
+  return pathname === "/kind"
+    || pathname.startsWith("/kind/")
+    || pathname.startsWith("/api/child/");
+}
+
+function getPortalSessionMode(value: unknown): "child" | "locked" | "parent" {
+  if (!value) return "parent";
+  if (typeof value !== "object" || Array.isArray(value)) return "locked";
+  const mode = (value as { mode?: unknown }).mode;
+  return mode === "child" ? "child" : "locked";
+}
+
+function isPortalSessionRecoveryPath(pathname: string) {
+  return pathname === "/login"
+    || pathname.startsWith("/auth/")
+    || pathname === "/wachtwoord-vergeten"
+    || pathname === "/wachtwoord-resetten";
+}
+
+function privateHeaders() {
+  return {
+    "Cache-Control": "private, no-store, max-age=0",
+    "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet, noimageindex"
+  } as const;
+}
+
+function applyPrivateHeaders<T extends NextResponse>(response: T): T {
+  for (const [key, value] of Object.entries(privateHeaders())) response.headers.set(key, value);
+  return response;
+}
+
+function copyResponseCookies(source: NextResponse, target: NextResponse) {
+  source.cookies.getAll().forEach((cookie) => target.cookies.set(cookie));
+}
+
+function privateFailureResponse(request: NextRequest) {
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.json(
+      { error: "portal_session_unavailable" },
+      { status: 503, headers: privateHeaders() }
+    );
+  }
+  return new NextResponse("Portal session temporarily unavailable", {
+    status: 503,
+    headers: privateHeaders()
+  });
 }

@@ -23,8 +23,8 @@ type BadgeStudioAssetRow = {
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-export async function GET(_request: Request, context: RouteContext) {
-  const guard = await requireApiAuthenticatedContext();
+export async function GET(request: Request, context: RouteContext) {
+  const guard = await requireApiAuthenticatedContext(request);
   if (!guard.ok) return guard.response;
 
   const { id } = await context.params;
@@ -37,17 +37,14 @@ export async function GET(_request: Request, context: RouteContext) {
   if (result.error || !result.data) return notFound();
 
   const asset = result.data as BadgeStudioAssetRow;
-  const platformAllowed = guard.context.platform?.roles.some((role) =>
-    role === "platform_owner" || role === "platform_admin"
-  );
+  const globalAllowed = asset.tenant_id === null;
   const tenantAllowed = asset.tenant_id
     ? guard.context.tenants.some((tenant) =>
-        tenant.tenantId === asset.tenant_id &&
-        tenant.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")
+        tenant.tenantId === asset.tenant_id
       )
     : false;
 
-  if (!platformAllowed && !tenantAllowed) return notFound();
+  if (!globalAllowed && !tenantAllowed) return notFound();
   if (asset.storage_bucket !== BADGE_STUDIO_ASSETS_BUCKET) return notFound();
   if (asset.status !== "active" || !hasDownloadableScan(asset.malware_scan_status)) return notFound();
 
