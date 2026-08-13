@@ -147,6 +147,7 @@ export function AppShellClient({
   const [collapsed, setCollapsed] = useState(false);
   const [portalTransition, setPortalTransition] = useState(false);
   const activeHref = findActiveHref(pathname, nav);
+  const sidebarCollapsed = mobileBottomNav ? false : collapsed;
   const initials = getInitials(user.name);
   const messagesHref = nav.find((item) => item.icon === "message")?.href;
   const contextualNav = useMemo(
@@ -170,8 +171,12 @@ export function AppShellClient({
   );
 
   useEffect(() => {
+    if (mobileBottomNav) {
+      setCollapsed(false);
+      return;
+    }
     setCollapsed(window.localStorage.getItem("nxttrack.sidebar.collapsed") === "true");
-  }, []);
+  }, [mobileBottomNav]);
 
   useEffect(() => {
     const channel = "BroadcastChannel" in window ? new BroadcastChannel("nxttrack.portal-session") : null;
@@ -215,9 +220,25 @@ export function AppShellClient({
       accent={accent}
       activeHref={activeHref}
       brand={brand}
-      collapsed={collapsed}
+      collapsed={sidebarCollapsed}
+      footerNavItem={mobileBottomNav ? {
+        activePrefixes: [
+          "/portaal/documenten",
+          "/portaal/feedback",
+          "/portaal/kinderen",
+          "/portaal/profiel"
+        ],
+        exact: true,
+        href: withContextParameter(
+          "/portaal/profiel",
+          contextSelector?.parameter,
+          searchParams.get(contextSelector?.parameter ?? "")
+        ),
+        icon: "user",
+        label: "Profiel & meer"
+      } : undefined}
       nav={contextualNav}
-      onToggleCollapsed={toggleCollapsed}
+      onToggleCollapsed={mobileBottomNav ? undefined : toggleCollapsed}
       reduceMotion={reduceMotion}
       user={user}
     />
@@ -240,7 +261,7 @@ export function AppShellClient({
           mobileBottomNav
             ? "portal-parent-sidebar sidebar hidden overflow-hidden border shadow-card lg:block"
             : "hidden md:block",
-          collapsed ? "w-[76px]" : mobileBottomNav ? "w-[240px]" : "w-[248px]"
+          sidebarCollapsed ? "w-[76px]" : mobileBottomNav ? "w-[240px]" : "w-[248px]"
         )}
       >
         {sidebar}
@@ -283,12 +304,26 @@ export function AppShellClient({
               </span>
             </div>
           ) : null}
-          <div className={cn("min-w-0", mobileBottomNav && "hidden lg:block")}>
-            <p className={cn(
-              "truncate text-xs uppercase tracking-wider",
-              mobileBottomNav ? "portal-parent-brand-title" : "text-muted-foreground"
-            )}>{brand.title}</p>
-            <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
+          <div className={cn("min-w-0", mobileBottomNav && "portal-desktop-brand hidden items-center gap-3 lg:flex")}>
+            {mobileBottomNav ? <span aria-hidden="true" className="portal-mobile-brand__mark">
+              {getInitials(brand.title).slice(0, 2)}
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  alt=""
+                  className="portal-mobile-brand__logo"
+                  onError={(event) => { event.currentTarget.hidden = true; }}
+                  src={brand.logoUrl}
+                />
+              ) : null}
+            </span> : null}
+            <span className="min-w-0">
+              <p className={cn(
+                "truncate text-xs uppercase tracking-wider",
+                mobileBottomNav ? "portal-parent-brand-title" : "text-muted-foreground"
+              )}>{brand.title}</p>
+              <p className="truncate text-sm font-semibold">{brand.subtitle}</p>
+            </span>
           </div>
           {contextSelector && contextSelectorPlacement === "header" ? <ContextSelector selector={contextSelector} /> : null}
           <div className="ml-auto flex shrink-0 items-center gap-2">
@@ -494,10 +529,11 @@ function MobileBottomNavigation({
   nav: ShellNavItem[];
   profileMenu?: ShellNavItem[];
 }) {
+  const pathname = usePathname();
   const primaryItems = nav.filter((item) => item.icon !== "card").slice(0, 4);
   const paymentItem = nav.find((item) => item.icon === "card");
   const moreItems = [...(paymentItem ? [paymentItem] : []), ...(profileMenu ?? [])];
-  const moreActive = moreItems.some((item) => activeHref === stripContextParameter(item.href));
+  const moreActive = moreItems.some((item) => isNavigationItemActive(pathname, item));
 
   return (
     <nav
@@ -627,6 +663,7 @@ function Sidebar({
   accent,
   activeHref,
   collapsed = false,
+  footerNavItem,
   mobile = false,
   onToggleCollapsed,
   reduceMotion
@@ -637,10 +674,12 @@ function Sidebar({
   accent: ShellAccent;
   activeHref?: string;
   collapsed?: boolean;
+  footerNavItem?: ShellNavItem;
   mobile?: boolean;
   onToggleCollapsed?: () => void;
   reduceMotion: boolean | null;
 }) {
+  const pathname = usePathname();
   const groups = useMemo(() => groupNavigation(nav), [nav]);
   const [closedSections, setClosedSections] = useState<Set<string>>(new Set());
 
@@ -675,7 +714,11 @@ function Sidebar({
             return (
               <section className={cn(index > 0 && "mt-3 border-t border-sidebar-border pt-3")} key={group.label}>
                 {!collapsed || mobile ? (
-                  group.label ? (
+                  group.label && footerNavItem ? (
+                    <p className="mb-1 min-h-8 px-2 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                      {group.label}
+                    </p>
+                  ) : group.label ? (
                     <button
                       aria-expanded={!isClosed}
                       className="mb-1 flex min-h-8 w-full items-center justify-between rounded-lg px-2 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -699,15 +742,28 @@ function Sidebar({
           })}
         </TooltipProvider>
       </nav>
-      <div className={cn("m-3 rounded-xl border border-border bg-gradient-to-br from-muted to-card p-2.5", collapsed && !mobile && "mx-2")}>
-        <div className={cn("flex items-center gap-3", collapsed && !mobile && "justify-center")}>
-          <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-semibold text-white", accentStyles[accent])}>{getInitials(user.name)}</div>
-          <div className={cn("min-w-0", collapsed && !mobile && "hidden")}>
-            <p className="truncate text-sm font-semibold">{user.name}</p>
-            <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+      {footerNavItem ? (
+        <section className="portal-sidebar-footer-nav border-t border-sidebar-border px-3 pb-4 pt-3">
+          <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">Informatie</p>
+          <NavigationItem
+            active={isNavigationItemActive(pathname, footerNavItem)}
+            collapsed={collapsed && !mobile}
+            item={footerNavItem}
+            mobile={mobile}
+            reduceMotion={reduceMotion}
+          />
+        </section>
+      ) : (
+        <div className={cn("m-3 rounded-xl border border-border bg-gradient-to-br from-muted to-card p-2.5", collapsed && !mobile && "mx-2")}>
+          <div className={cn("flex items-center gap-3", collapsed && !mobile && "justify-center")}>
+            <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br text-sm font-semibold text-white", accentStyles[accent])}>{getInitials(user.name)}</div>
+            <div className={cn("min-w-0", collapsed && !mobile && "hidden")}>
+              <p className="truncate text-sm font-semibold">{user.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{user.role}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

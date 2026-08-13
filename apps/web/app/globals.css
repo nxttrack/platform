@@ -681,7 +681,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
 }
 
 .portal-mobile-brand {
-  display: flex;
+  display: none;
   min-width: 0;
   flex: 1 1 auto;
   align-items: center;
@@ -2175,6 +2175,16 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
   .portal-parent-sidebar nav a > span.flex-1,
   .portal-parent-sidebar > div > div:last-child > div > div:last-child {
     display: none;
+  }
+
+  .portal-parent-sidebar .portal-sidebar-footer-nav > p,
+  .portal-parent-sidebar .portal-sidebar-footer-nav a > span.flex-1 {
+    display: none;
+  }
+
+  .portal-parent-sidebar .portal-sidebar-footer-nav a {
+    justify-content: center;
+    padding-inline: 0;
   }
 
   .portal-parent-sidebar nav {

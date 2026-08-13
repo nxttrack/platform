@@ -1,26 +1,29 @@
 import type { NavItem } from "@/components/shell/app-shell";
 
 export const parentNav: NavItem[] = [
-  { href: "/portaal", label: "Overzicht", icon: "home", exact: true },
+  { href: "/portaal", label: "Overzicht", icon: "home", exact: true, section: "Portaal" },
   {
     href: "/portaal/planning",
     label: "Planning",
     icon: "calendar",
+    section: "Portaal",
     activePrefixes: ["/portaal/lessen", "/portaal/afzwemmen"]
   },
   {
     href: "/portaal/ontwikkeling",
     label: "Ontwikkeling",
     icon: "trending",
+    section: "Portaal",
     activePrefixes: ["/portaal/voortgang", "/portaal/badges", "/portaal/media", "/portaal/diplomas"]
   },
   {
     href: "/portaal/inbox",
     label: "Inbox",
     icon: "inbox",
+    section: "Portaal",
     activePrefixes: ["/portaal/berichten"]
   },
-  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" }
+  { href: "/portaal/betalingen", label: "Betalingen", icon: "card", section: "Portaal" }
 ];
 
 export const parentMoreNav: NavItem[] = [

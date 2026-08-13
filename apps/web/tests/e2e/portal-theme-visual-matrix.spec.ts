@@ -196,10 +196,17 @@ async function captureParentDashboards(
   const page = await context.newPage();
   const evidence: EvidenceEntry[] = [];
   await signInParent(page);
+  await page.evaluate(() => window.localStorage.setItem("nxttrack.sidebar.collapsed", "true"));
   for (const viewport of requiredViewports) {
     await page.setViewportSize(viewport);
     await gotoStable(page, "/portaal");
     await assertDashboardLayout(page, "parent", viewport.width, viewport.height);
+    if (viewport.width >= 1280) {
+      await expect(page.locator(".portal-parent-sidebar").getByText("Portaal", { exact: true })).toBeVisible();
+      for (const label of ["Overzicht", "Planning", "Ontwikkeling", "Inbox", "Betalingen", "Profiel & meer"]) {
+        await expect(page.locator(".portal-parent-sidebar").getByText(label, { exact: true })).toBeVisible();
+      }
+    }
     await attachViewport(testInfo, page, `${theme}-parent-dashboard-${viewport.name}`);
     evidence.push({ kind: "dashboard-viewport", name: "parent", theme, viewport: viewport.name });
   }
