@@ -57,19 +57,24 @@ export async function processEmailOutboxBatch(input: { leaseSeconds?: number; li
   }
 
   const admin = createAdminClient();
-  const claim = await admin.rpc("claim_email_outbox", {
-    target_lease_seconds: input.leaseSeconds ?? 300,
-    target_limit: input.limit ?? 25
-  });
-
-  if (claim.error) {
-    throw new Error(`Could not claim email outbox: ${claim.error.message}`);
-  }
-
-  const claimed = (claim.data ?? []) as ClaimedEmailOutboxItem[];
+  const leaseSeconds = Math.min(900, Math.max(input.leaseSeconds ?? 300, minimumEmailOutboxLeaseSeconds()));
+  const limit = Number.isInteger(input.limit) && input.limit! >= 1 && input.limit! <= 100 ? input.limit! : 25;
   const results: EmailOutboxProcessResult[] = [];
 
-  for (const item of claimed) {
+  // Claim immediately before provider I/O. Pre-claiming a whole sequential batch
+  // lets later leases expire while earlier provider calls are still in flight.
+  for (let index = 0; index < limit; index += 1) {
+    const claim = await admin.rpc("claim_email_outbox", {
+      target_lease_seconds: leaseSeconds,
+      target_limit: 1
+    });
+
+    if (claim.error) {
+      throw new Error(`Could not claim email outbox: ${claim.error.message}`);
+    }
+
+    const item = ((claim.data ?? []) as ClaimedEmailOutboxItem[])[0];
+    if (!item) break;
     const message = parseTransactionalEmailPayload(item.payload);
 
     if (!message) {
@@ -99,6 +104,16 @@ export async function processEmailOutboxBatch(input: { leaseSeconds?: number; li
   }
 
   return results;
+}
+
+function minimumEmailOutboxLeaseSeconds() {
+  const configuredTimeout = Number.parseInt(process.env.EMAIL_DELIVERY_TIMEOUT_MS ?? "15000", 10);
+  const timeoutMs = Number.isInteger(configuredTimeout) && configuredTimeout >= 1_000 && configuredTimeout <= 60_000
+    ? configuredTimeout
+    : 15_000;
+
+  // Leave a bounded completion/logging margin after the provider timeout.
+  return Math.max(30, Math.ceil(timeoutMs / 1_000) + 30);
 }
 
 async function completeOutboxItem(
