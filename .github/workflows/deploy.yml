@@ -483,7 +483,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: nxttrack-${{ env.TARGET }}-${{ github.sha }}-release-evidence
-          path: ${{ env.RELEASE }}/artifacts/release-evidence.json
+          path: |
+            ${{ env.RELEASE }}/artifacts/release-evidence.json
+            ${{ env.RELEASE }}/artifacts/exact-source-sha.json
           if-no-files-found: error
           retention-days: ${{ inputs.target == 'production' && 90 || 14 }}
 
@@ -554,6 +556,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.staging_preview_sha || github.sha }}
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -568,6 +572,19 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Write required exact source SHA artifact
+        env:
+          DEPLOYED_SOURCE_SHA: ${{ inputs.staging_preview_sha || github.sha }}
+        run: pnpm run release:write-exact-source
+
+      - name: Retain exact source SHA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ inputs.staging_preview_sha || github.sha }}-exact-source
+          path: artifacts/exact-source-sha.json
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Install Playwright Chromium
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
@@ -706,7 +723,9 @@ jobs:
         uses: actions/upload-artifact@v6
         with:
           name: nxttrack-staging-${{ github.sha }}-release-evidence
-          path: artifacts/release-evidence.json
+          path: |
+            artifacts/release-evidence.json
+            artifacts/exact-source-sha.json
           if-no-files-found: error
           retention-days: 14
 
@@ -714,6 +733,7 @@ jobs:
         if: inputs.staging_preview_sha == '' && steps.upload-release-evidence.outcome == 'failure'
         run: |
           test -s artifacts/release-evidence.json
+          test -s artifacts/exact-source-sha.json
           echo "Artifact upload unavailable; release evidence is preserved in this job summary."
 
   finalize-staging-preview:

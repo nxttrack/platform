@@ -50,6 +50,7 @@
     "release:audit-runtime-env": "node scripts/release/audit-runtime-environment-contract.mjs",
     "release:create-go-no-go": "node scripts/release/create-go-no-go-form.mjs",
     "release:write-artifact-probe": "node scripts/release/write-artifact-storage-probe.mjs",
+    "release:write-exact-source": "node scripts/release/write-exact-source-artifact.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
     "phase15:staging": "node scripts/staging/phase-15-validate.mjs",
     "phase16:flow": "node scripts/staging/phase-16-operational-flow.mjs",

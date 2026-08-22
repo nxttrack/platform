@@ -7,6 +7,10 @@ const actions = readFileSync(new URL("../../apps/web/lib/domain/platform-health-
 const heartbeatRoute = readFileSync(new URL("../../apps/web/app/api/internal/platform-health/heartbeat/route.ts", import.meta.url), "utf8");
 const monitor = readFileSync(new URL("../../scripts/operations/monitor-operational-health.mjs", import.meta.url), "utf8");
 const storageBackup = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
+const storageBucketContract = readFileSync(
+  new URL("../../scripts/storage/storage-bucket-contract.mjs", import.meta.url),
+  "utf8"
+);
 
 test("platform health evidence is service-owned and incidents are platform-role scoped", () => {
   for (const table of ["platform_service_heartbeats", "platform_incidents"]) {
@@ -31,7 +35,8 @@ test("heartbeat ingestion and incident resolution require explicit authority", (
 test("monitoring and storage backup publish evidence and cover CMS media", () => {
   assert.match(monitor, /publishPlatformHeartbeat/);
   assert.match(monitor, /serviceKey: "runtime_monitor"/);
-  assert.match(storageBackup, /tenant-media-assets/);
+  assert.match(storageBucketContract, /name: "tenant-media-assets"/);
+  assert.match(storageBackup, /requiredStorageBucketNames/);
   assert.match(storageBackup, /platform_service_heartbeats/);
   assert.match(storageBackup, /service_key: "storage_backup"/);
 });

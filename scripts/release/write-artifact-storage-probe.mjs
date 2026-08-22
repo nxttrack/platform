@@ -2,13 +2,15 @@
 
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { resolveExactSourceSha } from "./exact-source-artifact.mjs";
 
 const outputPath = resolve(process.cwd(), "artifacts/artifact-storage-audit.json");
+const exactSourceSha = resolveExactSourceSha();
 const evidence = {
   schemaVersion: 1,
   purpose: "nxttrack-release-artifact-storage-audit",
   repository: process.env.GITHUB_REPOSITORY || null,
-  commitSha: process.env.GITHUB_SHA || null,
+  commitSha: exactSourceSha,
   runId: process.env.GITHUB_RUN_ID || null,
   createdAt: new Date().toISOString()
 };

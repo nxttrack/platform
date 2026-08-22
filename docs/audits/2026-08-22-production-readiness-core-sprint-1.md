@@ -227,12 +227,23 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Stretch 3 — securitybaseline en Node-harmonisatie
 
 - Status: CLOSED lokaal; uitvoering van gewijzigde GitHub-workflows blijft extern NIET GETEST.
-- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Commit: `d16281a9b2f5b963885ed273ea993c204f884ab4` (`chore(security): align runtime and patch nanoid`).
 - Gewijzigd: root enginecontract en `.node-version`, negen afwijkende workflowpins, nanoid-override/lockfile en drie runtime-security-contracttests. Reeds correcte Node 24.18.0-workflows bleven inhoudelijk ongewijzigd.
 - Dependencyfix: de gerichte transitieve override is verhoogd van kwetsbare `nanoid 3.3.17` naar gepatchte `3.3.18`; lockfile bevat uitsluitend `nanoid@3.3.18`. Er is geen nieuwe productiedependency toegevoegd.
 - Runtimecontract: alle negentien actieve `setup-node`-jobs gebruiken exact Node `24.18.0`; root `engines.node` is `>=24.18.0 <25` en `.node-version` is `24.18.0`. Dit sluit aan op de reeds gebruikte deploy/runtime en lokale verificatieruntime en verwijdert de mix van 20.19, 22 en 24.18.
 - Tests: runtime-security 3/3 PASS; frozen install PASS zonder lockfilemutatie; `pnpm audit --prod --audit-level high` PASS met `No known vulnerabilities found`; typecheck PASS; production build PASS; `git diff --check` PASS.
 - Risico/rollout: Node 24 is nu de bewuste enige ondersteunde major. Externe runners, self-hosted agents en deploymentimages moeten vóór rollout aantoonbaar Node 24.18.0 kunnen leveren; de workflows zijn niet uitgevoerd vanuit deze lokale sessie en zijn daarom niet als runtime-PASS gemarkeerd.
+
+### Stretch 4 — fail-closed evidencepijplijnen
+
+- Status: CLOSED voor repository- en lokale contracten; echte stagingrestore, Storage-rehearsal, GitHub artifactupload en gecredentialde browserisolatie blijven extern NIET GETEST.
+- Commit: wordt na deze groene stretchcommit in het finale validatieblok vastgelegd.
+- Dynamische restore-inventory: de restore-rehearsal inventariseert alle publieke brontabellen uit de dump, weigert een lege bron, vergelijkt de bron- en doeltabellen plus rowcounts exact en bevat geen statische `63`-drempel meer. De workflowvariabele en dezelfde minimumdrempel in de live FORCE-RLS-check zijn verwijderd; de live check weigert nog steeds een lege inventory en iedere tabel zonder RLS/FORCE RLS.
+- Storagecontract: één versioned contract bevat exact de vijf huidige private buckets `tenant-documents`, `diploma-vault`, `participant-media`, `badge-studio-assets` en `tenant-media-assets`, inclusief het juiste PDF/PNG-rehearsaltype. Export, restore, remote verify en cleanup vereisen altijd de volledige set. Manifest v3 bewaart het contractversion; oude/incomplete manifests worden fail-closed geweigerd in plaats van stil als volledig bewijs geaccepteerd.
+- Critical suites: premium-release en Sprint 4 tenant-isolation bevatten bij ontbrekende opt-inconfiguratie ieder één expliciet falende configuratietest. De negatieve lokale proef leverde exact twee failures en nul skips met de bedoelde foutmeldingen; dit is fail-closed configuratiebewijs en geen gecredentialde E2E-PASS.
+- Exact bronbewijs: CI en deploy schrijven en uploaden verplicht `exact-source-sha.json`; ontbrekende artifacts laten upload falen. De helper accepteert uitsluitend een volledige 40-teken-SHA en vergelijkt die met de werkelijk uitgecheckte commit. Staging-preview checkt voor de bewijsjob dezelfde expliciete preview-SHA uit en bindt `DEPLOYED_SOURCE_SHA` daaraan. Release evidence en artifact-storage evidence gebruiken dezelfde strikte resolver; productie bewaart het SHA-artifact samen met release evidence.
+- Tests: nieuw evidence-pipelinecontract 4/4 PASS; aangescherpte bestaande Storage/badge/health-contracten PASS; volledige unit/contractsuite 413/413 PASS; typecheck en echte lintscript (dezelfde `tsc --noEmit`) PASS; production build PASS; authaudit PASS; migrationaudit PASS (139); RLS-sourceaudit PASS (251 tabellen met alleen bestaande service/private-helperwaarschuwingen); dependencyaudit PASS (`No known vulnerabilities found`); vier database-integratiesuites PASS; shellsyntax en `git diff --check` PASS. De lokale exacte-SHA-writer schreef en herlas `d16281a9b2f5b963885ed273ea993c204f884ab4` vóór deze checkpointcommit.
+- Externe grens/risico: `db:verify-force-rls` blokkeert lokaal terecht omdat de check alleen tegen `staging.nxttrack.nl` mag draaien; `db:rls-role-smoke` meldde SKIP wegens ontbrekende Supabase-URL/anonkey en E2E-rollen. Geen van beide is als PASS geteld. Een bestaande vier-bucketbackup kan niet meer als actueel volledig herstelbewijs dienen en moet na rollout opnieuw als vijf-bucketbackup worden gemaakt en gerepeteerd; er is niets automatisch verwijderd of hersteld.
 
 ## Deployment- en rollbackcontract
 

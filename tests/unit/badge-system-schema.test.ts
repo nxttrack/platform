@@ -19,6 +19,10 @@ const badgeActions = readFileSync(
   "utf8"
 );
 const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
+const storageBucketContract = readFileSync(
+  new URL("../../scripts/storage/storage-bucket-contract.mjs", import.meta.url),
+  "utf8"
+);
 const badgeAssetRoute = readFileSync(
   new URL("../../apps/web/app/api/files/badge-studio-asset/[id]/route.ts", import.meta.url),
   "utf8"
@@ -142,8 +146,16 @@ test("studio-afbeeldingen zijn privé, gescand, begrensd en RLS-beveiligd", () =
 });
 
 test("studio-afbeeldingen vallen onder de objectbackup en herstelrehearsal", () => {
-  assert.match(backupScript, /tenant-documents,diploma-vault,participant-media,badge-studio-assets/);
-  assert.match(backupScript, /badge-studio-assets/);
+  assert.match(backupScript, /requiredStorageBucketNames/);
+  for (const bucket of [
+    "tenant-documents",
+    "diploma-vault",
+    "participant-media",
+    "badge-studio-assets",
+    "tenant-media-assets"
+  ]) {
+    assert.match(storageBucketContract, new RegExp(`name: "${bucket}"`));
+  }
 });
 
 test("badge-artwork heeft een volledige snapshot- en renderketen", () => {

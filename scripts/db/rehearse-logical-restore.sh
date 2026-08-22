@@ -17,7 +17,6 @@ work_dir="$(mktemp -d -t nxttrack-restore-XXXXXX)"
 container_name="nxttrack-restore-${GITHUB_RUN_ID:-local}-${RANDOM}"
 postgres_image="${POSTGRES_REHEARSAL_IMAGE:-postgres:17}"
 restore_password="nxttrack-restore-only-${RANDOM}-${RANDOM}"
-expected_public_tables="${EXPECTED_PUBLIC_TABLES:-63}"
 
 cleanup() {
   if [[ "$container_name" == nxttrack-restore-* ]]; then
@@ -116,15 +115,21 @@ if ! diff --unified=3 "$work_dir/source-counts.txt" "$work_dir/target-counts.txt
   exit 1
 fi
 
+source_public_table_count="$(grep -c $'\t' "$work_dir/source-counts.txt")"
 public_table_count="$(grep -c $'\t' "$work_dir/target-counts.txt")"
 restored_row_count="$(awk -F $'\t' '{ total += $2 } END { print total + 0 }' "$work_dir/target-counts.txt")"
 
-if [[ "$public_table_count" -ne "$expected_public_tables" ]]; then
-  echo "[backup:restore] Expected ${expected_public_tables} public tables, restored ${public_table_count}." >&2
+if [[ "$source_public_table_count" -le 0 ]]; then
+  echo "[backup:restore] Dynamic source inventory contains no public tables." >&2
   exit 1
 fi
 
-echo "[backup:restore] PASS restored ${public_table_count} public tables and ${restored_row_count} rows with exact count parity."
+if [[ "$public_table_count" -ne "$source_public_table_count" ]]; then
+  echo "[backup:restore] Dynamic source inventory has ${source_public_table_count} public tables; restored ${public_table_count}." >&2
+  exit 1
+fi
+
+echo "[backup:restore] PASS dynamically inventoried and restored ${public_table_count} public tables and ${restored_row_count} rows with exact count parity."
 echo "[backup:restore] Dump bytes=${dump_size} sha256=${dump_sha} source_commit=${GITHUB_SHA:-local}."
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then

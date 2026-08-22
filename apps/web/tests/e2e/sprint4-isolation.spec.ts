@@ -26,8 +26,12 @@ const phase = loadState<Phase16State>("PHASE16_STATE_PATH");
 const isolation = loadState<IsolationState>("SPRINT4_ISOLATION_STATE_PATH");
 const enabled = process.env.SPRINT4_ISOLATION_ENABLED === "true";
 
+if (!enabled) {
+  test("critical tenant-isolation configuration is present", () => {
+    expect(enabled, "SPRINT4_ISOLATION_ENABLED=true is required; this critical suite may not silently skip.").toBe(true);
+  });
+} else {
 test.describe("Sprint 4 role and tenant isolation", () => {
-  test.skip(!enabled, "Enable isolation checks to run this staging-only journey.");
   test.beforeAll(() => {
     expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when isolation checks are enabled.").not.toBeNull();
     expect(isolation, "SPRINT4_ISOLATION_STATE_PATH must resolve to a readable state file when isolation checks are enabled.").not.toBeNull();
@@ -100,6 +104,7 @@ test.describe("Sprint 4 role and tenant isolation", () => {
     expect(failures()).toEqual([]);
   });
 });
+}
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
   await signInAt(page, requiredEnv("PLAYWRIGHT_BASE_URL"), email, password, nextPath);

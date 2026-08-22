@@ -34,6 +34,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Write required exact source SHA artifact
+        run: pnpm run release:write-exact-source
+
+      - name: Retain exact source SHA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ github.sha }}-exact-source
+          path: artifacts/exact-source-sha.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Audit repository truth
         run: pnpm run release:truth
 
