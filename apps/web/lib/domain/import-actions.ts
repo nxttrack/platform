@@ -1,19 +1,20 @@
 "use server";
 
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createInvitation } from "@/lib/auth/invitations";
+import { ensureInvitationAuthUser } from "@/lib/auth/invitations";
+import { generateInvitationCode, hashAuthCode } from "@/lib/auth/tokens";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
-import { findUserIdByEmail } from "@/lib/auth/user-security";
+import { renderInvitationEmail } from "@/lib/email/templates";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getActiveTenant } from "./core";
 import { asImportType, getImportFields, importFieldsByType as fieldsByType, type ImportType } from "./import-contract";
 
 type ImportRow = { id: string; row_number: number; source_data: Record<string, unknown>; validation_status: string };
-type ManifestEntry = { table: string; id: string; rowId: string; email?: string };
+type ImportCommand = { rowId: string; invitation?: Record<string, unknown> };
 
 export async function saveImportMappingAction(formData: FormData) {
   const { tenant, userId } = await requireTenantAdmin();
@@ -58,7 +59,7 @@ export async function validateImportAction(formData: FormData) {
   let duplicates = 0;
   const admin = createAdminClient();
 
-  for (const { normalized, recordType, row } of mappedRows) {
+  const validationUpdates = mappedRows.map(({ normalized, recordType, row }) => {
     const errors = validateRow(recordType, normalized, validationReferences);
     const duplicateKey = buildDuplicateKey(recordType, normalized);
     const duplicate = duplicateKey ? seen.has(duplicateKey) || isExistingDuplicate(recordType, normalized, references) : false;
@@ -67,12 +68,29 @@ export async function validateImportAction(formData: FormData) {
     if (status === "valid") valid += 1;
     else if (status === "duplicate") duplicates += 1;
     else invalid += 1;
-    await requireWrite(admin.from("import_rows").update({ normalized_data: { ...normalized, record_type: recordType }, validation_status: status, validation_errors: errors, duplicate_key: duplicateKey }).eq("tenant_id", tenant.id).eq("id", row.id), `row ${row.row_number}`);
+    return { rowId: row.id, normalizedData: { ...normalized, record_type: recordType }, status, errors, duplicateKey };
+  });
+
+  for (let index = 0; index < validationUpdates.length; index += 250) {
+    const result = await admin.rpc("update_import_validation_chunk", {
+      target_actor_user_id: userId,
+      target_tenant_id: tenant.id,
+      target_job_id: jobId,
+      target_updates: validationUpdates.slice(index, index + 250)
+    });
+    if (result.error || result.data !== Math.min(250, validationUpdates.length - index)) {
+      throw new Error(`validation chunk ${Math.floor(index / 250) + 1} failed`);
+    }
   }
 
   const report = { checkedAt: new Date().toISOString(), valid, invalid, duplicates, total: rows.length };
-  await requireWrite(admin.from("import_jobs").update({ status: "validated", valid_count: valid, invalid_count: invalid, duplicate_count: duplicates, validation_report: report }).eq("tenant_id", tenant.id).eq("id", jobId), "validation");
-  await audit(tenant.id, jobId, userId, "validated", report);
+  const completed = await admin.rpc("complete_import_validation", {
+    target_actor_user_id: userId,
+    target_tenant_id: tenant.id,
+    target_job_id: jobId,
+    target_report: report
+  });
+  if (completed.error) throw new Error("validation completion failed");
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?job=${jobId}&saved=validated`);
 }
@@ -102,29 +120,62 @@ export async function applyImportAction(formData: FormData) {
   const tenant = getActiveTenant(context);
   if (!context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")) redirect("/admin?error=forbidden");
   const jobId = readRequired(formData, "jobId");
-  const job = await getJob(tenant.id, jobId);
-  assertStatus(job.status, ["ready"]);
-  const rows = await getRows(tenant.id, jobId, true);
-  const ordered = [...rows].sort((a, b) => applyOrder(a.normalized_data.record_type) - applyOrder(b.normalized_data.record_type));
   const admin = createAdminClient();
-  const manifest: ManifestEntry[] = [];
-  await requireWrite(admin.from("import_jobs").update({ status: "applying", applied_by_user_id: context.user.id }).eq("tenant_id", tenant.id).eq("id", jobId), "apply start");
+  const idempotencyKey = createHash("sha256").update(`import-apply:v1:${tenant.id}:${jobId}`).digest("hex");
+  const claim = await admin.rpc("claim_import_apply", {
+    target_actor_user_id: context.user.id,
+    target_tenant_id: tenant.id,
+    target_job_id: jobId,
+    target_idempotency_key: idempotencyKey,
+    target_lease_seconds: 300
+  });
+  if (claim.error) redirect(`/admin/importeren?job=${jobId}&error=apply_claim`);
+  const claimResult = claim.data as { outcome?: string; claimToken?: string } | null;
+  if (claimResult?.outcome === "completed") redirect(`/admin/importeren?job=${jobId}&saved=applied`);
+  if (claimResult?.outcome === "busy" || !claimResult?.claimToken) redirect(`/admin/importeren?job=${jobId}&error=apply_busy`);
 
-  try {
-    for (const row of ordered) {
-      if (row.validation_status !== "valid") continue;
-      const entry = await applyRow({ context, data: row.normalized_data, rowId: row.id, tenantId: tenant.id, tenantSlug: tenant.slug });
-      manifest.push(entry);
-      await requireWrite(admin.from("import_rows").update({ validation_status: "applied", target_table: entry.table, target_id: entry.id }).eq("tenant_id", tenant.id).eq("id", row.id), "row apply");
+  if (!(await materializePendingImportGuardians({ actorUserId: context.user.id, jobId, tenantId: tenant.id }))) {
+    redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+  }
+
+  const rows = (await getRows(tenant.id, jobId, true))
+    .filter((row) => row.validation_status === "valid")
+    .sort((left, right) => applyOrder(left.normalized_data.record_type) - applyOrder(right.normalized_data.record_type) || left.row_number - right.row_number);
+  const origin = await getTrustedRequestOrigin();
+  for (const recordType of ["guardians", "participants", "groups", "enrollments", "payments"]) {
+    const typeRows = rows.filter((row) => row.normalized_data.record_type === recordType);
+    for (let index = 0; index < typeRows.length; index += 250) {
+      const commands = typeRows.slice(index, index + 250).map((row) => buildImportCommand({
+        origin,
+        row,
+        tenantName: tenant.name,
+        tenantSlug: tenant.slug
+      }));
+      const chunk = await admin.rpc("apply_import_chunk", {
+        target_actor_user_id: context.user.id,
+        target_tenant_id: tenant.id,
+        target_job_id: jobId,
+        target_claim_token: claimResult.claimToken,
+        target_rows: commands
+      });
+      const chunkResult = chunk.data as { outcome?: string } | null;
+      if (chunk.error || chunkResult?.outcome !== "applied") {
+        redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+      }
+      if (recordType === "guardians" && !(await materializePendingImportGuardians({ actorUserId: context.user.id, jobId, tenantId: tenant.id }))) {
+        redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+      }
     }
-    const rollbackSignature = signManifest(tenant.id, jobId, manifest);
-    await requireWrite(admin.from("import_jobs").update({ status: "completed", rollback_manifest: manifest, validation_report: { ...job.validation_report, rollbackSignature }, applied_at: new Date().toISOString() }).eq("tenant_id", tenant.id).eq("id", jobId), "apply complete");
-    await audit(tenant.id, jobId, context.user.id, "applied", { created: manifest.length });
-  } catch (error) {
-    await rollbackManifest(tenant.id, manifest);
-    await admin.from("import_jobs").update({ status: "failed", rollback_manifest: [], validation_report: { ...job.validation_report, applyError: error instanceof Error ? error.message : "unknown" } }).eq("tenant_id", tenant.id).eq("id", jobId);
-    await audit(tenant.id, jobId, context.user.id, "failed", { error: error instanceof Error ? error.message : "unknown" });
-    redirect(`/admin/importeren?job=${jobId}&error=apply`);
+  }
+
+  const completed = await admin.rpc("complete_import_apply", {
+    target_actor_user_id: context.user.id,
+    target_tenant_id: tenant.id,
+    target_job_id: jobId,
+    target_claim_token: claimResult.claimToken
+  });
+  if (completed.error || (completed.data as { outcome?: string } | null)?.outcome !== "completed") {
+    redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
   }
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?job=${jobId}&saved=applied`);
@@ -133,77 +184,113 @@ export async function applyImportAction(formData: FormData) {
 export async function rollbackImportAction(formData: FormData) {
   const { tenant, userId } = await requireTenantAdmin();
   const jobId = readRequired(formData, "jobId");
-  const job = await getJob(tenant.id, jobId);
-  assertStatus(job.status, ["completed"]);
-  const manifest = Array.isArray(job.rollback_manifest) ? job.rollback_manifest as ManifestEntry[] : [];
-  const signature = typeof job.validation_report.rollbackSignature === "string" ? job.validation_report.rollbackSignature : "";
-  if (!verifyManifest(tenant.id, jobId, manifest, signature)) redirect(`/admin/importeren?job=${jobId}&error=rollback_signature`);
-  await rollbackManifest(tenant.id, manifest);
   const admin = createAdminClient();
-  await requireWrite(admin.from("import_rows").update({ validation_status: "rolled_back" }).eq("tenant_id", tenant.id).eq("import_job_id", jobId).eq("validation_status", "applied"), "rollback rows");
-  await requireWrite(admin.from("import_jobs").update({ status: "rolled_back", rolled_back_by_user_id: userId, rolled_back_at: new Date().toISOString() }).eq("tenant_id", tenant.id).eq("id", jobId), "rollback job");
-  await audit(tenant.id, jobId, userId, "rolled_back", { deleted: manifest.length });
+  const claim = await admin.rpc("claim_import_rollback", {
+    target_actor_user_id: userId,
+    target_tenant_id: tenant.id,
+    target_job_id: jobId,
+    target_lease_seconds: 300
+  });
+  if (claim.error) redirect(`/admin/importeren?job=${jobId}&error=rollback_claim`);
+  const claimResult = claim.data as { outcome?: string; claimToken?: string } | null;
+  if (claimResult?.outcome === "completed") redirect(`/admin/importeren?job=${jobId}&saved=rolled_back`);
+  if (claimResult?.outcome === "busy" || !claimResult?.claimToken) redirect(`/admin/importeren?job=${jobId}&error=rollback_busy`);
+
+  let done = false;
+  for (let chunkIndex = 0; chunkIndex < 1000 && !done; chunkIndex += 1) {
+    const chunk = await admin.rpc("rollback_import_chunk", {
+      target_actor_user_id: userId,
+      target_tenant_id: tenant.id,
+      target_job_id: jobId,
+      target_claim_token: claimResult.claimToken,
+      target_limit: 250
+    });
+    const chunkResult = chunk.data as { done?: boolean; outcome?: string } | null;
+    if (chunk.error || chunkResult?.outcome !== "compensated") {
+      redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+    }
+    done = chunkResult.done === true;
+  }
+  if (!done) redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+
+  const completed = await admin.rpc("complete_import_rollback", {
+    target_actor_user_id: userId,
+    target_tenant_id: tenant.id,
+    target_job_id: jobId,
+    target_claim_token: claimResult.claimToken
+  });
+  if (completed.error || (completed.data as { outcome?: string } | null)?.outcome !== "rolled_back") {
+    redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+  }
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?job=${jobId}&saved=rolled_back`);
 }
 
-async function applyRow(input: { context: Awaited<ReturnType<typeof requirePrivateShellContext>>; data: Record<string, unknown>; rowId: string; tenantId: string; tenantSlug: string }): Promise<ManifestEntry> {
-  const admin = createAdminClient();
-  const type = String(input.data.record_type);
-  if (type === "participants") {
-    const guardianEmail = nullable(input.data.guardian_email)?.toLowerCase() ?? null;
-    const guardianUserId = guardianEmail ? await findUserIdByEmail(guardianEmail) : null;
-    if (guardianEmail && !guardianUserId) throw new Error(`guardian not found: ${guardianEmail}`);
-    const row = await insertOne(admin.from("participants").insert({ tenant_id: input.tenantId, guardian_user_id: guardianUserId, display_name: stringValue(input.data.display_name), birth_date: nullable(input.data.birth_date), external_reference: nullable(input.data.external_reference), status: "active" }).select("id").single(), "participant");
-    return { table: "participants", id: row.id, rowId: input.rowId };
-  }
-  if (type === "guardians") {
-    const email = stringValue(input.data.email).toLowerCase();
-    await createInvitation({ actor: input.context, email, fullName: stringValue(input.data.full_name), acceptUrl: `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`, role: "parent", tenantSlug: input.tenantSlug });
-    const userId = await findUserIdByEmail(email);
-    if (!userId) throw new Error("guardian user missing after invitation");
-    return { table: "tenant_memberships", id: userId, rowId: input.rowId, email };
-  }
-  if (type === "groups") {
-    const refs = await loadReferences(input.tenantId);
-    const program = refs.programs.find((item) => item.code === stringValue(input.data.program_code));
-    const stage = refs.stages.find((item) => item.code === nullable(input.data.stage_code));
-    const resource = refs.resources.find((item) => item.code === nullable(input.data.resource_code));
-    if (!program) throw new Error("program not found");
-    const row = await insertOne(admin.from("groups").insert({ tenant_id: input.tenantId, program_id: program.id, stage_id: stage?.id ?? null, default_resource_id: resource?.id ?? null, name: stringValue(input.data.name), code: stringValue(input.data.code), status: "active", capacity: numberValue(input.data.capacity, 10), default_weekday: numberValue(input.data.weekday, 1), default_start_time: nullable(input.data.start_time), default_end_time: nullable(input.data.end_time) }).select("id").single(), "group");
-    return { table: "groups", id: row.id, rowId: input.rowId };
-  }
-  if (type === "enrollments") {
-    const refs = await loadReferences(input.tenantId);
-    const participant = findParticipant(refs, stringValue(input.data.participant_reference));
-    const program = refs.programs.find((item) => item.code === stringValue(input.data.program_code));
-    const stage = refs.stages.find((item) => item.code === nullable(input.data.stage_code));
-    if (!participant || !program) throw new Error("enrollment reference not found");
-    const row = await insertOne(admin.from("enrollments").insert({ tenant_id: input.tenantId, participant_id: participant.id, guardian_user_id: participant.guardian_user_id, program_id: program.id, current_stage_id: stage?.id ?? null, status: "active", source: "import", starts_on: nullable(input.data.starts_on) ?? new Date().toISOString().slice(0, 10) }).select("id").single(), "enrollment");
-    return { table: "enrollments", id: row.id, rowId: input.rowId };
-  }
-  if (type === "payments") {
-    const refs = await loadReferences(input.tenantId);
-    const participant = findParticipant(refs, stringValue(input.data.participant_reference));
-    const subscription = participant ? refs.subscriptions.find((item) => item.participant_id === participant.id && item.status === "active") : null;
-    const enrollment = participant ? refs.enrollments.find((item) => item.participant_id === participant.id && item.status === "active") : null;
-    if (!participant || !subscription || !enrollment) throw new Error("active subscription reference not found");
-    const status = ["due", "overdue", "paid", "waived", "cancelled"].includes(stringValue(input.data.status)) ? stringValue(input.data.status) : "due";
-    const row = await insertOne(admin.from("manual_payments").insert({ tenant_id: input.tenantId, subscription_id: subscription.id, participant_id: participant.id, enrollment_id: enrollment.id, guardian_user_id: participant.guardian_user_id, amount_cents: Math.round(numberValue(input.data.amount_eur) * 100), currency: "EUR", due_on: stringValue(input.data.due_on), paid_on: status === "paid" ? new Date().toISOString().slice(0, 10) : null, status, method: "import", recorded_by_user_id: input.context.user.id }).select("id").single(), "payment");
-    return { table: "manual_payments", id: row.id, rowId: input.rowId };
-  }
-  throw new Error(`unsupported record type: ${type}`);
+function buildImportCommand(input: {
+  origin: string;
+  row: ImportRow & { normalized_data: Record<string, unknown> };
+  tenantName: string;
+  tenantSlug: string;
+}): ImportCommand {
+  if (input.row.normalized_data.record_type !== "guardians") return { rowId: input.row.id };
+  const email = stringValue(input.row.normalized_data.email).toLowerCase();
+  const fullName = stringValue(input.row.normalized_data.full_name);
+  const code = generateInvitationCode();
+  const template = renderInvitationEmail({
+    acceptUrl: `${input.origin}/uitnodiging-accepteren`,
+    invitationCode: code,
+    isNewAccount: null,
+    organizationName: input.tenantName,
+    roleLabel: "Ouder/verzorger",
+    tenantSlug: input.tenantSlug
+  });
+  return {
+    rowId: input.row.id,
+    invitation: {
+      codeHash: hashAuthCode(code, email),
+      email,
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1_000).toISOString(),
+      message: { ...template, organizationName: input.tenantName, templateKey: "auth_invitation" }
+    }
+  };
 }
 
-async function rollbackManifest(tenantId: string, manifest: ManifestEntry[]) {
+async function materializePendingImportGuardians(input: { actorUserId: string; jobId: string; tenantId: string }) {
   const admin = createAdminClient();
-  for (const entry of [...manifest].reverse()) {
-    if (entry.table === "tenant_memberships") {
-      await admin.from("tenant_memberships").delete().eq("tenant_id", tenantId).eq("user_id", entry.id).eq("role", "parent");
-      await admin.from("auth_invitations").update({ status: "revoked" }).eq("tenant_id", tenantId).eq("invited_user_id", entry.id).eq("status", "pending");
+  const pending = await admin
+    .from("auth_invitations")
+    .select("id, email")
+    .eq("tenant_id", input.tenantId)
+    .eq("import_job_id", input.jobId)
+    .eq("status", "pending")
+    .in("identity_status", ["pending", "attention_required"])
+    .order("created_at");
+  if (pending.error) return false;
+
+  for (const invitation of (pending.data ?? []) as { email: string; id: string }[]) {
+    try {
+      const identity = await ensureInvitationAuthUser({ email: invitation.email, provisioningInvitationId: invitation.id });
+      const materialized = await admin.rpc("materialize_import_guardian_invitation", {
+        target_actor_user_id: input.actorUserId,
+        target_tenant_id: input.tenantId,
+        target_job_id: input.jobId,
+        target_invitation_id: invitation.id,
+        target_user_id: identity.userId,
+        target_is_new_account: identity.isNewAccount
+      });
+      if (materialized.error) throw new Error("identity_materialization_failed");
+    } catch {
+      await admin.rpc("mark_import_reconciliation_attention", {
+        target_actor_user_id: input.actorUserId,
+        target_tenant_id: input.tenantId,
+        target_job_id: input.jobId,
+        target_invitation_id: invitation.id,
+        target_error_code: "identity_materialization_failed"
+      });
+      return false;
     }
-    else if (["manual_payments", "enrollments", "groups", "participants"].includes(entry.table)) await admin.from(entry.table).delete().eq("tenant_id", tenantId).eq("id", entry.id);
   }
+  return true;
 }
 
 async function loadReferences(tenantId: string) {
@@ -258,7 +345,7 @@ function findParticipant(refs: Awaited<ReturnType<typeof loadReferences>>, refer
 function applyOrder(type: unknown) { return ({ guardians: 1, participants: 2, groups: 3, enrollments: 4, payments: 5 } as Record<string, number>)[String(type)] ?? 99; }
 
 async function requireTenantAdmin() { const context = await requirePrivateShellContext("/admin/importeren"); const tenant = getActiveTenant(context); if (!context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin")) redirect("/admin?error=forbidden"); return { tenant, userId: context.user.id }; }
-async function getJob(tenantId: string, jobId: string) { const { data, error } = await createAdminClient().from("import_jobs").select("id, import_type, status, mapping, summary, invalid_count, validation_report, rollback_manifest").eq("tenant_id", tenantId).eq("id", jobId).single(); if (error || !data) throw new Error(`job: ${error?.message ?? "missing"}`); return data as { id: string; import_type: ImportType; status: string; mapping: Record<string, unknown>; summary: Record<string, unknown>; invalid_count: number; validation_report: Record<string, unknown>; rollback_manifest: unknown }; }
+async function getJob(tenantId: string, jobId: string) { const { data, error } = await createAdminClient().from("import_jobs").select("id, import_type, status, mapping, summary, invalid_count, validation_report").eq("tenant_id", tenantId).eq("id", jobId).single(); if (error || !data) throw new Error(`job: ${error?.message ?? "missing"}`); return data as { id: string; import_type: ImportType; status: string; mapping: Record<string, unknown>; summary: Record<string, unknown>; invalid_count: number; validation_report: Record<string, unknown> }; }
 async function getRows(tenantId: string, jobId: string, normalized = false) {
   const admin = createAdminClient();
   const result = normalized
@@ -268,7 +355,6 @@ async function getRows(tenantId: string, jobId: string, normalized = false) {
   return (result.data ?? []) as unknown as (ImportRow & { normalized_data: Record<string, unknown> })[];
 }
 async function audit(tenantId: string, jobId: string, actor: string, eventType: string, details: Record<string, unknown>) { await requireWrite(createAdminClient().from("import_job_events").insert({ tenant_id: tenantId, import_job_id: jobId, actor_user_id: actor, event_type: eventType, details }), "audit"); }
-async function insertOne(operation: PromiseLike<{ data: { id: string } | null; error: { message: string } | null }>, label: string) { const result = await operation; if (result.error || !result.data) throw new Error(`${label}: ${result.error?.message ?? "missing"}`); return result.data; }
 async function requireWrite(operation: PromiseLike<{ error: { message: string } | null }>, label: string) { const result = await operation; if (result.error) throw new Error(`${label}: ${result.error.message}`); }
 function assertStatus(status: string, allowed: string[]) { if (!allowed.includes(status)) throw new Error(`Importstatus ${status} is not allowed`); }
 function readRequired(formData: FormData, field: string) { const value = readOptional(formData, field); if (!value) throw new Error(`${field} is required`); return value; }
@@ -279,5 +365,3 @@ function numberValue(value: unknown, fallback = 0) { const parsed = Number(Strin
 function normalize(value: string) { return value.trim().toLocaleLowerCase("nl").replace(/\s+/g, " "); }
 function isDate(value: string) { return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value)); }
 function isEmail(value: string) { return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value); }
-function signManifest(tenantId: string, jobId: string, manifest: ManifestEntry[]) { const secret = process.env.SESSION_SECRET ?? process.env.JWT_SECRET; if (!secret) throw new Error("Session secret is required for rollback signing"); return createHmac("sha256", secret).update(JSON.stringify({ tenantId, jobId, manifest })).digest("hex"); }
-function verifyManifest(tenantId: string, jobId: string, manifest: ManifestEntry[], signature: string) { const expected = signManifest(tenantId, jobId, manifest); if (!/^[a-f0-9]{64}$/.test(signature)) return false; return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature, "hex")); }
