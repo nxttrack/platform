@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getConfiguredEmailDeliveryConfig, type SendGridApiEmailConfig } from "./platform-settings";
 import { sendSmtpEmail } from "./smtp";
 import { applyTenantEmailBranding, type TenantEmailBranding } from "./tenant-branding";
+import { classifyEmailHttpFailure, classifyEmailTransportError, isEmailSendingEnabled } from "./email-delivery-contract";
 
 export type TransactionalEmailInput = {
   fromName?: string | null;
@@ -22,27 +23,41 @@ export type TransactionalEmailInput = {
 
 export type TransactionalEmailResult =
   | {
+      accepted: true;
       attemptId?: string;
-      delivered: true;
       provider: "sendgrid_api" | "smtp";
       providerMessageId?: string;
       source?: "env" | "platform_settings";
     }
   | {
+      accepted: false;
       attemptId?: string;
-      delivered: false;
+      failureCode: string;
       provider: "not_configured" | "sendgrid_api" | "smtp";
       providerMessageId?: string;
       reason: string;
+      retryable: boolean;
       source?: "env" | "platform_settings";
     };
 
 export async function sendTransactionalEmail(input: TransactionalEmailInput): Promise<TransactionalEmailResult> {
+  if (!isEmailSendingEnabled(process.env.EMAIL_SENDING_ENABLED)) {
+    return withDeliveryAttempt(input, {
+      accepted: false,
+      failureCode: "sending_disabled",
+      provider: "not_configured",
+      reason: "E-mailtransport is centraal uitgeschakeld.",
+      retryable: false
+    });
+  }
+
   if (isReservedTestRecipient(input.to)) {
     return withDeliveryAttempt(input, {
-      delivered: false,
+      accepted: false,
+      failureCode: "reserved_test_recipient",
       provider: "not_configured",
-      reason: "Delivery intentionally skipped for a reserved .test recipient."
+      reason: "Delivery intentionally skipped for a reserved .test recipient.",
+      retryable: false
     });
   }
 
@@ -53,9 +68,11 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
 
   if (!config) {
     const result: TransactionalEmailResult = {
-      delivered: false,
+      accepted: false,
+      failureCode: "configuration",
       provider: "not_configured",
-      reason: "Configureer SendGrid API of SMTP in de platform admin instellingen."
+      reason: "Configureer SendGrid API of SMTP in de platform admin instellingen.",
+      retryable: false
     };
 
     return withDeliveryAttempt(input, result);
@@ -72,10 +89,13 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
     try {
       result = await sendWithSendGridApi({ ...config, fromName }, deliveryInput);
     } catch (error) {
+      const classification = classifyEmailTransportError(error);
       result = {
-        delivered: false,
+        accepted: false,
+        failureCode: classification.code,
         provider: "sendgrid_api",
-        reason: error instanceof Error ? error.message : String(error),
+        reason: "SendGrid transport failed before provider acceptance.",
+        retryable: classification.retryable,
         source: config.source
       };
     }
@@ -84,15 +104,18 @@ export async function sendTransactionalEmail(input: TransactionalEmailInput): Pr
       await sendSmtpEmail({ ...config, fromName }, deliveryInput);
 
       result = {
-        delivered: true,
+        accepted: true,
         provider: "smtp",
         source: config.source
       };
     } catch (error) {
+      const classification = classifyEmailTransportError(error);
       result = {
-        delivered: false,
+        accepted: false,
+        failureCode: classification.code,
         provider: "smtp",
-        reason: error instanceof Error ? error.message : String(error),
+        reason: "SMTP transport failed before provider acceptance.",
+        retryable: classification.retryable,
         source: config.source
       };
     }
@@ -150,16 +173,19 @@ async function sendWithSendGridApi(config: SendGridApiEmailConfig, input: Transa
   });
 
   if (!response.ok) {
+    const classification = classifyEmailHttpFailure(response.status);
     return {
-      delivered: false,
+      accepted: false,
+      failureCode: classification.code,
       provider: "sendgrid_api",
       reason: `SendGrid API returned ${response.status}.`,
+      retryable: classification.retryable,
       source: config.source
     };
   }
 
   return {
-    delivered: true,
+    accepted: true,
     provider: "sendgrid_api",
     providerMessageId: response.headers.get("x-message-id") ?? undefined,
     source: config.source
@@ -194,12 +220,13 @@ async function logDeliveryAttempt(input: TransactionalEmailInput, result: Transa
       provider_source: result.source ?? null,
       template_key: input.templateKey ?? "custom",
       subject: input.subject,
-      status: result.delivered ? "sent" : result.provider === "not_configured" ? "skipped" : "failed",
-      error_message: result.delivered ? null : result.reason,
+      status: result.accepted ? "pending" : result.provider === "not_configured" ? "skipped" : "failed",
+      error_message: result.accepted ? null : result.reason,
       related_type: input.relatedType ?? null,
       related_id: input.relatedId ?? null,
       metadata,
-      delivered_at: result.delivered ? new Date().toISOString() : null
+      accepted_at: result.accepted ? new Date().toISOString() : null,
+      delivered_at: null
     })
     .select("id")
     .single();

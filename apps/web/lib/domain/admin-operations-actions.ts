@@ -353,16 +353,17 @@ export async function retryEmailDeliveryAttemptAction(formData: FormData) {
   await admin
     .from("tenant_notifications")
     .update({
-      delivered_at: mail.delivered ? new Date().toISOString() : null,
-      delivery_error: mail.delivered ? null : mail.reason,
-      delivery_status: mail.delivered ? "sent" : mail.provider === "not_configured" ? "skipped" : "failed",
-      email_delivery_attempt_id: mail.attemptId ?? null
+      delivered_at: null,
+      delivery_error: mail.accepted ? null : mail.reason,
+      delivery_status: mail.accepted ? "pending" : mail.provider === "not_configured" ? "skipped" : "failed",
+      email_delivery_attempt_id: mail.attemptId ?? null,
+      provider_accepted_at: mail.accepted ? new Date().toISOString() : null
     })
     .eq("tenant_id", tenant.id)
     .eq("id", notificationResult.data.id);
 
   revalidatePath("/admin/berichten");
-  redirect(`/admin/berichten?saved=${mail.delivered ? "mail_retry" : "mail_retry_failed"}`);
+  redirect(`/admin/berichten?saved=${mail.accepted ? "mail_retry_accepted" : "mail_retry_failed"}`);
 }
 
 async function getActionContext() {

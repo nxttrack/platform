@@ -148,7 +148,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
                       </button>
                     </form>
                   ) : null}
-                  <StatusPill tone={attempt.status === "sent" ? "success" : attempt.status === "failed" ? "danger" : "warning"}>{attempt.status}</StatusPill>
+                  <StatusPill tone={attempt.status === "sent" ? "success" : attempt.status === "accepted" ? "info" : attempt.status === "failed" ? "danger" : "warning"}>{attempt.status === "accepted" ? "provider geaccepteerd" : attempt.status}</StatusPill>
                 </div>
               </div>
             ))}

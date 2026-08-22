@@ -41,10 +41,10 @@ export type CreateInvitationInput = {
 };
 
 export type CreateInvitationResult = {
+  accepted: boolean;
   email: string;
   role: AppRole;
   tenantSlug: string | null;
-  delivered: boolean;
 };
 
 export type AcceptInvitationInput = {
@@ -152,13 +152,13 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
     to: email,
   });
 
-  await updateInvitationDelivery(invitationId, mail.delivered, mail.delivered ? null : mail.reason);
+  await updateInvitationDelivery(invitationId, mail.accepted, mail.accepted ? null : mail.reason);
 
   return {
+    accepted: mail.accepted,
     email,
     role,
-    tenantSlug: tenant?.slug ?? null,
-    delivered: mail.delivered
+    tenantSlug: tenant?.slug ?? null
   };
 }
 
@@ -498,13 +498,14 @@ function safeEqualHex(left: string, right: string) {
   return timingSafeEqual(Buffer.from(left, "hex"), Buffer.from(right, "hex"));
 }
 
-async function updateInvitationDelivery(invitationId: string, delivered: boolean, errorMessage: string | null) {
+async function updateInvitationDelivery(invitationId: string, accepted: boolean, errorMessage: string | null) {
   const admin = createAdminClient();
   const { error } = await admin
     .from("auth_invitations")
     .update({
-      delivery_status: delivered ? "sent" : "skipped",
-      delivery_error: errorMessage
+      delivery_status: accepted ? "pending" : "skipped",
+      delivery_error: errorMessage,
+      provider_accepted_at: accepted ? new Date().toISOString() : null
     })
     .eq("id", invitationId);
 

@@ -14,7 +14,7 @@ Werkvorm: geïsoleerde Git-worktree, omdat de oorspronkelijke werkmap ongetrackt
 
 | Audit-ID | Status | Checkpoint | Bewijs/commit |
 | --- | --- | --- | --- |
-| P1-004 | NOT STARTED | 2 — fail-closed mail en outbox | Nog te implementeren |
+| P1-004 | PARTIALLY CLOSED | 2 — fail-closed mail en outbox | Infrastructuur en centraal transport groen; business-enqueue wordt in checkpoints 3–5 transactioneel aangesloten |
 | P0-004 | NOT STARTED | 3 — tenantprovisioning | Nog te implementeren |
 | P1-001 | NOT STARTED | 4 — participant en intake | Nog te implementeren |
 | P1-002 | NOT STARTED | 4 — capaciteit en plaatsing | Nog te implementeren |
@@ -95,7 +95,7 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 - Transactie: businessrecord + outboxrow worden door dezelfde databasefunctie geschreven. Geen workerclaim of provider-I/O binnen die transactie.
 - Payload: service-only durable payload plus `related_type`/`related_id`; inhoud is begrensd. Logs gebruiken alleen outbox-ID/type/status/providerstatus.
 - Claim: `FOR UPDATE SKIP LOCKED`; status `queued|processing|retry|accepted|dead|cancelled`; lease token + expiry voorkomt dubbele actieve verwerking en maakt workercrashes hervatbaar.
-- Kill switch: uitsluitend de letterlijke, getrimde, case-insensitive waarde `true` voor `EMAIL_SENDING_ENABLED` staat provider-I/O toe. Missing, leeg, invalid en false geven een niet-retrybare disabled-uitkomst zonder netwerkaanroep. Dit wordt zowel in de worker als in het centrale transportpad afgedwongen.
+- Kill switch: uitsluitend de letterlijke, getrimde, case-insensitive waarde `true` voor `EMAIL_SENDING_ENABLED` staat provider-I/O toe. Missing, leeg, invalid en false geven in het directe centrale transport een disabled-uitkomst zonder netwerkaanroep; de outboxworker claimt in die toestand niets zodat queued/retry-items hervatbaar blijven. Dit wordt zowel vóór workerclaim als in het centrale transportpad afgedwongen.
 - Retry: alleen transient timeout/network/429/5xx; begrensd aantal attempts en deterministische exponential backoff met cap. Invalid payload/config/4xx (behalve 429) en exhausted retries gaan zichtbaar naar `dead`.
 - Provideracceptatie heet `accepted`, niet `delivered`. Bounce/webhookdelivery blijft open totdat end-to-end geïmplementeerd en getest.
 
@@ -141,7 +141,8 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 
 ### Checkpoint 1
 
-- Status: CLOSED zodra deze documentcommit is gemaakt.
+- Status: CLOSED.
+- Commit: `2582fdc21964abf784cab8315031bee754206ed9` (`docs(audit): define core readiness transaction contracts`).
 - Gewijzigd: alleen dit sprintdocument.
 - Tests: zie pre-change baseline; geen live credentials gebruikt.
 - Resterend risico: alle primaire auditissues zijn nog open; bestaande dependency- en lokale Playwrightbaseline zijn rood.
@@ -149,7 +150,14 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 
 ### Checkpoint 2
 
-- Status: NOT STARTED.
+- Audit-ID/status: P1-004 PARTIALLY CLOSED. Het centrale transport, de durable outbox, atomische claim, retry/dead-semantiek en serviceboundary zijn gereed; transactionele enqueue vanuit provisioning, participantflows en imports volgt in hun eigen checkpoints.
+- Commit: wordt na deze groene checkpointcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: additive migration `20260822002234_production_email_outbox.sql`; centraal transportcontract; outboxworker en fail-closed interne workerroute; invitation/password-reset/notificatie/slot-offer statussemantiek; beheerfeedback; unit- en echte PostgreSQL-concurrentietest.
+- Invarianten: alleen letterlijke `EMAIL_SENDING_ENABLED=true` kan provider-I/O bereiken; een uitgeschakelde worker claimt niets; `(tenant_id NULLS NOT DISTINCT, message_type, idempotency_key)` dedupliceert; afwijkende input onder dezelfde key faalt; `FOR UPDATE SKIP LOCKED` plus claimtoken/lease voorkomt dubbele actieve verwerking; een verlopen laatste lease wordt `dead`; provideracceptatie zet alleen `accepted_at`/`provider_accepted_at`, nooit `delivered_at`.
+- Grants: outbox-RPC's zijn `SECURITY INVOKER`, hebben vaste `search_path`, zijn gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen uitvoerbaar door `service_role`. Tabellen hebben FORCE RLS en expliciete deny-readpolicies voor authenticated; negatieve grant- en RLS-tests zijn groen.
+- Tests: `tests/unit/email-outbox-contract.test.ts` 7/7 PASS; volledige unitsuite 382/382 PASS; `test:email-outbox:db` PASS met twintig parallelle enqueues en twintig parallelle claims; authaudit PASS; typecheck PASS; production build PASS; migrationaudit PASS (136); RLS-audit PASS (248 tabellen, alleen bestaande private-helperwaarschuwingen); `git diff --check` PASS.
+- Lokale DB-validatie: de nieuwe migration is op de geïsoleerde lokale validatiecontainer geparset/toegepast; de repositorybrede `supabase db push` kon niet als bewijs dienen doordat die container bestaande history/schema-drift heeft bij `20260802230000` (`tenant_notifications_dedupe_unique`). Er is geen migration-repair uitgevoerd. De RPC-concurrentietest draait wel tegen de werkelijk aangemaakte outboxtabellen en functies.
+- Resterend risico: bounce/webhook-afleveringsbewijs is niet geïmplementeerd en wordt niet als opgelost geclaimd; worker scheduling/credentials zijn extern NIET GETEST; bestaande mailcallers buiten de samengestelde writes gebruiken nog het centrale directe pad en worden bij checkpoints 3–5 waar vereist atomair naar enqueue verplaatst. Nieuwe incassopogingen blijven bewust fail-closed zolang alleen provideracceptatie en geen aflevering bekend is.
 
 ### Checkpoint 3
 

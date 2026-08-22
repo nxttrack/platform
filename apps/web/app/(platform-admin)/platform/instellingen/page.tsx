@@ -53,7 +53,7 @@ export default async function PlatformSettingsPage({ searchParams }: PageProps) 
 
       {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Mailinstellingen zijn opgeslagen.</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessages[error] ?? "Instellingen verwerken is niet gelukt."}</p> : null}
-      {test === "sent" ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Testmail is verzonden.</p> : null}
+      {test === "accepted" ? <p className="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">Testmail is door de provider geaccepteerd; aflevering is nog niet bevestigd.</p> : null}
       {test === "failed" ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Testmail versturen is niet gelukt.</p> : null}
       {test === "invalid_email" ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">Controleer het testadres.</p> : null}
       {settings && !settings.settingsAvailable ? (

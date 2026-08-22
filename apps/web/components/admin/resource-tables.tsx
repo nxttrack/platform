@@ -250,7 +250,7 @@ export function InvitationsTable({ platform = false, rows }: { platform?: boolea
     { accessorKey: "email", header: "E-mail", meta: { label: "E-mail" }, filterFn: dataTableTextFilter, cell: ({ getValue }) => <span className="inline-flex items-center gap-2 font-semibold"><Mail className="size-4 text-primary" />{String(getValue())}</span> },
     { accessorKey: "tenant", header: "Organisatie", meta: { label: "Organisatie" } },
     { accessorKey: "role", header: "Rol", meta: { label: "Rol" } },
-    { accessorKey: "deliveryStatus", header: "Bezorging", meta: { label: "Bezorging" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "sent" ? "success" : getValue() === "failed" ? "danger" : "neutral"}>{String(getValue())}</StatusPill> },
+    { accessorKey: "deliveryStatus", header: "Bezorging", meta: { label: "Bezorging" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "sent" ? "success" : getValue() === "accepted" ? "info" : getValue() === "failed" ? "danger" : "neutral"}>{getValue() === "accepted" ? "provider geaccepteerd" : String(getValue())}</StatusPill> },
     { accessorKey: "status", header: "Status", meta: { label: "Status" }, cell: ({ getValue }) => <StatusPill tone={getValue() === "accepted" ? "success" : getValue() === "pending" ? "warning" : "neutral"}>{String(getValue())}</StatusPill> },
     { accessorKey: "expiresAt", header: "Verloopt", meta: { label: "Verloopt" }, cell: ({ getValue }) => formatDateTime(String(getValue())) }
   ];

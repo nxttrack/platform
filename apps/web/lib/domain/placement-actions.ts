@@ -386,8 +386,9 @@ export async function createSlotOfferAction(formData: FormData) {
     admin
       .from("slot_offers")
       .update({
-        delivery_status: mail.delivered ? "sent" : "skipped",
-        delivery_error: mail.delivered ? null : mail.reason
+        delivery_status: mail.accepted ? "pending" : "skipped",
+        delivery_error: mail.accepted ? null : mail.reason,
+        provider_accepted_at: mail.accepted ? new Date().toISOString() : null
       })
       .eq("tenant_id", tenant.id)
       .eq("id", offerId),
@@ -414,13 +415,13 @@ export async function createSlotOfferAction(formData: FormData) {
       slotOfferId: offerId,
       actorUserId: context.user.id,
       eventType: "slot_offer.sent",
-      message: mail.delivered ? "Slot offer per e-mail verstuurd." : "Slot offer link aangemaakt; mailprovider niet geconfigureerd.",
-      payload: { deliveryStatus: mail.delivered ? "sent" : "skipped" }
+      message: mail.accepted ? "Slot offer door de mailprovider geaccepteerd." : "Slot offer link aangemaakt; mailtransport heeft het bericht niet geaccepteerd.",
+      payload: { deliveryStatus: mail.accepted ? "accepted" : "skipped" }
     })
   ]);
 
   revalidatePath("/admin/wachtlijst");
-  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.delivered ? "sent" : "skipped"}`);
+  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.accepted ? "accepted" : "skipped"}`);
 }
 
 export async function createPlacementSuggestionTaskAction(formData: FormData) {

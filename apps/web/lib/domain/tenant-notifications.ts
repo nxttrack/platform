@@ -154,8 +154,9 @@ async function deliverNotificationsByEmail(input: {
 
       await updateNotificationDelivery(notification.id, {
         attemptId: mail.attemptId,
-        deliveryError: mail.delivered ? null : mail.reason,
-        deliveryStatus: mail.delivered ? "sent" : mail.provider === "not_configured" ? "skipped" : "failed"
+        deliveryError: mail.accepted ? null : mail.reason,
+        deliveryStatus: mail.accepted ? "pending" : mail.provider === "not_configured" ? "skipped" : "failed",
+        providerAcceptedAt: mail.accepted ? new Date().toISOString() : null
       });
     })
   );
@@ -166,7 +167,8 @@ async function updateNotificationDelivery(
   input: {
     attemptId?: string;
     deliveryError: string | null;
-    deliveryStatus: "sent" | "failed" | "skipped";
+    deliveryStatus: "failed" | "pending" | "skipped";
+    providerAcceptedAt?: string | null;
   }
 ) {
   const admin = createAdminClient();
@@ -174,10 +176,11 @@ async function updateNotificationDelivery(
   await admin
     .from("tenant_notifications")
     .update({
-      delivered_at: input.deliveryStatus === "sent" ? new Date().toISOString() : null,
+      delivered_at: null,
       delivery_error: input.deliveryError,
       delivery_status: input.deliveryStatus,
-      email_delivery_attempt_id: input.attemptId ?? null
+      email_delivery_attempt_id: input.attemptId ?? null,
+      provider_accepted_at: input.providerAcceptedAt ?? null
     })
     .eq("id", notificationId);
 }

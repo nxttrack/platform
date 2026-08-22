@@ -234,7 +234,7 @@ export default async function PlatformOrganizationDetailPage({ params, searchPar
                     <tr key={invitation.id}>
                       <td className="px-4 py-3"><p className="font-semibold">{profile?.fullName ?? "Naam niet ingevuld"}</p><p className="text-xs text-muted-foreground">{invitation.email}</p></td>
                       <td className="px-4 py-3">{isTenantRoleValue(invitation.role) ? roleLabels[invitation.role] : invitation.role}</td>
-                      <td className="px-4 py-3"><StatusPill tone={invitation.delivery_status === "sent" ? "success" : invitation.delivery_status === "failed" ? "danger" : "neutral"}>{invitation.delivery_status}</StatusPill></td>
+                      <td className="px-4 py-3"><StatusPill tone={invitation.delivery_status === "sent" ? "success" : invitation.delivery_status === "accepted" ? "info" : invitation.delivery_status === "failed" ? "danger" : "neutral"}>{invitation.delivery_status === "accepted" ? "provider geaccepteerd" : invitation.delivery_status}</StatusPill></td>
                       <td className="px-4 py-3"><StatusPill tone={invitation.status === "accepted" ? "success" : invitation.status === "pending" && !expired ? "warning" : "neutral"}>{invitation.status === "pending" && expired ? "verlopen" : invitation.status}</StatusPill></td>
                       <td className="px-4 py-3">{formatDateTime(invitation.expires_at)}</td>
                       <td className="px-4 py-3">
