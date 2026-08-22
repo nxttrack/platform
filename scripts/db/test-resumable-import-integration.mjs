@@ -22,10 +22,11 @@ try {
   await testBatchedValidationWithErrorsAndDuplicate();
   await testValidAndDoubleApply();
   await testGuardianOutboxAndMaterialization();
+  await testRollbackRefusesProcessingOrAcceptedMailForSharedAuthUser();
   await testChunkFailureResumeAndRollbackFailure();
   await testFiveThousandRowsInTwentyChunks();
   console.log(
-    "[test:resumable-import:db] PASS batched mixed validation, duplicate rows, valid/double apply, transactional blocked guardian outbox, mid-chunk rollback+resume, durable rollback failure+retry, and 5,000 rows in 20 RPC chunks."
+    "[test:resumable-import:db] PASS batched mixed validation, duplicate rows, valid/double apply, blocked guardian mail, shared-Auth processing/accepted rollback refusal, crash resume, durable rollback retry, and 5,000 rows."
   );
 } finally {
   await Promise.allSettled([workers.end(), setup.end()]);
@@ -195,6 +196,84 @@ async function testGuardianOutboxAndMaterialization() {
   assertEqual(rolledBack.rows[0]?.outbox_status, "cancelled", "guardian outbox is cancelled");
   assertEqual(rolledBack.rows[0]?.memberships, 0, "import-created guardian membership is removed");
   assertEqual(rolledBack.rows[0]?.manifest_entries, 3, "guardian manifest remains after rollback");
+}
+
+async function testRollbackRefusesProcessingOrAcceptedMailForSharedAuthUser() {
+  const otherTenantId = randomUUID();
+  await setup.query(
+    "insert into public.tenants (id,slug,name,status) values ($1,$2,'Shared guardian tenant','active')",
+    [otherTenantId, `shared-${token}`]
+  );
+  await setup.query(
+    "insert into public.tenant_memberships (tenant_id,user_id,role,status) values ($1,$2,'parent','active')",
+    [otherTenantId, guardianUserId]
+  );
+
+  const email = `guardian-processing-${token}@example.test`;
+  const jobId = await createJob("guardians", "ready", [{
+    record_type: "guardians", full_name: "Shared Auth Guardian", email
+  }]);
+  const applyClaim = await claimApply(jobId);
+  const rows = await importRows(jobId);
+  const command = {
+    rowId: rows[0].id,
+    invitation: {
+      codeHash: sha256(`processing:${email}`), email,
+      expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1_000).toISOString(),
+      message: {
+        html: "<p>Synthetic processing rollback test.</p>", organizationName: `Import ${token}`,
+        subject: "Synthetic processing rollback", templateKey: "auth_invitation",
+        text: "Synthetic processing rollback test."
+      }
+    }
+  };
+  const applied = await applyRows(jobId, applyClaim.claimToken, rows, null, [command]);
+  const invitationId = applied.invitations[0].invitationId;
+  await serviceQuery(
+    "select public.materialize_import_guardian_invitation($1,$2,$3,$4,$5,false)",
+    [actorId, tenantId, jobId, invitationId, guardianUserId]
+  );
+  await completeApply(jobId, applyClaim.claimToken);
+  const outbox = await setup.query(
+    "select id from public.email_outbox where payload_reference_type='auth_invitation' and payload_reference_id=$1",
+    [invitationId]
+  );
+  const outboxId = outbox.rows[0].id;
+  const outboxClaim = await claimOutboxOnly(outboxId);
+
+  const firstRollbackClaim = await claimRollback(jobId);
+  const processingRefusal = await rollbackChunk(jobId, firstRollbackClaim.claimToken);
+  assertEqual(processingRefusal.outcome, "needs_attention", "processing mail blocks automatic rollback");
+  const processingState = await setup.query(
+    `select outbox.status,
+      (select count(*)::integer from public.tenant_memberships where tenant_id=$2 and user_id=$3 and status='active') as shared_memberships,
+      (select count(*)::integer from public.tenant_memberships where tenant_id=$4 and user_id=$3) as imported_memberships
+     from public.email_outbox outbox where outbox.id=$1`,
+    [outboxId, otherTenantId, guardianUserId, tenantId]
+  );
+  assertEqual(processingState.rows[0].status, "processing", "rollback preserves processing mail");
+  assertEqual(processingState.rows[0].shared_memberships, 1, "shared Auth membership survives processing refusal");
+  assertEqual(processingState.rows[0].imported_memberships, 1, "caught rollback failure is atomic");
+
+  await serviceQuery(
+    "select public.complete_email_outbox($1,$2,'accepted','smtp','synthetic-provider-id',null,null,null)",
+    [outboxId, outboxClaim.claim_token]
+  );
+  const secondRollbackClaim = await claimRollback(jobId);
+  const acceptedRefusal = await rollbackChunk(jobId, secondRollbackClaim.claimToken);
+  assertEqual(acceptedRefusal.outcome, "needs_attention", "accepted mail blocks automatic rollback");
+  const acceptedState = await setup.query(
+    `select outbox.status,
+      (select count(*)::integer from auth.users where id=$2) as auth_users,
+      (select count(*)::integer from public.tenant_memberships where tenant_id=$3 and user_id=$2 and status='active') as shared_memberships,
+      (select count(*)::integer from public.import_manifest_entries where import_job_id=$4) as manifest
+     from public.email_outbox outbox where outbox.id=$1`,
+    [outboxId, guardianUserId, otherTenantId, jobId]
+  );
+  assertEqual(acceptedState.rows[0].status, "accepted", "accepted provider evidence survives rollback");
+  assertEqual(acceptedState.rows[0].auth_users, 1, "shared Auth user is never deleted");
+  assertEqual(acceptedState.rows[0].shared_memberships, 1, "shared tenant membership survives accepted refusal");
+  assertEqual(acceptedState.rows[0].manifest, 3, "manifest remains for human reconciliation");
 }
 
 async function testChunkFailureResumeAndRollbackFailure() {
@@ -396,6 +475,25 @@ async function completeRollback(jobId, claimToken) {
     [actorId, tenantId, jobId, claimToken]
   );
   return result.rows[0]?.result;
+}
+
+async function claimOutboxOnly(outboxId) {
+  await setup.query("begin");
+  await setup.query(
+    `select id from public.email_outbox where id<>$1 and (
+      (status in ('queued','retry') and next_attempt_at<=now())
+      or (status='processing' and lease_expires_at<=now() and attempts<max_attempts)
+    ) for update`,
+    [outboxId]
+  );
+  try {
+    const claim = await serviceQuery("select * from public.claim_email_outbox(1,300)");
+    assertEqual(claim.rowCount, 1, "target outbox is claimable");
+    assertEqual(claim.rows[0].outbox_id, outboxId, "target outbox is isolated");
+    return claim.rows[0];
+  } finally {
+    await setup.query("commit");
+  }
 }
 
 async function assertServiceOnlyBoundary() {

@@ -41,6 +41,7 @@
     "test:resumable-import:db": "node scripts/db/test-resumable-import-integration.mjs",
     "test:production-readiness-certification:db": "node scripts/db/test-production-readiness-certification-integration.mjs",
     "test:production-readiness-tenant-matrix:db": "node scripts/db/test-production-readiness-tenant-matrix.mjs",
+    "test:production-readiness-crash-windows:db": "node scripts/db/test-production-readiness-crash-windows.mjs",
     "android:quality": "apps/android/gradlew -p apps/android qualityGate",
     "android:build": "apps/android/gradlew -p apps/android :instructor-app:assembleDebug :parent-app:assembleDebug :instructor-app:bundleRelease :parent-app:bundleRelease",
     "test:portal-themes:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/portal-theme-visual-matrix.spec.ts --project=chromium-desktop --retries=0",

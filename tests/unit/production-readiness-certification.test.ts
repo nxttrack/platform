@@ -74,6 +74,7 @@ test("upgrade preflight is read-only and fail-closed on every required legacy bl
     "conflicting_legacy_idempotency_keys",
     "invitation_auth_lineage_inconsistencies",
     "expired_email_worker_leases",
+    "noncanonical_email_outbox_idempotency_keys",
     "unexpected_client_mutation_grants",
     "unexpected_storage_bucket_inventory",
     "migration_fingerprint_mismatch"

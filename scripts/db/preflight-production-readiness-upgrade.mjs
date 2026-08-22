@@ -161,8 +161,19 @@ try {
     if (expiredLeases.rowCount > 0) {
       block("expired_email_worker_leases", expiredLeases.rows);
     }
+    const noncanonicalKeys = await client.query(`
+      select id, tenant_id
+      from public.email_outbox
+      where idempotency_key !~ '^[a-z0-9][a-z0-9:._@+\\-]{7,199}$'
+      order by tenant_id nulls first, id
+    `);
+    report.inventory.noncanonicalEmailIdempotencyKeyCount = noncanonicalKeys.rowCount;
+    if (noncanonicalKeys.rowCount > 0) {
+      block("noncanonical_email_outbox_idempotency_keys", noncanonicalKeys.rows);
+    }
   } else {
     report.inventory.expiredEmailWorkerLeaseCount = 0;
+    report.inventory.noncanonicalEmailIdempotencyKeyCount = 0;
   }
 
   const buckets = await client.query("select id, public from storage.buckets order by id");

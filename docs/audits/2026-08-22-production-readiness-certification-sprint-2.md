@@ -71,6 +71,8 @@ truth were explicitly checked.
 | CERT-006 | High | Worker claims up to 25 messages with one shared start time → sequential provider calls (15–60 seconds each) → later leases expire before first send; another worker may reclaim and send the same message. The claim-token check occurs only after provider I/O. | Duplicate external email and misleading reconciliation. | CODE-SIDE CLOSED: claim exactly one immediately before provider I/O; lease is at least provider timeout plus a bounded completion margin. Static regression and concurrent DB claim suite are green. External providers remain at-least-once, never exactly-once. |
 | CERT-007 | High readiness | Upgrade applies the new live-membership unique index directly, but no preflight existed for legacy active/trial duplicates. The duplicate fixture blocks index creation. | Uncontrolled staging migration failure after deployment begins. | Fix is assigned to Checkpoint 3: read-only fail-closed preflight before any migration mutation; customer data is never auto-repaired. |
 | CERT-008 | High | A local `platform_admin` JWT with no Tenant B membership → permissive `current_user_can_manage_tenant_domain` branch → direct PostgREST `PATCH participants` in Tenant B. The first role-matrix run changed the synthetic row and failed red. | A compromised platform-admin browser session could directly mutate tenant-domain records outside a service-routed, audited command path. | CODE-SIDE CLOSED: a second additive migration adds a client-role mutation guard to the certification boundaries. Platform roles require an explicit active owner/admin/staff membership for direct writes; reads and `service_role` paths remain separate. The same Data API attack is now a controlled error. |
+| CERT-009 | Medium | Durable outbox payload → `parseTransactionalEmailPayload` accepted `subject="Safe\r\nBcc: ..."` → SendGrid JSON received the raw subject (SMTP happened to sanitize later). The new executable parser test failed red with the injected subject returned as valid. | Provider-dependent header manipulation or malformed outbound mail. | CODE-SIDE CLOSED: payload validation is now a pure tested boundary; subject/from/organization header fields reject C0/DEL controls. Poison, malformed recipient, oversized recipient/subject/body and CRLF cases fail while bounded Unicode remains valid. |
+| CERT-010 | Medium | Service-routed enqueue → byte-exact but unconstrained key → uppercase, leading/trailing whitespace and Unicode-suffix variants each inserted a new provider-effect row. The crash suite failed red on the first variant. | A malformed retry/caller could bypass intended email dedupe and cause duplicate external effects. | CODE-SIDE CLOSED: additive canonical lowercase-ASCII key constraint plus trigger; existing noncanonical rows are reported by preflight and never auto-rewritten. Exact replay dedupes; exact key/different payload and every variant fail. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -245,9 +247,58 @@ the 141-migration secure grant audit, typecheck, production build (17 static pag
 Auth audit, migration/RLS audits, production dependency audit and `git diff --check`
 are VERIFIED LOCAL.
 
-## Checkpoint 5 — failure and crash windows
+## Checkpoint 4 — Data API tenant isolation
 
-Pending.
+VERIFIED LOCAL with synthetic database/provider-boundary evidence. The new crash
+suite and strengthened existing integrations prove:
+
+- 100 concurrent workers claim 100 due outbox rows exactly once each; the existing
+  20-worker/single-row race also remains green;
+- an external-acceptance marker followed by a worker crash leaves the row visibly
+  `processing`; after forced lease expiry a second claim records `lease_recovered`,
+  increments the attempt and fences the old completion token;
+- future work is not claimed early, retry delay rejects 86,401 seconds and accepts
+  the 86,400-second maximum, while limit/lease bounds fail explicitly;
+- advisory-lock contention obeys a 150 ms statement timeout and becomes usable
+  after release; a real two-row reverse-lock deadlock aborts exactly one transaction
+  with PostgreSQL `40P01`, after which both rows remain unmodified;
+- an exact outbox key replays one row and conflicts on different payload; uppercase,
+  leading/trailing whitespace and Unicode variants are rejected by migration
+  `20260822235045_canonical_email_outbox_idempotency_keys.sql`;
+- the payload parser rejects non-objects, arrays, invalid/oversized recipients,
+  501-character subjects, 65,537-character bodies and CRLF header injection while
+  preserving a safe bounded Unicode subject;
+- all seven provisioning failure steps leave zero partial graphs; 20 duplicate
+  submits produce one graph. The explicit post-commit fixture has two existing Auth
+  users, zero memberships, two pending identities and two blocked outbox rows, then
+  resumes idempotently through materialization/opening;
+- duplicate intake remains 20-way idempotent; one-seat capacity is now proven under
+  both 20 and 100 concurrent commands (one placement, respectively 19 and 99 durable
+  controlled results, one audit);
+- import double-apply is idempotent, an injected middle-chunk crash preserves the
+  prior committed manifest and retries the failed chunk without duplicates, and a
+  5,000-row import remains exactly 20 bounded RPC chunks;
+- import rollback refuses both `processing` and `accepted` invitation mail, retains
+  all manifest evidence, keeps the failure atomic and preserves the shared Auth user
+  plus its active membership in another tenant.
+
+Provider exactly-once is **not claimed**. If a provider accepts and the worker dies
+before the database completion, no transactional protocol can prove from the local
+database whether resending is safe. The supported contract is at-least-once with a
+bounded lease, token fencing, attempt/event history and a visible reconciliation
+window. `accepted_at` means provider acceptance only; `delivered_at` remains null
+until separate evidence exists. No real provider was contacted.
+
+The canonical-key migration adds its check as `NOT VALID`, enforces it immediately
+for new writes and validates it automatically only when no legacy violations exist.
+Otherwise the read-only preflight blocks with UUID/count evidence; it never trims,
+lowercases or deletes existing data.
+
+Checkpoint regression gate: 422/422 unit tests; the focused outbox,
+provisioning, onboarding, resumable-import, certification, crash-window and
+102-case tenant-matrix database integrations; typecheck; Auth audit; all 142
+migration files; 251-table RLS audit; production dependency audit; production
+build (17 static pages); and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 6 — rollback and compatibility
 

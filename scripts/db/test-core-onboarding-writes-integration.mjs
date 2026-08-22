@@ -26,8 +26,9 @@ try {
   await testPlacementFailures();
   await testPlacementTenantConsistency();
   await testOneSeatConcurrency();
+  await testOneHundredSeatConcurrency();
   console.log(
-    "[test:core-onboarding:db] PASS participant/intake failure rollback and replay; placement failure rollback; 20-way one-seat claim produced one placed and nineteen controlled capacity responses with one audit."
+    "[test:core-onboarding:db] PASS participant/intake failure rollback and replay; placement failure rollback; 20-way and 100-way one-seat claims each produced one placement and controlled capacity responses."
   );
 } finally {
   await Promise.allSettled([workers.end(), setup.end()]);
@@ -203,6 +204,41 @@ async function testOneSeatConcurrency() {
   assertEqual(final.rows[0]?.capacity_results, 19, "nineteen durable controlled capacity results");
 }
 
+async function testOneHundredSeatConcurrency() {
+  const stressGroupId = randomUUID();
+  await setup.query(
+    `insert into public.groups (
+      id, tenant_id, program_id, stage_id, name, status, capacity,
+      regular_capacity, flex_capacity, trial_capacity, hard_capacity, capacity_borrowing
+    ) values ($1, $2, $3, $4, 'One hundred claim stress', 'active', 1, 1, 0, 0, 1, 'none')`,
+    [stressGroupId, tenantId, programId, stageId]
+  );
+  const enrollments = [];
+  for (let index = 0; index < 100; index += 1) {
+    enrollments.push(await createEnrollment(`stress-claim-${index}`));
+  }
+  const claims = enrollments.map((enrollment) => ({ enrollment, operationKey: randomUUID() }));
+  const results = await Promise.all(
+    claims.map((claim) => placementCommand(claim.enrollment.id, claim.operationKey, null, stressGroupId))
+  );
+  assertEqual(results.filter((result) => result.outcome === "placed").length, 1, "100-way race has one placement");
+  assertEqual(
+    results.filter((result) => ["capacity_full", "conflict"].includes(result.outcome)).length,
+    99,
+    "100-way race has ninety-nine controlled results"
+  );
+  const final = await setup.query(
+    `select
+      (select count(*)::integer from public.group_memberships where tenant_id=$1 and group_id=$2 and status in ('active','trial')) as live,
+      (select count(*)::integer from public.swim_audit_events where tenant_id=$1 and event_type='group.membership_placed' and after_json ->> 'groupId'=$2::text) as audits,
+      (select count(*)::integer from public.core_write_operations where tenant_id=$1 and operation_type='group_placement' and result_json ->> 'outcome'='capacity_full' and idempotency_key=any($3::text[])) as capacity_results`,
+    [tenantId, stressGroupId, claims.map((claim) => claim.operationKey)]
+  );
+  assertEqual(final.rows[0]?.live, 1, "100-way race leaves one live membership");
+  assertEqual(final.rows[0]?.audits, 1, "100-way race leaves one placement audit");
+  assertEqual(final.rows[0]?.capacity_results, 99, "100-way race leaves ninety-nine durable capacity results");
+}
+
 function participantFixture(suffix) {
   const participant = {
     guardianUserId: guardianId,
@@ -277,11 +313,11 @@ async function intakeCommand(fixture, failureStep = null) {
   return result.rows[0]?.result;
 }
 
-async function placementCommand(enrollmentId, operationKey, failureStep = null) {
-  const command = { groupId, enrollmentId, status: "active", capacityBucket: "regular", capacityWeight: 1, startsOn: "2026-08-22" };
+async function placementCommand(enrollmentId, operationKey, failureStep = null, targetGroupId = groupId) {
+  const command = { groupId: targetGroupId, enrollmentId, status: "active", capacityBucket: "regular", capacityWeight: 1, startsOn: "2026-08-22" };
   const result = await serviceQuery(
     "select public.place_group_membership_atomic($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) as result",
-    [actorId, tenantId, operationKey, sha256(JSON.stringify(command)), groupId, enrollmentId, "active", "regular", 1, "2026-08-22"],
+    [actorId, tenantId, operationKey, sha256(JSON.stringify(command)), targetGroupId, enrollmentId, "active", "regular", 1, "2026-08-22"],
     failureStep
   );
   return result.rows[0]?.result;

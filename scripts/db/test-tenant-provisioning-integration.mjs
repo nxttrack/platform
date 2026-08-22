@@ -126,6 +126,18 @@ try {
   );
   const ownerInvitationId = invitationRows.rows[0]?.id;
   const staffInvitationId = invitationRows.rows[1]?.id;
+  const preMaterializationCrashWindow = await setup.query(
+    `select
+      (select count(*)::integer from auth.users where id in ($2,$3)) as auth_users,
+      (select count(*)::integer from public.tenant_memberships where tenant_id=$4) as memberships,
+      (select count(*)::integer from public.auth_invitations where provisioning_run_id=$1 and invited_user_id is null and identity_status='pending') as pending_identities,
+      (select count(*)::integer from public.email_outbox where tenant_id=$4 and next_attempt_at>now()+interval '50 years') as blocked_outbox`,
+    [runId, actorId, staffUserId, tenantId]
+  );
+  assertEqual(preMaterializationCrashWindow.rows[0]?.auth_users, 2, "Auth accounts may already exist after database commit");
+  assertEqual(preMaterializationCrashWindow.rows[0]?.memberships, 0, "Auth-create crash leaves no partial membership binding");
+  assertEqual(preMaterializationCrashWindow.rows[0]?.pending_identities, 2, "database-commit crash remains explicitly pending");
+  assertEqual(preMaterializationCrashWindow.rows[0]?.blocked_outbox, 2, "both crash windows keep provider mail blocked");
   await materialize(runId, ownerInvitationId, actorId, false);
   await serviceQuery(
     "select public.mark_tenant_provisioning_identity_attention($1, $2, 'injected_auth_timeout')",

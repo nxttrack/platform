@@ -8,6 +8,7 @@ import {
   emailRetryDelaySeconds,
   isEmailSendingEnabled
 } from "../../apps/web/lib/email/email-delivery-contract";
+import { parseTransactionalEmailPayload } from "../../apps/web/lib/email/outbox-payload";
 
 const migrationPath = new URL(
   "../../supabase/migrations/20260822002234_production_email_outbox.sql",
@@ -40,6 +41,34 @@ test("timeouts, network failures, 429 and 5xx retry while permanent 4xx does not
 
 test("retry backoff is deterministic and bounded", () => {
   assert.deepEqual([1, 2, 3, 4, 5, 6, 100].map(emailRetryDelaySeconds), [30, 120, 480, 1_800, 7_200, 7_200, 7_200]);
+});
+
+test("durable payload parser rejects poison, oversized fields and header injection", () => {
+  const valid = { to: "safe@example.test", subject: "Veilige onderwerpregel", text: "Veilige body" };
+  assert.deepEqual(parseTransactionalEmailPayload(valid), {
+    ...valid,
+    fromName: null,
+    html: undefined,
+    metadata: undefined,
+    organizationName: null,
+    recipientUserId: null,
+    relatedId: null,
+    relatedType: null,
+    templateKey: undefined,
+    tenantId: null
+  });
+  for (const payload of [
+    null,
+    [],
+    { ...valid, to: `victim@example.test\r\nBcc: injected@example.test` },
+    { ...valid, subject: "Safe\r\nBcc: injected@example.test" },
+    { ...valid, to: `${"a".repeat(310)}@example.test` },
+    { ...valid, subject: "s".repeat(501) },
+    { ...valid, text: "b".repeat(65_537) }
+  ]) {
+    assert.equal(parseTransactionalEmailPayload(payload), null);
+  }
+  assert.equal(parseTransactionalEmailPayload({ ...valid, subject: "Uitnodiging – 東京" })?.subject, "Uitnodiging – 東京");
 });
 
 test("outbox schema enforces durable dedupe, atomic claims, leases, retries and terminal state", async () => {
