@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -182,7 +183,7 @@ async function loadWaitTimeModel(tenantId: string, includeTestData: boolean) {
   for (const membership of (membershipsResult.data ?? []) as Array<{ group_id: string; capacity_weight: number }>) {
     usedByGroup.set(membership.group_id, (usedByGroup.get(membership.group_id) ?? 0) + Number(membership.capacity_weight));
   }
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
 
   const history: HistoricalPlacement[] = ((offersResult.data ?? []) as Array<{
     waitlist_entry_id: string;

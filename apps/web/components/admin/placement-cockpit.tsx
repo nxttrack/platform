@@ -1,5 +1,7 @@
 "use client";
 
+import { toAmsterdamDate } from "@/lib/date/business-date";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle, CheckCircle2, Clock3, ListTodo, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -118,7 +120,7 @@ export function PlacementCockpit({ initialSearch, rows }: { initialSearch?: stri
 function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
   const statusMeta = getWaitlistStatusMeta(row.status);
   const effectivelyAgeBlocked = row.minimumAgeBlocked && (
-    !row.eligibleFrom || row.eligibleFrom > new Date().toISOString().slice(0, 10)
+    !row.eligibleFrom || row.eligibleFrom > toAmsterdamDate()
   );
 
   return (

@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -254,9 +255,9 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
     if (age !== null) agesByGroup.set(membership.group_id, [...(agesByGroup.get(membership.group_id) ?? []), age]);
     const readiness = readinessByParticipant.get(membership.participant_id);
     const exitDate = membership.ends_on ?? readiness?.next_review_on ?? null;
-    if (exitDate && exitDate <= eightWeeks.toISOString().slice(0, 10)) {
+    if (exitDate && exitDate <= toAmsterdamDate(eightWeeks)) {
       exits8ByGroup.set(membership.group_id, (exits8ByGroup.get(membership.group_id) ?? 0) + 1);
-      if (exitDate <= new Date(now.getTime() + 28 * dayMs).toISOString().slice(0, 10)) {
+      if (exitDate <= addAmsterdamCalendarDays(now, 28)) {
         exits4ByGroup.set(membership.group_id, (exits4ByGroup.get(membership.group_id) ?? 0) + 1);
       }
     }
@@ -292,8 +293,8 @@ async function loadSmartPlacementModel(tenantId: string, entries: WaitlistEntryR
       );
       const activeGroupAssignments = assignments.filter((assignment) =>
         assignment.group_id === group.id &&
-        (!assignment.starts_on || assignment.starts_on <= now.toISOString().slice(0, 10)) &&
-        (!assignment.ends_on || assignment.ends_on >= now.toISOString().slice(0, 10))
+        (!assignment.starts_on || assignment.starts_on <= toAmsterdamDate(now)) &&
+        (!assignment.ends_on || assignment.ends_on >= toAmsterdamDate(now))
       );
       const hasSessionInstructor = futureSessions.some((session) => (assignmentsBySession.get(session.id)?.length ?? 0) > 0);
       const instructorIds = new Set([

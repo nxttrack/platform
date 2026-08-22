@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "@/lib/date/business-date";
 import { BadgeEuro, MousePointerClick, ShieldCheck, UserRoundCheck } from "lucide-react";
 
 import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
@@ -18,9 +19,9 @@ export default async function CampaignRevenuePage({ searchParams }: PageProps) {
   const tenant = getActiveTenant(context);
   const params = (await searchParams) ?? {};
   const today = new Date();
-  const defaultFrom = new Date(today.getTime() - 89 * 86_400_000).toISOString().slice(0, 10);
+  const defaultFrom = addAmsterdamCalendarDays(today, -89);
   const from = validDate(getParam(params, "from")) ?? defaultFrom;
-  const to = validDate(getParam(params, "to")) ?? today.toISOString().slice(0, 10);
+  const to = validDate(getParam(params, "to")) ?? toAmsterdamDate(today);
   const report = await getCampaignRevenueReport({ tenantId: tenant.id, from, to });
 
   return (

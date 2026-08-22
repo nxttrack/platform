@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -196,7 +198,7 @@ export async function registerGraduationResultAction(formData: FormData) {
           certificate_number: readOptional(formData, "certificateNumber"),
           title: certificateTitle,
           status: "issued",
-          issued_on: readOptional(formData, "issuedOn") ?? new Date().toISOString().slice(0, 10),
+          issued_on: readOptional(formData, "issuedOn") ?? toAmsterdamDate(),
           issued_by_user_id: user.id,
           notes: readOptional(formData, "certificateNotes")
         },

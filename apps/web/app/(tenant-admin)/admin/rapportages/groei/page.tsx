@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "@/lib/date/business-date";
 import { Award, Clock3, FileText, TrendingUp } from "lucide-react";
 
 import { AdminMetricCard } from "@/components/admin/admin-patterns";
@@ -178,7 +179,7 @@ function formatDate(value: string) {
 function previousDate(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() - 1);
-  return date.toISOString().slice(0, 10);
+  return toAmsterdamDate(date);
 }
 function days(value: number | null) {
   return value === null ? "—" : `${value} dagen`;

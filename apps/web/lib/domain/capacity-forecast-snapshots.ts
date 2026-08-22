@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -325,7 +326,7 @@ function tenantDate(value: Date, timeZone: string) {
 function addDays(value: string, days: number) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+  return toAmsterdamDate(date);
 }
 
 function previousDate(value: string) {

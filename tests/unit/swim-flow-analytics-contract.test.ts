@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../../apps/web/lib/date/business-date";
 import assert from "node:assert/strict";
 import test from "node:test";
 
@@ -163,5 +164,5 @@ test("rolling boundary uses local completion date across DST and excludes invali
 function addDays(value: string, days: number) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+  return toAmsterdamDate(date);
 }

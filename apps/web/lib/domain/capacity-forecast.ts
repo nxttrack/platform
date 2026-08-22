@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -124,9 +125,9 @@ export async function forecastCapacity(input: {
   const includeTestData = allowTestData(input.includeTestData ?? false);
   const admin = createAdminClient();
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = toAmsterdamDate(now);
   const horizon = new Date(now.getTime() + input.horizonWeeks * 7 * dayMs);
-  const historyStart = new Date(now.getTime() - 12 * 7 * dayMs).toISOString().slice(0, 10);
+  const historyStart = addAmsterdamCalendarDays(now, -12 * 7);
 
   const [
     groupsResult,
@@ -261,14 +262,14 @@ export async function forecastCapacity(input: {
       const groupMemberships = memberships.filter((row) => row.group_id === group.id);
       const activeMemberships = groupMemberships.filter((row) =>
         ["active", "trial"].includes(row.status) &&
-        row.starts_on <= horizon.toISOString().slice(0, 10) &&
+        row.starts_on <= toAmsterdamDate(horizon) &&
         (!row.ends_on || row.ends_on >= today)
       );
       const currentMemberships = activeMemberships.filter((row) =>
         row.starts_on <= today && (!row.ends_on || row.ends_on >= today)
       );
       const datedOpenings = currentMemberships.filter((row) =>
-        !!row.ends_on && row.ends_on > today && row.ends_on <= horizon.toISOString().slice(0, 10)
+        !!row.ends_on && row.ends_on > today && row.ends_on <= toAmsterdamDate(horizon)
       ).reduce((total, row) => total + Number(row.capacity_weight), 0);
       const historicalExits = groupMemberships.filter((row) =>
         ["completed", "cancelled"].includes(row.status) &&
@@ -284,7 +285,7 @@ export async function forecastCapacity(input: {
         row.program_id === group.program_id &&
         row.stage_id === group.stage_id &&
         currentParticipantIds.has(row.participant_id) &&
-        (!row.next_review_on || row.next_review_on <= horizon.toISOString().slice(0, 10))
+        (!row.next_review_on || row.next_review_on <= toAmsterdamDate(horizon))
       );
       const previousStageId = group.stage_id ? previousStageById.get(group.stage_id) : null;
       const eligibleTargetGroupCount = Math.max(
@@ -313,7 +314,7 @@ export async function forecastCapacity(input: {
       }, 0));
       const groupAssignments = assignments.filter((row) =>
         row.group_id === group.id &&
-        (!row.starts_on || row.starts_on <= horizon.toISOString().slice(0, 10)) &&
+        (!row.starts_on || row.starts_on <= toAmsterdamDate(horizon)) &&
         (!row.ends_on || row.ends_on >= today)
       );
       const hasInstructor = groupAssignments.length > 0;
@@ -325,7 +326,7 @@ export async function forecastCapacity(input: {
           groupStart: group.default_start_time,
           groupEnd: group.default_end_time,
           today,
-          horizonEnd: horizon.toISOString().slice(0, 10)
+          horizonEnd: toAmsterdamDate(horizon)
         })
       );
       const resourceAvailable = isResourceAvailable({
@@ -367,14 +368,14 @@ export async function forecastCapacity(input: {
         resourceAvailable,
         isTest,
         knownOpeningDates: currentMemberships.flatMap((row) =>
-          row.ends_on && row.ends_on > today && row.ends_on <= horizon.toISOString().slice(0, 10)
+          row.ends_on && row.ends_on > today && row.ends_on <= toAmsterdamDate(horizon)
             ? [row.ends_on]
             : []
         ),
         readinessReviewDates: targetStageReadiness.flatMap((row) =>
           row.next_review_on &&
           row.next_review_on >= today &&
-          row.next_review_on <= horizon.toISOString().slice(0, 10)
+          row.next_review_on <= toAmsterdamDate(horizon)
             ? [row.next_review_on]
             : []
         ),

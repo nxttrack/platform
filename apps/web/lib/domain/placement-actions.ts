@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -748,7 +750,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       is_test: entry.is_test,
       journey_run_id: entry.journey_run_id,
       test_metadata_json: entry.test_metadata_json,
-      starts_on: new Date().toISOString().slice(0, 10)
+      starts_on: toAmsterdamDate()
     })
     .select("id")
     .single();
@@ -766,7 +768,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       enrollment_id: enrollmentId,
       participant_id: participantId,
       status: "active",
-      starts_on: new Date().toISOString().slice(0, 10),
+      starts_on: toAmsterdamDate(),
       capacity_weight: 1,
       source: entry.is_test ? "journey_simulation_bot" : "intake",
       is_test: entry.is_test,
@@ -967,7 +969,7 @@ function getMinimumAgeDecision(birthDate: string | null) {
   const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
   return {
     blocked: eligible > todayDate,
-    eligibleFrom: eligible.toISOString().slice(0, 10)
+    eligibleFrom: toAmsterdamDate(eligible)
   };
 }
 

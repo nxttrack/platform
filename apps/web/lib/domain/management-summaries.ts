@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 import { buildTenantGrowthReport } from "@/lib/analytics/growth-cohorts";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -43,6 +44,6 @@ export function previousWeekRange(now = new Date()) {
   end.setUTCDate(end.getUTCDate() - weekday);
   const start = new Date(end);
   start.setUTCDate(start.getUTCDate() - 6);
-  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  return { start: toAmsterdamDate(start), end: toAmsterdamDate(end) };
 }
 function formatDate(value: string) { return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`)); }

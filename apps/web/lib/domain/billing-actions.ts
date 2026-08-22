@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -140,7 +142,7 @@ export async function createSubscriptionAction(formData: FormData) {
       guardian_user_id: enrollmentResult.data.guardian_user_id,
       payment_plan_id: planResult.data.id,
       status: readEnum(formData, "status", subscriptionStatuses, "active"),
-      starts_on: readOptional(formData, "startsOn") ?? new Date().toISOString().slice(0, 10),
+      starts_on: readOptional(formData, "startsOn") ?? toAmsterdamDate(),
       ends_on: readOptional(formData, "endsOn"),
       next_due_on: readOptional(formData, "nextDueOn"),
       amount_cents: readMoneyCentsOptional(formData, "amount") ?? planResult.data.amount_cents,
@@ -199,7 +201,7 @@ export async function createManualPaymentAction(formData: FormData) {
       amount_cents: readMoneyCentsOptional(formData, "amount") ?? subscriptionResult.data.amount_cents,
       currency: (readOptional(formData, "currency") ?? subscriptionResult.data.currency).toUpperCase(),
       due_on: readRequired(formData, "dueOn"),
-      paid_on: status === "paid" ? readOptional(formData, "paidOn") ?? new Date().toISOString().slice(0, 10) : readOptional(formData, "paidOn"),
+      paid_on: status === "paid" ? readOptional(formData, "paidOn") ?? toAmsterdamDate() : readOptional(formData, "paidOn"),
       status,
       reference: readOptional(formData, "reference"),
       method: readOptional(formData, "method"),
@@ -247,7 +249,7 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
     redirect("/admin/betalingen?error=payment-provider-managed");
   }
 
-  const paidOn = status === "paid" ? readOptional(formData, "paidOn") ?? new Date().toISOString().slice(0, 10) : readOptional(formData, "paidOn");
+  const paidOn = status === "paid" ? readOptional(formData, "paidOn") ?? toAmsterdamDate() : readOptional(formData, "paidOn");
   const { error } = await admin
     .from("manual_payments")
     .update({
@@ -572,7 +574,7 @@ export async function recordPaymentSessionFailureAction(formData: FormData) {
 export async function runBillingLifecycleAction() {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
   const paymentsResult = await admin
     .from("manual_payments")
     .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on")
@@ -711,7 +713,7 @@ export async function createBillingExportBatchAction(formData: FormData) {
   }
 
   const invoiceIds = ((invoicesResult.data ?? []) as { id: string }[]).map((invoice) => invoice.id);
-  const exportKey = `${exportType}-${new Date().toISOString().slice(0, 10)}-${randomUUID().slice(0, 8)}`;
+  const exportKey = `${exportType}-${toAmsterdamDate()}-${randomUUID().slice(0, 8)}`;
   const batchResult = await admin
     .from("billing_export_batches")
     .insert({
@@ -836,7 +838,7 @@ async function createBillingFollowUpTask(input: { description: string; participa
     classification_reasons: ["financial_participant_follow_up"],
     priority: input.priority,
     status: "open",
-    due_on: new Date().toISOString().slice(0, 10)
+    due_on: toAmsterdamDate()
   });
 }
 

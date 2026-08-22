@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -430,7 +431,7 @@ function startOfDay(value: Date) {
 }
 
 function dateKey(value: string) {
-  return new Date(value).toISOString().slice(0, 10);
+  return toAmsterdamDate(new Date(value));
 }
 
 function timeKey(value: Date) {

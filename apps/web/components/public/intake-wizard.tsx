@@ -1,5 +1,7 @@
 "use client";
 
+import { toAmsterdamDate } from "@/lib/date/business-date";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -425,7 +427,7 @@ function ChildStep(props: {
         {props.participantName.trim() ? (
           <Field className="animate-in fade-in-0 slide-in-from-bottom-2">
             <FieldLabel htmlFor="wizardBirthDate">Geboortedatum kind</FieldLabel>
-            <Input className="h-12" id="wizardBirthDate" max={new Date().toISOString().slice(0, 10)} onChange={(event) => props.onBirthDateChange(event.target.value)} type="date" value={props.birthDate} />
+            <Input className="h-12" id="wizardBirthDate" max={toAmsterdamDate()} onChange={(event) => props.onBirthDateChange(event.target.value)} type="date" value={props.birthDate} />
             {props.age !== null ? <FieldDescription>{props.participantName.split(" ")[0]} is {props.age} jaar.</FieldDescription> : null}
           </Field>
         ) : null}

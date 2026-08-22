@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 export type IntelligenceConfidence = "laag" | "middel" | "hoog";
 export type CapacityRiskLevel = "healthy" | "watch" | "bottleneck" | "critical";
 export type AttendanceRiskLevel = "watch" | "elevated" | "high";
@@ -89,7 +90,7 @@ export function computeCapacityForecast(input: {
   horizonWeeks: 4 | 8 | 12;
   asOfDate?: string;
 }): CapacityForecast[] {
-  const asOfDate = input.asOfDate ?? new Date().toISOString().slice(0, 10);
+  const asOfDate = input.asOfDate ?? toAmsterdamDate();
   return input.groups
     .map((group) => {
       const activeSoftReservations = Math.max(0, group.activeSoftReservations ?? 0);
@@ -1045,7 +1046,7 @@ function daysBetween(older: string, newer: string) {
 function addIsoDays(value: string, days: number) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + days);
-  return date.toISOString().slice(0, 10);
+  return toAmsterdamDate(date);
 }
 
 function clampIsoDate(value: string, maximum: string) {

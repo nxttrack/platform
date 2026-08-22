@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -12,7 +13,7 @@ export type GrowthAnalyticsReport = {
   evidence: string[];
 };
 
-export async function buildTenantGrowthReport(tenantId: string, from = oneYearAgo(), to = new Date().toISOString().slice(0, 10)): Promise<GrowthAnalyticsReport> {
+export async function buildTenantGrowthReport(tenantId: string, from = oneYearAgo(), to = toAmsterdamDate()): Promise<GrowthAnalyticsReport> {
   const admin = createAdminClient();
   const [intakes, sources, lineage, enrollments, programs, memberships, groups, resources, certificates] = await Promise.all([
     admin.from("intake_submissions").select("id, received_at, is_test").eq("tenant_id", tenantId).eq("is_test", false).gte("received_at", `${from}T00:00:00.000Z`).lte("received_at", `${to}T23:59:59.999Z`).order("received_at"),
@@ -77,4 +78,4 @@ function groupBy<Row, Key>(rows: Row[], key: (row: Row) => Key) { const result =
 function daysBetween(left: string, right: string) { return Math.max(0, Math.round((new Date(right).getTime() - new Date(left).getTime()) / 86_400_000)); }
 function median(values: number[]) { if (!values.length) return null; const sorted = [...values].sort((a, b) => a - b); const middle = Math.floor(sorted.length / 2); return sorted.length % 2 ? sorted[middle] : Math.round((sorted[middle - 1] + sorted[middle]) / 2); }
 function percentage(value: number, total: number) { return total ? Math.round((value / total) * 100) : 0; }
-function oneYearAgo() { const date = new Date(); date.setUTCFullYear(date.getUTCFullYear() - 1); return date.toISOString().slice(0, 10); }
+function oneYearAgo() { const date = new Date(); date.setUTCFullYear(date.getUTCFullYear() - 1); return toAmsterdamDate(date); }

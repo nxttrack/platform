@@ -207,12 +207,22 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Stretch 1 — nieuwsbrief production-safe
 
 - Status: CLOSED als veilige concept-only fallback; echte nieuwsbriefdelivery blijft NIET GEÏMPLEMENTEERD en extern NIET GETEST.
-- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Commit: `c0bb26e3e3e9a68af0a09c1588d9ad6e94867d3d` (`fix(newsletters): enforce concept-only delivery gate`).
 - Gewijzigd: server-only newsletter-delivery-capability, campaignserveraction, conceptformulier, beheerbewijsweergave en drie production-safety-contracttests.
 - Fail-closed contract: alleen de letterlijke envwaarde `NEWSLETTER_DELIVERY_ENABLED=true` kan de feature aanvragen, maar de capability blijft uit zolang de applicatie geen in dezelfde change geverifieerde sender bevat. Een envflag alleen kan dus nooit planning of successtatus verzinnen. De serveraction weigert iedere status anders dan `draft` vóór ontvangerpreparatie; de UI biedt alleen een hidden draftstatus en toont geen schedule- of sendcontrole.
 - Waarheidsgetrouwe UI: de pagina claimt geen verzending of aflevering. Eventuele historische `scheduled|sending|sent` data wordt als legacy externe status met waarschuwing getoond; deliveryrows heten historische evidence en bewijzen expliciet geen aflevering.
 - Tests: newsletter safety 3/3 PASS; communication hub contract/schema samen 20/20 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
 - Vervolg voor echte delivery: implementeer eerst sender, durable outboxbinding, worker, provideracceptatie/deliverybewijs, consent/unsubscribe en E2E; pas daarna mag de compile-time sendercapability in dezelfde gereviewde change worden geopend. Een envwijziging alleen is onvoldoende.
+
+### Stretch 2 — Europe/Amsterdam date-only semantics
+
+- Status: CLOSED voor de geïnventariseerde risicovolle webkern-usages.
+- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: centrale `business-date` helper, 34 webbronbestanden, één lokale E2E-helper, één analyticscontract en drie tijdzonecontracttests.
+- Semantiek: `toAmsterdamDate` gebruikt expliciet `Intl.DateTimeFormat(..., timeZone: "Europe/Amsterdam")` en `formatToParts`, valideert input fail-fast en retourneert uitsluitend `YYYY-MM-DD`. `addAmsterdamCalendarDays` rekent eerst vanuit de lokale businessdatum en gebruikt UTC-noon als veilige kalenderrepresentatie, zodat een 23- of 25-uursdag geen dagoffset verschuift.
+- Inventaris/resultaat: de actuele branch bevatte 73 instanties van `toISOString().slice(0, 10)` in `apps/web` plus het direct gekoppelde swim-flow-contract (de auditraming noemde 72). Alle 73 zijn vervangen; dezelfde scope bevat daarna nul matches. ISO-timestamps en expliciete timestamptz-serialisatie zijn bewust niet gewijzigd.
+- Tests: business-date 3/3 PASS met UTC-middernacht, CET, CEST, 29 maart 2026 en 25 oktober 2026; gerichte automation/placement/next-best/retention/smart-signals/swim-flow regressies 28/28 PASS; volledige unit/contractsuite 406/406 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
+- Risico/afbakening: losse stagingfixtures en scripts buiten de webkern behouden hun eigen bestaande tijdhelpers en vallen niet onder deze eerste tranche. Reeds opgeslagen datumwaarden worden niet herschreven. Datum-only parsing van provider-timestamps zonder `Date#toISOString` is niet stil meegewijzigd en vereist per providercontract afzonderlijke beoordeling.
 
 ## Deployment- en rollbackcontract
 

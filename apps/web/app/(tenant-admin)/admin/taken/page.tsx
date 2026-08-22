@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "@/lib/date/business-date";
 import { AlertCircle, CheckCircle2, ListChecks, Timer } from "lucide-react";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
@@ -23,7 +24,7 @@ export default async function AdminTasksPage({ searchParams }: PageProps) {
   const query = getParam(params, "q");
   const participantById = new Map(data.participants.map((participant) => [participant.id, participant]));
   const staffById = new Map(data.staffUsers.map((staff) => [staff.userId, staff]));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
 
   return (
     <div className="space-y-5">

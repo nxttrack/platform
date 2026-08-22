@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -82,7 +83,7 @@ export async function getCampaignRevenueReport(input: {
   const attendanceByParticipant = groupBy(attendanceResult.data ?? [], (row) => row.participant_id);
   const subscriptionsByEnrollment = groupBy(subscriptionsResult.data ?? [], (row) => row.enrollment_id);
   const paymentsByEnrollment = groupBy(paymentsResult.data ?? [], (row) => row.enrollment_id);
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
   const rows: CampaignFunnelInput[] = sources.flatMap((source) => {
     const intake = intakeById.get(source.intake_submission_id);
     if (!intake) return [];

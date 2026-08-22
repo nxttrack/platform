@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "@/lib/date/business-date";
 import { NextResponse } from "next/server";
 
 import {
@@ -330,7 +331,7 @@ async function recordCollectionFailure(input: {
     classification_reasons: ["financial_participant_follow_up"],
     priority: "high",
     status: "open",
-    due_on: new Date().toISOString().slice(0, 10)
+    due_on: toAmsterdamDate()
   });
   if (taskResult.error) throw taskResult.error;
 
