@@ -15,6 +15,10 @@ const upgradeFixture = readFileSync(
   new URL("../../scripts/db/seed-production-readiness-upgrade-fixture.mjs", import.meta.url),
   "utf8"
 );
+const platformTenantBoundaryMigration = readFileSync(
+  new URL("../../supabase/migrations/20260822233930_restrict_platform_only_tenant_mutations.sql", import.meta.url),
+  "utf8"
+);
 
 function functionSource(name: string) {
   const replaceStart = migration.indexOf(`create or replace function ${name}`);
@@ -86,4 +90,29 @@ test("blocked upgrade fixture contains no automatic customer-data repair", () =>
   assert.match(upgradeFixture, /'accepted', 'sent'/);
   assert.match(upgradeFixture, /lease_expires_at = now\(\) - interval '1 minute'/);
   assert.doesNotMatch(upgradePreflight, /delete\s+from\s+public\./i);
+});
+
+test("platform roles are not implicit tenant mutation capabilities", () => {
+  assert.match(platformTenantBoundaryMigration, /current_user <> 'authenticated'/);
+  assert.match(platformTenantBoundaryMigration, /current_user_has_platform_role/);
+  assert.match(platformTenantBoundaryMigration, /current_user_has_tenant_role/);
+  assert.match(platformTenantBoundaryMigration, /Direct platform-only tenant mutation is forbidden/);
+  for (const table of [
+    "tenant_onboarding_runs",
+    "auth_invitations",
+    "tenant_memberships",
+    "participants",
+    "participant_guardians",
+    "enrollments",
+    "intake_submissions",
+    "intake_answers",
+    "group_memberships",
+    "import_jobs",
+    "import_manifest_entries",
+    "email_outbox",
+    "core_write_operations",
+    "storage.objects"
+  ]) {
+    assert.match(platformTenantBoundaryMigration, new RegExp(table.replace(".", "\\.")));
+  }
 });

@@ -70,6 +70,7 @@ truth were explicitly checked.
 | CERT-005 | Medium | Recipient/staff Data API update privileges → newly added `provider_accepted_at`/`accepted_at` columns on existing writable tables. | Client roles could forge provider-acceptance audit evidence. | CODE-SIDE CLOSED: client-role insert/update triggers fence the evidence columns on invitations, notifications, slot offers and delivery attempts without weakening existing business-row policies. |
 | CERT-006 | High | Worker claims up to 25 messages with one shared start time → sequential provider calls (15–60 seconds each) → later leases expire before first send; another worker may reclaim and send the same message. The claim-token check occurs only after provider I/O. | Duplicate external email and misleading reconciliation. | CODE-SIDE CLOSED: claim exactly one immediately before provider I/O; lease is at least provider timeout plus a bounded completion margin. Static regression and concurrent DB claim suite are green. External providers remain at-least-once, never exactly-once. |
 | CERT-007 | High readiness | Upgrade applies the new live-membership unique index directly, but no preflight existed for legacy active/trial duplicates. The duplicate fixture blocks index creation. | Uncontrolled staging migration failure after deployment begins. | Fix is assigned to Checkpoint 3: read-only fail-closed preflight before any migration mutation; customer data is never auto-repaired. |
+| CERT-008 | High | A local `platform_admin` JWT with no Tenant B membership → permissive `current_user_can_manage_tenant_domain` branch → direct PostgREST `PATCH participants` in Tenant B. The first role-matrix run changed the synthetic row and failed red. | A compromised platform-admin browser session could directly mutate tenant-domain records outside a service-routed, audited command path. | CODE-SIDE CLOSED: a second additive migration adds a client-role mutation guard to the certification boundaries. Platform roles require an explicit active owner/admin/staff membership for direct writes; reads and `service_role` paths remain separate. The same Data API attack is now a controlled error. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -199,7 +200,50 @@ the clean/blocked rehearsals and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 4 — local Data API tenant/role attack matrix
 
-Pending.
+VERIFIED LOCAL against the secure-default full Supabase stack, using HTTP calls to
+PostgREST/Storage rather than relying on direct PostgreSQL role simulation. JWTs
+were locally signed for synthetic users only. The matrix covers Tenant A and B
+owner, admin, staff, instructor, parent and child (`athlete`), plus anon, a stale
+subject, a suspended membership, platform admin/support and the service role.
+
+The first matrix run exposed CERT-008: a platform admin without any tenant
+membership successfully changed the Tenant B participant through PostgREST. After
+the red reproduction, CLI migration
+`20260822233930_restrict_platform_only_tenant_mutations.sql` added one fixed-path
+client-role trigger boundary across onboarding, invitations/memberships, participant
+graph, intake, groups, imports, outbox/operation ledgers and Storage metadata. It
+does not run for `service_role`; a platform identity can write directly only when it
+also has an explicit active tenant owner/admin/staff membership. Historical
+migrations and the broad platform read model were not rewritten.
+
+The green matrix executed 102 Tenant A→B table or Storage-prefix attacks across all
+six Tenant A roles. It covered onboarding runs/events, invitations/memberships,
+outbox/events, participants/guardians/enrollments, intake submissions/answers,
+group memberships, import jobs/rows/manifest, Storage object paths and platform
+audit events. No Tenant B row or object was returned or changed. Modified
+`x-tenant-id` and `x-forwarded-host` headers did not alter the JWT-bound result.
+
+Additional green cases prove:
+
+- anon, missing, stale and suspended contexts return controlled empty/deny results;
+- authenticated outbox SELECT is RLS-denied while direct UPDATE is independently
+  grant-denied; import state and operation-ledger mutations are also grant-denied;
+- platform admin/support cannot directly mutate tenant participants without tenant
+  membership;
+- a mixed-Tenant A/B group membership fails explicitly at the RLS/FK boundary;
+- anon and all six authenticated roles cannot invoke the service-only outbox claim;
+- client calls to participant-graph, intake and group-placement RPCs with Tenant B
+  targets fail explicitly;
+- the service-routed Data API can read the exact Tenant B fixture and execute the
+  claim RPC;
+- reuse of one outbox idempotency key with a different payload fails explicitly.
+
+No request body, email address, JWT, secret or personal field is logged by the test.
+
+Checkpoint regression gate: 421/421 unit tests, all five focused DB integrations,
+the 141-migration secure grant audit, typecheck, production build (17 static pages),
+Auth audit, migration/RLS audits, production dependency audit and `git diff --check`
+are VERIFIED LOCAL.
 
 ## Checkpoint 5 — failure and crash windows
 
