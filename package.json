@@ -18,6 +18,8 @@
     "db:verify-force-rls": "node scripts/db/verify-force-rls.mjs",
     "db:advisors": "node scripts/db/supabase-advisors.mjs",
     "db:inventory-production-read-only": "node scripts/db/inventory-production-read-only.mjs",
+    "db:preflight-production-readiness-upgrade": "node scripts/db/preflight-production-readiness-upgrade.mjs",
+    "db:seed-production-readiness-upgrade-fixture": "node scripts/db/seed-production-readiness-upgrade-fixture.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:package-standalone-assets": "node scripts/deploy/package-standalone-assets.mjs",
     "design:audit": "node scripts/design/audit-lovable-baseline.mjs",

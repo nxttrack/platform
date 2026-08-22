@@ -7,6 +7,14 @@ const migration = readFileSync(
   "utf8"
 );
 const outboxWorker = readFileSync(new URL("../../apps/web/lib/email/outbox.ts", import.meta.url), "utf8");
+const upgradePreflight = readFileSync(
+  new URL("../../scripts/db/preflight-production-readiness-upgrade.mjs", import.meta.url),
+  "utf8"
+);
+const upgradeFixture = readFileSync(
+  new URL("../../scripts/db/seed-production-readiness-upgrade-fixture.mjs", import.meta.url),
+  "utf8"
+);
 
 function functionSource(name: string) {
   const replaceStart = migration.indexOf(`create or replace function ${name}`);
@@ -51,4 +59,31 @@ test("the mail worker claims one item only when it is ready to send", () => {
   assert.match(outboxWorker, /target_limit:\s*1/);
   assert.match(outboxWorker, /minimumEmailOutboxLeaseSeconds/);
   assert.doesNotMatch(outboxWorker, /target_limit:\s*input\.limit\s*\?\?\s*25/);
+});
+
+test("upgrade preflight is read-only and fail-closed on every required legacy blocker", () => {
+  assert.match(upgradePreflight, /begin read only isolation level repeatable read/);
+  assert.match(upgradePreflight, /process\.exitCode = report\.blockers\.length === 0 \? 0 : 2/);
+  for (const blocker of [
+    "duplicate_live_group_memberships",
+    "legacy_import_without_durable_manifest",
+    "conflicting_legacy_idempotency_keys",
+    "invitation_auth_lineage_inconsistencies",
+    "expired_email_worker_leases",
+    "unexpected_client_mutation_grants",
+    "unexpected_storage_bucket_inventory",
+    "migration_fingerprint_mismatch"
+  ]) {
+    assert.match(upgradePreflight, new RegExp(blocker));
+  }
+});
+
+test("blocked upgrade fixture contains no automatic customer-data repair", () => {
+  assert.match(upgradeFixture, /UPGRADE_FIXTURE_MODE/);
+  assert.match(upgradeFixture, /'trial'.*current_date, 'trial'/s);
+  assert.match(upgradeFixture, /set status = 'applying'/);
+  assert.match(upgradeFixture, /conflicting-upgrade-key/);
+  assert.match(upgradeFixture, /'accepted', 'sent'/);
+  assert.match(upgradeFixture, /lease_expires_at = now\(\) - interval '1 minute'/);
+  assert.doesNotMatch(upgradePreflight, /delete\s+from\s+public\./i);
 });

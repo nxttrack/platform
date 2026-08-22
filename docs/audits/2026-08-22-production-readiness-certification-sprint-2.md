@@ -151,7 +151,51 @@ both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 3 — base-to-head upgrade rehearsal and preflight
 
-Pending.
+VERIFIED LOCAL with a reproducible fixture and read-only fail-closed preflight.
+The base project was built from migration files obtained directly from Git object
+`68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`; its history contained exactly 135
+rows ending at `20260812120000`. The fixture then added two tenants and twelve Auth
+identities covering owner/admin/staff/instructor/parent/child, plus profiles,
+memberships, participants, guardians, enrollments, active/trial group membership,
+queued invitations, incomplete onboarding, legacy import rollback data, queued and
+failed mail evidence, five buckets and representative import audit events.
+
+On the clean fixture the new `db:preflight-production-readiness-upgrade` command
+returned PASS before mutation. It reported the two intentionally incomplete draft
+onboarding runs and two legacy mail attempts as operator warnings, but found no
+index blocker, manifestless active import, conflicting legacy key, broken Auth
+lineage, expired lease, grant anomaly, bucket anomaly or fingerprint mismatch.
+
+Only the four byte-frozen Sprint 1 migrations were then applied, in timestamp order:
+the history advanced 135→139 with no error. Both tenants, all twelve memberships,
+both participants and both group memberships remained. The original outbox,
+provisioning, core-write and 5,000-row import DB integrations all passed on this
+upgraded database. The additive certification migration was applied separately
+(139→140); its adversarial integration and the preflight then also passed. A
+production application artifact started against this upgraded fixture and strict
+`/api/health` returned `ok=true`, database pass in 35 ms and the expected local
+certification SHA.
+
+The blocked fixture deliberately contains one duplicate active/trial membership,
+one applying import without a durable manifest, two legacy runs sharing an
+idempotency key with different payloads, one accepted invitation without an Auth
+user and one expired outbox worker lease. To make the last condition representable,
+only the first (outbox) migration was present in that fixture; the dangerous group
+unique-index migration had not run. Preflight returned BLOCKED/exit 2 and emitted
+only UUIDs, states, counts and fingerprints—no email, name or payload. A readback
+afterward proved history remained exactly 136, all three later Sprint 1 migrations
+and the corrective migration remained unapplied, the three membership rows remained
+and the import was still `applying`. No customer data was repaired or deleted.
+
+The preflight uses `BEGIN READ ONLY ISOLATION LEVEL REPEATABLE READ`, rolls back on
+exit, fingerprints all four immutable migrations, tolerates objects that do not yet
+exist at base, and conditionally tightens its grant/lease checks as migrations become
+present. Static regressions enforce every blocker class and prohibit a customer-data
+delete path in the preflight.
+
+Checkpoint regression gate: 420/420 unit tests, typecheck, production build, Auth
+audit, 140-file migration audit, 251-table RLS audit, production dependency audit,
+the clean/blocked rehearsals and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 4 — local Data API tenant/role attack matrix
 
