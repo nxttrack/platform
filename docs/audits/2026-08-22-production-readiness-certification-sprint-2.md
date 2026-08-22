@@ -101,7 +101,53 @@ test weakening was introduced.
 
 ## Checkpoint 2 — clean-room migration builds
 
-Pending.
+VERIFIED LOCAL for both required grant profiles. Each project started as an empty
+full local Supabase stack before repository migrations were introduced or applied.
+No dump, repair command, pre-existing schema or hand-created application object was
+used. The repository now includes `db:audit-clean-room`, which compares every
+`version`/`name` row in `supabase_migrations.schema_migrations` with the sorted SQL
+files and performs the remaining assertions below without retaining sentinel data.
+
+The target originally contained 139 migrations. Both final clean-room builds apply
+140 because the certification fix is an additive, CLI-generated migration; the
+four pushed Sprint 1 files remain byte-for-byte unchanged.
+
+| Profile | Empty-stack start | Migration application | Result |
+| --- | --- | --- | --- |
+| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 23:04:59–23:05:38 CEST | 2026-08-23 23:06:08–23:06:15 CEST | 140/140 exact, no repair/error |
+| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 23:08:35–23:09:13 CEST | 2026-08-23 23:10:27–23:10:34 CEST | 140/140 exact, no repair/error |
+
+The secure fixture explicitly revokes the PostgreSQL default `PUBLIC EXECUTE` as
+well as Data API table/sequence/function defaults before application migrations.
+That global function revocation is required because a schema-specific default is
+additive and cannot remove PostgreSQL's built-in `PUBLIC EXECUTE` default.
+
+Both profiles have the same application inventory: 251 `public` tables, all with
+RLS and FORCE RLS; 265 `public`/`app_private` functions; 245 user triggers; 926
+public indexes; 2,620 public constraints; and five exact private buckets
+(`badge-studio-assets`, `diploma-vault`, `participant-media`, `tenant-documents`,
+`tenant-media-assets`). Storage has only the two clean scoped read policies and the
+restrictive child-session policy. Ten critical mail/provision/import RPC signatures
+are explicitly denied to `anon`/`authenticated` and executable by `service_role`.
+
+A transaction-rolled-back post-migration sentinel proves the intended difference:
+
+| New object privilege | Legacy | Secure default |
+| --- | --- | --- |
+| `anon` table SELECT | allowed | denied |
+| `authenticated` table INSERT | allowed | denied |
+| `anon` function EXECUTE | allowed | denied |
+| Any installed `public`/`app_private` function executable by `PUBLIC` or `anon` | 6 compatibility functions | 0 |
+
+All five focused DB integrations (email outbox, atomic provisioning, core
+onboarding, 5,000-row resumable import and certification adversarial cases) pass on
+both builds. A production app artifact started against each stack and `/api/health`
+reported `ok=true`, database pass (34 ms legacy, 32 ms secure) and the expected
+certification source. This is local compatibility evidence, not a live claim.
+
+Checkpoint regression gate: 418/418 unit tests, typecheck, production build, Auth
+audit, 140-file migration audit, 251-table RLS audit, production dependency audit,
+both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 3 — base-to-head upgrade rehearsal and preflight
 
