@@ -15,7 +15,7 @@ Werkvorm: geïsoleerde Git-worktree, omdat de oorspronkelijke werkmap ongetrackt
 | Audit-ID | Status | Checkpoint | Bewijs/commit |
 | --- | --- | --- | --- |
 | P1-004 | PARTIALLY CLOSED | 2 — fail-closed mail en outbox | Infrastructuur en centraal transport groen; business-enqueue wordt in checkpoints 3–5 transactioneel aangesloten |
-| P0-004 | NOT STARTED | 3 — tenantprovisioning | Nog te implementeren |
+| P0-004 | CLOSED | 3 — tenantprovisioning | Atomische databasegraph, deterministische dedupe, hervatbare Auth-grens en failure/concurrencybewijs |
 | P1-001 | NOT STARTED | 4 — participant en intake | Nog te implementeren |
 | P1-002 | NOT STARTED | 4 — capaciteit en plaatsing | Nog te implementeren |
 | P1-003 | NOT STARTED | 5 — imports | Nog te implementeren |
@@ -151,7 +151,7 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Checkpoint 2
 
 - Audit-ID/status: P1-004 PARTIALLY CLOSED. Het centrale transport, de durable outbox, atomische claim, retry/dead-semantiek en serviceboundary zijn gereed; transactionele enqueue vanuit provisioning, participantflows en imports volgt in hun eigen checkpoints.
-- Commit: wordt na deze groene checkpointcommit in het volgende checkpointblok vastgelegd.
+- Commit: `ae04a439b16da009436092061d95410b3da7e74c` (`feat(email): add fail-closed durable outbox`).
 - Gewijzigd: additive migration `20260822002234_production_email_outbox.sql`; centraal transportcontract; outboxworker en fail-closed interne workerroute; invitation/password-reset/notificatie/slot-offer statussemantiek; beheerfeedback; unit- en echte PostgreSQL-concurrentietest.
 - Invarianten: alleen letterlijke `EMAIL_SENDING_ENABLED=true` kan provider-I/O bereiken; een uitgeschakelde worker claimt niets; `(tenant_id NULLS NOT DISTINCT, message_type, idempotency_key)` dedupliceert; afwijkende input onder dezelfde key faalt; `FOR UPDATE SKIP LOCKED` plus claimtoken/lease voorkomt dubbele actieve verwerking; een verlopen laatste lease wordt `dead`; provideracceptatie zet alleen `accepted_at`/`provider_accepted_at`, nooit `delivered_at`.
 - Grants: outbox-RPC's zijn `SECURITY INVOKER`, hebben vaste `search_path`, zijn gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen uitvoerbaar door `service_role`. Tabellen hebben FORCE RLS en expliciete deny-readpolicies voor authenticated; negatieve grant- en RLS-tests zijn groen.
@@ -161,7 +161,18 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 
 ### Checkpoint 3
 
-- Status: NOT STARTED.
+- Audit-ID/status: P0-004 CLOSED. P1-004 blijft PARTIALLY CLOSED totdat ook importinvitaties transactioneel via dezelfde outbox lopen.
+- Commit: wordt na deze groene checkpointcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: additive migration `20260822004329_atomic_tenant_provisioning.sql`; provisioningserveraction en hervatactie; Auth-userresolver/bootstrapherkenning; generieke invitationcopy; onboardingrun-UI; unitcontract en echte PostgreSQL-integratietest.
+- Transactie: `provision_tenant_atomic` serialiseert op de deterministische slugkey en schrijft run, inactive tenant, settings, theme-availability/assignment/audit, domains, branding, program, stages, resources, group, payment plan, invitations, outbox en immutable events binnen één PL/pgSQL-boundary. De interne exception-subtransactie rolt iedere graphwrite terug maar bewaart een PII-vrije `attention_required` run plus attempt/event.
+- Idempotentie: de key is SHA-256 over `tenant-provisioning:v1:<slug>`; de afzonderlijke requestfingerprint omvat alle genormaliseerde businessinput. Dezelfde key/input retourneert dezelfde run/tenant; key-reuse met andere input faalt. Een advisory transaction lock serialiseert parallelle submits.
+- Auth-grens: Auth-users worden pas na de databasecommit aangemaakt of gevonden. Nieuwe bootstrapaccounts krijgen alleen de invitation-UUID in admin-only app metadata, zodat een crash tussen Auth en database veilig als nieuw account hervat en nog steeds wachtwoordkeuze eist. De database-materializer upsert profile/security/membership atomisch. Geen mislukte poging verwijdert mogelijk gedeelde Auth-users.
+- Fail-closed opening: tenant en outbox blijven respectievelijk `inactive` en circa honderd jaar uitgesteld zolang identities onvolledig zijn. Alleen `complete_tenant_provisioning` verifieert alle identities, memberships en outboxreferenties, activeert de tenant, opent de run en maakt alle invitation-items in dezelfde transactie due. Provider-I/O gebeurt daarna door de worker.
+- Grants/audit: alle publieke provisioning-RPC's zijn `SECURITY INVOKER`, fixed-search-path, gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen uitvoerbaar door `service_role`; de minimale private Auth-resolver is fixed-search-path `SECURITY DEFINER` en eveneens service-only. `tenant_onboarding_events` is append-only, FORCE RLS en platform-admin read-only.
+- Failure/concurrencybewijs: zeven geïnjecteerde boundaries (`organization`, `identity`, `program`, `operations`, `billing`, `invitations`, `opening`) laten elk nul tenant/invitationgraph achter en één durable aandachtsevent; een database-retry hergebruikt dezelfde run en bewaart beide attempts/events. Twintig parallelle submits leveren exact één run en één tenant. Identity-timeout + retry, dubbele materialisatie en dubbele finalization zijn idempotent bewezen.
+- Tests: provisioningcontract 6/6 PASS; volledige unitsuite 388/388 PASS; `test:tenant-provisioning:db` PASS; `test:email-outbox:db` PASS in dezelfde gedeelde queue; authaudit PASS; typecheck PASS; production build PASS; migrationaudit PASS (137); RLS-audit PASS (249 tabellen, alleen bestaande private-helperwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
+- Lokale DB-validatie: migration compileerde/toegepast op de geïsoleerde lokale validatiecontainer; alle functies zijn werkelijk uitgevoerd. Geen staging/live database, echte mail of live Auth-provider is gebruikt. Auth API-runtime blijft daarom extern NIET GETEST; de databasezijde en crashsemantiek zijn lokaal bewezen.
+- Rollbackrisico: application-forward rollback houdt tenants/runs/invitations uit deze flow intact; `EMAIL_SENDING_ENABLED=false` en/of de worker gate stopt provider-I/O. De additive tabellen/kolommen kunnen door de oude app worden genegeerd, maar een oude app mag niet opnieuw voor provisioning worden gebruikt omdat die zijn oude niet-atomische writeketen zou hervatten.
 
 ### Checkpoint 4
 

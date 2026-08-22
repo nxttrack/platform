@@ -14,7 +14,7 @@ type KeyValue = {
 export function renderInvitationEmail(input: {
   acceptUrl: string;
   invitationCode: string;
-  isNewAccount: boolean;
+  isNewAccount: boolean | null;
   organizationName: string;
   roleLabel: string;
   tenantSlug?: string | null;
@@ -35,9 +35,11 @@ export function renderInvitationEmail(input: {
     rows,
     subject: `Je uitnodiging voor ${input.organizationName}`,
     title: "Je uitnodiging staat klaar",
-    message: input.isNewAccount
-      ? "Open de uitnodiging, vul je e-mailadres en de eenmalige code in en kies je eigen wachtwoord. De code verloopt automatisch."
-      : "Open de uitnodiging en bevestig de extra toegang met je e-mailadres en de eenmalige code. Je bestaande wachtwoord blijft ongewijzigd."
+    message: input.isNewAccount === null
+      ? "Open de uitnodiging en vul je e-mailadres en de eenmalige code in. Bij een nieuw account kies je daarna een eigen wachtwoord; een bestaand wachtwoord blijft ongewijzigd. De code verloopt automatisch."
+      : input.isNewAccount
+        ? "Open de uitnodiging, vul je e-mailadres en de eenmalige code in en kies je eigen wachtwoord. De code verloopt automatisch."
+        : "Open de uitnodiging en bevestig de extra toegang met je e-mailadres en de eenmalige code. Je bestaande wachtwoord blijft ongewijzigd."
   });
 }
 

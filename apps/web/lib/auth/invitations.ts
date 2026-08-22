@@ -85,7 +85,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<Cr
     });
   }
 
-  const invitedUser = await ensureAuthUser({ email });
+  const invitedUser = await ensureInvitationAuthUser({ email });
   const userId = invitedUser.userId;
   const invitationCode = generateInvitationCode();
   const expiresAt = new Date(Date.now() + invitationTtlHours * 60 * 60 * 1000).toISOString();
@@ -223,7 +223,7 @@ export async function acceptInvitation(input: AcceptInvitationInput) {
   } as const;
 }
 
-async function ensureAuthUser(input: { email: string }) {
+export async function ensureInvitationAuthUser(input: { email: string; provisioningInvitationId?: string }) {
   const existingUserId = await findUserIdByEmail(input.email);
   const admin = createAdminClient();
 
@@ -234,20 +234,64 @@ async function ensureAuthUser(input: { email: string }) {
     };
   }
 
+  const resolvedAuthUserId = await resolveAuthUserIdByEmail(input.email);
+
+  if (resolvedAuthUserId) {
+    return {
+      isNewAccount: await isProvisioningBootstrapUser(resolvedAuthUserId, input.provisioningInvitationId),
+      userId: resolvedAuthUserId
+    };
+  }
+
   const { data, error } = await admin.auth.admin.createUser({
+    ...(input.provisioningInvitationId
+      ? { app_metadata: { nxttrack_provisioning_invitation_id: input.provisioningInvitationId } }
+      : {}),
     email: input.email,
     password: generateUncommunicatedBootstrapPassword(),
     email_confirm: true
   });
 
   if (error || !data.user) {
-    throw new Error(`Could not create invited auth user: ${error?.message ?? "missing user"}`);
+    const concurrentAuthUserId = await resolveAuthUserIdByEmail(input.email);
+
+    if (concurrentAuthUserId) {
+      return {
+        isNewAccount: await isProvisioningBootstrapUser(concurrentAuthUserId, input.provisioningInvitationId),
+        userId: concurrentAuthUserId
+      };
+    }
+
+    throw new Error("Could not create invited Auth user.");
   }
 
   return {
     isNewAccount: true,
     userId: data.user.id,
   };
+}
+
+async function resolveAuthUserIdByEmail(email: string) {
+  const { data, error } = await createAdminClient().rpc("resolve_auth_user_id_by_email", {
+    target_email: normalizeEmail(email)
+  });
+
+  if (error) {
+    throw new Error(`Could not resolve invited Auth user: ${error.message}`);
+  }
+
+  return typeof data === "string" ? data : null;
+}
+
+async function isProvisioningBootstrapUser(userId: string, invitationId: string | undefined) {
+  if (!invitationId) return false;
+  const { data, error } = await createAdminClient().auth.admin.getUserById(userId);
+
+  if (error || !data.user) {
+    throw new Error("Could not inspect invited Auth user.");
+  }
+
+  return data.user.app_metadata?.nxttrack_provisioning_invitation_id === invitationId;
 }
 
 async function requireTenant(slug: string | null | undefined): Promise<TenantInviteTarget> {

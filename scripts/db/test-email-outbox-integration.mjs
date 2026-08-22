@@ -52,11 +52,27 @@ try {
     "reusing an idempotency key with different input must fail"
   );
 
-  const concurrentClaims = await Promise.all(
-    Array.from({ length: 20 }, () => serviceQuery(
-      "select * from public.claim_email_outbox(1, 30)"
-    ))
+  await setup.query("begin");
+  await setup.query(
+    `select id from public.email_outbox
+     where id <> $1
+       and (
+         (status in ('queued', 'retry') and next_attempt_at <= now())
+         or (status = 'processing' and lease_expires_at <= now() and attempts < max_attempts)
+       )
+     for update`,
+    [outboxId]
   );
+  let concurrentClaims;
+  try {
+    concurrentClaims = await Promise.all(
+      Array.from({ length: 20 }, () => serviceQuery(
+        "select * from public.claim_email_outbox(1, 30)"
+      ))
+    );
+  } finally {
+    await setup.query("commit");
+  }
   const claimedRows = concurrentClaims.flatMap((result) => result.rows);
   assertEqual(claimedRows.length, 1, "twenty workers must claim one queued item exactly once");
   const firstClaim = claimedRows[0];

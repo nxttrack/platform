@@ -1,10 +1,14 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
-import { createInvitation } from "@/lib/auth/invitations";
+import { ensureInvitationAuthUser } from "@/lib/auth/invitations";
+import { roleLabels } from "@/lib/auth/roles";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { generateInvitationCode, hashAuthCode } from "@/lib/auth/tokens";
+import { renderInvitationEmail } from "@/lib/email/templates";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteMollieCustomer, MollieApiError } from "./mollie";
@@ -26,165 +30,239 @@ export async function provisionTenantAction(formData: FormData) {
   const locationName = readRequired(formData, "locationName");
   const poolName = readRequired(formData, "poolName");
   const groupName = readRequired(formData, "groupName");
-  const staff = splitList(readOptional(formData, "staffEmails") ?? "").map(normalizeEmail);
+  const staff = [...new Set(splitList(readOptional(formData, "staffEmails") ?? "").map(normalizeEmail))].sort();
   const amountCents = Math.round(readPositiveNumber(formData, "monthlyAmount") * 100);
   const portalThemeSelection = readRequired(formData, "portalThemeRelease");
   const portalThemeSeparator = portalThemeSelection.lastIndexOf("@");
   const portalThemeKey = portalThemeSelection.slice(0, portalThemeSeparator);
   const portalThemeRelease = portalThemeSelection.slice(portalThemeSeparator + 1);
 
-  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || !hostname.endsWith(".nxttrack.nl") || !getThemeRelease(portalThemeKey, portalThemeRelease)) {
+  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || hostname !== `${slug}.nxttrack.nl` || !getThemeRelease(portalThemeKey, portalThemeRelease)) {
     redirect("/platform/onboarding?error=validation");
   }
 
-  const runResult = await admin.from("tenant_onboarding_runs").insert({
-    status: "provisioning",
-    current_step: "organization",
-    draft_data: { name, slug, hostname, ownerEmail, programName, locationName, poolName, groupName, staffCount: staff.length },
-    created_by_user_id: context.user.id
-  }).select("id").single();
+  const productName = readOptional(formData, "productName") ?? name;
+  const primaryColor = readColor(formData, "primaryColor", "#1d4ed8").toLowerCase();
+  const accentColor = readColor(formData, "accentColor", "#06b6d4").toLowerCase();
+  const groupCapacity = readPositiveInteger(formData, "groupCapacity");
+  const weekday = readPositiveInteger(formData, "weekday");
+  const startTime = readRequired(formData, "startTime");
+  const endTime = readRequired(formData, "endTime");
+  const fingerprintInput = {
+    accentColor,
+    amountCents,
+    customDomain,
+    groupCapacity,
+    groupName,
+    hostname,
+    locationName,
+    name,
+    ownerEmail,
+    ownerName,
+    poolName,
+    portalThemeKey,
+    portalThemeRelease,
+    primaryColor,
+    productName,
+    programName,
+    slug,
+    staff,
+    stageNames,
+    startTime,
+    endTime,
+    weekday
+  };
+  const idempotencyKey = sha256(`tenant-provisioning:v1:${slug}`);
+  const requestFingerprint = sha256(JSON.stringify(fingerprintInput));
+  const acceptUrl = `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`;
+  const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1_000).toISOString();
+  const invitations = [
+    buildProvisioningInvitation({
+      acceptUrl,
+      businessKey: `owner:${ownerEmail}`,
+      email: ownerEmail,
+      expiresAt,
+      fullName: ownerName,
+      organizationName: name,
+      role: "tenant_owner",
+      tenantSlug: slug
+    }),
+    ...staff.map((email) => buildProvisioningInvitation({
+      acceptUrl,
+      businessKey: `staff:${email}`,
+      email,
+      expiresAt,
+      fullName: staffDisplayName(email),
+      organizationName: name,
+      role: "instructor",
+      tenantSlug: slug
+    }))
+  ];
+  const provision = await admin.rpc("provision_tenant_atomic", {
+    target_actor_user_id: context.user.id,
+    target_idempotency_key: idempotencyKey,
+    target_payload: { ...fingerprintInput, invitations },
+    target_request_fingerprint: requestFingerprint
+  });
+  const provisionResult = parseProvisioningResult(provision.data);
 
-  if (runResult.error || !runResult.data) {
+  if (provision.error || !provisionResult) {
     redirect("/platform/onboarding?error=run");
   }
+  if (!provisionResult.tenantId) {
+    redirect(`/platform/onboarding?error=provisioning&run=${provisionResult.runId}`);
+  }
+  if (provisionResult.outcome !== "opened") {
+    try {
+      await materializeTenantOnboardingRun(context.user.id, provisionResult.runId);
+    } catch {
+      await admin.rpc("mark_tenant_provisioning_identity_attention", {
+        target_actor_user_id: context.user.id,
+        target_error_code: "auth_materialization_failed",
+        target_run_id: provisionResult.runId
+      });
+      redirect(`/platform/onboarding?error=identity&run=${provisionResult.runId}`);
+    }
+  }
 
-  const runId = (runResult.data as { id: string }).id;
-  let tenantId: string | null = null;
+  revalidatePath("/platform");
+  revalidatePath("/platform/onboarding");
+  redirect(`/platform/onboarding?opened=1&run=${provisionResult.runId}`);
+}
+
+export async function resumeTenantProvisioningAction(formData: FormData) {
+  const context = await requirePlatformAdministrator("/platform/onboarding");
+  const runId = readRequired(formData, "runId");
 
   try {
-    const tenant = await insertOne(admin.from("tenants").insert({ name, slug, sector: "swim_school", status: "inactive" }).select("id").single(), "tenant");
-    tenantId = tenant.id;
-    await admin.from("tenant_onboarding_runs").update({ tenant_id: tenantId, current_step: "identity" }).eq("id", runId);
-
-    await requireWrite(admin.from("tenant_settings").insert({ tenant_id: tenantId, terminology_sector: "swim_school", locale: "nl-NL", timezone: "Europe/Amsterdam", assessment_rating_display: "smileys" }), "tenant settings");
-    const themeAssignment = await admin.rpc("activate_tenant_portal_theme", {
+    await materializeTenantOnboardingRun(context.user.id, runId);
+  } catch {
+    await createAdminClient().rpc("mark_tenant_provisioning_identity_attention", {
       target_actor_user_id: context.user.id,
-      target_event_type: "activated",
-      target_reason: "Expliciete keuze tijdens tenantonboarding",
-      target_request_correlation_id: runId,
-      target_tenant_id: tenantId,
-      target_theme_key: portalThemeKey,
-      target_theme_release: portalThemeRelease,
-      target_ticket_reference: `onboarding:${runId}`
+      target_error_code: "auth_materialization_failed",
+      target_run_id: runId
     });
-    if (themeAssignment.error) throw new Error(`portal theme: ${themeAssignment.error.message}`);
-    await requireWrite(admin.from("tenant_domains").insert({
-      tenant_id: tenantId,
-      hostname,
-      kind: "subdomain",
-      status: "verified",
-      is_primary: true
-    }), "primary domain");
-    if (customDomain && customDomain !== hostname) {
-      await requireWrite(admin.from("tenant_domains").insert({ tenant_id: tenantId, hostname: customDomain, kind: "custom_domain", status: "pending", is_primary: false }), "custom domain");
-    }
-    await requireWrite(admin.from("tenant_branding").insert({
-      tenant_id: tenantId,
-      product_name: readOptional(formData, "productName") ?? name,
-      primary_color: readColor(formData, "primaryColor", "#1d4ed8"),
-      accent_color: readColor(formData, "accentColor", "#06b6d4"),
-      portal_welcome: `Welkom bij ${name}. Hier volgt u lessen, voortgang en betalingen.`,
-      status: "active",
-      pwa_enabled: true
-    }), "branding");
-
-    await admin.from("tenant_onboarding_runs").update({ current_step: "program" }).eq("id", runId);
-    const program = await insertOne(admin.from("programs").insert({
-      tenant_id: tenantId,
-      name: programName,
-      code: "ZWEM-ABC",
-      description: "Doorlopende leerlijn met heldere voortgang per niveau.",
-      status: "active",
-      sort_order: 10
-    }).select("id").single(), "program");
-    const stageResult = await admin.from("program_stages").insert(stageNames.map((stageName, index) => ({
-      tenant_id: tenantId,
-      program_id: program.id,
-      name: stageName,
-      code: `NIVEAU-${index + 1}`,
-      badge_label: stageName,
-      color_hex: ["#0ea5e9", "#06b6d4", "#14b8a6", "#22c55e"][index % 4],
-      status: "active",
-      sort_order: (index + 1) * 10
-    }))).select("id").order("sort_order");
-    if (stageResult.error || !stageResult.data?.length) throw new Error(`program stages: ${stageResult.error?.message ?? "missing rows"}`);
-
-    await admin.from("tenant_onboarding_runs").update({ current_step: "operations" }).eq("id", runId);
-    const location = await insertOne(admin.from("resources").insert({ tenant_id: tenantId, kind: "location", name: locationName, code: "LOC-01", status: "active" }).select("id").single(), "location");
-    const pool = await insertOne(admin.from("resources").insert({ tenant_id: tenantId, parent_resource_id: location.id, kind: "pool", name: poolName, code: "BAD-01", capacity: 24, status: "active" }).select("id").single(), "pool");
-    await requireWrite(admin.from("groups").insert({
-      tenant_id: tenantId,
-      program_id: program.id,
-      stage_id: stageResult.data[0].id,
-      default_resource_id: pool.id,
-      name: groupName,
-      code: "GRP-01",
-      status: "active",
-      capacity: readPositiveInteger(formData, "groupCapacity"),
-      default_weekday: readPositiveInteger(formData, "weekday"),
-      default_start_time: readRequired(formData, "startTime"),
-      default_end_time: readRequired(formData, "endTime"),
-      starts_on: new Date().toISOString().slice(0, 10)
-    }), "group");
-
-    await admin.from("tenant_onboarding_runs").update({ current_step: "billing" }).eq("id", runId);
-    await requireWrite(admin.from("payment_plans").insert({
-      tenant_id: tenantId,
-      program_id: program.id,
-      code: "MAAND",
-      name: "Maandabonnement",
-      description: "Doorlopend maandabonnement voor zwemlessen.",
-      amount_cents: amountCents,
-      currency: "EUR",
-      billing_interval: "monthly",
-      billing_day: 1,
-      payment_terms_days: 14,
-      status: "active"
-    }), "payment plan");
-
-    await requireWrite(admin.from("tenants").update({ status: "active" }).eq("id", tenantId), "tenant activation");
-    await admin.from("tenant_onboarding_runs").update({ current_step: "owner" }).eq("id", runId);
-    const acceptUrl = `${await getTrustedRequestOrigin()}/uitnodiging-accepteren`;
-    await createInvitation({ actor: context, email: ownerEmail, fullName: ownerName, acceptUrl, role: "tenant_owner", tenantSlug: slug });
-
-    await admin.from("tenant_onboarding_runs").update({ current_step: "staff" }).eq("id", runId);
-    for (const email of staff) {
-      await createInvitation({ actor: context, email, acceptUrl, role: "instructor", tenantSlug: slug });
-    }
-
-    const checklist = {
-      branding: true,
-      customDomainPending: Boolean(customDomain),
-      domain: true,
-      group: true,
-      location: true,
-      ownerInvited: true,
-      paymentPlan: true,
-      programAndStages: true,
-      portalTheme: `${portalThemeKey}@${portalThemeRelease}`,
-      staffInvited: true
-    };
-    await requireWrite(admin.from("tenant_onboarding_runs").update({
-      status: "opened",
-      current_step: "opening",
-      checklist,
-      completed_by_user_id: context.user.id,
-      completed_at: new Date().toISOString()
-    }).eq("id", runId), "opening check");
-  } catch (error) {
-    if (tenantId) {
-      await admin.from("tenants").update({ status: "inactive" }).eq("id", tenantId);
-    }
-    await admin.from("tenant_onboarding_runs").update({
-      status: "attention_required",
-      checklist: { error: error instanceof Error ? error.message : "unknown provisioning error" }
-    }).eq("id", runId);
-    redirect(`/platform/onboarding?error=provisioning&run=${runId}`);
+    redirect(`/platform/onboarding?error=identity&run=${runId}`);
   }
 
   revalidatePath("/platform");
   revalidatePath("/platform/onboarding");
   redirect(`/platform/onboarding?opened=1&run=${runId}`);
+}
+
+type ProvisioningResult = {
+  outcome: "attention_required" | "opened" | "ready";
+  runId: string;
+  tenantId: string | null;
+};
+
+async function materializeTenantOnboardingRun(actorUserId: string, runId: string) {
+  const admin = createAdminClient();
+  const invitationResult = await admin
+    .from("auth_invitations")
+    .select("id, email, identity_status, invited_user_id")
+    .eq("provisioning_run_id", runId)
+    .eq("status", "pending")
+    .order("created_at");
+
+  if (invitationResult.error || !invitationResult.data?.length) {
+    throw new Error("Provisioning invitations are not available for identity materialization.");
+  }
+
+  for (const invitation of invitationResult.data) {
+    const invitedUser = await ensureInvitationAuthUser({
+      email: invitation.email,
+      provisioningInvitationId: invitation.id
+    });
+    const materialized = await admin.rpc("materialize_tenant_onboarding_invitation", {
+      target_actor_user_id: actorUserId,
+      target_invitation_id: invitation.id,
+      target_is_new_account: invitedUser.isNewAccount,
+      target_run_id: runId,
+      target_user_id: invitedUser.userId
+    });
+
+    if (materialized.error) {
+      throw new Error("Provisioning identity database materialization failed.");
+    }
+  }
+
+  const completed = await admin.rpc("complete_tenant_provisioning", {
+    target_actor_user_id: actorUserId,
+    target_run_id: runId
+  });
+  const completedResult = parseProvisioningResult(completed.data);
+
+  if (completed.error || completedResult?.outcome !== "opened") {
+    throw new Error("Tenant provisioning could not be opened after identity materialization.");
+  }
+
+  return completedResult;
+}
+
+function buildProvisioningInvitation(input: {
+  acceptUrl: string;
+  businessKey: string;
+  email: string;
+  expiresAt: string;
+  fullName: string;
+  organizationName: string;
+  role: "instructor" | "tenant_owner";
+  tenantSlug: string;
+}) {
+  const invitationCode = generateInvitationCode();
+  const message = renderInvitationEmail({
+    acceptUrl: input.acceptUrl,
+    invitationCode,
+    isNewAccount: null,
+    organizationName: input.organizationName,
+    roleLabel: roleLabels[input.role],
+    tenantSlug: input.tenantSlug
+  });
+
+  return {
+    businessKey: input.businessKey,
+    codeHash: hashAuthCode(invitationCode, input.email),
+    email: input.email,
+    expiresAt: input.expiresAt,
+    fullName: input.fullName,
+    message: {
+      ...message,
+      organizationName: input.organizationName,
+      templateKey: "auth_invitation"
+    },
+    role: input.role
+  };
+}
+
+function parseProvisioningResult(value: unknown): ProvisioningResult | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const row = value as Record<string, unknown>;
+  const outcome = row.outcome;
+  const runId = row.runId;
+  const tenantId = row.tenantId;
+
+  if (!["attention_required", "opened", "ready"].includes(String(outcome))) return null;
+  if (typeof runId !== "string" || !isUuid(runId)) return null;
+  if (tenantId !== null && (typeof tenantId !== "string" || !isUuid(tenantId))) return null;
+
+  return {
+    outcome: outcome as ProvisioningResult["outcome"],
+    runId,
+    tenantId: tenantId as string | null
+  };
+}
+
+function sha256(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
+function staffDisplayName(email: string) {
+  return email.split("@")[0]?.replace(/[._-]+/g, " ").trim() || "Instructeur";
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 export async function startTenantOffboardingAction(formData: FormData) {
@@ -563,12 +641,6 @@ async function requirePlatformAdministrator(path: `/${string}`) {
   const context = await requirePrivateShellContext(path);
   if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) redirect("/platform?error=forbidden");
   return context;
-}
-
-async function insertOne<T extends { id: string }>(operation: PromiseLike<{ data: T | null; error: { message: string } | null }>, label: string) {
-  const result = await operation;
-  if (result.error || !result.data) throw new Error(`${label}: ${result.error?.message ?? "missing row"}`);
-  return result.data;
 }
 
 async function requireWrite(operation: PromiseLike<{ error: { message: string } | null }>, label: string) {
