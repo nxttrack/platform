@@ -192,7 +192,7 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Checkpoint 5
 
 - Audit-ID/status: P1-003 CLOSED en P1-004 CLOSED voor de gescopeerde onboarding-writeketen.
-- Commit: wordt na deze groene checkpointcommit in het finale verificatieblok vastgelegd.
+- Commit: `ac110703848bfae943efff684b8f766ad91e19dc` (`feat(imports): add resumable apply and rollback`).
 - Gewijzigd: additive migration `20260822012255_resumable_import_apply_rollback.sql`; import-validatie/apply/rollback-serveractions en beheerstatus; durable `import_manifest_entries`; import/invitation-lineage; unitcontract; echte PostgreSQL failure-, retry-, rollback- en 5.000-row-integratietest.
 - Claim/idempotentie: `claim_import_apply` lockt de job, bindt de deterministische SHA-256-key `import-apply:v1:<tenant>:<job>` en geeft één lease-token uit. Een actieve lease retourneert `busy`; een verlopen of zichtbaar gefaalde poging kan worden hervat; een afgeronde job retourneert dezelfde completion. Apply-attempts zijn begrensd en rollback kan niet tegelijk starten.
 - Batching: validatiestatussen en targets worden in maximaal 250 rows per RPC verwerkt. Een applychunk lockt job en rows en schrijft target, rowstate en iedere manifestregel binnen één exception-subtransactie. Een fout rolt de volledige huidige chunk terug, bewaart eerdere gecommitte chunks, zet `failed/needs_attention`, wist de claim en schrijft een PII-arm fout-event. Hervatting selecteert alleen resterende `valid` rows. De 5.000-rowproef gebruikt exact twintig apply-RPC's en creëert exact 5.000 targets plus manifestregels.
@@ -203,6 +203,16 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 - Tests: nieuw unitcontract 6/6 PASS; volledige unitsuite 396/396 PASS; `test:resumable-import:db` PASS; regressies `test:email-outbox:db`, `test:tenant-provisioning:db` en `test:core-onboarding:db` PASS; typecheck/lint PASS; authaudit PASS; production build PASS; migrationaudit PASS (139); RLS-audit PASS (251 tabellen, alleen de bestaande private-helperwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
 - Lokale DB-validatie: de migration is op de geïsoleerde PostgreSQL-validatiecontainer geparset/toegepast en de RPC's zijn werkelijk als `service_role` uitgevoerd. Door bestaande migration-historydrift is geen `supabase db push` of repair als bewijs gebruikt. Geen staging/live database, echte mailprovider of live Auth-provider is benaderd; Auth API-runtime, worker scheduling en delivery blijven extern NIET GETEST.
 - Rollback/deploymentrisico: oude apps mogen na migratie niet voor apply/rollback worden gebruikt omdat die het oude geheugenmanifest en losse writes terugbrengen. Voor deployment eerst migrations 2–5 in volgorde, dan exact hetzelfde appartifact, daarna workers nog met kill switch uit. Bestaande jobs zonder durable manifest worden bewust fail-closed niet automatisch teruggedraaid; menselijke inventaris/reconciliatie is vereist.
+
+### Stretch 1 — nieuwsbrief production-safe
+
+- Status: CLOSED als veilige concept-only fallback; echte nieuwsbriefdelivery blijft NIET GEÏMPLEMENTEERD en extern NIET GETEST.
+- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: server-only newsletter-delivery-capability, campaignserveraction, conceptformulier, beheerbewijsweergave en drie production-safety-contracttests.
+- Fail-closed contract: alleen de letterlijke envwaarde `NEWSLETTER_DELIVERY_ENABLED=true` kan de feature aanvragen, maar de capability blijft uit zolang de applicatie geen in dezelfde change geverifieerde sender bevat. Een envflag alleen kan dus nooit planning of successtatus verzinnen. De serveraction weigert iedere status anders dan `draft` vóór ontvangerpreparatie; de UI biedt alleen een hidden draftstatus en toont geen schedule- of sendcontrole.
+- Waarheidsgetrouwe UI: de pagina claimt geen verzending of aflevering. Eventuele historische `scheduled|sending|sent` data wordt als legacy externe status met waarschuwing getoond; deliveryrows heten historische evidence en bewijzen expliciet geen aflevering.
+- Tests: newsletter safety 3/3 PASS; communication hub contract/schema samen 20/20 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
+- Vervolg voor echte delivery: implementeer eerst sender, durable outboxbinding, worker, provideracceptatie/deliverybewijs, consent/unsubscribe en E2E; pas daarna mag de compile-time sendercapability in dezelfde gereviewde change worden geopend. Een envwijziging alleen is onvoldoende.
 
 ## Deployment- en rollbackcontract
 
