@@ -237,13 +237,44 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Stretch 4 — fail-closed evidencepijplijnen
 
 - Status: CLOSED voor repository- en lokale contracten; echte stagingrestore, Storage-rehearsal, GitHub artifactupload en gecredentialde browserisolatie blijven extern NIET GETEST.
-- Commit: wordt na deze groene stretchcommit in het finale validatieblok vastgelegd.
+- Commit: `a10c12e4d39303320e0e686d66b56df059499230` (`chore(evidence): harden release and restore proofs`).
 - Dynamische restore-inventory: de restore-rehearsal inventariseert alle publieke brontabellen uit de dump, weigert een lege bron, vergelijkt de bron- en doeltabellen plus rowcounts exact en bevat geen statische `63`-drempel meer. De workflowvariabele en dezelfde minimumdrempel in de live FORCE-RLS-check zijn verwijderd; de live check weigert nog steeds een lege inventory en iedere tabel zonder RLS/FORCE RLS.
 - Storagecontract: één versioned contract bevat exact de vijf huidige private buckets `tenant-documents`, `diploma-vault`, `participant-media`, `badge-studio-assets` en `tenant-media-assets`, inclusief het juiste PDF/PNG-rehearsaltype. Export, restore, remote verify en cleanup vereisen altijd de volledige set. Manifest v3 bewaart het contractversion; oude/incomplete manifests worden fail-closed geweigerd in plaats van stil als volledig bewijs geaccepteerd.
 - Critical suites: premium-release en Sprint 4 tenant-isolation bevatten bij ontbrekende opt-inconfiguratie ieder één expliciet falende configuratietest. De negatieve lokale proef leverde exact twee failures en nul skips met de bedoelde foutmeldingen; dit is fail-closed configuratiebewijs en geen gecredentialde E2E-PASS.
 - Exact bronbewijs: CI en deploy schrijven en uploaden verplicht `exact-source-sha.json`; ontbrekende artifacts laten upload falen. De helper accepteert uitsluitend een volledige 40-teken-SHA en vergelijkt die met de werkelijk uitgecheckte commit. Staging-preview checkt voor de bewijsjob dezelfde expliciete preview-SHA uit en bindt `DEPLOYED_SOURCE_SHA` daaraan. Release evidence en artifact-storage evidence gebruiken dezelfde strikte resolver; productie bewaart het SHA-artifact samen met release evidence.
 - Tests: nieuw evidence-pipelinecontract 4/4 PASS; aangescherpte bestaande Storage/badge/health-contracten PASS; volledige unit/contractsuite 413/413 PASS; typecheck en echte lintscript (dezelfde `tsc --noEmit`) PASS; production build PASS; authaudit PASS; migrationaudit PASS (139); RLS-sourceaudit PASS (251 tabellen met alleen bestaande service/private-helperwaarschuwingen); dependencyaudit PASS (`No known vulnerabilities found`); vier database-integratiesuites PASS; shellsyntax en `git diff --check` PASS. De lokale exacte-SHA-writer schreef en herlas `d16281a9b2f5b963885ed273ea993c204f884ab4` vóór deze checkpointcommit.
 - Externe grens/risico: `db:verify-force-rls` blokkeert lokaal terecht omdat de check alleen tegen `staging.nxttrack.nl` mag draaien; `db:rls-role-smoke` meldde SKIP wegens ontbrekende Supabase-URL/anonkey en E2E-rollen. Geen van beide is als PASS geteld. Een bestaande vier-bucketbackup kan niet meer als actueel volledig herstelbewijs dienen en moet na rollout opnieuw als vijf-bucketbackup worden gemaakt en gerepeteerd; er is niets automatisch verwijderd of hersteld.
+
+## Finale validatie vanaf de complete implementatietip
+
+Bron voor deze finale run: `a10c12e4d39303320e0e686d66b56df059499230`. De werkmap was schoon vóór en na de lokale PostgreSQL-proeven; alle gegenereerde build-/testartifacts zijn genegeerd en niet gecommit.
+
+| Controle | Finaal resultaat |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS; lockfile onveranderd |
+| `pnpm typecheck` en `pnpm lint` | PASS; lint is in deze repository dezelfde `tsc --noEmit`-grens |
+| Volledige unit/contractsuite | PASS; 413/413, 0 failures, 0 skips |
+| `pnpm build` | PASS; Next.js 16.2.11, 17 statische pagina's |
+| Auth-, migration- en RLS-sourceaudit | PASS; 3 authcontracttests, 139 migrations, 251 publieke tabellen; alleen reeds bekende private/service-helperwaarschuwingen zonder authenticated grant |
+| Productiedependencyaudit | PASS; `No known vulnerabilities found` |
+| Repository/design/Journey/runtime audits | PASS; production-historywaarschuwing blijft zichtbaar en is niet gemerged |
+| Outbox PostgreSQL-integratie | PASS; 20-way enqueue/claim, lease, retry/dead en immutable events |
+| Provisioning PostgreSQL-integratie | PASS; zeven failureboundaries, nul partial graphs, 20-way duplicate submit exact één tenant |
+| Core writes PostgreSQL-integratie | PASS; participant/intake rollback+retry en twintig claims op één plek exact één plaatsing |
+| Import PostgreSQL-integratie | PASS; mixed/duplicate/double apply, midchunk resume, rollback retry en 5.000 rows in exact twintig chunks |
+| Standalone packaging + desktop smoke | PASS; native Sharp/libvips, static/public assets en 20/20 desktop smoke |
+| Volledige Playwrightset na correcte packaging | 46 PASS, 64 SKIP wegens ontbrekende externe suiteconfig/credentials, 4 verwachte fail-closed configuratiefailures (premium release en tenantisolatie op desktop+mobile) |
+| `git diff --check` | PASS |
+
+De 64 credential-/staging-/providergebonden tests zijn NIET GETEST, niet groen verklaard. De vier configuratiefailures vervangen de vroegere stille skips en zijn dus het bedoelde bewijs dat een kritieke release/isolationrun zonder expliciete configuratie niet succesvol kan lijken. Met `PREMIUM_RELEASE_BROWSER_ENABLED=true`, `SPRINT4_ISOLATION_ENABLED=true`, de statefiles en de bijbehorende E2E-credentials moeten de echte scenario's in staging alsnog PASS leveren. De live FORCE-RLS-check, Supabase role-smoke, echte Auth-side effects, worker scheduling, mailprovideracceptatie/delivery, Storage backup/restore en GitHub artifactuploads blijven eveneens externe vervolgstappen.
+
+## Auditafsluiting
+
+- Werkelijk gesloten: P0-004, P1-001, P1-002, P1-003 en P1-004 binnen de gescopeerde technische onboarding-writeketen.
+- Gedeeltelijk/productgrens: nieuwsbriefdelivery is bewust concept-only; bounce/webhookdelivery, live Auth/mail/runtime en bestaande jobs zonder durable importmanifest zijn niet als opgelost geclaimd.
+- Algemene auditstatus: het oorspronkelijke auditrapport en de algemene NO-GO zijn niet gewijzigd. Deze branch levert alleen het technische sprintbewijs; GO vereist de hierboven genoemde externe rehearsals, rolloutchecks en menselijke goedkeuring.
+- Migratievolgorde: `20260822002234_production_email_outbox.sql`, `20260822004329_atomic_tenant_provisioning.sql`, `20260822010612_atomic_core_onboarding_writes.sql`, `20260822012255_resumable_import_apply_rollback.sql`, daarna exact hetzelfde gebouwde appartifact. Houd mail/workerfeaturegates uit totdat runtimechecks en identities compleet zijn.
+- Rollback: application-forward en fail-closed. Zet mail/workerfeaturegates uit, stop consumers en herstel de applicatie naar een compatibele versie die de nieuwe write-RPC's blijft gebruiken. Verwijder geen additive tabellen/constraints en gebruik geen migration-repair. Reconcileer pre-existente duplicate live memberships en legacy imports read-only/menselijk vóór rollout; herstel alleen via het durable importmanifest.
 
 ## Deployment- en rollbackcontract
 
