@@ -52,17 +52,7 @@ try {
     "reusing an idempotency key with different input must fail"
   );
 
-  await setup.query("begin");
-  await setup.query(
-    `select id from public.email_outbox
-     where id <> $1
-       and (
-         (status in ('queued', 'retry') and next_attempt_at <= now())
-         or (status = 'processing' and lease_expires_at <= now() and attempts < max_attempts)
-       )
-     for update`,
-    [outboxId]
-  );
+  await beginClaimIsolation([outboxId]);
   let concurrentClaims;
   try {
     concurrentClaims = await Promise.all(
@@ -91,7 +81,13 @@ try {
     "update public.email_outbox set next_attempt_at = now() where id = $1",
     [outboxId]
   );
-  const secondClaimResult = await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  await beginClaimIsolation([outboxId]);
+  let secondClaimResult;
+  try {
+    secondClaimResult = await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  } finally {
+    await setup.query("commit");
+  }
   assertEqual(secondClaimResult.rows.length, 1, "a due retry must be claimable");
   const secondClaim = secondClaimResult.rows[0];
   assertEqual(secondClaim?.attempt_number, 2, "a retry claim must increment attempts once");
@@ -125,13 +121,24 @@ try {
     [leaseKey, JSON.stringify(payload)]
   );
   const leaseOutboxId = leaseEnqueue.rows[0]?.id;
-  const finalClaim = await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  await beginClaimIsolation([leaseOutboxId]);
+  let finalClaim;
+  try {
+    finalClaim = await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  } finally {
+    await setup.query("commit");
+  }
   assertEqual(finalClaim.rows[0]?.outbox_id, leaseOutboxId, "the final-attempt fixture must be claimed");
   await setup.query(
     "update public.email_outbox set lease_expires_at = now() - interval '1 second' where id = $1",
     [leaseOutboxId]
   );
-  await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  await beginClaimIsolation([leaseOutboxId]);
+  try {
+    await serviceQuery("select * from public.claim_email_outbox(1, 30)");
+  } finally {
+    await setup.query("commit");
+  }
   const exhausted = await setup.query(
     "select status, last_error_code from public.email_outbox where id = $1",
     [leaseOutboxId]
@@ -174,6 +181,20 @@ async function assertServiceOnlyBoundary() {
   );
   const countResult = hiddenRows.find((result) => Array.isArray(result.rows) && result.rows[0]?.count !== undefined);
   assertEqual(countResult?.rows[0]?.count, 0, "authenticated RLS must expose zero outbox rows");
+}
+
+async function beginClaimIsolation(allowedIds) {
+  await setup.query("begin");
+  await setup.query(
+    `select id from public.email_outbox
+     where not (id = any($1::uuid[]))
+       and (
+         (status in ('queued', 'retry') and next_attempt_at <= now())
+         or (status = 'processing' and lease_expires_at <= now() and attempts < max_attempts)
+       )
+     for update`,
+    [allowedIds]
+  );
 }
 
 async function serviceQuery(text, values = []) {

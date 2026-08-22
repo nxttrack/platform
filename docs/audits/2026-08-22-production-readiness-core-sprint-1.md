@@ -16,8 +16,8 @@ Werkvorm: geïsoleerde Git-worktree, omdat de oorspronkelijke werkmap ongetrackt
 | --- | --- | --- | --- |
 | P1-004 | PARTIALLY CLOSED | 2 — fail-closed mail en outbox | Infrastructuur en centraal transport groen; business-enqueue wordt in checkpoints 3–5 transactioneel aangesloten |
 | P0-004 | CLOSED | 3 — tenantprovisioning | Atomische databasegraph, deterministische dedupe, hervatbare Auth-grens en failure/concurrencybewijs |
-| P1-001 | NOT STARTED | 4 — participant en intake | Nog te implementeren |
-| P1-002 | NOT STARTED | 4 — capaciteit en plaatsing | Nog te implementeren |
+| P1-001 | CLOSED | 4 — participant en intake | Atomische participantgraph en intakegraph, database-idempotentie en failurebewijs |
+| P1-002 | CLOSED | 4 — capaciteit en plaatsing | Groepslock, herberekening onder lock, live-unique invariant en 20-way concurrencybewijs |
 | P1-003 | NOT STARTED | 5 — imports | Nog te implementeren |
 
 De algemene NO-GO uit het auditrapport blijft ongewijzigd. Deze sprint claimt geen live runtimebewijs zonder de vereiste externe credentials en omgevingen.
@@ -162,7 +162,7 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Checkpoint 3
 
 - Audit-ID/status: P0-004 CLOSED. P1-004 blijft PARTIALLY CLOSED totdat ook importinvitaties transactioneel via dezelfde outbox lopen.
-- Commit: wordt na deze groene checkpointcommit in het volgende checkpointblok vastgelegd.
+- Commit: `785e310c6080ddd077e6430e0f6538a41b208d18` (`feat(onboarding): make tenant provisioning atomic`).
 - Gewijzigd: additive migration `20260822004329_atomic_tenant_provisioning.sql`; provisioningserveraction en hervatactie; Auth-userresolver/bootstrapherkenning; generieke invitationcopy; onboardingrun-UI; unitcontract en echte PostgreSQL-integratietest.
 - Transactie: `provision_tenant_atomic` serialiseert op de deterministische slugkey en schrijft run, inactive tenant, settings, theme-availability/assignment/audit, domains, branding, program, stages, resources, group, payment plan, invitations, outbox en immutable events binnen één PL/pgSQL-boundary. De interne exception-subtransactie rolt iedere graphwrite terug maar bewaart een PII-vrije `attention_required` run plus attempt/event.
 - Idempotentie: de key is SHA-256 over `tenant-provisioning:v1:<slug>`; de afzonderlijke requestfingerprint omvat alle genormaliseerde businessinput. Dezelfde key/input retourneert dezelfde run/tenant; key-reuse met andere input faalt. Een advisory transaction lock serialiseert parallelle submits.
@@ -176,7 +176,18 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 
 ### Checkpoint 4
 
-- Status: NOT STARTED.
+- Audit-ID/status: P1-001 CLOSED en P1-002 CLOSED.
+- Commit: wordt na deze groene checkpointcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: additive migration `20260822010612_atomic_core_onboarding_writes.sql`; participant- en plaatsingserveractions; intake-submitflow; expliciete beheerformulier-operationkeys; service-only operation-ledger; unitcontract; echte PostgreSQL failure/idempotency/concurrencytest; herhaalbare gedeelde outboxtestisolatie.
+- Participantgraph: `create_participant_graph_atomic` valideert de actieve beheeractor, tenant-parent, program en stage/programrelatie en schrijft participant, optionele guardianrelatie, enrollment en een PII-arme `participant.graph_created` audit in één exception-subtransactie. De expliciete formulierkey plus SHA-256 requestfingerprint levert bij twintig parallelle retries exact één graph; key-reuse met andere input faalt. Failure-injectie na participant, guardian, enrollment en audit laat telkens nul graphrecords/audit achter en bewaart alleen een PII-vrije failed operation.
+- Intakegraph: de publieke submitflow behoudt de aparte dertigdaagse duplicate-detectie, maar berekent daarnaast een tienminutenwindow-key uit de bestaande dedupekey. `create_intake_submission_atomic` serialiseert daarop en schrijft submission, alle answers en het bestaande `intake.received` event in één transactie. Form/program/group/question-tenantrelaties worden database-side herbevestigd; auditpayload bevat IDs/classificatie maar geen ouder- of kindnaam/e-mail. Twintig parallelle retries leveren één submission, één answer-set en één event; failure na elk van de drie writes laat nul partial graph achter.
+- Plaatsing: `place_group_membership_atomic` lockt de groepsrij `FOR UPDATE`, valideert actor, tenant en dat enrollment en groep hetzelfde program delen, en herberekent onder die lock regular/flex/trial én hard capacity uit live memberships, actieve betaalholds en goedgekeurde soft reservations. Verwachte uitkomsten zijn `placed|already_placed|capacity_full|conflict`; een duplicate click retourneert het oorspronkelijke resultaat. De nieuwe partiële unique index begrenst alleen live `active|trial` per `(tenant, group, enrollment)`, zodat andere programs, paused/historische records en flexbucketsemantiek niet te breed worden verboden; de bestaande historische constraint is bewust niet gedropt.
+- Concurrencybewijs: bij één resterende reguliere/harde plek en twintig parallelle claims van twintig verschillende actieve enrollments ontstond exact één `placed`, negentien gecontroleerde `capacity_full`, één live eindmembership en één `group.membership_placed` audit. Een replay van de winnaar bleef idempotent; dezelfde key met andere input gaf conflict. Een enrollment uit een ander program werd geweigerd zonder membership.
+- Grants/RLS: alle drie publieke RPC's zijn `SECURITY INVOKER`, fixed-search-path, gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen execute-granted aan `service_role`. `core_write_operations` heeft FORCE RLS; authenticated heeft alleen een expliciete selectgrant achter een always-false policy en ziet dus nul rows. De ledger bevat uitsluitend keys, hashes, status, actor/tenant-IDs, begrensde foutcodes en PII-vrije result-IDs.
+- Tests: nieuw unitcontract 6/6 PASS; volledige unitsuite 390/390 PASS; `test:core-onboarding:db` PASS; `test:email-outbox:db` tweemaal achter elkaar PASS in de gedeelde lokale DB; `test:tenant-provisioning:db` PASS; authaudit PASS; typecheck/lint PASS; production build PASS; migrationaudit PASS (138); RLS-audit PASS (250 tabellen, alleen bestaande private-triggerwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
+- Lokale DB-validatie: de migration is op de geïsoleerde PostgreSQL-validatiecontainer geparset/toegepast en de RPC's zijn werkelijk als `service_role` uitgevoerd. Geen staging/live database of externe provider is benaderd. De bestaande migration-historydrift van deze container blijft ongewijzigd; er is geen migration-repair gebruikt.
+- Rollbackrisico: application-forward rollback laat de additive ledger/index en reeds gecommitte graphrecords intact. De oude app mag niet opnieuw voor deze drie writes worden gebruikt omdat die de niet-atomische paden terugbrengt. De partiële index kan deployment fail-closed blokkeren wanneer een doelomgeving al meerdere live active/trial rows voor exact dezelfde tenant+groep+enrollment bevat; vóór live migration is daarom een read-only duplicate-inventory en menselijke reconciliatie vereist, zonder automatische verwijdering. Publieke intake gebruikt bewust een tijdgebonden key: een gecorrigeerde payload binnen hetzelfde tienminutenwindow geeft conflict in plaats van stil een tweede aanvraag te maken.
+- Resterend risico/menselijke stap: deployment en runtime-E2E blijven NIET GETEST; review de live duplicate-inventory en rolloutvolgorde. P1-004 blijft PARTIALLY CLOSED totdat checkpoint 5 importinvitations via de outbox schrijft.
 
 ### Checkpoint 5
 

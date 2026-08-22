@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Clock3, UserPlus, UsersRound } from "lucide-react";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
@@ -133,6 +134,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
 function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCoreData>> }) {
   return (
     <DirtyForm action={createParticipantEnrollmentAction} className="grid gap-4 sm:grid-cols-2">
+      <input name="operationKey" type="hidden" value={randomUUID()} />
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
       <SelectField label="Badge-aanspreekvorm" name="gender">
@@ -169,6 +171,7 @@ function PlacementForm({
 }) {
   return (
     <DirtyForm action={createGroupMembershipAction} className="grid gap-4 sm:grid-cols-2">
+      <input name="operationKey" type="hidden" value={randomUUID()} />
       <SelectField label="Inschrijving" name="enrollmentId" required>
         <option value="">Kies inschrijving</option>
         {data.enrollments.map((enrollment) => <option key={enrollment.id} value={enrollment.id}>{participantById.get(enrollment.participant_id)?.display_name ?? "Leerling"} · {programById.get(enrollment.program_id)?.name ?? "Programma"}</option>)}
