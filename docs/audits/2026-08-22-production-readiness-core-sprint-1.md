@@ -217,12 +217,22 @@ De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure
 ### Stretch 2 — Europe/Amsterdam date-only semantics
 
 - Status: CLOSED voor de geïnventariseerde risicovolle webkern-usages.
-- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Commit: `141ae59f3b4448d3f85c2fe04b35a2ce93d7ddd3` (`fix(dates): use Amsterdam business dates in core flows`).
 - Gewijzigd: centrale `business-date` helper, 34 webbronbestanden, één lokale E2E-helper, één analyticscontract en drie tijdzonecontracttests.
 - Semantiek: `toAmsterdamDate` gebruikt expliciet `Intl.DateTimeFormat(..., timeZone: "Europe/Amsterdam")` en `formatToParts`, valideert input fail-fast en retourneert uitsluitend `YYYY-MM-DD`. `addAmsterdamCalendarDays` rekent eerst vanuit de lokale businessdatum en gebruikt UTC-noon als veilige kalenderrepresentatie, zodat een 23- of 25-uursdag geen dagoffset verschuift.
 - Inventaris/resultaat: de actuele branch bevatte 73 instanties van `toISOString().slice(0, 10)` in `apps/web` plus het direct gekoppelde swim-flow-contract (de auditraming noemde 72). Alle 73 zijn vervangen; dezelfde scope bevat daarna nul matches. ISO-timestamps en expliciete timestamptz-serialisatie zijn bewust niet gewijzigd.
 - Tests: business-date 3/3 PASS met UTC-middernacht, CET, CEST, 29 maart 2026 en 25 oktober 2026; gerichte automation/placement/next-best/retention/smart-signals/swim-flow regressies 28/28 PASS; volledige unit/contractsuite 406/406 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
 - Risico/afbakening: losse stagingfixtures en scripts buiten de webkern behouden hun eigen bestaande tijdhelpers en vallen niet onder deze eerste tranche. Reeds opgeslagen datumwaarden worden niet herschreven. Datum-only parsing van provider-timestamps zonder `Date#toISOString` is niet stil meegewijzigd en vereist per providercontract afzonderlijke beoordeling.
+
+### Stretch 3 — securitybaseline en Node-harmonisatie
+
+- Status: CLOSED lokaal; uitvoering van gewijzigde GitHub-workflows blijft extern NIET GETEST.
+- Commit: wordt na deze groene stretchcommit in het volgende checkpointblok vastgelegd.
+- Gewijzigd: root enginecontract en `.node-version`, negen afwijkende workflowpins, nanoid-override/lockfile en drie runtime-security-contracttests. Reeds correcte Node 24.18.0-workflows bleven inhoudelijk ongewijzigd.
+- Dependencyfix: de gerichte transitieve override is verhoogd van kwetsbare `nanoid 3.3.17` naar gepatchte `3.3.18`; lockfile bevat uitsluitend `nanoid@3.3.18`. Er is geen nieuwe productiedependency toegevoegd.
+- Runtimecontract: alle negentien actieve `setup-node`-jobs gebruiken exact Node `24.18.0`; root `engines.node` is `>=24.18.0 <25` en `.node-version` is `24.18.0`. Dit sluit aan op de reeds gebruikte deploy/runtime en lokale verificatieruntime en verwijdert de mix van 20.19, 22 en 24.18.
+- Tests: runtime-security 3/3 PASS; frozen install PASS zonder lockfilemutatie; `pnpm audit --prod --audit-level high` PASS met `No known vulnerabilities found`; typecheck PASS; production build PASS; `git diff --check` PASS.
+- Risico/rollout: Node 24 is nu de bewuste enige ondersteunde major. Externe runners, self-hosted agents en deploymentimages moeten vóór rollout aantoonbaar Node 24.18.0 kunnen leveren; de workflows zijn niet uitgevoerd vanuit deze lokale sessie en zijn daarom niet als runtime-PASS gemarkeerd.
 
 ## Deployment- en rollbackcontract
 

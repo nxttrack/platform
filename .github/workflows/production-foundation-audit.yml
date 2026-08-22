@@ -128,7 +128,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "20.19.0"
+          node-version: "24.18.0"
 
       - name: Setup pnpm
         run: |
@@ -161,7 +161,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "20.19.0"
+          node-version: "24.18.0"
 
       - name: Audit sender, provider secret and mail DNS
         run: node scripts/release/audit-production-mail-config.mjs

@@ -120,11 +120,11 @@
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=24.18.0 <25"
   },
   "pnpm": {
     "overrides": {
-      "nanoid": "3.3.17",
+      "nanoid": "3.3.18",
       "postcss": "8.5.23",
       "sharp": "0.35.0"
     }
