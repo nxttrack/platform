@@ -6,6 +6,7 @@ import { isRuntimeSchemaCompatible } from "../../apps/web/lib/release/schema-com
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260823000225_runtime_schema_compatibility_contract.sql");
 const secureGrantMigration = read("supabase/migrations/20260823001941_secure_default_function_grants.sql");
+const ledgerGrantMigration = read("supabase/migrations/20260823005756_close_service_ledger_default_grants.sql");
 const health = read("apps/web/app/api/health/route.ts");
 const proxy = read("apps/web/proxy.ts");
 const deploy = read(".github/workflows/deploy.yml");
@@ -27,6 +28,15 @@ test("the final secure-default correction revokes recreated trigger functions an
   assert.match(secureGrantMigration, /'20260823001941'/);
 });
 
+test("legacy auto-grants are removed from service-owned ledgers", () => {
+  for (const table of ["core_write_operations", "import_manifest_entries"]) {
+    assert.match(ledgerGrantMigration, new RegExp(`revoke all privileges on table public\\.${table}`));
+    assert.match(ledgerGrantMigration, new RegExp(`grant select on table public\\.${table} to authenticated`));
+  }
+  assert.match(ledgerGrantMigration, /185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad/);
+  assert.match(ledgerGrantMigration, /'20260823005756'/);
+});
+
 test("health fails closed unless database and application contracts match", () => {
   assert.match(health, /runtime_schema_compatibility/);
   assert.match(health, /schemaCompatibility/);
@@ -35,10 +45,10 @@ test("health fails closed unless database and application contracts match", () =
 
 test("the application validator rejects absent, old and tampered schema contracts", () => {
   const valid = {
-    contract_version: 3,
+    contract_version: 4,
     minimum_compatible_app_sha: "4e3784649767be4c197db624b33995b3d1502f65",
-    minimum_schema_fingerprint: "761d27a977c53c6037c4408b2064557b80b1c301107195c9065f748ef730fff3",
-    required_migration_version: "20260823002720"
+    minimum_schema_fingerprint: "185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad",
+    required_migration_version: "20260823005756"
   };
   assert.equal(isRuntimeSchemaCompatible([valid]), true);
   for (const value of [null, [], { ...valid, contract_version: 0 }, { ...valid, minimum_schema_fingerprint: "old" }]) {

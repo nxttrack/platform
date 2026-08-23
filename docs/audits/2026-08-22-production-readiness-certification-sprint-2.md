@@ -28,7 +28,7 @@ disposable local systems.
 | `20260822010612_atomic_core_onboarding_writes.sql` | `352ba1dba8bc393228719959cbbbf7725d217d2b6210ca88b299b0014572a433` |
 | `20260822012255_resumable_import_apply_rollback.sql` | `6997c62c3ab1f35fdb7e1c2106c292081cb05231422ca255756af0b9eb0764e2` |
 
-All six certification migrations, beginning with
+All seven certification migrations, beginning with
 `20260822225251_production_readiness_certification.sql`, were generated with the
 repository-pinned Supabase CLI and are additive.
 
@@ -80,6 +80,7 @@ truth were explicitly checked.
 | CERT-015 | Medium readiness | First exact-SHA staging dispatch → read-only preflight → three naturally expired invitations still stored as `pending` were grouped with accepted invitations lacking Auth lineage. The release stopped before migration. | A safe additive migration was blocked by a normal lazy-expiry state that application and database acceptance paths already reject and atomically mark expired on use. | CODE-SIDE CLOSED: accepted-without-user/timestamp remains a hard blocker; expired pending capability rows are separately reported as PII-free operator warnings and are never repaired by preflight. A red-to-green unit plus synthetic expired-row preflight proves PASS-with-warning; the original records are untouched. |
 | CERT-016 | Medium readiness | First staging dispatch → package install/preflight log → self-hosted runner used Node `24.17.0` despite the repository engine floor and certified toolchain being `24.18.0`. | Deployment evidence was produced under an unsupported runtime and could diverge from local/CI artifacts. | CODE-SIDE CLOSED: the deploy job now installs and asserts exact Node `24.18.0` and pnpm `10.24.0` before any Node audit, install or build. Static workflow regression is green. |
 | CERT-017 | High readiness | Second staging dispatch → migrations applied → pre-activation compatibility assertion inside the rsynced release directory → `git merge-base ... HEAD` failed because deployment deliberately excludes `.git`. | Every otherwise-valid release would stop after schema migration and before activation; rollback containment would preserve the old app but leave staging indefinitely schema-forward. | CODE-SIDE CLOSED: the assertion resolves the retained GitHub checkout, verifies its exact SHA equals `DEPLOYED_SOURCE_SHA`, and checks ancestry against that immutable SHA. The deployment failure is the red proof; unit and executable local schema assertion are green. |
+| CERT-018 | High | Third staging preflight after the first ten additive migrations → `has_table_privilege` → legacy Supabase default privileges still gave `anon` and `authenticated` direct mutation grants on `core_write_operations` and `import_manifest_entries`. RLS denied actual row writes, but the required independent grant boundary failed. | A future policy regression could expose service-owned idempotency and rollback ledgers directly to clients; staging correctly refused activation. | CODE-SIDE CLOSED: CLI-generated additive migration `20260823005756` revokes all client/PUBLIC privileges on both ledgers, restores authenticated SELECT only and service-role ALL, and rolls the handshake forward. Both 146-step clean rooms, the strengthened grant audit, focused DB integration, preflight, 102-case Data API matrix and rollback rehearsal are green. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -119,13 +120,13 @@ used. The repository now includes `db:audit-clean-room`, which compares every
 files and performs the remaining assertions below without retaining sentinel data.
 
 The target originally contained 139 migrations. Both final clean-room builds apply
-145 because all six certification corrections are additive, CLI-generated
+146 because all seven certification corrections are additive, CLI-generated
 migrations; the four pushed Sprint 1 files remain byte-for-byte unchanged.
 
 | Profile | Empty-stack start | Migration application | Result |
 | --- | --- | --- | --- |
-| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 00:24:11 UTC | 2026-08-23 00:24:11–00:31:17 UTC | 145/145 exact, no repair/error |
-| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 00:23:01 UTC | 2026-08-23 00:23:51–00:31:17 UTC | 145/145 exact, no repair/error |
+| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 00:24:11 UTC | final additive step 2026-08-23 00:58 UTC | 146/146 exact, no repair/error |
+| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 00:23:01 UTC | final additive step 2026-08-23 00:58 UTC | 146/146 exact, no repair/error |
 
 The secure fixture explicitly revokes the PostgreSQL default `PUBLIC EXECUTE` as
 well as Data API table/sequence/function defaults before application migrations.
@@ -155,8 +156,8 @@ both builds. A production app artifact started against each stack and `/api/heal
 reported `ok=true`, database and schema-compatibility pass, and the expected
 certification source. This is local compatibility evidence, not a live claim.
 
-Final clean-room re-certification gate: 428/428 unit tests, typecheck, production build, Auth
-audit, 145-file migration audit, 251-table RLS audit, production dependency audit,
+Final clean-room re-certification gate: 431/431 unit tests, typecheck, production build, Auth
+audit, 146-file migration audit, 251-table RLS audit, production dependency audit,
 both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 3 — base-to-head upgrade rehearsal and preflight
@@ -317,11 +318,11 @@ and onboarding write paths.
 
 Migration `20260823000225_runtime_schema_compatibility_contract.sql`, rolled forward
 by the later additive corrections, publishes one immutable, service-only contract
-with version 3, minimum compatible app SHA
+with version 4, minimum compatible app SHA
 `4e3784649767be4c197db624b33995b3d1502f65`, required migration
-`20260823002720`, and minimum-schema fingerprint
-`761d27a977c53c6037c4408b2064557b80b1c301107195c9065f748ef730fff3` (SHA-256
-over the ordered 145-migration minimum lineage). `anon` and `authenticated` are
+`20260823005756`, and minimum-schema fingerprint
+`185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad` (SHA-256
+over the ordered 146-migration minimum lineage). `anon` and `authenticated` are
 grant-denied through the local Data API; `service_role` receives the one expected
 row.
 
@@ -329,7 +330,7 @@ The three executable artifact/schema combinations produced:
 
 | Combination | Result |
 | --- | --- |
-| New 145-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
+| New 146-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
 | New schema + freshly frozen-installed/built `4e378…` artifact | HTTP 200; database `pass`; all 17 Sprint 1 transactional RPC names retained |
 | Newly built certification artifact + old 140-migration schema | HTTP 503; database connectivity still `pass`; schema compatibility explicitly `fail` |
 
@@ -351,7 +352,7 @@ does not replace Data API grants/RLS; those remain independently covered by the
 The deployment workflow now blocks certification-preview activation unless the
 full 40-character input SHA equals the selected branch HEAD, the target is staging,
 the read-only customer-data preflight passes, every pending migration belongs to
-the ten-entry Sprint 1/certification allowlist, and the post-migration schema
+the eleven-entry Sprint 1/certification allowlist, and the post-migration schema
 contract matches. Migration-history repair is explicitly forced off. For this
 preview it mechanically forces maintenance, mail,
 newsletter and internal workers to their safe values. Production promotion remains
@@ -360,16 +361,16 @@ outside this certification path.
 Checkpoint regression gate: 428/428 units including 6/6 dedicated red-to-green compatibility tests,
 application-forward rehearsal, three built-artifact HTTP probes, 102-case Data API
 matrix including the new RPC grants, typecheck, production build (17 static pages),
-runtime-environment audit, all 145 migration files, 251-table RLS audit and
+runtime-environment audit, all 146 migration files, 251-table RLS audit and
 `git diff --check` are VERIFIED LOCAL.
 
 ## Full regression and external boundaries
 
 The primary local Definition of Done is complete. The final repository-wide gate
 used a frozen install and passed the complete `hardening:local` chain after
-CERT-014 was fixed. Its component evidence includes 430/430 unit tests with zero
+CERT-014 was fixed. Its component evidence includes 431/431 unit tests with zero
 failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
-environment audit; 145-file migration-history audit; 251-table RLS/FORCE-RLS
+environment audit; 146-file migration-history audit; 251-table RLS/FORCE-RLS
 audit; all release/hardening audits; production build with 17 static pages;
 standalone packaging; and the staging-gate audit. The staging gate reported zero
 failures and nine explicitly external confirmations. `release:truth`, the design
@@ -387,7 +388,7 @@ five required private buckets, exported a version-3 manifest (5 objects, 379
 bytes), verified every local checksum, deleted the sources, restored them without
 upsert, verified the remote counts/checksums and deleted the rehearsal prefix.
 
-The local database evidence comprises two 145-migration clean rooms, the clean and
+The local database evidence comprises two 146-migration clean rooms, the clean and
 blocked base-to-head rehearsals, six focused integrations under both grant
 profiles, the 102-case Data API matrix, failure/crash-window integrations and the
 read-only rollback rehearsal. No test was removed, weakened or converted to a
@@ -396,7 +397,7 @@ skip. No customer data or real provider was used.
 The certification deployment path is restricted to staging and an exact
 40-character branch-HEAD SHA. It forces migrations on, repair off, global
 maintenance/no-write on and all effect workers off; runs the read-only preflight
-before migration; allows only the ten expected Sprint 1/certification migration
+before migration; allows only the eleven expected Sprint 1/certification migration
 versions; asserts the runtime/schema handshake before activation; and skips the
 legacy Phase 16 mutating fixture. Production is not reachable through this branch
 exception.

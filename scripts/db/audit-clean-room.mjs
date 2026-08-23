@@ -103,6 +103,25 @@ try {
   `);
   assert.deepEqual(canonicalOutboxConstraint.rows, [{ convalidated: true }], "fresh schema must validate the canonical outbox key constraint");
 
+  const serviceLedgerBoundaries = [];
+  for (const table of ["core_write_operations", "import_manifest_entries"]) {
+    const result = await client.query(
+      `select
+        has_table_privilege('anon', $1, 'insert,update,delete') as anon_mutation,
+        has_table_privilege('authenticated', $1, 'insert,update,delete') as authenticated_mutation,
+        has_table_privilege('authenticated', $1, 'select') as authenticated_read,
+        has_table_privilege('service_role', $1, 'insert,update,delete') as service_mutation`,
+      [`public.${table}`]
+    );
+    assert.deepEqual(result.rows[0], {
+      anon_mutation: false,
+      authenticated_mutation: false,
+      authenticated_read: true,
+      service_mutation: true
+    }, `${table} grants are not independently service-write-only`);
+    serviceLedgerBoundaries.push(table);
+  }
+
   const functionBoundaries = [];
   for (const signature of serviceOnlyFunctions) {
     const result = await client.query(
@@ -149,6 +168,7 @@ try {
     buckets: buckets.rows,
     storagePolicies: storagePolicies.rows,
     canonicalOutboxKeyConstraintValidated: true,
+    serviceWriteOnlyLedgerCount: serviceLedgerBoundaries.length,
     serviceOnlyFunctionCount: functionBoundaries.length,
     publicOrAnonExecutableFunctionCount: unexpectedSecureExec.rows[0].total,
     sentinel

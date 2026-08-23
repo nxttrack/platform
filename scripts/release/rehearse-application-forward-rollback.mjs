@@ -37,10 +37,10 @@ try {
   const newContract = await current.query("select * from public.runtime_schema_compatibility()");
   assert.equal(newContract.rowCount, 1, "new schema + new artifact contract must match once");
   assert.deepEqual(newContract.rows[0], {
-    contract_version: 3,
+    contract_version: 4,
     minimum_compatible_app_sha: "4e3784649767be4c197db624b33995b3d1502f65",
-    minimum_schema_fingerprint: "761d27a977c53c6037c4408b2064557b80b1c301107195c9065f748ef730fff3",
-    required_migration_version: "20260823002720"
+    minimum_schema_fingerprint: "185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad",
+    required_migration_version: "20260823005756"
   });
 
   const oldContract = await previous.query("select to_regprocedure('public.runtime_schema_compatibility()')::text as signature");
