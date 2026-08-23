@@ -195,6 +195,8 @@ try {
   }
 
   const grantFindings = [];
+  const legacyPendingGrantFindings = [];
+  const ledgerGrantCorrectionApplied = await migrationApplied("20260823005756");
   for (const table of ["core_write_operations", "email_outbox", "email_outbox_events", "import_manifest_entries"]) {
     if (!(await tableExists("public", table))) continue;
     const grants = await client.query(
@@ -204,7 +206,12 @@ try {
       [`public.${table}`]
     );
     if (grants.rows[0].anon_mutation || grants.rows[0].authenticated_mutation) {
-      grantFindings.push({ object: `public.${table}`, ...grants.rows[0] });
+      const finding = { object: `public.${table}`, ...grants.rows[0] };
+      if (!ledgerGrantCorrectionApplied && ["core_write_operations", "import_manifest_entries"].includes(table)) {
+        legacyPendingGrantFindings.push(finding);
+      } else {
+        grantFindings.push(finding);
+      }
     }
   }
   if (await migrationApplied("20260822225251")) {
@@ -217,6 +224,10 @@ try {
         grantFindings.push({ object: `public.${table}`, ...grants.rows[0] });
       }
     }
+  }
+  report.inventory.legacyPendingGrantCount = legacyPendingGrantFindings.length;
+  if (legacyPendingGrantFindings.length > 0) {
+    warn("legacy_service_ledger_grants_pending_correction", legacyPendingGrantFindings);
   }
   report.inventory.unexpectedGrantCount = grantFindings.length;
   if (grantFindings.length > 0) {

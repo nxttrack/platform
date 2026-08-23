@@ -81,6 +81,7 @@ truth were explicitly checked.
 | CERT-016 | Medium readiness | First staging dispatch → package install/preflight log → self-hosted runner used Node `24.17.0` despite the repository engine floor and certified toolchain being `24.18.0`. | Deployment evidence was produced under an unsupported runtime and could diverge from local/CI artifacts. | CODE-SIDE CLOSED: the deploy job now installs and asserts exact Node `24.18.0` and pnpm `10.24.0` before any Node audit, install or build. Static workflow regression is green. |
 | CERT-017 | High readiness | Second staging dispatch → migrations applied → pre-activation compatibility assertion inside the rsynced release directory → `git merge-base ... HEAD` failed because deployment deliberately excludes `.git`. | Every otherwise-valid release would stop after schema migration and before activation; rollback containment would preserve the old app but leave staging indefinitely schema-forward. | CODE-SIDE CLOSED: the assertion resolves the retained GitHub checkout, verifies its exact SHA equals `DEPLOYED_SOURCE_SHA`, and checks ancestry against that immutable SHA. The deployment failure is the red proof; unit and executable local schema assertion are green. |
 | CERT-018 | High | Third staging preflight after the first ten additive migrations → `has_table_privilege` → legacy Supabase default privileges still gave `anon` and `authenticated` direct mutation grants on `core_write_operations` and `import_manifest_entries`. RLS denied actual row writes, but the required independent grant boundary failed. | A future policy regression could expose service-owned idempotency and rollback ledgers directly to clients; staging correctly refused activation. | CODE-SIDE CLOSED: CLI-generated additive migration `20260823005756` revokes all client/PUBLIC privileges on both ledgers, restores authenticated SELECT only and service-role ALL, and rolls the handshake forward. Both 146-step clean rooms, the strengthened grant audit, focused DB integration, preflight, 102-case Data API matrix and rollback rehearsal are green. |
+| CERT-019 | Medium readiness | Third staging dispatch → pre-migration preflight → the exact CERT-018 grants were blocked before the pending allowlisted grant-correction migration could execute. | A safe corrective migration had no path to repair configuration-level privileges even though it touches no customer records. | CODE-SIDE CLOSED: only the two exact ledger findings are warnings while migration `20260823005756` is pending; every other grant anomaly still blocks. The workflow reruns the complete read-only preflight after migration, where any remaining ledger grant blocks activation. Synthetic pending/applied fixtures and workflow-order tests are green. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -156,7 +157,7 @@ both builds. A production app artifact started against each stack and `/api/heal
 reported `ok=true`, database and schema-compatibility pass, and the expected
 certification source. This is local compatibility evidence, not a live claim.
 
-Final clean-room re-certification gate: 431/431 unit tests, typecheck, production build, Auth
+Final clean-room re-certification gate: 432/432 unit tests, typecheck, production build, Auth
 audit, 146-file migration audit, 251-table RLS audit, production dependency audit,
 both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
 
@@ -368,7 +369,7 @@ runtime-environment audit, all 146 migration files, 251-table RLS audit and
 
 The primary local Definition of Done is complete. The final repository-wide gate
 used a frozen install and passed the complete `hardening:local` chain after
-CERT-014 was fixed. Its component evidence includes 431/431 unit tests with zero
+CERT-014 was fixed. Its component evidence includes 432/432 unit tests with zero
 failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
 environment audit; 146-file migration-history audit; 251-table RLS/FORCE-RLS
 audit; all release/hardening audits; production build with 17 static pages;
@@ -397,8 +398,8 @@ skip. No customer data or real provider was used.
 The certification deployment path is restricted to staging and an exact
 40-character branch-HEAD SHA. It forces migrations on, repair off, global
 maintenance/no-write on and all effect workers off; runs the read-only preflight
-before migration; allows only the eleven expected Sprint 1/certification migration
-versions; asserts the runtime/schema handshake before activation; and skips the
+both before and after migration; allows only the eleven expected Sprint
+1/certification migration versions; asserts the runtime/schema handshake before activation; and skips the
 legacy Phase 16 mutating fixture. Production is not reachable through this branch
 exception.
 

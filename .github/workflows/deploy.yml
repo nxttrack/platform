@@ -418,6 +418,13 @@ jobs:
           test "$GITHUB_REF_NAME" != "codex/production-readiness-certification-sprint-2" || test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
           pnpm run db:migrate
 
+      - name: Run certification post-migration read-only verification
+        if: github.ref_name == 'codex/production-readiness-certification-sprint-2'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
       - name: Assert runtime schema compatibility before activation
         working-directory: ${{ env.RELEASE }}
         run: pnpm run release:assert-schema-compatibility

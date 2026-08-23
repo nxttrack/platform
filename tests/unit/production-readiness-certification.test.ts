@@ -96,6 +96,12 @@ test("expired pending invitations are reported without blocking a safe migration
   assert.match(upgradePreflight, /warn\("expired_pending_invitations_require_operator_awareness", expiredPendingInvitations\.rows\)/);
 });
 
+test("the known ledger grant gap is tolerated only until its corrective migration", () => {
+  assert.match(upgradePreflight, /legacy_service_ledger_grants_pending_correction/);
+  assert.match(upgradePreflight, /migrationApplied\("20260823005756"\)/);
+  assert.match(upgradePreflight, /legacyPendingGrantCount/);
+});
+
 test("blocked upgrade fixture contains no automatic customer-data repair", () => {
   assert.match(upgradeFixture, /UPGRADE_FIXTURE_MODE/);
   assert.match(upgradeFixture, /'trial'.*current_date, 'trial'/s);
