@@ -1,15 +1,14 @@
 # Production-readiness certification — Sprint 2
 
-Status: **PRIMARY LOCAL CERTIFICATION VERIFIED — general audit remains NO-GO**
+Status: **PRIMARY CERTIFICATION VERIFIED; STAGING MAINTENANCE PREVIEW DEPLOYED — general audit remains NO-GO**
 Certification target: `4e3784649767be4c197db624b33995b3d1502f65`  
 Audit base: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`  
 Certification branch: `codex/production-readiness-certification-sprint-2`  
 Evidence vocabulary: `VERIFIED LOCAL`, `CODE-SIDE CLOSED`, `NOT TESTED EXTERNAL`, `BLOCKED`, `FAILED`
 
-This is an independent local certification. It does not promote the Sprint 1
-claims, does not certify a live environment and does not turn the general
-production-readiness audit into GO. Unless a later section explicitly records a
-staging action requested after the original brief, all evidence is from synthetic,
+This is an independent certification. It does not promote the Sprint 1 claims and
+does not turn the general production-readiness audit into GO. Except for the
+explicit staging deployment record below, all evidence is from synthetic,
 disposable local systems.
 
 ## Immutable inputs and isolation
@@ -385,6 +384,9 @@ repository shell scripts pass `bash -n`. Actionlint parsed every workflow and fo
 no YAML/expression error in the certification change; it reports only established
 custom-runner-label warnings and pre-existing shellcheck notices.
 
+The same non-mutating public/auth-boundary Playwright smoke was then run directly
+against `https://staging.nxttrack.nl` on desktop and mobile: 40/40 passed.
+
 The local Storage stretch rehearsal seeded one controlled object in each of the
 five required private buckets, exported a version-3 manifest (5 objects, 379
 bytes), verified every local checksum, deleted the sources, restored them without
@@ -404,9 +406,35 @@ both before and after migration; allows only the eleven expected Sprint
 legacy Phase 16 mutating fixture. Production is not reachable through this branch
 exception.
 
-The following remain **NOT TESTED EXTERNAL** unless a later deployment record says
-otherwise: real Auth-user creation and recovery, real SendGrid delivery and
-provider webhooks, billing/payment providers, live Supabase backup/restore and
-five-bucket object checksum reconciliation, the full 64-case hosted Playwright
-matrix, GitHub artifact retention/readback, and any production environment. These
-external gates keep the general production-readiness audit at **NO-GO**.
+## Requested staging deployment record
+
+The user subsequently requested a deployment. Only the constrained staging
+certification preview was used; no production deployment, merge or pull request
+was performed.
+
+Workflow run [32609642668](https://github.com/nxttrack/platform/actions/runs/32609642668)
+completed successfully on 2026-08-23 for exact deployed source
+`7b55a80cbd44e2153a5e690e34ab1c62f755b1c0`. The deploy, staging browser
+validation and preview-finalization jobs all passed. Preflight, the migration
+allowlist, all 146 migrations, post-migration grant verification, source ancestry,
+schema compatibility, preview rollback snapshot, activation, health and runtime
+smoke were green. The rollback job did not run because validation succeeded.
+
+Live read-only verification after activation returned HTTP 200 from `/login` and
+`/api/health`. Health reported the exact deployed SHA, database `pass` and schema
+compatibility `pass`. A POST to `/api/health` returned HTTP 503, independently
+confirming the forced maintenance/no-write boundary. Mail, newsletter and internal
+effect workers remained disabled.
+
+The retained GitHub artifact
+`nxttrack-7b55a80cbd44e2153a5e690e34ab1c62f755b1c0-exact-source` was downloaded and
+read back. Its JSON records the same repository, branch, workflow run and exact
+commit SHA. The preceding four attempts stopped fail-closed before activation and
+provided the red evidence for CERT-015 through CERT-020; none replaced the old
+application release.
+
+The following remain **NOT TESTED EXTERNAL**: real Auth-user creation and recovery,
+real SendGrid delivery and provider webhooks, billing/payment providers, live
+Supabase backup/restore and five-bucket object checksum reconciliation, the full
+64-case credentialed hosted Playwright matrix, and any production environment.
+These external gates keep the general production-readiness audit at **NO-GO**.
