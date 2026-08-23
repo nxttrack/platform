@@ -70,6 +70,7 @@ test("maintenance mode blocks every unsafe HTTP method before session work", () 
 });
 
 test("certification deploys force all effect workers off and assert schema before activation", () => {
+  assert.match(deploy, /Checkout[\s\S]*?fetch-depth: 0[\s\S]*?Setup certified Node/);
   assert.match(deploy, /Setup certified Node[\s\S]*?node-version: "24\.18\.0"/);
   assert.match(deploy, /corepack prepare pnpm@10\.24\.0 --activate/);
   for (const setting of [
