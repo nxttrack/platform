@@ -73,6 +73,7 @@ truth were explicitly checked.
 | CERT-008 | High | A local `platform_admin` JWT with no Tenant B membership → permissive `current_user_can_manage_tenant_domain` branch → direct PostgREST `PATCH participants` in Tenant B. The first role-matrix run changed the synthetic row and failed red. | A compromised platform-admin browser session could directly mutate tenant-domain records outside a service-routed, audited command path. | CODE-SIDE CLOSED: a second additive migration adds a client-role mutation guard to the certification boundaries. Platform roles require an explicit active owner/admin/staff membership for direct writes; reads and `service_role` paths remain separate. The same Data API attack is now a controlled error. |
 | CERT-009 | Medium | Durable outbox payload → `parseTransactionalEmailPayload` accepted `subject="Safe\r\nBcc: ..."` → SendGrid JSON received the raw subject (SMTP happened to sanitize later). The new executable parser test failed red with the injected subject returned as valid. | Provider-dependent header manipulation or malformed outbound mail. | CODE-SIDE CLOSED: payload validation is now a pure tested boundary; subject/from/organization header fields reject C0/DEL controls. Poison, malformed recipient, oversized recipient/subject/body and CRLF cases fail while bounded Unicode remains valid. |
 | CERT-010 | Medium | Service-routed enqueue → byte-exact but unconstrained key → uppercase, leading/trailing whitespace and Unicode-suffix variants each inserted a new provider-effect row. The crash suite failed red on the first variant. | A malformed retry/caller could bypass intended email dedupe and cause duplicate external effects. | CODE-SIDE CLOSED: additive canonical lowercase-ASCII key constraint plus trigger; existing noncanonical rows are reported by preflight and never auto-rewritten. Exact replay dedupes; exact key/different payload and every variant fail. |
+| CERT-011 | High readiness | New artifact → `/api/health` → only `tenants` count probe. Against a reachable pre-Sprint-1 schema the probe passed even though the artifact requires new transactional RPCs; there was also no global application no-write switch. | An incompatible release could be activated as healthy, while an emergency rollback had no mechanical containment for server actions, webhooks or internal POST workers. | CODE-SIDE CLOSED: additive service-only schema handshake, exact release/deploy assertion, health 503 on mismatch, app-wide unsafe-method maintenance gate, forced-off certification-preview workers/mail/newsletters and a read-only application-forward rehearsal. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -302,7 +303,57 @@ build (17 static pages); and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 6 — rollback and compatibility
 
-Pending.
+VERIFIED LOCAL. The previous allowed application is the exact Sprint 1 target
+`4e3784649767be4c197db624b33995b3d1502f65`; the older audit basis
+`68d4a79ccdc3ede3691bf1ec1782fb8f81c05466` is intentionally not an allowed
+rollback artifact because it still contains the replaced non-transactional import
+and onboarding write paths.
+
+Migration `20260823000225_runtime_schema_compatibility_contract.sql` publishes one
+immutable, service-only contract with version 1, minimum compatible app SHA
+`4e3784649767be4c197db624b33995b3d1502f65`, required migration
+`20260823000225`, and minimum-schema fingerprint
+`c21d353eed62463814087c3edc7bdf63a11522141131052641b8d9972ef02ab7` (SHA-256
+over the ordered 143-migration minimum lineage). `anon` and `authenticated` are
+grant-denied through the local Data API; `service_role` receives the one expected
+row.
+
+The three executable artifact/schema combinations produced:
+
+| Combination | Result |
+| --- | --- |
+| New 143-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
+| New schema + freshly frozen-installed/built `4e378…` artifact | HTTP 200; database `pass`; all 17 Sprint 1 transactional RPC names retained |
+| Newly built certification artifact + old 140-migration schema | HTTP 503; database connectivity still `pass`; schema compatibility explicitly `fail` |
+
+The local `release:rehearse-application-forward-rollback` command opens both
+databases in repeatable-read, read-only transactions. It proved in 100 ms that all
+3,751 old public column/type contracts and the 17 previous-app transactional RPCs
+remain available, the old schema lacks the new handshake, and pending work remains
+unchanged (`email=30`, `import=6`, `identity=8`). No schema migration, schema drop,
+history repair or job mutation occurs in the rehearsal.
+
+Containment requires and checks exact values
+`MAINTENANCE_NO_WRITE=true`, `EMAIL_SENDING_ENABLED=false`,
+`NEWSLETTER_DELIVERY_ENABLED=false`, and `INTERNAL_JOBS_ENABLED=false`. With the
+new production build, GET `/api/health` remained available while POST was rejected
+as `503 maintenance_no_write` before session/database work. This application gate
+does not replace Data API grants/RLS; those remain independently covered by the
+102-case matrix.
+
+The deployment workflow now blocks certification-preview activation unless the
+full 40-character input SHA equals the selected branch HEAD, the target is staging,
+the read-only customer-data preflight passes, every pending migration belongs to
+the eight-entry Sprint 1/certification allowlist, and the post-migration schema
+contract matches. For this preview it mechanically forces maintenance, mail,
+newsletter and internal workers to their safe values. Production promotion remains
+outside this certification path.
+
+Checkpoint regression gate: 427/427 units including 5/5 dedicated red-to-green compatibility tests,
+application-forward rehearsal, three built-artifact HTTP probes, 102-case Data API
+matrix including the new RPC grants, typecheck, production build (17 static pages),
+runtime-environment audit, all 143 migration files, 251-table RLS audit and
+`git diff --check` are VERIFIED LOCAL.
 
 ## Full regression and external boundaries
 

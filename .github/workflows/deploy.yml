@@ -54,7 +54,10 @@ jobs:
       github.ref_name == 'main' ||
       (inputs.target == 'staging' &&
       github.ref_name == 'codex/parent-child-portals-v1' &&
-      inputs.staging_preview_sha == 'd30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b')
+      inputs.staging_preview_sha == 'd30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b') ||
+      (inputs.target == 'staging' &&
+      github.ref_name == 'codex/production-readiness-certification-sprint-2' &&
+      inputs.staging_preview_sha == github.sha)
     runs-on: [self-hosted, linux, x64, nxttrack]
 
     environment: ${{ inputs.target }}
@@ -146,8 +149,10 @@ jobs:
       SUPABASE_ADVISOR_LEVEL: ${{ vars.SUPABASE_ADVISOR_LEVEL }}
       SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
-      EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED || 'false' }}
-      INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED || 'false' }}
+      MAINTENANCE_NO_WRITE: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'true' || vars.MAINTENANCE_NO_WRITE || 'false' }}
+      EMAIL_SENDING_ENABLED: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'false' || vars.EMAIL_SENDING_ENABLED || 'false' }}
+      NEWSLETTER_DELIVERY_ENABLED: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'false' || vars.NEWSLETTER_DELIVERY_ENABLED || 'false' }}
+      INTERNAL_JOBS_ENABLED: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'false' || vars.INTERNAL_JOBS_ENABLED || 'false' }}
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
       BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
@@ -180,8 +185,16 @@ jobs:
           DEPLOYED_SOURCE_SHA="$(git rev-parse HEAD)"
           if [[ -n "$STAGING_PREVIEW_SHA" ]]; then
             test "$TARGET" = "staging"
-            test "$GITHUB_REF_NAME" = "codex/parent-child-portals-v1"
-            test "$STAGING_PREVIEW_SHA" = "d30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b"
+            case "$GITHUB_REF_NAME" in
+              codex/parent-child-portals-v1)
+                test "$STAGING_PREVIEW_SHA" = "d30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b"
+                ;;
+              codex/production-readiness-certification-sprint-2)
+                [[ "$STAGING_PREVIEW_SHA" =~ ^[0-9a-f]{40}$ ]]
+                test "$STAGING_PREVIEW_SHA" = "$GITHUB_SHA"
+                ;;
+              *) exit 1 ;;
+            esac
             test "$DEPLOYED_SOURCE_SHA" = "$STAGING_PREVIEW_SHA"
             test "${BOOTSTRAP_PLATFORM_OWNER:-false}" != "true"
           else
@@ -286,7 +299,9 @@ jobs:
             printf 'BOOTSTRAP_PLATFORM_OWNER_EMAIL=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_EMAIL"
             printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
             printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
+            printf 'MAINTENANCE_NO_WRITE=%s\n' "$MAINTENANCE_NO_WRITE"
             printf 'EMAIL_SENDING_ENABLED=%s\n' "$EMAIL_SENDING_ENABLED"
+            printf 'NEWSLETTER_DELIVERY_ENABLED=%s\n' "$NEWSLETTER_DELIVERY_ENABLED"
             printf 'INTERNAL_JOBS_ENABLED=%s\n' "$INTERNAL_JOBS_ENABLED"
             printf 'MOLLIE_API_KEY=%s\n' "$MOLLIE_API_KEY"
             printf 'BILLING_AUTOMATION_SECRET=%s\n' "$BILLING_AUTOMATION_SECRET"
@@ -354,13 +369,12 @@ jobs:
           node --input-type=module <<'NODE'
           import { readdirSync } from "node:fs";
           import pg from "pg";
-          const allowed = new Set([
-            "20260811120000",
-            "20260811130000",
-            "20260811140000",
-            "20260811180455",
-            "20260812120000"
-          ]);
+          const allowed = new Set(process.env.GITHUB_REF_NAME === "codex/production-readiness-certification-sprint-2"
+            ? [
+                "20260822002234", "20260822004329", "20260822010612", "20260822012255",
+                "20260822225251", "20260822233930", "20260822235045", "20260823000225"
+              ]
+            : ["20260811120000", "20260811130000", "20260811140000", "20260811180455", "20260812120000"]);
           const local = readdirSync("supabase/migrations")
             .filter((file) => !file.endsWith("_legacy_remote_history.sql"))
             .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? []);
@@ -375,11 +389,22 @@ jobs:
           if (unexpected.length) throw new Error(`Refusing unexpected staging migrations: ${unexpected.join(",")}`);
           NODE
 
+      - name: Run certification read-only deployment preflight
+        if: github.ref_name == 'codex/production-readiness-certification-sprint-2'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
       - name: Run database migrations
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
           pnpm run db:migrate
+
+      - name: Assert runtime schema compatibility before activation
+        working-directory: ${{ env.RELEASE }}
+        run: pnpm run release:assert-schema-compatibility
 
       - name: Verify staging preview migrations
         if: env.STAGING_PREVIEW_SHA != ''
@@ -595,10 +620,11 @@ jobs:
         run: pnpm run phase16:flow
 
       - name: Prepare parent and child preview fixture
-        if: inputs.staging_preview_sha != ''
+        if: github.ref_name == 'codex/parent-child-portals-v1'
         run: node scripts/staging/parent-child-preview-fixture.mjs prepare
 
       - name: Validate required seven-theme parent and child portal matrix
+        if: github.ref_name != 'codex/production-readiness-certification-sprint-2'
         env:
           PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
         run: pnpm run test:portal-themes:e2e
@@ -617,7 +643,7 @@ jobs:
           retention-days: 14
 
       - name: Disable parent and child preview rollout
-        if: always() && inputs.staging_preview_sha != ''
+        if: always() && github.ref_name == 'codex/parent-child-portals-v1'
         run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
 
       - name: Prepare Sprint 4 browser-mutation fixture

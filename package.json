@@ -48,6 +48,8 @@
     "test:journey:e2e": "pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts",
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
     "release:assert-source": "node scripts/release/assert-release-source.mjs",
+    "release:assert-schema-compatibility": "node scripts/release/assert-runtime-schema-compatibility.mjs",
+    "release:rehearse-application-forward-rollback": "node scripts/release/rehearse-application-forward-rollback.mjs",
     "release:audit-production-foundation": "node scripts/release/audit-production-foundation.mjs",
     "release:audit-production-mail": "node scripts/release/audit-production-mail-config.mjs",
     "release:audit-premium": "node scripts/release/audit-premium-productization.mjs",

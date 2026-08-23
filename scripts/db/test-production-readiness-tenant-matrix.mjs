@@ -163,6 +163,13 @@ try {
       body: { target_limit: 1, target_lease_seconds: 60 }
     });
     assert.ok([401, 403, 404].includes(rpc.status), "client claim_email_outbox invocation must be denied by grants");
+
+    const compatibilityRpc = await rest("rpc/runtime_schema_compatibility", {
+      token,
+      method: "POST",
+      body: {}
+    });
+    assert.ok([401, 403, 404].includes(compatibilityRpc.status), "client runtime schema contract invocation must be denied by grants");
   }
 
   const manipulatedTenantRpcs = [
@@ -222,6 +229,14 @@ try {
     body: { target_limit: 1, target_lease_seconds: 60 }
   });
   assert.equal(serviceClaim.status, 200, "service role must execute the outbox claim RPC");
+
+  const serviceCompatibility = await rest("rpc/runtime_schema_compatibility", {
+    service: true,
+    method: "POST",
+    body: {}
+  });
+  assert.equal(serviceCompatibility.status, 200, "service role must execute the runtime schema contract RPC");
+  assert.equal(serviceCompatibility.json[0]?.contract_version, 1);
 
   const firstKeyUse = await rest("rpc/enqueue_email_outbox", {
     service: true,
@@ -407,14 +422,18 @@ async function proveGrantBoundary() {
       has_table_privilege('authenticated', 'public.email_outbox', 'update') as outbox_update,
       has_table_privilege('authenticated', 'public.import_jobs', 'update') as import_update,
       has_function_privilege('authenticated', 'public.claim_email_outbox(integer,integer)', 'execute') as client_claim,
-      has_function_privilege('service_role', 'public.claim_email_outbox(integer,integer)', 'execute') as service_claim
+      has_function_privilege('service_role', 'public.claim_email_outbox(integer,integer)', 'execute') as service_claim,
+      has_function_privilege('authenticated', 'public.runtime_schema_compatibility()', 'execute') as client_compatibility,
+      has_function_privilege('service_role', 'public.runtime_schema_compatibility()', 'execute') as service_compatibility
   `);
   assert.deepEqual(result.rows[0], {
     outbox_select: true,
     outbox_update: false,
     import_update: false,
     client_claim: false,
-    service_claim: true
+    service_claim: true,
+    client_compatibility: false,
+    service_compatibility: true
   });
 }
 
