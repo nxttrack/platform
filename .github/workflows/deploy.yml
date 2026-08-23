@@ -116,9 +116,10 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
+      RUN_DB_MIGRATIONS: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'true' || vars.RUN_DB_MIGRATIONS }}
       DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
       DB_MIGRATE_INCLUDE_ALL: ${{ vars.DB_MIGRATE_INCLUDE_ALL }}
+      DB_MIGRATION_REPAIR_EXISTING_SCHEMA: ${{ github.ref_name == 'codex/production-readiness-certification-sprint-2' && 'false' || vars.DB_MIGRATION_REPAIR_EXISTING_SCHEMA || 'false' }}
       BOOTSTRAP_PLATFORM_OWNER: ${{ inputs.bootstrap_platform_owner && 'true' || vars.BOOTSTRAP_PLATFORM_OWNER }}
       BOOTSTRAP_PLATFORM_OWNER_EMAIL: ${{ vars.BOOTSTRAP_PLATFORM_OWNER_EMAIL || 'admin@nxttrack.nl' }}
       BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD: ${{ secrets.BOOTSTRAP_PLATFORM_OWNER_TEMP_PASSWORD }}
@@ -401,6 +402,7 @@ jobs:
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
+          test "$GITHUB_REF_NAME" != "codex/production-readiness-certification-sprint-2" || test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
           pnpm run db:migrate
 
       - name: Assert runtime schema compatibility before activation
@@ -616,6 +618,7 @@ jobs:
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
       - name: Phase 16 operational flow validation
+        if: github.ref_name != 'codex/production-readiness-certification-sprint-2'
         env:
           PHASE16_SKIP_PLAYWRIGHT: ${{ inputs.staging_preview_sha != '' && 'true' || 'false' }}
         run: pnpm run phase16:flow

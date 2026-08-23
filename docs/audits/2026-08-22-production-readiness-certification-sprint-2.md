@@ -1,6 +1,6 @@
 # Production-readiness certification — Sprint 2
 
-Status: **IN PROGRESS — general audit remains NO-GO**  
+Status: **PRIMARY LOCAL CERTIFICATION VERIFIED — general audit remains NO-GO**
 Certification target: `4e3784649767be4c197db624b33995b3d1502f65`  
 Audit base: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`  
 Certification branch: `codex/production-readiness-certification-sprint-2`  
@@ -28,9 +28,9 @@ disposable local systems.
 | `20260822010612_atomic_core_onboarding_writes.sql` | `352ba1dba8bc393228719959cbbbf7725d217d2b6210ca88b299b0014572a433` |
 | `20260822012255_resumable_import_apply_rollback.sql` | `6997c62c3ab1f35fdb7e1c2106c292081cb05231422ca255756af0b9eb0764e2` |
 
-The corrective migration
-`20260822225251_production_readiness_certification.sql` was generated with the
-repository-pinned Supabase CLI and is additive.
+All six certification migrations, beginning with
+`20260822225251_production_readiness_certification.sql`, were generated with the
+repository-pinned Supabase CLI and are additive.
 
 ## Toolchain and untouched baseline
 
@@ -76,6 +76,7 @@ truth were explicitly checked.
 | CERT-011 | High readiness | New artifact → `/api/health` → only `tenants` count probe. Against a reachable pre-Sprint-1 schema the probe passed even though the artifact requires new transactional RPCs; there was also no global application no-write switch. | An incompatible release could be activated as healthy, while an emergency rollback had no mechanical containment for server actions, webhooks or internal POST workers. | CODE-SIDE CLOSED: additive service-only schema handshake, exact release/deploy assertion, health 503 on mismatch, app-wide unsafe-method maintenance gate, forced-off certification-preview workers/mail/newsletters and a read-only application-forward rehearsal. |
 | CERT-012 | Low hardening | Legacy-default clean room → four `app_private` invoker trigger functions created without an explicit revoke → inherited direct `PUBLIC` EXECUTE. Client roles lacked `USAGE` on `app_private`, so no executable Data API attack path was confirmed. | Unnecessary latent privilege that could become reachable after an unrelated future schema grant. | CODE-SIDE CLOSED: the additive correction explicitly revokes all client/service direct execution; trigger invocation remains functional. Secure-default reports zero and legacy reports only two intended public compatibility functions. |
 | CERT-013 | High integrity | Import invitation creation resolved `invited_user_id` before membership materialization → `materialize_import_guardian_invitation` treated Auth lineage alone as completed → returned `outcome=ready` with `membershipId=null`. A fresh clean-room regression failed red on the pre-existing-membership conflict. | Import could record false identity completion, skip the membership bind and leave the guardian/job in inconsistent reconciliation state. | CODE-SIDE CLOSED: completion now requires the exact invitation-owned membership; a matching Auth-only binding continues through create-only materialization, while any pre-existing tenant parent membership fails without mutation. Both grant profiles pass the adversarial and 5,000-row import suites. |
+| CERT-014 | Medium readiness | Full `hardening:local` → `release:audit-sprint31` → required deleted `rollbackSignature`/`timingSafeEqual` tokens in application import code. The gate failed after all preceding suites passed. | CI/deploy hardening could not certify the stronger Sprint 1 durable database rollback implementation, encouraging accidental reintroduction of the obsolete process-local contract. | CODE-SIDE CLOSED: the audit now requires the actual claim/apply/complete and claim/rollback/complete RPC surfaces plus `import_manifest_entries`; the full hardening chain is rerun after the change. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -250,7 +251,7 @@ the 141-migration secure grant audit, typecheck, production build (17 static pag
 Auth audit, migration/RLS audits, production dependency audit and `git diff --check`
 are VERIFIED LOCAL.
 
-## Checkpoint 4 — Data API tenant isolation
+## Checkpoint 5 — failure and crash windows
 
 VERIFIED LOCAL with synthetic database/provider-boundary evidence. The new crash
 suite and strengthened existing integrations prove:
@@ -348,7 +349,8 @@ The deployment workflow now blocks certification-preview activation unless the
 full 40-character input SHA equals the selected branch HEAD, the target is staging,
 the read-only customer-data preflight passes, every pending migration belongs to
 the ten-entry Sprint 1/certification allowlist, and the post-migration schema
-contract matches. For this preview it mechanically forces maintenance, mail,
+contract matches. Migration-history repair is explicitly forced off. For this
+preview it mechanically forces maintenance, mail,
 newsletter and internal workers to their safe values. Production promotion remains
 outside this certification path.
 
@@ -360,4 +362,34 @@ runtime-environment audit, all 145 migration files, 251-table RLS audit and
 
 ## Full regression and external boundaries
 
-Pending.
+The primary local Definition of Done is complete. The final repository-wide gate
+used a frozen install and passed the complete `hardening:local` chain after
+CERT-014 was fixed. Its component evidence includes 428/428 unit tests with zero
+failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
+environment audit; 145-file migration-history audit; 251-table RLS/FORCE-RLS
+audit; all release/hardening audits; production build with 17 static pages;
+standalone packaging; and the staging-gate audit. The staging gate reported zero
+failures and nine explicitly external confirmations. `release:truth`, the design
+audit, 53 swim-canon tests, 27 parent/child portal tests, the migration no-op path,
+and `git diff --check` also pass after the final deployment-workflow hardening.
+
+The local database evidence comprises two 145-migration clean rooms, the clean and
+blocked base-to-head rehearsals, six focused integrations under both grant
+profiles, the 102-case Data API matrix, failure/crash-window integrations and the
+read-only rollback rehearsal. No test was removed, weakened or converted to a
+skip. No customer data or real provider was used.
+
+The certification deployment path is restricted to staging and an exact
+40-character branch-HEAD SHA. It forces migrations on, repair off, global
+maintenance/no-write on and all effect workers off; runs the read-only preflight
+before migration; allows only the ten expected Sprint 1/certification migration
+versions; asserts the runtime/schema handshake before activation; and skips the
+legacy Phase 16 mutating fixture. Production is not reachable through this branch
+exception.
+
+The following remain **NOT TESTED EXTERNAL** unless a later deployment record says
+otherwise: real Auth-user creation and recovery, real SendGrid delivery and
+provider webhooks, billing/payment providers, live Supabase backup/restore and
+five-bucket object checksum reconciliation, the full 64-case hosted Playwright
+matrix, GitHub artifact retention/readback, and any production environment. These
+external gates keep the general production-readiness audit at **NO-GO**.

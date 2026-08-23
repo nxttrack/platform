@@ -60,5 +60,8 @@ test("certification deploys force all effect workers off and assert schema befor
     "INTERNAL_JOBS_ENABLED"
   ]) assert.match(deploy, new RegExp(`${setting}:`));
   assert.match(deploy, /release:assert-schema-compatibility/);
+  assert.match(deploy, /DB_MIGRATION_REPAIR_EXISTING_SCHEMA.*false/);
+  assert.match(deploy, /RUN_DB_MIGRATIONS.*production-readiness-certification-sprint-2.*true/);
+  assert.match(deploy, /Phase 16 operational flow validation[\s\S]*?if: github\.ref_name != 'codex\/production-readiness-certification-sprint-2'/);
   assert.ok(deploy.indexOf("release:assert-schema-compatibility") < deploy.indexOf("Activate release"));
 });
