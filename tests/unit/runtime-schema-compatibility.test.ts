@@ -9,6 +9,7 @@ const secureGrantMigration = read("supabase/migrations/20260823001941_secure_def
 const health = read("apps/web/app/api/health/route.ts");
 const proxy = read("apps/web/proxy.ts");
 const deploy = read(".github/workflows/deploy.yml");
+const releaseAssertion = read("scripts/release/assert-runtime-schema-compatibility.mjs");
 
 test("the schema exposes one service-only immutable compatibility contract", () => {
   assert.match(migration, /public\.runtime_schema_compatibility/);
@@ -43,6 +44,12 @@ test("the application validator rejects absent, old and tampered schema contract
   for (const value of [null, [], { ...valid, contract_version: 0 }, { ...valid, minimum_schema_fingerprint: "old" }]) {
     assert.equal(isRuntimeSchemaCompatible(value), false);
   }
+});
+
+test("the release assertion verifies the deployed SHA from the retained checkout", () => {
+  assert.match(releaseAssertion, /GITHUB_WORKSPACE/);
+  assert.match(releaseAssertion, /DEPLOYED_SOURCE_SHA/);
+  assert.match(releaseAssertion, /merge-base.*--is-ancestor.*minimumAppSha.*deployedSourceSha/);
 });
 
 test("maintenance mode blocks every unsafe HTTP method before session work", () => {

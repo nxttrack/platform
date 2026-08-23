@@ -79,6 +79,7 @@ truth were explicitly checked.
 | CERT-014 | Medium readiness | Full `hardening:local` → `release:audit-sprint31` → required deleted `rollbackSignature`/`timingSafeEqual` tokens in application import code. The gate failed after all preceding suites passed. | CI/deploy hardening could not certify the stronger Sprint 1 durable database rollback implementation, encouraging accidental reintroduction of the obsolete process-local contract. | CODE-SIDE CLOSED: the audit now requires the actual claim/apply/complete and claim/rollback/complete RPC surfaces plus `import_manifest_entries`; the full hardening chain is rerun after the change. |
 | CERT-015 | Medium readiness | First exact-SHA staging dispatch → read-only preflight → three naturally expired invitations still stored as `pending` were grouped with accepted invitations lacking Auth lineage. The release stopped before migration. | A safe additive migration was blocked by a normal lazy-expiry state that application and database acceptance paths already reject and atomically mark expired on use. | CODE-SIDE CLOSED: accepted-without-user/timestamp remains a hard blocker; expired pending capability rows are separately reported as PII-free operator warnings and are never repaired by preflight. A red-to-green unit plus synthetic expired-row preflight proves PASS-with-warning; the original records are untouched. |
 | CERT-016 | Medium readiness | First staging dispatch → package install/preflight log → self-hosted runner used Node `24.17.0` despite the repository engine floor and certified toolchain being `24.18.0`. | Deployment evidence was produced under an unsupported runtime and could diverge from local/CI artifacts. | CODE-SIDE CLOSED: the deploy job now installs and asserts exact Node `24.18.0` and pnpm `10.24.0` before any Node audit, install or build. Static workflow regression is green. |
+| CERT-017 | High readiness | Second staging dispatch → migrations applied → pre-activation compatibility assertion inside the rsynced release directory → `git merge-base ... HEAD` failed because deployment deliberately excludes `.git`. | Every otherwise-valid release would stop after schema migration and before activation; rollback containment would preserve the old app but leave staging indefinitely schema-forward. | CODE-SIDE CLOSED: the assertion resolves the retained GitHub checkout, verifies its exact SHA equals `DEPLOYED_SOURCE_SHA`, and checks ancestry against that immutable SHA. The deployment failure is the red proof; unit and executable local schema assertion are green. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -366,7 +367,7 @@ runtime-environment audit, all 145 migration files, 251-table RLS audit and
 
 The primary local Definition of Done is complete. The final repository-wide gate
 used a frozen install and passed the complete `hardening:local` chain after
-CERT-014 was fixed. Its component evidence includes 429/429 unit tests with zero
+CERT-014 was fixed. Its component evidence includes 430/430 unit tests with zero
 failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
 environment audit; 145-file migration-history audit; 251-table RLS/FORCE-RLS
 audit; all release/hardening audits; production build with 17 static pages;
@@ -380,6 +381,11 @@ the synthetic secure-default stack on desktop and mobile: 40/40 passed. All thre
 repository shell scripts pass `bash -n`. Actionlint parsed every workflow and found
 no YAML/expression error in the certification change; it reports only established
 custom-runner-label warnings and pre-existing shellcheck notices.
+
+The local Storage stretch rehearsal seeded one controlled object in each of the
+five required private buckets, exported a version-3 manifest (5 objects, 379
+bytes), verified every local checksum, deleted the sources, restored them without
+upsert, verified the remote counts/checksums and deleted the rehearsal prefix.
 
 The local database evidence comprises two 145-migration clean rooms, the clean and
 blocked base-to-head rehearsals, six focused integrations under both grant

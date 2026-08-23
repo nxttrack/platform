@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
+const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
 const minimumAppSha = "4e3784649767be4c197db624b33995b3d1502f65";
 const requiredMigrationVersion = "20260823002720";
 const expectedFingerprint = "761d27a977c53c6037c4408b2064557b80b1c301107195c9065f748ef730fff3";
@@ -19,8 +20,17 @@ if (versions.at(-1) !== requiredMigrationVersion || localFingerprint !== expecte
   throw new Error("Local migration lineage does not match the runtime schema contract.");
 }
 
-execFileSync("git", ["merge-base", "--is-ancestor", minimumAppSha, "HEAD"], {
-  cwd: root,
+const checkoutSha = execFileSync("git", ["rev-parse", "HEAD"], {
+  cwd: sourceCheckout,
+  encoding: "utf8"
+}).trim();
+const deployedSourceSha = process.env.DEPLOYED_SOURCE_SHA || checkoutSha;
+if (!/^[0-9a-f]{40}$/.test(deployedSourceSha) || checkoutSha !== deployedSourceSha) {
+  throw new Error("Deployed source SHA does not match the retained source checkout.");
+}
+
+execFileSync("git", ["merge-base", "--is-ancestor", minimumAppSha, deployedSourceSha], {
+  cwd: sourceCheckout,
   stdio: "ignore"
 });
 
