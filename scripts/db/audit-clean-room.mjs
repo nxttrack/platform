@@ -38,7 +38,8 @@ const serviceOnlyFunctions = [
   "public.provision_tenant_atomic(uuid,text,text,jsonb)",
   "public.complete_tenant_provisioning(uuid,uuid)",
   "public.apply_import_chunk(uuid,uuid,uuid,uuid,jsonb)",
-  "public.rollback_import_chunk(uuid,uuid,uuid,uuid,integer)"
+  "public.rollback_import_chunk(uuid,uuid,uuid,uuid,integer)",
+  "public.runtime_schema_compatibility()"
 ];
 
 const client = new pg.Client({ connectionString });
@@ -94,6 +95,13 @@ try {
     where schemaname = 'storage' and tablename = 'objects'
     order by policyname
   `);
+  const canonicalOutboxConstraint = await client.query(`
+    select convalidated
+      from pg_constraint
+     where conrelid = 'public.email_outbox'::regclass
+       and conname = 'email_outbox_idempotency_key_canonical_check'
+  `);
+  assert.deepEqual(canonicalOutboxConstraint.rows, [{ convalidated: true }], "fresh schema must validate the canonical outbox key constraint");
 
   const functionBoundaries = [];
   for (const signature of serviceOnlyFunctions) {
@@ -140,6 +148,7 @@ try {
     objects: objectCounts.rows[0],
     buckets: buckets.rows,
     storagePolicies: storagePolicies.rows,
+    canonicalOutboxKeyConstraintValidated: true,
     serviceOnlyFunctionCount: functionBoundaries.length,
     publicOrAnonExecutableFunctionCount: unexpectedSecureExec.rows[0].total,
     sentinel

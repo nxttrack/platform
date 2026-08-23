@@ -19,14 +19,18 @@ const platformTenantBoundaryMigration = readFileSync(
   new URL("../../supabase/migrations/20260822233930_restrict_platform_only_tenant_mutations.sql", import.meta.url),
   "utf8"
 );
+const preboundImportIdentityMigration = readFileSync(
+  new URL("../../supabase/migrations/20260823002720_close_prebound_import_identity_gap.sql", import.meta.url),
+  "utf8"
+);
 
-function functionSource(name: string) {
-  const replaceStart = migration.indexOf(`create or replace function ${name}`);
-  const start = replaceStart === -1 ? migration.indexOf(`create function ${name}`) : replaceStart;
+function functionSource(name: string, source = migration) {
+  const replaceStart = source.indexOf(`create or replace function ${name}`);
+  const start = replaceStart === -1 ? source.indexOf(`create function ${name}`) : replaceStart;
   assert.notEqual(start, -1, `${name} must be replaced additively`);
-  const end = migration.indexOf("\n$$;", start);
+  const end = source.indexOf("\n$$;", start);
   assert.notEqual(end, -1, `${name} must have a complete body`);
-  return migration.slice(start, end + 4);
+  return source.slice(start, end + 4);
 }
 
 test("authenticated clients cannot mutate service-owned import state or durable rows", () => {
@@ -43,10 +47,12 @@ test("provider acceptance evidence is immutable to client roles", () => {
 });
 
 test("guardian materialization is create-only and preserves the global profile", () => {
-  const source = functionSource("public.materialize_import_guardian_invitation");
+  const source = functionSource("public.materialize_import_guardian_invitation", preboundImportIdentityMigration);
   assert.match(source, /on conflict \(id\) do nothing/);
   assert.doesNotMatch(source, /full_name\s*=\s*coalesce\(excluded\.full_name/);
   assert.match(source, /Import guardian membership already exists/);
+  assert.match(source, /already_materialized := membership_id is not null/);
+  assert.ok(source.indexOf("membership.invitation_id = invitation.id") < source.indexOf("if not already_materialized then"));
 });
 
 test("rollback owns generated guardian links and refuses unmanifested dependants", () => {

@@ -74,6 +74,8 @@ truth were explicitly checked.
 | CERT-009 | Medium | Durable outbox payload → `parseTransactionalEmailPayload` accepted `subject="Safe\r\nBcc: ..."` → SendGrid JSON received the raw subject (SMTP happened to sanitize later). The new executable parser test failed red with the injected subject returned as valid. | Provider-dependent header manipulation or malformed outbound mail. | CODE-SIDE CLOSED: payload validation is now a pure tested boundary; subject/from/organization header fields reject C0/DEL controls. Poison, malformed recipient, oversized recipient/subject/body and CRLF cases fail while bounded Unicode remains valid. |
 | CERT-010 | Medium | Service-routed enqueue → byte-exact but unconstrained key → uppercase, leading/trailing whitespace and Unicode-suffix variants each inserted a new provider-effect row. The crash suite failed red on the first variant. | A malformed retry/caller could bypass intended email dedupe and cause duplicate external effects. | CODE-SIDE CLOSED: additive canonical lowercase-ASCII key constraint plus trigger; existing noncanonical rows are reported by preflight and never auto-rewritten. Exact replay dedupes; exact key/different payload and every variant fail. |
 | CERT-011 | High readiness | New artifact → `/api/health` → only `tenants` count probe. Against a reachable pre-Sprint-1 schema the probe passed even though the artifact requires new transactional RPCs; there was also no global application no-write switch. | An incompatible release could be activated as healthy, while an emergency rollback had no mechanical containment for server actions, webhooks or internal POST workers. | CODE-SIDE CLOSED: additive service-only schema handshake, exact release/deploy assertion, health 503 on mismatch, app-wide unsafe-method maintenance gate, forced-off certification-preview workers/mail/newsletters and a read-only application-forward rehearsal. |
+| CERT-012 | Low hardening | Legacy-default clean room → four `app_private` invoker trigger functions created without an explicit revoke → inherited direct `PUBLIC` EXECUTE. Client roles lacked `USAGE` on `app_private`, so no executable Data API attack path was confirmed. | Unnecessary latent privilege that could become reachable after an unrelated future schema grant. | CODE-SIDE CLOSED: the additive correction explicitly revokes all client/service direct execution; trigger invocation remains functional. Secure-default reports zero and legacy reports only two intended public compatibility functions. |
+| CERT-013 | High integrity | Import invitation creation resolved `invited_user_id` before membership materialization → `materialize_import_guardian_invitation` treated Auth lineage alone as completed → returned `outcome=ready` with `membershipId=null`. A fresh clean-room regression failed red on the pre-existing-membership conflict. | Import could record false identity completion, skip the membership bind and leave the guardian/job in inconsistent reconciliation state. | CODE-SIDE CLOSED: completion now requires the exact invitation-owned membership; a matching Auth-only binding continues through create-only materialization, while any pre-existing tenant parent membership fails without mutation. Both grant profiles pass the adversarial and 5,000-row import suites. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -113,13 +115,13 @@ used. The repository now includes `db:audit-clean-room`, which compares every
 files and performs the remaining assertions below without retaining sentinel data.
 
 The target originally contained 139 migrations. Both final clean-room builds apply
-140 because the certification fix is an additive, CLI-generated migration; the
-four pushed Sprint 1 files remain byte-for-byte unchanged.
+145 because all six certification corrections are additive, CLI-generated
+migrations; the four pushed Sprint 1 files remain byte-for-byte unchanged.
 
 | Profile | Empty-stack start | Migration application | Result |
 | --- | --- | --- | --- |
-| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 23:04:59–23:05:38 CEST | 2026-08-23 23:06:08–23:06:15 CEST | 140/140 exact, no repair/error |
-| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 23:08:35–23:09:13 CEST | 2026-08-23 23:10:27–23:10:34 CEST | 140/140 exact, no repair/error |
+| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 00:24:11 UTC | 2026-08-23 00:24:11–00:31:17 UTC | 145/145 exact, no repair/error |
+| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 00:23:01 UTC | 2026-08-23 00:23:51–00:31:17 UTC | 145/145 exact, no repair/error |
 
 The secure fixture explicitly revokes the PostgreSQL default `PUBLIC EXECUTE` as
 well as Data API table/sequence/function defaults before application migrations.
@@ -127,11 +129,11 @@ That global function revocation is required because a schema-specific default is
 additive and cannot remove PostgreSQL's built-in `PUBLIC EXECUTE` default.
 
 Both profiles have the same application inventory: 251 `public` tables, all with
-RLS and FORCE RLS; 265 `public`/`app_private` functions; 245 user triggers; 926
-public indexes; 2,620 public constraints; and five exact private buckets
+RLS and FORCE RLS; 268 `public`/`app_private` functions; 264 user triggers; 926
+public indexes; 2,621 public constraints; and five exact private buckets
 (`badge-studio-assets`, `diploma-vault`, `participant-media`, `tenant-documents`,
 `tenant-media-assets`). Storage has only the two clean scoped read policies and the
-restrictive child-session policy. Ten critical mail/provision/import RPC signatures
+restrictive child-session policy. Eleven critical mail/provision/import/runtime RPC signatures
 are explicitly denied to `anon`/`authenticated` and executable by `service_role`.
 
 A transaction-rolled-back post-migration sentinel proves the intended difference:
@@ -141,16 +143,16 @@ A transaction-rolled-back post-migration sentinel proves the intended difference
 | `anon` table SELECT | allowed | denied |
 | `authenticated` table INSERT | allowed | denied |
 | `anon` function EXECUTE | allowed | denied |
-| Any installed `public`/`app_private` function executable by `PUBLIC` or `anon` | 6 compatibility functions | 0 |
+| Any installed `public`/`app_private` function executable by `PUBLIC` or `anon` | 2 compatibility functions | 0 |
 
-All five focused DB integrations (email outbox, atomic provisioning, core
-onboarding, 5,000-row resumable import and certification adversarial cases) pass on
+All six focused DB integrations (email outbox, atomic provisioning, core
+onboarding, 5,000-row resumable import, certification adversarial and crash-window cases) pass on
 both builds. A production app artifact started against each stack and `/api/health`
-reported `ok=true`, database pass (34 ms legacy, 32 ms secure) and the expected
+reported `ok=true`, database and schema-compatibility pass, and the expected
 certification source. This is local compatibility evidence, not a live claim.
 
-Checkpoint regression gate: 418/418 unit tests, typecheck, production build, Auth
-audit, 140-file migration audit, 251-table RLS audit, production dependency audit,
+Final clean-room re-certification gate: 428/428 unit tests, typecheck, production build, Auth
+audit, 145-file migration audit, 251-table RLS audit, production dependency audit,
 both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
 
 ## Checkpoint 3 — base-to-head upgrade rehearsal and preflight
@@ -309,12 +311,13 @@ VERIFIED LOCAL. The previous allowed application is the exact Sprint 1 target
 rollback artifact because it still contains the replaced non-transactional import
 and onboarding write paths.
 
-Migration `20260823000225_runtime_schema_compatibility_contract.sql` publishes one
-immutable, service-only contract with version 1, minimum compatible app SHA
+Migration `20260823000225_runtime_schema_compatibility_contract.sql`, rolled forward
+by the later additive corrections, publishes one immutable, service-only contract
+with version 3, minimum compatible app SHA
 `4e3784649767be4c197db624b33995b3d1502f65`, required migration
-`20260823000225`, and minimum-schema fingerprint
-`c21d353eed62463814087c3edc7bdf63a11522141131052641b8d9972ef02ab7` (SHA-256
-over the ordered 143-migration minimum lineage). `anon` and `authenticated` are
+`20260823002720`, and minimum-schema fingerprint
+`761d27a977c53c6037c4408b2064557b80b1c301107195c9065f748ef730fff3` (SHA-256
+over the ordered 145-migration minimum lineage). `anon` and `authenticated` are
 grant-denied through the local Data API; `service_role` receives the one expected
 row.
 
@@ -322,15 +325,15 @@ The three executable artifact/schema combinations produced:
 
 | Combination | Result |
 | --- | --- |
-| New 143-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
+| New 145-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
 | New schema + freshly frozen-installed/built `4e378…` artifact | HTTP 200; database `pass`; all 17 Sprint 1 transactional RPC names retained |
 | Newly built certification artifact + old 140-migration schema | HTTP 503; database connectivity still `pass`; schema compatibility explicitly `fail` |
 
 The local `release:rehearse-application-forward-rollback` command opens both
-databases in repeatable-read, read-only transactions. It proved in 100 ms that all
+databases in repeatable-read, read-only transactions. It proved in 95 ms that all
 3,751 old public column/type contracts and the 17 previous-app transactional RPCs
 remain available, the old schema lacks the new handshake, and pending work remains
-unchanged (`email=30`, `import=6`, `identity=8`). No schema migration, schema drop,
+unchanged (`email=15`, `import=3`, `identity=2`). No schema migration, schema drop,
 history repair or job mutation occurs in the rehearsal.
 
 Containment requires and checks exact values
@@ -344,15 +347,15 @@ does not replace Data API grants/RLS; those remain independently covered by the
 The deployment workflow now blocks certification-preview activation unless the
 full 40-character input SHA equals the selected branch HEAD, the target is staging,
 the read-only customer-data preflight passes, every pending migration belongs to
-the eight-entry Sprint 1/certification allowlist, and the post-migration schema
+the ten-entry Sprint 1/certification allowlist, and the post-migration schema
 contract matches. For this preview it mechanically forces maintenance, mail,
 newsletter and internal workers to their safe values. Production promotion remains
 outside this certification path.
 
-Checkpoint regression gate: 427/427 units including 5/5 dedicated red-to-green compatibility tests,
+Checkpoint regression gate: 428/428 units including 6/6 dedicated red-to-green compatibility tests,
 application-forward rehearsal, three built-artifact HTTP probes, 102-case Data API
 matrix including the new RPC grants, typecheck, production build (17 static pages),
-runtime-environment audit, all 143 migration files, 251-table RLS audit and
+runtime-environment audit, all 145 migration files, 251-table RLS audit and
 `git diff --check` are VERIFIED LOCAL.
 
 ## Full regression and external boundaries

@@ -236,7 +236,7 @@ try {
     body: {}
   });
   assert.equal(serviceCompatibility.status, 200, "service role must execute the runtime schema contract RPC");
-  assert.equal(serviceCompatibility.json[0]?.contract_version, 1);
+  assert.equal(serviceCompatibility.json[0]?.contract_version, 3);
 
   const firstKeyUse = await rest("rpc/enqueue_email_outbox", {
     service: true,
