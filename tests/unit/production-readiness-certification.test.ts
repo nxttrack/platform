@@ -89,6 +89,13 @@ test("upgrade preflight is read-only and fail-closed on every required legacy bl
   }
 });
 
+test("expired pending invitations are reported without blocking a safe migration", () => {
+  assert.match(upgradePreflight, /expired_pending_invitations_require_operator_awareness/);
+  assert.match(upgradePreflight, /expiredPendingInvitationCount/);
+  assert.match(upgradePreflight, /block\("invitation_auth_lineage_inconsistencies", invitationAuthLineageInconsistencies\.rows\)/);
+  assert.match(upgradePreflight, /warn\("expired_pending_invitations_require_operator_awareness", expiredPendingInvitations\.rows\)/);
+});
+
 test("blocked upgrade fixture contains no automatic customer-data repair", () => {
   assert.match(upgradeFixture, /UPGRADE_FIXTURE_MODE/);
   assert.match(upgradeFixture, /'trial'.*current_date, 'trial'/s);

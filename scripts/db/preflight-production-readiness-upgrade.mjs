@@ -121,21 +121,30 @@ try {
     block("conflicting_legacy_idempotency_keys", legacyIdempotencyConflicts.rows);
   }
 
-  const invitationInconsistencies = await client.query(`
+  const invitationAuthLineageInconsistencies = await client.query(`
     select id, tenant_id, status,
       case
         when status = 'accepted' and invited_user_id is null then 'accepted_without_auth_user'
         when status = 'accepted' and accepted_at is null then 'accepted_without_timestamp'
-        when status = 'pending' and expires_at <= now() then 'expired_but_pending'
       end as reason
     from public.auth_invitations
-    where (status = 'accepted' and (invited_user_id is null or accepted_at is null))
-       or (status = 'pending' and expires_at <= now())
+    where status = 'accepted' and (invited_user_id is null or accepted_at is null)
     order by tenant_id nulls first, id
   `);
-  report.inventory.invitationInconsistencyCount = invitationInconsistencies.rowCount;
-  if (invitationInconsistencies.rowCount > 0) {
-    block("invitation_auth_lineage_inconsistencies", invitationInconsistencies.rows);
+  report.inventory.invitationInconsistencyCount = invitationAuthLineageInconsistencies.rowCount;
+  if (invitationAuthLineageInconsistencies.rowCount > 0) {
+    block("invitation_auth_lineage_inconsistencies", invitationAuthLineageInconsistencies.rows);
+  }
+
+  const expiredPendingInvitations = await client.query(`
+    select id, tenant_id, status, 'expired_but_pending' as reason
+    from public.auth_invitations
+    where status = 'pending' and expires_at <= now()
+    order by tenant_id nulls first, id
+  `);
+  report.inventory.expiredPendingInvitationCount = expiredPendingInvitations.rowCount;
+  if (expiredPendingInvitations.rowCount > 0) {
+    warn("expired_pending_invitations_require_operator_awareness", expiredPendingInvitations.rows);
   }
 
   const legacyMail = await client.query(`

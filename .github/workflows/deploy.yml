@@ -180,6 +180,19 @@ jobs:
         with:
           ref: ${{ inputs.staging_preview_sha || github.sha }}
 
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup certified pnpm
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.24.0"
+
       - name: Enforce release source boundary
         run: |
           set -euo pipefail

@@ -77,6 +77,8 @@ truth were explicitly checked.
 | CERT-012 | Low hardening | Legacy-default clean room → four `app_private` invoker trigger functions created without an explicit revoke → inherited direct `PUBLIC` EXECUTE. Client roles lacked `USAGE` on `app_private`, so no executable Data API attack path was confirmed. | Unnecessary latent privilege that could become reachable after an unrelated future schema grant. | CODE-SIDE CLOSED: the additive correction explicitly revokes all client/service direct execution; trigger invocation remains functional. Secure-default reports zero and legacy reports only two intended public compatibility functions. |
 | CERT-013 | High integrity | Import invitation creation resolved `invited_user_id` before membership materialization → `materialize_import_guardian_invitation` treated Auth lineage alone as completed → returned `outcome=ready` with `membershipId=null`. A fresh clean-room regression failed red on the pre-existing-membership conflict. | Import could record false identity completion, skip the membership bind and leave the guardian/job in inconsistent reconciliation state. | CODE-SIDE CLOSED: completion now requires the exact invitation-owned membership; a matching Auth-only binding continues through create-only materialization, while any pre-existing tenant parent membership fails without mutation. Both grant profiles pass the adversarial and 5,000-row import suites. |
 | CERT-014 | Medium readiness | Full `hardening:local` → `release:audit-sprint31` → required deleted `rollbackSignature`/`timingSafeEqual` tokens in application import code. The gate failed after all preceding suites passed. | CI/deploy hardening could not certify the stronger Sprint 1 durable database rollback implementation, encouraging accidental reintroduction of the obsolete process-local contract. | CODE-SIDE CLOSED: the audit now requires the actual claim/apply/complete and claim/rollback/complete RPC surfaces plus `import_manifest_entries`; the full hardening chain is rerun after the change. |
+| CERT-015 | Medium readiness | First exact-SHA staging dispatch → read-only preflight → three naturally expired invitations still stored as `pending` were grouped with accepted invitations lacking Auth lineage. The release stopped before migration. | A safe additive migration was blocked by a normal lazy-expiry state that application and database acceptance paths already reject and atomically mark expired on use. | CODE-SIDE CLOSED: accepted-without-user/timestamp remains a hard blocker; expired pending capability rows are separately reported as PII-free operator warnings and are never repaired by preflight. A red-to-green unit plus synthetic expired-row preflight proves PASS-with-warning; the original records are untouched. |
+| CERT-016 | Medium readiness | First staging dispatch → package install/preflight log → self-hosted runner used Node `24.17.0` despite the repository engine floor and certified toolchain being `24.18.0`. | Deployment evidence was produced under an unsupported runtime and could diverge from local/CI artifacts. | CODE-SIDE CLOSED: the deploy job now installs and asserts exact Node `24.18.0` and pnpm `10.24.0` before any Node audit, install or build. Static workflow regression is green. |
 
 No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
 idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
@@ -364,7 +366,7 @@ runtime-environment audit, all 145 migration files, 251-table RLS audit and
 
 The primary local Definition of Done is complete. The final repository-wide gate
 used a frozen install and passed the complete `hardening:local` chain after
-CERT-014 was fixed. Its component evidence includes 428/428 unit tests with zero
+CERT-014 was fixed. Its component evidence includes 429/429 unit tests with zero
 failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
 environment audit; 145-file migration-history audit; 251-table RLS/FORCE-RLS
 audit; all release/hardening audits; production build with 17 static pages;
@@ -372,6 +374,12 @@ standalone packaging; and the staging-gate audit. The staging gate reported zero
 failures and nine explicitly external confirmations. `release:truth`, the design
 audit, 53 swim-canon tests, 27 parent/child portal tests, the migration no-op path,
 and `git diff --check` also pass after the final deployment-workflow hardening.
+
+As stretch evidence, the public/auth-boundary Playwright smoke runs locally against
+the synthetic secure-default stack on desktop and mobile: 40/40 passed. All three
+repository shell scripts pass `bash -n`. Actionlint parsed every workflow and found
+no YAML/expression error in the certification change; it reports only established
+custom-runner-label warnings and pre-existing shellcheck notices.
 
 The local database evidence comprises two 145-migration clean rooms, the clean and
 blocked base-to-head rehearsals, six focused integrations under both grant
