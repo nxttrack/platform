@@ -81,12 +81,16 @@ test("exact-SHA maintenance previews execute a read-only browser smoke", () => {
 
 test("logical restore binds the source to exact repository migration lineage", () => {
   const script = repositoryFile("scripts/db/rehearse-logical-restore.sh");
+  const bootstrap = repositoryFile("scripts/db/restore-target-bootstrap.sql");
 
   assert.match(script, /supabase_migrations\.schema_migrations/);
   assert.match(script, /expected_migration_fingerprint/);
   assert.match(script, /source_migration_fingerprint/);
   assert.match(script, /Source migration lineage does not match/);
   assert.ok(script.indexOf("Source migration lineage does not match") < script.indexOf("Creating a logical dump"));
+  for (const extension of ["btree_gist", "pgcrypto", '"uuid-ossp"']) {
+    assert.match(bootstrap, new RegExp(`create extension if not exists ${extension}`));
+  }
 });
 
 test("Storage restore is explicitly bound and keeps historical manifest validation version-aware", () => {
