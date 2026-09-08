@@ -50,7 +50,7 @@ test("health fails closed unless database and application contracts match", () =
   assert.match(health, /status: ok \? 200 : 503/);
 });
 
-test("the application validator rejects absent, old and tampered schema contracts", () => {
+test("the compatibility bridge accepts the immediately previous schema and rejects tampering", () => {
   const valid = {
     contract_version: 5,
     minimum_compatible_app_sha: "352b38cd69958a3d59d31b39aaa798e6de70a77f",
@@ -58,7 +58,20 @@ test("the application validator rejects absent, old and tampered schema contract
     required_migration_version: "20260908111450"
   };
   assert.equal(isRuntimeSchemaCompatible([valid]), true);
-  for (const value of [null, [], { ...valid, contract_version: 0 }, { ...valid, minimum_schema_fingerprint: "old" }]) {
+  assert.equal(isRuntimeSchemaCompatible([{
+    contract_version: 4,
+    minimum_compatible_app_sha: "4e3784649767be4c197db624b33995b3d1502f65",
+    minimum_schema_fingerprint: "185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad",
+    required_migration_version: "20260823005756"
+  }]), true);
+  assert.equal(isRuntimeSchemaCompatible([{ ...valid, minimum_compatible_app_sha: "f".repeat(40) }]), true);
+  for (const value of [
+    null,
+    [],
+    { ...valid, contract_version: 0 },
+    { ...valid, minimum_schema_fingerprint: "old" },
+    { ...valid, minimum_compatible_app_sha: "not-a-sha" }
+  ]) {
     assert.equal(isRuntimeSchemaCompatible(value), false);
   }
 });
