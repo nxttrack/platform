@@ -49,7 +49,7 @@ test("preview rollback target has an ancestry-checked immutable release identity
   const assertion = repositoryFile("scripts/release/assert-rollback-release.mjs");
 
   assert.match(deploy, /release:assert-rollback-target/);
-  assert.match(assertion, /fffcb312d6317d97fd24b8e876efb47fb658f455/);
+  assert.match(assertion, /541fe5fd6cee083cb809eef236382cfd2d519ed3/);
   assert.match(assertion, /merge-base/);
   assert.match(assertion, /--is-ancestor/);
   assert.match(assertion, /RELEASE_COMMIT_SHA/);

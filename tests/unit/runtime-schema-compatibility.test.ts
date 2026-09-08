@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { isRuntimeSchemaCompatible } from "../../apps/web/lib/release/schema-compatibility";
+import {
+  isRuntimeSchemaCompatible,
+  MINIMUM_COMPATIBLE_APP_SHA
+} from "../../apps/web/lib/release/schema-compatibility";
 
 const read = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 const migration = read("supabase/migrations/20260823000225_runtime_schema_compatibility_contract.sql");
@@ -39,7 +42,8 @@ test("legacy auto-grants are removed from service-owned ledgers", () => {
 });
 
 test("re-certification rolls the compatibility contract to its compatible application anchor", () => {
-  assert.match(recertificationMigration, /fffcb312d6317d97fd24b8e876efb47fb658f455/);
+  assert.equal(MINIMUM_COMPATIBLE_APP_SHA, "541fe5fd6cee083cb809eef236382cfd2d519ed3");
+  assert.match(recertificationMigration, /541fe5fd6cee083cb809eef236382cfd2d519ed3/);
   assert.match(recertificationMigration, /2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba/);
   assert.match(recertificationMigration, /'20260908111450'/);
 });
@@ -53,7 +57,7 @@ test("health fails closed unless database and application contracts match", () =
 test("the compatibility bridge accepts the immediately previous schema and rejects tampering", () => {
   const valid = {
     contract_version: 5,
-    minimum_compatible_app_sha: "fffcb312d6317d97fd24b8e876efb47fb658f455",
+    minimum_compatible_app_sha: "541fe5fd6cee083cb809eef236382cfd2d519ed3",
     minimum_schema_fingerprint: "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
     required_migration_version: "20260908111450"
   };

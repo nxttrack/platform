@@ -8,7 +8,7 @@ import pg from "pg";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
-const minimumAppSha = "fffcb312d6317d97fd24b8e876efb47fb658f455";
+const minimumAppSha = "541fe5fd6cee083cb809eef236382cfd2d519ed3";
 const requiredMigrationVersion = "20260908111450";
 const expectedFingerprint = "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
