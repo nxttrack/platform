@@ -8,9 +8,9 @@ import pg from "pg";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
-const minimumAppSha = "352b38cd69958a3d59d31b39aaa798e6de70a77f";
+const minimumAppSha = "fffcb312d6317d97fd24b8e876efb47fb658f455";
 const requiredMigrationVersion = "20260908111450";
-const expectedFingerprint = "686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e";
+const expectedFingerprint = "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
   .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
   .sort();

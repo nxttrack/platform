@@ -1,97 +1,6 @@
 -- Independent 2026-09-08 re-certification corrections. The reviewed Sprint 1
 -- migrations remain immutable; every change here is additive.
 
--- Direct Data API writes must enforce the same reservation-aware group capacity
--- invariant as the service-routed placement RPC.
-create or replace function app_private.enforce_membership_capacity_bucket()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, pg_temp
-as $$
-declare
-  target_group public.groups%rowtype;
-  regular_used numeric := 0;
-  flex_used numeric := 0;
-  trial_used numeric := 0;
-  total_used numeric := 0;
-  bucket_used numeric := 0;
-  bucket_limit numeric := 0;
-begin
-  if new.status not in ('active', 'trial') then
-    return new;
-  end if;
-  if new.status = 'trial' and new.capacity_bucket <> 'trial' then
-    raise exception 'Trial memberships must use the trial capacity bucket';
-  end if;
-
-  select * into target_group
-  from public.groups lesson_group
-  where lesson_group.tenant_id = new.tenant_id and lesson_group.id = new.group_id
-  for update;
-  if target_group.id is null then raise exception 'Group not found'; end if;
-
-  select
-    coalesce(sum(source.weight) filter (where source.bucket = 'regular'), 0),
-    coalesce(sum(source.weight) filter (where source.bucket = 'flex'), 0),
-    coalesce(sum(source.weight) filter (where source.bucket = 'trial'), 0),
-    coalesce(sum(source.weight), 0)
-  into regular_used, flex_used, trial_used, total_used
-  from (
-    select membership.capacity_bucket as bucket, membership.capacity_weight as weight
-    from public.group_memberships membership
-    where membership.tenant_id = new.tenant_id
-      and membership.group_id = new.group_id
-      and membership.status in ('active', 'trial')
-      and (tg_op = 'INSERT' or membership.id <> new.id)
-    union all
-    select registration.capacity_bucket, 1::numeric
-    from public.offering_registrations registration
-    where registration.tenant_id = new.tenant_id
-      and registration.group_id = new.group_id
-      and registration.status in ('held', 'pending_payment', 'payment_review')
-      and (registration.hold_expires_at is null or registration.hold_expires_at > now())
-    union all
-    select reservation.capacity_bucket, reservation.capacity_weight
-    from public.capacity_soft_reservations reservation
-    where reservation.tenant_id = new.tenant_id
-      and reservation.group_id = new.group_id
-      and reservation.status = 'approved'
-      and reservation.expires_at > now()
-  ) source;
-
-  bucket_limit := case new.capacity_bucket
-    when 'regular' then target_group.regular_capacity
-    when 'flex' then target_group.flex_capacity
-    else target_group.trial_capacity
-  end;
-  if new.capacity_bucket = 'flex'
-    and target_group.capacity_borrowing in ('flex_from_regular', 'bidirectional')
-  then
-    bucket_limit := bucket_limit + greatest(target_group.regular_capacity - regular_used, 0);
-  elsif new.capacity_bucket = 'regular'
-    and target_group.capacity_borrowing = 'bidirectional'
-  then
-    bucket_limit := bucket_limit + greatest(target_group.flex_capacity - flex_used, 0);
-  end if;
-  bucket_used := case new.capacity_bucket
-    when 'regular' then regular_used
-    when 'flex' then flex_used
-    else trial_used
-  end;
-
-  if total_used + new.capacity_weight > target_group.hard_capacity then
-    raise exception 'Physical group capacity exceeded';
-  end if;
-  if bucket_used + new.capacity_weight > bucket_limit then
-    raise exception 'Requested capacity bucket is full';
-  end if;
-  return new;
-end;
-$$;
-
-revoke all on function app_private.enforce_membership_capacity_bucket() from public, anon, authenticated;
-
 -- Import-created Auth identities are external effects. Record their ownership in
 -- the durable manifest and fence compensation with a lease/token pair so a crash
 -- after Auth deletion can be reconciled safely. Pre-existing/shared identities
@@ -483,8 +392,8 @@ set search_path = ''
 as $$
   select
     5,
-    '352b38cd69958a3d59d31b39aaa798e6de70a77f'::text,
-    '686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e'::text,
+    'fffcb312d6317d97fd24b8e876efb47fb658f455'::text,
+    '2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba'::text,
     '20260908111450'::text;
 $$;
 

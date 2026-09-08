@@ -170,6 +170,19 @@ try {
       body: {}
     });
     assert.ok([401, 403, 404].includes(compatibilityRpc.status), "client runtime schema contract invocation must be denied by grants");
+
+    const authRollbackRpc = await rest("rpc/claim_import_auth_user_rollback", {
+      token,
+      method: "POST",
+      body: {
+        target_actor_user_id: ownerA.id,
+        target_tenant_id: tenantA,
+        target_job_id: "a0000000-0000-4000-8000-000000000001",
+        target_claim_token: "97000000-0000-4000-8000-000000000001",
+        target_lease_seconds: 60
+      }
+    });
+    assert.ok([401, 403, 404].includes(authRollbackRpc.status), "client Auth-compensation claim invocation must be denied by grants");
   }
 
   const manipulatedTenantRpcs = [
@@ -423,6 +436,8 @@ async function proveGrantBoundary() {
       has_table_privilege('authenticated', 'public.import_jobs', 'update') as import_update,
       has_function_privilege('authenticated', 'public.claim_email_outbox(integer,integer)', 'execute') as client_claim,
       has_function_privilege('service_role', 'public.claim_email_outbox(integer,integer)', 'execute') as service_claim,
+      has_function_privilege('authenticated', 'public.claim_import_auth_user_rollback(uuid,uuid,uuid,uuid,integer)', 'execute') as client_auth_rollback,
+      has_function_privilege('service_role', 'public.claim_import_auth_user_rollback(uuid,uuid,uuid,uuid,integer)', 'execute') as service_auth_rollback,
       has_function_privilege('authenticated', 'public.runtime_schema_compatibility()', 'execute') as client_compatibility,
       has_function_privilege('service_role', 'public.runtime_schema_compatibility()', 'execute') as service_compatibility
   `);
@@ -431,7 +446,9 @@ async function proveGrantBoundary() {
     outbox_update: false,
     import_update: false,
     client_claim: false,
+    client_auth_rollback: false,
     service_claim: true,
+    service_auth_rollback: true,
     client_compatibility: false,
     service_compatibility: true
   });

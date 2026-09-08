@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 
-export const minimumRollbackAppSha = "352b38cd69958a3d59d31b39aaa798e6de70a77f";
+export const minimumRollbackAppSha = "fffcb312d6317d97fd24b8e876efb47fb658f455";
 
 export function readReleaseCommitSha(releaseDirectory) {
   const artifactPath = join(releaseDirectory, "artifacts", "exact-source-sha.json");

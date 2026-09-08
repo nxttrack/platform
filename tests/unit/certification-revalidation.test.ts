@@ -49,7 +49,7 @@ test("preview rollback target has an ancestry-checked immutable release identity
   const assertion = repositoryFile("scripts/release/assert-rollback-release.mjs");
 
   assert.match(deploy, /release:assert-rollback-target/);
-  assert.match(assertion, /352b38cd69958a3d59d31b39aaa798e6de70a77f/);
+  assert.match(assertion, /fffcb312d6317d97fd24b8e876efb47fb658f455/);
   assert.match(assertion, /merge-base/);
   assert.match(assertion, /--is-ancestor/);
   assert.match(assertion, /RELEASE_COMMIT_SHA/);
@@ -143,14 +143,12 @@ test("Storage restore is explicitly bound and keeps historical manifest validati
   );
 });
 
-test("capacity and import-created Auth identities have additive corrective database controls", () => {
+test("import-created Auth identities have additive corrective database controls", () => {
   const migrations = readdirSync(new URL("../../supabase/migrations/", import.meta.url));
   const migrationName = migrations.find((name) => name.endsWith("_production_readiness_recertification.sql"));
   assert.ok(migrationName, "CLI-generated re-certification migration must exist");
   const migration = repositoryFile(`supabase/migrations/${migrationName}`);
 
-  assert.match(migration, /capacity_soft_reservations/);
-  assert.match(migration, /offering_registrations/);
   assert.match(migration, /import_auth_users/);
   assert.match(migration, /import_auth_users_for_job/);
   assert.match(migration, /import_auth_user_exists/);

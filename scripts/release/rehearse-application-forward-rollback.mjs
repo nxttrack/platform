@@ -38,8 +38,8 @@ try {
   assert.equal(newContract.rowCount, 1, "new schema + new artifact contract must match once");
   assert.deepEqual(newContract.rows[0], {
     contract_version: 5,
-    minimum_compatible_app_sha: "352b38cd69958a3d59d31b39aaa798e6de70a77f",
-    minimum_schema_fingerprint: "686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e",
+    minimum_compatible_app_sha: "fffcb312d6317d97fd24b8e876efb47fb658f455",
+    minimum_schema_fingerprint: "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
     required_migration_version: "20260908111450"
   });
 

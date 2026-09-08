@@ -39,8 +39,8 @@ test("legacy auto-grants are removed from service-owned ledgers", () => {
 });
 
 test("re-certification rolls the compatibility contract to its compatible application anchor", () => {
-  assert.match(recertificationMigration, /352b38cd69958a3d59d31b39aaa798e6de70a77f/);
-  assert.match(recertificationMigration, /686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e/);
+  assert.match(recertificationMigration, /fffcb312d6317d97fd24b8e876efb47fb658f455/);
+  assert.match(recertificationMigration, /2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba/);
   assert.match(recertificationMigration, /'20260908111450'/);
 });
 
@@ -53,8 +53,8 @@ test("health fails closed unless database and application contracts match", () =
 test("the compatibility bridge accepts the immediately previous schema and rejects tampering", () => {
   const valid = {
     contract_version: 5,
-    minimum_compatible_app_sha: "352b38cd69958a3d59d31b39aaa798e6de70a77f",
-    minimum_schema_fingerprint: "686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e",
+    minimum_compatible_app_sha: "fffcb312d6317d97fd24b8e876efb47fb658f455",
+    minimum_schema_fingerprint: "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
     required_migration_version: "20260908111450"
   };
   assert.equal(isRuntimeSchemaCompatible([valid]), true);

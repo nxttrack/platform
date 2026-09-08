@@ -141,6 +141,13 @@ async function testGuardianOutboxAndMaterialization() {
   const chunk = await applyRows(jobId, claim.claimToken, rows, null, [command]);
   assertEqual(chunk.outcome, "applied", "guardian chunk applies");
   const invitationId = chunk.invitations[0]?.invitationId;
+  const ownedGuardianUserId = randomUUID();
+  await setup.query(
+    `insert into auth.users (
+      id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) values ($1, 'authenticated', 'authenticated', $2, $3::jsonb, '{}'::jsonb, now(), now())`,
+    [ownedGuardianUserId, email, JSON.stringify({ nxttrack_provisioning_invitation_id: invitationId })]
+  );
   const blocked = await setup.query(
     `select invitation.identity_status, invitation.invited_user_id,
       outbox.status as outbox_status, outbox.next_attempt_at > now() + interval '50 years' as blocked
@@ -156,7 +163,7 @@ async function testGuardianOutboxAndMaterialization() {
 
   const materialized = await serviceQuery(
     "select public.materialize_import_guardian_invitation($1, $2, $3, $4, $5, true) as result",
-    [actorId, tenantId, jobId, invitationId, guardianUserId]
+    [actorId, tenantId, jobId, invitationId, ownedGuardianUserId]
   );
   assertEqual(materialized.rows[0]?.result?.outcome, "ready", "guardian identity materializes");
   const stillBlocked = await setup.query(
@@ -180,6 +187,24 @@ async function testGuardianOutboxAndMaterialization() {
   assertEqual(ready.rows[0]?.released, true, "job completion releases guardian mail");
 
   const rollbackClaim = await claimRollback(jobId);
+  const authClaim = await serviceQuery(
+    "select public.claim_import_auth_user_rollback($1,$2,$3,$4,300) as result",
+    [actorId, tenantId, jobId, rollbackClaim.claimToken]
+  );
+  assertEqual(authClaim.rows[0]?.result?.outcome, "claimed", "owned Auth identity is claimed before database rollback");
+  await setup.query("delete from auth.users where id=$1", [ownedGuardianUserId]);
+  const authCompleted = await serviceQuery(
+    "select public.complete_import_auth_user_rollback($1,$2,$3,$4,$5,$6,true) as result",
+    [
+      actorId,
+      tenantId,
+      jobId,
+      rollbackClaim.claimToken,
+      authClaim.rows[0].result.manifestEntryId,
+      authClaim.rows[0].result.claimToken
+    ]
+  );
+  assertEqual(authCompleted.rows[0]?.result?.outcome, "compensated", "owned Auth identity compensation is durable");
   const guardianRollback = await rollbackChunk(jobId, rollbackClaim.claimToken);
   assertEqual(guardianRollback.done, true, "guardian rollback compensates complete manifest");
   await completeRollback(jobId, rollbackClaim.claimToken);
@@ -195,7 +220,7 @@ async function testGuardianOutboxAndMaterialization() {
   assertEqual(rolledBack.rows[0]?.status, "revoked", "guardian invitation is revoked");
   assertEqual(rolledBack.rows[0]?.outbox_status, "cancelled", "guardian outbox is cancelled");
   assertEqual(rolledBack.rows[0]?.memberships, 0, "import-created guardian membership is removed");
-  assertEqual(rolledBack.rows[0]?.manifest_entries, 3, "guardian manifest remains after rollback");
+  assertEqual(rolledBack.rows[0]?.manifest_entries, 4, "guardian and Auth manifest remains after rollback");
 }
 
 async function testRollbackRefusesProcessingOrAcceptedMailForSharedAuthUser() {
