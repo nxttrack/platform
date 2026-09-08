@@ -265,6 +265,19 @@ jobs:
 
           echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
 
+      - name: Snapshot and validate certification rollback target
+        if: github.ref_name == 'codex/production-readiness-certification-sprint-2'
+        run: |
+          set -euo pipefail
+          PREVIOUS_RELEASE="$(readlink -f "$BASE_DIR/current")"
+          STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.json"
+          ENV_STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.env"
+          test -s "$BASE_DIR/shared/.env"
+          cp --dereference --preserve=mode "$BASE_DIR/shared/.env" "$ENV_STATE_FILE"
+          chgrp nxttrack-deploy "$ENV_STATE_FILE"
+          ROLLBACK_RELEASE="$PREVIOUS_RELEASE" ROLLBACK_STATE_FILE="$STATE_FILE" \
+            pnpm run release:assert-rollback-target
+
       - name: Write environment file
         run: |
           set -euo pipefail
@@ -376,6 +389,29 @@ jobs:
           pnpm build
           pnpm run deploy:package-standalone-assets
 
+      - name: Persist immutable release identity
+        working-directory: ${{ env.RELEASE }}
+        run: pnpm run release:write-exact-source
+
+      - name: Enter and verify certification maintenance containment
+        if: github.ref_name == 'codex/production-readiness-certification-sprint-2'
+        run: |
+          set -euo pipefail
+          sudo systemctl restart "$SERVICE_NAME"
+          for attempt in {1..20}; do
+            status="$(curl --silent --show-error --output /tmp/nxttrack-maintenance-response --write-out '%{http_code}' \
+              --request POST --max-time 10 "$APP_URL/api/internal/email-outbox/process" || true)"
+            if [[ "$status" == "503" ]] && grep -q 'maintenance_no_write' /tmp/nxttrack-maintenance-response; then
+              echo "[deploy:containment] PASS maintenance no-write is active before migration."
+              break
+            fi
+            if [[ "$attempt" == "20" ]]; then
+              echo "[deploy:containment] Maintenance no-write was not active before migration." >&2
+              exit 1
+            fi
+            sleep 3
+          done
+
       - name: Enforce staging preview migration allowlist
         if: env.STAGING_PREVIEW_SHA != ''
         working-directory: ${{ env.RELEASE }}
@@ -388,7 +424,7 @@ jobs:
             ? [
                 "20260822002234", "20260822004329", "20260822010612", "20260822012255",
                 "20260822225251", "20260822233930", "20260822235045", "20260823000225",
-                "20260823001941", "20260823002720", "20260823005756"
+                "20260823001941", "20260823002720", "20260823005756", "20260908111450"
               ]
             : ["20260811120000", "20260811130000", "20260811140000", "20260811180455", "20260812120000"]);
           const local = readdirSync("supabase/migrations")
@@ -485,17 +521,6 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run auth:bootstrap-platform-owner
-
-      - name: Snapshot staging preview rollback target
-        if: env.STAGING_PREVIEW_SHA != ''
-        run: |
-          set -euo pipefail
-          PREVIOUS_RELEASE="$(readlink -f "$BASE_DIR/current")"
-          case "$PREVIOUS_RELEASE" in
-            "$BASE_DIR"/releases/*) ;;
-            *) echo "Refusing invalid preview rollback target: $PREVIOUS_RELEASE"; exit 1 ;;
-          esac
-          printf '%s\n' "$PREVIOUS_RELEASE" > "$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
 
       - name: Activate release
         run: |
@@ -621,6 +646,10 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Production-readiness maintenance preview browser smoke
+        if: github.ref_name == 'codex/production-readiness-certification-sprint-2' && inputs.staging_preview_sha != ''
+        run: pnpm run test:production-readiness-preview:e2e
 
       - name: Write required exact source SHA artifact
         env:
@@ -803,17 +832,22 @@ jobs:
         if: needs.deploy.result != 'success' || needs.staging-browser-validation.result != 'success'
         run: |
           set -euo pipefail
-          STATE_FILE="$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
+          STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.json"
+          ENV_STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.env"
           if [[ ! -s "$STATE_FILE" ]]; then
             echo "No activated preview rollback target was recorded."
             exit 0
           fi
-          PREVIOUS_RELEASE="$(tr -d '\r\n' < "$STATE_FILE")"
+          PREVIOUS_RELEASE="$(node -e 'const fs=require("node:fs"); const state=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); process.stdout.write(state.releaseDirectory)' "$STATE_FILE")"
           case "$PREVIOUS_RELEASE" in
             "$BASE_DIR"/releases/*) ;;
             *) echo "Refusing invalid preview rollback target: $PREVIOUS_RELEASE"; exit 1 ;;
           esac
           test -d "$PREVIOUS_RELEASE"
+          test -s "$ENV_STATE_FILE"
+          cp --dereference --preserve=mode "$ENV_STATE_FILE" "$BASE_DIR/shared/.env.rollback"
+          chgrp nxttrack-deploy "$BASE_DIR/shared/.env.rollback"
+          mv -Tf "$BASE_DIR/shared/.env.rollback" "$BASE_DIR/shared/.env"
           ln -sfn "$PREVIOUS_RELEASE" "$BASE_DIR/current.new"
           mv -Tf "$BASE_DIR/current.new" "$BASE_DIR/current"
           sudo systemctl restart "$SERVICE_NAME"
@@ -823,5 +857,6 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          STATE_FILE="$BASE_DIR/shared/parent-child-preview-${GITHUB_RUN_ID}.previous"
-          rm -f "$STATE_FILE"
+          STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.json"
+          ENV_STATE_FILE="$BASE_DIR/shared/production-readiness-preview-${GITHUB_RUN_ID}.previous.env"
+          rm -f "$STATE_FILE" "$ENV_STATE_FILE"

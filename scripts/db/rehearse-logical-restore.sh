@@ -13,6 +13,7 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 
 script_dir="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+repository_root="$(realpath "$script_dir/../..")"
 work_dir="$(mktemp -d -t nxttrack-restore-XXXXXX)"
 container_name="nxttrack-restore-${GITHUB_RUN_ID:-local}-${RANDOM}"
 postgres_image="${POSTGRES_REHEARSAL_IMAGE:-postgres:17}"
@@ -32,6 +33,33 @@ trap cleanup EXIT INT TERM
 
 echo "[backup:restore] Pulling pinned PostgreSQL rehearsal image ${postgres_image}."
 docker pull "$postgres_image" >/dev/null
+
+expected_migration_fingerprint="$(node --input-type=module - "$repository_root" <<'NODE'
+import { createHash } from "node:crypto";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+const root = process.argv[2];
+const versions = readdirSync(join(root, "supabase", "migrations"))
+  .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
+  .sort();
+process.stdout.write(createHash("sha256").update(versions.join("\n")).digest("hex"));
+NODE
+)"
+if ! source_migration_versions="$(
+  docker run --rm --network host \
+    --env SOURCE_DATABASE_URL="$DATABASE_URL" \
+    "$postgres_image" \
+    sh -ceu 'psql "$SOURCE_DATABASE_URL" --no-psqlrc --tuples-only --no-align --set=ON_ERROR_STOP=1 --command="select string_agg(version::text, chr(10) order by version::text) from supabase_migrations.schema_migrations"'
+)"; then
+  echo "[backup:restore] Source migration lineage does not match: migration history is unavailable." >&2
+  exit 1
+fi
+source_migration_fingerprint="$(printf '%s' "$source_migration_versions" | sha256sum | cut -d' ' -f1)"
+if [[ "$source_migration_fingerprint" != "$expected_migration_fingerprint" ]]; then
+  echo "[backup:restore] Source migration lineage does not match the checked-out repository." >&2
+  exit 1
+fi
+echo "[backup:restore] Source migration lineage fingerprint=${source_migration_fingerprint}."
 
 echo "[backup:restore] Creating a logical dump of public and app_private."
 docker run --rm --interactive --network host \

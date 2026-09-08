@@ -196,6 +196,14 @@ export async function rollbackImportAction(formData: FormData) {
   if (claimResult?.outcome === "completed") redirect(`/admin/importeren?job=${jobId}&saved=rolled_back`);
   if (claimResult?.outcome === "busy" || !claimResult?.claimToken) redirect(`/admin/importeren?job=${jobId}&error=rollback_busy`);
 
+  const authCompensated = await compensateImportAuthUsers({
+    actorUserId: userId,
+    claimToken: claimResult.claimToken,
+    jobId,
+    tenantId: tenant.id
+  });
+  if (!authCompensated) redirect(`/admin/importeren?job=${jobId}&error=reconciliation`);
+
   let done = false;
   for (let chunkIndex = 0; chunkIndex < 1000 && !done; chunkIndex += 1) {
     const chunk = await admin.rpc("rollback_import_chunk", {
@@ -224,6 +232,64 @@ export async function rollbackImportAction(formData: FormData) {
   }
   revalidatePath("/admin/importeren");
   redirect(`/admin/importeren?job=${jobId}&saved=rolled_back`);
+}
+
+async function compensateImportAuthUsers(input: {
+  actorUserId: string;
+  claimToken: string;
+  jobId: string;
+  tenantId: string;
+}) {
+  const admin = createAdminClient();
+  for (let index = 0; index < 250; index += 1) {
+    const claim = await admin.rpc("claim_import_auth_user_rollback", {
+      target_actor_user_id: input.actorUserId,
+      target_tenant_id: input.tenantId,
+      target_job_id: input.jobId,
+      target_claim_token: input.claimToken,
+      target_lease_seconds: 300
+    });
+    const claimed = claim.data as {
+      alreadyDeleted?: boolean;
+      claimToken?: string;
+      manifestEntryId?: string;
+      outcome?: string;
+      userId?: string;
+    } | null;
+    if (claim.error) {
+      if (claim.error.code === "PGRST202") {
+        const compatibility = await admin.rpc("runtime_schema_compatibility");
+        const contract = Array.isArray(compatibility.data) ? compatibility.data[0] : null;
+        // Compatibility anchor releases may run once against the immediately
+        // preceding schema, which cannot contain Auth-user manifest entries yet.
+        if (!compatibility.error && contract?.contract_version === 4) return true;
+      }
+      return false;
+    }
+    if (!claimed?.outcome) return false;
+    if (claimed.outcome === "empty") return true;
+    if (claimed.outcome === "busy" || claimed.outcome !== "claimed"
+      || !claimed.claimToken || !claimed.manifestEntryId || !claimed.userId) return false;
+
+    let deleted = claimed.alreadyDeleted === true;
+    if (!deleted) {
+      const deletion = await admin.auth.admin.deleteUser(claimed.userId);
+      deleted = !deletion.error;
+    }
+    const completed = await admin.rpc("complete_import_auth_user_rollback", {
+      target_actor_user_id: input.actorUserId,
+      target_tenant_id: input.tenantId,
+      target_job_id: input.jobId,
+      target_claim_token: input.claimToken,
+      target_manifest_entry_id: claimed.manifestEntryId,
+      target_external_claim_token: claimed.claimToken,
+      target_deleted: deleted
+    });
+    if (completed.error || (completed.data as { outcome?: string } | null)?.outcome !== "compensated") {
+      return false;
+    }
+  }
+  return false;
 }
 
 function buildImportCommand(input: {

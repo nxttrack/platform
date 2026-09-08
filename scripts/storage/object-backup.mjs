@@ -9,6 +9,11 @@ import {
   storageBucketContractVersion,
   storageBucketDefinition
 } from "./storage-bucket-contract.mjs";
+import {
+  assertStorageRestoreBinding,
+  storageProjectFingerprint,
+  validateStorageManifestBucketContract
+} from "./storage-restore-contract.mjs";
 
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
@@ -43,7 +48,6 @@ try {
   } else if (command === "verify-local") {
     output(await verifyLocalBackup());
   } else if (command === "restore") {
-    requireConfirmation("STORAGE_RESTORE_CONFIRMATION", "RESTORE_STORAGE_OBJECTS");
     output(await restoreObjects());
   } else if (command === "verify-remote") {
     output(await verifyRemoteObjects());
@@ -117,7 +121,7 @@ async function exportObjects() {
     version: 3,
     bucketContractVersion: storageBucketContractVersion,
     createdAt: new Date().toISOString(),
-    sourceProjectFingerprint: sha256(new URL(supabaseUrl).hostname).slice(0, 16),
+    sourceProjectFingerprint: storageProjectFingerprint(supabaseUrl),
     environment: process.env.APP_ENV,
     buckets,
     missingBuckets,
@@ -197,23 +201,51 @@ async function verifyLocalBackup() {
 
 async function restoreObjects() {
   const manifest = await readManifest();
+  assertStorageRestoreBinding({ environment: process.env, manifest, targetUrl: supabaseUrl });
   await verifyLocalBackup();
+  await assertRestoreTargetsAbsent(manifest);
+  const created = [];
 
-  for (const entry of manifest.objects) {
-    const bytes = await readFile(resolveBackupFile(entry.file));
-    const options = {
-      upsert: false,
-      ...(entry.contentType ? { contentType: entry.contentType } : {}),
-      ...(entry.cacheControl ? { cacheControl: entry.cacheControl } : {})
-    };
-    const { error } = await admin.storage.from(entry.bucket).upload(entry.path, bytes, options);
+  try {
+    for (const entry of manifest.objects) {
+      const bytes = await readFile(resolveBackupFile(entry.file));
+      const options = {
+        upsert: false,
+        ...(entry.contentType ? { contentType: entry.contentType } : {}),
+        ...(entry.cacheControl ? { cacheControl: entry.cacheControl } : {})
+      };
+      const { error } = await admin.storage.from(entry.bucket).upload(entry.path, bytes, options);
 
-    if (error) {
-      throw new Error(`Restore refused or failed for an object in ${entry.bucket}: ${error.message}`);
+      if (error) {
+        throw new Error(`Restore refused or failed for an object in ${entry.bucket}: ${error.message}`);
+      }
+      created.push({ bucket: entry.bucket, path: entry.path });
     }
+    await verifyRemoteObjects();
+  } catch (error) {
+    try {
+      await removeObjects(created);
+    } catch (cleanupError) {
+      throw new Error(
+        `Storage restore failed and compensation also failed; reconcile the manifest paths before retrying. Restore: ${error instanceof Error ? error.message : String(error)}. Compensation: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`
+      );
+    }
+    throw error;
   }
 
   return summarizeManifest(manifest);
+}
+
+async function assertRestoreTargetsAbsent(manifest) {
+  const targetKeys = new Set(manifest.objects.map((entry) => `${entry.bucket}\0${entry.path}`));
+
+  for (const bucket of manifest.buckets) {
+    await assertBucketExists(bucket);
+    const existing = await listAllObjects(bucket, normalizePrefix(manifest.prefix ?? ""));
+    if (existing.some((entry) => targetKeys.has(`${bucket}\0${entry.path}`))) {
+      throw new Error(`Storage restore target already contains a manifest path in ${bucket}; no object was written.`);
+    }
+  }
 }
 
 async function verifyRemoteObjects() {
@@ -382,12 +414,7 @@ async function readManifest() {
     if (!allowedBuckets.has(bucket)) throw new Error("Backup manifest contains an unsupported bucket.");
   }
 
-  if (
-    manifest.buckets.length !== requiredStorageBucketNames.length ||
-    requiredStorageBucketNames.some((bucket) => !manifest.buckets.includes(bucket))
-  ) {
-    throw new Error("Storage backup manifest does not cover the complete required bucket contract.");
-  }
+  validateStorageManifestBucketContract(manifest, requiredStorageBucketNames, allowedBuckets);
 
   if (manifest.version === 3 && manifest.bucketContractVersion !== storageBucketContractVersion) {
     throw new Error("Storage backup manifest uses an unsupported bucket contract version.");
