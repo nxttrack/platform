@@ -8,9 +8,9 @@ import pg from "pg";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
-const minimumAppSha = "4e3784649767be4c197db624b33995b3d1502f65";
-const requiredMigrationVersion = "20260823005756";
-const expectedFingerprint = "185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad";
+const minimumAppSha = "352b38cd69958a3d59d31b39aaa798e6de70a77f";
+const requiredMigrationVersion = "20260908111450";
+const expectedFingerprint = "686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
   .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
   .sort();
@@ -50,7 +50,7 @@ try {
   const result = await client.query("select * from public.runtime_schema_compatibility()");
   const contract = result.rows[0];
   if (result.rowCount !== 1
-    || contract.contract_version !== 4
+    || contract.contract_version !== 5
     || contract.minimum_compatible_app_sha !== minimumAppSha
     || contract.minimum_schema_fingerprint !== expectedFingerprint
     || contract.required_migration_version !== requiredMigrationVersion) {

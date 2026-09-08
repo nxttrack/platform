@@ -25,6 +25,7 @@ try {
   await testIntakeFailuresAndReplay();
   await testPlacementFailures();
   await testPlacementTenantConsistency();
+  await testDirectMembershipHonorsSoftReservations();
   await testOneSeatConcurrency();
   await testOneHundredSeatConcurrency();
   console.log(
@@ -173,6 +174,50 @@ async function testPlacementTenantConsistency() {
     [tenantId, groupId, enrollment.id]
   );
   assertEqual(membershipCount.rows[0]?.count, 0, "program mismatch leaves no membership");
+}
+
+async function testDirectMembershipHonorsSoftReservations() {
+  const reservedGroupId = randomUUID();
+  const waitlistEntryId = randomUUID();
+  const enrollment = await createEnrollment("direct-reservation-boundary");
+  await setup.query(
+    `insert into public.groups (
+      id, tenant_id, program_id, stage_id, name, status, capacity,
+      regular_capacity, flex_capacity, trial_capacity, hard_capacity, capacity_borrowing
+    ) values ($1, $2, $3, $4, 'Reserved direct-write boundary', 'active', 1, 1, 0, 0, 1, 'none')`,
+    [reservedGroupId, tenantId, programId, stageId]
+  );
+  await setup.query(
+    `insert into public.waitlist_entries (
+      id, tenant_id, program_id, recommended_stage_id, parent_name, parent_email,
+      participant_name, selected_option, status, source
+    ) values ($1, $2, $3, $4, 'Capacity parent', $5, 'Capacity child', 'waitlist', 'waiting', 'manual')`,
+    [waitlistEntryId, tenantId, programId, stageId, `capacity-${token}@example.test`]
+  );
+  await setup.query(
+    `insert into public.capacity_soft_reservations (
+      tenant_id, group_id, waitlist_entry_id, capacity_bucket, capacity_weight,
+      status, reason, idempotency_key, requested_by_user_id, expires_at,
+      reviewed_by_user_id, reviewed_at, review_reason
+    ) values ($1, $2, $3, 'regular', 1, 'approved', 'Certification hold', $4,
+      $5, now() + interval '1 hour', $5, now(), 'Certification approval')`,
+    [tenantId, reservedGroupId, waitlistEntryId, `capacity-${randomUUID()}`, actorId]
+  );
+  await assertRejects(
+    () => setup.query(
+      `insert into public.group_memberships (
+        tenant_id, group_id, enrollment_id, participant_id, status,
+        starts_on, capacity_weight, capacity_bucket, source
+      ) values ($1, $2, $3, $4, 'active', current_date, 1, 'regular', 'manual')`,
+      [tenantId, reservedGroupId, enrollment.id, enrollment.participantId]
+    ),
+    "direct membership writes must count approved soft reservations"
+  );
+  const membership = await setup.query(
+    "select count(*)::integer as count from public.group_memberships where tenant_id=$1 and group_id=$2",
+    [tenantId, reservedGroupId]
+  );
+  assertEqual(membership.rows[0]?.count, 0, "reservation-aware trigger leaves no overbooking row");
 }
 
 async function testOneSeatConcurrency() {

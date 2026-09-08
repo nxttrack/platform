@@ -146,9 +146,11 @@ try {
 
   await testOwnedGuardianLinkRollback({ actorId, guardianId: crossTenantGuardianId, tenantId: tenantA });
   await testRollbackRefusesLaterData({ actorId, recipientId: actorId, tenantId: tenantA });
+  await testCrashAfterImportAuthCreate({ actorId, tenantId: tenantA, token });
+  await testSharedImportAuthUserIsPreserved({ actorId, sharedTenantId: tenantB, tenantId: tenantA, token });
 
   console.log(
-    "[test:production-readiness-certification:db] PASS service-only import state, immutable provider acceptance, cross-tenant profile preservation, create-only membership, owned-child rollback, and later-data rollback refusal."
+    "[test:production-readiness-certification:db] PASS service-only import state, immutable provider acceptance, cross-tenant profile preservation, create-only membership, owned-child rollback, later-data refusal, crash-window Auth compensation, stale claim fencing, and shared Auth preservation."
   );
 } finally {
   await client.query("rollback").catch(() => undefined);
@@ -273,6 +275,114 @@ async function testRollbackRefusesLaterData({ actorId, recipientId, tenantId }) 
     [participantId, laterNotificationId]
   );
   assert.deepEqual(preserved.rows[0], { later_notification: true, participant: true });
+}
+
+async function testCrashAfterImportAuthCreate({ actorId, tenantId, token }) {
+  const fixture = await createImportJob({ actorId, tenantId, status: "completed", type: "guardians" });
+  const invitationId = await createInvitation({
+    actorId,
+    email: `cert-crash-auth-${token}@example.test`,
+    fullName: "Crash-window guardian",
+    jobId: fixture.jobId,
+    rowId: fixture.rowId,
+    tenantId
+  });
+  const userId = randomUUID();
+  await recordInvitationManifest({ fixture, invitationId, tenantId });
+  await client.query(
+    `insert into auth.users (
+      id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) values ($1, 'authenticated', 'authenticated', $2, $3::jsonb, '{}'::jsonb, now(), now())`,
+    [userId, `cert-crash-auth-${token}@example.test`, JSON.stringify({ nxttrack_provisioning_invitation_id: invitationId })]
+  );
+
+  const rollback = await client.query(
+    "select public.claim_import_rollback($1, $2, $3, 300) as result",
+    [actorId, tenantId, fixture.jobId]
+  );
+  const rollbackToken = rollback.rows[0].result.claimToken;
+  const first = await client.query(
+    "select public.claim_import_auth_user_rollback($1, $2, $3, $4, 300) as result",
+    [actorId, tenantId, fixture.jobId, rollbackToken]
+  );
+  assert.equal(first.rows[0].result.outcome, "claimed");
+  assert.equal(first.rows[0].result.userId, userId);
+  assert.equal(first.rows[0].result.alreadyDeleted, false);
+
+  await client.query("delete from auth.users where id = $1", [userId]);
+  await client.query(
+    "update public.import_manifest_entries set compensation_lease_expires_at=now()-interval '1 second' where id=$1",
+    [first.rows[0].result.manifestEntryId]
+  );
+  const recovered = await client.query(
+    "select public.claim_import_auth_user_rollback($1, $2, $3, $4, 300) as result",
+    [actorId, tenantId, fixture.jobId, rollbackToken]
+  );
+  assert.equal(recovered.rows[0].result.outcome, "claimed");
+  assert.equal(recovered.rows[0].result.alreadyDeleted, true);
+  await expectSqlError(
+    "select public.complete_import_auth_user_rollback($1,$2,$3,$4,$5,$6,true)",
+    [actorId, tenantId, fixture.jobId, rollbackToken, first.rows[0].result.manifestEntryId, first.rows[0].result.claimToken],
+    /claim is invalid or expired/
+  );
+  const completed = await client.query(
+    "select public.complete_import_auth_user_rollback($1,$2,$3,$4,$5,$6,true) as result",
+    [actorId, tenantId, fixture.jobId, rollbackToken, recovered.rows[0].result.manifestEntryId, recovered.rows[0].result.claimToken]
+  );
+  assert.equal(completed.rows[0].result.outcome, "compensated");
+  const manifest = await client.query(
+    "select compensation_status from public.import_manifest_entries where import_job_id=$1 and target_table='import_auth_users'",
+    [fixture.jobId]
+  );
+  assert.deepEqual(manifest.rows, [{ compensation_status: "compensated" }]);
+}
+
+async function testSharedImportAuthUserIsPreserved({ actorId, sharedTenantId, tenantId, token }) {
+  const fixture = await createImportJob({ actorId, tenantId, status: "completed", type: "guardians" });
+  const invitationId = await createInvitation({
+    actorId,
+    email: `cert-shared-auth-${token}@example.test`,
+    fullName: "Shared guardian",
+    jobId: fixture.jobId,
+    rowId: fixture.rowId,
+    tenantId
+  });
+  const userId = randomUUID();
+  await recordInvitationManifest({ fixture, invitationId, tenantId });
+  await client.query(
+    `insert into auth.users (
+      id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+    ) values ($1, 'authenticated', 'authenticated', $2, $3::jsonb, '{}'::jsonb, now(), now())`,
+    [userId, `cert-shared-auth-${token}@example.test`, JSON.stringify({ nxttrack_provisioning_invitation_id: invitationId })]
+  );
+  await client.query(
+    "insert into public.tenant_memberships (tenant_id,user_id,role,status) values ($1,$2,'parent','active')",
+    [sharedTenantId, userId]
+  );
+  const rollback = await client.query(
+    "select public.claim_import_rollback($1, $2, $3, 300) as result",
+    [actorId, tenantId, fixture.jobId]
+  );
+  const claim = await client.query(
+    "select public.claim_import_auth_user_rollback($1, $2, $3, $4, 300) as result",
+    [actorId, tenantId, fixture.jobId, rollback.rows[0].result.claimToken]
+  );
+  assert.deepEqual(
+    { errorCode: claim.rows[0].result.errorCode, outcome: claim.rows[0].result.outcome },
+    { errorCode: "shared_auth_identity", outcome: "needs_attention" }
+  );
+  const preserved = await client.query("select exists(select 1 from auth.users where id=$1) as exists", [userId]);
+  assert.equal(preserved.rows[0].exists, true);
+}
+
+async function recordInvitationManifest({ fixture, invitationId, tenantId }) {
+  await client.query(
+    `insert into public.import_manifest_entries (
+      tenant_id, import_job_id, import_row_id, record_type, target_table, target_id,
+      created_by_import, apply_attempt
+    ) values ($1,$2,$3,'guardians','auth_invitations',$4,true,1)`,
+    [tenantId, fixture.jobId, fixture.rowId, invitationId]
+  );
 }
 
 async function expectSqlError(sql, parameters, messagePattern) {

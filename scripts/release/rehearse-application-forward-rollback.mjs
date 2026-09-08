@@ -37,10 +37,10 @@ try {
   const newContract = await current.query("select * from public.runtime_schema_compatibility()");
   assert.equal(newContract.rowCount, 1, "new schema + new artifact contract must match once");
   assert.deepEqual(newContract.rows[0], {
-    contract_version: 4,
-    minimum_compatible_app_sha: "4e3784649767be4c197db624b33995b3d1502f65",
-    minimum_schema_fingerprint: "185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad",
-    required_migration_version: "20260823005756"
+    contract_version: 5,
+    minimum_compatible_app_sha: "352b38cd69958a3d59d31b39aaa798e6de70a77f",
+    minimum_schema_fingerprint: "686f431e1b015f6f4f597137689f4b2dcb9b0c70a070666b26428bdaaebc293e",
+    required_migration_version: "20260908111450"
   });
 
   const oldContract = await previous.query("select to_regprocedure('public.runtime_schema_compatibility()')::text as signature");
@@ -51,6 +51,7 @@ try {
     "complete_import_apply", "complete_import_rollback", "complete_import_validation",
     "complete_tenant_provisioning", "create_intake_submission_atomic", "create_participant_graph_atomic",
     "enqueue_email_outbox", "materialize_import_guardian_invitation",
+    "claim_import_auth_user_rollback", "complete_import_auth_user_rollback",
     "materialize_tenant_onboarding_invitation", "place_group_membership_atomic",
     "provision_tenant_atomic", "rollback_import_chunk", "update_import_validation_chunk"
   ];
