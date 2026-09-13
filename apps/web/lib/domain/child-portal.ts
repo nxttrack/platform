@@ -184,6 +184,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   }
   if (enrollmentResult.error) throw new Error("Child portal enrollment could not be loaded");
   if (preferencesResult.error || availableThemesResult.error || brandingResult.error || settingsResult.error) throw new Error("Child portal preferences could not be loaded");
+  const timeZone = resolveChildTimeZone(settingsResult.data?.timezone);
   const themePreference = preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
     themeKey: preferencesResult.data.theme_key,
     themeRelease: preferencesResult.data.theme_release
@@ -202,7 +203,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   const [membershipResult, awardResult, mediaApprovalResult, programResult, stageResult, standardReleasesResult, certificatesResult, graduationInvitesResult] = await Promise.all([
     admin
       .from("group_memberships")
-      .select("group_id")
+      .select("group_id, starts_on, ends_on")
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .in("status", ["active", "trial"]),
@@ -261,7 +262,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     groupIds.length
       ? admin.from("groups").select("id, name, default_resource_id, offering_type").eq("tenant_id", childSession.tenantId).in("id", groupIds)
       : Promise.resolve({ data: [], error: null }),
-    loadChildAgendaSessions(admin, childSession.tenantId, groupIds),
+    loadChildAgendaSessions(admin, childSession.tenantId, membershipResult.data ?? [], timeZone),
     releaseIds.length
       ? admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
       : Promise.resolve({ data: [], error: null }),
@@ -363,7 +364,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
 
   return {
     sessionExpiresAt: childSession.expiresAt,
-    tenant: { id: tenant.tenantId, logoUrl: safeHttpsUrl(brandingResult.data?.logo_url), name: tenant.name, sector: tenant.sector, timeZone: resolveChildTimeZone(settingsResult.data?.timezone) },
+    tenant: { id: tenant.tenantId, logoUrl: safeHttpsUrl(brandingResult.data?.logo_url), name: tenant.name, sector: tenant.sector, timeZone },
     child: {
       id: childSession.participantId,
       firstName: displayName.trim().split(/\s+/)[0] || "Jij",
