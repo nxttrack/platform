@@ -12,6 +12,7 @@ import {
   type ResolvedPortalTheme
 } from "@/lib/theme/portal-theme-server";
 import type { EnrollmentRow } from "./core";
+import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
 import { getPortalFeatureFlags, type PortalFeatureFlags } from "./portal-features";
 import {
   getJourneyForEnrollment,
@@ -20,14 +21,7 @@ import {
   type SwimJourneyRing
 } from "./swim-progress";
 
-export type ChildSafeBadgeDto = {
-  id: string;
-  title: string;
-  category: string;
-  earned: boolean;
-  earnedAt: string | null;
-  isSurprise: boolean;
-};
+export type { ChildSafeBadgeDto } from "./child-badges";
 
 export type ChildSafeCertificateDto = {
   id: string;
@@ -268,7 +262,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       ? admin.from("sessions").select("id, group_id, resource_id, starts_at, ends_at, status").eq("tenant_id", childSession.tenantId).in("group_id", groupIds).gte("ends_at", new Date().toISOString()).order("starts_at").limit(24)
       : Promise.resolve({ data: [], error: null }),
     releaseIds.length
-      ? admin.from("badge_definition_releases").select("id, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
+      ? admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
       : Promise.resolve({ data: [], error: null }),
     mediaIds.length
       ? admin.from("participant_media").select("id, caption, media_type, published_at").eq("tenant_id", childSession.tenantId).eq("participant_id", childSession.participantId).eq("status", "published").gt("expires_at", new Date().toISOString()).in("id", mediaIds).order("published_at", { ascending: false })
@@ -345,41 +339,14 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     }
   }
   const participantGender = participantResult.data.gender;
-  const standardReleases = (standardReleasesResult.data ?? [])
-    .filter((release) => audienceMatches(release.audience, participantGender))
-    .filter((release) => (latestAvailabilityByReleaseId.get(release.id) ?? "available") === "available")
-    .sort((first, second) => {
-      if (first.stable_key !== second.stable_key) return first.stable_key.localeCompare(second.stable_key);
-      const tenantPriority = Number(Boolean(second.tenant_id)) - Number(Boolean(first.tenant_id));
-      return tenantPriority || second.release_number - first.release_number;
-    });
-  const currentStandardReleaseByKey = new Map<string, (typeof standardReleases)[number]>();
-  for (const release of standardReleases) {
-    if (!currentStandardReleaseByKey.has(release.stable_key)) currentStandardReleaseByKey.set(release.stable_key, release);
-  }
-  const earnedReleaseIds = new Set(releaseIds);
   const displayName = participantResult.data.display_name;
-  const earnedBadges: ChildSafeBadgeDto[] = awards.map((award) => {
-    const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
-    return {
-      id: award.id,
-      title: release ? genderedBadgeTitle(release, participantGender) : award.title,
-      category: release?.category ?? "compliments",
-      earned: true,
-      earnedAt: award.awarded_at,
-      isSurprise: release?.is_surprise === true
-    };
+  const badges = projectChildSafeBadges({
+    awards,
+    earnedReleases: releasesResult.data ?? [],
+    standardReleases: standardReleasesResult.data ?? [],
+    latestAvailabilityByReleaseId,
+    gender: participantGender
   });
-  const lockedBadges: ChildSafeBadgeDto[] = [...currentStandardReleaseByKey.values()]
-    .filter((release) => !earnedReleaseIds.has(release.id))
-    .map((release) => ({
-      id: `locked:${release.id}`,
-      title: genderedBadgeTitle(release, participantGender),
-      category: release.category,
-      earned: false,
-      earnedAt: null,
-      isSurprise: false
-    }));
   const journey = projectChildSafeJourney(canonicalJourney, awards.map((award) => {
     const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
     return {
@@ -440,7 +407,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       trainerFirstName: null
       };
     })].sort((first, second) => first.startsAt.localeCompare(second.startsAt)),
-    badges: earnedBadges.concat(lockedBadges),
+    badges,
     certificates: (certificatesResult.data ?? []).flatMap((certificate) => certificate.issued_on ? [{
       id: certificate.id,
       title: certificate.title,
@@ -645,21 +612,6 @@ function safeContentUrl(value: unknown) {
   } catch {
     return null;
   }
-}
-
-function audienceMatches(audience: string, gender: string) {
-  return audience === "all"
-    || (audience === "boys" && gender === "boy")
-    || (audience === "girls" && gender === "girl");
-}
-
-function genderedBadgeTitle(
-  release: { name_boy: string | null; name_default: string; name_girl: string | null },
-  gender: string
-) {
-  if (gender === "boy") return release.name_boy ?? release.name_default;
-  if (gender === "girl") return release.name_girl ?? release.name_default;
-  return release.name_default;
 }
 
 function safeHttpsUrl(value: string | null | undefined) {

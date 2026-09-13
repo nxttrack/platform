@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const childDomain = source("../../apps/web/lib/domain/child-portal.ts");
+const childBadges = source("../../apps/web/lib/domain/child-badges.ts");
 const childShell = source("../../apps/web/components/child/child-portal-shell.tsx");
 const childMediaRoute = source("../../apps/web/app/api/child/media/[id]/route.ts");
 const childSessionRoute = source("../../apps/web/app/api/child/session/route.ts");
@@ -26,7 +27,8 @@ test("child DTO is an explicit allowlist and strips assessment internals", () =>
 test("unearned surprises are absent at the server query boundary", () => {
   assert.match(childDomain, /badge_definition_releases[\s\S]*\.eq\("is_surprise", false\)/);
   assert.match(childDomain, /releaseIds\.length[\s\S]*badge_definition_releases[\s\S]*\.in\("id", releaseIds\)/);
-  assert.match(childDomain, /isSurprise: false/);
+  assert.match(childBadges, /isSurprise: false/);
+  assert.match(childDomain, /select\("id, stable_key, category, is_surprise, name_default, name_boy, name_girl"\)/);
 });
 
 test("child media is approval-bound, inline and has no download capability", () => {
