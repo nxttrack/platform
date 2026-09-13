@@ -4,6 +4,7 @@ import { cache } from "react";
 
 import { requireChildPortalSession } from "@/lib/auth/portal-session";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
+import { resolveChildTimeZone } from "@/lib/date/child-lesson-date";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getThemeDisplayName, getThemeRelease } from "@/lib/theme/portal-theme-registry";
 import {
@@ -12,6 +13,7 @@ import {
   type ResolvedPortalTheme
 } from "@/lib/theme/portal-theme-server";
 import type { EnrollmentRow } from "./core";
+import { loadChildAgendaSessions } from "./child-agenda";
 import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
 import { getPortalFeatureFlags, type PortalFeatureFlags } from "./portal-features";
 import {
@@ -101,7 +103,7 @@ export type ChildSafeMediaDto = {
 
 export type ChildPortalDto = {
   sessionExpiresAt: string;
-  tenant: { id: string; logoUrl: string | null; name: string; sector: string };
+  tenant: { id: string; logoUrl: string | null; name: string; sector: string; timeZone: string };
   child: { id: string; firstName: string; initial: string };
   theme: ResolvedPortalTheme;
   features: PortalFeatureFlags;
@@ -129,7 +131,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   if (!tenant) throw new Error("Child portal tenant binding is no longer valid");
 
   const admin = createAdminClient();
-  const [participantResult, guardianResult, enrollmentResult, tenantTheme, features, preferencesResult, availableThemesResult, brandingResult] = await Promise.all([
+  const [participantResult, guardianResult, enrollmentResult, tenantTheme, features, preferencesResult, availableThemesResult, brandingResult, settingsResult] = await Promise.all([
     admin
       .from("participants")
       .select("id, display_name, gender, guardian_user_id, status")
@@ -172,7 +174,8 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .select("logo_url")
       .eq("tenant_id", childSession.tenantId)
       .eq("status", "active")
-      .maybeSingle()
+      .maybeSingle(),
+    admin.from("tenant_settings").select("timezone").eq("tenant_id", childSession.tenantId).maybeSingle()
   ]);
 
   const legacyGuardianBound = participantResult.data?.guardian_user_id === childSession.userId;
@@ -180,7 +183,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     throw new Error("Child portal participant binding is no longer valid");
   }
   if (enrollmentResult.error) throw new Error("Child portal enrollment could not be loaded");
-  if (preferencesResult.error || availableThemesResult.error || brandingResult.error) throw new Error("Child portal preferences could not be loaded");
+  if (preferencesResult.error || availableThemesResult.error || brandingResult.error || settingsResult.error) throw new Error("Child portal preferences could not be loaded");
   const themePreference = preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
     themeKey: preferencesResult.data.theme_key,
     themeRelease: preferencesResult.data.theme_release
@@ -205,7 +208,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .in("status", ["active", "trial"]),
     admin
       .from("participant_badge_awards")
-      .select("id, badge_release_id, title, awarded_at, resolved_description, trigger_event_type, trigger_context_json")
+      .select("id, badge_release_id, resolved_badge_key, title, awarded_at, resolved_description, trigger_event_type, trigger_context_json")
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .eq("status", "awarded")
@@ -258,9 +261,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     groupIds.length
       ? admin.from("groups").select("id, name, default_resource_id, offering_type").eq("tenant_id", childSession.tenantId).in("id", groupIds)
       : Promise.resolve({ data: [], error: null }),
-    groupIds.length
-      ? admin.from("sessions").select("id, group_id, resource_id, starts_at, ends_at, status").eq("tenant_id", childSession.tenantId).in("group_id", groupIds).gte("ends_at", new Date().toISOString()).order("starts_at").limit(24)
-      : Promise.resolve({ data: [], error: null }),
+    loadChildAgendaSessions(admin, childSession.tenantId, groupIds),
     releaseIds.length
       ? admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
       : Promise.resolve({ data: [], error: null }),
@@ -362,7 +363,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
 
   return {
     sessionExpiresAt: childSession.expiresAt,
-    tenant: { id: tenant.tenantId, logoUrl: safeHttpsUrl(brandingResult.data?.logo_url), name: tenant.name, sector: tenant.sector },
+    tenant: { id: tenant.tenantId, logoUrl: safeHttpsUrl(brandingResult.data?.logo_url), name: tenant.name, sector: tenant.sector, timeZone: resolveChildTimeZone(settingsResult.data?.timezone) },
     child: {
       id: childSession.participantId,
       firstName: displayName.trim().split(/\s+/)[0] || "Jij",

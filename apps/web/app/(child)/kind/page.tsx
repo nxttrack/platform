@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChildJourneyMap } from "@/components/child/child-journey-map";
 import { ProgressRing } from "@/components/shell/ui";
 import { childJourneyEvents, childJourneyNodes } from "@/lib/domain/child-journey-view";
+import { formatChildLessonDate } from "@/lib/date/child-lesson-date";
 import { getChildPortalData } from "@/lib/domain/child-portal";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
@@ -36,7 +37,7 @@ export default async function ChildTodayPage() {
           mobileArtwork={theme.assets["overview.hero.mobile"]?.path ?? null}
           nodes={childJourneyNodes(data.journey)}
         />
-        <section className="child-today__mobile-lesson" data-journey-exclusion><CalendarDays aria-hidden="true" /><span><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt) : "Nog niet gepland"}</strong></span></section>
+        <section className="child-today__mobile-lesson" data-journey-exclusion><CalendarDays aria-hidden="true" /><span><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt, data.tenant.timeZone) : "Nog niet gepland"}</strong></span></section>
         {rings.length ? <section aria-label="Mijn voortgang" className="child-today__quest-rings" data-journey-exclusion>
           {rings.map((ring) => <div key={`${ring.kind}:${ring.key}`}>
             <ProgressRing label={ring.kind === "stage" ? "badje" : "diploma"} size={62} value={ring.progressPercent} />
@@ -45,7 +46,7 @@ export default async function ChildTodayPage() {
         </section> : null}
       </div>
       <aside className="child-today__info">
-        <section><CalendarDays aria-hidden="true" /><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt) : "Nog niet gepland"}</strong><span>{nextLesson?.locationName ?? "Je ouder ziet de details"}</span></section>
+        <section><CalendarDays aria-hidden="true" /><small>Volgende {terminology.activity}</small><strong>{nextLesson ? formatDate(nextLesson.startsAt, data.tenant.timeZone) : "Nog niet gepland"}</strong><span>{nextLesson?.locationName ?? "Je ouder ziet de details"}</span></section>
         <section><MessageCircleHeart aria-hidden="true" /><small>Compliment</small><strong>{latestCompliment}</strong><span>Speciaal door je trainer gekozen</span></section>
         <section><Award aria-hidden="true" /><small>Laatste mijlpaal</small><strong>{latestBadge?.title ?? "Je eerste badge komt eraan"}</strong><span>{latestBadge ? "Mooi verdiend!" : "Blijf lekker oefenen"}</span></section>
       </aside>
@@ -58,6 +59,6 @@ export default async function ChildTodayPage() {
   </div>;
 }
 
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+function formatDate(value: string, timeZone: string) {
+  return formatChildLessonDate(value, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }, timeZone);
 }

@@ -1,5 +1,6 @@
 import { Backpack, CalendarDays, ChevronRight, Clock3, MapPin, Sparkles, UserRound } from "lucide-react";
 import Link from "next/link";
+import { childLessonCalendarDaysUntil, formatChildLessonDate } from "@/lib/date/child-lesson-date";
 import { getChildPortalData } from "@/lib/domain/child-portal";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
@@ -13,28 +14,29 @@ export default async function ChildAgendaPage() {
   return <div className="child-page" data-child-route-state="agenda">
     <header className="child-page__heading"><span>Mijn agenda</span><h1>Wanneer is mijn volgende {terminology.activity}?</h1><p>Hier staan alleen jouw {terminology.activities} en bevestigde eindmomenten. Een ouder regelt wijzigingen en betalingen.</p></header>
     <div className="child-agenda-highlight-grid">
-      <AgendaHighlight eyebrow="Volgende activiteit" lesson={nextLesson} terminology={terminology} />
-      <AgendaHighlight eyebrow="Belangrijk moment" lesson={importantMoment} terminology={terminology} />
+      <AgendaHighlight eyebrow="Volgende activiteit" lesson={nextLesson} terminology={terminology} timeZone={data.tenant.timeZone} />
+      <AgendaHighlight eyebrow="Belangrijk moment" lesson={importantMoment} terminology={terminology} timeZone={data.tenant.timeZone} />
     </div>
     <section className="child-card child-lesson-list">
       {data.lessons.length ? data.lessons.map((lesson) => <Link href={`/kind/agenda/lessen/${lesson.id}`} key={lesson.id}>
-        <span className="child-lesson-date"><b>{new Date(lesson.startsAt).getDate()}</b><small>{new Intl.DateTimeFormat("nl-NL", { month: "short" }).format(new Date(lesson.startsAt))}</small></span>
-        <span><strong>{lesson.groupName}</strong><small><CalendarDays /> {formatTime(lesson.startsAt, lesson.endsAt)}</small>{lesson.activityType !== "regular" ? <small><Sparkles /> {activityLabel(lesson.activityType, terminology.finalMoment)}</small> : null}{lesson.locationName ? <small><MapPin /> {lesson.locationName}</small> : null}{lesson.trainerFirstName ? <small><UserRound /> {terminology.instructor} {lesson.trainerFirstName}</small> : null}{lesson.supplies.length ? <small><Backpack /> {lesson.supplies.join(", ")}</small> : null}</span>
+        <span className="child-lesson-date"><b>{formatChildLessonDate(lesson.startsAt, { day: "numeric" }, data.tenant.timeZone)}</b><small>{formatChildLessonDate(lesson.startsAt, { month: "short" }, data.tenant.timeZone)}</small></span>
+        <span><strong>{lesson.groupName}</strong><small><CalendarDays /> {formatTime(lesson.startsAt, lesson.endsAt, data.tenant.timeZone)}</small>{lesson.activityType !== "regular" ? <small><Sparkles /> {activityLabel(lesson.activityType, terminology.finalMoment)}</small> : null}{lesson.locationName ? <small><MapPin /> {lesson.locationName}</small> : null}{lesson.trainerFirstName ? <small><UserRound /> {terminology.instructor} {lesson.trainerFirstName}</small> : null}{lesson.supplies.length ? <small><Backpack /> {lesson.supplies.join(", ")}</small> : null}</span>
         <ChevronRight aria-hidden="true" />
       </Link>) : <div className="child-empty"><CalendarDays /><h2>Nog geen les gepland</h2><p>Vraag je ouder als je wilt weten wanneer je volgende les is.</p></div>}
     </section>
   </div>;
 }
-function formatTime(start: string, end: string) { const f = new Intl.DateTimeFormat("nl-NL", { weekday: "long", hour: "2-digit", minute: "2-digit" }); return `${f.format(new Date(start))} – ${new Intl.DateTimeFormat("nl-NL", { hour: "2-digit", minute: "2-digit" }).format(new Date(end))}`; }
+function formatTime(start: string, end: string, timeZone: string) { return `${formatChildLessonDate(start, { weekday: "long", hour: "2-digit", minute: "2-digit" }, timeZone)} – ${formatChildLessonDate(end, { hour: "2-digit", minute: "2-digit" }, timeZone)}`; }
 
-function AgendaHighlight({ eyebrow, lesson, terminology }: {
+function AgendaHighlight({ eyebrow, lesson, terminology, timeZone }: {
   eyebrow: string;
+  timeZone: string;
   lesson: Awaited<ReturnType<typeof getChildPortalData>>["lessons"][number] | null;
   terminology: ReturnType<typeof getPortalTerminology>;
 }) {
   return <section className="child-card child-agenda-highlight">
     <small>{eyebrow}</small>
-    {lesson ? <><h2>{lesson.groupName}</h2><p><Clock3 /> {formatTime(lesson.startsAt, lesson.endsAt)}</p>{lesson.locationName ? <p><MapPin /> {lesson.locationName}</p> : null}<strong>{countdownLabel(lesson.startsAt, terminology.activity)}</strong><Link href={`/kind/agenda/lessen/${lesson.id}`}>Bekijk details <ChevronRight /></Link></> : <><h2>Nog niet gepland</h2><p>Nieuwe informatie verschijnt zodra de planning rond is.</p></>}
+    {lesson ? <><h2>{lesson.groupName}</h2><p><Clock3 /> {formatTime(lesson.startsAt, lesson.endsAt, timeZone)}</p>{lesson.locationName ? <p><MapPin /> {lesson.locationName}</p> : null}<strong>{countdownLabel(lesson.startsAt, terminology.activity, timeZone)}</strong><Link href={`/kind/agenda/lessen/${lesson.id}`}>Bekijk details <ChevronRight /></Link></> : <><h2>Nog niet gepland</h2><p>Nieuwe informatie verschijnt zodra de planning rond is.</p></>}
   </section>;
 }
 
@@ -46,8 +48,8 @@ function activityLabel(value: Awaited<ReturnType<typeof getChildPortalData>>["le
   return "Activiteit";
 }
 
-function countdownLabel(startsAt: string, activity: string) {
-  const days = Math.max(0, Math.ceil((new Date(startsAt).getTime() - Date.now()) / 86_400_000));
+function countdownLabel(startsAt: string, activity: string, timeZone: string) {
+  const days = childLessonCalendarDaysUntil(startsAt, timeZone);
   if (days === 0) return `Vandaag is je ${activity}`;
   if (days === 1) return `Morgen is je ${activity}`;
   return `Nog ${days} dagen`;

@@ -7,7 +7,7 @@ export type ChildSafeBadgeDto = {
   isSurprise: boolean;
 };
 
-type Award = { id: string; badge_release_id: string | null; title: string; awarded_at: string };
+type Award = { id: string; badge_release_id: string | null; resolved_badge_key: string | null; title: string; awarded_at: string };
 type EarnedRelease = {
   id: string;
   stable_key: string;
@@ -31,7 +31,8 @@ export function projectChildSafeBadges({ awards, earnedReleases, standardRelease
   // badge identity even when a newer platform or tenant release becomes current.
   const earnedStableKeys = new Set(awards.flatMap((award) => {
     const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : undefined;
-    return release ? [release.stable_key] : [];
+    const key = release?.stable_key ?? award.resolved_badge_key;
+    return key ? [key] : [];
   }));
   const available = standardReleases
     .filter((release) => !release.is_surprise && audienceMatches(release.audience, gender))

@@ -8,7 +8,7 @@ const release = (id: string, stable_key: string, overrides = {}) => ({
   category: "progress", audience: "all", is_surprise: false, ...overrides
 });
 const award = (badge_release_id: string | null, id = "award-1") => ({
-  id, badge_release_id, title: "Legacy award title", awarded_at: "2026-08-01T12:00:00Z"
+  id, badge_release_id, resolved_badge_key: null as string | null, title: "Legacy award title", awarded_at: "2026-08-01T12:00:00Z"
 });
 const project = (earnedReleases: ReturnType<typeof release>[], standardReleases: ReturnType<typeof release>[],
   overrides: Partial<Parameters<typeof projectChildSafeBadges>[0]> = {}) => projectChildSafeBadges({
@@ -83,4 +83,20 @@ test("only actually awarded releases contribute earned identities and missing re
   assert.deepEqual(result.map((badge) => [badge.id, badge.title, badge.earned]), [
     ["award-1", "Legacy award title", true], ["locked:unattached", "Historical unattached", false]
   ]);
+});
+
+test("legacy snapshot keys cover current releases without changing historical award data", () => {
+  const legacy = { ...award(null), resolved_badge_key: "floating" };
+  const result = project([], [release("current", "floating"), release("other", "diving")], { awards: [legacy] });
+  assert.deepEqual(result.map((badge) => [badge.id, badge.earned]), [["award-1", true], ["locked:other", false]]);
+  assert.equal(result[0].title, legacy.title);
+  assert.equal(result[0].earnedAt, legacy.awarded_at);
+});
+
+test("immutable release identity takes precedence over a conflicting legacy snapshot key", () => {
+  const earned = release("old", "floating");
+  const result = project([earned], [release("current", "floating"), release("other", "diving")], {
+    awards: [{ ...award(earned.id), resolved_badge_key: "diving" }]
+  });
+  assert.deepEqual(result.map((badge) => badge.id), ["award-1", "locked:other"]);
 });
