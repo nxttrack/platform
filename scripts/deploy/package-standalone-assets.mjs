@@ -35,9 +35,9 @@ assertHasAsset(standalonePnpmDir, [".so", ".dylib", ".dll"], "Packaged standalon
 
 console.log("[deploy:package-standalone-assets] Packaged static, public and native Sharp assets for standalone runtime.");
 
-function replaceDirectory(source, target) {
+function replaceDirectory(source, target, options = {}) {
   rmSync(target, { recursive: true, force: true });
-  cpSync(source, target, { recursive: true });
+  cpSync(source, target, { recursive: true, ...options });
 }
 
 function packageSharpRuntimeDependencies() {
@@ -53,9 +53,10 @@ function packageSharpRuntimeDependencies() {
   }
 
   for (const packageDirectory of sharpRuntimePackages) {
-    cpSync(join(sourcePnpmDir, packageDirectory), join(standalonePnpmDir, packageDirectory), {
-      recursive: true,
-      force: true
+    // Replace traced package directories instead of copying over pnpm links.
+    // Relative links must keep resolving inside the relocatable standalone tree.
+    replaceDirectory(join(sourcePnpmDir, packageDirectory), join(standalonePnpmDir, packageDirectory), {
+      verbatimSymlinks: true
     });
   }
 }
