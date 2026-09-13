@@ -1,0 +1,33 @@
+{
+  "checked_at_utc": "2026-09-13T23:50:32.613240+00:00",
+  "workflows": [
+    {
+      "id": 319324277,
+      "name": "Journey Bot staging tick",
+      "path": ".github/workflows/journey-bot-staging-tick.yml",
+      "state": "disabled_manually",
+      "updated_at": "2026-09-14T01:34:01.000+02:00"
+    },
+    {
+      "id": 319324897,
+      "name": "Journey Bot staging smoke",
+      "path": ".github/workflows/journey-bot-staging-smoke.yml",
+      "state": "disabled_manually",
+      "updated_at": "2026-09-14T01:34:02.000+02:00"
+    },
+    {
+      "id": 319758199,
+      "name": "Journey Bot staging window",
+      "path": ".github/workflows/journey-bot-staging-window.yml",
+      "state": "disabled_manually",
+      "updated_at": "2026-09-14T01:34:03.000+02:00"
+    },
+    {
+      "id": 319281251,
+      "name": "Staging demo tenant seed",
+      "path": ".github/workflows/staging-demo-tenant-seed.yml",
+      "state": "disabled_manually",
+      "updated_at": "2026-09-14T01:35:03.000+02:00"
+    }
+  ]
+}

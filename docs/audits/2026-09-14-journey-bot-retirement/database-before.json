@@ -1,0 +1,19 @@
+{
+  "query": "SELECT now() checked_at_utc,(SELECT count(*) FROM public.journey_bot_runs WHERE status='running') running_runs,(SELECT count(*) FROM public.journey_bot_configs WHERE lock_token IS NOT NULL AND locked_at>now()-interval '15 minutes') held_locks,(SELECT count(*) FROM supabase_migrations.schema_migrations) migrations,(SELECT jsonb_object_agg(table_name,row_count) FROM (SELECT 'configs' table_name,count(*) row_count FROM public.journey_bot_configs UNION ALL SELECT 'runs',count(*) FROM public.journey_bot_runs UNION ALL SELECT 'children',count(*) FROM public.journey_bot_child_journeys UNION ALL SELECT 'events',count(*) FROM public.journey_bot_child_events UNION ALL SELECT 'issues',count(*) FROM public.journey_bot_issues UNION ALL SELECT 'purges',count(*) FROM public.journey_bot_purge_receipts) t) retained_row_counts;",
+  "result": [
+    {
+      "checked_at_utc": "2026-09-13 23:44:39.863215+00",
+      "running_runs": 0,
+      "held_locks": 0,
+      "migrations": 147,
+      "retained_row_counts": {
+        "runs": 50,
+        "events": 10747,
+        "issues": 58,
+        "purges": 1,
+        "configs": 1,
+        "children": 264
+      }
+    }
+  ]
+}

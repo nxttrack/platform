@@ -1,0 +1,15 @@
+{
+  "checked_at_utc": "2026-09-13T23:44:03.147Z",
+  "remote_calls": 0,
+  "checks": [
+    "active-run guard fails atomically before disabling configuration",
+    "all six historical row counts and pending receipt retained",
+    "configuration stopped and schedule cleared",
+    "all four bot RPC/private functions removed",
+    "all 18 role/table combinations deny write privileges",
+    "service can inspect retained receipt but actual re-enable UPDATE is refused",
+    "synthetic lifecycle deletion exception retired; append-only restored"
+  ],
+  "result": "PASS",
+  "fixture_rolled_back": true
+}
