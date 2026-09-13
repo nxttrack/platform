@@ -10,7 +10,8 @@ const safeMimeTypes = new Set([
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "image/jpeg",
-  "image/png"
+  "image/png",
+  "video/mp4"
 ]);
 
 export async function createPrivateFileResponse(input: {
@@ -37,7 +38,8 @@ export async function createPrivateFileResponse(input: {
       "Content-Type": mimeType,
       "Cross-Origin-Resource-Policy": "same-origin",
       "Referrer-Policy": "no-referrer",
-      "X-Content-Type-Options": "nosniff"
+      "X-Content-Type-Options": "nosniff",
+      "X-Robots-Tag": "noindex, nofollow, noarchive, nosnippet, noimageindex"
     }
   });
 }

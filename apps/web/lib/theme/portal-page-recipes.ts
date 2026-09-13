@@ -11,7 +11,7 @@ export type PortalRoutePresentation = {
   recipeId: RegisteredPageRecipeId;
   intensity: PortalRouteIntensity;
   cue: string;
-  motif: "momentum" | "bay" | "current" | "ice" | "coast" | "lanes";
+  motif: "momentum" | "bay" | "current" | "ice" | "coast" | "ocean" | "lanes";
   milestones: readonly [string, string, string];
 };
 
@@ -98,6 +98,16 @@ const profiles: Record<string, ThemeVisualProfile> = {
   }, {
     planning: ["Strandpost", "Volgende punt", "Vuurtoren"],
     development: ["Vertrek", "Op koers", "Volgende haven"],
+    badges: ["Ontdekt", "Behaald", "Gevierd"]
+  }),
+  "ocean-quest": profile("ocean", {
+    overview: "Vaar naar je volgende eiland",
+    planning: "De volgende duik in beeld",
+    development: "Ontdek jouw Ocean Quest",
+    badges: "Parels en mijlpalen uit jouw reis"
+  }, {
+    planning: ["Klaar", "Volgende duik", "Nieuw eiland"],
+    development: ["Starteiland", "Onderweg", "Doeleiland"],
     badges: ["Ontdekt", "Behaald", "Gevierd"]
   }),
   "nationaal-zwem-abc": profile("lanes", {

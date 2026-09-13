@@ -1,35 +1,36 @@
 import type { NavItem } from "@/components/shell/app-shell";
 
 export const parentNav: NavItem[] = [
-  { href: "/portaal", label: "Overzicht", icon: "home", exact: true },
+  { href: "/portaal", label: "Overzicht", icon: "home", exact: true, section: "Portaal" },
   {
     href: "/portaal/planning",
     label: "Planning",
     icon: "calendar",
+    section: "Portaal",
     activePrefixes: ["/portaal/lessen", "/portaal/afzwemmen"]
   },
   {
     href: "/portaal/ontwikkeling",
     label: "Ontwikkeling",
     icon: "trending",
+    section: "Portaal",
     activePrefixes: ["/portaal/voortgang", "/portaal/badges", "/portaal/media", "/portaal/diplomas"]
   },
   {
     href: "/portaal/inbox",
     label: "Inbox",
     icon: "inbox",
+    section: "Portaal",
     activePrefixes: ["/portaal/berichten"]
   },
-  { href: "/portaal/betalingen", label: "Betalingen", icon: "card" }
+  { href: "/portaal/betalingen", label: "Betalingen", icon: "card", section: "Portaal" }
 ];
 
 export const parentMoreNav: NavItem[] = [
-  { href: "/portaal/documenten", label: "Documenten", icon: "file", section: "Informatie" },
-  { href: "/portaal/feedback", label: "Feedback", icon: "chart", section: "Informatie" },
-  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users", section: "Account" },
-  { href: "/portaal/profiel", label: "Profiel", icon: "user", section: "Account" },
-  { href: "/portaal/profiel#communicatie", label: "Meldingsvoorkeuren", icon: "bell", section: "Voorkeuren" },
-  { href: "/portaal/ontwikkeling/media#toestemming", label: "Privacy en toestemming", icon: "shield", section: "Voorkeuren" }
+  { href: "/portaal/documenten", label: "Documenten", icon: "file" },
+  { href: "/portaal/feedback", label: "Feedback", icon: "chart" },
+  { href: "/portaal/kinderen", label: "Gezin en toegang", icon: "users" },
+  { href: "/portaal/profiel", label: "Profiel", icon: "user" }
 ];
 
 export const instructorNav: NavItem[] = [

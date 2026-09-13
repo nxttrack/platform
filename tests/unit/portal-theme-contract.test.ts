@@ -18,7 +18,7 @@ import {
   portalOverviewRecipePresentations
 } from "../../apps/web/lib/theme/portal-overview-recipes";
 
-test("catalogus bevat exact de zes v3-releases met alle dertien routes", () => {
+test("catalogus bevat exact de zeven v3-releases met alle dertien routes", () => {
   assert.deepEqual(
     portalThemeCatalog.map((theme) => `${theme.theme.key}@${theme.theme.release}`),
     [
@@ -27,6 +27,7 @@ test("catalogus bevat exact de zes v3-releases met alle dertien routes", () => {
       "turtle-trails@3.0.0",
       "polar-splash@3.0.0",
       "coastal-explorer@3.0.0",
+      "ocean-quest@3.0.0",
       "nationaal-zwem-abc@3.0.0"
     ]
   );
@@ -53,7 +54,7 @@ test("manifestvalidator weigert onbekende databasevelden", () => {
   assert.throws(() => validatePortalThemeManifest(unsafe), /Invalid manifest keys/);
 });
 
-test("iedere release gebruikt exact dezelfde geregistreerde Journey Engine", () => {
+test("iedere release gebruikt dezelfde Journey Engine en parentprojectie", () => {
   const overviewRecipes = portalThemeCatalog.map((theme) => theme.recipes.pages.overview);
 
   assert.equal(new Set(overviewRecipes).size, 1);
@@ -70,8 +71,9 @@ test("iedere release gebruikt exact dezelfde geregistreerde Journey Engine", () 
     new URL("../../apps/web/app/(portaal)/portaal/page.tsx", import.meta.url),
     "utf8"
   );
-  assert.match(overviewSource, /resolvedTheme\.displayName/);
-  assert.match(overviewSource, /PortalOverviewHero/);
+  assert.match(overviewSource, /orderJourneyNodes/);
+  assert.match(overviewSource, /ParentOverviewTop/);
+  assert.match(overviewSource, /resolvedTheme\.manifest\.assets\["overview\.hero\.desktop"\]/);
 });
 
 test("alle thema's gebruiken uitsluitend de neutrale badgeplaceholderfamilie", () => {

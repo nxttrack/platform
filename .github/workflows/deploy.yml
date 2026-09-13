@@ -115,7 +115,8 @@ jobs:
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
-      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS || 'false' }}
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: ${{ vars.PHASE16_PRESERVE_ADMIN_IDENTITIES || 'true' }}
       PHASE16_SKIP_PLAYWRIGHT_INSTALL: ${{ vars.PHASE16_SKIP_PLAYWRIGHT_INSTALL }}
       PHASE16_SKIP_PLAYWRIGHT: ${{ vars.PHASE16_SKIP_PLAYWRIGHT }}
       E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
@@ -404,7 +405,8 @@ jobs:
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
-      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS || 'false' }}
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: ${{ vars.PHASE16_PRESERVE_ADMIN_IDENTITIES || 'true' }}
       PHASE16_SKIP_PLAYWRIGHT_INSTALL: "true"
       PHASE15_SKIP_PLAYWRIGHT_INSTALL: "true"
       RUN_DB_MIGRATIONS: "true"
@@ -457,22 +459,29 @@ jobs:
       - name: Phase 16 operational flow validation
         run: pnpm run phase16:flow
 
-      - name: Validate required six-theme portal matrix
+      - name: Prepare parent and child test fixture
+        run: node scripts/staging/parent-child-preview-fixture.mjs prepare
+
+      - name: Validate required seven-theme parent and child portal matrix
         env:
           PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
         run: pnpm run test:portal-themes:e2e
 
-      - name: Upload six-theme portal matrix evidence
+      - name: Upload seven-theme parent and child portal matrix evidence
         if: always()
         continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
-          name: nxttrack-staging-${{ github.sha }}-six-theme-portal-matrix
+          name: nxttrack-staging-${{ github.sha }}-seven-theme-parent-child-portal-matrix
           path: |
             apps/web/playwright-report
             apps/web/test-results
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Restore parent and child test rollout
+        if: always()
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
 
       - name: Prepare Sprint 4 browser-mutation fixture
         run: pnpm run sprint4:prepare-mutations

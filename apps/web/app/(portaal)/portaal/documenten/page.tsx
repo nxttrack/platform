@@ -2,18 +2,19 @@ import Link from "next/link";
 import { Download, Eye, FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { formatDocumentDate, formatDocumentSize, getParentDocuments } from "@/lib/domain/documents";
+import { formatDocumentDate, formatDocumentSize, getParentDocumentsPageData } from "@/lib/domain/documents";
 import { resolveCurrentParentPortalTheme } from "@/lib/theme/portal-theme-server";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
 
 export default async function ParentDocumentsPage() {
-  const [documents, portalTheme] = await Promise.all([
-    getParentDocuments(),
+  const [documentData, portalTheme] = await Promise.all([
+    getParentDocumentsPageData(),
     resolveCurrentParentPortalTheme("/portaal/documenten")
   ]);
-  const terminology = getPortalTerminology(portalTheme.manifest);
+  const documents = documentData.documents;
+  const terminology = getPortalTerminology(portalTheme.manifest, documentData.tenant.sector);
 
   return (
     <div className="space-y-6">

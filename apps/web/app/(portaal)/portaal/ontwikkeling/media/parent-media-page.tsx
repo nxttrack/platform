@@ -6,7 +6,10 @@ import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { Card, PageHeader, StatusPill } from "@/components/shell/ui";
 import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
-import { recordParticipantMediaConsentAction } from "@/lib/domain/participant-media-actions";
+import {
+  recordParticipantMediaConsentAction,
+  setChildMediaApprovalAction
+} from "@/lib/domain/participant-media-actions";
 import { PARTICIPANT_MEDIA_POLICY_VERSION } from "@/lib/domain/participant-media-contract";
 import { getParentParticipantMediaData } from "@/lib/domain/participant-media";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
@@ -29,7 +32,8 @@ export default async function ParentDevelopmentMediaPage({ searchParams }: PageP
   const error = getParam(params, "error");
   const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
   const visibleParticipants = selectedParticipantId ? data.participants.filter((participant) => participant.id === selectedParticipantId) : data.participants;
-  const terminology = getPortalTerminology(portalTheme.manifest);
+  const terminology = getPortalTerminology(portalTheme.manifest, data.tenant.sector);
+  const childMediaApprovalIds = new Set(data.childMediaApprovalIds);
 
   return (
     <div className="space-y-6">
@@ -97,13 +101,18 @@ export default async function ParentDevelopmentMediaPage({ searchParams }: PageP
                     <div className="grid gap-4 sm:grid-cols-2">
                       {media.map((item) => (
                         <article className="overflow-hidden rounded-xl border border-border bg-background" key={item.id}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
+                          {item.media_type === "video" ? <video
+                            className="aspect-[4/3] w-full bg-muted object-cover"
+                            controls
+                            playsInline
+                            preload="metadata"
+                            src={`/api/files/participant-media/${item.id}`}
+                          /> : <img
                             alt={item.caption ? `${participant.display_name}: ${item.caption}` : `Voortgangsfoto van ${participant.display_name}`}
                             className="aspect-[4/3] w-full bg-muted object-cover"
                             loading="lazy"
                             src={`/api/files/participant-media/${item.id}`}
-                          />
+                          />}
                           <div className="p-4">
                             <p className="font-semibold">{item.caption || "Voortgangsmoment"}</p>
                             <p className="mt-1 text-xs text-muted-foreground">
@@ -120,6 +129,13 @@ export default async function ParentDevelopmentMediaPage({ searchParams }: PageP
                             ) : (
                               <p className="mt-3 text-xs text-muted-foreground">Bekijken toegestaan; downloaden staat uit.</p>
                             )}
+                            {data.childModeEnabled && mayDecide ? (
+                              <ChildMediaApprovalForm
+                                approved={childMediaApprovalIds.has(item.id)}
+                                mediaId={item.id}
+                                participantId={participant.id}
+                              />
+                            ) : null}
                           </div>
                         </article>
                       ))}
@@ -167,6 +183,35 @@ export default async function ParentDevelopmentMediaPage({ searchParams }: PageP
         })
       )}
     </div>
+  );
+}
+
+function ChildMediaApprovalForm({
+  approved,
+  mediaId,
+  participantId
+}: {
+  approved: boolean;
+  mediaId: string;
+  participantId: string;
+}) {
+  return (
+    <DirtyForm action={setChildMediaApprovalAction} className="mt-4 border-t border-border pt-3">
+      <input name="decision" type="hidden" value={approved ? "revoke" : "approve"} />
+      <input name="mediaId" type="hidden" value={mediaId} />
+      <input name="participantId" type="hidden" value={participantId} />
+      <p className="mb-2 text-xs leading-5 text-muted-foreground">
+        {approved
+          ? "Dit moment is zichtbaar in kindmodus. Er wordt geen deel- of downloadknop getoond."
+          : "Dit moment blijft verborgen in kindmodus tot je het afzonderlijk goedkeurt."}
+      </p>
+      <button
+        className="min-h-11 w-full rounded-lg border border-border bg-background px-3 text-sm font-semibold"
+        type="submit"
+      >
+        {approved ? "Verbergen in kindmodus" : "Tonen in kindmodus"}
+      </button>
+    </DirtyForm>
   );
 }
 
@@ -243,6 +288,8 @@ function consentLabel(status: string) {
 }
 
 function consentSuccess(value: string, organization: string) {
+  if (value === "child_approve") return "Dit voortgangsmoment is nu afzonderlijk goedgekeurd voor kindmodus.";
+  if (value === "child_revoke") return "Dit voortgangsmoment is direct verborgen in kindmodus.";
   if (value === "granted") return `Toestemming is vastgelegd. De ${organization} kan nu gecontroleerde voortgangsfoto's publiceren.`;
   if (value === "withdrawn") return "Toestemming is ingetrokken. Eerder gepubliceerde media is direct verborgen.";
   if (value === "denied") return "Je keuze om geen toestemming te geven is vastgelegd.";
@@ -252,6 +299,8 @@ function consentSuccess(value: string, organization: string) {
 function consentError(value: string) {
   if (value === "confirmation") return "Bevestig dat je de keuze bewust maakt.";
   if (value === "readonly") return "Je gezinskoppeling heeft alleen-lezen toegang en mag toestemming niet wijzigen.";
+  if (value === "session") return "Je sessie kon niet veilig worden gekoppeld. Log opnieuw in en probeer het nogmaals.";
+  if (value === "child_media") return "De zichtbaarheid in kindmodus kon niet veilig worden gewijzigd.";
   return "De toestemmingskeuze kon niet veilig worden vastgelegd.";
 }
 

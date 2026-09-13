@@ -13,7 +13,7 @@ export function ParentSectionNav({
   return (
     <nav
       aria-label={label}
-      className="-mx-4 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0"
+      className="min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
     >
       <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border bg-card p-1 shadow-soft md:min-w-0">
         {items.map((item) => (

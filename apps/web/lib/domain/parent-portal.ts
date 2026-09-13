@@ -429,6 +429,7 @@ export type ParentPortalData = {
     id: string;
     slug: string;
     name: string;
+    sector: NonNullable<AuthenticatedTrustedAuthContext["activeTenant"]>["sector"];
   };
   user: AuthenticatedTrustedAuthContext["user"];
   profile: ParentProfileRow | null;

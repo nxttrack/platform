@@ -13,7 +13,7 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { PortalOverviewHero } from "@/components/parent/portal-overview-hero";
+import { ParentOverviewTop } from "@/components/parent/parent-overview-top";
 import type { PortalJourneyNode } from "@/components/parent/portal-journey-engine";
 import {
   formatLessonDate,
@@ -29,7 +29,8 @@ import {
 import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
 import {
   orderJourneyNodes,
-  resolveJourneyDestination
+  resolveJourneyDestination,
+  selectDefaultJourneyNode
 } from "@/lib/theme/portal-journey-contract";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
@@ -68,7 +69,7 @@ export default async function ParentHomePage({
   const locationId = nextLesson?.resource_id
     ?? (nextLesson ? groupById.get(nextLesson.group_id)?.default_resource_id : null);
   const resolvedTheme = data.portalTheme;
-  const terminology = getPortalTerminology(resolvedTheme.manifest);
+  const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
   const observationByItemId = new Map(
     (journey?.effectiveObservations ?? []).map((observation) => [
       observation.curriculum_item_id,
@@ -187,34 +188,20 @@ export default async function ParentHomePage({
 
   return (
     <div className="portal-dashboard dashboard-page">
-      <PortalOverviewHero
-        child={selectedParticipant
-          ? {
-              initial:
-                selectedParticipant.display_name.trim().charAt(0).toUpperCase() || "★",
-              location: locationId
-                ? resourceById.get(locationId)?.name ?? null
-                : null,
-              name: selectedParticipant.display_name,
-              nextLesson: nextLesson
-                ? formatLessonDate(nextLesson.starts_at, nextLesson.ends_at)
-                : null,
-              program: enrollment
-                ? programById.get(enrollment.program_id)?.name ?? "Programma"
-                : "Nog geen programma",
-              progressPercent:
-                journey?.rings.find((ring) => ring.kind === "diploma")?.progressPercent
-                ?? 0,
-              stage: journey?.currentStage?.name ?? "Startniveau"
-            }
-          : null}
+      <ParentOverviewTop
+        currentGoal={selectDefaultJourneyNode(nodes) ?? null}
         destinationStage={destinationStage}
-        displayName={resolvedTheme.displayName}
-        href="/portaal/ontwikkeling"
-        manifest={resolvedTheme.manifest}
-        nodes={nodes}
+        lesson={nextLesson ? {
+          dateLabel: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at),
+          groupName: groupById.get(nextLesson.group_id)?.name ?? null,
+          locationName: locationId ? resourceById.get(locationId)?.name ?? null : null
+        } : null}
         participantId={participantId}
+        progressHref={participantContextHref("/portaal/ontwikkeling", participantId)}
+        program={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Nog geen programma"}
         rings={journey?.rings ?? []}
+        sceneUrl={resolvedTheme.manifest.assets["overview.hero.desktop"]?.path ?? null}
+        stage={journey?.currentStage?.name ?? "Startniveau"}
       />
 
       <div className="portal-dashboard__cards dashboard-cards">

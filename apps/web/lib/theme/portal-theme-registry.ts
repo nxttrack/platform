@@ -12,6 +12,7 @@ type ThemeAssetSource = {
   desktop: { hash: string; width: number; height: number };
   mobile: { hash: string; width: number; height: number };
   mascot?: { hash: string; width: number; height: number };
+  completed?: { hash: string; width: number; height: number };
 };
 
 type ThemeDefinition = {
@@ -90,6 +91,14 @@ function createAssets(definition: ThemeDefinition): PortalThemeManifestV3["asset
       definition.assets.mascot.hash,
       definition.assets.mascot.width,
       definition.assets.mascot.height
+    );
+  }
+  if (definition.assets.completed) {
+    assets["progress.chapter.completed"] = asset(
+      `${prefix}/journey-completed.png`,
+      definition.assets.completed.hash,
+      definition.assets.completed.width,
+      definition.assets.completed.height
     );
   }
   return assets;
@@ -324,6 +333,34 @@ const definitions: ThemeDefinition[] = [
       mascot: { hash: "5f940c254a8c560a51289422f8c66377b0fc563a812c9944cad940ee683564c6", width: 1024, height: 1536 }
     },
     haptics: "precise"
+  },
+  {
+    key: "ocean-quest",
+    displayName: "Ocean Quest",
+    publicDisplayName: "Ocean Quest",
+    description: "Een interactieve onderwaterreis langs eilanden, parels en persoonlijke mijlpalen.",
+    sectorMode: "swim",
+    mascot: "manta",
+    journeyMetaphor: "island-to-island-ocean-quest",
+    developmentLabel: "Zwemreis",
+    tokens: tokens({
+      primary: "#0B79D0",
+      secondary: "#10B5C4",
+      accent: "#F4B944",
+      attention: "#FF786B",
+      success: "#28B98B",
+      ink: "#082948",
+      muted: "#667D91",
+      page: ["#F2FDFF", "#DCF7F9", "#F0FBFF"],
+      sidebar: ["#073D5F", "#062C4C", "#051F3B"]
+    }),
+    assets: {
+      desktop: { hash: "c8f4ca9f64608dffb2579d5494ff1cc811459e238b0b55727eda77296e64de7b", width: 1983, height: 793 },
+      mobile: { hash: "fcfd746bb3b186d3e6a29702aa1eee020347f1b0491761eb14a8a79674fb1615", width: 853, height: 1844 },
+      mascot: { hash: "b84d87656b55646bc8bee3697b1b72093846d89e06f87055ca051a49f3a6dde0", width: 1706, height: 922 },
+      completed: { hash: "8183dc2282b61b234b103095774d813171b63d5f9b1207ed4f18d95ef7d619ca", width: 1983, height: 793 }
+    },
+    haptics: "playful"
   },
   {
     key: "nationaal-zwem-abc",

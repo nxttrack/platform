@@ -25,7 +25,7 @@ export default async function ParentFeedbackPage({ searchParams }: PageProps) {
   const selectedParticipantId = getSelectedParticipantId(params, [...participants.keys()]);
   const visibleRequests = data.requests.filter((row) => !selectedParticipantId || row.participant_id === selectedParticipantId);
   const open = visibleRequests.filter((row) => row.status === "open" && new Date(row.expires_at).getTime() > Date.now());
-  const terminology = getPortalTerminology(portalTheme.manifest);
+  const terminology = getPortalTerminology(portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-5">

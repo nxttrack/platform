@@ -13,6 +13,7 @@ import { formatCommunicationDate, getParentMessages, messageAudienceLabel } from
 import { getParentPortalData } from "@/lib/domain/parent-portal";
 import { getSelectedParticipantId, participantContextHref, type ParentPortalSearchParams } from "@/lib/domain/parent-portal-selection";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
+import { getParentPortalRequests } from "@/lib/domain/portal-parent-requests";
 
 type PageProps = {
   searchParams?: Promise<ParentPortalSearchParams>;
@@ -21,7 +22,7 @@ type PageProps = {
 export const dynamic = "force-dynamic";
 
 export default async function ParentInboxPage({ searchParams }: PageProps) {
-  const [data, messages, hub, params] = await Promise.all([getParentPortalData(), getParentMessages(), getParentCommunicationHub(), searchParams ?? Promise.resolve({})]);
+  const [data, messages, hub, parentRequests, params] = await Promise.all([getParentPortalData(), getParentMessages(), getParentCommunicationHub(), getParentPortalRequests(), searchParams ?? Promise.resolve({})]);
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const success = getParam(params, "success");
@@ -34,7 +35,7 @@ export default async function ParentInboxPage({ searchParams }: PageProps) {
   const visibleNotifications = data.notifications.filter((notification) => !selectedParticipantId || !notification.participant_id || notification.participant_id === selectedParticipantId);
   const unreadNotifications = visibleNotifications.filter((notification) => notification.status === "unread");
   const inboxHref = participantContextHref("/portaal/inbox", selectedParticipantId);
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">
@@ -59,6 +60,14 @@ export default async function ParentInboxPage({ searchParams }: PageProps) {
         <Metric icon={<Bell className="h-5 w-5" />} label="Updates" value={visibleNotifications.length} />
         <Metric icon={<MailOpen className="h-5 w-5" />} label="Ongelezen" value={unreadNotifications.length} />
       </div>
+
+      {parentRequests.length ? <section className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+        <div className="mb-4 flex items-center justify-between gap-3"><div><h2 className="font-bold text-foreground">Verzoeken uit kindmodus</h2><p className="mt-1 text-sm text-muted-foreground">Gestructureerde hulpvragen zonder vrij bericht of gevoelige inhoud.</p></div><StatusPill tone="info">{parentRequests.length} open</StatusPill></div>
+        <div className="grid gap-3 md:grid-cols-2">{parentRequests.map((request) => {
+          const participant = data.participants.find((item) => item.id === request.participant_id);
+          return <article className="rounded-lg border border-border bg-white p-4" key={request.id}><small className="font-semibold uppercase tracking-wider text-primary">{participant?.display_name ?? "Je kind"}</small><h3 className="mt-1 font-bold">{parentRequestLabel(request.request_type)}</h3><p className="mt-2 text-xs text-muted-foreground">Ontvangen {formatCommunicationDate(request.created_at)}</p></article>;
+        })}</div>
+      </section> : null}
 
       <section className="scroll-mt-24" id="gesprekken">
         <div className="mb-3 flex items-center justify-between gap-3">
@@ -217,6 +226,15 @@ function notificationLabel(type: string, finalMoment: string) {
   }
 
   return "update";
+}
+
+function parentRequestLabel(type: string) {
+  const labels: Record<string, string> = {
+    lesson_help: "Wil je mij helpen met dit lesmoment?",
+    activity_interest: "Wil je samen naar deze activiteit kijken?",
+    open_parent_portal: "Wil je het ouderportaal voor mij openen?"
+  };
+  return labels[type] ?? "Hulp gevraagd";
 }
 
 function getParam(params: Record<string, string | string[] | undefined>, key: string) {

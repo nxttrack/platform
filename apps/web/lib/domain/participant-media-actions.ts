@@ -19,6 +19,7 @@ import { getActiveTenant } from "./core";
 import {
   normalizeRetentionDays,
   PARTICIPANT_MEDIA_MAX_BYTES,
+  PARTICIPANT_MEDIA_MIME_TYPES,
   PARTICIPANT_MEDIA_POLICY_VERSION,
   PARTICIPANT_MEDIA_PURPOSE
 } from "./participant-media-contract";
@@ -52,6 +53,36 @@ export async function recordParticipantMediaConsentAction(formData: FormData) {
   redirect(`/portaal/media?saved=${decision}`);
 }
 
+export async function setChildMediaApprovalAction(formData: FormData) {
+  const context = await requirePrivateShellContext("/portaal/ontwikkeling/media");
+  const tenant = getActiveTenant(context);
+  const participantId = readRequired(formData, "participantId");
+  const mediaId = readRequired(formData, "mediaId");
+  const decision = readEnum(formData, "decision", ["approve", "revoke"] as const);
+
+  if (!context.session) {
+    redirect("/portaal/ontwikkeling/media?error=session");
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("set_child_media_approval_for_service", {
+    p_approved: decision === "approve",
+    p_media_id: mediaId,
+    p_participant_id: participantId,
+    p_session_id: context.session.id,
+    p_tenant_id: tenant.id,
+    p_user_id: context.user.id
+  });
+
+  if (error || data !== true) {
+    redirect(`/portaal/ontwikkeling/media?error=${error?.code === "42501" ? "readonly" : "child_media"}`);
+  }
+
+  revalidatePath("/portaal/ontwikkeling/media");
+  revalidatePath("/kind/ik");
+  redirect(`/portaal/ontwikkeling/media?saved=child_${decision}`);
+}
+
 export async function uploadParticipantMediaAction(formData: FormData) {
   const context = await requirePrivateShellContext("/admin/leerlingen");
   requireTenantMediaAdmin(context);
@@ -68,8 +99,12 @@ export async function uploadParticipantMediaAction(formData: FormData) {
   if (!(file instanceof File) || file.size === 0) {
     redirect(`/admin/leerlingen/${participantId}/media?error=file`);
   }
-  if (file.size > PARTICIPANT_MEDIA_MAX_BYTES || !["image/jpeg", "image/png"].includes(file.type)) {
+  if (file.size > PARTICIPANT_MEDIA_MAX_BYTES || !PARTICIPANT_MEDIA_MIME_TYPES.includes(file.type as (typeof PARTICIPANT_MEDIA_MIME_TYPES)[number])) {
     redirect(`/admin/leerlingen/${participantId}/media?error=file_type`);
+  }
+  const mediaType = file.type === "video/mp4" ? "video" : "image";
+  if (mediaType === "video" && formData.get("videoWebRenditionConfirmed") !== "on") {
+    redirect(`/admin/leerlingen/${participantId}/media?error=video_rendition`);
   }
 
   const admin = createAdminClient();
@@ -97,7 +132,7 @@ export async function uploadParticipantMediaAction(formData: FormData) {
   let processed: File;
   try {
     await scanUpload(file, "participant_media");
-    processed = await normalizeProgressImage(file);
+    processed = mediaType === "image" ? await normalizeProgressImage(file) : file;
   } catch {
     redirect(`/admin/leerlingen/${participantId}/media?error=processing`);
   }
@@ -123,10 +158,10 @@ export async function uploadParticipantMediaAction(formData: FormData) {
     tenant_id: tenant.id,
     participant_id: participantId,
     uploaded_by: context.user.id,
-    media_type: "image",
+    media_type: mediaType,
     storage_bucket: upload.storageBucket,
     storage_path: upload.filePath,
-    file_name: processed.type === "image/png" ? "voortgangsfoto.png" : "voortgangsfoto.jpg",
+    file_name: processed.type === "image/png" ? "voortgangsfoto.png" : processed.type === "video/mp4" ? "voortgangsvideo.mp4" : "voortgangsfoto.jpg",
     mime_type: upload.mimeType,
     size_bytes: upload.sizeBytes,
     caption,
@@ -136,7 +171,9 @@ export async function uploadParticipantMediaAction(formData: FormData) {
     status: "draft",
     download_allowed: downloadAllowed,
     content_classification: "restricted",
-    classification_reasons: ["minor_media", "biometric_context", "metadata_removed"],
+    classification_reasons: mediaType === "image"
+      ? ["minor_media", "biometric_context", "metadata_removed"]
+      : ["minor_media", "biometric_context", "web_rendition_confirmed"],
     file_sha256: upload.scan.sha256,
     malware_scan_engine: upload.scan.engine,
     malware_scan_status: upload.scan.status,

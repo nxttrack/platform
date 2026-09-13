@@ -52,7 +52,7 @@ export default async function ParentPlanningPage({ searchParams }: ParentPlannin
         .map((membership) => ({ session, membership }))
     )
     .sort((a, b) => new Date(a.session.starts_at).getTime() - new Date(b.session.starts_at).getTime());
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

@@ -11,7 +11,8 @@ type PageProps = {
 
 const errorMessages: Record<string, string> = {
   invalid_credentials: "E-mail of wachtwoord klopt niet.",
-  forbidden: "Je account heeft geen toegang tot deze omgeving."
+  forbidden: "Je account heeft geen toegang tot deze omgeving.",
+  child_session_locked: "De beveiligde kindmodus is vergrendeld. Log opnieuw in om terug te keren naar het ouderportaal."
 };
 
 export default async function LoginPage({ searchParams }: PageProps) {
@@ -20,6 +21,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
   const nextPath = sanitizeRelativePath(getParam(params, "next"), "/portaal");
   const resetDone = getParam(params, "reset") === "done";
   const invitationAccepted = getParam(params, "invitation") === "accepted";
+  const parentReauthRequired = getParam(params, "reauth") === "required";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4 py-10">
@@ -33,6 +35,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
         {error ? <p className="mb-4 rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessages[error] ?? "Inloggen is niet gelukt."}</p> : null}
         {resetDone ? <p className="mb-4 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Je wachtwoord is gewijzigd. Log opnieuw in.</p> : null}
         {invitationAccepted ? <p className="mb-4 rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Je uitnodiging is geaccepteerd. Je kunt nu inloggen.</p> : null}
+        {parentReauthRequired ? <p className="mb-4 rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-sm font-medium text-primary">Log opnieuw in om de beveiligde kindmodus te verlaten.</p> : null}
 
         <form action={loginAction} className="space-y-4">
           <input name="next" type="hidden" value={nextPath} />

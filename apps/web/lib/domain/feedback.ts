@@ -127,6 +127,7 @@ export async function getParentFeedbackDataForContext(
   assertResult(responses.error, "parent feedback responses");
 
   return {
+    tenant,
     requests: requestRows,
     campaigns: campaigns.data ?? [],
     participants: participants.data ?? [],
