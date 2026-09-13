@@ -2,10 +2,17 @@
 
 This repository is the final rebuild of NXTTRACK.
 
-Current working mode: controlled production launch completed for
-`08624b16d07bc1536ec4ef3739ff54c48ef7a39e`. Production health, migrations, owner access,
-database-backed SendGrid delivery, encrypted Storage backup and operational alerting are proven. Sprint 6
-now hardens and validates optional Mollie billing on staging before any tenant or live-provider activation.
+Current working mode: Phase 0 main reconciliation before V4.2. The cleanup branch
+ports existing parent/child session contracts, canonical journey history and
+production-readiness hardening from individually classified source families.
+No V4.2 UI, theme importer or Default 1.1 assets are included.
+
+See [the reconciliation ledger](docs/audits/2026-09-13-main-reconciliation.md),
+[the measured baseline](BASELINE.md) and
+[the review report](MAIN-RECONCILIATION-REPORT.md). Historical production and
+staging claims below describe their named releases; they do not certify this
+branch or authorize a deployment. Only the user merges the cleanup PR into main.
+Use a merge commit: the immutable compatibility anchor must remain in history.
 
 ## Source of truth
 
@@ -18,7 +25,7 @@ now hardens and validates optional Mollie billing on staging before any tenant o
 
 Run `pnpm run release:truth` to verify the repository and release-source invariants and to report local branch divergence.
 
-## Current implementation status
+## Historical implementation status
 
 The repository has moved beyond the original documentation-only phase:
 
