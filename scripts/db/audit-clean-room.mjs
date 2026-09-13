@@ -125,6 +125,23 @@ try {
   }
 
   const functionBoundaries = [];
+  for (const signature of [
+    "public.claim_journey_bot_config(uuid,uuid,integer)",
+    "app_private.claim_journey_bot_config(uuid,uuid,integer)",
+    "public.purge_journey_bot_run(uuid,uuid)",
+    "app_private.purge_journey_bot_run(uuid,uuid)"
+  ]) {
+    assert.equal((await client.query("select to_regprocedure($1) is null as retired", [signature])).rows[0].retired, true,
+      `${signature} must not remain callable after retirement`);
+  }
+  for (const table of ["journey_bot_configs", "journey_bot_runs", "journey_bot_child_journeys", "journey_bot_child_events", "journey_bot_issues", "journey_bot_purge_receipts"]) {
+    for (const role of ["anon", "authenticated", "service_role"]) {
+      const grants = (await client.query("select has_table_privilege($1,$2,'insert,update,delete,truncate,references,trigger') as writable", [role, `public.${table}`])).rows[0];
+      assert.equal(grants.writable, false, `${role} must not mutate retired ${table}`);
+    }
+    assert.equal((await client.query("select has_table_privilege('service_role',$1,'select') readable", [`public.${table}`])).rows[0].readable, true,
+      `${table} history must remain inspectable`);
+  }
   for (const signature of serviceOnlyFunctions) {
     const result = await client.query(
       `select
