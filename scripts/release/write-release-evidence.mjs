@@ -2,9 +2,11 @@
 
 import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { resolveExactSourceSha, writeExactSourceArtifact } from "./exact-source-artifact.mjs";
 
 const target = process.env.RELEASE_TARGET || process.env.TARGET || "unknown";
 const outputPath = resolve(process.cwd(), process.env.RELEASE_EVIDENCE_PATH || "artifacts/release-evidence.json");
+const exactSourceSha = resolveExactSourceSha();
 const evidence = {
   schemaVersion: 1,
   application: "nxttrack-platform",
@@ -12,7 +14,7 @@ const evidence = {
   source: {
     canonicalBranch: process.env.RELEASE_CANONICAL_BRANCH || "main",
     refName: process.env.GITHUB_REF_NAME || null,
-    commitSha: process.env.GITHUB_SHA || process.env.RELEASE_COMMIT_SHA || null,
+    commitSha: exactSourceSha,
     stagedCommitSha: target === "production" ? process.env.STAGING_RELEASE_SHA || null : null
   },
   workflow: {
@@ -47,6 +49,10 @@ const evidence = {
 
 mkdirSync(dirname(outputPath), { recursive: true });
 writeFileSync(outputPath, `${JSON.stringify(evidence, null, 2)}\n`, { mode: 0o640 });
+writeExactSourceArtifact({
+  outputPath: resolve(dirname(outputPath), "exact-source-sha.json"),
+  sourceSha: exactSourceSha
+});
 console.log(`[release:evidence] Wrote non-sensitive release evidence to ${outputPath}.`);
 
 if (process.env.GITHUB_STEP_SUMMARY) {

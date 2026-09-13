@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../../lib/date/business-date";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
@@ -288,7 +289,7 @@ function requireState() {
 function dateValue(days: number) {
   const value = new Date();
   value.setDate(value.getDate() + days);
-  return value.toISOString().slice(0, 10);
+  return toAmsterdamDate(value);
 }
 
 function nextIsoWeekdayDate(targetWeekday: number, weeksFromNext = 0) {
@@ -296,7 +297,7 @@ function nextIsoWeekdayDate(targetWeekday: number, weeksFromNext = 0) {
   const currentWeekday = value.getUTCDay() || 7;
   const daysUntilTarget = ((targetWeekday - currentWeekday + 7) % 7) || 7;
   value.setUTCDate(value.getUTCDate() + daysUntilTarget + weeksFromNext * 7);
-  return value.toISOString().slice(0, 10);
+  return toAmsterdamDate(value);
 }
 
 function dateTimeValue(days: number, hour: number, minute: number) {

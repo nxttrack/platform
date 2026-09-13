@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -547,7 +548,7 @@ async function findLongAbsenceCandidate(tenantId: string) {
 }
 
 async function findDiplomaCandidate(tenantId: string, settings: AutomationRecipeSettings) {
-  const since = new Date(Date.now() - settings.lookbackDays * dayMs).toISOString().slice(0, 10);
+  const since = addAmsterdamCalendarDays(new Date(), -settings.lookbackDays);
   const result = await createAdminClient()
     .from("certificate_records")
     .select("id, participant_id, issued_on, is_test, journey_run_id")
@@ -608,8 +609,8 @@ async function findPaymentFailureCandidate(tenantId: string, settings: Automatio
 
 async function findExpiringCreditCandidate(tenantId: string, settings: AutomationRecipeSettings) {
   const admin = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
-  const horizon = new Date(Date.now() + settings.daysAhead * dayMs).toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
+  const horizon = addAmsterdamCalendarDays(new Date(), settings.daysAhead);
   const creditsResult = await admin
     .from("catch_up_credits")
     .select("id, participant_id, expires_on")

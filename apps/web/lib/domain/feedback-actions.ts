@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -23,7 +25,7 @@ export async function createFeedbackCampaignAction(formData: FormData) {
     follow_up_question: followUp,
     trigger_type: triggerType,
     status,
-    active_from: status === "active" ? new Date().toISOString().slice(0, 10) : null,
+    active_from: status === "active" ? toAmsterdamDate() : null,
     created_by_user_id: context.user.id
   });
   if (result.error) redirect(`${adminPath}?error=campaign`);

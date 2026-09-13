@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 export const journeyScenarioModes = [
   "intake_only",
   "intake_to_placement",
@@ -94,7 +95,7 @@ export function getMinimumAgeDecision(birthDate: string, today = new Date()): Mi
 
   return {
     blocked: eligibleDate.getTime() > todayDate.getTime(),
-    eligibleFrom: eligibleDate.toISOString().slice(0, 10)
+    eligibleFrom: toAmsterdamDate(eligibleDate)
   };
 }
 
@@ -102,7 +103,7 @@ export function sortEligibleFifo<T extends { createdAt: string; eligibleFrom: st
   entries: readonly T[],
   today = new Date()
 ): T[] {
-  const todayIso = today.toISOString().slice(0, 10);
+  const todayIso = toAmsterdamDate(today);
 
   return entries
     .filter((entry) => !entry.eligibleFrom || entry.eligibleFrom <= todayIso)

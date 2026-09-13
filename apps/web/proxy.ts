@@ -5,6 +5,13 @@ import { resolveTenantHost, type TenantHostResolution } from "@/lib/tenant/resol
 import { getTenantRoutingConfig } from "@/lib/tenant/routing-config";
 
 export async function proxy(request: NextRequest) {
+  if (process.env.MAINTENANCE_NO_WRITE === "true" && !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+    return NextResponse.json(
+      { error: "maintenance_no_write" },
+      { status: 503, headers: { "Cache-Control": "private, no-store, max-age=0", "Retry-After": "60" } }
+    );
+  }
+
   const tenantResolution = resolveTenantHost(request.headers.get("host") ?? request.nextUrl.host, getTenantRoutingConfig());
   let supabaseResponse = createTenantAwareResponse(request, tenantResolution);
   const config = getSupabasePublicConfig();

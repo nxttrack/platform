@@ -12,11 +12,14 @@
     "auth:audit": "node scripts/auth/audit-route-access.mjs && node scripts/auth/audit-auth-boundary.mjs && tsx --test tests/unit/auth-invitation-target.test.ts",
     "auth:bootstrap-platform-owner": "node scripts/auth/bootstrap-platform-owner.mjs",
     "db:audit": "node scripts/db/audit-migrations.mjs",
+    "db:audit-clean-room": "node scripts/db/audit-clean-room.mjs",
     "db:rls-audit": "node scripts/db/audit-rls-coverage.mjs",
     "db:rls-role-smoke": "node scripts/db/rls-role-smoke.mjs",
     "db:verify-force-rls": "node scripts/db/verify-force-rls.mjs",
     "db:advisors": "node scripts/db/supabase-advisors.mjs",
     "db:inventory-production-read-only": "node scripts/db/inventory-production-read-only.mjs",
+    "db:preflight-production-readiness-upgrade": "node scripts/db/preflight-production-readiness-upgrade.mjs",
+    "db:seed-production-readiness-upgrade-fixture": "node scripts/db/seed-production-readiness-upgrade-fixture.mjs",
     "db:migrate": "node scripts/db/migrate.mjs",
     "deploy:package-standalone-assets": "node scripts/deploy/package-standalone-assets.mjs",
     "design:audit": "node scripts/design/audit-lovable-baseline.mjs",
@@ -32,12 +35,23 @@
     "test:swim-canon": "tsx --test tests/unit/swim-progress-contract.test.ts tests/unit/swim-permissions-contract.test.ts tests/unit/swim-canon-schema.test.ts tests/unit/swim-assessment-schema.test.ts tests/unit/swim-badge-batch-schema.test.ts tests/unit/swim-curriculum-wizard-schema.test.ts tests/unit/swim-transition-carryover-schema.test.ts tests/unit/swim-group-planning-schema.test.ts tests/unit/billing-document-contract.test.ts tests/unit/swim-flow-analytics-contract.test.ts tests/unit/swim-analytics-forecast-schema.test.ts tests/unit/native-mobile-contract.test.ts",
     "test:swim-canon:db": "node scripts/db/test-swim-canon-integration.mjs",
     "test:planning:concurrency": "node scripts/db/test-planning-concurrency.mjs",
+    "test:email-outbox:db": "node scripts/db/test-email-outbox-integration.mjs",
+    "test:tenant-provisioning:db": "node scripts/db/test-tenant-provisioning-integration.mjs",
+    "test:core-onboarding:db": "node scripts/db/test-core-onboarding-writes-integration.mjs",
+    "test:resumable-import:db": "node scripts/db/test-resumable-import-integration.mjs",
+    "test:production-readiness-certification:db": "node scripts/db/test-production-readiness-certification-integration.mjs",
+    "test:production-readiness-tenant-matrix:db": "node scripts/db/test-production-readiness-tenant-matrix.mjs",
+    "test:production-readiness-crash-windows:db": "node scripts/db/test-production-readiness-crash-windows.mjs",
+    "test:production-readiness-preview:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/production-readiness-maintenance-preview.spec.ts --project=chromium-desktop --retries=0",
     "android:quality": "apps/android/gradlew -p apps/android qualityGate",
     "android:build": "apps/android/gradlew -p apps/android :instructor-app:assembleDebug :parent-app:assembleDebug :instructor-app:bundleRelease :parent-app:bundleRelease",
     "test:portal-themes:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/portal-theme-visual-matrix.spec.ts --project=chromium-desktop --retries=0",
     "test:journey:e2e": "pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts",
     "release:truth": "node scripts/release/audit-repository-truth.mjs",
     "release:assert-source": "node scripts/release/assert-release-source.mjs",
+    "release:assert-schema-compatibility": "node scripts/release/assert-runtime-schema-compatibility.mjs",
+    "release:assert-rollback-target": "node scripts/release/assert-rollback-release.mjs",
+    "release:rehearse-application-forward-rollback": "node scripts/release/rehearse-application-forward-rollback.mjs",
     "release:audit-production-foundation": "node scripts/release/audit-production-foundation.mjs",
     "release:audit-production-mail": "node scripts/release/audit-production-mail-config.mjs",
     "release:audit-premium": "node scripts/release/audit-premium-productization.mjs",
@@ -46,6 +60,7 @@
     "release:audit-runtime-env": "node scripts/release/audit-runtime-environment-contract.mjs",
     "release:create-go-no-go": "node scripts/release/create-go-no-go-form.mjs",
     "release:write-artifact-probe": "node scripts/release/write-artifact-storage-probe.mjs",
+    "release:write-exact-source": "node scripts/release/write-exact-source-artifact.mjs",
     "release:write-evidence": "node scripts/release/write-release-evidence.mjs",
     "phase15:staging": "node scripts/staging/phase-15-validate.mjs",
     "phase16:flow": "node scripts/staging/phase-16-operational-flow.mjs",
@@ -86,7 +101,7 @@
     "test:content-security": "tsx --test tests/unit/content-classification.test.ts",
     "test:journey-bot": "tsx --test tests/unit/journey-bot-contract.test.ts tests/unit/journey-bot-tick-evaluator.test.ts",
     "test:demo-seed": "node --test tests/unit/demo-time.test.mjs",
-    "security:audit-dependencies": "pnpm audit --prod --audit-level high",
+    "security:audit-dependencies": "pnpm audit --prod --audit-level moderate",
     "sprint4:prepare-mutations": "node scripts/staging/prepare-sprint4-mutations.mjs",
     "sprint4:prepare-offer-edges": "node scripts/staging/prepare-sprint4-offer-edges.mjs",
     "sprint4:prepare-parent": "node scripts/staging/prepare-sprint4-parent.mjs",
@@ -116,18 +131,18 @@
     "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=24.18.0 <25"
   },
   "pnpm": {
     "overrides": {
-      "nanoid": "3.3.17",
+      "nanoid": "3.3.18",
       "postcss": "8.5.23",
       "sharp": "0.35.0"
     }
   },
   "devDependencies": {
     "pg": "^8.22.0",
-    "supabase": "^2.109.1",
+    "supabase": "2.117.0",
     "tsx": "4.23.1"
   }
 }

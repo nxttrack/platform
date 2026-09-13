@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -175,7 +177,7 @@ export async function cancelLessonAction(formData: FormData) {
       source_cancellation_id: (cancellationResult.data as { id: string }).id,
       status: "available",
       credit_type: "lesson_cancellation",
-      expires_on: expiresOn.toISOString().slice(0, 10)
+      expires_on: toAmsterdamDate(expiresOn)
     });
 
     if (creditResult.error) {

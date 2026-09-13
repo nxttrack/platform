@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { isRuntimeSchemaCompatible } from "@/lib/release/schema-compatibility";
 
 export const dynamic = "force-dynamic";
 
@@ -13,12 +14,20 @@ type DatabaseHealthCheck = {
   status: HealthCheckStatus;
 };
 
+type SchemaCompatibilityHealthCheck = {
+  message: string;
+  status: HealthCheckStatus;
+};
+
 const APP_NAME = "nxttrack-platform";
 
 export async function GET() {
   const database = await checkDatabase();
+  const schemaCompatibility = await checkSchemaCompatibility();
   const requireDatabase = process.env.REQUIRE_HEALTH_DATABASE === "true" || process.env.HEALTH_STRICT === "true";
-  const ok = database.status !== "fail" && (!requireDatabase || database.status === "pass");
+  const ok = database.status !== "fail"
+    && schemaCompatibility.status !== "fail"
+    && (!requireDatabase || (database.status === "pass" && schemaCompatibility.status === "pass"));
 
   return NextResponse.json(
     {
@@ -29,11 +38,40 @@ export async function GET() {
       buildTimestamp: process.env.RELEASE_BUILD_TIME ?? process.env.BUILD_TIMESTAMP ?? null,
       checkedAt: new Date().toISOString(),
       checks: {
-        database
+        database,
+        schemaCompatibility
       }
     },
     { status: ok ? 200 : 503 }
   );
+}
+
+async function checkSchemaCompatibility(): Promise<SchemaCompatibilityHealthCheck> {
+  if (!getSupabasePublicConfig() || !process.env.SUPABASE_SECRET_KEY) {
+    return {
+      message: "Schema compatibility check is not configured.",
+      status: "skipped"
+    };
+  }
+
+  try {
+    const { data, error } = await createAdminClient().rpc("runtime_schema_compatibility");
+    if (error || !isRuntimeSchemaCompatible(data)) {
+      return {
+        message: "Runtime and database schema compatibility contract does not match.",
+        status: "fail"
+      };
+    }
+    return {
+      message: "Runtime and database schema compatibility contract matches.",
+      status: "pass"
+    };
+  } catch {
+    return {
+      message: "Runtime and database schema compatibility check failed.",
+      status: "fail"
+    };
+  }
 }
 
 async function checkDatabase(): Promise<DatabaseHealthCheck> {

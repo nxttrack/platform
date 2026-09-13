@@ -97,7 +97,7 @@ export async function sendPlatformEmailTestAction(formData: FormData) {
     templateKey: "platform_delivery_test"
   });
 
-  redirect(`${settingsPath}?test=${result.delivered ? "sent" : "failed"}`);
+  redirect(`${settingsPath}?test=${result.accepted ? "accepted" : "failed"}`);
 }
 
 async function requirePlatformOwner() {

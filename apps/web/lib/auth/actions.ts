@@ -160,7 +160,7 @@ export async function createInvitationAction(formData: FormData) {
     redirect(`${returnPath}?error=invalid_role&kind=${invitationKind}`);
   }
 
-  let delivered = false;
+  let accepted = false;
 
   try {
     const result = await createInvitation({
@@ -172,12 +172,12 @@ export async function createInvitationAction(formData: FormData) {
       actor
     });
 
-    delivered = result.delivered;
+    accepted = result.accepted;
   } catch (error) {
     redirect(`${returnPath}?error=${invitationErrorCode(error)}&kind=${invitationKind}`);
   }
 
-  redirect(`${returnPath}?sent=1&delivery=${delivered ? "sent" : "skipped"}&kind=${invitationKind}`);
+  redirect(`${returnPath}?sent=1&delivery=${accepted ? "accepted" : "skipped"}&kind=${invitationKind}`);
 }
 
 function invitationErrorCode(error: unknown) {

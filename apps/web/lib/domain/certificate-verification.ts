@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -34,7 +35,7 @@ export async function verifyPublicCertificate(code: string): Promise<PublicCerti
   if (tenant.error || participant.error || program.error || stage.error || !tenant.data || !participant.data || !program.data || !stage.data) return null;
   const status = certificate.data.status === "issued" && certificate.data.verification_status === "active" ? "valid" : "revoked";
   const requestHeaders = await headers();
-  const fingerprintSource = `${requestHeaders.get("user-agent") ?? "unknown"}|${new Date().toISOString().slice(0, 10)}`;
+  const fingerprintSource = `${requestHeaders.get("user-agent") ?? "unknown"}|${toAmsterdamDate()}`;
   await admin.from("certificate_verification_events").insert({
     tenant_id: certificate.data.tenant_id,
     certificate_id: certificate.data.id,
