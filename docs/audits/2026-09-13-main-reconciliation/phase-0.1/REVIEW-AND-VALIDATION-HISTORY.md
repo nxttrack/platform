@@ -208,10 +208,10 @@ per profiel, 52 Chromiumsmokes en maintenance groen. Journey-herhaling en nieuwe
 GitHub CI/review zijn bij deze publicatie nog pending. Extra PL/pgSQL-lint meldt
 drie bestaande diagnostieken; die staan afzonderlijk als risico in het rapport.
 
-Zie [FASE 0.1-validation](2026-09-13-main-reconciliation/phase-0.1/validation.json),
-[advisories](2026-09-13-main-reconciliation/phase-0.1/advisories.json),
-[alle dependencywijzigingen](2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json)
-en het actuele [rapport](../../MAIN-RECONCILIATION-REPORT.md).
+Zie [FASE 0.1-validation](validation.json),
+[advisories](advisories.json),
+[alle dependencywijzigingen](dependency-version-changes.json)
+en het actuele [rapport](../../../../MAIN-RECONCILIATION-REPORT.md).
 
 ### Vervolg na tweede Codex-review
 

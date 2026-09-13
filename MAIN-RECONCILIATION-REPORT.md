@@ -193,7 +193,9 @@ ancestryhelper, schemafloor en alle 147 migraties blijven ongewijzigd.
 | Vervolg-P2 legacy badges | resolved_badge_key als fallback; immutable release-identiteit houdt voorrang. |
 | Vervolg-P1 plaatsingsdatums | Inclusieve tenant-lokale begin-/einddatums, overlap/gaten en limiet na filtering; stabiele paginering. |
 
-Alle **6 threads resolved, 0 open**. De [nieuwe Codex-review](https://github.com/nxttrack/platform/pull/57#issuecomment-5654331438)
+De **6 codethreads zijn resolved**. De daaropvolgende P2 over vier verplaatste
+documentatielinks is gecorrigeerd en lokaal gecontroleerd; de actuele stand van
+alle 7 threads staat in het afsluitcommentaar. De [nieuwe Codex-review](https://github.com/nxttrack/platform/pull/57#issuecomment-5654331438)
 op `c6cd1c0` vond geen nieuwe belangrijke bevindingen. Elke correctie is vóór
 threadresolutie met groene regressies onderbouwd.
 
@@ -208,7 +210,8 @@ Productie-audit **4 → 0**, met ongewijzigde moderate-gate. Dit zijn de eerste
 patched upstreamversies; geen major-upgrade, allowlist, ignore of force-fix.
 Next/Sharp peers en native pakketten zijn onderzocht; de scoped Next override
 blijft binnen upstream semver. Alle ranges, paden, direct/transitief en redenen
-voor alle 40 gewijzigde packagenamen staan in de [dependency-evidence](docs/audits/2026-09-13-main-reconciliation/phase-0.1/advisories.json).
+staan in de [advisory-evidence](docs/audits/2026-09-13-main-reconciliation/phase-0.1/advisories.json);
+alle 40 gewijzigde packagenamen en redenen in de [dependencylijst](docs/audits/2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json).
 De noodzakelijke standalone-copyfix behoudt relatieve pnpm-links; herhaling,
 relocatie en echte PNG/WebP/AVIF-verwerking slagen. Eén identieke dubbele
 workflow-envkey is verwijderd; 29 workflows strikt zonder dubbele keys getest.
