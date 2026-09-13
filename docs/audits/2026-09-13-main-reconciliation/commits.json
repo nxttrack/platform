@@ -1,0 +1,3590 @@
+[
+  {
+    "sha": "de26545e0241661cc594d08920812ec6e2f8ff4c",
+    "subject": "Merge pull request #4 from nxttrack/main",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7a3965dc14f1888023bae5102e805709845894da",
+    "subject": "Merge pull request #6 from nxttrack/main",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "63d2faa2a9c9e4397d4d257b5bd619e73a8d18bd",
+    "subject": "Merge pull request #8 from nxttrack/main",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5713d447e47b7301a2f1f863313941405ba61bff",
+    "subject": "Merge main into staging after identity boundary migration",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2c719a6e141cffeed5e446ec0105f73b43fe6e1c",
+    "subject": "Merge tenant routing contract into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d020e3bd0e729833b9123face7a30d69ab8412d0",
+    "subject": "Promote main to staging after route guard contracts",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6b475ff1863cdb80df6ed7994db8be55be13777d",
+    "subject": "Promote main to staging after trusted auth context sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2b9e31b46fb753bcfb7099460534647730bebfa0",
+    "subject": "Promote main to staging after Lovable marketing page",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(nxttrack-marketing)/nxttrack/page.tsx",
+      "apps/web/components/marketing/nxttrack-marketing.tsx",
+      "apps/web/public/lovable/nxttrack-logo.svg",
+      "docs/LOVABLE_MARKETING_PORT.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5c544ae3693154b2de833ae70680caaa3a2e52d8",
+    "subject": "Complete Phase 2 shell auth boundaries",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(auth-boundary)/auth/no-access/page.tsx",
+      "apps/web/app/(auth-boundary)/auth/redirect/page.tsx",
+      "apps/web/app/(auth-boundary)/auth/tenant-switch/actions.ts",
+      "apps/web/app/(auth-boundary)/auth/tenant-switch/page.tsx",
+      "apps/web/app/(instructor)/instructor/berichten/page.tsx",
+      "apps/web/app/(instructor)/instructor/documenten/page.tsx",
+      "apps/web/app/(instructor)/instructor/groepen/page.tsx",
+      "apps/web/app/(instructor)/instructor/layout.tsx",
+      "apps/web/app/(instructor)/instructor/leerlingen/page.tsx",
+      "apps/web/app/(instructor)/instructor/taken/page.tsx",
+      "apps/web/app/(parent)/parent/badges/page.tsx",
+      "apps/web/app/(parent)/parent/diplomas/page.tsx",
+      "apps/web/app/(parent)/parent/layout.tsx",
+      "apps/web/app/(parent)/parent/profiel/page.tsx",
+      "apps/web/app/(platform-admin)/platform/layout.tsx",
+      "apps/web/app/(platform-admin)/platform/page.tsx",
+      "apps/web/app/(platform-admin)/platform/settings/page.tsx",
+      "apps/web/app/(platform-admin)/platform/templates/page.tsx",
+      "apps/web/app/(platform-admin)/platform/tenants/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/afzwemmen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/berichten/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/documenten/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/groepen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/intake/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/layout.tsx",
+      "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/programma/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/rapportages/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/taken/page.tsx",
+      "apps/web/app/(tenant-public)/login/actions.ts",
+      "apps/web/app/(tenant-public)/login/page.tsx",
+      "apps/web/app/page.tsx",
+      "apps/web/components/lovable/page-kit.tsx",
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/components/shell/private-shell-boundary.tsx",
+      "apps/web/lib/auth/redirects.ts",
+      "apps/web/lib/auth/server-context.ts",
+      "apps/web/lib/auth/tenant-selection.ts",
+      "apps/web/lib/navigation.ts",
+      "scripts/auth/audit-route-access.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "db245756aa33c5db969b4d1703499c8a95c8e623",
+    "subject": "Fix standalone static assets in staging deploy",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/scripts/start.mjs",
+      "docs/VPS_DEPLOY_RUNBOOK.md",
+      "scripts/deploy/prepare-standalone-assets.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "131f3fa9e033b9dab2d80bf6783de1780a7c0c31",
+    "subject": "Align Supabase public key env names",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/deploy.yml",
+      "apps/web/lib/supabase/config.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6a572678534949da7d7128fa79785f91ec6b5ddd",
+    "subject": "Add core domain foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/enrollments/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/groepen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/groups/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/instructors/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/programma/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/programs/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/resources/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/sessions/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/stages/page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/navigation.ts",
+      "docs/PHASE_3_CORE_DOMAIN_FOUNDATION.md",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624103000_core_domain_foundation.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8d481e9fb358cf885e7e42761d27f5f65e5ef938",
+    "subject": "Complete phase 3 admin CRUD foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "docs/PHASE_3_CORE_DOMAIN_FOUNDATION.md",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624113000_core_domain_admin_crud.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6c48b5783b2dbf9f0b69f3f27b53a713741afcdd",
+    "subject": "Add phase 4 public tenant intake foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".gitignore",
+      "apps/web/app/(tenant-public)/intake/page.tsx",
+      "apps/web/app/(tenant-public)/programmas/[slug]/page.tsx",
+      "apps/web/app/(tenant-public)/programmas/page.tsx",
+      "apps/web/app/page.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "apps/web/lib/public-site/tenant-site.ts",
+      "docs/IMPLEMENTATION_ROADMAP.md",
+      "docs/PHASE_4_PUBLIC_TENANT_INTAKE.md",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624123000_phase4_public_tenant_intake.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9c495ac775b5814258c94ec48ad5ba63a586aec4",
+    "subject": "Fix staging tenant deploy config",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/app/api/health/route.ts",
+      "apps/web/lib/tenant/routing-config.ts",
+      "docs/PHASE_3_AUTH_TENANTS_ROLES.md",
+      "docs/STAGING_SETUP_CHECKLIST.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "412d313d786af273b1de022d2693d2ea9ead613d",
+    "subject": "Pass migration flags to staging deploy",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/deploy.yml",
+      "docs/STAGING_SETUP_CHECKLIST.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b80ccc94a6727f65519de538100878c4d20dab2a",
+    "subject": "Add phase 5 placement workflow foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/intake/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/plaatsingsvoorstellen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/slot-offers/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/wachtlijst/page.tsx",
+      "apps/web/app/(tenant-public)/slot-offers/[token]/page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/placement/slot-offer-public-actions.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624124823_phase5_waitlist_placement_slot_offers.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "97840354538d59c24e64356d525e6b98e9ed8555",
+    "subject": "Add phase 6 parent portal foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(parent)/parent/diplomas/page.tsx",
+      "apps/web/app/(parent)/parent/documenten/page.tsx",
+      "apps/web/app/(parent)/parent/lessen/page.tsx",
+      "apps/web/app/(parent)/parent/notificaties/page.tsx",
+      "apps/web/app/(parent)/parent/page.tsx",
+      "apps/web/app/(parent)/parent/profiel/page.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/parent-portal/parent-portal-actions.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624132927_phase6_parent_portal.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "792058ab22a0229ae0b76c1134c4951843f314e2",
+    "subject": "Add phase 7 instructor portal foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(instructor)/instructor/agenda/page.tsx",
+      "apps/web/app/(instructor)/instructor/groepen/page.tsx",
+      "apps/web/app/(instructor)/instructor/group/[id]/page.tsx",
+      "apps/web/app/(instructor)/instructor/leerlingen/page.tsx",
+      "apps/web/app/(instructor)/instructor/page.tsx",
+      "apps/web/app/(instructor)/instructor/student/[id]/page.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/lib/instructor-portal/instructor-portal-actions.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-read-model.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624154647_phase7_instructor_portal.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4c558bc36c77a530aa222bccc69f029671e133a9",
+    "subject": "Add phase 8 progress badges achievements",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(parent)/parent/badges/page.tsx",
+      "apps/web/app/(parent)/parent/voortgang/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/badges/page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/instructor-portal/instructor-portal-actions.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-read-model.ts",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624160304_phase8_progress_badges_achievements.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "31b60f1dad765dc881430379ff06e1c198cec7bd",
+    "subject": "Add phase 9 afzwem diploma vault",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/afzwemmen/page.tsx",
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/afzwem/admin-afzwem-actions.ts",
+      "apps/web/lib/afzwem/admin-afzwem-read-model.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624162125_phase9_afzwem_diploma_vault.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "c6ab5a43c1ff24585e36285c8e268b3aa7da315c",
+    "subject": "Add phase 10 manual payments",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(parent)/parent/betalingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/payments/page.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "apps/web/lib/payments/admin-payments-read-model.ts",
+      "apps/web/lib/payments/payment-adapter.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624163501_phase10_manual_payments.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a67faf5e8a8b8915edc2ae24d09efffe7a62be06",
+    "subject": "Add phase 11 tenant admin operations",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/rapportages/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/taken/page.tsx",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/navigation.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8d56eddb477682e81864a552f671fbf3995ff33a",
+    "subject": "Add phase 12 operations workflows",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/berichten/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/documenten/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/rapportages/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/taken/page.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/lib/communication/email-adapter.ts",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624172043_phase12_messages_tasks_docs_reports.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7ea9e42ed98571934393a793a03275eebf467e64",
+    "subject": "Add phase 13 hardening release gate",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "README.md",
+      "docs/PHASE_13_HARDENING_PRODUCTION_LAUNCH.md",
+      "docs/STAGING_SETUP_CHECKLIST.md",
+      "docs/VPS_DEPLOY_RUNBOOK.md",
+      "package.json",
+      "scripts/release/phase13-gate.mjs",
+      "scripts/security/audit-release-readiness.mjs",
+      "scripts/smoke/staging-smoke.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "73e17e587c6f1042cbc076cbce6812b783727d26",
+    "subject": "Add platform tenant super admin management",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(auth-boundary)/auth/change-password/actions.ts",
+      "apps/web/app/(auth-boundary)/auth/change-password/page.tsx",
+      "apps/web/app/(auth-boundary)/auth/change-password/password-change-form.tsx",
+      "apps/web/app/(auth-boundary)/auth/redirect/page.tsx",
+      "apps/web/app/(platform-admin)/platform/page.tsx",
+      "apps/web/app/(platform-admin)/platform/tenants/page.tsx",
+      "apps/web/components/platform-admin/platform-admin-dashboard.tsx",
+      "apps/web/components/shell/private-shell-boundary.tsx",
+      "apps/web/lib/auth/password-policy.ts",
+      "apps/web/lib/auth/password-requirements.ts",
+      "apps/web/lib/auth/redirects.ts",
+      "apps/web/lib/communication/live-email.ts",
+      "apps/web/lib/platform-admin/platform-admin-read-model.ts",
+      "apps/web/lib/platform-admin/super-admin-actions.ts",
+      "apps/web/lib/supabase/admin.ts",
+      "apps/web/package.json",
+      "pnpm-lock.yaml",
+      "scripts/auth/audit-auth-boundary.mjs",
+      "scripts/db/audit-migrations.mjs",
+      "scripts/security/audit-release-readiness.mjs",
+      "supabase/migrations/20260624180636_platform_super_admins.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f6d51bbdaddb4af38946a109f8fa1f596df44d1c",
+    "subject": "Add global platform SMTP settings",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/platform-admin/platform-admin-dashboard.tsx",
+      "apps/web/lib/communication/live-email.ts",
+      "apps/web/lib/platform-admin/platform-admin-read-model.ts",
+      "apps/web/lib/platform-admin/smtp-settings-actions.ts",
+      "apps/web/lib/platform-admin/super-admin-actions.ts",
+      "scripts/db/audit-migrations.mjs",
+      "supabase/migrations/20260624182824_platform_smtp_settings.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8af6b2a0ca45ef454a6c670e0822792edb343757",
+    "subject": "Force staging database migrations",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "docs/STAGING_SETUP_CHECKLIST.md",
+      "docs/VPS_DEPLOY_RUNBOOK.md",
+      "package.json",
+      "pnpm-lock.yaml",
+      "scripts/db/migrate.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "0d57e0c2045fe03b7dc043a3e6cd32b706fd8e79",
+    "subject": "Fix phase 9 migration seed variable",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260624162125_phase9_afzwem_diploma_vault.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a7decf8aa655c5e7e719c13ea20845c828f65db0",
+    "subject": "Retry staging deploy health checks",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9cc58f9a7a371fb4d34c4165a9291ede3ed9dcc2",
+    "subject": "Guard staging Supabase auth config",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/app/api/health/route.ts",
+      "docs/STAGING_SETUP_CHECKLIST.md",
+      "scripts/smoke/staging-smoke.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b23e835095faed51552aea4dce4e551f2d04e1ae",
+    "subject": "Fix Supabase public key fallback",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/app/api/health/route.ts",
+      "apps/web/lib/supabase/config.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6256d83f0f19f5b59107f9f535773416b319373e",
+    "subject": "Allow direct platform SMTP credentials",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/platform-admin/platform-admin-dashboard.tsx",
+      "apps/web/lib/communication/live-email.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9dbee93a6838e4e73e836e8b814a1976680c4329",
+    "subject": "Align tenant marketing with Lovable prototype",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/public/lovable/hero-swim.png",
+      "apps/web/public/lovable/nxttrack-logo.svg",
+      "apps/web/public/lovable/zwemdemo-logo.png"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d679de6eec1df297ac77654d8ecece564f6167f2",
+    "subject": "Fix mobile tenant hero image sizing",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8c6e45e7cfa99827e9353d18f71c26a1db860637",
+    "subject": "Polish Lovable placeholders and Dutch backoffice",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(instructor)/instructor/berichten/page.tsx",
+      "apps/web/app/(instructor)/instructor/documenten/page.tsx",
+      "apps/web/app/(instructor)/instructor/taken/page.tsx",
+      "apps/web/app/(nxttrack-marketing)/nxttrack/zwemscholen/page.tsx",
+      "apps/web/app/(platform-admin)/platform/settings/page.tsx",
+      "apps/web/app/(platform-admin)/platform/templates/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+      "apps/web/app/(tenant-public)/agenda/page.tsx",
+      "apps/web/app/(tenant-public)/nieuws/page.tsx",
+      "apps/web/app/(tenant-public)/slot-offers/[token]/page.tsx",
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/lovable/page-kit.tsx",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/shell/private-shell-boundary.tsx",
+      "apps/web/components/shell/route-placeholder.tsx",
+      "apps/web/lib/navigation.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7055dd621c6452977454fee80d9b37825faca708",
+    "subject": "Polish auth and platform admin language",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(auth-boundary)/auth/no-access/page.tsx",
+      "apps/web/app/(auth-boundary)/auth/tenant-switch/page.tsx",
+      "apps/web/app/(platform-admin)/platform/settings/page.tsx",
+      "apps/web/app/(platform-admin)/platform/templates/page.tsx",
+      "apps/web/app/(tenant-public)/login/page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/platform-admin/platform-admin-dashboard.tsx",
+      "apps/web/components/shell/private-shell-boundary.tsx",
+      "apps/web/lib/auth/roles.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "814a368aa2a93d941d714760494d96c9f7db1d01",
+    "subject": "Group admin navigation and document enterprise gaps",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/lib/navigation.ts",
+      "docs/SWIM_START_ENTERPRISE_GAP_ANALYSIS.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "c935d95ba6144828d42e5ed52b122c18b2629377",
+    "subject": "Complete tenant website settings sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+      "apps/web/lib/public-site/tenant-site.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-actions.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-read-model.ts",
+      "supabase/migrations/20260624234957_tenant_website_settings.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "69d8d4a2f9583e373d4c0ecd7ba8274fb65e11ea",
+    "subject": "Complete people enrollment operations sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+      "apps/web/components/people/admin-people-page.tsx",
+      "apps/web/lib/communication/live-email.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/people/admin-people-actions.ts",
+      "supabase/migrations/20260625002003_people_enrollment_operations.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8728baf07341b4190e8d127d351d6a7970d30b0a",
+    "subject": "Complete planning sessions attendance sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/planning/admin-planning-page.tsx",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-actions.ts",
+      "apps/web/lib/planning/admin-planning-actions.ts",
+      "supabase/migrations/20260625003245_planning_sessions_attendance_operations.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "cbf0112bdd0d15e5028e69aa95fdb0dd3838ada0",
+    "subject": "Complete portals progress sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3c7709c5103f1a85c7fd15fbaf90e5565cedd67f",
+    "subject": "Complete messages documents payments reports sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/api/documents/[id]/download/route.ts",
+      "apps/web/app/api/reports/[id]/download/route.ts",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/lib/communication/email-adapter.ts",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "supabase/migrations/20260625012653_sprint5_messages_documents_payments_reports.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1b7e05430a71f3da9130f3a9fa5351d4e8a1117b",
+    "subject": "Complete enterprise hardening sprint",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "docs/SPRINT_6_ENTERPRISE_HARDENING.md",
+      "docs/STAGING_SETUP_CHECKLIST.md",
+      "package.json",
+      "scripts/db/rls-contract-tests.mjs",
+      "scripts/e2e/critical-workflows.mjs",
+      "scripts/release/phase13-gate.mjs",
+      "scripts/ui/audit-accessibility-responsive.mjs",
+      "supabase/migrations/20260625014622_sprint6_enterprise_hardening_audit_logs.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1ea63023e0590e22629b7a15d1bd9daa6edaf9f3",
+    "subject": "Harden manual payments and finance exports",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/api/finance-exports/[id]/download/route.ts",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "apps/web/lib/payments/admin-payments-read-model.ts",
+      "scripts/db/rls-contract-tests.mjs",
+      "scripts/e2e/critical-workflows.mjs",
+      "supabase/migrations/20260625015503_payments_invoice_rules_refunds_finance_exports.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3a05b92b5518d1fedfa31afb7189b0e77180cdd4",
+    "subject": "Build query backed reporting dashboards",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/rapportages/page.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "apps/web/lib/operations/reporting.ts",
+      "scripts/db/rls-contract-tests.mjs",
+      "scripts/e2e/critical-workflows.mjs",
+      "supabase/migrations/20260625073048_reporting_dashboards_exports_permissions.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9c37fe47b75e39b896c84121badff5e13067c72f",
+    "subject": "Mature admin UX workflows",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/groups/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/guardians/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/instructors/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/intake/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/leerlingen/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/payments/[id]/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/sessions/[id]/page.tsx",
+      "apps/web/app/api/admin-exports/[type]/download/route.ts",
+      "apps/web/components/admin/action-form.tsx",
+      "apps/web/components/admin/admin-detail-pages.tsx",
+      "apps/web/components/admin/table-enhancer.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/components/people/admin-people-page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "scripts/db/rls-contract-tests.mjs",
+      "scripts/e2e/critical-workflows.mjs",
+      "supabase/migrations/20260625080954_admin_ux_maturity_audit_coverage.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "17f3a2a2d58c393c9bbb45fa3a860efe2fe5471f",
+    "subject": "Add quality bar smoke and observability gates",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/api/health/ready/route.ts",
+      "apps/web/app/api/health/route.ts",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/lib/observability/error-reporting.ts",
+      "apps/web/lib/observability/logger.ts",
+      "apps/web/lib/observability/release.ts",
+      "docs/QUALITY_BAR.md",
+      "docs/RELEASE_NOTES.md",
+      "package.json",
+      "scripts/e2e/quality-smoke.mjs",
+      "scripts/release/phase13-gate.mjs",
+      "scripts/ui/audit-accessibility-responsive.mjs",
+      "scripts/ui/lovable-visual-compare.mjs"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9092786a52486d8ab5a12fd5d1d4d256fb56dd73",
+    "subject": "Mature tenant website CMS controls",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-public)/agenda/page.tsx",
+      "apps/web/app/(tenant-public)/nieuws/page.tsx",
+      "apps/web/app/(tenant-public)/programmas/[slug]/page.tsx",
+      "apps/web/app/(tenant-public)/programmas/page.tsx",
+      "apps/web/app/page.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+      "apps/web/lib/public-site/metadata.ts",
+      "apps/web/lib/public-site/tenant-site.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-actions.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-read-model.ts",
+      "docs/RELEASE_NOTES.md",
+      "scripts/e2e/quality-smoke.mjs",
+      "supabase/migrations/20260625084636_tenant_website_cms_maturity.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a5300b99d67214fa4ffbfb5bd7724e51ba2c3e92",
+    "subject": "Mature document vault workflows",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/api/documents/[id]/download/route.ts",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "apps/web/lib/parent-portal/parent-portal-actions.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "pnpm-workspace.yaml",
+      "supabase/migrations/20260625102000_document_vault_maturity.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "df394ab678c1c778ddc490e0818b4ae0b6ef244c",
+    "subject": "Mature communication workflows",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/lib/afzwem/admin-afzwem-actions.ts",
+      "apps/web/lib/communication/email-adapter.ts",
+      "apps/web/lib/communication/event-hooks.ts",
+      "apps/web/lib/communication/live-email.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-actions.ts",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "supabase/migrations/20260625113000_communication_maturity.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "28cd98b594161d59fd1f06464318ca5c2a93db65",
+    "subject": "Add admin import workflow",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/imports/page.tsx",
+      "apps/web/components/imports/admin-imports-page.tsx",
+      "apps/web/lib/imports/admin-imports-actions.ts",
+      "apps/web/lib/imports/admin-imports-read-model.ts",
+      "apps/web/lib/navigation.ts",
+      "supabase/migrations/20260625123000_admin_import_sprint.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3c2eb8df10a64db8ad094eb96a13cbb9281b6a61",
+    "subject": "Complete platform admin settings",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(platform-admin)/platform/settings/page.tsx",
+      "apps/web/app/(platform-admin)/platform/templates/page.tsx",
+      "apps/web/components/platform-admin/platform-completion-pages.tsx",
+      "apps/web/lib/platform-admin/platform-completion-actions.ts",
+      "apps/web/lib/platform-admin/platform-completion-read-model.ts",
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "964bb5c25986905a6896e8cf1c16d2ff19963ea7",
+    "subject": "Add production observability workflow",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/deploy.yml",
+      "apps/web/app/api/health/ready/route.ts",
+      "apps/web/app/api/health/route.ts",
+      "apps/web/components/platform-admin/platform-completion-pages.tsx",
+      "apps/web/lib/observability/config.ts",
+      "apps/web/lib/observability/error-reporting.ts",
+      "apps/web/lib/observability/logger.ts",
+      "apps/web/lib/observability/release.ts",
+      "apps/web/lib/platform-admin/platform-completion-read-model.ts",
+      "docs/PRODUCTION_OBSERVABILITY.md",
+      "docs/QUALITY_BAR.md",
+      "docs/RELEASE_NOTES.md",
+      "package.json",
+      "pnpm-lock.yaml",
+      "scripts/deploy/record-release-metadata.mjs",
+      "supabase/migrations/20260625130000_production_observability.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2c064dd6bf86617f490fd62e997cfda1b2500325",
+    "subject": "Add browser e2e smoke suite",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/ci.yml",
+      ".gitignore",
+      "docs/QUALITY_BAR.md",
+      "docs/RELEASE_NOTES.md",
+      "docs/SPRINT_6_ENTERPRISE_HARDENING.md",
+      "package.json",
+      "playwright.config.ts",
+      "pnpm-lock.yaml",
+      "tests/e2e/workflow-smoke.spec.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "594f8dc65ba379daf8495433ba8b01f0d6ee0c47",
+    "subject": "Harden enterprise UI responsiveness",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/components/shell/private-shell-boundary.tsx",
+      "apps/web/proxy.ts",
+      "docs/RELEASE_NOTES.md",
+      "docs/UI_UX_ENTERPRISE_AUDIT.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ed74070f86e5484b79c68bf9c6a9cf9049d792e9",
+    "subject": "Add Lovable pixel QA baselines",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      ".github/workflows/ci.yml",
+      "docs/QUALITY_BAR.md",
+      "docs/RELEASE_NOTES.md",
+      "docs/UI_UX_ENTERPRISE_AUDIT.md",
+      "package.json",
+      "playwright.config.ts",
+      "tests/e2e/lovable-pixel.spec.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "57d21467f61c8a85b25e71f863c25861829cdc2f",
+    "subject": "Fix marketing CTA contrast and tenant mobile menu",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/marketing/nxttrack-marketing.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "59606e1cf9ee0cf2c10bf17e13b8af44c0e87e41",
+    "subject": "Fix staging E2E base URL fallback",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".github/workflows/ci.yml",
+      "docs/QUALITY_BAR.md",
+      "docs/RELEASE_NOTES.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a5504e5dd3699af5eccbbd8b42f3e908c49f26ca",
+    "subject": "Fix reporting migration seed variable",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625073048_reporting_dashboards_exports_permissions.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "91450520662fb336f0bf47cc7e0ffa33e5480a4e",
+    "subject": "Make platform settings singleton compatible",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/lib/platform-admin/platform-completion-actions.ts",
+      "apps/web/lib/platform-admin/platform-completion-read-model.ts",
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "0ee4024843f8b9ad44dac6311e3f3bd6295cc764",
+    "subject": "Fix shell sidebar active route matching",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/shell/app-shell.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f248376b992cafa61174d53679ecdabd0801c66b",
+    "subject": "Contain admin shell viewport overflow",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/globals.css",
+      "apps/web/components/admin/table-enhancer.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/components/shell/ui.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2ea44afafbf71dd3eb92442eeba098e49eb53516",
+    "subject": "Style slot offer cancel action as destructive",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/placement/admin-placement-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d07efef40f4bcad29ebed131718cc77a60791136",
+    "subject": "Restructure learner management into table and tabs",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/leerlingen/[id]/page.tsx",
+      "apps/web/components/admin/admin-detail-pages.tsx",
+      "apps/web/components/people/admin-people-page.tsx",
+      "apps/web/components/people/create-learner-modal.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "fe1b61e29f22d511cfa7acfca78cc2610f6268e4",
+    "subject": "Harden platform settings migration type detection",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a4003b1c63e230faed191ff7da81af74f0cd8ce0",
+    "subject": "Simplify enrollments page scope",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "01c916ca6a1fb5ab0ad7345ef140d0716260fcff",
+    "subject": "Refocus communication and reporting backoffice UX",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/mail-instellingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/mailtemplates/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/nieuws/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/nieuwsbrief/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/notificatietemplates/page.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "95a64123a19a8e9ac53010562b6a70fbac2ca47a",
+    "subject": "Fix platform settings seed id compatibility",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9e3fc309866cf3c04c6376645063fccc8e4eb7c7",
+    "subject": "Handle legacy uuid platform settings migration",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "47e176b8d3576574ad5f2e97bbc45fd4c357295e",
+    "subject": "Drop legacy platform settings singleton check",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "12ed6dfb0cf64ac7e3f26177cf1caca9f1f07a84",
+    "subject": "Use uuid platform settings migration model",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625124500_platform_admin_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1830534b02ab93a479edc1b8fb5d191caaf4610d",
+    "subject": "Add smart flow canon and phaseplan",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "docs/SMART_FLOW_CANON.md",
+      "docs/SMART_FLOW_PHASEPLAN.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3a88dc7c51e8dcf0c5506257ae7abe58f5468b8a",
+    "subject": "Add smart flow decision foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "apps/web/lib/smart-flow/decision.ts",
+      "apps/web/lib/smart-flow/intake-recommendation.ts",
+      "apps/web/lib/smart-flow/placement-decision.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "docs/SMART_FLOW_RULE_VERSIONING.md",
+      "supabase/migrations/20260625131000_smart_flow_architecture_consolidation.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9cdc13c5b64e0e03d4d7ad064d533e7534afb5f9",
+    "subject": "Add smart intake recommendation foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/admin/admin-detail-pages.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/components/public-site/intake-conditional-field.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "apps/web/lib/public-site/tenant-site.ts",
+      "apps/web/lib/smart-flow/intake-duplicates.ts",
+      "apps/web/lib/smart-flow/intake-recommendation.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-actions.ts",
+      "apps/web/lib/tenant-website-settings/admin-tenant-website-read-model.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "supabase/migrations/20260625132000_smart_intake_stage_recommendation.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "df3ed2d4432c5d745643d8d48b5e1b3cf9ae8039",
+    "subject": "Add smart capacity engine",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/components/planning/admin-planning-page.tsx",
+      "apps/web/lib/capacity/capacity-engine.ts",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/smart-flow/placement-decision.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "supabase/migrations/20260625132123_smart_capacity_engine.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "907356dcf82c0a517fb1e8a8c13743e069e23b7a",
+    "subject": "Add smart waitlist ranking",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/wachtlijst/page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/operations/reporting.ts",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/smart-flow/placement-decision.ts",
+      "apps/web/lib/smart-flow/waitlist-ranking.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "supabase/migrations/20260625134225_smart_waitlist_engine.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "470c089b49c16d353b00982fc56e6b3b6e38146d",
+    "subject": "Add placement assistant 2",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/smart-flow/placement-assistant.ts",
+      "apps/web/lib/smart-flow/placement-decision.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "supabase/migrations/20260625140136_placement_assistant_2.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1a0e83ba4db6f6fae41ef0839e3b69353b056c28",
+    "subject": "Complete slot offer placement flow",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-public)/slot-offers/[token]/page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/capacity/capacity-engine.ts",
+      "apps/web/lib/placement/admin-placement-actions.ts",
+      "apps/web/lib/placement/admin-placement-read-model.ts",
+      "apps/web/lib/placement/slot-offer-public-actions.ts",
+      "supabase/migrations/20260625142335_slot_offer_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a5229f04f1b8f0c1db588752f4147307aac0daac",
+    "subject": "Add lesson makeup engine",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/planning/admin-planning-page.tsx",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/makeup/makeup-engine.ts",
+      "apps/web/lib/operations/reporting.ts",
+      "apps/web/lib/parent-portal/parent-portal-actions.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "apps/web/lib/planning/admin-planning-actions.ts",
+      "supabase/migrations/20260625144350_lesson_makeup_engine.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4a48603a5e80a904b1b59be4bbb842314d67d834",
+    "subject": "Add progress badge engine 2",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/instructor-portal/instructor-portal-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/communication/event-hooks.ts",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-actions.ts",
+      "apps/web/lib/instructor-portal/instructor-portal-read-model.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "apps/web/lib/progress/progress-engine.ts",
+      "supabase/migrations/20260625151113_progress_badge_engine_2.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "068e7c5137560ea1163212be6c36b40feaa29f01",
+    "subject": "Add flow through engine",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/lib/domain/admin-domain-actions.ts",
+      "apps/web/lib/domain/admin-domain-read-model.ts",
+      "apps/web/lib/flow-through/flow-through-engine.ts",
+      "supabase/migrations/20260625153837_flow_through_engine.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "21922022fcd96e8c329c0a8eccaa885e9765a399",
+    "subject": "Add diploma readiness radar",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/lib/afzwem/admin-afzwem-actions.ts",
+      "apps/web/lib/afzwem/admin-afzwem-read-model.ts",
+      "apps/web/lib/afzwem/diploma-readiness-engine.ts",
+      "supabase/migrations/20260625160031_diploma_readiness_afzwem_radar.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f77feb353f13f5d2d107f2fe3f9903fc8790769e",
+    "subject": "Complete certificate diploma vault",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/api/certificates/[id]/download/route.ts",
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/afzwem/admin-afzwem-actions.ts",
+      "apps/web/lib/afzwem/admin-afzwem-read-model.ts",
+      "apps/web/lib/parent-portal/parent-portal-actions.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "supabase/migrations/20260625162949_certificate_diploma_vault_completion.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b61ef458bbd0c4342bbf50d9819b6cd5234dfff8",
+    "subject": "Add smart admin command center",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/page.tsx",
+      "apps/web/app/api/reports/[id]/download/route.ts",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4068cdf610a9d7d6b26613bb8730a95bebd10e41",
+    "subject": "Add advanced automation controls",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/automatisering/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/page.tsx",
+      "apps/web/components/automation/admin-automation-page.tsx",
+      "apps/web/components/operations/admin-operations-pages.tsx",
+      "apps/web/lib/automation/admin-automation-actions.ts",
+      "apps/web/lib/automation/admin-automation-read-model.ts",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/smart-flow/automation.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "docs/SMART_FLOW_PHASEPLAN.md",
+      "supabase/migrations/20260625165527_advanced_automation_s12.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a07c719b17737c92f3483f0781b41199276cfdc7",
+    "subject": "Add AI assistant layer",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      "apps/web/app/(tenant-admin)/admin/ai-assistent/page.tsx",
+      "apps/web/components/ai/admin-ai-assistant-page.tsx",
+      "apps/web/lib/ai/admin-ai-actions.ts",
+      "apps/web/lib/ai/admin-ai-read-model.ts",
+      "apps/web/lib/ai/assistant.ts",
+      "apps/web/lib/navigation.ts",
+      "docs/SMART_FLOW_CANON.md",
+      "docs/SMART_FLOW_PHASEPLAN.md",
+      "supabase/migrations/20260625170953_ai_assistant_layer_s13.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "317591154469d51eca799b6055839b917fdceba9",
+    "subject": "Update swim-school feature canon and secrets registry",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      "docs/IMPLEMENTATION_ROADMAP.md",
+      "docs/MODULES_AND_PACKAGES.md",
+      "docs/NXTTRACK_CANON.md",
+      "docs/REQUIRED_SECRETS.md",
+      "docs/SMART_FEATURES_CANON.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "c05b6a54400eb88598a57a9eecbd12c538af3630",
+    "subject": "Add multi-language readiness foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      "apps/web/lib/i18n/dictionary.ts",
+      "apps/web/lib/i18n/index.ts",
+      "apps/web/lib/i18n/languages.ts",
+      "docs/IMPLEMENTATION_ROADMAP.md",
+      "docs/MODULES_AND_PACKAGES.md",
+      "docs/MULTI_LANGUAGE_PLAN.md",
+      "docs/NXTTRACK_CANON.md",
+      "docs/REQUIRED_SECRETS.md",
+      "docs/SMART_FEATURES_CANON.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "746c8fc4be206aa26def090a8096c13486460880",
+    "subject": "Add registration fee payment plan",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "docs/REGISTRATION_FEE_PLAN.md",
+      "docs/REQUIRED_SECRETS.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f319af3b13e8c284a91c7c01077122e952e8c41b",
+    "subject": "Add English public tenant translations",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/[language]/agenda/page.tsx",
+      "apps/web/app/[language]/intake/page.tsx",
+      "apps/web/app/[language]/news/page.tsx",
+      "apps/web/app/[language]/page.tsx",
+      "apps/web/app/[language]/programs/[slug]/page.tsx",
+      "apps/web/app/[language]/programs/page.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/lib/i18n/index.ts",
+      "apps/web/lib/i18n/public-routing.ts",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "docs/MULTI_LANGUAGE_PLAN.md"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8145606ab76e4bcd7c594590a1963b3809b9f334",
+    "subject": "Add SEPA incasso engine",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      ".env.example",
+      "apps/web/app/api/mollie/payments/webhook/route.ts",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "apps/web/lib/payments/admin-payments-read-model.ts",
+      "apps/web/lib/payments/payment-adapter.ts",
+      "docs/REQUIRED_SECRETS.md",
+      "docs/SEPA_INCASSO_IMPLEMENTATION.md",
+      "supabase/migrations/20260625184526_sepa_incasso_engine.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "490c16f70a38e156c364b6764871e1f56eeaaf56",
+    "subject": "Add payment batch foundation",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/lib/payments/admin-payments-actions.ts",
+      "apps/web/lib/payments/admin-payments-read-model.ts",
+      "docs/PAYMENT_BATCHES_FOUNDATION.md",
+      "docs/REQUIRED_SECRETS.md",
+      "supabase/migrations/20260625191853_payment_batches_foundation.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f9f1ea3fe03816dd102bcb0b9111ca74f0021163",
+    "subject": "Add tenant customer helpdesk MVP",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(parent)/parent/helpdesk/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/helpdesk/page.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/parent-portal/parent-portal-pages.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/operations/admin-phase12-actions.ts",
+      "apps/web/lib/operations/admin-phase12-read-model.ts",
+      "apps/web/lib/parent-portal/parent-portal-actions.ts",
+      "apps/web/lib/parent-portal/parent-portal-read-model.ts",
+      "scripts/db/rls-contract-tests.mjs",
+      "supabase/migrations/20260625202802_tenant_customer_helpdesk_mvp.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3d12a6e37ab0e8de63d722f76d5576f16829c618",
+    "subject": "Refine tenant admin backoffice UX structure",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/groepen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/programma/page.tsx",
+      "apps/web/components/imports/admin-imports-page.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx",
+      "apps/web/lib/navigation.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6c65e4ddacdb5a0f92462f417141a43e239dbd57",
+    "subject": "Seed staging empty demo groups",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260625234654_seed_staging_empty_demo_groups.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "cea6015b2a2d2edfb9fabe38ba9a31d231a54b5d",
+    "subject": "Add smart registration form wizard",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/intake-wizard.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "apps/web/lib/public-site/tenant-site.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "08ea761f96cdaea73b3ec061734b8ea826eca0a9",
+    "subject": "Seed staging learners intakes and waitlist",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260626005132_seed_staging_learners_intakes_waitlist.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "997a0462dc4fe9349057fff141bc4d510ba6759d",
+    "subject": "Fix staging learner seed migration variables",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "supabase/migrations/20260626005132_seed_staging_learners_intakes_waitlist.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d17f16de177920b6214ea3b95d244e90a144da4c",
+    "subject": "Compact waitlist workflow rows",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/placement/admin-placement-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5668d2620387b75a02203326c86464f72dd044e7",
+    "subject": "Compact admin workflow and domain lists",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "e94e36fe998a90ae21856de7540d617b4de5b386",
+    "subject": "Add waitlist page tabs",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/wachtlijst/page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ad384fdd7d0b19a2b3d7040898bbbcf7d31a0e5e",
+    "subject": "Add tabbed admin dashboard sections",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/admin/admin-tabs.tsx",
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/components/ai/admin-ai-assistant-page.tsx",
+      "apps/web/components/automation/admin-automation-page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/imports/admin-imports-page.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/components/planning/admin-planning-page.tsx",
+      "apps/web/components/tenant-website-settings/admin-tenant-website-settings-page.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "35a0e84938366c95545a27604b4393d1d548562e",
+    "subject": "Link intake candidates to editable dossiers",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/admin/admin-detail-pages.tsx",
+      "apps/web/components/afzwem/admin-afzwem-page.tsx",
+      "apps/web/components/domain/admin-domain-pages.tsx",
+      "apps/web/components/operations/admin-phase12-pages.tsx",
+      "apps/web/components/payments/admin-payments-page.tsx",
+      "apps/web/components/people/admin-people-page.tsx",
+      "apps/web/components/placement/admin-placement-pages.tsx",
+      "apps/web/lib/placement/admin-placement-actions.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "12791f6c1fa659cc85914378e1169584f0f1dfc6",
+    "subject": "Fix intake email update event logging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/lib/placement/admin-placement-actions.ts"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "47efec5f1e1bf54f28fa8f816ca2dd5f138277fc",
+    "subject": "Improve public intake lesson preferences",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/intake-wizard.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9c20d34309a1c6287afd13a3c8ab4c277e8f4d26",
+    "subject": "Add program selection to public intake",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/intake-wizard.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "247d7f77f974a583a0a64a80dfaf40462b338810",
+    "subject": "Polish intake lesson suggestions",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/intake-wizard.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "bdaa9d881f7a4b7072b328e51ad0aebaf07ed00b",
+    "subject": "Add intake confirmation summary",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-public)/intake/page.tsx",
+      "apps/web/app/[language]/intake/page.tsx",
+      "apps/web/components/public-site/tenant-public-pages.tsx",
+      "apps/web/lib/i18n/public-routing.ts",
+      "apps/web/lib/public-site/intake-actions.ts",
+      "supabase/migrations/20260626093000_intake_confirmation_summary_template.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "941a161587471af0c16fdedac1dfc59ce32c22f3",
+    "subject": "Fix tenant marketing CTA buttons",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5082528d81ca26d8c8580582296202dbd08340fb",
+    "subject": "Force white text on program CTAs",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/components/public-site/tenant-public-pages.tsx"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f978ec9eabe40409048a72fe4974b5ad66279a63",
+    "subject": "Merge main into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "14c6f105f137092a55341923c3043785d430751c",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "99f1aed07101a6c78d83bd858730fa366ac6edae",
+    "subject": "Merge pull request #24 from nxttrack/main",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3221c1e83e29f805d02ab7d040837f0c49366da9",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1199ebb6d60685c717af96870edcbb551966139b",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4e20b3ef28f238e9352d9b9c9690cc0db5ff4eeb",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a83243a0b50406a29e6f95615a02c9802b58789e",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "0f527ef386e81dcca7601d2fe7a622091d508141",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "3ac456ae8f397c919272b4fbe6e4182f45e44af4",
+    "subject": "Merge branch 'main' into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7cdfe0086b5a132bb5fcf02a2ef6e62f9f50fcd7",
+    "subject": "merge: synchronize staging with main",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "89695efcb478af1745c2684146b290578d8960c6",
+    "subject": "merge: add platform organization management to staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "531fe69a4e262c15cf5e158344853e041ce4ec2d",
+    "subject": "fix(auth): activate pending invitations through RPC",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [
+      "apps/web/app/(tenant-public)/uitnodiging-accepteren/page.tsx",
+      "apps/web/lib/auth/actions.ts",
+      "apps/web/lib/auth/invitations.ts",
+      "apps/web/tests/e2e/smoke.spec.ts",
+      "scripts/auth/audit-auth-boundary.mjs",
+      "supabase/migrations/20260726163000_invitation_acceptance_rpc_bridge.sql"
+    ],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8bd6b32029e74f130a912cdfd80f6393389fe90f",
+    "subject": "merge: premium tenant admin UX into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "05ba24c60142df70bcfe18008d37168f76fa1ded",
+    "subject": "merge: phase 16 invitation drawer validation into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2e5e9a3cd4cbaff2626abc2ad846822676e62100",
+    "subject": "merge: premium placement browser validation into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a18fa38c6e2e5644adc0cb63a7283f4d94c548e2",
+    "subject": "merge: premium admin billing validation into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5691e0321783f4cbe0a9ee7634565ef90945c95d",
+    "subject": "merge: data table accessibility fix into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "12224e6ba19616ffede4f88dd82615c0cebed85f",
+    "subject": "merge: admin WCAG fixes into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5a3a294f788c8c6d1b709edec904d5ee1557bdaa",
+    "subject": "merge: danger contrast fix into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7b6dc577ceb571e360a2a579109d7a8cc36ec1c9",
+    "subject": "merge: admin accessibility timeout budget into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2cd16dfe53f3a2871009a69dc21f22eed78f5702",
+    "subject": "merge: premium product suite into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d3f9017a79abb61015aa2e21d5a79f21e7e780bf",
+    "subject": "merge: restore dashboard chart contract in staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "01b291e04ab9816d7342c3dc53e51495f4b0a49d",
+    "subject": "merge: CRM migration repair into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "0907dc29ade8b0284f9eb46b5532a0a13f2e608b",
+    "subject": "merge: browser validation repair into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d7ac3e684e31ea028b34c3869e2dc73689deb531",
+    "subject": "merge: simplified platform invitations into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "de4c53ee02f3a38713262fb4dbee384e5008ce9b",
+    "subject": "merge: sync feature freeze candidate to staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "16c0acdf3f342e8fef8fd0b815a4d73570737ac5",
+    "subject": "merge: release hardening fix into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9296cf327258559efed4938f94185c5649edc918",
+    "subject": "merge: browser hardening into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ac4efeec747884950983b6b682907a44aa2e13ff",
+    "subject": "merge: premium release accessibility into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b00b2bd3236cfb1f4928386fdb0597d89e954960",
+    "subject": "merge: analytics release evidence into staging",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6f9aec33d4e2172a231ec4f0b57a4342d724c1a8",
+    "subject": "merge: finalize analytics release evidence",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2ac2e9364efefc0e9e609871216dfac3f01b1cfd",
+    "subject": "Merge remote-tracking branch 'origin/main' into codex/parent-child-portals-v1",
+    "classification": "ALREADY_PRESENT",
+    "family": "historical-tree-reconciliation",
+    "files": [],
+    "reason": "Geen netto afwijking: tree(2ac2e9364efefc0e9e609871216dfac3f01b1cfd) == tree(0fa158fb0abc7fdfe781a103a4c83b016edcba45).",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9fc3e52250db340f81121fa45fade364b17eb949",
+    "subject": "docs(portals): preserve sprint sources and baseline audit",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/codex-input/ocean-quest-v1.0.0/SOURCE_MANIFEST.sha256",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/DESIGN_CANON.md",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/README.md",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/manta-friendly.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-completed-chapter.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-current-desktop.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-current-mobile.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/board.html",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/boards/NXTTRACK_Ocean_Quest_Complete_desktop.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/boards/NXTTRACK_Ocean_Quest_Complete_mobile.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/index.html",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/render-boards.js",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/render.js",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/badges.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/children.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/development.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/diplomas.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/documents.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/feedback.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/inbox.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/lesson.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/media.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/overview.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/payments.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/planning.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/profile.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/badges.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/children.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/development.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/diplomas.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/documents.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/feedback.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/inbox.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/lesson.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/media.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/overview.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/payments.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/planning.png",
+      "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/profile.png",
+      "docs/codex-tasks/CODEX_CLOUD_OCEAN_QUEST_BRONNENADDENDUM.md",
+      "docs/codex-tasks/NXTTRACK_CODEX_CLOUD_PARENT_CHILD_IMPLEMENTATIESPRINT_V1.0.md",
+      "docs/codex-tasks/OPVOLGTAAK_CODEX_OCEAN_QUEST_7E_THEME.md",
+      "docs/codex-tasks/PARENT_CHILD_PORTALS_BASELINE_AUDIT.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1ffaf0127ca33280f0c0da8f6f7c0f0000d96b9e",
+    "subject": "feat(portals): add session-bound parent and child experiences",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/(child)/kind/agenda/lessen/[id]/page.tsx",
+      "apps/web/app/(child)/kind/agenda/page.tsx",
+      "apps/web/app/(child)/kind/badges/page.tsx",
+      "apps/web/app/(child)/kind/ik/page.tsx",
+      "apps/web/app/(child)/kind/layout.tsx",
+      "apps/web/app/(child)/kind/page.tsx",
+      "apps/web/app/(child)/kind/reis/page.tsx",
+      "apps/web/app/(instructor)/instructor/student/[id]/page.tsx",
+      "apps/web/app/(portaal)/portaal/betalingen/page.tsx",
+      "apps/web/app/(portaal)/portaal/documenten/page.tsx",
+      "apps/web/app/(portaal)/portaal/feedback/page.tsx",
+      "apps/web/app/(portaal)/portaal/inbox/parent-inbox-page.tsx",
+      "apps/web/app/(portaal)/portaal/kinderen/page.tsx",
+      "apps/web/app/(portaal)/portaal/layout.tsx",
+      "apps/web/app/(portaal)/portaal/lessen/[id]/page.tsx",
+      "apps/web/app/(portaal)/portaal/ontwikkeling/badges/parent-badges-page.tsx",
+      "apps/web/app/(portaal)/portaal/ontwikkeling/diplomas/parent-diplomas-page.tsx",
+      "apps/web/app/(portaal)/portaal/ontwikkeling/media/parent-media-page.tsx",
+      "apps/web/app/(portaal)/portaal/ontwikkeling/parent-development-page.tsx",
+      "apps/web/app/(portaal)/portaal/page.tsx",
+      "apps/web/app/(portaal)/portaal/planning/parent-planning-page.tsx",
+      "apps/web/app/(portaal)/portaal/profiel/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/branding/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/leerlingen/[id]/media/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/programma/leerlijn/[versionId]/page.tsx",
+      "apps/web/app/(tenant-public)/login/page.tsx",
+      "apps/web/app/api/child/media/[id]/route.ts",
+      "apps/web/app/api/child/session/route.ts",
+      "apps/web/app/api/files/participant-media/[id]/route.ts",
+      "apps/web/app/globals.css",
+      "apps/web/components/admin/media-library-table.tsx",
+      "apps/web/components/badges/badge-artwork-placeholder.tsx",
+      "apps/web/components/child/child-journey-map.tsx",
+      "apps/web/components/child/child-portal-shell.tsx",
+      "apps/web/components/parent/parent-overview-top.tsx",
+      "apps/web/components/shell/app-shell-client.tsx",
+      "apps/web/components/shell/app-shell.tsx",
+      "apps/web/lib/auth/access.ts",
+      "apps/web/lib/auth/actions.ts",
+      "apps/web/lib/auth/guard.ts",
+      "apps/web/lib/auth/identity-boundary.ts",
+      "apps/web/lib/auth/portal-session-actions.ts",
+      "apps/web/lib/auth/portal-session-contract.ts",
+      "apps/web/lib/auth/portal-session.ts",
+      "apps/web/lib/auth/server-context.ts",
+      "apps/web/lib/auth/server-guard.ts",
+      "apps/web/lib/auth/trusted-context.ts",
+      "apps/web/lib/domain/child-journey-view.ts",
+      "apps/web/lib/domain/child-portal-actions.ts",
+      "apps/web/lib/domain/child-portal.ts",
+      "apps/web/lib/domain/core.ts",
+      "apps/web/lib/domain/curriculum-actions.ts",
+      "apps/web/lib/domain/documents.ts",
+      "apps/web/lib/domain/feedback.ts",
+      "apps/web/lib/domain/instructor-actions.ts",
+      "apps/web/lib/domain/media-library.ts",
+      "apps/web/lib/domain/native-mobile.ts",
+      "apps/web/lib/domain/parent-portal.ts",
+      "apps/web/lib/domain/participant-media-actions.ts",
+      "apps/web/lib/domain/participant-media-contract.ts",
+      "apps/web/lib/domain/participant-media.ts",
+      "apps/web/lib/domain/portal-feature-actions.ts",
+      "apps/web/lib/domain/portal-features.ts",
+      "apps/web/lib/domain/portal-parent-requests.ts",
+      "apps/web/lib/navigation.ts",
+      "apps/web/lib/security/malware-scanner.ts",
+      "apps/web/lib/storage/private-file-response.ts",
+      "apps/web/lib/storage/private-files.ts",
+      "apps/web/lib/theme/portal-child-theme-recipes.ts",
+      "apps/web/lib/theme/portal-page-recipes.ts",
+      "apps/web/lib/theme/portal-terminology.ts",
+      "apps/web/lib/theme/portal-theme-contract.ts",
+      "apps/web/lib/theme/portal-theme-registry.ts",
+      "apps/web/lib/theme/portal-theme-server.ts",
+      "apps/web/proxy.ts",
+      "apps/web/public/portal-themes/ocean-quest/journey-completed.png",
+      "apps/web/public/portal-themes/ocean-quest/journey-desktop.png",
+      "apps/web/public/portal-themes/ocean-quest/journey-mobile.png",
+      "apps/web/public/portal-themes/ocean-quest/mascot.png",
+      "apps/web/public/sw.js",
+      "package.json",
+      "pnpm-lock.yaml",
+      "supabase/migrations/20260811120000_parent_child_portal_session_security.sql",
+      "supabase/migrations/20260811130000_ocean_quest_seventh_theme.sql",
+      "supabase/migrations/20260811140000_child_safe_curriculum_media_contract.sql"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "60e84544f7b1160c3ea46b8f65c2a9ed8aade3e0",
+    "subject": "test(portals): enforce security and visual release gates",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      "apps/web/lib/theme/portal-visual-matrix.ts",
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "scripts/auth/audit-route-access.mjs",
+      "tests/unit/portal-child-projection.test.ts",
+      "tests/unit/portal-session-contract.test.ts",
+      "tests/unit/portal-theme-contract.test.ts",
+      "tests/unit/portal-theme-schema.test.ts",
+      "tests/unit/portal-theme-six-by-thirteen.test.ts",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "580c995bcbbea63662d943bb8ad7ef4815f20598",
+    "subject": "docs(portals): document rollout security and QA status",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/architecture/PARENT_CHILD_PORTAL_THREAT_MODEL.md",
+      "docs/implementation/PARENT_CHILD_PORTALS_CHANGELOG.md",
+      "docs/implementation/PARENT_CHILD_PORTALS_QA_REPORT.md",
+      "docs/implementation/PARENT_CHILD_PORTAL_ASSET_MANIFEST.md",
+      "docs/implementation/PARENT_CHILD_PORTAL_ROUTE_THEME_MATRIX.md",
+      "docs/runbooks/PARENT_CHILD_PORTAL_ROLLOUT.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "494e9eb964960d9cc3140fd05810386c76125c27",
+    "subject": "ci(staging): add guarded parent child preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "scripts/staging/parent-child-preview-fixture.mjs",
+      "scripts/staging/phase-16-operational-flow.mjs",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "23a4db5524b1221c6fb0d1f7b3604e9eaee1fc63",
+    "subject": "fix(staging): make portal preview seed repeatable",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "scripts/staging/parent-child-preview-fixture.mjs",
+      "scripts/staging/phase-16-operational-flow.mjs",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "da4a57fa4618c5868d31ae0cf2b25dc649844a1d",
+    "subject": "fix(staging): isolate portal preview validation",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "scripts/staging/parent-child-preview-fixture.mjs",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1677e65861b62257d92b2478ce40776efe6d5de7",
+    "subject": "fix(staging): validate seven themes through public control plane",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "scripts/staging/parent-child-preview-fixture.mjs",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b6b04d5853c2d4052336d438f551f6ecc6fb0d22",
+    "subject": "fix(staging): accept configured service role secret",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f8e8de5b007a8697b2b19ef6ff8a0e3a2c926bcc",
+    "subject": "fix(staging): retain preview rollback target",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "23a715b5bf3bfea9de2ff4956ffed04c0c5cdd70",
+    "subject": "fix(portals): secure theme RPCs and mobile section nav",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/components/parent/parent-section-nav.tsx",
+      "supabase/migrations/20260811180455_portal_theme_public_rpc_wrappers.sql",
+      "tests/unit/portal-theme-schema.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "e72ae2e75cdf554697a96bf725855d82fef09b34",
+    "subject": "ci(staging): validate portal theme follow-up",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "scripts/staging/parent-child-preview-fixture.mjs",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ade031ce60fe54d239edafaec8e9df118cae206b",
+    "subject": "ci(staging): release audited portal preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b302697fbf5f418becb418cc7942d55b55a78ad2",
+    "subject": "fix(staging): use exact audited preview SHA",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "80fd3c31dce3dc291bdedae235670bb6f13b8962",
+    "subject": "fix(portals): wrap long mobile page titles",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/components/shell/ui.tsx",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "75b918147f9f5087f3c41054a916634deaf221f0",
+    "subject": "ci(staging): validate mobile title fix",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5b132c94a049a5af33826468068cb5a505424614",
+    "subject": "fix(portals): meet mobile dashboard contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "apps/web/components/shell/app-shell-client.tsx",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2d003d96c8c5e240a700f76dc883118edd6815b9",
+    "subject": "ci(staging): validate dashboard contrast fix",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5ac0119a8426d11695accb2500225eaa1df00352",
+    "subject": "fix(child-portal): enforce header touch target",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1806d787a3b7433c8f08d66d64f91a192438ff34",
+    "subject": "ci(staging): validate child touch target fix",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "91d5e68ab82387c384495a85f0e0ad4dc23a641a",
+    "subject": "fix(child-portal): enlarge parent request target",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6575b7023f31f3737e71e313649c3b3ce1218b6e",
+    "subject": "ci(staging): validate child request touch target",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "df89b61e5fa91973231cac9755a0d64ccfa00248",
+    "subject": "fix(child-portal): fit journey within compact viewport",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f5664e0c3a5f7e45699ca12fb75bbeb95617ed14",
+    "subject": "ci(staging): validate compact child dashboard",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4e15c3aee3be60c085cad0b90b20917170a80687",
+    "subject": "fix(child-portal): reserve space on smallest viewport",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "36f0e57b79b4605b934526c2189889a733679b3b",
+    "subject": "ci(staging): validate smallest child viewport",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "bb346b8e892ca1f00ae2bc3f81dc04dc1943549c",
+    "subject": "test(portals): target child request feedback",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a9b20f7fdd67c5f96999e4e317d5384700c47ce3",
+    "subject": "fix(child-portal): meet dashboard contrast requirements",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "90857569183c23606ede0be37e2148bedb493545",
+    "subject": "ci(staging): validate child dashboard contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7c52e3f7ceb28aa1dd519718e6abb0d1343efe54",
+    "subject": "fix(child-portal): strengthen journey action contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "162aa5fd82473e1cb6128b709f18659260aee281",
+    "subject": "ci(staging): validate journey action contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "cbaa8da3aea9e29a0e7954fa8184152747405c48",
+    "subject": "fix(parent-portal): harden notification badge contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "apps/web/components/shell/app-shell-client.tsx",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d48e4538307166dbe10ba84c77a38a9749e7dbe6",
+    "subject": "ci(staging): validate semantic danger badge",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "17775818b62dbf007e42fb238805b50d9cfea1f9",
+    "subject": "test(release): parallelize portal visual evidence",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ce9328dc252ce08d0bb6ff06938171e4ee88f57e",
+    "subject": "test(release): serialize child parent reauth",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "cbe7d58d3ecbe9505e3294f14ebbaf90961fbeac",
+    "subject": "test(release): isolate portal accessibility sessions",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "88953f676ac8970ab97bdfc61088c6021854fd3e",
+    "subject": "fix(parent-portal): meet header brand contrast",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "apps/web/components/shell/app-shell-client.tsx",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "6ab9d1c0622c0b559a77fbdd95dbb7fbae78d717",
+    "subject": "test(release): validate header contrast preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2b46ab2a5c41a0c97b043108ef9402b6987e7c63",
+    "subject": "feat(journey): persist stable child timeline",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/lib/domain/child-journey-view.ts",
+      "apps/web/lib/domain/child-portal.ts",
+      "apps/web/lib/domain/swim-progress.ts",
+      "apps/web/lib/theme/portal-journey-contract.ts",
+      "supabase/migrations/20260812120000_stable_journey_completion_sequence.sql",
+      "tests/unit/portal-child-projection.test.ts",
+      "tests/unit/portal-journey-engine.test.ts",
+      "tests/unit/portal-journey-schema.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a5068768fa6233de775961d43262343d897fdf91",
+    "subject": "feat(child-portal): add collision-safe journey map",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/(child)/kind/page.tsx",
+      "apps/web/app/(child)/kind/reis/page.tsx",
+      "apps/web/app/globals.css",
+      "apps/web/components/child/child-journey-map.tsx",
+      "apps/web/public/portal-themes/coastal-explorer/mascot-256.avif",
+      "apps/web/public/portal-themes/coastal-explorer/mascot-256.webp",
+      "apps/web/public/portal-themes/coastal-explorer/mascot-512.avif",
+      "apps/web/public/portal-themes/coastal-explorer/mascot-512.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1440.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1440.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1920.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1920.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-640.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-640.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-960.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-960.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-640.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-640.webp",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-960.avif",
+      "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-960.webp",
+      "apps/web/public/portal-themes/dolphin-bay/mascot-256.avif",
+      "apps/web/public/portal-themes/dolphin-bay/mascot-256.webp",
+      "apps/web/public/portal-themes/dolphin-bay/mascot-512.avif",
+      "apps/web/public/portal-themes/dolphin-bay/mascot-512.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.webp",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.avif",
+      "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.webp",
+      "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-640.avif",
+      "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-640.webp",
+      "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-960.avif",
+      "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-960.webp",
+      "apps/web/public/portal-themes/ocean-quest/mascot-256.avif",
+      "apps/web/public/portal-themes/ocean-quest/mascot-256.webp",
+      "apps/web/public/portal-themes/ocean-quest/mascot-512.avif",
+      "apps/web/public/portal-themes/ocean-quest/mascot-512.webp",
+      "apps/web/public/portal-themes/polar-splash/mascot-256.avif",
+      "apps/web/public/portal-themes/polar-splash/mascot-256.webp",
+      "apps/web/public/portal-themes/polar-splash/mascot-512.avif",
+      "apps/web/public/portal-themes/polar-splash/mascot-512.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1440.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1440.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1920.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1920.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-640.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-640.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-960.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-960.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-640.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-640.webp",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-960.avif",
+      "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-960.webp",
+      "apps/web/public/portal-themes/rendition-manifest.json",
+      "apps/web/public/portal-themes/turtle-trails/mascot-256.avif",
+      "apps/web/public/portal-themes/turtle-trails/mascot-256.webp",
+      "apps/web/public/portal-themes/turtle-trails/mascot-512.avif",
+      "apps/web/public/portal-themes/turtle-trails/mascot-512.webp",
+      "package.json",
+      "scripts/theme/build-portal-theme-renditions.mjs",
+      "tests/unit/portal-journey-collision.test.ts",
+      "tests/unit/portal-theme-schema.test.ts",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "12a01e144aa24561d5da822904d3d21e9d4a263c",
+    "subject": "test(journey): add browser and release evidence",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/ci.yml",
+      "apps/web/app/test-harness/journey/journey-harness-client.tsx",
+      "apps/web/app/test-harness/journey/page.tsx",
+      "apps/web/playwright.journey.config.ts",
+      "apps/web/tests/e2e/journey-timeline.spec.ts",
+      "apps/web/tests/e2e/journey-visual.spec.ts",
+      "docs/evidence/journey-audit/artifact-manifest.json",
+      "docs/implementation/JOURNEY_AUDIT.md"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "37801558cca08dfa9981119aca5849847797a965",
+    "subject": "fix(ci): isolate journey browser matrix",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/playwright.config.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9f9d0b000921099ba5d3f3582c5b95db0f162389",
+    "subject": "fix(journey): verify rendered mascot endpoint",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/components/child/child-journey-map.tsx",
+      "apps/web/tests/e2e/journey-timeline.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "24ae4ec369459301099aaa22d15c53e4fc6de571",
+    "subject": "fix(test): verify journey revisit in new document",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/journey-timeline.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b3d555e63b65062fbe3e79c72a5aa16693d52b99",
+    "subject": "test(journey): wait for revisit hydration",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/tests/e2e/journey-timeline.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1d6673f4d14085d84c568987b9b5a9534a9e80f5",
+    "subject": "fix(journey): keep pointer target stable until click",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/components/child/child-journey-map.tsx"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1615678e069b5052a488528142c5e6402c614d16",
+    "subject": "docs(journey): record cross-browser release evidence",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/evidence/journey-audit/artifact-manifest.json",
+      "docs/implementation/JOURNEY_AUDIT.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "395f612c0cbfa406688bca221a4abae29f718691",
+    "subject": "ci(staging): allow journey preview release",
+    "classification": "SUPERSEDED",
+    "family": "feature-preview-deploy",
+    "files": [
+      ".github/workflows/deploy.yml"
+    ],
+    "reason": "Tijdelijke featurebranch/SHA-uitzondering; main-only deploygrens behouden, generieke hardening apart porten.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "5ac534931a0e436c76c4a31377c5c18356abb642",
+    "subject": "fix(staging): enforce journey preview SHA",
+    "classification": "SUPERSEDED",
+    "family": "feature-preview-deploy",
+    "files": [
+      ".github/workflows/deploy.yml"
+    ],
+    "reason": "Tijdelijke featurebranch/SHA-uitzondering; main-only deploygrens behouden, generieke hardening apart porten.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "112b486dd1ef5a14d4c803ae0ff9a1c566e06c13",
+    "subject": "test(staging): align preview release contract",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "f4fde88b091a488327cad211e747e63b8b778882",
+    "subject": "fix(child-portal): preserve parent reauthentication",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/components/child/child-portal-shell.tsx",
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+      "tests/unit/portal-session-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9ae13f97073e6df29befc09c2cb156ce874797ac",
+    "subject": "ci(staging): allow parent reauth preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "9977f6fc4418c8bbb492be9e285a916b2c88c559",
+    "subject": "fix(parent-portal): restore canonical navigation shell",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/globals.css",
+      "apps/web/components/shell/app-shell-client.tsx",
+      "apps/web/lib/navigation.ts",
+      "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "080a93378caebd8ee7b0f1ce76b00a37199ac995",
+    "subject": "ci(staging): allow portal shell preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b",
+    "subject": "fix(parent-portal): keep navigation labels canonical",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      "apps/web/app/(portaal)/portaal/layout.tsx",
+      "tests/unit/portal-theme-six-by-thirteen.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "68d4a79ccdc3ede3691bf1ec1782fb8f81c05466",
+    "subject": "ci(staging): allow canonical navigation preview",
+    "classification": "KEEP_AND_PORT",
+    "family": "pre-v42-portal-contracts",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "tests/unit/portal-visual-matrix-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "2582fdc21964abf784cab8315031bee754206ed9",
+    "subject": "docs(audit): define core readiness transaction contracts",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ae04a439b16da009436092061d95410b3da7e74c",
+    "subject": "feat(email): add fail-closed durable outbox",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(platform-admin)/platform/instellingen/page.tsx",
+      "apps/web/app/(platform-admin)/platform/organisaties/[id]/page.tsx",
+      "apps/web/app/(platform-admin)/platform/uitnodigingen/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/berichten/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/uitnodigingen/page.tsx",
+      "apps/web/app/api/internal/email-outbox/process/route.ts",
+      "apps/web/components/admin/resource-tables.tsx",
+      "apps/web/lib/auth/actions.ts",
+      "apps/web/lib/auth/invitations.ts",
+      "apps/web/lib/auth/password-reset.ts",
+      "apps/web/lib/domain/admin-operations-actions.ts",
+      "apps/web/lib/domain/placement-actions.ts",
+      "apps/web/lib/domain/tenant-notifications.ts",
+      "apps/web/lib/email/actions.ts",
+      "apps/web/lib/email/email-delivery-contract.ts",
+      "apps/web/lib/email/outbox.ts",
+      "apps/web/lib/email/transactional.ts",
+      "apps/web/tests/e2e/controlled-communications.spec.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "scripts/db/test-email-outbox-integration.mjs",
+      "supabase/migrations/20260822002234_production_email_outbox.sql",
+      "tests/unit/email-outbox-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "785e310c6080ddd077e6430e0f6538a41b208d18",
+    "subject": "feat(onboarding): make tenant provisioning atomic",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(platform-admin)/platform/onboarding/page.tsx",
+      "apps/web/lib/auth/invitations.ts",
+      "apps/web/lib/domain/tenant-lifecycle-actions.ts",
+      "apps/web/lib/email/templates.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "scripts/db/test-email-outbox-integration.mjs",
+      "scripts/db/test-tenant-provisioning-integration.mjs",
+      "supabase/migrations/20260822004329_atomic_tenant_provisioning.sql",
+      "tests/unit/tenant-provisioning-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "8b9e8a642689051b8f8d1023ef9d9d3e0ff4d5ab",
+    "subject": "feat(onboarding): make core participant writes atomic",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+      "apps/web/lib/domain/actions.ts",
+      "apps/web/lib/domain/intake-actions.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "scripts/db/test-core-onboarding-writes-integration.mjs",
+      "scripts/db/test-email-outbox-integration.mjs",
+      "supabase/migrations/20260822010612_atomic_core_onboarding_writes.sql",
+      "tests/unit/core-onboarding-writes-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ac110703848bfae943efff684b8f766ad91e19dc",
+    "subject": "feat(imports): add resumable apply and rollback",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/importeren/page.tsx",
+      "apps/web/lib/domain/import-actions.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "scripts/db/test-resumable-import-integration.mjs",
+      "supabase/migrations/20260822012255_resumable_import_apply_rollback.sql",
+      "tests/unit/resumable-import-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "c0bb26e3e3e9a68af0a09c1588d9ad6e94867d3d",
+    "subject": "fix(newsletters): enforce concept-only delivery gate",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/nieuwsbrieven/page.tsx",
+      "apps/web/components/communication/communication-forms.tsx",
+      "apps/web/lib/domain/communication-hub-actions.ts",
+      "apps/web/lib/email/newsletter-delivery-capability.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "tests/unit/newsletter-production-safety.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "141ae59f3b4448d3f85c2fe04b35a2ce93d7ddd3",
+    "subject": "fix(dates): use Amsterdam business dates in core flows",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/rapportages/campagnes/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/rapportages/groei/page.tsx",
+      "apps/web/app/(tenant-admin)/admin/taken/page.tsx",
+      "apps/web/app/api/webhooks/mollie/route.ts",
+      "apps/web/components/admin/placement-cockpit.tsx",
+      "apps/web/components/public/intake-wizard.tsx",
+      "apps/web/lib/analytics/campaign-revenue.ts",
+      "apps/web/lib/analytics/growth-cohorts.ts",
+      "apps/web/lib/date/business-date.ts",
+      "apps/web/lib/domain/automation-recipes.ts",
+      "apps/web/lib/domain/billing-actions.ts",
+      "apps/web/lib/domain/capacity-forecast-snapshots.ts",
+      "apps/web/lib/domain/capacity-forecast.ts",
+      "apps/web/lib/domain/certificate-verification.ts",
+      "apps/web/lib/domain/data-quality.ts",
+      "apps/web/lib/domain/feedback-actions.ts",
+      "apps/web/lib/domain/graduation-actions.ts",
+      "apps/web/lib/domain/growth-analytics.ts",
+      "apps/web/lib/domain/instructor-replacement-actions.ts",
+      "apps/web/lib/domain/journey-bot-contract.ts",
+      "apps/web/lib/domain/journey-bot.ts",
+      "apps/web/lib/domain/learning-intelligence-contract.ts",
+      "apps/web/lib/domain/management-summaries.ts",
+      "apps/web/lib/domain/mollie-financial-sync.ts",
+      "apps/web/lib/domain/next-best-actions.ts",
+      "apps/web/lib/domain/parent-portal-actions.ts",
+      "apps/web/lib/domain/placement-actions.ts",
+      "apps/web/lib/domain/planning.ts",
+      "apps/web/lib/domain/retention-signals-actions.ts",
+      "apps/web/lib/domain/retention-signals.ts",
+      "apps/web/lib/domain/smart-events.ts",
+      "apps/web/lib/domain/smart-placement.ts",
+      "apps/web/lib/domain/swim-flow-analytics.ts",
+      "apps/web/lib/domain/wait-time.ts",
+      "apps/web/tests/e2e/sprint4-admin-mutations.spec.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "tests/unit/business-date.test.ts",
+      "tests/unit/swim-flow-analytics-contract.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d16281a9b2f5b963885ed273ea993c204f884ab4",
+    "subject": "chore(security): align runtime and patch nanoid",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/communications-foundation-audit.yml",
+      ".github/workflows/operational-monitor.yml",
+      ".github/workflows/production-foundation-audit.yml",
+      ".github/workflows/production-migration-rehearsal.yml",
+      ".github/workflows/staging-mollie-adjustment-rehearsal.yml",
+      ".github/workflows/staging-mollie-incasso-rehearsal.yml",
+      ".github/workflows/staging-mollie-mandate-rehearsal.yml",
+      ".github/workflows/staging-mollie-rehearsal.yml",
+      ".node-version",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "pnpm-lock.yaml",
+      "tests/unit/runtime-security-baseline.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a10c12e4d39303320e0e686d66b56df059499230",
+    "subject": "chore(evidence): harden release and restore proofs",
+    "classification": "KEEP_AND_PORT",
+    "family": "atomic-core-and-outbox",
+    "files": [
+      ".github/workflows/ci.yml",
+      ".github/workflows/deploy.yml",
+      ".github/workflows/staging-backup-restore-rehearsal.yml",
+      "apps/web/tests/e2e/premium-release-hardening.spec.ts",
+      "apps/web/tests/e2e/sprint4-isolation.spec.ts",
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+      "package.json",
+      "scripts/db/rehearse-logical-restore.sh",
+      "scripts/db/verify-force-rls.mjs",
+      "scripts/release/exact-source-artifact.mjs",
+      "scripts/release/write-artifact-storage-probe.mjs",
+      "scripts/release/write-exact-source-artifact.mjs",
+      "scripts/release/write-release-evidence.mjs",
+      "scripts/storage/object-backup.mjs",
+      "scripts/storage/storage-bucket-contract.mjs",
+      "tests/unit/badge-system-schema.test.ts",
+      "tests/unit/evidence-pipeline-contract.test.ts",
+      "tests/unit/participant-media-schema.test.ts",
+      "tests/unit/tenant-health-schema.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "4e3784649767be4c197db624b33995b3d1502f65",
+    "subject": "docs(audit): record final core readiness evidence",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-core-sprint-1.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "22cc1585c053b1e549cc749730b7bda74f997a11",
+    "subject": "fix(certification): close adversarial integrity findings",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/email/outbox.ts",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/db/test-production-readiness-certification-integration.mjs",
+      "supabase/migrations/20260822225251_production_readiness_certification.sql",
+      "tests/unit/production-readiness-certification.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1cff705717085d5a03ae4b4e1951d36c0174a55b",
+    "subject": "test(certification): prove clean-room migration profiles",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "package.json",
+      "scripts/db/audit-clean-room.mjs"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "cb4c110702979dc049932ecf128db4f7d28d1fe8",
+    "subject": "test(certification): rehearse fail-closed base upgrade",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "package.json",
+      "scripts/db/preflight-production-readiness-upgrade.mjs",
+      "scripts/db/seed-production-readiness-upgrade-fixture.mjs",
+      "tests/unit/production-readiness-certification.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "650785a45015259d813a45243d8aa4c999d71df9",
+    "subject": "fix(certification): enforce Data API tenant boundaries",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "package.json",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "supabase/migrations/20260822233930_restrict_platform_only_tenant_mutations.sql",
+      "tests/unit/production-readiness-certification.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "b3948527e871ce36e46549213d240504b19a5987",
+    "subject": "fix(certification): harden crash and provider boundaries",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/email/outbox-payload.ts",
+      "apps/web/lib/email/outbox.ts",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "package.json",
+      "scripts/db/preflight-production-readiness-upgrade.mjs",
+      "scripts/db/test-core-onboarding-writes-integration.mjs",
+      "scripts/db/test-production-readiness-crash-windows.mjs",
+      "scripts/db/test-resumable-import-integration.mjs",
+      "scripts/db/test-tenant-provisioning-integration.mjs",
+      "supabase/migrations/20260822235045_canonical_email_outbox_idempotency_keys.sql",
+      "tests/unit/email-outbox-contract.test.ts",
+      "tests/unit/production-readiness-certification.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "1fecdc90079805b71d02b588d28f58092f5b66aa",
+    "subject": "fix(certification): enforce rollback compatibility contract",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".env.example",
+      ".github/workflows/deploy.yml",
+      ".github/workflows/production-foundation-audit.yml",
+      "apps/web/app/api/health/route.ts",
+      "apps/web/lib/release/schema-compatibility.ts",
+      "apps/web/proxy.ts",
+      "docs/REQUIRED_ENVIRONMENT_VARIABLES.md",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "package.json",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/audit-production-foundation.mjs",
+      "scripts/release/audit-runtime-environment-contract.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260823000225_runtime_schema_compatibility_contract.sql",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ab8894d297faefdc7aac71aa0e5a1a2ce90e1a27",
+    "subject": "fix(certification): close final clean-room regressions",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/lib/release/schema-compatibility.ts",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/db/audit-clean-room.mjs",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260823001941_secure_default_function_grants.sql",
+      "supabase/migrations/20260823002720_close_prebound_import_identity_gap.sql",
+      "tests/unit/production-readiness-certification.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "27a02c6eb3a3bb16131caebe42119af55c5716cf",
+    "subject": "test(certification): finalize release gates",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/release/audit-sprint31.mjs",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "e3764f5863c337435b420223643dcaf4bc2bdd1e",
+    "subject": "fix(certification): unblock safe staging preflight",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/db/preflight-production-readiness-upgrade.mjs",
+      "tests/unit/production-readiness-certification.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d7b3724e61631614119aa471bb55cf67c7f554ba",
+    "subject": "fix(certification): verify packaged release ancestry",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "65416b06f6d23bb0d47343546ae975b198021416",
+    "subject": "fix(certification): revoke legacy service ledger grants",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/lib/release/schema-compatibility.ts",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/db/audit-clean-room.mjs",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260823005756_close_service_ledger_default_grants.sql",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "91b8ff42e9affca4e1e5f3e94776997f703ccf45",
+    "subject": "fix(certification): verify grants after migration",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "scripts/db/preflight-production-readiness-upgrade.mjs",
+      "tests/unit/production-readiness-certification.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "7b55a80cbd44e2153a5e690e34ab1c62f755b1c0",
+    "subject": "fix(certification): retain source ancestry in deploy",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a0eebee250310c6219e7ef24c2db925f85fad286",
+    "subject": "docs(certification): record staging deployment evidence",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "352b38cd69958a3d59d31b39aaa798e6de70a77f",
+    "subject": "fix(release): establish recertification compatibility anchor",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      ".github/workflows/deploy.yml",
+      "apps/web/lib/domain/import-actions.ts",
+      "apps/web/package.json",
+      "apps/web/tests/e2e/production-readiness-maintenance-preview.spec.ts",
+      "package.json",
+      "pnpm-lock.yaml",
+      "scripts/db/rehearse-logical-restore.sh",
+      "scripts/release/assert-rollback-release.mjs",
+      "scripts/storage/object-backup.mjs",
+      "scripts/storage/storage-restore-contract.mjs"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "d9489fe95c581742d4c8b8244d4adb0b3866d3e4",
+    "subject": "fix(db): close recertification capacity and auth gaps",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/release/schema-compatibility.ts",
+      "scripts/db/audit-clean-room.mjs",
+      "scripts/db/test-core-onboarding-writes-integration.mjs",
+      "scripts/db/test-production-readiness-certification-integration.mjs",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "scripts/release/assert-rollback-release.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260908111450_production_readiness_recertification.sql",
+      "tests/unit/certification-revalidation.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "fffcb312d6317d97fd24b8e876efb47fb658f455",
+    "subject": "fix(release): add schema compatibility bridge",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/release/schema-compatibility.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+    "subject": "fix(release): pin verified schema compatibility floor",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/release/schema-compatibility.ts",
+      "scripts/db/test-production-readiness-tenant-matrix.mjs",
+      "scripts/db/test-resumable-import-integration.mjs",
+      "scripts/release/assert-rollback-release.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260908111450_production_readiness_recertification.sql",
+      "tests/unit/certification-revalidation.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "ca3219b0f389668eb850aefd3a573a93c381d31e",
+    "subject": "fix(release): bind final compatibility bridge",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "apps/web/lib/release/schema-compatibility.ts",
+      "scripts/release/assert-rollback-release.mjs",
+      "scripts/release/assert-runtime-schema-compatibility.mjs",
+      "scripts/release/rehearse-application-forward-rollback.mjs",
+      "supabase/migrations/20260908111450_production_readiness_recertification.sql",
+      "tests/unit/certification-revalidation.test.ts",
+      "tests/unit/runtime-schema-compatibility.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "a65c0183d8d6dd490fcdd662c1b7b94578a3a245",
+    "subject": "fix(restore): provision required postgres extensions",
+    "classification": "KEEP_AND_PORT",
+    "family": "certification-hardening",
+    "files": [
+      "scripts/db/restore-target-bootstrap.sql",
+      "tests/unit/certification-revalidation.test.ts"
+    ],
+    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  },
+  {
+    "sha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "subject": "docs(certification): finalize independent recertification",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "family": "historical-evidence",
+    "files": [
+      "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md"
+    ],
+    "reason": "Documentatie/evidence; bron-SHA blijft referentie, geen nieuwe testclaim.",
+    "action": "Zie family-ledger; niet cherry-picken."
+  }
+]

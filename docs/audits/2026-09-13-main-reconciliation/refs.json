@@ -1,0 +1,967 @@
+[
+  {
+    "ref": "refs/heads/agent/swim-school-canon-v3-android",
+    "sha": "fb99b9c54fed6eb9279f4c56df03d0ab8cd60183",
+    "behind": 54,
+    "ahead": 0,
+    "mergeBase": "fb99b9c54fed6eb9279f4c56df03d0ab8cd60183",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      28,
+      27
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/automation-communication-media",
+    "sha": "bf4a84e542edee62e6dd87a45392cbabff1c3a6c",
+    "behind": 146,
+    "ahead": 0,
+    "mergeBase": "bf4a84e542edee62e6dd87a45392cbabff1c3a6c",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/communication-hub",
+    "sha": "3dec17559d44137512a38aaed43df53adf53098d",
+    "behind": 143,
+    "ahead": 0,
+    "mergeBase": "3dec17559d44137512a38aaed43df53adf53098d",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/family-crm-intelligence",
+    "sha": "7173a342c48342a3e5fff92d9f784e0e0a0dd9fe",
+    "behind": 167,
+    "ahead": 0,
+    "mergeBase": "7173a342c48342a3e5fff92d9f784e0e0a0dd9fe",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/fix-admin-enrollment-gender-contract",
+    "sha": "376f9703d9b88e08e712576520289fd5c34c88ad",
+    "behind": 7,
+    "ahead": 0,
+    "mergeBase": "376f9703d9b88e08e712576520289fd5c34c88ad",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      51
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-admin-session-feedback-retry",
+    "sha": "e9995a333f51049a392789776885aeed27142f72",
+    "behind": 5,
+    "ahead": 0,
+    "mergeBase": "e9995a333f51049a392789776885aeed27142f72",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      52
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-admin-session-run-uniqueness",
+    "sha": "18c090fb4297aa730457c7196e4a9a68de27491b",
+    "behind": 3,
+    "ahead": 0,
+    "mergeBase": "18c090fb4297aa730457c7196e4a9a68de27491b",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      53
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-append-only-sprint4-fixtures",
+    "sha": "ab33593d2f42c41eb338c587725b726cc7177864",
+    "behind": 32,
+    "ahead": 0,
+    "mergeBase": "ab33593d2f42c41eb338c587725b726cc7177864",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      39
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-billing-event-compat",
+    "sha": "99cf35f7e2ae9710cda3960d7878fa08817ee19f",
+    "behind": 48,
+    "ahead": 0,
+    "mergeBase": "99cf35f7e2ae9710cda3960d7878fa08817ee19f",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      31
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-final-stage-destination",
+    "sha": "450052ceee7650341ac0966cecc3215a698668ea",
+    "behind": 36,
+    "ahead": 0,
+    "mergeBase": "450052ceee7650341ac0966cecc3215a698668ea",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      37
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-gender-migration-order",
+    "sha": "ee40120005f0f10b082f7c2cabb3e4a2e7f25403",
+    "behind": 50,
+    "ahead": 0,
+    "mergeBase": "ee40120005f0f10b082f7c2cabb3e4a2e7f25403",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      30
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-isolation-parent-display-contract",
+    "sha": "3994759e446086b2da7a990a1b6be3008c3a860e",
+    "behind": 1,
+    "ahead": 0,
+    "mergeBase": "3994759e446086b2da7a990a1b6be3008c3a860e",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      54
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-parent-mobile-contrast",
+    "sha": "1822d3dcd58a0b685c368395ba31aea794bb67ac",
+    "behind": 0,
+    "ahead": 1,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Latere portalenlijn gebruikt portal-text voor subtitle en semantic danger badge; geen oudere CSS terugzetten.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      55
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-phase16-assessment-baseline",
+    "sha": "0e782bf1f693ed8df240b2d7238ee9351291becb",
+    "behind": 15,
+    "ahead": 0,
+    "mergeBase": "0e782bf1f693ed8df240b2d7238ee9351291becb",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      47
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-phase16-mobile-payments",
+    "sha": "16e6e22c6c621db84e71027b47c050b49c4864bb",
+    "behind": 40,
+    "ahead": 0,
+    "mergeBase": "16e6e22c6c621db84e71027b47c050b49c4864bb",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      35
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-phase16-parent-first-name",
+    "sha": "f81d8ed40f4d9b4c6eb3b97ac2a17a6aa8b69a6c",
+    "behind": 42,
+    "ahead": 0,
+    "mergeBase": "f81d8ed40f4d9b4c6eb3b97ac2a17a6aa8b69a6c",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      34
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-phase16-planning-fixture",
+    "sha": "4ae37d29e856ecbcbe81f0438757c50799dbff54",
+    "behind": 44,
+    "ahead": 0,
+    "mergeBase": "4ae37d29e856ecbcbe81f0438757c50799dbff54",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      33
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-admin-capacity-selectors",
+    "sha": "5c83a5572e1c3396d663b38306fcc6ec7f5bee1a",
+    "behind": 19,
+    "ahead": 0,
+    "mergeBase": "5c83a5572e1c3396d663b38306fcc6ec7f5bee1a",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      45
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-admin-publish-navigation",
+    "sha": "9a60b808ea063a1b25cd901258176cec4619f5bb",
+    "behind": 9,
+    "ahead": 0,
+    "mergeBase": "9a60b808ea063a1b25cd901258176cec4619f5bb",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      50
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-admin-selectors",
+    "sha": "6709802927ab254a330dee52aa1eb6f4b213d698",
+    "behind": 21,
+    "ahead": 0,
+    "mergeBase": "6709802927ab254a330dee52aa1eb6f4b213d698",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      44
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-admin-table-selectors",
+    "sha": "97a7cba0476a9ac8b4ed62c53109197a5e13bd10",
+    "behind": 200,
+    "ahead": 1,
+    "mergeBase": "de61e30d72569f738d05779823b25dd69278192a",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Main bevat latere canonieke wizard-, capacity-, feedback- en retryselectors via PRs 43-53.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-admin-terminology",
+    "sha": "798a188ab987e430d6715074b0da0a528aee3e1f",
+    "behind": 23,
+    "ahead": 0,
+    "mergeBase": "798a188ab987e430d6715074b0da0a528aee3e1f",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      43
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-assessment-correction",
+    "sha": "21a2e156dbbb6853e76d3970e388da8bdcc71090",
+    "behind": 30,
+    "ahead": 0,
+    "mergeBase": "21a2e156dbbb6853e76d3970e388da8bdcc71090",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      40
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-assessment-feedback",
+    "sha": "904b79824ca023a5780e70a548d1a749b8a47a10",
+    "behind": 28,
+    "ahead": 0,
+    "mergeBase": "904b79824ca023a5780e70a548d1a749b8a47a10",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      41
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-gender-locator",
+    "sha": "f5632b6a5bc4809da9252b99c528c846792aa717",
+    "behind": 34,
+    "ahead": 0,
+    "mergeBase": "f5632b6a5bc4809da9252b99c528c846792aa717",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      38
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-intake-program-scope",
+    "sha": "7388f88b1c59953215883bf357ffc1e8dd13d4ce",
+    "behind": 11,
+    "ahead": 0,
+    "mergeBase": "7388f88b1c59953215883bf357ffc1e8dd13d4ce",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      49
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/fix-sprint4-parent-terminology",
+    "sha": "a79acdd63766fee8a3c73d478348a2fe9d88cf85",
+    "behind": 25,
+    "ahead": 0,
+    "mergeBase": "a79acdd63766fee8a3c73d478348a2fe9d88cf85",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      42
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/harden-sprint4-admin-feedback-selectors",
+    "sha": "5253ebf6803abd252ea74275e01f79b1ff5ea119",
+    "behind": 17,
+    "ahead": 0,
+    "mergeBase": "5253ebf6803abd252ea74275e01f79b1ff5ea119",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      46
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/harden-sprint4-admin-reruns",
+    "sha": "fbe374da50846c49d3be53bfa6d824fc17a5d3f3",
+    "behind": 13,
+    "ahead": 0,
+    "mergeBase": "fbe374da50846c49d3be53bfa6d824fc17a5d3f3",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      48
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/main-reconciliation-v42-prep",
+    "sha": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "behind": 0,
+    "ahead": 0,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "reason": "Werkbranch van deze fase, geen input voor zichzelf.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/parent-child-portals-v1",
+    "sha": "68d4a79ccdc3ede3691bf1ec1782fb8f81c05466",
+    "behind": 0,
+    "ahead": 199,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": [
+      56
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/premium-badges",
+    "sha": "b4f27d5be3797c4beafbda6983aa024edf02a055",
+    "behind": 129,
+    "ahead": 0,
+    "mergeBase": "b4f27d5be3797c4beafbda6983aa024edf02a055",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/premium-product-suite",
+    "sha": "0be070bf33cc7b2bb31fc07a059d3e5d9292ff31",
+    "behind": 98,
+    "ahead": 0,
+    "mergeBase": "0be070bf33cc7b2bb31fc07a059d3e5d9292ff31",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/premium-tenant-admin-ux",
+    "sha": "ef04590fe427a2c3a8b1952737b50165fe535cd8",
+    "behind": 171,
+    "ahead": 0,
+    "mergeBase": "ef04590fe427a2c3a8b1952737b50165fe535cd8",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/production-readiness-certification-sprint-2",
+    "sha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "behind": 0,
+    "ahead": 230,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/production-readiness-core-sprint-1",
+    "sha": "4e3784649767be4c197db624b33995b3d1502f65",
+    "behind": 0,
+    "ahead": 209,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/security-hardening-lifecycle",
+    "sha": "662549ebe75a16ad637a75b79c6d7bc1439e4934",
+    "behind": 209,
+    "ahead": 0,
+    "mergeBase": "662549ebe75a16ad637a75b79c6d7bc1439e4934",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/seed-theme-visual-matrix",
+    "sha": "284f9aebac25e209daccd73956cf655f2710208e",
+    "behind": 46,
+    "ahead": 0,
+    "mergeBase": "284f9aebac25e209daccd73956cf655f2710208e",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      32
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/seed-versioned-phase16-curriculum",
+    "sha": "d28831edbdc1bbd28ce6d7d48b14f0a5404f3f1f",
+    "behind": 38,
+    "ahead": 0,
+    "mergeBase": "d28831edbdc1bbd28ce6d7d48b14f0a5404f3f1f",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      36
+    ]
+  },
+  {
+    "ref": "refs/heads/codex/staging-premium-sync",
+    "sha": "6f9aec33d4e2172a231ec4f0b57a4342d724c1a8",
+    "behind": 98,
+    "ahead": 142,
+    "mergeBase": "0be070bf33cc7b2bb31fc07a059d3e5d9292ff31",
+    "ancestorOfCertification": true,
+    "classification": "SUPERSEDED",
+    "reason": "Historische deploymentlijn; main-tree is expliciet behouden bij 2ac2e93, canonieke modules zijn leidend.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/codex/theme-deploy-memory",
+    "sha": "15958cfc5981d78a9accf8e389882f9d503b82ca",
+    "behind": 52,
+    "ahead": 0,
+    "mergeBase": "15958cfc5981d78a9accf8e389882f9d503b82ca",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      29
+    ]
+  },
+  {
+    "ref": "refs/heads/docs/nxttrack-legal-facts-inventory",
+    "sha": "eb2358c68802748e61dd888cd8a175a60e7f20ca",
+    "behind": 217,
+    "ahead": 8,
+    "mergeBase": "76f0a3f8cc28abab59fba06ff40e03fbea7c6a5f",
+    "ancestorOfCertification": false,
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "reason": "Acht documentatiecommits, uitsluitend docs/legal-analysis; behouden op bronref.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/heads/main",
+    "sha": "e34544c6d7ddfea572d4b1c68a3e201ee3381872",
+    "behind": 74,
+    "ahead": 0,
+    "mergeBase": "e34544c6d7ddfea572d4b1c68a3e201ee3381872",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      24,
+      18,
+      16,
+      14,
+      12,
+      10,
+      8,
+      6,
+      4
+    ]
+  },
+  {
+    "ref": "refs/heads/staging",
+    "sha": "7b6dc577ceb571e360a2a579109d7a8cc36ec1c9",
+    "behind": 186,
+    "ahead": 131,
+    "mergeBase": "0358b50c3028f6f933d06f32f0aa46abb03178bf",
+    "ancestorOfCertification": true,
+    "classification": "SUPERSEDED",
+    "reason": "Historische deploymentlijn; main-tree is expliciet behouden bij 2ac2e93, canonieke modules zijn leidend.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      23,
+      19
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/agent/swim-school-canon-v3-android",
+    "sha": "fb99b9c54fed6eb9279f4c56df03d0ab8cd60183",
+    "behind": 54,
+    "ahead": 0,
+    "mergeBase": "fb99b9c54fed6eb9279f4c56df03d0ab8cd60183",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      28,
+      27
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/fix-billing-event-compat",
+    "sha": "99cf35f7e2ae9710cda3960d7878fa08817ee19f",
+    "behind": 48,
+    "ahead": 0,
+    "mergeBase": "99cf35f7e2ae9710cda3960d7878fa08817ee19f",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      31
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/fix-gender-migration-order",
+    "sha": "ee40120005f0f10b082f7c2cabb3e4a2e7f25403",
+    "behind": 50,
+    "ahead": 0,
+    "mergeBase": "ee40120005f0f10b082f7c2cabb3e4a2e7f25403",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      30
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/fix-parent-mobile-contrast",
+    "sha": "1822d3dcd58a0b685c368395ba31aea794bb67ac",
+    "behind": 0,
+    "ahead": 1,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Latere portalenlijn gebruikt portal-text voor subtitle en semantic danger badge; geen oudere CSS terugzetten.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      55
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/fix-standalone-static-assets",
+    "sha": "c19650a0c4568cc128805681893ee6fec6e96e25",
+    "behind": 469,
+    "ahead": 10,
+    "mergeBase": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      21
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/fix-supabase-public-key-env",
+    "sha": "7863d07c141f6f1cd1a963ace1066c8663c9999f",
+    "behind": 469,
+    "ahead": 13,
+    "mergeBase": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      22
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/lovable-nxttrack-marketing",
+    "sha": "8b43507e450ce24ddf63a57777d04318628ac18f",
+    "behind": 469,
+    "ahead": 6,
+    "mergeBase": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      17
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/parent-child-portals-v1",
+    "sha": "68d4a79ccdc3ede3691bf1ec1782fb8f81c05466",
+    "behind": 0,
+    "ahead": 199,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": [
+      56
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-0-1-foundation",
+    "sha": "b932723ff7310e41c1467d958de1c05d9c0fa8f5",
+    "behind": 493,
+    "ahead": 0,
+    "mergeBase": "b932723ff7310e41c1467d958de1c05d9c0fa8f5",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      3,
+      1
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-2-app-scaffold",
+    "sha": "c8705ede5caf2a9e6ad748262ffcb024036dce69",
+    "behind": 501,
+    "ahead": 0,
+    "mergeBase": "c8705ede5caf2a9e6ad748262ffcb024036dce69",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      2
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-auth-tenants-roles",
+    "sha": "5a294f546f3628d2285a45430b8f9aea081719c8",
+    "behind": 484,
+    "ahead": 0,
+    "mergeBase": "5a294f546f3628d2285a45430b8f9aea081719c8",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      5
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-guard-contracts",
+    "sha": "255dfbd577975a61b13915ab508ad3825683f04f",
+    "behind": 471,
+    "ahead": 5,
+    "mergeBase": "2ca17027138ef8c6b1fab6742362c635f6b4a71f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      13
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-identity-migration",
+    "sha": "a05447f234a1436acdd7336acc3768632fd2613c",
+    "behind": 473,
+    "ahead": 13,
+    "mergeBase": "fcd0558c0e64b25e5d4b722a522988aa44c34c84",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      9
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-route-access-ci",
+    "sha": "86e0f3c08823452a8c84d1131b379a2dfe692647",
+    "behind": 474,
+    "ahead": 0,
+    "mergeBase": "86e0f3c08823452a8c84d1131b379a2dfe692647",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      7
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-tenant-routing-contract",
+    "sha": "d5c122537886d01465a0dcfc0ddbbff2e01c5805",
+    "behind": 472,
+    "ahead": 4,
+    "mergeBase": "fc2f440da3d153ceadd4377a457b2935666d4f66",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      11
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase-3-trusted-auth-context",
+    "sha": "6e907bef36bfa23ad0331ceb7c32b1ecf9e39d67",
+    "behind": 470,
+    "ahead": 9,
+    "mergeBase": "8d05e1cb6b2cfb6bf3e7d8cb9d14e36dd66c9e21",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      15
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/phase2-shell-boundaries",
+    "sha": "e5befb4cb92de8809531938333a4f09d0a27c632",
+    "behind": 469,
+    "ahead": 9,
+    "mergeBase": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische fase-2/3 branch, reeds gemergede PR met latere main route/auth/domain-implementatie; geen oude scaffold herstellen.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      20
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/production-readiness-certification-sprint-2",
+    "sha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "behind": 0,
+    "ahead": 230,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/remotes/origin/codex/production-readiness-core-sprint-1",
+    "sha": "4e3784649767be4c197db624b33995b3d1502f65",
+    "behind": 0,
+    "ahead": 209,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "KEEP_AND_PORT",
+    "reason": "Beoordeelde netto domeinwijzigingen na tree-identieke merge; previewdeployments en bewijs afzonderlijk uitsluiten.",
+    "action": "Port uitsluitend geselecteerde families.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/remotes/origin/codex/security-hardening-lifecycle",
+    "sha": "662549ebe75a16ad637a75b79c6d7bc1439e4934",
+    "behind": 209,
+    "ahead": 0,
+    "mergeBase": "662549ebe75a16ad637a75b79c6d7bc1439e4934",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/remotes/origin/codex/seed-theme-visual-matrix",
+    "sha": "284f9aebac25e209daccd73956cf655f2710208e",
+    "behind": 46,
+    "ahead": 0,
+    "mergeBase": "284f9aebac25e209daccd73956cf655f2710208e",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      32
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/codex/theme-deploy-memory",
+    "sha": "15958cfc5981d78a9accf8e389882f9d503b82ca",
+    "behind": 52,
+    "ahead": 0,
+    "mergeBase": "15958cfc5981d78a9accf8e389882f9d503b82ca",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      29
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/docs/nxttrack-legal-facts-inventory",
+    "sha": "eb2358c68802748e61dd888cd8a175a60e7f20ca",
+    "behind": 217,
+    "ahead": 8,
+    "mergeBase": "76f0a3f8cc28abab59fba06ff40e03fbea7c6a5f",
+    "ancestorOfCertification": false,
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "reason": "Acht documentatiecommits, uitsluitend docs/legal-analysis; behouden op bronref.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/remotes/origin/main",
+    "sha": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "behind": 0,
+    "ahead": 0,
+    "mergeBase": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "ancestorOfCertification": true,
+    "classification": "ALREADY_PRESENT",
+    "reason": "Broncommit is ancestor van origin/main; geen herport.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      24,
+      18,
+      16,
+      14,
+      12,
+      10,
+      8,
+      6,
+      4
+    ]
+  },
+  {
+    "ref": "refs/remotes/origin/production",
+    "sha": "ba8932b5ecc5c4148c1b5d6d14b27ba6628df281",
+    "behind": 469,
+    "ahead": 32,
+    "mergeBase": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "ancestorOfCertification": false,
+    "classification": "SUPERSEDED",
+    "reason": "Historische deploymentlijn; main-tree is expliciet behouden bij 2ac2e93, canonieke modules zijn leidend.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": []
+  },
+  {
+    "ref": "refs/remotes/origin/staging",
+    "sha": "6f9aec33d4e2172a231ec4f0b57a4342d724c1a8",
+    "behind": 98,
+    "ahead": 142,
+    "mergeBase": "0be070bf33cc7b2bb31fc07a059d3e5d9292ff31",
+    "ancestorOfCertification": true,
+    "classification": "SUPERSEDED",
+    "reason": "Historische deploymentlijn; main-tree is expliciet behouden bij 2ac2e93, canonieke modules zijn leidend.",
+    "action": "Geen runtimeport; ref behouden.",
+    "pullRequests": [
+      23,
+      19
+    ]
+  }
+]

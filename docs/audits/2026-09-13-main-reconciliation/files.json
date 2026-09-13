@@ -1,0 +1,2922 @@
+[
+  {
+    "path": ".env.example",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/ci.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/communications-foundation-audit.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/deploy.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "canonical-release",
+    "action": "Alleen generieke tooling, exact-source, schema en rollback guards; geen branchallowlist/previewjobs."
+  },
+  {
+    "path": ".github/workflows/operational-monitor.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/production-foundation-audit.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/production-migration-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/staging-backup-restore-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/staging-mollie-adjustment-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/staging-mollie-incasso-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/staging-mollie-mandate-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".github/workflows/staging-mollie-rehearsal.yml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": ".node-version",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/agenda/lessen/[id]/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/agenda/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/badges/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/ik/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/layout.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(child)/kind/reis/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(instructor)/instructor/student/[id]/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(platform-admin)/platform/instellingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(platform-admin)/platform/onboarding/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(platform-admin)/platform/organisaties/[id]/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(platform-admin)/platform/uitnodigingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/betalingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/documenten/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/feedback/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/inbox/parent-inbox-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/kinderen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/layout.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/lessen/[id]/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/ontwikkeling/badges/parent-badges-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/ontwikkeling/diplomas/parent-diplomas-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/ontwikkeling/media/parent-media-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/ontwikkeling/parent-development-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/planning/parent-planning-page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(portaal)/portaal/profiel/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/agenda/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/berichten/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/branding/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/importeren/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/instellingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/leerlingen/[id]/media/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/leerlingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/nieuwsbrieven/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/programma/leerlijn/[versionId]/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/rapportages/campagnes/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/rapportages/groei/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/taken/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-admin)/admin/uitnodigingen/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/(tenant-public)/login/page.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/child/media/[id]/route.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/child/session/route.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/files/participant-media/[id]/route.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/health/route.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/internal/email-outbox/process/route.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/api/webhooks/mollie/route.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/globals.css",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/test-harness/journey/journey-harness-client.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/app/test-harness/journey/page.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/admin/media-library-table.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/admin/placement-cockpit.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/admin/resource-tables.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/badges/badge-artwork-placeholder.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/child/child-journey-map.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/child/child-portal-shell.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/communication/communication-forms.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/parent/parent-overview-top.tsx",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/parent/parent-section-nav.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/public/intake-wizard.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/shell/app-shell-client.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/shell/app-shell.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/components/shell/ui.tsx",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/analytics/campaign-revenue.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/analytics/growth-cohorts.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/access.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/guard.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/identity-boundary.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/invitations.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/password-reset.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/portal-session-actions.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/portal-session-contract.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/portal-session.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/server-context.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/server-guard.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/auth/trusted-context.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/date/business-date.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/admin-operations-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/automation-recipes.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/billing-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/capacity-forecast-snapshots.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/capacity-forecast.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/certificate-verification.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/child-journey-view.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/child-portal-actions.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/child-portal.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/communication-hub-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/core.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/curriculum-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/data-quality.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/documents.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/feedback-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/feedback.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/graduation-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/growth-analytics.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/import-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/instructor-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/instructor-replacement-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/intake-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/journey-bot-contract.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/journey-bot.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/learning-intelligence-contract.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/management-summaries.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/media-library.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/mollie-financial-sync.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/native-mobile.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/next-best-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/parent-portal-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/parent-portal.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/participant-media-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/participant-media-contract.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/participant-media.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/placement-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/planning.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/portal-feature-actions.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/portal-features.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/portal-parent-requests.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/retention-signals-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/retention-signals.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/smart-events.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/smart-placement.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/swim-flow-analytics.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/swim-progress.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/tenant-lifecycle-actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/tenant-notifications.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/domain/wait-time.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/actions.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/email-delivery-contract.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/newsletter-delivery-capability.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/outbox-payload.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/outbox.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/templates.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/email/transactional.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/navigation.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/release/schema-compatibility.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/security/malware-scanner.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/storage/private-file-response.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/storage/private-files.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-child-theme-recipes.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-journey-contract.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-page-recipes.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-terminology.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-theme-contract.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-theme-registry.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-theme-server.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/lib/theme/portal-visual-matrix.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/package.json",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/playwright.config.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/playwright.journey.config.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/proxy.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/mascot-256.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/mascot-256.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/mascot-512.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/mascot-512.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1440.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1440.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1920.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-1920.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-landscape-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/coastal-explorer/progress-journey-portrait-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/dolphin-bay/mascot-256.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/dolphin-bay/mascot-256.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/dolphin-bay/mascot-512.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/dolphin-bay/mascot-512.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1440.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-1920.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-landscape-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nationaal-zwem-abc/progress-journey-portrait-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/nxttrack-default/progress-journey-portrait-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/journey-completed.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/journey-desktop.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/journey-mobile.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/mascot-256.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/mascot-256.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/mascot-512.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/mascot-512.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/ocean-quest/mascot.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/mascot-256.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/mascot-256.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/mascot-512.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/mascot-512.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1440.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1440.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1920.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-1920.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-landscape-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-640.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-640.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-960.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/polar-splash/progress-journey-portrait-960.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/rendition-manifest.json",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/turtle-trails/mascot-256.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/turtle-trails/mascot-256.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/turtle-trails/mascot-512.avif",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/portal-themes/turtle-trails/mascot-512.webp",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/public/sw.js",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/controlled-communications.spec.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/journey-timeline.spec.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/journey-visual.spec.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/premium-release-hardening.spec.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/production-readiness-maintenance-preview.spec.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/sprint4-admin-mutations.spec.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "apps/web/tests/e2e/sprint4-isolation.spec.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "docs/REQUIRED_ENVIRONMENT_VARIABLES.md",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/architecture/PARENT_CHILD_PORTAL_THREAT_MODEL.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/audits/2026-08-22-production-readiness-certification-sprint-2.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/audits/2026-08-22-production-readiness-core-sprint-1.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/SOURCE_MANIFEST.sha256",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/DESIGN_CANON.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/README.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/manta-friendly.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-completed-chapter.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-current-desktop.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/assets/quest-current-mobile.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/board.html",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/boards/NXTTRACK_Ocean_Quest_Complete_desktop.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/boards/NXTTRACK_Ocean_Quest_Complete_mobile.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/index.html",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/render-boards.js",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/render.js",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/badges.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/children.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/development.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/diplomas.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/documents.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/feedback.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/inbox.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/lesson.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/media.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/overview.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/payments.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/planning.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/desktop/profile.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/badges.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/children.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/development.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/diplomas.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/documents.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/feedback.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/inbox.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/lesson.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/media.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/overview.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/payments.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/planning.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-input/ocean-quest-v1.0.0/portal-final/screens/mobile/profile.png",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-tasks/CODEX_CLOUD_OCEAN_QUEST_BRONNENADDENDUM.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-tasks/NXTTRACK_CODEX_CLOUD_PARENT_CHILD_IMPLEMENTATIESPRINT_V1.0.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-tasks/OPVOLGTAAK_CODEX_OCEAN_QUEST_7E_THEME.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/codex-tasks/PARENT_CHILD_PORTALS_BASELINE_AUDIT.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/evidence/journey-audit/artifact-manifest.json",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Niet dupliceren; immutable bronlink in ledger."
+  },
+  {
+    "path": "docs/implementation/JOURNEY_AUDIT.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/implementation/PARENT_CHILD_PORTALS_CHANGELOG.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/implementation/PARENT_CHILD_PORTALS_QA_REPORT.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/implementation/PARENT_CHILD_PORTAL_ASSET_MANIFEST.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/implementation/PARENT_CHILD_PORTAL_ROUTE_THEME_MATRIX.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "docs/runbooks/PARENT_CHILD_PORTAL_ROLLOUT.md",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "DOCS_OR_EVIDENCE_ONLY",
+    "group": "historical-evidence",
+    "action": "Operationele referentiedocs behouden met historische statusindex."
+  },
+  {
+    "path": "package.json",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "pnpm-lock.yaml",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/auth/audit-route-access.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/audit-clean-room.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/preflight-production-readiness-upgrade.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/rehearse-logical-restore.sh",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/restore-target-bootstrap.sql",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/seed-production-readiness-upgrade-fixture.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-core-onboarding-writes-integration.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-email-outbox-integration.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-production-readiness-certification-integration.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-production-readiness-crash-windows.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-production-readiness-tenant-matrix.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-resumable-import-integration.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/test-tenant-provisioning-integration.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/db/verify-force-rls.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/assert-rollback-release.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/assert-runtime-schema-compatibility.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/audit-production-foundation.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/audit-runtime-environment-contract.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/audit-sprint31.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/exact-source-artifact.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/rehearse-application-forward-rollback.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/write-artifact-storage-probe.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/write-exact-source-artifact.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/release/write-release-evidence.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/staging/parent-child-preview-fixture.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/staging/phase-16-operational-flow.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/storage/object-backup.mjs",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/storage/storage-bucket-contract.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/storage/storage-restore-contract.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "scripts/theme/build-portal-theme-renditions.mjs",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260811120000_parent_child_portal_session_security.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260811130000_ocean_quest_seventh_theme.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260811140000_child_safe_curriculum_media_contract.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260811180455_portal_theme_public_rpc_wrappers.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260812120000_stable_journey_completion_sequence.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822002234_production_email_outbox.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822004329_atomic_tenant_provisioning.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822010612_atomic_core_onboarding_writes.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822012255_resumable_import_apply_rollback.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822225251_production_readiness_certification.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822233930_restrict_platform_only_tenant_mutations.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260822235045_canonical_email_outbox_idempotency_keys.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260823000225_runtime_schema_compatibility_contract.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260823001941_secure_default_function_grants.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260823002720_close_prebound_import_identity_gap.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260823005756_close_service_ledger_default_grants.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "supabase/migrations/20260908111450_production_readiness_recertification.sql",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/badge-system-schema.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/business-date.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/certification-revalidation.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/core-onboarding-writes-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/email-outbox-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/evidence-pipeline-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/newsletter-production-safety.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/participant-media-schema.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-child-projection.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-journey-collision.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-journey-engine.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-journey-schema.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-session-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-theme-contract.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-theme-schema.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-theme-six-by-thirteen.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/portal-visual-matrix-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "pre-v42-portal-contracts",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/production-readiness-certification.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/resumable-import-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/runtime-schema-compatibility.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/runtime-security-baseline.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/swim-flow-analytics-contract.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/tenant-health-schema.test.ts",
+    "sourceStatus": "M",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  },
+  {
+    "path": "tests/unit/tenant-provisioning-contract.test.ts",
+    "sourceStatus": "A",
+    "sourceSha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
+    "classification": "KEEP_AND_PORT",
+    "group": "core-and-certification",
+    "action": "Beoordeelde bronversie porten; afhankelijkheden en checks per domeingroep."
+  }
+]
