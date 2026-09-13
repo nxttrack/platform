@@ -464,4 +464,75 @@ begin
 end;
 $$;
 
+-- The undo actor deliberately differs from the publication actor.
+insert into auth.users (id, aud, role, email, raw_app_meta_data, raw_user_meta_data)
+values ('16000000-0000-4000-8000-000000000003', 'authenticated', 'authenticated', 'undo-admin@example.test', '{}', '{}');
+insert into public.tenant_memberships (tenant_id, user_id, role, status)
+values ('26000000-0000-4000-8000-000000000001', '16000000-0000-4000-8000-000000000003', 'tenant_admin', 'active');
+select set_config('request.jwt.claims', '{"sub":"16000000-0000-4000-8000-000000000003","role":"service_role"}', true);
+
+do $$
+declare
+  changed integer;
+  before_invoice_hash text := (select content_hash from public.billing_invoices
+    where id = (select result_id from billing_v3_results where result_key = 'invoice'));
+  other_blackout uuid := gen_random_uuid();
+begin
+  begin
+    perform public.undo_season_blackout_v3(gen_random_uuid(), '77000000-0000-4000-8000-000000000001',
+      '16000000-0000-4000-8000-000000000003');
+    raise exception 'Cross-tenant undo unexpectedly succeeded';
+  exception when others then
+    if sqlerrm <> 'Insufficient holiday management permission' then raise; end if;
+  end;
+  insert into public.season_blackout_periods (id,tenant_id,season_id,name,starts_at,ends_at,
+    session_handling,financial_handling,status,created_by_user_id,published_by_user_id,published_at)
+  select other_blackout,tenant_id,season_id,'Independent overlapping closure',starts_at,ends_at,
+    'cancel','no_change','published',created_by_user_id,published_by_user_id,published_at
+  from public.season_blackout_periods where id='77000000-0000-4000-8000-000000000001';
+  begin
+    perform public.undo_season_blackout_v3('26000000-0000-4000-8000-000000000001',
+      '77000000-0000-4000-8000-000000000001','16000000-0000-4000-8000-000000000003');
+    raise exception 'Another published closure unexpectedly allowed restoration';
+  exception when others then
+    if sqlerrm <> 'Scheduled session overlaps a published closure' then raise; end if;
+  end;
+  if (select status from public.season_blackout_periods where id='77000000-0000-4000-8000-000000000001') <> 'published'
+    or (select status from public.sessions where id='47000000-0000-4000-8000-000000000002') <> 'cancelled'
+    or exists (select 1 from public.schedule_occurrence_exceptions
+      where blackout_id='77000000-0000-4000-8000-000000000001' and status <> 'applied') then
+    raise exception 'Failed undo must roll back closure status, session and history together';
+  end if;
+  update public.season_blackout_periods set status='closed' where id=other_blackout;
+  changed := public.undo_season_blackout_v3('26000000-0000-4000-8000-000000000001',
+    '77000000-0000-4000-8000-000000000001', '16000000-0000-4000-8000-000000000003');
+  if changed <> 1 or (select status from public.sessions
+    where id = '47000000-0000-4000-8000-000000000002') <> 'scheduled' then
+    raise exception 'Undo must restore exactly the affected session';
+  end if;
+  if not exists (select 1 from public.season_schedule_change_events
+    where blackout_id = '77000000-0000-4000-8000-000000000001' and status = 'undone'
+      and actor_user_id = '16000000-0000-4000-8000-000000000001'
+      and undone_by_user_id = '16000000-0000-4000-8000-000000000003' and undone_at is not null) then
+    raise exception 'Undo must retain the publisher and record the current undo actor';
+  end if;
+  if not exists (select 1 from public.schedule_occurrence_exceptions
+    where blackout_id = '77000000-0000-4000-8000-000000000001' and status = 'reversed'
+      and reversed_by_user_id = '16000000-0000-4000-8000-000000000003')
+    or not exists (select 1 from public.season_financial_adjustment_proposals
+      where blackout_id = '77000000-0000-4000-8000-000000000001' and status = 'dismissed'
+        and reviewed_by_user_id = '16000000-0000-4000-8000-000000000003')
+    or (select status from public.season_blackout_periods
+      where id = '77000000-0000-4000-8000-000000000001') <> 'closed' then
+    raise exception 'Undo must retain reversed history and dismiss only proposed adjustments';
+  end if;
+  if public.undo_season_blackout_v3('26000000-0000-4000-8000-000000000001',
+      '77000000-0000-4000-8000-000000000001', '16000000-0000-4000-8000-000000000003') <> 0
+    or (select content_hash from public.billing_invoices
+      where id = (select result_id from billing_v3_results where result_key = 'invoice')) <> before_invoice_hash then
+    raise exception 'Undo replay must be idempotent and preserve final invoices';
+  end if;
+end;
+$$;
+
 rollback;

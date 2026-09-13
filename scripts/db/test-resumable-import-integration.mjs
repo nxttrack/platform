@@ -19,6 +19,8 @@ try {
   await setup.connect();
   await createFixture();
   await assertServiceOnlyBoundary();
+  await testStageIdentityAndRecovery();
+  await testPaymentReferenceIdentity();
   await testBatchedValidationWithErrorsAndDuplicate();
   await testValidAndDoubleApply();
   await testGuardianOutboxAndMaterialization();
@@ -53,6 +55,102 @@ async function createFixture() {
     "insert into public.programs (id, tenant_id, name, code, status) values ($1, $2, 'Import program', $3, 'active')",
     [programId, tenantId, `IMP-${token}`]
   );
+}
+
+async function testStageIdentityAndRecovery() {
+  const stageId = randomUUID();
+  const otherProgramId = randomUUID();
+  const otherTenantId = randomUUID();
+  const foreignProgramId = randomUUID();
+  const stageCode = `stage-${token}`;
+  await setup.query("insert into public.tenants (id,slug,name) values ($1,$2,'Other import tenant')", [otherTenantId, otherTenantId]);
+  await setup.query(`insert into public.programs (id,tenant_id,name,code,status) values
+    ($1,$2,'Other local program',$3,'active'), ($4,$5,'Foreign program',$6,'active')`,
+  [otherProgramId, tenantId, `OTHER-${token}`, foreignProgramId, otherTenantId, `IMP-${token}`]);
+  await setup.query(`insert into public.program_stages (id,tenant_id,program_id,name,code,status) values
+    ($1,$2,$3,'Correct import stage',$4,'active'),
+    ($5,$2,$6,'Same code, different program',$4,'active'),
+    ($7,$8,$9,'Same code, different tenant',$4,'active'),
+    ($10,$2,$6,'Other program only',$11,'active')`,
+  [stageId, tenantId, programId, stageCode, randomUUID(), otherProgramId, randomUUID(), otherTenantId, foreignProgramId, randomUUID(), `other-only-${token}`]);
+
+  const reference = `STAGE-${token}`;
+  const groupCode = `stage-group-${token}`;
+  const jobId = await createJob('mixed', 'ready', [
+    participantData('stage participant', reference),
+    {record_type:'groups', program_code:`IMP-${token}`, stage_code:stageCode, code:groupCode, name:'Stage import group'},
+    {record_type:'enrollments', participant_reference:reference, program_code:`IMP-${token}`, stage_code:stageCode}
+  ]);
+  const rows = await importRows(jobId);
+  const firstClaim = await claimApply(jobId);
+  assertEqual((await applyRows(jobId, firstClaim.claimToken, rows.slice(0, 1))).outcome, 'applied', 'stage fixture participant applies');
+  // A successful group stage lookup is required before checking the injected failure.
+  assertEqual((await applyRows(jobId, firstClaim.claimToken, rows.slice(1, 2))).outcome, 'applied', 'group stage resolves the selected program');
+  const failed = await applyRows(jobId, firstClaim.claimToken, rows.slice(2), `row:${rows[2].row_number}`);
+  assertEqual(failed.outcome, 'needs_attention', 'stage enrollment crash is recoverable');
+  assertEqual((await setup.query('select count(*)::integer as count from public.enrollments where tenant_id=$1', [tenantId])).rows[0].count, 0, 'failed enrollment transaction leaves no write');
+  const resumed = await claimApply(jobId);
+  assertEqual((await applyRows(jobId, resumed.claimToken, rows)).processed, 1, 'restart skips committed participant/group and applies enrollment once');
+  assertEqual((await applyRows(jobId, resumed.claimToken, rows)).processed, 0, 'stage chunk replay creates no duplicates');
+  await completeApply(jobId, resumed.claimToken);
+  const graph = await setup.query(`select
+    (select stage_id from public.groups where tenant_id=$1 and code=$2) as group_stage,
+    (select current_stage_id from public.enrollments where tenant_id=$1) as enrollment_stage,
+    (select count(*)::integer from public.import_manifest_entries where import_job_id=$3) as manifest`, [tenantId, groupCode, jobId]);
+  assertEqual(graph.rows[0].group_stage, stageId, 'group ignores same-code stages in other programs/tenants');
+  assertEqual(graph.rows[0].enrollment_stage, stageId, 'enrollment shares the correct stage identity');
+  assertEqual(graph.rows[0].manifest, 3, 'one manifest per imported graph record');
+  const rollback = await claimRollback(jobId);
+  // Enrollment creation appends protected lifecycle evidence. Existing rollback
+  // reports needs_attention rather than deleting that history.
+  assertEqual((await rollbackChunk(jobId, rollback.claimToken)).outcome, 'needs_attention', 'enrollment history blocks destructive rollback');
+  assertEqual((await setup.query('select count(*)::integer as count from public.swim_lifecycle_events where tenant_id=$1',[tenantId])).rows[0].count > 0, true, 'blocked rollback preserves lifecycle evidence');
+  assertEqual((await setup.query('select count(*)::integer as count from public.program_stages where id=$1',[stageId])).rows[0].count, 1, 'rollback preserves the pre-existing curriculum stage');
+  assertEqual((await setup.query('select count(*)::integer as count from public.groups where tenant_id=$1 and code=$2',[tenantId,groupCode])).rows[0].count, 1, 'blocked rollback is atomic and preserves the earlier group');
+  const groupJob = await createJob('groups','ready',[{record_type:'groups', program_code:`IMP-${token}`, stage_code:stageCode, code:`rollback-group-${token}`, name:'Independent group rollback'}]);
+  const groupClaim = await claimApply(groupJob);
+  assertEqual((await applyRows(groupJob,groupClaim.claimToken,await importRows(groupJob))).outcome,'applied','independent stage group applies');
+  await completeApply(groupJob,groupClaim.claimToken);
+  const groupRollback = await claimRollback(groupJob);
+  assertEqual((await rollbackChunk(groupJob,groupRollback.claimToken)).outcome,'compensated','independent group rollback succeeds');
+  await completeRollback(groupJob,groupRollback.claimToken);
+  assertEqual((await setup.query('select count(*)::integer as count from public.groups where tenant_id=$1 and code=$2',[tenantId,`rollback-group-${token}`])).rows[0].count,0,'group rollback removes only its imported group');
+
+  const invalidJob = await createJob('groups','ready', [{record_type:'groups', program_code:`IMP-${token}`,
+    stage_code:`other-only-${token}`, code:`invalid-stage-${token}`, name:'Wrong program stage'}]);
+  const invalidClaim = await claimApply(invalidJob);
+  assertEqual((await applyRows(invalidJob,invalidClaim.claimToken,await importRows(invalidJob))).outcome,'needs_attention','a stage from another program is not adopted');
+  assertEqual((await setup.query('select count(*)::integer as count from public.import_manifest_entries where import_job_id=$1',[invalidJob])).rows[0].count,0,'invalid stage leaves no manifest/write');
+}
+
+async function testPaymentReferenceIdentity() {
+  const planId = randomUUID();
+  await setup.query(`insert into public.payment_plans (id,tenant_id,program_id,code,name,amount_cents,currency,billing_interval,payment_terms_days,status)
+    values ($1,$2,$3,$4,'Import payment reference',1000,'EUR','monthly',14,'active')`,[planId,tenantId,programId,`payment-${token}`]);
+  const participants = [randomUUID(),randomUUID()];
+  const enrollments = [randomUUID(),randomUUID()];
+  const subscriptions = [randomUUID(),randomUUID()];
+  for (let i=0;i<2;i++) {
+    await setup.query(`insert into public.participants (id,tenant_id,guardian_user_id,display_name,external_reference,status)
+      values ($1,$2,$3,$4,$4,'active')`,[participants[i],tenantId,guardianUserId,`PAY-${token}-${i}`]);
+    await setup.query(`insert into public.enrollments (id,tenant_id,participant_id,guardian_user_id,program_id,status,starts_on)
+      values ($1,$2,$3,$4,$5,'active',current_date)`,[enrollments[i],tenantId,participants[i],guardianUserId,programId]);
+    await setup.query(`insert into public.subscriptions (id,tenant_id,participant_id,enrollment_id,guardian_user_id,payment_plan_id,status,starts_on,next_due_on,amount_cents,currency,billing_interval)
+      values ($1,$2,$3,$4,$5,$6,'active',current_date,current_date,1000,'EUR','monthly')`,[subscriptions[i],tenantId,participants[i],enrollments[i],guardianUserId,planId]);
+  }
+  const job = await createJob('payments','ready',[{record_type:'payments',participant_reference:`PAY-${token}-1`,amount_eur:'10.00',due_on:'2026-12-01',status:'due'}]);
+  const claim = await claimApply(job);
+  assertEqual((await applyRows(job,claim.claimToken,await importRows(job))).outcome,'applied','payment lookup uses the selected participant');
+  await completeApply(job,claim.claimToken);
+  const payment = await setup.query(`select payment.participant_id,payment.enrollment_id,payment.subscription_id
+    from public.manual_payments payment join public.import_manifest_entries manifest on manifest.target_id=payment.id
+    where manifest.import_job_id=$1 and manifest.target_table='manual_payments'`,[job]);
+  assertEqual(payment.rows[0].participant_id,participants[1],'payment remains bound to imported participant');
+  assertEqual(payment.rows[0].enrollment_id,enrollments[1],'payment ignores an earlier unrelated enrollment');
+  assertEqual(payment.rows[0].subscription_id,subscriptions[1],'payment ignores an earlier unrelated subscription');
+  const rollback = await claimRollback(job);
+  assertEqual((await rollbackChunk(job,rollback.claimToken)).outcome,'compensated','unprocessed imported payment rollback succeeds');
+  await completeRollback(job,rollback.claimToken);
 }
 
 async function testBatchedValidationWithErrorsAndDuplicate() {
