@@ -473,7 +473,6 @@ jobs:
 
     env:
       CI: true
-      DEPLOYED_SOURCE_SHA: ${{ github.sha }}
       MAINTENANCE_NO_WRITE: ${{ vars.MAINTENANCE_NO_WRITE || 'false' }}
       NEXT_TELEMETRY_DISABLED: 1
       NODE_OPTIONS: --max-old-space-size=3072
