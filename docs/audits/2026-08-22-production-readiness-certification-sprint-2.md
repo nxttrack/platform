@@ -3,9 +3,9 @@
 # Production-readiness certification — Sprint 2
 
 Status: **PRIMARY CERTIFICATION VERIFIED LOCAL — general audit remains NO-GO**
-Certification target: `4e3784649767be4c197db624b33995b3d1502f65`  
-Audit base: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`  
-Certification branch: `codex/production-readiness-certification-sprint-2`  
+Certification target: `4e3784649767be4c197db624b33995b3d1502f65`
+Audit base: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`
+Certification branch: `codex/production-readiness-certification-sprint-2`
 Evidence vocabulary: `VERIFIED LOCAL`, `CODE-SIDE CLOSED`, `NOT TESTED EXTERNAL`, `BLOCKED`, `FAILED`
 
 This is an independent certification. It does not promote the Sprint 1 claims and

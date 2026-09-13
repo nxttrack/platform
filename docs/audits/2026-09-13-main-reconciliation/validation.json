@@ -17,7 +17,7 @@
       "command": "pnpm typecheck",
       "result": "PASS",
       "log": "logs/corrective-typecheck.log",
-      "sha256": "0778a12da1712f6062d5dbfe63297871116dfc2459175dc67923495fbd5dd151"
+      "sha256": "f3a625c21fd87f58d123eec82e699f3166b981c916ac1fdf31212553e0cf1a70"
     },
     {
       "name": "unit",
@@ -31,7 +31,7 @@
       "command": "pnpm build",
       "result": "PASS",
       "log": "logs/corrective-build.log",
-      "sha256": "031b9f047543fc3d39c68bad4100cc8aab388c6299555d18beb6787798a7dccf"
+      "sha256": "06d3f28a5148cc7c42eeaca53d83969592f2ff30b37c6e65a5481a9a76859997"
     },
     {
       "name": "standalone",
@@ -328,7 +328,7 @@
       "command": "CI=true PLAYWRIGHT_PORT=3218 pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-timeline.spec.ts tests/e2e/journey-visual.spec.ts --config=playwright.journey.config.ts --project=journey-chromium --workers=1",
       "result": "PASS_AFTER_TARGETED_RETRY",
       "log": "logs/verified-journey.log",
-      "sha256": "8fa21332550bde677f0a37e3dbdec8897b3bff4682b3be7a4ce4de13668ce1bc",
+      "sha256": "6243095ec408822a5fe9a581407ec435332128b8bd3fad3a2c0de27773c0a48e",
       "passedInitially": 12,
       "failedInitially": 1,
       "failure": "ENOSPC while closing artifact context; same 86-render test rerun successfully using owned shared-memory output/temp",
@@ -357,5 +357,6 @@
     "Full-height Pixel 7 screenshot exceeded native capture dimensions; complete CSS-scale capture passes unchanged content checks.",
     "Journey endpoint measurement and absolute CSS position now share the inner border origin; unchanged clearance and settled assertions.",
     "Disk/inode limitations were corrected locally before final builds and DB runs."
-  ]
+  ],
+  "logNormalization": "Workspace path replaced with <worktree>; trailing whitespace and blank EOF lines normalized; results and errors retained."
 }

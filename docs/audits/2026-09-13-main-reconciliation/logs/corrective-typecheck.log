@@ -1,0 +1,7 @@
+
+> @nxttrack/platform@0.0.0 typecheck <worktree>
+> pnpm --filter @nxttrack/web typecheck
+
+
+> @nxttrack/web@0.0.0 typecheck <worktree>/apps/web
+> tsc --noEmit
