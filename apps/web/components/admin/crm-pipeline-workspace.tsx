@@ -385,7 +385,7 @@ function SlaSettings({ data }: { data: CrmPipelineData }) {
           <li>• Verloren vereist een expliciete reden.</li>
           <li>• Duplicate merges zijn herstelbaar.</li>
           <li>• Leadscore prioriteert alleen handmatige review.</li>
-          <li>• Journey Bot-data blijft buiten live CRM.</li>
+          <li>• Testdata blijft buiten live CRM.</li>
         </ul>
       </aside>
     </div>

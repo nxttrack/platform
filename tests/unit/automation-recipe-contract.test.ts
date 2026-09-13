@@ -56,7 +56,7 @@ test("recipe decision blocks Journey Bot and test data even when the signal is s
     const decision = decideAutomationRecipeCandidate(unsafeCandidate);
     assert.equal(decision.eligible, false);
     assert.equal(decision.skippedReason, "test_data_blocked");
-    assert.match(decision.reasons.join(" "), /Journey Bot/);
+    assert.match(decision.reasons.join(" "), /Testdata/);
   }
 });
 

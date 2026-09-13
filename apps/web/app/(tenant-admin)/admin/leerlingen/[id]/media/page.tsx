@@ -150,7 +150,7 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
             </p>
             {data.participant.is_test ? (
               <p className="mt-4 rounded-lg border border-warning/20 bg-warning/10 p-3 text-sm text-warning-foreground">
-                Journey Bot- en testleerlingen kunnen bewust geen media ontvangen.
+                Testleerlingen kunnen bewust geen media ontvangen.
               </p>
             ) : !data.canMutate ? (
               <p className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-sm text-muted-foreground">

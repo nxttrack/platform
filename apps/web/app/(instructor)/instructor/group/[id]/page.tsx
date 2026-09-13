@@ -135,7 +135,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h4 className="font-bold text-foreground">{card.participant_name}</h4>
-                          {card.is_test ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+                          {card.is_test ? <StatusPill tone="info">Testdata</StatusPill> : null}
                         </div>
                         <StatusPill tone={card.status === "treated" ? "success" : "neutral"}>{card.status === "treated" ? "Behandeld" : "Open"}</StatusPill>
                       </div>

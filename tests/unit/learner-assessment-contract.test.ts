@@ -35,7 +35,6 @@ test("legacyconversie bewaart bronwaarde en de genormaliseerde ankers 0/0,5/1", 
 test("alle bekende assessmentwriters leggen de vijfpuntsschaal expliciet vast", async () => {
   for (const relativePath of [
     "apps/web/lib/domain/instructor-actions.ts",
-    "apps/web/lib/domain/journey-bot.ts",
     "scripts/staging/phase-16-operational-flow.mjs",
     "scripts/staging/seed-sprint31-demo.mjs"
   ]) {

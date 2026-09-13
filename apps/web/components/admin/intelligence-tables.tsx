@@ -167,7 +167,7 @@ export function CapacityForecastTable({
           <div className="flex flex-wrap gap-2">
             <CapacityRiskBadge risk={row.risk} />
             <ConfidenceBadge confidence={row.confidence} />
-            {row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+            {row.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
           </div>
           <dl className="grid gap-3 sm:grid-cols-2">
             <Detail label="Huidig" value={`${row.occupied} van ${row.capacity}`} />
@@ -287,7 +287,7 @@ export function AttendanceSignalsTable({
           <div className="flex flex-wrap gap-2">
             <AttendanceRiskBadge risk={row.risk} />
             <ConfidenceBadge confidence={row.confidence} />
-            {row.isTest ? <StatusPill tone="info">Journey Bot · alleen bekijken</StatusPill> : null}
+            {row.isTest ? <StatusPill tone="info">Testdata · alleen bekijken</StatusPill> : null}
           </div>
           <p className="text-sm leading-6 text-foreground">{row.reason}</p>
           <div className="grid gap-2">
@@ -302,7 +302,7 @@ export function AttendanceSignalsTable({
           </p>
           {row.isTest ? (
             <p className="text-xs text-muted-foreground">
-              Journey Bot-signalen kunnen geen echte taak of ouderconcept aanmaken.
+              Testsignalen kunnen geen echte taak of ouderconcept aanmaken.
             </p>
           ) : (
             <div className="flex flex-wrap gap-2">
@@ -395,7 +395,7 @@ export function BottlenecksTable({ rows }: { rows: BottleneckTableRow[] }) {
           <div className="flex flex-wrap gap-2">
             <StatusPill tone="warning">Leskwaliteitssignaal</StatusPill>
             <ConfidenceBadge confidence={row.confidence} />
-            {row.isTest ? <StatusPill tone="info">Journey Bot · alleen bekijken</StatusPill> : null}
+            {row.isTest ? <StatusPill tone="info">Testdata · alleen bekijken</StatusPill> : null}
           </div>
           <p className="rounded-xl border border-primary/15 bg-primary/5 p-3 text-sm font-medium leading-6 text-foreground">
             {row.suggestedFocus}

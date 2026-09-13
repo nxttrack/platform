@@ -97,7 +97,7 @@ export function LessonPlanWorkspace({
                   <p className="text-xs font-bold uppercase tracking-wider text-primary">Lesplanassistent</p>
                   <PlanStatus status={plan?.status ?? "not_started"} />
                   {plan ? <StatusPill tone="neutral">Versie {plan.versionNumber}</StatusPill> : null}
-                  {selected.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+                  {selected.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
                 </div>
                 <h2 className="mt-2 text-2xl font-bold text-foreground">{selected.groupName}</h2>
                 <p className="mt-1 text-sm text-muted-foreground">{formatSession(selected.startsAt, selected.endsAt)} · {selected.stageName ?? "Niveau niet gekoppeld"}</p>
