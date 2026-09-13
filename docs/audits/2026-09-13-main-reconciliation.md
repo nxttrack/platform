@@ -105,3 +105,12 @@ groene typecheck/build/packaging/audits. `b1200dd` verwijdert een identieke dubb
 workflow-envkey; 29 workflows zijn strikt gevalideerd. De nieuwe publicatie wordt
 opnieuw via CI en Codex beoordeeld. Zie het rapport en de follow-up evidence;
 eerdere 454-unit-/CI-runs blijven met hun eigen SHA bewaard.
+
+### Aanvullende P1 uit de derde review
+
+`d42a65f` heeft groene Web CI 34766100074 en Android CI 34766100069. Codex
+5191196954 vond ontbrekende plaatsingsdatums in de kindagenda. `1b28cd8`
+begrenst lessen inclusief op tenant-lokale instroom/uitstroom en past de
+24-limiet pas na filtering toe. 464 units en alle lokale build/auditgates zijn
+groen; echte lokale PostgREST-querysyntax is getest op 147 migraties. Geen SQL
+gewijzigd. Afsluitende CI/review wordt op de nieuwe publicatie gevolgd.

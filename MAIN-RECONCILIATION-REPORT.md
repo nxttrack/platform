@@ -323,3 +323,34 @@ SKIP), inclusief 630 DOM-eindstates en 86 renders. Aanvullende mobiele maintenan
 is ook groen: samen 2 maintenancechecks. De finale publicatie en nieuwe review
 van de vervolgcorrecties worden afzonderlijk gevolgd; een oudere groene run
 wordt niet als bewijs voor een nieuwere SHA gepresenteerd.
+
+### Derde review: plaatsingsdatums
+
+Head `d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5` is volledig groen in Web CI
+**34766100074** en Android native CI **34766100069**. Review **5191196954**
+vond nog één P1 in thread `PRRT_kwDOTCRwsc6h50XU`: lessen waren niet begrensd
+door de begin-/einddatum van actieve of proefplaatsingen.
+
+Correctiehead **`1b28cd818e56ae034bad73c924317080fbcf376c`** selecteert beide
+plaatsingsdatums. De session-query begrenst ieder plaatsingsinterval al in de
+Data API met een ruime UTC-marge, waarna de inclusieve exacte lesdatum in de
+tenanttijdzone wordt getoetst. Overlap geeft geen dubbele les; tussenliggende
+onderbrekingen en andere groepen blijven onafhankelijk. Stabiele paginering
+past de limiet van 24 toe ná deze filtering, zodat vroege ongeldige rijen geen
+geldige lessen verdringen. Queryfouten leveren geen gedeeltelijke agenda.
+
+Regressies: **464 units PASS**, inclusief instroom/uitstroom, CEST/CET,
+New York/Kiritimati, overlap/gaten/open einde, paginering en foutafhandeling.
+Typecheck, productiebuild/standalone en alle lokale auditgates opnieuw PASS.
+De echte session-query is bovendien tegen een opnieuw gemaakte eigen lokale
+PostgREST-stack met alle 147 migraties uitgevoerd: drie HTTP 200-responses op
+synthetische niet-bestaande tenant/plaatsings-IDs bewijzen de OR/range/order-syntax.
+De functionele datumgevallen draaien in de bovengenoemde tests; lege Data
+API-responses worden niet als functioneel fixturebewijs gepresenteerd.
+Geen SQL/migratie gewijzigd, geen remote database benaderd.
+
+De vorige volledige lokale browserherhaling was groen: 52 smoke, 13 journey,
+1 maintenance op de build met de tijdzone/legacy-correcties. Dezelfde suites
+draaien opnieuw na de plaatsingscorrectie; CI en Codex worden op de gepushte
+vervolghead opnieuw gevolgd. Zes aangetroffen threads moeten bij afsluiting
+allemaal aantoonbaar zijn opgelost.

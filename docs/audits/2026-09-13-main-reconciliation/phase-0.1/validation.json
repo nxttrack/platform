@@ -1067,6 +1067,372 @@
         }
       ],
       "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 34766100074,
+      "headSha": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5",
+      "jobs": [
+        {
+          "completedAt": "2026-09-13T15:43:56Z",
+          "conclusion": "success",
+          "databaseId": 103747216853,
+          "name": "Build",
+          "startedAt": "2026-09-13T15:36:19Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-13T15:36:21Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-13T15:36:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:26Z",
+              "conclusion": "success",
+              "name": "Checkout",
+              "number": 2,
+              "startedAt": "2026-09-13T15:36:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:31Z",
+              "conclusion": "success",
+              "name": "Setup Node",
+              "number": 3,
+              "startedAt": "2026-09-13T15:36:26Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:32Z",
+              "conclusion": "success",
+              "name": "Setup pnpm",
+              "number": 4,
+              "startedAt": "2026-09-13T15:36:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:39Z",
+              "conclusion": "success",
+              "name": "Install dependencies",
+              "number": 5,
+              "startedAt": "2026-09-13T15:36:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:39Z",
+              "conclusion": "success",
+              "name": "Write required exact source SHA artifact",
+              "number": 6,
+              "startedAt": "2026-09-13T15:36:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:40Z",
+              "conclusion": "success",
+              "name": "Retain exact source SHA artifact",
+              "number": 7,
+              "startedAt": "2026-09-13T15:36:39Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:40Z",
+              "conclusion": "success",
+              "name": "Audit repository truth",
+              "number": 8,
+              "startedAt": "2026-09-13T15:36:40Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:41Z",
+              "conclusion": "success",
+              "name": "Audit Lovable baseline contract",
+              "number": 9,
+              "startedAt": "2026-09-13T15:36:40Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:12Z",
+              "conclusion": "success",
+              "name": "Typecheck",
+              "number": 10,
+              "startedAt": "2026-09-13T15:36:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:21Z",
+              "conclusion": "success",
+              "name": "Test every local unit contract",
+              "number": 11,
+              "startedAt": "2026-09-13T15:37:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:22Z",
+              "conclusion": "success",
+              "name": "Audit Journey Bot foundation",
+              "number": 12,
+              "startedAt": "2026-09-13T15:37:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:22Z",
+              "conclusion": "success",
+              "name": "Audit runtime environment contract",
+              "number": 13,
+              "startedAt": "2026-09-13T15:37:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:23Z",
+              "conclusion": "success",
+              "name": "Audit auth boundaries",
+              "number": 14,
+              "startedAt": "2026-09-13T15:37:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:37:24Z",
+              "conclusion": "success",
+              "name": "Audit production dependencies",
+              "number": 15,
+              "startedAt": "2026-09-13T15:37:23Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:38:19Z",
+              "conclusion": "success",
+              "name": "Build",
+              "number": 16,
+              "startedAt": "2026-09-13T15:37:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:38:19Z",
+              "conclusion": "success",
+              "name": "Audit migrations",
+              "number": 17,
+              "startedAt": "2026-09-13T15:38:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:38:21Z",
+              "conclusion": "success",
+              "name": "Audit RLS coverage",
+              "number": 18,
+              "startedAt": "2026-09-13T15:38:19Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:38:22Z",
+              "conclusion": "success",
+              "name": "Check migration command",
+              "number": 19,
+              "startedAt": "2026-09-13T15:38:21Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:38:22Z",
+              "conclusion": "success",
+              "name": "Package standalone runtime assets",
+              "number": 20,
+              "startedAt": "2026-09-13T15:38:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:39:05Z",
+              "conclusion": "success",
+              "name": "Install Playwright browser engines",
+              "number": 21,
+              "startedAt": "2026-09-13T15:38:22Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:39:51Z",
+              "conclusion": "success",
+              "name": "Run local browser smoke tests",
+              "number": 22,
+              "startedAt": "2026-09-13T15:39:05Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:43:48Z",
+              "conclusion": "success",
+              "name": "Validate Journey timeline in Chromium Firefox and WebKit",
+              "number": 23,
+              "startedAt": "2026-09-13T15:39:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:43:54Z",
+              "conclusion": "success",
+              "name": "Upload Journey timeline evidence",
+              "number": 24,
+              "startedAt": "2026-09-13T15:43:48Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:43:54Z",
+              "conclusion": "success",
+              "name": "Post Setup Node",
+              "number": 47,
+              "startedAt": "2026-09-13T15:43:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:43:54Z",
+              "conclusion": "success",
+              "name": "Post Checkout",
+              "number": 48,
+              "startedAt": "2026-09-13T15:43:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:43:54Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 49,
+              "startedAt": "2026-09-13T15:43:54Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/nxttrack/platform/actions/runs/34766100074/job/103747216853"
+        }
+      ],
+      "status": "completed"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 34766100069,
+      "headSha": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5",
+      "jobs": [
+        {
+          "completedAt": "2026-09-13T15:44:10Z",
+          "conclusion": "success",
+          "databaseId": 103747216953,
+          "name": "Native contract, lint, test and build",
+          "startedAt": "2026-09-13T15:36:19Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-09-13T15:36:24Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-09-13T15:36:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:30Z",
+              "conclusion": "success",
+              "name": "Checkout",
+              "number": 2,
+              "startedAt": "2026-09-13T15:36:24Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:30Z",
+              "conclusion": "success",
+              "name": "Set up Java 17",
+              "number": 3,
+              "startedAt": "2026-09-13T15:36:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:31Z",
+              "conclusion": "success",
+              "name": "Validate Gradle wrapper",
+              "number": 4,
+              "startedAt": "2026-09-13T15:36:30Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:32Z",
+              "conclusion": "success",
+              "name": "Set up Gradle",
+              "number": 5,
+              "startedAt": "2026-09-13T15:36:31Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:36:44Z",
+              "conclusion": "success",
+              "name": "Ensure Android 37 SDK",
+              "number": 6,
+              "startedAt": "2026-09-13T15:36:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:40:18Z",
+              "conclusion": "success",
+              "name": "Run native quality gate",
+              "number": 7,
+              "startedAt": "2026-09-13T15:36:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:41:57Z",
+              "conclusion": "success",
+              "name": "Build both debug and instrumentation APKs",
+              "number": 8,
+              "startedAt": "2026-09-13T15:40:18Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:04Z",
+              "conclusion": "success",
+              "name": "Build unsigned release bundles",
+              "number": 9,
+              "startedAt": "2026-09-13T15:41:57Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:08Z",
+              "conclusion": "success",
+              "name": "Upload native diagnostics and artifacts",
+              "number": 10,
+              "startedAt": "2026-09-13T15:44:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:08Z",
+              "conclusion": "success",
+              "name": "Post Set up Gradle",
+              "number": 18,
+              "startedAt": "2026-09-13T15:44:08Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:08Z",
+              "conclusion": "success",
+              "name": "Post Set up Java 17",
+              "number": 19,
+              "startedAt": "2026-09-13T15:44:08Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:08Z",
+              "conclusion": "success",
+              "name": "Post Checkout",
+              "number": 20,
+              "startedAt": "2026-09-13T15:44:08Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-09-13T15:44:08Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 21,
+              "startedAt": "2026-09-13T15:44:08Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/nxttrack/platform/actions/runs/34766100069/job/103747216953"
+        }
+      ],
+      "status": "completed"
     }
   ],
   "reviewRounds": [
@@ -1079,6 +1445,200 @@
       },
       "fixedIn": "6a7c0fc35f4919acb6d6f21f0a54f364ec16d144",
       "status": "Fixes locally green; awaiting publication, resolution and another review."
+    },
+    {
+      "head": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5",
+      "reviewId": 5191196954,
+      "findings": {
+        "P1": 1,
+        "P2": 0
+      },
+      "fixedIn": "1b28cd818e56ae034bad73c924317080fbcf376c",
+      "status": "Fix locally green, including real loopback PostgREST syntax; awaiting publication, resolution and another review."
     }
-  ]
+  ],
+  "membershipReviewValidation": {
+    "codeHead": "1b28cd818e56ae034bad73c924317080fbcf376c",
+    "unit": {
+      "passed": 464,
+      "failed": 0,
+      "skipped": 0
+    },
+    "checks": [
+      {
+        "name": "typecheck",
+        "command": [
+          "pnpm",
+          "typecheck"
+        ],
+        "exitCode": 0,
+        "seconds": 3.06,
+        "log": "logs/membership-closure-typecheck.txt",
+        "sha256": "05fdeadda5dbce4c98202b169b8db046052d0791981998a0094a0426cd1425bc"
+      },
+      {
+        "name": "unit",
+        "command": [
+          "pnpm",
+          "run",
+          "test:unit"
+        ],
+        "exitCode": 0,
+        "seconds": 3.96,
+        "log": "logs/membership-closure-unit.txt",
+        "sha256": "9f4b3dbaaa821e022cbf6a8570178507a56fa123eaa35f1ece6ea065fa6c8a46"
+      },
+      {
+        "name": "release-truth",
+        "command": [
+          "pnpm",
+          "run",
+          "release:truth"
+        ],
+        "exitCode": 0,
+        "seconds": 0.36,
+        "log": "logs/membership-closure-release-truth.txt",
+        "sha256": "0d7c16e9687c5ebf8156adee901acd73d1495aee7210c0a117f8e03d3257a152"
+      },
+      {
+        "name": "design-audit",
+        "command": [
+          "pnpm",
+          "run",
+          "design:audit"
+        ],
+        "exitCode": 0,
+        "seconds": 0.3,
+        "log": "logs/membership-closure-design-audit.txt",
+        "sha256": "aba278f20337f067b27e39dcf913b7d3a327c8cedf85cdd5e31891af66d50582"
+      },
+      {
+        "name": "auth-audit",
+        "command": [
+          "pnpm",
+          "run",
+          "auth:audit"
+        ],
+        "exitCode": 0,
+        "seconds": 0.6,
+        "log": "logs/membership-closure-auth-audit.txt",
+        "sha256": "023348a724d3cf4e65ae31cea2705c932cff6b1aa8196689971007136bb8c570"
+      },
+      {
+        "name": "db-audit",
+        "command": [
+          "pnpm",
+          "run",
+          "db:audit"
+        ],
+        "exitCode": 0,
+        "seconds": 0.39,
+        "log": "logs/membership-closure-db-audit.txt",
+        "sha256": "5a01a021d01fe693df7ac543075040e9e59d657e80291dade15e5e9eb1d53197"
+      },
+      {
+        "name": "db-rls-audit",
+        "command": [
+          "pnpm",
+          "run",
+          "db:rls-audit"
+        ],
+        "exitCode": 0,
+        "seconds": 1.49,
+        "log": "logs/membership-closure-db-rls-audit.txt",
+        "sha256": "5f36f1ad8f4299c6e8608b9894def1bd1135c9562a0f374a0bb9a2267de91d2b"
+      },
+      {
+        "name": "release-audit-sprint31",
+        "command": [
+          "pnpm",
+          "run",
+          "release:audit-sprint31"
+        ],
+        "exitCode": 0,
+        "seconds": 0.29,
+        "log": "logs/membership-closure-release-audit-sprint31.txt",
+        "sha256": "4355452cd63a0e44cb29ff9efffc6f55d57a3e578b0d048037fe71d50fbc6122"
+      },
+      {
+        "name": "release-audit-journey-bot",
+        "command": [
+          "pnpm",
+          "run",
+          "release:audit-journey-bot"
+        ],
+        "exitCode": 0,
+        "seconds": 0.29,
+        "log": "logs/membership-closure-release-audit-journey-bot.txt",
+        "sha256": "f7c3dc124b6c448ac6aa080a7b49b736d5a1923bf43076aa8f6f8634b3945758"
+      },
+      {
+        "name": "release-audit-runtime-env",
+        "command": [
+          "pnpm",
+          "run",
+          "release:audit-runtime-env"
+        ],
+        "exitCode": 0,
+        "seconds": 0.28,
+        "log": "logs/membership-closure-release-audit-runtime-env.txt",
+        "sha256": "642935ad1a83cd78ad44096ceefaf829d8ae3170e6a4599515efa02553816376"
+      },
+      {
+        "name": "security-audit-dependencies",
+        "command": [
+          "pnpm",
+          "run",
+          "security:audit-dependencies"
+        ],
+        "exitCode": 0,
+        "seconds": 1.03,
+        "log": "logs/membership-closure-security-audit-dependencies.txt",
+        "sha256": "57b70b028d0170f438ced296ccf514915a433091b22f2b1341f962df0b5d4c7b"
+      },
+      {
+        "name": "db-migrate",
+        "command": [
+          "pnpm",
+          "run",
+          "db:migrate"
+        ],
+        "exitCode": 0,
+        "seconds": 0.3,
+        "log": "logs/membership-closure-db-migrate.txt",
+        "sha256": "0f8c0f53d5b5cc32f3e7fc16bfe4a451a86d3da56c30e5ab17f29a314754cb95"
+      },
+      {
+        "name": "build",
+        "command": [
+          "pnpm",
+          "run",
+          "build"
+        ],
+        "exitCode": 0,
+        "seconds": 8.37,
+        "log": "logs/membership-closure-build.txt",
+        "sha256": "5e0fb29beef3bc23d3adcdabc9677d08587302a74fd19d99d28f8b3074d2027e"
+      },
+      {
+        "name": "deploy-package-standalone-assets",
+        "command": [
+          "pnpm",
+          "run",
+          "deploy:package-standalone-assets"
+        ],
+        "exitCode": 0,
+        "seconds": 0.45,
+        "log": "logs/membership-closure-deploy-package-standalone-assets.txt",
+        "sha256": "80be146fe4042d40f575c362682ae264ee2be634d1696fbab9e95cbdc2dafcba"
+      },
+      {
+        "name": "agenda-real-postgrest",
+        "command": "pnpm exec tsx check-agenda-postgrest.mts; only owned loopback API",
+        "exitCode": 0,
+        "log": "logs/agenda-real-postgrest.txt",
+        "sha256": "a0c36449aa4d7f194c0bd14f00cc033a4f61b58813c02820f65a2485aab62194"
+      }
+    ]
+  }
 }
