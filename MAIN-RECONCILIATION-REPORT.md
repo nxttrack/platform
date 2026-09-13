@@ -281,3 +281,45 @@ faalde op workflowvalidatie; er is geen deployment uitgevoerd of gestart.
 **Merge-commit blijft verplicht; niet squashen/rebasen. Main is niet gemergd en
 er is niets gedeployed. Geen V4.2-code, importer, Default 1.1, remote DB-wijziging
 of echte mail, betaling of notificatie toegevoegd/uitgevoerd.**
+
+### Tweede review en correctieronde op `6a7c0fc`
+
+De eerste nieuwe publicatiehead `a529056475d0a809f5bfe78b02d227137f9c1df5`
+heeft inmiddels volledig groene [Web CI 34765275679](https://github.com/nxttrack/platform/actions/runs/34765275679)
+en [Android native CI 34765275669](https://github.com/nxttrack/platform/actions/runs/34765275669).
+Web CI bereikte alle eerder overgeslagen stappen: audit nul advisories,
+454 units, build, packaging, browserinstallatie, 52 smokechecks en de volledige
+journeygate: **31 PASS, 17 expliciete SKIP**. Chromium draaide 13 tests,
+Firefox 9 en WebKit 9. De 17 skips zijn de bestaande negen externe staging/botcases,
+twee Chromium-only touchcases en zes geometrie/render/performancecases die slechts
+eenmaal in Chromium draaien. Firefox/WebKit zijn daarmee werkelijk uitgevoerd;
+geen infrastructurele skip is als PASS geteld. Android bouwde ook de unsigned
+releasebundels. Dit was een automatische run volgens het ongewijzigde pathfilter.
+
+Codex-review `5191141978` op `a529056` vond daarna **twee P1 en één P2**:
+
+| Thread | Correctie | Regressiebewijs |
+| --- | --- | --- |
+| `PRRT_kwDOTCRwsc6h5vbl` — P1 niet-actieve lessen | De bestaande session-query gebruikt uitsluitend status `scheduled`; tenant/group/endtime/order/limit blijven behouden. | Echte Supabase-client met lokale fetch-stub verifieert de PostgREST-query, alle vier statuswaarden en nul requests zonder groepslidmaatschap. |
+| `PRRT_kwDOTCRwsc6h5vbn` — P1 tijdzone | Tenantgebonden `tenant_settings.timezone` wordt child-safe geprojecteerd, gevalideerd en bij ontbrekende/ongeldige configuratie Amsterdam. Vandaag, agenda, datumchips en lesdetail gebruiken expliciet dezelfde zone. Aftelling telt lokale kalenderdagen. | UTC- en Los Angeles-host, CET/CEST, maand-/middernachtgrens, andere tenantzone, ontbrekende/ongeldige zone en beide DST-wissels. |
+| `PRRT_kwDOTCRwsc6h5vbp` — P2 legacy awards | Query selecteert `resolved_badge_key`; ontbrekende release-identiteit valt terug op de immutable award-snapshot. Een bestaande release-key houdt voorrang. | Legacy award/current release zonder locked duplicaat, onafhankelijke andere key en release/snapshotconflict. Titel/datum blijven historisch. |
+
+Alle drie correcties staan in codehead
+`6a7c0fc35f4919acb6d6f21f0a54f364ec16d144`. Nieuwe volledige units:
+**460 PASS, 0 failed/skipped**; typecheck, truth/Lovable/Journey Bot/runtime/auth,
+migratie/RLS/Sprint31, productie-audit, build en standalone packaging opnieuw PASS.
+De volledige lokale Chromium-suite draait opnieuw op die build. SQL, migraties,
+import/outbox/onboarding en databasecontracten zijn in deze vervolgcorrecties niet
+gewijzigd; de eerder uitgevoerde twee 147-migratieprofielen blijven hun bewijsbasis.
+
+De afzonderlijke workflowvalidatiefout is inhoudelijk opgelost in `b1200dd`:
+precies één redundante `DEPLOYED_SOURCE_SHA`-regel verwijderd. Een strikte
+unique-key YAML-parser reproduceert de vorige fout op regel 483 en keurt daarna
+alle **29 workflows** goed. Triggers/main-only/maintenance/schema/rollbackgates
+blijven intact. Dit start of autoriseert geen deployment.
+
+De eerste lokale journeyherhaling is volledig groen (13 PASS, 3 externe staging
+SKIP), inclusief 630 DOM-eindstates en 86 renders. Aanvullende mobiele maintenance
+is ook groen: samen 2 maintenancechecks. De finale publicatie en nieuwe review
+van de vervolgcorrecties worden afzonderlijk gevolgd; een oudere groene run
+wordt niet als bewijs voor een nieuwere SHA gepresenteerd.

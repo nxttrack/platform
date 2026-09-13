@@ -1,0 +1,192 @@
+
+> @nxttrack/platform@0.0.0 test:journey:e2e /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts --project=journey-chromium --workers=1 --output=/dev/shm/nxttrack-phase01-journey-chromium
+
+[WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+
+Running 16 tests using 1 worker
+
+  -   1 [journey-chromium] › tests/e2e/journey-bot-staging.spec.ts:8:7 › Journey Simulation Bot staging smoke › tick endpoint weigert een ontbrekend cron-geheim
+  -   2 [journey-chromium] › tests/e2e/journey-bot-staging.spec.ts:14:7 › Journey Simulation Bot staging smoke › platform owner validates full journey, stressmatrix, stopbudget en cleanup
+  -   3 [journey-chromium] › tests/e2e/journey-bot-window-control.spec.ts:8:7 › Journey Simulation Bot controlled staging window › starts a bounded full ABC journey window
+  ✓   4 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (2.3s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (2.1s)
+  ✓   6 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1.5s)
+  ✓   7 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (2.2s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1.9s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.3s)
+  ✓  10 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.2s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1.0s)
+  ✓  12 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1.2s)
+  ✓  13 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (2.9s)
+  ✘  14 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (22.9s)
+  ✘  15 [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (27.5s)
+  ✓  16 [journey-chromium] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2.7s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+
+    Error: page.reload: net::ERR_INSUFFICIENT_RESOURCES
+    Call log:
+      - waiting for navigation until "load"
+
+
+      227 |       }
+      228 |       await page.evaluate(() => localStorage.removeItem("nxttrack:help:journey-direct-manipulation-v1"));
+    > 229 |       await page.reload();
+          |                  ^
+      230 |       await expect(page.getByRole("status").filter({ hasText: "Sleep, veeg" })).toBeVisible();
+      231 |       await expect(page.locator(".child-journey-map"), `${theme}/${viewport.name}/tooltip-settled`).toHaveAttribute("data-motion-settled", "true");
+      232 |       await assertMascotClearance(page, 12, `${theme}/${viewport.name}/tooltip`);
+        at /home/codex/repos/nxttrack-main-reconciliation-v42-prep/apps/web/tests/e2e/journey-timeline.spec.ts:229:18
+
+    Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write
+
+    Error: ENOSPC: no space left on device, write
+
+    Error: End of central directory record signature not found. Either not a zip file, or file is truncated.
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('.child-journey-map')
+    Expected: "true"
+    Received: ""
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 10000ms
+      - waiting for locator('.child-journey-map')
+
+
+      149 |   await expect(entry).toHaveAttribute("aria-pressed", "true");
+      150 |   if (open) await expect(page.getByRole("dialog")).toBeVisible();
+    > 151 |   await expect(page.locator(".child-journey-map")).toHaveAttribute("data-motion-settled", "true");
+          |                                                    ^
+      152 | }
+      153 |
+      154 | async function capture(page: Page, testInfo: TestInfo, name: string) {
+        at selectEntry (/home/codex/repos/nxttrack-main-reconciliation-v42-prep/apps/web/tests/e2e/journey-visual.spec.ts:151:52)
+        at /home/codex/repos/nxttrack-main-reconciliation-v42-prep/apps/web/tests/e2e/journey-visual.spec.ts:27:7
+
+    Error: ENOSPC: no space left on device, write
+
+    attachment #1: journey-nxttrack-default-desktop-initial-current (image/png) ────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-initial-current-2ea974ba46a3692f1d915e0d1aa1f89beb0d0d06.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: journey-nxttrack-default-desktop-oldest-completion (image/png) ──────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-oldest-completion-961bd885fc69858e2b81c31c7fc69481bec00225.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: journey-nxttrack-default-desktop-milestone-popup (image/png) ────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-milestone-popup-996bb932eaab91141c77ca6a91549ab0ef89f2d1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: journey-nxttrack-default-desktop-first-visit-tooltip (image/png) ────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-first-visit-tooltip-cbdfb01477e62546c7b68097043825180c757ef0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: journey-nxttrack-default-mobile-initial-current (image/png) ─────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-initial-current-1bef3180bac6f52bdabb5e774014add639d06fd3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: journey-nxttrack-default-mobile-oldest-completion (image/png) ───────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-oldest-completion-bc5b4fb5c354efdc1eddce9adf649dfab396ae39.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: journey-nxttrack-default-mobile-milestone-popup (image/png) ─────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-milestone-popup-574d0d437d05baaddccf400ca2b6abbafd718a44.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: journey-nxttrack-default-mobile-first-visit-tooltip (image/png) ─────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-first-visit-tooltip-7414b29672021e9b45eb2619ec8e1dfddd4ae0d3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: journey-dolphin-bay-desktop-initial-current (image/png) ─────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-initial-current-4b668c109997a0442172defea99566d9270332ec.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: journey-dolphin-bay-desktop-oldest-completion (image/png) ──────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-oldest-completion-4f2eba7c2524ab58f771e4cf1acc48a26ef9e8c7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: journey-dolphin-bay-desktop-milestone-popup (image/png) ────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-milestone-popup-43eaaafb2b2e7e08f3653248a7b65459b46f5a7e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #12: journey-dolphin-bay-desktop-first-visit-tooltip (image/png) ────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-first-visit-tooltip-0de9e8f6ec5e87c52eb537d2b072287ccee9917f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #13: journey-dolphin-bay-mobile-initial-current (image/png) ─────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-initial-current-d631726237e1a3b4d27e0fc9625aa0a18a6fa473.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #14: journey-dolphin-bay-mobile-oldest-completion (image/png) ───────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-oldest-completion-918a459deded68063df1b9769b47768be7d7bfad.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #15: journey-dolphin-bay-mobile-milestone-popup (image/png) ─────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-milestone-popup-9befb979c4fcdf1cc7ba5d9b99dd194e0b72689a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #16: journey-dolphin-bay-mobile-first-visit-tooltip (image/png) ─────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-first-visit-tooltip-89930f069a1335170c8edc5daf35634b4ea26da1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #17: journey-turtle-trails-desktop-initial-current (image/png) ──────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-initial-current-f4edcd628c6a126245ef14ceb5f24e967ae7da9e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #18: journey-turtle-trails-desktop-oldest-completion (image/png) ────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-oldest-completion-89f871d5f54dfd977db6222c3f0d5a23738e5d5e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #19: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #20: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #21: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #22: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #23: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #24: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #25: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #26: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-journey-chromium/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/error-context.md
+
+  2 failed
+    [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+    [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+  3 skipped
+  11 passed (1.3m)
+undefined
+/home/codex/repos/nxttrack-main-reconciliation-v42-prep/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.journey.config.ts --project=journey-chromium --workers=1 --output=/dev/shm/nxttrack-phase01-journey-chromium
+ ELIFECYCLE  Command failed with exit code 1.

@@ -1,0 +1,111 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "a529056475d0a809f5bfe78b02d227137f9c1df5",
+        "reviewThreads": {
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xM1QxNDoyNTowNFrOoeWH9g=="
+          },
+          "nodes": [
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf0",
+              "isResolved": true,
+              "isOutdated": false,
+              "path": "scripts/release/compatible-application-ancestry.mjs",
+              "line": 9,
+              "startLine": 7,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR56",
+                    "databaseId": 3999866490,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Use a compatibility anchor contained by this commit**\n\nDeploying this reviewed SHA always fails the pre-activation schema assertion: commit `60b66a9` has parent `0fa158f`, so neither the schema floor `541fe5f` nor mapped anchor `12b4885` is its ancestor. `git merge-base -h` defines `--is-ancestor` as checking whether the first commit is an ancestor of the second, and running the helper with this SHA produces `Application commit has no certified compatible ancestor`; `.github/workflows/deploy.yml` runs that assertion unconditionally before activation. The compatibility mapping must reference an ancestor actually present in the reviewed commit's history (or the required history must be merged into it).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866490",
+                    "createdAt": "2026-09-13T14:25:04Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uawUx",
+                    "databaseId": 3999991089,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Verified against actual PR head a529056475d0a809f5bfe78b02d227137f9c1df5 and original 0228c7d387dcfbb448b661febca750f30d514053: `git merge-base --is-ancestor 12b4885a55c439caa2a7aa180d597e72baf9d2d5 HEAD` exits 0. The flattened 60b66a9 mentioned in the review is not the real PR head/history. All eight reconciliation commits remain ancestors; no squash/rebase was used.\n\n33d7333 adds a canonical-main-only checkout regression: only refs/heads/main exists, the actual candidate passes, and old main 0fa158f is rejected. We also ran the existing release:assert-schema-compatibility (all 147 local migrations) and release:assert-rollback-target CLIs with GITHUB_WORKSPACE pointing to that main-only checkout; both passed. Rollback used only a synthetic local artifact, no deployment. Evidence: docs/audits/2026-09-13-main-reconciliation/phase-0.1/{git-proof.json,canonical-main-results.json,logs/canonical-main-*.txt}.\n\nThe production ancestry helper, immutable compatibility anchor, historical schema floor and merge-commit requirement are unchanged. Full unit suite: 454 passed, zero failed/skipped; both local database profile suites pass. Resolving based on actual ancestry and regression evidence, without changing correct production code solely to satisfy the synthetic-history finding.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999991089",
+                    "createdAt": "2026-09-13T15:20:31Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf2",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/lib/domain/child-portal.ts",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR59",
+                    "databaseId": 3999866493,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match earned badges by stable key instead of release ID**\n\nWhen a child earned an older release of a badge and a newer release with the same `stable_key` becomes current, this ID comparison treats the current release as unearned and displays a locked badge alongside the earned historical award. The badge award RPC explicitly considers either the release ID or `resolved_badge_key = target_release.stable_key` to prevent re-awarding the same logical badge, so the child projection should likewise derive earned stable keys from the awarded releases rather than comparing only version-specific IDs.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866493",
+                    "createdAt": "2026-09-13T14:25:05Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uawWX",
+                    "databaseId": 3999991191,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in b3f8b89, present in current head a529056475d0a809f5bfe78b02d227137f9c1df5. The earned-release query now selects stable_key. The actual child DTO projector derives earned logical keys from awarded historical releases and suppresses current locked releases sharing those keys. Historical award IDs, dates and release-derived titles remain unchanged; legacy titles still fall back to the award record.\n\nEight behavior tests cover earned current releases; earned old plus newer same-key releases; never-earned keys; independent keys; tenant override/newest-release selection; surprise/history; lifecycle/audience; and unawarded/missing historical release rows. Tenant priority and availability selection are preserved. Tests call the production projector, not a duplicate implementation. Full suite: 454 passed, zero failed/skipped; typecheck, build and 52 Chromium desktop/mobile smoke checks pass. Evidence: tests/unit/child-badges.test.ts and docs/audits/2026-09-13-main-reconciliation/phase-0.1/validation.json. Resolving after green regression tests.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999991191",
+                    "createdAt": "2026-09-13T15:20:33Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

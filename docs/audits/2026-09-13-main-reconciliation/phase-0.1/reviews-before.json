@@ -1,0 +1,79 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "0228c7d387dcfbb448b661febca750f30d514053",
+        "reviewThreads": {
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xM1QxNDoyNTowNFrOoeWH9g=="
+          },
+          "nodes": [
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf0",
+              "isResolved": false,
+              "isOutdated": false,
+              "path": "scripts/release/compatible-application-ancestry.mjs",
+              "line": 9,
+              "startLine": 7,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR56",
+                    "databaseId": 3999866490,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Use a compatibility anchor contained by this commit**\n\nDeploying this reviewed SHA always fails the pre-activation schema assertion: commit `60b66a9` has parent `0fa158f`, so neither the schema floor `541fe5f` nor mapped anchor `12b4885` is its ancestor. `git merge-base -h` defines `--is-ancestor` as checking whether the first commit is an ancestor of the second, and running the helper with this SHA produces `Application commit has no certified compatible ancestor`; `.github/workflows/deploy.yml` runs that assertion unconditionally before activation. The compatibility mapping must reference an ancestor actually present in the reviewed commit's history (or the required history must be merged into it).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866490",
+                    "createdAt": "2026-09-13T14:25:04Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf2",
+              "isResolved": false,
+              "isOutdated": false,
+              "path": "apps/web/lib/domain/child-portal.ts",
+              "line": 374,
+              "startLine": 373,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR59",
+                    "databaseId": 3999866493,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match earned badges by stable key instead of release ID**\n\nWhen a child earned an older release of a badge and a newer release with the same `stable_key` becomes current, this ID comparison treats the current release as unearned and displays a locked badge alongside the earned historical award. The badge award RPC explicitly considers either the release ID or `resolved_badge_key = target_release.stable_key` to prevent re-awarding the same logical badge, so the child projection should likewise derive earned stable keys from the awarded releases rather than comparing only version-specific IDs.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866493",
+                    "createdAt": "2026-09-13T14:25:05Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

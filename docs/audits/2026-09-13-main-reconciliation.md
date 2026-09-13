@@ -93,3 +93,15 @@ Zie [FASE 0.1-validation](2026-09-13-main-reconciliation/phase-0.1/validation.js
 [advisories](2026-09-13-main-reconciliation/phase-0.1/advisories.json),
 [alle dependencywijzigingen](2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json)
 en het actuele [rapport](../../MAIN-RECONCILIATION-REPORT.md).
+
+### Vervolg na tweede Codex-review
+
+Op `a529056` zijn Web CI **34765275679** en Android native CI **34765275669**
+volledig SUCCESS. De echte Firefox/WebKit-run leverde samen met Chromium 31 PASS
+met 17 bestaande expliciete skips. De tweede review vond twee nieuwe P1
+(lesstatus/tijdzone) en één P2 (legacy badge-key). Correctiecode
+`6a7c0fc35f4919acb6d6f21f0a54f364ec16d144` heeft 460 groene units plus opnieuw
+groene typecheck/build/packaging/audits. `b1200dd` verwijdert een identieke dubbele
+workflow-envkey; 29 workflows zijn strikt gevalideerd. De nieuwe publicatie wordt
+opnieuw via CI en Codex beoordeeld. Zie het rapport en de follow-up evidence;
+eerdere 454-unit-/CI-runs blijven met hun eigen SHA bewaard.
