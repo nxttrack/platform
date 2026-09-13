@@ -1,0 +1,16 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] Using Supabase CLI 2.117.0.
+[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=false dryRun=false
+Connecting to remote database...
+Skipping migration README.md... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20260913175334_pre_v42_sql_identifier_ambiguities.sql
+ • 20260913182211_bind_import_payment_enrollment.sql
+ [Y/n] y
+Applying migration 20260913175334_pre_v42_sql_identifier_ambiguities.sql...
+Applying migration 20260913182211_bind_import_payment_enrollment.sql...
+Finished supabase db push.

@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 release:audit-sprint31 /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/release/audit-sprint31.mjs
+
+[sprint31:audit] 18 lifecycle surfaces verified.

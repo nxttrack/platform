@@ -1,0 +1,26 @@
+{
+  "before_migrations": 147,
+  "after_migrations": 149,
+  "job_id": "10d83006-c705-4440-8d16-5e85cd841b13",
+  "claim": {
+    "outcome": "claimed",
+    "idempotentReplay": true
+  },
+  "applied": {
+    "outcome": "applied",
+    "processed": 2,
+    "invitations": []
+  },
+  "completed": {
+    "outcome": "completed",
+    "manifestEntries": 3,
+    "idempotentReplay": false
+  },
+  "graph": {
+    "participants": 1,
+    "manifest": 3,
+    "group_stage": "e9872910-d052-449f-a919-f2cc01277f0d",
+    "enrollment_stage": "e9872910-d052-449f-a919-f2cc01277f0d"
+  },
+  "pass": true
+}

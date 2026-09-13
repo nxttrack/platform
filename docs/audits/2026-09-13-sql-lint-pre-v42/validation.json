@@ -769,9 +769,15 @@
   "github_phase02": {
     "pr": 58,
     "url": "https://github.com/nxttrack/platform/pull/58",
-    "status": "CI and Codex review pending; exact final head and conclusions are retained in the PR handoff."
+    "recorded_web_ci": {
+      "head": "d8f523d722740f5ecebc7814249a4c99679a1aee",
+      "run_id": 34773973289,
+      "conclusion": "success"
+    },
+    "final_gate_source": "Exact final-head CI, review and thread conclusions are retained in the PR handoff."
   },
   "no_deployment_performed": true,
   "v42_started": false,
-  "transcript_format": "UTF-8 LF, trailing whitespace and blank EOF lines normalized for Git. Raw hashes retained; test output meaning and outcomes unchanged."
+  "transcript_format": "UTF-8 LF, trailing whitespace and blank EOF lines normalized for Git. Raw hashes retained; test output meaning and outcomes unchanged.",
+  "review_closure": "review-closure-validation.json"
 }

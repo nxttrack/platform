@@ -3,6 +3,10 @@ Canonical baseline:
 
 # FASE 0.2 — SQL lint ambiguities before V4.2
 
+Current candidate: **149 migrations**, consisting of the 147 canonical migrations
+and two forward-only corrections. The original three lint findings are FIXED.
+The additional Codex P1 and its current validation are detailed below.
+
 ## Original inventory, completed before code changes
 
 Reproduced on the canonical 147-migration database with Supabase CLI 2.117.0:
@@ -91,7 +95,7 @@ mapping was introduced. This existing import resolves `program_stages` using the
 tenant, selected program and imported code; versioned curriculum publication and
 mapping stay under the existing canonical curriculum contracts.
 
-### Migration and rollback impact
+### Initial 148-migration implementation and rollback impact
 
 One CLI-generated forward-only migration:
 `supabase/migrations/20260913175334_pre_v42_sql_identifier_ambiguities.sql`.
@@ -113,7 +117,7 @@ Both the canonical main application and this candidate accept the upgraded
 handshake. The canonical release assertion also passes against the upgraded schema.
 The historical app floor and real compatibility anchor `12b4885` remain unchanged.
 
-### Definitive local validation
+### Initial local validation at `8b4f4c6`
 
 - Frozen dependency install; unchanged production policy and `pnpm audit --prod`: PASS, zero advisories. No package manifest or lockfile change.
 - Typecheck, 464 unit contracts (zero failures/skips), production build and standalone packaging: PASS.
@@ -145,7 +149,7 @@ rollback success.
 
 ### Files and review scope
 
-Runtime changes are limited to the new migration and
+Runtime changes are limited to the two forward-only migrations and
 `scripts/release/assert-runtime-schema-compatibility.mjs`. Regression coverage is
 in `tests/sql/portal_theme_schedule_integration.sql`, the existing holiday SQL
 suite, and the existing swim-canon, planning-concurrency and resumable-import runners.
@@ -155,7 +159,8 @@ integration, theme assets, portal redesign or dependency upgrade is included.
 Post-merge main CI is certified in
 [the baseline record](docs/audits/2026-09-13-post-reconciliation-main-baseline.md).
 The featurebranch is published as [PR #58](https://github.com/nxttrack/platform/pull/58).
-Its own Web CI and Codex review are pending. Native paths/package graph are unchanged; the existing Android
+Web CI 34773973289 passed on `d8f523d`; its Codex review found the P1 below.
+The exact final-head checks and review result are retained in the PR handoff. Native paths/package graph are unchanged; the existing Android
 workflow's path filter does not require a new run for this SQL-only PR.
 
 Technical references: [PostgreSQL variable substitution](https://www.postgresql.org/docs/current/plpgsql-implementation.html)
@@ -169,3 +174,52 @@ V4.2 has not started yet.
 Evidence transcripts are normalized to LF with trailing whitespace removed for Git;
 raw and normalized SHA-256 hashes are retained in the validation index. Test results
 and failed-attempt history are unchanged.
+
+## Codex P1 closure — subscription/enrollment identity
+
+[Review thread](https://github.com/nxttrack/platform/pull/58#discussion_r4000448989),
+reviewed head `d8f523d722740f5ecebc7814249a4c99679a1aee`.
+The review found that the selected participant could have multiple active
+enrollments, with an older enrollment's subscription cancelled. Independent
+subscription/enrollment ordering could then create an internally inconsistent
+imported payment. The strengthened regression reproduced the incorrect UUID.
+
+Correction in `2ecf785`: read the enrollment ID from the selected subscription and
+require that exact tenant/participant-bound enrollment to be active. An inactive
+linked enrollment yields controlled `needs_attention`; it never falls back to
+another active enrollment. Existing selection order, claim boundaries, accounting
+fields and compensation semantics otherwise remain unchanged.
+
+The already applied and committed migration 148 remains byte-identical. A second
+CLI-generated forward-only migration,
+`20260913182211_bind_import_payment_enrollment.sql`, replaces only the existing
+import function with this correction. Total: **149 migrations**. The complete
+artifact lineage is now pinned to
+`6200db9c908722a4419071a5765f88134188d18a7879f5ecfd4dfe98af71034e`.
+The canonical runtime handshake and ancestry anchor remain unchanged.
+
+[Review closure evidence](docs/audits/2026-09-13-sql-lint-pre-v42/review-closure-validation.json)
+records the complete rerun on code head `2ecf785`:
+
+- Frozen install, production audit/policy (zero advisories), typecheck, all 464
+  units, build, packaging and all repository/auth/migration/RLS/runtime audits: PASS.
+- Legacy database: canonical 147 migrations; an actual import failed at the old
+  stage lookup after committing its prior participant. Existing `db:migrate`
+  upgraded it to 149, leaving that job and manifest unchanged. A normal claim and
+  apply resumed the same import, skipped the existing participant, and completed
+  exactly one group/enrollment graph with the correct stage and three manifest rows.
+- Secure defaults: independent fresh install of all 149 migrations: PASS.
+- Both profiles: all thirteen existing DB checks repeated, including the extended
+  subscription/enrollment regression, nine SQL suites, concurrency, outbox,
+  onboarding, 5,000-row import/restart/compensation, crash contracts and 102
+  API/storage assertions per profile across six roles: PASS.
+- Original SQL lint and security advisors repeated on both profiles: zero errors.
+- Both current and canonical application health contracts accept the 149 schema;
+  original ACLs/security settings and `variable_conflict=error` remain intact.
+  The canonical application's release assertion also passes against 149.
+
+The initial 148-migration runs above remain historical evidence of what they
+actually executed. They are not substituted for these 149-migration runs.
+Thread resolution is based on the failing-before/passing-after regression and
+these complete reruns. Final-head Web CI and the fresh Codex review must also be
+read from PR #58 before user merge. This task does not merge PR #58.

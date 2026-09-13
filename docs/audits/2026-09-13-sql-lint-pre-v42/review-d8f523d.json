@@ -1,0 +1,48 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "d8f523d722740f5ecebc7814249a4c99679a1aee",
+        "reviewThreads": {
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xM1QxODoxNzozM1rOoeuPWQ=="
+          },
+          "nodes": [
+            {
+              "id": "PRRT_kwDOTCRwsc6h649Z",
+              "isResolved": false,
+              "isOutdated": false,
+              "path": "supabase/migrations/20260913175334_pre_v42_sql_identifier_ambiguities.sql",
+              "line": 308,
+              "startLine": 306,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ucgHd",
+                    "databaseId": 4000448989,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Bind imported payments to the subscription's enrollment**\n\nWhen a participant has multiple active enrollments, these independent ordered lookups can select an enrollment different from the one referenced by the selected active subscription\u2014for example, an older enrollment may remain active after its subscription was cancelled. The `manual_payments` schema validates the subscription and enrollment with separate foreign keys, so the insert succeeds and silently attributes the imported payment to inconsistent billing/enrollment records. Derive `enrollment_id` from the selected subscription (or constrain the enrollment lookup to that subscription) instead.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/58#discussion_r4000448989",
+                    "createdAt": "2026-09-13T18:17:33Z",
+                    "commit": {
+                      "oid": "d8f523d722740f5ecebc7814249a4c99679a1aee"
+                    },
+                    "originalCommit": {
+                      "oid": "d8f523d722740f5ecebc7814249a4c99679a1aee"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}
