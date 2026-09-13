@@ -1,0 +1,558 @@
+> Historical source report retained from `db9806f1d12aee7082f5c2848a271ac526e65aa6`. These results do not certify the reconciliation branch. See [the current report](../../MAIN-RECONCILIATION-REPORT.md).
+
+# Production-readiness certification — Sprint 2
+
+Status: **PRIMARY CERTIFICATION VERIFIED LOCAL — general audit remains NO-GO**
+Certification target: `4e3784649767be4c197db624b33995b3d1502f65`  
+Audit base: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`  
+Certification branch: `codex/production-readiness-certification-sprint-2`  
+Evidence vocabulary: `VERIFIED LOCAL`, `CODE-SIDE CLOSED`, `NOT TESTED EXTERNAL`, `BLOCKED`, `FAILED`
+
+This is an independent certification. It does not promote the Sprint 1 claims and
+does not turn the general production-readiness audit into GO. Except for the
+explicit historical staging record retained from the earlier branch history, all
+2026-09-08 evidence is from synthetic, disposable local systems. No deployment,
+PR, merge or live mutation was performed during this re-certification.
+
+## Authoritative re-certification record — 2026-09-08
+
+This section supersedes conflicting historical counts or compatibility values in
+the preserved checkpoint narrative below. The immutable Sprint 1 target contains
+139 migrations; the certification branch contains eight additive corrective
+migrations and therefore builds 147. The four Sprint 1 migrations remain
+byte-for-byte unchanged.
+
+### Final local verdict
+
+**VERIFIED LOCAL** as a safe staging candidate, subject to the external gates
+listed below. The compatible schema contract is version 5, requires migration
+`20260908111450`, has ordered-lineage SHA-256
+`2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba`,
+and sets the minimum compatible application to
+`541fe5fd6cee083cb809eef236382cfd2d519ed3`.
+
+| Evidence | Final result |
+| --- | --- |
+| Legacy clean room | 147/147 exact, no repair; 251/251 public tables RLS + FORCE RLS |
+| Secure-default clean room | 147/147 exact; automatic table/insert/function sentinel grants all denied |
+| Public inventory | 251 tables, 273 public/app-private functions, 264 triggers, 926 indexes, 2,621 constraints |
+| Storage inventory | Five exact private buckets; three scoped object policies |
+| Base upgrade | Exact `68d4a79` state 135 migrations; clean fixture applied only the four Sprint 1 migrations, 135→139 |
+| Blocked upgrade | Preflight exit 2 before mutation; history/data tuple remained `135:3:2` |
+| Tenant/role attacks | 102 Tenant A→B PostgREST/Storage attacks across six roles, all controlled deny/empty |
+| Failure windows | Six DB suites green, including 100 outbox claims, 20/100 one-seat claims, stale tokens, lease recovery, timeout and deadlock |
+| Compatibility | Previous app `541fe5…` + new schema HTTP 200; current app + old schema HTTP 503 |
+| Containment | Read-only rehearsal 157 ms; real unsafe HTTP POST returns `503 maintenance_no_write` |
+| Logical restore | PostgreSQL 17 isolated restore: 251 tables, 16,676 rows, exact count parity |
+| Full regression | Frozen install; 440/440 units; typecheck; build; package; Auth, migration, RLS, runtime and dependency audits green |
+
+The secure-default audit independently proves grants and RLS: all 251 application
+tables have RLS/FORCE RLS, zero installed `public`/`app_private` functions are
+executable by `PUBLIC` or `anon`, and all 13 critical service-only RPC signatures
+are denied to `anon`/`authenticated`. The expected `app_private` audit warnings
+mean those internal trigger/helpers correctly have no authenticated execute grant.
+
+The base-to-head blocked fixture contains a duplicate live group membership,
+manifestless applying import, conflicting key/payload lineage and accepted
+invitation without Auth lineage. It stops in a read-only repeatable-read preflight
+before the first Sprint 1 migration. An expired outbox lease cannot exist in exact
+`68d4a79` because the outbox table is introduced by Sprint 1; the head fixture and
+crash suite cover that condition instead.
+
+The formal immutable security-diff scan for `68d4a79..4e378464` completed with
+complete file coverage and seven validated findings (five high, two medium), all
+now CODE-SIDE CLOSED on this branch. Its generated local report is
+`/tmp/nxttrack-cert-security-scan-fnCslv/report.md`; the durable finding register
+and remediation evidence are recorded in this document.
+
+Actionlint 1.7.12 accepts every workflow when configured with the repository's
+known custom `nxttrack` runner label and without ShellCheck integration. The raw
+run reports only that unconfigured custom label and pre-existing ShellCheck
+notices; no YAML or GitHub-expression error exists in the certification change.
+All repository shell scripts pass `bash -n`.
+
+### External gates that remain open
+
+- **NOT TESTED EXTERNAL:** real Auth-user creation/deletion and shared-user recovery;
+- **NOT TESTED EXTERNAL:** real SendGrid/SMTP acceptance, delivery and webhook behavior;
+- **NOT TESTED EXTERNAL:** GitHub-hosted artifact production/readback and runner behavior;
+- **NOT TESTED EXTERNAL:** managed Supabase backup/PITR and real five-bucket restore;
+- **NOT TESTED EXTERNAL:** credentialed hosted Playwright isolation matrix and any production action.
+
+Provider exactly-once is not claimed. Email remains at-least-once with durable
+attempt/event evidence, lease recovery, stale-token fencing and visible human
+reconciliation. The general production-readiness audit therefore remains NO-GO
+until the external gates are closed.
+
+The remaining sections preserve the branch's chronological checkpoint evidence.
+Counts and compatibility values describe the HEAD at that historical checkpoint;
+the authoritative final values above take precedence.
+
+## Immutable inputs and isolation
+
+- The certification worktree was created at exact target SHA on the requested
+  branch. The original checkout and its unrelated untracked files were left alone.
+- Reviewed diff: 110 files, 6,685 insertions and 668 deletions.
+- No repository `AGENTS.md` or `SECURITY.md` was present.
+- The four pushed Sprint 1 migrations were not edited or renumbered. Their SHA-256
+  fingerprints at audit start are:
+
+| Migration | SHA-256 |
+| --- | --- |
+| `20260822002234_production_email_outbox.sql` | `a41443e10ebb53934ba6403552fbdad9174bbdd394c446caac87cfc745514b42` |
+| `20260822004329_atomic_tenant_provisioning.sql` | `b6c4a1dc74ff0813c47a58ad195b86b065b7db1d13144467129b224b94925816` |
+| `20260822010612_atomic_core_onboarding_writes.sql` | `352ba1dba8bc393228719959cbbbf7725d217d2b6210ca88b299b0014572a433` |
+| `20260822012255_resumable_import_apply_rollback.sql` | `6997c62c3ab1f35fdb7e1c2106c292081cb05231422ca255756af0b9eb0764e2` |
+
+All eight certification migrations, beginning with
+`20260822225251_production_readiness_certification.sql`, were generated with the
+repository-pinned Supabase CLI and are additive.
+
+## Toolchain and untouched baseline
+
+| Component | Version/result |
+| --- | --- |
+| Node.js | `24.18.0` |
+| pnpm | `10.24.0` |
+| Supabase CLI | `2.117.0` (exact repository pin; current official release used for the final builds) |
+| Docker / Compose | `29.6.2` / `5.3.1` |
+| PostgreSQL client / local Supabase server | `16.15` / `17.6` |
+| Frozen install | VERIFIED LOCAL, lockfile unchanged |
+| Unit suite before certification edits | 413 passed, 0 failed/skipped/todo |
+| Typecheck, build, auth audit, migration audit, RLS audit | VERIFIED LOCAL |
+| Dependency audit | VERIFIED LOCAL, no reported vulnerabilities |
+
+CLI procedure and version selection were checked against the official
+[Supabase CLI local-development guide](https://supabase.com/docs/guides/local-development/cli/getting-started),
+[migration command reference](https://supabase.com/docs/reference/cli/supabase-start)
+and [v2.117.0 release notes](https://github.com/supabase/cli/releases/tag/v2.117.0).
+The guide explicitly recommends a project-local exact pin and an empty-volume
+restart after upgrading; both final clean rooms follow that procedure. Commands
+and destructive scope were confirmed locally with `--help` before execution.
+
+The historical Sprint 1 validation database also passed the pre-edit email
+outbox, provisioning, core onboarding and resumable-import integration suites.
+That establishes a baseline only; it is not clean-room evidence.
+
+## Checkpoint 1 — adversarial diff review
+
+Every changed file in `68d4a79..4e378464` was inventoried. The review split SQL,
+RLS/grants, Auth/mail/import runtime and CI/restore/rollback surfaces, then traced
+findings back through their actual callers and policies. SECURITY INVOKER/DEFINER,
+fixed `search_path`, direct grants, FORCE RLS, tenant binding, key reuse,
+lock/lease behavior, PII logging, Amsterdam-date conversion and workflow source
+truth were explicitly checked.
+
+### Finding register
+
+| ID | Severity | Source → sink and reproduction | Impact | Fix and regression proof |
+| --- | --- | --- | --- | --- |
+| CERT-001 | High | Authenticated tenant-admin Data API role → legacy `FOR ALL` policy and table privileges → direct `UPDATE`/`DELETE import_jobs`. A transactional reproduction forged `apply_attempts=99` and `rollback_state=completed`; deleting the job cascaded into `import_manifest_entries`. | A client could bypass the service-only lease/state machine and erase durable reconciliation evidence for its tenant. | CODE-SIDE CLOSED: additive migration revokes client mutation privileges on jobs, rows and events. Integration test proves update/delete are denied while service RPC execution remains available only to `service_role`. |
+| CERT-002 | High | Tenant A guardian CSV name → `materialize_import_guardian_invitation` → `profiles ... ON CONFLICT DO UPDATE full_name`. A local reproduction changed an existing Tenant B user's global name to Tenant A input before invitation acceptance. | Cross-tenant identity-integrity violation. | CODE-SIDE CLOSED: existing profiles use `ON CONFLICT DO NOTHING`; cross-tenant fixture proves the canonical name remains unchanged. |
+| CERT-003 | High | Guardian import targeting a pre-existing suspended/invited membership → membership upsert → manifest marked `created_by_import=false` and already compensated. Reproduction changed the old membership to invited and replaced its invitation while rollback had no restoration record. | Silent corruption of pre-import membership state. | CODE-SIDE CLOSED: materialization is create-only and fails into visible reconciliation if the same tenant/user/role already exists. The regression test proves status/invitation/profile remain unchanged. |
+| CERT-004 | High | Tenant-admin import rollback → deletion of an import-created participant/group → repository-wide `ON DELETE CASCADE` relations. A later notification attached after import was deleted by the original rollback path. | Rollback could destroy legitimate post-import data outside its ownership manifest. | CODE-SIDE CLOSED: generated participant-guardian links are now explicitly manifested; transaction-local FK guards refuse parent deletion when any unmanifested dependent remains. Tests prove owned-child rollback succeeds and later data is preserved with `needs_attention`. |
+| CERT-005 | Medium | Recipient/staff Data API update privileges → newly added `provider_accepted_at`/`accepted_at` columns on existing writable tables. | Client roles could forge provider-acceptance audit evidence. | CODE-SIDE CLOSED: client-role insert/update triggers fence the evidence columns on invitations, notifications, slot offers and delivery attempts without weakening existing business-row policies. |
+| CERT-006 | High | Worker claims up to 25 messages with one shared start time → sequential provider calls (15–60 seconds each) → later leases expire before first send; another worker may reclaim and send the same message. The claim-token check occurs only after provider I/O. | Duplicate external email and misleading reconciliation. | CODE-SIDE CLOSED: claim exactly one immediately before provider I/O; lease is at least provider timeout plus a bounded completion margin. Static regression and concurrent DB claim suite are green. External providers remain at-least-once, never exactly-once. |
+| CERT-007 | High readiness | Upgrade applies the new live-membership unique index directly, but no preflight existed for legacy active/trial duplicates. The duplicate fixture blocks index creation. | Uncontrolled staging migration failure after deployment begins. | Fix is assigned to Checkpoint 3: read-only fail-closed preflight before any migration mutation; customer data is never auto-repaired. |
+| CERT-008 | High | A local `platform_admin` JWT with no Tenant B membership → permissive `current_user_can_manage_tenant_domain` branch → direct PostgREST `PATCH participants` in Tenant B. The first role-matrix run changed the synthetic row and failed red. | A compromised platform-admin browser session could directly mutate tenant-domain records outside a service-routed, audited command path. | CODE-SIDE CLOSED: a second additive migration adds a client-role mutation guard to the certification boundaries. Platform roles require an explicit active owner/admin/staff membership for direct writes; reads and `service_role` paths remain separate. The same Data API attack is now a controlled error. |
+| CERT-009 | Medium | Durable outbox payload → `parseTransactionalEmailPayload` accepted `subject="Safe\r\nBcc: ..."` → SendGrid JSON received the raw subject (SMTP happened to sanitize later). The new executable parser test failed red with the injected subject returned as valid. | Provider-dependent header manipulation or malformed outbound mail. | CODE-SIDE CLOSED: payload validation is now a pure tested boundary; subject/from/organization header fields reject C0/DEL controls. Poison, malformed recipient, oversized recipient/subject/body and CRLF cases fail while bounded Unicode remains valid. |
+| CERT-010 | Medium | Service-routed enqueue → byte-exact but unconstrained key → uppercase, leading/trailing whitespace and Unicode-suffix variants each inserted a new provider-effect row. The crash suite failed red on the first variant. | A malformed retry/caller could bypass intended email dedupe and cause duplicate external effects. | CODE-SIDE CLOSED: additive canonical lowercase-ASCII key constraint plus trigger; existing noncanonical rows are reported by preflight and never auto-rewritten. Exact replay dedupes; exact key/different payload and every variant fail. |
+| CERT-011 | High readiness | New artifact → `/api/health` → only `tenants` count probe. Against a reachable pre-Sprint-1 schema the probe passed even though the artifact requires new transactional RPCs; there was also no global application no-write switch. | An incompatible release could be activated as healthy, while an emergency rollback had no mechanical containment for server actions, webhooks or internal POST workers. | CODE-SIDE CLOSED: additive service-only schema handshake, exact release/deploy assertion, health 503 on mismatch, app-wide unsafe-method maintenance gate, forced-off certification-preview workers/mail/newsletters and a read-only application-forward rehearsal. |
+| CERT-012 | Low hardening | Legacy-default clean room → four `app_private` invoker trigger functions created without an explicit revoke → inherited direct `PUBLIC` EXECUTE. Client roles lacked `USAGE` on `app_private`, so no executable Data API attack path was confirmed. | Unnecessary latent privilege that could become reachable after an unrelated future schema grant. | CODE-SIDE CLOSED: the additive correction explicitly revokes all client/service direct execution; trigger invocation remains functional. Secure-default reports zero and legacy reports only two intended public compatibility functions. |
+| CERT-013 | High integrity | Import invitation creation resolved `invited_user_id` before membership materialization → `materialize_import_guardian_invitation` treated Auth lineage alone as completed → returned `outcome=ready` with `membershipId=null`. A fresh clean-room regression failed red on the pre-existing-membership conflict. | Import could record false identity completion, skip the membership bind and leave the guardian/job in inconsistent reconciliation state. | CODE-SIDE CLOSED: completion now requires the exact invitation-owned membership; a matching Auth-only binding continues through create-only materialization, while any pre-existing tenant parent membership fails without mutation. Both grant profiles pass the adversarial and 5,000-row import suites. |
+| CERT-014 | Medium readiness | Full `hardening:local` → `release:audit-sprint31` → required deleted `rollbackSignature`/`timingSafeEqual` tokens in application import code. The gate failed after all preceding suites passed. | CI/deploy hardening could not certify the stronger Sprint 1 durable database rollback implementation, encouraging accidental reintroduction of the obsolete process-local contract. | CODE-SIDE CLOSED: the audit now requires the actual claim/apply/complete and claim/rollback/complete RPC surfaces plus `import_manifest_entries`; the full hardening chain is rerun after the change. |
+| CERT-015 | Medium readiness | First exact-SHA staging dispatch → read-only preflight → three naturally expired invitations still stored as `pending` were grouped with accepted invitations lacking Auth lineage. The release stopped before migration. | A safe additive migration was blocked by a normal lazy-expiry state that application and database acceptance paths already reject and atomically mark expired on use. | CODE-SIDE CLOSED: accepted-without-user/timestamp remains a hard blocker; expired pending capability rows are separately reported as PII-free operator warnings and are never repaired by preflight. A red-to-green unit plus synthetic expired-row preflight proves PASS-with-warning; the original records are untouched. |
+| CERT-016 | Medium readiness | First staging dispatch → package install/preflight log → self-hosted runner used Node `24.17.0` despite the repository engine floor and certified toolchain being `24.18.0`. | Deployment evidence was produced under an unsupported runtime and could diverge from local/CI artifacts. | CODE-SIDE CLOSED: the deploy job now installs and asserts exact Node `24.18.0` and pnpm `10.24.0` before any Node audit, install or build. Static workflow regression is green. |
+| CERT-017 | High readiness | Second staging dispatch → migrations applied → pre-activation compatibility assertion inside the rsynced release directory → `git merge-base ... HEAD` failed because deployment deliberately excludes `.git`. | Every otherwise-valid release would stop after schema migration and before activation; rollback containment would preserve the old app but leave staging indefinitely schema-forward. | CODE-SIDE CLOSED: the assertion resolves the retained GitHub checkout, verifies its exact SHA equals `DEPLOYED_SOURCE_SHA`, and checks ancestry against that immutable SHA. The deployment failure is the red proof; unit and executable local schema assertion are green. |
+| CERT-018 | High | Third staging preflight after the first ten additive migrations → `has_table_privilege` → legacy Supabase default privileges still gave `anon` and `authenticated` direct mutation grants on `core_write_operations` and `import_manifest_entries`. RLS denied actual row writes, but the required independent grant boundary failed. | A future policy regression could expose service-owned idempotency and rollback ledgers directly to clients; staging correctly refused activation. | CODE-SIDE CLOSED: CLI-generated additive migration `20260823005756` revokes all client/PUBLIC privileges on both ledgers, restores authenticated SELECT only and service-role ALL, and rolls the handshake forward. Both 146-step clean rooms, the strengthened grant audit, focused DB integration, preflight, 102-case Data API matrix and rollback rehearsal are green. |
+| CERT-019 | Medium readiness | Third staging dispatch → pre-migration preflight → the exact CERT-018 grants were blocked before the pending allowlisted grant-correction migration could execute. | A safe corrective migration had no path to repair configuration-level privileges even though it touches no customer records. | CODE-SIDE CLOSED: only the two exact ledger findings are warnings while migration `20260823005756` is pending; every other grant anomaly still blocks. The workflow reruns the complete read-only preflight after migration, where any remaining ledger grant blocks activation. Synthetic pending/applied fixtures and workflow-order tests are green. |
+| CERT-020 | Medium readiness | Fourth staging dispatch → all pre/post-migration checks green → ancestry assertion → shallow Actions checkout lacked target ancestor `4e378…`. | Exact source equality passed, but minimum-compatible ancestry could not be independently proven, so activation correctly stopped. | CODE-SIDE CLOSED: the deploy checkout now fetches full history before the exact-SHA and ancestry assertions. The failed dispatch is red evidence and the workflow contract test is green. |
+
+No credible SQL injection, unsafe SECURITY DEFINER search path, cross-tenant
+idempotency-key bypass, PII-bearing error log, Amsterdam date regression or
+workflow source-SHA substitution was confirmed in the reviewed change set.
+
+### 2026-09-08 independent re-certification delta register
+
+The branch already contained the certification work and historical staging
+evidence when this independent re-certification began. None of that evidence is
+treated as current proof. The following candidates were registered before any
+new repair. Every confirmed row below has executable red-to-green evidence.
+
+| ID | Severity | Source → sink and concrete reproduction | Possible impact | Fix decision and proving test |
+| --- | --- | --- | --- | --- |
+| CERT-021 | Medium privacy/integrity | Guardian CSV creates a confirmed Auth user through `ensureInvitationAuthUser`; SQL previously had no Auth/profile ownership target, so rollback left the identity behind. | Orphaned identity and retained email/name PII. | CODE-SIDE CLOSED: additive Auth-ownership manifest, guarded claim/lease/complete compensator, shared-user preservation and crash-after-create regression. |
+| CERT-022 | High readiness | Maintenance flags were written but the old process was not restarted before migrations. | Concurrent writes/provider effects during transition. | CODE-SIDE CLOSED: workflow activates and verifies HTTP 503 containment before migration; static order test and local real-HTTP proof pass. |
+| CERT-023 | High readiness | Rollback target path was snapshotted without immutable release identity or ancestry proof. | Rollback could start an incompatible artifact. | CODE-SIDE CLOSED: exact metadata readback plus Git ancestry assertion before migration and activation. |
+| CERT-024 | Medium readiness | All preview browser jobs could be conditionally skipped. | False browser-validation success. | CODE-SIDE CLOSED: exact-SHA maintenance preview always runs a bounded read-only health/navigation smoke. |
+| CERT-025 | High readiness | Logical restore validated any database against its own dynamic inventory. | False restore proof for a wrong source. | CODE-SIDE CLOSED: dump is bound to the checked-out ordered migration fingerprint before export. |
+| CERT-026 | High privacy/readiness | Storage manifest was not bound to source/target projects and partial uploads survived caught failure. | Cross-environment PII copy and partial restore. | CODE-SIDE CLOSED: explicit source/target/environment transition binding, conflict preflight, caught-failure cleanup and exact remote verification. Hard process death remains visible reconciliation, not atomicity. |
+| CERT-027 | Medium recovery | Manifest versions 1/2/3 all incorrectly required the current five buckets. | Historical backups advertised as supported were rejected. | CODE-SIDE CLOSED: validation is version-aware; v3 keeps the strict five-bucket contract. |
+| CERT-028 | Medium readiness | Tiptap moderate advisory was hidden by a high-only audit threshold. | Stale zero-vulnerability claim and latent unsafe primitive. | CODE-SIDE CLOSED: coherent exact `3.31.3` Tiptap family and moderate audit threshold; `pnpm audit --prod` reports no known vulnerabilities. |
+| CERT-029 | REJECTED | A subreview suspected that direct `group_memberships` DML ignored offering and soft-reservation capacity. The exact 139-migration base-to-head fixture and a new direct-write integration disproved it: the existing `20260802220000` trigger already locks the group and counts both sources. | No defect or impact. | REJECTED after executable counterexample; no production SQL change retained. The regression remains to guard this invariant. |
+| CERT-030 | Medium readiness | Supabase CLI was stale and range-declared as `^2.109.1`. | Non-reproducible migration evidence and missed current behavior. | CODE-SIDE CLOSED: exact `2.117.0` pin, frozen lock, CLI `--help` discovery and both clean rooms rebuilt from empty. |
+| CERT-031 | High readiness | The first isolated logical restore failed at `session_instructor_reservations` because UUID GiST had no operator class; bootstrap omitted source-required extensions. | Recovery rehearsal could never reconstruct constraints despite a valid dump. | CODE-SIDE CLOSED: failing restore plus unit contract; bootstrap now provisions `btree_gist`, `pgcrypto` and `uuid-ossp` in `extensions`; rerun restores 251 tables/16,676 rows exactly. |
+| CERT-032 | High readiness | The first v5 compatibility anchor named `fffcb31…`, but that artifact still embedded a wrong lineage fingerprint and rejected the final schema. | Claimed previous-app rollback would fail closed, leaving no proven application-forward rollback target. | CODE-SIDE CLOSED: a failing constant/health proof established `541fe5…` as the first real bridge; final contract pins it, exact artifact returns HTTP 200 on the new schema, current artifact returns 503 on old schema. |
+
+Rejected/deferred candidates in this pass:
+
+- Preflight output containing tenant and record UUIDs is not a privacy finding:
+  the deployment-preflight contract explicitly requires PII-free counts and
+  record IDs for human reconciliation, and no names or email addresses are
+  selected.
+- The application-schema-only logical restore does not restore real Supabase
+  Auth identities. This remains `NOT TESTED EXTERNAL` provider-restore scope;
+  its local row-count result must not be described as an independently usable
+  Auth restore.
+
+### Red → green evidence for confirmed fixes
+
+Before implementation, `tests/unit/production-readiness-certification.test.ts`
+ran 5 tests and failed all 5. After the additive migration and worker change it
+passes 5/5. The focused database integration additionally proves:
+
+- client import-state update/delete denial;
+- immutable provider evidence with ordinary notification read updates still allowed;
+- existing same-tenant membership conflict without mutation;
+- cross-tenant global-profile preservation;
+- explicit ownership/compensation of generated guardian links;
+- fail-closed preservation of later dependent data.
+
+The existing email outbox, tenant provisioning, core onboarding and resumable
+import integrations all remain green against a disposable clone with the
+corrective migration applied. The resumable import suite includes 5,000 rows in
+20 chunks; core capacity includes a 20-way one-seat race; provisioning and outbox
+each retain their 20-way contention proofs.
+
+Checkpoint regression gate: 418/418 unit tests, typecheck, production build (17
+static pages), Auth audit, 140-file migration audit, 251-table RLS audit,
+production dependency audit and `git diff --check` are VERIFIED LOCAL. No skip or
+test weakening was introduced.
+
+## Checkpoint 2 — clean-room migration builds
+
+VERIFIED LOCAL for both required grant profiles. Each project started as an empty
+full local Supabase stack before repository migrations were introduced or applied.
+No dump, repair command, pre-existing schema or hand-created application object was
+used. The repository now includes `db:audit-clean-room`, which compares every
+`version`/`name` row in `supabase_migrations.schema_migrations` with the sorted SQL
+files and performs the remaining assertions below without retaining sentinel data.
+
+The target originally contained 139 migrations. Both final clean-room builds apply
+146 because all seven certification corrections are additive, CLI-generated
+migrations; the four pushed Sprint 1 files remain byte-for-byte unchanged.
+
+| Profile | Empty-stack start | Migration application | Result |
+| --- | --- | --- | --- |
+| Legacy auto-grants (`api.auto_expose_new_tables=true`) | 2026-08-23 00:24:11 UTC | final additive step 2026-08-23 00:58 UTC | 146/146 exact, no repair/error |
+| Secure default (`auto_expose_new_tables` absent/false plus PostgreSQL default-privilege revocation) | 2026-08-23 00:23:01 UTC | final additive step 2026-08-23 00:58 UTC | 146/146 exact, no repair/error |
+
+The secure fixture explicitly revokes the PostgreSQL default `PUBLIC EXECUTE` as
+well as Data API table/sequence/function defaults before application migrations.
+That global function revocation is required because a schema-specific default is
+additive and cannot remove PostgreSQL's built-in `PUBLIC EXECUTE` default.
+
+Both profiles have the same application inventory: 251 `public` tables, all with
+RLS and FORCE RLS; 268 `public`/`app_private` functions; 264 user triggers; 926
+public indexes; 2,621 public constraints; and five exact private buckets
+(`badge-studio-assets`, `diploma-vault`, `participant-media`, `tenant-documents`,
+`tenant-media-assets`). Storage has only the two clean scoped read policies and the
+restrictive child-session policy. Eleven critical mail/provision/import/runtime RPC signatures
+are explicitly denied to `anon`/`authenticated` and executable by `service_role`.
+
+A transaction-rolled-back post-migration sentinel proves the intended difference:
+
+| New object privilege | Legacy | Secure default |
+| --- | --- | --- |
+| `anon` table SELECT | allowed | denied |
+| `authenticated` table INSERT | allowed | denied |
+| `anon` function EXECUTE | allowed | denied |
+| Any installed `public`/`app_private` function executable by `PUBLIC` or `anon` | 2 compatibility functions | 0 |
+
+All six focused DB integrations (email outbox, atomic provisioning, core
+onboarding, 5,000-row resumable import, certification adversarial and crash-window cases) pass on
+both builds. A production app artifact started against each stack and `/api/health`
+reported `ok=true`, database and schema-compatibility pass, and the expected
+certification source. This is local compatibility evidence, not a live claim.
+
+Final clean-room re-certification gate: 432/432 unit tests, typecheck, production build, Auth
+audit, 146-file migration audit, 251-table RLS audit, production dependency audit,
+both clean-room grant audits and `git diff --check` are VERIFIED LOCAL.
+
+## Checkpoint 3 — base-to-head upgrade rehearsal and preflight
+
+VERIFIED LOCAL with a reproducible fixture and read-only fail-closed preflight.
+The base project was built from migration files obtained directly from Git object
+`68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`; its history contained exactly 135
+rows ending at `20260812120000`. The fixture then added two tenants and twelve Auth
+identities covering owner/admin/staff/instructor/parent/child, plus profiles,
+memberships, participants, guardians, enrollments, active/trial group membership,
+queued invitations, incomplete onboarding, legacy import rollback data, queued and
+failed mail evidence, five buckets and representative import audit events.
+
+On the clean fixture the new `db:preflight-production-readiness-upgrade` command
+returned PASS before mutation. It reported the two intentionally incomplete draft
+onboarding runs and two legacy mail attempts as operator warnings, but found no
+index blocker, manifestless active import, conflicting legacy key, broken Auth
+lineage, expired lease, grant anomaly, bucket anomaly or fingerprint mismatch.
+
+Only the four byte-frozen Sprint 1 migrations were then applied, in timestamp order:
+the history advanced 135→139 with no error. Both tenants, all twelve memberships,
+both participants and both group memberships remained. The original outbox,
+provisioning, core-write and 5,000-row import DB integrations all passed on this
+upgraded database. The additive certification migration was applied separately
+(139→140); its adversarial integration and the preflight then also passed. A
+production application artifact started against this upgraded fixture and strict
+`/api/health` returned `ok=true`, database pass in 35 ms and the expected local
+certification SHA.
+
+The blocked fixture deliberately contains one duplicate active/trial membership,
+one applying import without a durable manifest, two legacy runs sharing an
+idempotency key with different payloads, one accepted invitation without an Auth
+user and one expired outbox worker lease. To make the last condition representable,
+only the first (outbox) migration was present in that fixture; the dangerous group
+unique-index migration had not run. Preflight returned BLOCKED/exit 2 and emitted
+only UUIDs, states, counts and fingerprints—no email, name or payload. A readback
+afterward proved history remained exactly 136, all three later Sprint 1 migrations
+and the corrective migration remained unapplied, the three membership rows remained
+and the import was still `applying`. No customer data was repaired or deleted.
+
+The preflight uses `BEGIN READ ONLY ISOLATION LEVEL REPEATABLE READ`, rolls back on
+exit, fingerprints all four immutable migrations, tolerates objects that do not yet
+exist at base, and conditionally tightens its grant/lease checks as migrations become
+present. Static regressions enforce every blocker class and prohibit a customer-data
+delete path in the preflight.
+
+Checkpoint regression gate: 420/420 unit tests, typecheck, production build, Auth
+audit, 140-file migration audit, 251-table RLS audit, production dependency audit,
+the clean/blocked rehearsals and `git diff --check` are VERIFIED LOCAL.
+
+## Checkpoint 4 — local Data API tenant/role attack matrix
+
+VERIFIED LOCAL against the secure-default full Supabase stack, using HTTP calls to
+PostgREST/Storage rather than relying on direct PostgreSQL role simulation. JWTs
+were locally signed for synthetic users only. The matrix covers Tenant A and B
+owner, admin, staff, instructor, parent and child (`athlete`), plus anon, a stale
+subject, a suspended membership, platform admin/support and the service role.
+
+The first matrix run exposed CERT-008: a platform admin without any tenant
+membership successfully changed the Tenant B participant through PostgREST. After
+the red reproduction, CLI migration
+`20260822233930_restrict_platform_only_tenant_mutations.sql` added one fixed-path
+client-role trigger boundary across onboarding, invitations/memberships, participant
+graph, intake, groups, imports, outbox/operation ledgers and Storage metadata. It
+does not run for `service_role`; a platform identity can write directly only when it
+also has an explicit active tenant owner/admin/staff membership. Historical
+migrations and the broad platform read model were not rewritten.
+
+The green matrix executed 102 Tenant A→B table or Storage-prefix attacks across all
+six Tenant A roles. It covered onboarding runs/events, invitations/memberships,
+outbox/events, participants/guardians/enrollments, intake submissions/answers,
+group memberships, import jobs/rows/manifest, Storage object paths and platform
+audit events. No Tenant B row or object was returned or changed. Modified
+`x-tenant-id` and `x-forwarded-host` headers did not alter the JWT-bound result.
+
+Additional green cases prove:
+
+- anon, missing, stale and suspended contexts return controlled empty/deny results;
+- authenticated outbox SELECT is RLS-denied while direct UPDATE is independently
+  grant-denied; import state and operation-ledger mutations are also grant-denied;
+- platform admin/support cannot directly mutate tenant participants without tenant
+  membership;
+- a mixed-Tenant A/B group membership fails explicitly at the RLS/FK boundary;
+- anon and all six authenticated roles cannot invoke the service-only outbox claim;
+- client calls to participant-graph, intake and group-placement RPCs with Tenant B
+  targets fail explicitly;
+- the service-routed Data API can read the exact Tenant B fixture and execute the
+  claim RPC;
+- reuse of one outbox idempotency key with a different payload fails explicitly.
+
+No request body, email address, JWT, secret or personal field is logged by the test.
+
+Checkpoint regression gate: 421/421 unit tests, all five focused DB integrations,
+the 141-migration secure grant audit, typecheck, production build (17 static pages),
+Auth audit, migration/RLS audits, production dependency audit and `git diff --check`
+are VERIFIED LOCAL.
+
+## Checkpoint 5 — failure and crash windows
+
+VERIFIED LOCAL with synthetic database/provider-boundary evidence. The new crash
+suite and strengthened existing integrations prove:
+
+- 100 concurrent workers claim 100 due outbox rows exactly once each; the existing
+  20-worker/single-row race also remains green;
+- an external-acceptance marker followed by a worker crash leaves the row visibly
+  `processing`; after forced lease expiry a second claim records `lease_recovered`,
+  increments the attempt and fences the old completion token;
+- future work is not claimed early, retry delay rejects 86,401 seconds and accepts
+  the 86,400-second maximum, while limit/lease bounds fail explicitly;
+- advisory-lock contention obeys a 150 ms statement timeout and becomes usable
+  after release; a real two-row reverse-lock deadlock aborts exactly one transaction
+  with PostgreSQL `40P01`, after which both rows remain unmodified;
+- an exact outbox key replays one row and conflicts on different payload; uppercase,
+  leading/trailing whitespace and Unicode variants are rejected by migration
+  `20260822235045_canonical_email_outbox_idempotency_keys.sql`;
+- the payload parser rejects non-objects, arrays, invalid/oversized recipients,
+  501-character subjects, 65,537-character bodies and CRLF header injection while
+  preserving a safe bounded Unicode subject;
+- all seven provisioning failure steps leave zero partial graphs; 20 duplicate
+  submits produce one graph. The explicit post-commit fixture has two existing Auth
+  users, zero memberships, two pending identities and two blocked outbox rows, then
+  resumes idempotently through materialization/opening;
+- duplicate intake remains 20-way idempotent; one-seat capacity is now proven under
+  both 20 and 100 concurrent commands (one placement, respectively 19 and 99 durable
+  controlled results, one audit);
+- import double-apply is idempotent, an injected middle-chunk crash preserves the
+  prior committed manifest and retries the failed chunk without duplicates, and a
+  5,000-row import remains exactly 20 bounded RPC chunks;
+- import rollback refuses both `processing` and `accepted` invitation mail, retains
+  all manifest evidence, keeps the failure atomic and preserves the shared Auth user
+  plus its active membership in another tenant.
+
+Provider exactly-once is **not claimed**. If a provider accepts and the worker dies
+before the database completion, no transactional protocol can prove from the local
+database whether resending is safe. The supported contract is at-least-once with a
+bounded lease, token fencing, attempt/event history and a visible reconciliation
+window. `accepted_at` means provider acceptance only; `delivered_at` remains null
+until separate evidence exists. No real provider was contacted.
+
+The canonical-key migration adds its check as `NOT VALID`, enforces it immediately
+for new writes and validates it automatically only when no legacy violations exist.
+Otherwise the read-only preflight blocks with UUID/count evidence; it never trims,
+lowercases or deletes existing data.
+
+Checkpoint regression gate: 422/422 unit tests; the focused outbox,
+provisioning, onboarding, resumable-import, certification, crash-window and
+102-case tenant-matrix database integrations; typecheck; Auth audit; all 142
+migration files; 251-table RLS audit; production dependency audit; production
+build (17 static pages); and `git diff --check` are VERIFIED LOCAL.
+
+## Checkpoint 6 — rollback and compatibility
+
+VERIFIED LOCAL. The previous allowed application is the exact Sprint 1 target
+`4e3784649767be4c197db624b33995b3d1502f65`; the older audit basis
+`68d4a79ccdc3ede3691bf1ec1782fb8f81c05466` is intentionally not an allowed
+rollback artifact because it still contains the replaced non-transactional import
+and onboarding write paths.
+
+Migration `20260823000225_runtime_schema_compatibility_contract.sql`, rolled forward
+by the later additive corrections, publishes one immutable, service-only contract
+with version 4, minimum compatible app SHA
+`4e3784649767be4c197db624b33995b3d1502f65`, required migration
+`20260823005756`, and minimum-schema fingerprint
+`185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad` (SHA-256
+over the ordered 146-migration minimum lineage). `anon` and `authenticated` are
+grant-denied through the local Data API; `service_role` receives the one expected
+row.
+
+The three executable artifact/schema combinations produced:
+
+| Combination | Result |
+| --- | --- |
+| New 146-migration schema + newly built certification artifact | HTTP 200; database `pass`; schema compatibility `pass` |
+| New schema + freshly frozen-installed/built `4e378…` artifact | HTTP 200; database `pass`; all 17 Sprint 1 transactional RPC names retained |
+| Newly built certification artifact + old 140-migration schema | HTTP 503; database connectivity still `pass`; schema compatibility explicitly `fail` |
+
+The local `release:rehearse-application-forward-rollback` command opens both
+databases in repeatable-read, read-only transactions. It proved in 95 ms that all
+3,751 old public column/type contracts and the 17 previous-app transactional RPCs
+remain available, the old schema lacks the new handshake, and pending work remains
+unchanged (`email=15`, `import=3`, `identity=2`). No schema migration, schema drop,
+history repair or job mutation occurs in the rehearsal.
+
+Containment requires and checks exact values
+`MAINTENANCE_NO_WRITE=true`, `EMAIL_SENDING_ENABLED=false`,
+`NEWSLETTER_DELIVERY_ENABLED=false`, and `INTERNAL_JOBS_ENABLED=false`. With the
+new production build, GET `/api/health` remained available while POST was rejected
+as `503 maintenance_no_write` before session/database work. This application gate
+does not replace Data API grants/RLS; those remain independently covered by the
+102-case matrix.
+
+The deployment workflow now blocks certification-preview activation unless the
+full 40-character input SHA equals the selected branch HEAD, the target is staging,
+the read-only customer-data preflight passes, every pending migration belongs to
+the eleven-entry Sprint 1/certification allowlist, and the post-migration schema
+contract matches. Migration-history repair is explicitly forced off. For this
+preview it mechanically forces maintenance, mail,
+newsletter and internal workers to their safe values. Production promotion remains
+outside this certification path.
+
+Checkpoint regression gate: 428/428 units including 6/6 dedicated red-to-green compatibility tests,
+application-forward rehearsal, three built-artifact HTTP probes, 102-case Data API
+matrix including the new RPC grants, typecheck, production build (17 static pages),
+runtime-environment audit, all 146 migration files, 251-table RLS audit and
+`git diff --check` are VERIFIED LOCAL.
+
+## Full regression and external boundaries
+
+The primary local Definition of Done is complete. The final repository-wide gate
+used a frozen install and passed the complete `hardening:local` chain after
+CERT-014 was fixed. Its component evidence includes 432/432 unit tests with zero
+failed, skipped or todo; TypeScript typecheck; Auth contract audit; runtime
+environment audit; 146-file migration-history audit; 251-table RLS/FORCE-RLS
+audit; all release/hardening audits; production build with 17 static pages;
+standalone packaging; and the staging-gate audit. The staging gate reported zero
+failures and nine explicitly external confirmations. `release:truth`, the design
+audit, 53 swim-canon tests, 27 parent/child portal tests, the migration no-op path,
+and `git diff --check` also pass after the final deployment-workflow hardening.
+
+As stretch evidence, the public/auth-boundary Playwright smoke runs locally against
+the synthetic secure-default stack on desktop and mobile: 40/40 passed. All three
+repository shell scripts pass `bash -n`. Actionlint parsed every workflow and found
+no YAML/expression error in the certification change; it reports only established
+custom-runner-label warnings and pre-existing shellcheck notices.
+
+The same non-mutating public/auth-boundary Playwright smoke was then run directly
+against `https://staging.nxttrack.nl` on desktop and mobile: 40/40 passed.
+
+The local Storage stretch rehearsal seeded one controlled object in each of the
+five required private buckets, exported a version-3 manifest (5 objects, 379
+bytes), verified every local checksum, deleted the sources, restored them without
+upsert, verified the remote counts/checksums and deleted the rehearsal prefix.
+
+The local database evidence comprises two 146-migration clean rooms, the clean and
+blocked base-to-head rehearsals, six focused integrations under both grant
+profiles, the 102-case Data API matrix, failure/crash-window integrations and the
+read-only rollback rehearsal. No test was removed, weakened or converted to a
+skip. No customer data or real provider was used.
+
+The certification deployment path is restricted to staging and an exact
+40-character branch-HEAD SHA. It forces migrations on, repair off, global
+maintenance/no-write on and all effect workers off; runs the read-only preflight
+both before and after migration; allows only the eleven expected Sprint
+1/certification migration versions; asserts the runtime/schema handshake before activation; and skips the
+legacy Phase 16 mutating fixture. Production is not reachable through this branch
+exception.
+
+## Preserved historical staging deployment record — not part of the 2026-09-08 run
+
+The user subsequently requested a deployment. Only the constrained staging
+certification preview was used; no production deployment, merge or pull request
+was performed.
+
+Workflow run [32609642668](https://github.com/nxttrack/platform/actions/runs/32609642668)
+completed successfully on 2026-08-23 for exact deployed source
+`7b55a80cbd44e2153a5e690e34ab1c62f755b1c0`. The deploy, staging browser
+validation and preview-finalization jobs all passed. Preflight, the migration
+allowlist, all 146 migrations, post-migration grant verification, source ancestry,
+schema compatibility, preview rollback snapshot, activation, health and runtime
+smoke were green. The rollback job did not run because validation succeeded.
+
+Live read-only verification after activation returned HTTP 200 from `/login` and
+`/api/health`. Health reported the exact deployed SHA, database `pass` and schema
+compatibility `pass`. A POST to `/api/health` returned HTTP 503, independently
+confirming the forced maintenance/no-write boundary. Mail, newsletter and internal
+effect workers remained disabled.
+
+The retained GitHub artifact
+`nxttrack-7b55a80cbd44e2153a5e690e34ab1c62f755b1c0-exact-source` was downloaded and
+read back. Its JSON records the same repository, branch, workflow run and exact
+commit SHA. The preceding four attempts stopped fail-closed before activation and
+provided the red evidence for CERT-015 through CERT-020; none replaced the old
+application release.
+
+The following remain **NOT TESTED EXTERNAL**: real Auth-user creation and recovery,
+real SendGrid delivery and provider webhooks, billing/payment providers, live
+Supabase backup/restore and five-bucket object checksum reconciliation, the full
+64-case credentialed hosted Playwright matrix, and any production environment.
+These external gates keep the general production-readiness audit at **NO-GO**.

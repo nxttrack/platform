@@ -1,0 +1,361 @@
+{
+  "date": "2026-09-13",
+  "runtimeCommit": "2f4317e19ed48687a51870274d7c9e74502d6ff5",
+  "base": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+  "node": "24.18.0",
+  "pnpm": "10.24.0",
+  "supabaseCli": "2.117.0",
+  "scope": "local synthetic data; no deploy, remote DB, providers, payments or protected-branch writes",
+  "unit": {
+    "passed": 444,
+    "failed": 0,
+    "skipped": 0
+  },
+  "checks": [
+    {
+      "name": "typecheck",
+      "command": "pnpm typecheck",
+      "result": "PASS",
+      "log": "logs/corrective-typecheck.log",
+      "sha256": "0778a12da1712f6062d5dbfe63297871116dfc2459175dc67923495fbd5dd151"
+    },
+    {
+      "name": "unit",
+      "command": "pnpm run test:unit",
+      "result": "PASS",
+      "log": "logs/corrective-unit.log",
+      "sha256": "df8ca7d25cf81ad303bc9d6d7be729d3290867345b8a4914b3a9eefbfdd33ea2"
+    },
+    {
+      "name": "build",
+      "command": "pnpm build",
+      "result": "PASS",
+      "log": "logs/corrective-build.log",
+      "sha256": "031b9f047543fc3d39c68bad4100cc8aab388c6299555d18beb6787798a7dccf"
+    },
+    {
+      "name": "standalone",
+      "command": "pnpm run deploy:package-standalone-assets",
+      "result": "PASS",
+      "log": "logs/corrective-standalone.log",
+      "sha256": "2ea4019a97e2f1f42a46936dc906e7b166dc6105c82db070451a484bb581f775"
+    },
+    {
+      "name": "release-truth",
+      "command": "pnpm run release:truth",
+      "result": "PASS",
+      "log": "logs/final-release-truth.log",
+      "sha256": "50ab4a6f43a80bef000575bab02efb9380c00d1a18286eb9a5ce12a42b2151d9"
+    },
+    {
+      "name": "design-audit",
+      "command": "pnpm run design:audit",
+      "result": "PASS",
+      "log": "logs/final-design-audit.log",
+      "sha256": "9e1ee5ab6af87916755097185d40e6cc869e7f582a994f9b2740b0e52e6425f4"
+    },
+    {
+      "name": "auth-audit",
+      "command": "pnpm run auth:audit",
+      "result": "PASS",
+      "log": "logs/final-auth-audit.log",
+      "sha256": "5d54e543df82e108848be769e031f4a308f89de269e984baf241d971e1322dbf"
+    },
+    {
+      "name": "db-audit",
+      "command": "pnpm run db:audit",
+      "result": "PASS",
+      "log": "logs/final-db-audit.log",
+      "sha256": "1352cbc2f04b1ad984c3315a8e9290d5ec978e5c08b12b7a01c2151e00bb575d"
+    },
+    {
+      "name": "db-rls-audit",
+      "command": "pnpm run db:rls-audit",
+      "result": "PASS",
+      "log": "logs/final-db-rls-audit.log",
+      "sha256": "f5f78917eef74620f20b50b59f613758f86d93ee46e66fa4f220e68928c69d24"
+    },
+    {
+      "name": "release-audit-sprint31",
+      "command": "pnpm run release:audit-sprint31",
+      "result": "PASS",
+      "log": "logs/final-release-audit-sprint31.log",
+      "sha256": "1192b31aec704381c8dc880b7235769386ddbffcc2dfde1d211c034a29dcac78"
+    },
+    {
+      "name": "release-audit-journey-bot",
+      "command": "pnpm run release:audit-journey-bot",
+      "result": "PASS",
+      "log": "logs/final-release-audit-journey-bot.log",
+      "sha256": "72d2bcb263b111b82934a560a5ff2980069cb3f4e5488304cd7278cfaa5bcc3f"
+    },
+    {
+      "name": "runtime-env",
+      "command": "pnpm run release:audit-runtime-env",
+      "result": "PASS",
+      "log": "logs/final-runtime-env-retry.log",
+      "sha256": "be723c66dcbca8b7d91915324f387c555b95d6ca77fe3ba1d3f1b9fc51066188"
+    },
+    {
+      "name": "production-dependencies",
+      "command": "pnpm run security:audit-dependencies",
+      "result": "FAIL",
+      "log": "logs/final-security-audit-dependencies.log",
+      "sha256": "3c0376f326276963b347e7e883bd4961dcd782e532a5167e8b52c3a33dcb00f9",
+      "advisories": {
+        "critical": 2,
+        "high": 1,
+        "moderate": 1
+      },
+      "baselineAdvisories": 7
+    },
+    {
+      "name": "legacy-upgrade:db:audit-clean-room",
+      "command": "pnpm run db:audit-clean-room",
+      "result": "PASS",
+      "log": "logs/db-db-audit-clean-room.log",
+      "sha256": "01f3564d3f0a3003651dcff89983d75d118cfaca31131e1d90cc64ba3348875b"
+    },
+    {
+      "name": "legacy-upgrade:db:preflight-production-readiness-upgrade",
+      "command": "pnpm run db:preflight-production-readiness-upgrade",
+      "result": "PASS",
+      "log": "logs/db-db-preflight-production-readiness-upgrade.log",
+      "sha256": "d43211a9ef31ce734024812f8344e3c34bffc556df5d5661dcd781b5d6141a38"
+    },
+    {
+      "name": "legacy-upgrade:release:assert-schema-compatibility",
+      "command": "pnpm run release:assert-schema-compatibility",
+      "result": "PASS",
+      "log": "logs/db-release-assert-schema-compatibility.log",
+      "sha256": "53528739c4d891b725ed046d59ad769addb167db538dec3a6fe9ebe4f8ebe92c"
+    },
+    {
+      "name": "legacy-upgrade:test:swim-canon:db",
+      "command": "pnpm run test:swim-canon:db",
+      "result": "PASS",
+      "log": "logs/db-test-swim-canon-db.log",
+      "sha256": "59f12297000829cbefa355aa1b50c09b3646ef63ccb8022f93faa5796385b313"
+    },
+    {
+      "name": "legacy-upgrade:test:planning:concurrency",
+      "command": "pnpm run test:planning:concurrency",
+      "result": "PASS",
+      "log": "logs/db-test-planning-concurrency.log",
+      "sha256": "6d4178f6c5e4186a8ce8e2f6525589fce898d1a4e3bbf2653d31beca7dd3d87d"
+    },
+    {
+      "name": "legacy-upgrade:test:email-outbox:db",
+      "command": "pnpm run test:email-outbox:db",
+      "result": "PASS",
+      "log": "logs/db-test-email-outbox-db.log",
+      "sha256": "1eec650211c426b59e5abc01dee7658f6ad02c92952bcef0ff82d95acc4ca790"
+    },
+    {
+      "name": "legacy-upgrade:test:tenant-provisioning:db",
+      "command": "pnpm run test:tenant-provisioning:db",
+      "result": "PASS",
+      "log": "logs/db-test-tenant-provisioning-db.log",
+      "sha256": "d3284187b0fbd7ef5836a25c94f4a173886a805bbf660cf87d9b0823eb7de68f"
+    },
+    {
+      "name": "legacy-upgrade:test:core-onboarding:db",
+      "command": "pnpm run test:core-onboarding:db",
+      "result": "PASS",
+      "log": "logs/db-test-core-onboarding-db.log",
+      "sha256": "7ef21540dfcf5645cb6576548d66e5b83a6c9decc3a00c1910c9baa452b84985"
+    },
+    {
+      "name": "legacy-upgrade:test:resumable-import:db",
+      "command": "pnpm run test:resumable-import:db",
+      "result": "PASS",
+      "log": "logs/db-test-resumable-import-db.log",
+      "sha256": "9a446dead3e5091c3292b6412c69bc2b742caa020217402b33c9e766eea90fc3"
+    },
+    {
+      "name": "legacy-upgrade:test:production-readiness-certification:db",
+      "command": "pnpm run test:production-readiness-certification:db",
+      "result": "PASS",
+      "log": "logs/db-test-production-readiness-certification-db.log",
+      "sha256": "fe3ddbcff43d6cb81ce6c4cdcc37092df022fdd5f2f60fe1e6add6d1f97b0357"
+    },
+    {
+      "name": "legacy-upgrade:test:production-readiness-crash-windows:db",
+      "command": "pnpm run test:production-readiness-crash-windows:db",
+      "result": "PASS",
+      "log": "logs/db-test-production-readiness-crash-windows-db.log",
+      "sha256": "12b85dfcfee24cba7eeaf75685bd81e60b98afe7c0a8180c33aa3b143ff24943"
+    },
+    {
+      "name": "secure-fresh:db:audit-clean-room",
+      "command": "pnpm run db:audit-clean-room",
+      "result": "PASS",
+      "log": "logs/secure-db-audit-clean-room.log",
+      "sha256": "a9f2043c8b2c1c01d6b07302d8c8872bcac66f3d54ccb035b73f2498709eb7cf"
+    },
+    {
+      "name": "secure-fresh:db:preflight-production-readiness-upgrade",
+      "command": "pnpm run db:preflight-production-readiness-upgrade",
+      "result": "PASS",
+      "log": "logs/secure-db-preflight-production-readiness-upgrade.log",
+      "sha256": "d43211a9ef31ce734024812f8344e3c34bffc556df5d5661dcd781b5d6141a38"
+    },
+    {
+      "name": "secure-fresh:release:assert-schema-compatibility",
+      "command": "pnpm run release:assert-schema-compatibility",
+      "result": "PASS",
+      "log": "logs/secure-release-assert-schema-compatibility.log",
+      "sha256": "53528739c4d891b725ed046d59ad769addb167db538dec3a6fe9ebe4f8ebe92c"
+    },
+    {
+      "name": "secure-fresh:test:swim-canon:db",
+      "command": "pnpm run test:swim-canon:db",
+      "result": "PASS",
+      "log": "logs/secure-test-swim-canon-db.log",
+      "sha256": "59f12297000829cbefa355aa1b50c09b3646ef63ccb8022f93faa5796385b313"
+    },
+    {
+      "name": "secure-fresh:test:planning:concurrency",
+      "command": "pnpm run test:planning:concurrency",
+      "result": "PASS",
+      "log": "logs/secure-test-planning-concurrency.log",
+      "sha256": "6d4178f6c5e4186a8ce8e2f6525589fce898d1a4e3bbf2653d31beca7dd3d87d"
+    },
+    {
+      "name": "secure-fresh:test:email-outbox:db",
+      "command": "pnpm run test:email-outbox:db",
+      "result": "PASS",
+      "log": "logs/secure-test-email-outbox-db.log",
+      "sha256": "1eec650211c426b59e5abc01dee7658f6ad02c92952bcef0ff82d95acc4ca790"
+    },
+    {
+      "name": "secure-fresh:test:tenant-provisioning:db",
+      "command": "pnpm run test:tenant-provisioning:db",
+      "result": "PASS",
+      "log": "logs/secure-test-tenant-provisioning-db.log",
+      "sha256": "d3284187b0fbd7ef5836a25c94f4a173886a805bbf660cf87d9b0823eb7de68f"
+    },
+    {
+      "name": "secure-fresh:test:core-onboarding:db",
+      "command": "pnpm run test:core-onboarding:db",
+      "result": "PASS",
+      "log": "logs/secure-test-core-onboarding-db.log",
+      "sha256": "7ef21540dfcf5645cb6576548d66e5b83a6c9decc3a00c1910c9baa452b84985"
+    },
+    {
+      "name": "secure-fresh:test:resumable-import:db",
+      "command": "pnpm run test:resumable-import:db",
+      "result": "PASS",
+      "log": "logs/secure-test-resumable-import-db.log",
+      "sha256": "9a446dead3e5091c3292b6412c69bc2b742caa020217402b33c9e766eea90fc3"
+    },
+    {
+      "name": "secure-fresh:test:production-readiness-certification:db",
+      "command": "pnpm run test:production-readiness-certification:db",
+      "result": "PASS",
+      "log": "logs/secure-test-production-readiness-certification-db.log",
+      "sha256": "fe3ddbcff43d6cb81ce6c4cdcc37092df022fdd5f2f60fe1e6add6d1f97b0357"
+    },
+    {
+      "name": "secure-fresh:test:production-readiness-crash-windows:db",
+      "command": "pnpm run test:production-readiness-crash-windows:db",
+      "result": "PASS",
+      "log": "logs/secure-test-production-readiness-crash-windows-db.log",
+      "sha256": "12b85dfcfee24cba7eeaf75685bd81e60b98afe7c0a8180c33aa3b143ff24943"
+    },
+    {
+      "name": "legacy-tenant-matrix",
+      "command": "pnpm run test:production-readiness-tenant-matrix:db",
+      "result": "PASS",
+      "log": "logs/db-tenant-matrix-retry.log",
+      "sha256": "729a7b0891222982638b1cbedd4c2beb58bff62c4621101108f4c46b6fcdfb8b",
+      "assertions": 102
+    },
+    {
+      "name": "secure-tenant-matrix",
+      "command": "pnpm run test:production-readiness-tenant-matrix:db",
+      "result": "PASS",
+      "log": "logs/secure-final-test-production-readiness-tenant-matrix-db.log",
+      "sha256": "729a7b0891222982638b1cbedd4c2beb58bff62c4621101108f4c46b6fcdfb8b",
+      "assertions": 102
+    },
+    {
+      "name": "legacy-security-advisors",
+      "command": "pnpm exec supabase db advisors --db-url <owned-loopback-db>?sslmode=disable --type security --level error --fail-on error",
+      "result": "PASS",
+      "log": "logs/legacy-security-advisors-retry.log",
+      "sha256": "787b82f7fe548780e774ee923b05dca02dffadb45143ff952fbbed44bf57459d"
+    },
+    {
+      "name": "secure-security-advisors",
+      "command": "pnpm exec supabase db advisors --db-url <owned-loopback-db>?sslmode=disable --type security --level error --fail-on error",
+      "result": "PASS",
+      "log": "logs/secure-security-advisors-retry.log",
+      "sha256": "787b82f7fe548780e774ee923b05dca02dffadb45143ff952fbbed44bf57459d"
+    },
+    {
+      "name": "smoke",
+      "command": "CI=true PLAYWRIGHT_PORT=3217 pnpm --filter @nxttrack/web exec playwright test tests/e2e/smoke.spec.ts tests/e2e/visual-performance.spec.ts --workers=2",
+      "result": "PASS",
+      "log": "logs/verified-smoke.log",
+      "sha256": "f4ab2137ca46d3c566e8d9dedae623b7fc5ae116bd3abcd402700a8e812bf145",
+      "passed": 52,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "journey-renders-retry",
+      "command": "CI=true TMPDIR=<owned-shm-temp> PLAYWRIGHT_PORT=3218 pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-visual.spec.ts --config=playwright.journey.config.ts --project=journey-chromium --grep 86 --output=<owned-shm-output> --workers=1",
+      "result": "PASS",
+      "log": "logs/verified-journey-renders-retry.log",
+      "sha256": "9952e7557ca717bfb5344930c18336080746330a3cb7c89a5160d95692a03a96",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "maintenance",
+      "command": "CI=true PLAYWRIGHT_PORT=3219 MAINTENANCE_NO_WRITE=true pnpm --filter @nxttrack/web exec playwright test tests/e2e/production-readiness-maintenance-preview.spec.ts --workers=1",
+      "result": "PASS",
+      "log": "logs/verified-maintenance.log",
+      "sha256": "4b27022e9badca35e43de907c0b6b24dd9db78c1955b9f70aa238a3b77a85730",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "journey-first-final-attempt",
+      "command": "CI=true PLAYWRIGHT_PORT=3218 pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-timeline.spec.ts tests/e2e/journey-visual.spec.ts --config=playwright.journey.config.ts --project=journey-chromium --workers=1",
+      "result": "PASS_AFTER_TARGETED_RETRY",
+      "log": "logs/verified-journey.log",
+      "sha256": "8fa21332550bde677f0a37e3dbdec8897b3bff4682b3be7a4ce4de13668ce1bc",
+      "passedInitially": 12,
+      "failedInitially": 1,
+      "failure": "ENOSPC while closing artifact context; same 86-render test rerun successfully using owned shared-memory output/temp",
+      "uniqueFinalPassed": 13
+    },
+    {
+      "name": "workflow-syntax",
+      "result": "PASS",
+      "runBlocks": 213,
+      "command": "PyYAML parse + bash -n after replacing GitHub expression placeholders",
+      "log": "logs/workflow-syntax.log",
+      "sha256": "95dd18a86c3de020b4f19f5c5d0a8ec66159b15e771ceaae039bc84c4805f820"
+    }
+  ],
+  "limitations": [
+    "Dependency audit remains red: 2 critical, 1 high, 1 moderate; all also reported on origin/main.",
+    "Firefox/WebKit lack required host shared libraries and were not executed.",
+    "No authenticated external staging journeys, staging bot windows, real-provider checks or remote restore/deploy rehearsals.",
+    "Workflow YAML and 213 shell blocks parsed, actionlint unavailable."
+  ],
+  "resolvedAttempts": [
+    "Runtime-env audit passed after porting the required environment documentation.",
+    "Tenant API matrix passed after the existing synthetic two-tenant fixture was seeded.",
+    "Secure default config alone retained PostgreSQL defaults; recreated empty stack, revoked defaults before migrations, and reran all suites.",
+    "Loopback DB advisors require sslmode=disable on the disposable local stacks.",
+    "Full-height Pixel 7 screenshot exceeded native capture dimensions; complete CSS-scale capture passes unchanged content checks.",
+    "Journey endpoint measurement and absolute CSS position now share the inner border origin; unchanged clearance and settled assertions.",
+    "Disk/inode limitations were corrected locally before final builds and DB runs."
+  ]
+}

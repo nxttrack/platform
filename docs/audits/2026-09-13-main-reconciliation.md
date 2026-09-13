@@ -15,11 +15,11 @@ PRs, de 230 broncommits en 365 netto gewijzigde bestanden vast:
 Elk item heeft exact één primaire classificatie. Gemengde branches worden
 hieronder per inhoudelijke familie opgesplitst; dit is geen branch-mergeplan.
 
-## Families en besluiten vóór porten
+## Families en besluiten (afgesloten na porten)
 
 | Familie / bron | Classificatie | Modules, reden en afhankelijkheden | Voorgenomen actie / bewijs |
 | --- | --- | --- | --- |
-| Main-ancestors; gemergede PRs 1–54 naar main | ALREADY_PRESENT | Bestaande canon, auth, instructor assessments, billing, media, Android en tests | Behouden; baseline 328 unit, build, audits en 40 browserchecks groen |
+| Main-ancestors en gemergede PRs naar main | ALREADY_PRESENT | Bestaande canon, auth, instructor assessments, billing, media, Android en tests | Behouden; baseline 328 unit, build, audits en 40 browserchecks groen; historische staging-PRs afzonderlijk geclassificeerd in JSON |
 | Historische staging-/productionontwikkeling tot `2ac2e93` | ALREADY_PRESENT | De opgeloste merge heeft exact de tree van main; 230 ahead is geen 230 runtimeports | Geen oudere routes/helpers terugzetten; treehash in BASELINE.md |
 | Losse oude scaffold/phase-3/deploybranches | SUPERSEDED | Auth-boundary, `/parent`, Engelse adminroutes en oude deploymentarchitectuur vervangen door huidige trusted guards, `/portaal` en main releasecontract | Geen branchport; PR- en refmetadata behouden |
 | Parent/child v1 `1ffaf01` → `68d4a79`, PR #56 | KEEP_AND_PORT | Auth-session binding, ouderreauth, child-safe DTO/media, canonical journey history, theme lifecycle en hun bestaande v1 routeconsumers | Alleen bestaande pre-V4.2 code; portal/theme/canon units, auth audit en browser journey; tenant featureflags blijven werkzaam |
@@ -31,17 +31,39 @@ hieronder per inhoudelijke familie opgesplitst; dit is geen branch-mergeplan.
 | Certificering `22cc158` → `db9806f` | KEEP_AND_PORT | Tenant boundaries, grantrestricties, privacy, content/idempotency, provider/crashcorrecties, immutable evidence en storage/restore contract | Latere correcties tegelijk met afhankelijke runtime; oude migraties byte-identiek behouden |
 | Runtime/dependencies `d16281a`, `db9806f` | KEEP_AND_PORT | Node 24, fixed nanoid/Tiptap, exacte Supabase CLI | Frozen lockfile, alle units, build en audit; actuele baselineadvisories afzonderlijk behandelen |
 | Featurebranch-previewdeployments / gepinde preview-SHAs | SUPERSEDED | Tijdelijke uitzonderingen horen niet in canonical main | Main-only dispatch behouden; generieke exact-source/schema/rollbackcontroles semantisch integreren |
-| Certificerings-SHA als schema-/rollbackfloor (`541fe5f`) | KEEP_AND_PORT | Die SHA is géén ancestor van deze semantische port | Nieuwe additieve compatibility bridge naar een bewezen reconciliation-ancestor; geen ancestrycheck verwijderen |
+| Certificerings-SHA als schema-/rollbackfloor (`541fe5f`) | KEEP_AND_PORT | Die SHA is géén ancestor van deze semantische port | Immutable equivalent-ancestor map naar `12b4885`; op dat commit zijn apps/web, dependencies en alle migraties identiek aan `db9806f`. Geen extra migratie of herschreven floor. Vier nieuwe ancestrytests; merge-commit verplicht |
 | `docs/nxttrack-legal-facts-inventory`, acht commits | DOCS_OR_EVIDENCE_ONLY | Alleen `docs/legal-analysis`; geen runtimecode | Op bronref bewaren, geen actuele juridische/operationele claims overnemen |
 | Oude auditrapporten, screenshots, inputprompts, rolloutbewijs | DOCS_OR_EVIDENCE_ONLY | Bronmateriaal met historische datum/SHA; geen nieuw bewijs | Nuttige operationele docs behouden met historische index; grote prototype/input/evidencebinaries via immutable Git-links bewaren |
-| Mogelijke duplicate helper/demo cleanup | REVIEW_REQUIRED | Een naam of legacylabel bewijst geen ongebruik | Pas OBSOLETE_REMOVE na zoek-, vervangings- en testbewijs; anders expliciet behouden |
+| `FamilyCommandCenter` en `PortalOverviewHero` | OBSOLETE_REMOVE | Geen imports/routeconsumers; vervangen door ParentOverviewTop en ChildJourneyMap | Verwijderd in `8a72f88`; [usage- en testbewijs](2026-09-13-main-reconciliation/cleanup.json) |
+| Overige helpers, featureflags, releases en compatibility adapters | ALREADY_PRESENT | Bestaande consumers of historische snapshotcontracten | Bewust behouden; geen verwijdering op basis van alleen legacylabels |
+| Vier resterende dependency-advisories | REVIEW_REQUIRED | Al op origin/main; Next/sharp/browser-mapping vallen buiten de gecertificeerde dependencyfixes | Audit blijft rood, geen allowlist of lagere threshold; aparte gerichte patchreview vóór release |
+
+## Uitgevoerde afsluiting
+
+De 70 refs, 54 PRs, 230 broncommits en 365 bronbestanden zijn volledig
+geclassificeerd. Van de 230 commits zijn 143 ALREADY_PRESENT, 61 KEEP_AND_PORT,
+19 SUPERSEDED en 7 DOCS_OR_EVIDENCE_ONLY. De oorspronkelijke ledgercommit
+`d539421` bewaart de inventaris vóór runtimewijzigingen; deze versie legt de
+definitieve besluiten vast. Preview-only workflowwijzigingen en hun gepinde
+SHA-tests zijn na inhoudelijke inspectie SUPERSEDED geworden.
+
+De geselecteerde families zijn geïntegreerd in `d87aa78` en `12b4885`;
+canonical deployment/CI in `e1b8cb6`; bewezen cleanup in `8a72f88`; bestaande
+journey-coördinaten en browserbewijs in `2f4317e`. Alle 130 main-migraties en
+147 bronmigraties zijn byte-identiek behouden. Zie
+[migration-integrity](2026-09-13-main-reconciliation/migration-integrity.json).
+
+De twee bestaande open PRs zijn niet gewijzigd: #55 is superseded; #56 bevat
+de semantisch overgenomen pre-V4.2-familie maar houdt zijn oorspronkelijke
+staging-base. Ook lokale gebruikerswijzigingen en remote branches blijven staan.
 
 ## Grenzen en verificatie
 
-Voor elke poort worden relevante suites uitgevoerd, daarna alle units, typecheck,
-productiebuild, repository-/auth-/migratie-/RLS-audits en lokale browserchecks.
-Nieuwe DB-tests gebruiken uitsluitend een eigen disposable database en fictieve
-records; geen bestaande lokale stacks of remote databases muteren.
+Voor iedere port zijn domeinsuites uitgevoerd, gevolgd door alle units,
+typecheck, productiebuild, repository-/auth-/migratie-/RLS-audits en lokale
+browserchecks. DB-tests gebruiken uitsluitend eigen disposable databases met
+fictieve records. Het [eindrapport](../../MAIN-RECONCILIATION-REPORT.md) bevat
+de definitieve uitslagen, eerdere afwijkingen, herstelacties en beperkingen.
 
 Historische migraties, releases, snapshotcompatibiliteit, audits en consumers van
 featureflags blijven behouden. Readme/current-statusclaims worden gecorrigeerd;

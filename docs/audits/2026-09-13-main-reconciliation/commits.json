@@ -2272,7 +2272,7 @@
       "supabase/migrations/20260811140000_child_safe_curriculum_media_contract.sql"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "60e84544f7b1160c3ea46b8f65c2a9ed8aade3e0",
@@ -2293,7 +2293,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "580c995bcbbea63662d943bb8ad7ef4815f20598",
@@ -2323,7 +2323,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "23a4db5524b1221c6fb0d1f7b3604e9eaee1fc63",
@@ -2336,7 +2336,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "da4a57fa4618c5868d31ae0cf2b25dc649844a1d",
@@ -2349,7 +2349,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1677e65861b62257d92b2478ce40776efe6d5de7",
@@ -2362,7 +2362,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "b6b04d5853c2d4052336d438f551f6ecc6fb0d22",
@@ -2374,19 +2374,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "f8e8de5b007a8697b2b19ef6ff8a0e3a2c926bcc",
     "subject": "fix(staging): retain preview rollback target",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "23a715b5bf3bfea9de2ff4956ffed04c0c5cdd70",
@@ -2399,7 +2399,7 @@
       "tests/unit/portal-theme-schema.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "e72ae2e75cdf554697a96bf725855d82fef09b34",
@@ -2413,31 +2413,31 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "ade031ce60fe54d239edafaec8e9df118cae206b",
     "subject": "ci(staging): release audited portal preview",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "b302697fbf5f418becb418cc7942d55b55a78ad2",
     "subject": "fix(staging): use exact audited preview SHA",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "80fd3c31dce3dc291bdedae235670bb6f13b8962",
@@ -2449,19 +2449,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "75b918147f9f5087f3c41054a916634deaf221f0",
     "subject": "ci(staging): validate mobile title fix",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "5b132c94a049a5af33826468068cb5a505424614",
@@ -2474,19 +2474,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "2d003d96c8c5e240a700f76dc883118edd6815b9",
     "subject": "ci(staging): validate dashboard contrast fix",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "5ac0119a8426d11695accb2500225eaa1df00352",
@@ -2498,19 +2498,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1806d787a3b7433c8f08d66d64f91a192438ff34",
     "subject": "ci(staging): validate child touch target fix",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "91d5e68ab82387c384495a85f0e0ad4dc23a641a",
@@ -2522,19 +2522,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "6575b7023f31f3737e71e313649c3b3ce1218b6e",
     "subject": "ci(staging): validate child request touch target",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "df89b61e5fa91973231cac9755a0d64ccfa00248",
@@ -2546,19 +2546,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "f5664e0c3a5f7e45699ca12fb75bbeb95617ed14",
     "subject": "ci(staging): validate compact child dashboard",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "4e15c3aee3be60c085cad0b90b20917170a80687",
@@ -2570,19 +2570,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "36f0e57b79b4605b934526c2189889a733679b3b",
     "subject": "ci(staging): validate smallest child viewport",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "bb346b8e892ca1f00ae2bc3f81dc04dc1943549c",
@@ -2594,7 +2594,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "a9b20f7fdd67c5f96999e4e317d5384700c47ce3",
@@ -2606,19 +2606,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "90857569183c23606ede0be37e2148bedb493545",
     "subject": "ci(staging): validate child dashboard contrast",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "7c52e3f7ceb28aa1dd519718e6abb0d1343efe54",
@@ -2630,19 +2630,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "162aa5fd82473e1cb6128b709f18659260aee281",
     "subject": "ci(staging): validate journey action contrast",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "cbaa8da3aea9e29a0e7954fa8184152747405c48",
@@ -2655,19 +2655,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "d48e4538307166dbe10ba84c77a38a9749e7dbe6",
     "subject": "ci(staging): validate semantic danger badge",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "17775818b62dbf007e42fb238805b50d9cfea1f9",
@@ -2678,7 +2678,7 @@
       "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "ce9328dc252ce08d0bb6ff06938171e4ee88f57e",
@@ -2689,7 +2689,7 @@
       "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "cbe7d58d3ecbe9505e3294f14ebbaf90961fbeac",
@@ -2700,7 +2700,7 @@
       "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "88953f676ac8970ab97bdfc61088c6021854fd3e",
@@ -2713,19 +2713,19 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "6ab9d1c0622c0b559a77fbdd95dbb7fbae78d717",
     "subject": "test(release): validate header contrast preview",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "2b46ab2a5c41a0c97b043108ef9402b6987e7c63",
@@ -2743,7 +2743,7 @@
       "tests/unit/portal-journey-schema.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "a5068768fa6233de775961d43262343d897fdf91",
@@ -2823,7 +2823,7 @@
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "12a01e144aa24561d5da822904d3d21e9d4a263c",
@@ -2841,7 +2841,7 @@
       "docs/implementation/JOURNEY_AUDIT.md"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "37801558cca08dfa9981119aca5849847797a965",
@@ -2852,7 +2852,7 @@
       "apps/web/playwright.config.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "9f9d0b000921099ba5d3f3582c5b95db0f162389",
@@ -2864,7 +2864,7 @@
       "apps/web/tests/e2e/journey-timeline.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "24ae4ec369459301099aaa22d15c53e4fc6de571",
@@ -2875,7 +2875,7 @@
       "apps/web/tests/e2e/journey-timeline.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "b3d555e63b65062fbe3e79c72a5aa16693d52b99",
@@ -2886,7 +2886,7 @@
       "apps/web/tests/e2e/journey-timeline.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1d6673f4d14085d84c568987b9b5a9534a9e80f5",
@@ -2897,7 +2897,7 @@
       "apps/web/components/child/child-journey-map.tsx"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1615678e069b5052a488528142c5e6402c614d16",
@@ -2936,13 +2936,13 @@
   {
     "sha": "112b486dd1ef5a14d4c803ae0ff9a1c566e06c13",
     "subject": "test(staging): align preview release contract",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "f4fde88b091a488327cad211e747e63b8b778882",
@@ -2955,19 +2955,19 @@
       "tests/unit/portal-session-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "9ae13f97073e6df29befc09c2cb156ce874797ac",
     "subject": "ci(staging): allow parent reauth preview",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "9977f6fc4418c8bbb492be9e285a916b2c88c559",
@@ -2981,19 +2981,19 @@
       "apps/web/tests/e2e/portal-theme-visual-matrix.spec.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "080a93378caebd8ee7b0f1ce76b00a37199ac995",
     "subject": "ci(staging): allow portal shell preview",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "d30cf298bd0e4e8ee4240cb12d197d7ec6b76f0b",
@@ -3005,19 +3005,19 @@
       "tests/unit/portal-theme-six-by-thirteen.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "68d4a79ccdc3ede3691bf1ec1782fb8f81c05466",
     "subject": "ci(staging): allow canonical navigation preview",
-    "classification": "KEEP_AND_PORT",
-    "family": "pre-v42-portal-contracts",
+    "classification": "SUPERSEDED",
+    "family": "temporary-preview-release",
     "files": [
       ".github/workflows/deploy.yml",
       "tests/unit/portal-visual-matrix-contract.test.ts"
     ],
-    "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "reason": "Alleen tijdelijke preview-SHA/branchacceptatie en de bijbehorende workflowcontracttest; canonical main-only deployment vervangt dit.",
+    "action": "Geen previewuitzondering overgenomen; generieke releaseasserties blijven in e1b8cb6."
   },
   {
     "sha": "2582fdc21964abf784cab8315031bee754206ed9",
@@ -3061,7 +3061,7 @@
       "tests/unit/email-outbox-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "785e310c6080ddd077e6430e0f6538a41b208d18",
@@ -3081,7 +3081,7 @@
       "tests/unit/tenant-provisioning-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "8b9e8a642689051b8f8d1023ef9d9d3e0ff4d5ab",
@@ -3100,7 +3100,7 @@
       "tests/unit/core-onboarding-writes-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "ac110703848bfae943efff684b8f766ad91e19dc",
@@ -3117,7 +3117,7 @@
       "tests/unit/resumable-import-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "c0bb26e3e3e9a68af0a09c1588d9ad6e94867d3d",
@@ -3133,7 +3133,7 @@
       "tests/unit/newsletter-production-safety.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "141ae59f3b4448d3f85c2fe04b35a2ce93d7ddd3",
@@ -3182,7 +3182,7 @@
       "tests/unit/swim-flow-analytics-contract.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "d16281a9b2f5b963885ed273ea993c204f884ab4",
@@ -3206,7 +3206,7 @@
       "tests/unit/runtime-security-baseline.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "a10c12e4d39303320e0e686d66b56df059499230",
@@ -3235,7 +3235,7 @@
       "tests/unit/tenant-health-schema.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "4e3784649767be4c197db624b33995b3d1502f65",
@@ -3261,7 +3261,7 @@
       "tests/unit/production-readiness-certification.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1cff705717085d5a03ae4b4e1951d36c0174a55b",
@@ -3274,7 +3274,7 @@
       "scripts/db/audit-clean-room.mjs"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "cb4c110702979dc049932ecf128db4f7d28d1fe8",
@@ -3289,7 +3289,7 @@
       "tests/unit/production-readiness-certification.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "650785a45015259d813a45243d8aa4c999d71df9",
@@ -3304,7 +3304,7 @@
       "tests/unit/production-readiness-certification.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "b3948527e871ce36e46549213d240504b19a5987",
@@ -3326,7 +3326,7 @@
       "tests/unit/production-readiness-certification.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "1fecdc90079805b71d02b588d28f58092f5b66aa",
@@ -3352,7 +3352,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "ab8894d297faefdc7aac71aa0e5a1a2ce90e1a27",
@@ -3373,7 +3373,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "27a02c6eb3a3bb16131caebe42119af55c5716cf",
@@ -3387,7 +3387,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "e3764f5863c337435b420223643dcaf4bc2bdd1e",
@@ -3402,7 +3402,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "d7b3724e61631614119aa471bb55cf67c7f554ba",
@@ -3415,7 +3415,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "65416b06f6d23bb0d47343546ae975b198021416",
@@ -3434,7 +3434,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "91b8ff42e9affca4e1e5f3e94776997f703ccf45",
@@ -3449,7 +3449,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "7b55a80cbd44e2153a5e690e34ab1c62f755b1c0",
@@ -3462,7 +3462,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "a0eebee250310c6219e7ef24c2db925f85fad286",
@@ -3493,7 +3493,7 @@
       "scripts/storage/storage-restore-contract.mjs"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "d9489fe95c581742d4c8b8244d4adb0b3866d3e4",
@@ -3514,7 +3514,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "fffcb312d6317d97fd24b8e876efb47fb658f455",
@@ -3526,7 +3526,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
@@ -3545,7 +3545,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "ca3219b0f389668eb850aefd3a573a93c381d31e",
@@ -3562,7 +3562,7 @@
       "tests/unit/runtime-schema-compatibility.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "a65c0183d8d6dd490fcdd662c1b7b94578a3a245",
@@ -3574,7 +3574,7 @@
       "tests/unit/certification-revalidation.test.ts"
     ],
     "reason": "Netto intentie behouden via domeinselectie en laatste gevalideerde bronversie, niet volledige commit toepassen.",
-    "action": "Zie family-ledger; niet cherry-picken."
+    "action": "Semantisch geïntegreerd via d87aa78/12b4885, met canonical release-aanpassingen in e1b8cb6; zie file-ledger en eindrapport."
   },
   {
     "sha": "db9806f1d12aee7082f5c2848a271ac526e65aa6",
