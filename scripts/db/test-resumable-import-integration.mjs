@@ -138,7 +138,18 @@ async function testPaymentReferenceIdentity() {
     await setup.query(`insert into public.subscriptions (id,tenant_id,participant_id,enrollment_id,guardian_user_id,payment_plan_id,status,starts_on,next_due_on,amount_cents,currency,billing_interval)
       values ($1,$2,$3,$4,$5,$6,'active',current_date,current_date,1000,'EUR','monthly')`,[subscriptions[i],tenantId,participants[i],enrollments[i],guardianUserId,planId]);
   }
-  const job = await createJob('payments','ready',[{record_type:'payments',participant_reference:`PAY-${token}-1`,amount_eur:'10.00',due_on:'2026-12-01',status:'due'}]);
+  // The selected participant retains an older active enrollment whose
+  // subscription was cancelled. The current subscription belongs to a newer one.
+  await setup.query("update public.enrollments set created_at=now()-interval '1 day' where id=$1",[enrollments[1]]);
+  await setup.query("update public.subscriptions set status='cancelled' where id=$1",[subscriptions[1]]);
+  enrollments[1] = randomUUID();
+  subscriptions[1] = randomUUID();
+  await setup.query(`insert into public.enrollments (id,tenant_id,participant_id,guardian_user_id,program_id,status,starts_on)
+    values ($1,$2,$3,$4,$5,'active',current_date)`,[enrollments[1],tenantId,participants[1],guardianUserId,programId]);
+  await setup.query(`insert into public.subscriptions (id,tenant_id,participant_id,enrollment_id,guardian_user_id,payment_plan_id,status,starts_on,next_due_on,amount_cents,currency,billing_interval)
+    values ($1,$2,$3,$4,$5,$6,'active',current_date,current_date,1000,'EUR','monthly')`,[subscriptions[1],tenantId,participants[1],enrollments[1],guardianUserId,planId]);
+  const paymentData = {record_type:'payments',participant_reference:`PAY-${token}-1`,amount_eur:'10.00',due_on:'2026-12-01',status:'due'};
+  const job = await createJob('payments','ready',[paymentData]);
   const claim = await claimApply(job);
   assertEqual((await applyRows(job,claim.claimToken,await importRows(job))).outcome,'applied','payment lookup uses the selected participant');
   await completeApply(job,claim.claimToken);
@@ -146,11 +157,16 @@ async function testPaymentReferenceIdentity() {
     from public.manual_payments payment join public.import_manifest_entries manifest on manifest.target_id=payment.id
     where manifest.import_job_id=$1 and manifest.target_table='manual_payments'`,[job]);
   assertEqual(payment.rows[0].participant_id,participants[1],'payment remains bound to imported participant');
-  assertEqual(payment.rows[0].enrollment_id,enrollments[1],'payment ignores an earlier unrelated enrollment');
+  assertEqual(payment.rows[0].enrollment_id,enrollments[1],'payment uses the selected subscription enrollment, not the oldest active enrollment');
   assertEqual(payment.rows[0].subscription_id,subscriptions[1],'payment ignores an earlier unrelated subscription');
   const rollback = await claimRollback(job);
   assertEqual((await rollbackChunk(job,rollback.claimToken)).outcome,'compensated','unprocessed imported payment rollback succeeds');
   await completeRollback(job,rollback.claimToken);
+  await setup.query("update public.enrollments set status='cancelled' where id=$1",[enrollments[1]]);
+  const invalidJob = await createJob('payments','ready',[paymentData]);
+  const invalidClaim = await claimApply(invalidJob);
+  assertEqual((await applyRows(invalidJob,invalidClaim.claimToken,await importRows(invalidJob))).outcome,'needs_attention','an inactive linked enrollment must not fall back to another active enrollment');
+  assertEqual((await setup.query('select count(*)::integer as count from public.import_manifest_entries where import_job_id=$1',[invalidJob])).rows[0].count,0,'invalid subscription enrollment leaves no imported payment');
 }
 
 async function testBatchedValidationWithErrorsAndDuplicate() {

@@ -15,8 +15,8 @@ const expectedFingerprint = "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8ac
 // Body-only SQL corrections preserve the 147-migration minimum handshake so
 // the canonical previous application can roll back safely. This artifact still
 // requires its complete, independently pinned migration lineage.
-const requiredArtifactMigrationVersion = "20260913175334";
-const expectedArtifactFingerprint = "9606805fdf875ef27b76986532a5e226c49e5e90d30358a5f3a58f921bd33417";
+const requiredArtifactMigrationVersion = "20260913182211";
+const expectedArtifactFingerprint = "6200db9c908722a4419071a5765f88134188d18a7879f5ecfd4dfe98af71034e";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
   .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
   .sort();
