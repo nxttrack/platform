@@ -1,0 +1,70 @@
+BEGIN
+INSERT 0 2
+UPDATE 0
+INSERT 0 1
+INSERT 0 2
+UPDATE 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 1
+INSERT 0 2
+INSERT 0 1
+INSERT 0 1
+                                set_config                                 
+---------------------------------------------------------------------------
+ {"sub" : "16000000-0000-4000-8000-000000000001", "role" : "service_role"}
+(1 row)
+
+  set_config  
+--------------
+ service_role
+(1 row)
+
+CREATE TABLE
+INSERT 0 1
+DO
+INSERT 0 1
+DO
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+                                                                                                                                                        publish_group_offering                                                                                                                                                         
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"blocking": [], "currency": "EUR", "warnings": [{"code": "booking_window", "message": "Zonder boekingsvenster is het aanbod direct en onbeperkt in tijd zichtbaar."}], "canPublish": true, "offeringId": "57000000-0000-4000-8000-000000000001", "contractVersion": "group_offering_v3", "occurrenceCount": 1, "totalPriceCents": 0}
+(1 row)
+
+DO
+INSERT 0 1
+                                                                                                                                                          publish_group_offering                                                                                                                                                           
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"blocking": [], "currency": "EUR", "warnings": [{"code": "booking_window", "message": "Zonder boekingsvenster is het aanbod direct en onbeperkt in tijd zichtbaar."}], "canPublish": true, "offeringId": "57000000-0000-4000-8000-000000000002", "contractVersion": "group_offering_v3", "occurrenceCount": 1, "totalPriceCents": 12100}
+(1 row)
+
+CREATE TABLE
+INSERT 0 1
+DO
+INSERT 0 1
+INSERT 0 1
+DO
+INSERT 0 1
+INSERT 0 1
+                              set_config                              
+----------------------------------------------------------------------
+ {"sub":"16000000-0000-4000-8000-000000000003","role":"service_role"}
+(1 row)
+
+ERROR:  Scheduled session overlaps a published closure
+CONTEXT:  PL/pgSQL function app_private.enforce_session_booking_contract() line 72 at RAISE
+SQL statement "update public.sessions session
+  set status = exception.before_status
+  from public.schedule_occurrence_exceptions exception
+  where exception.tenant_id = target_tenant_id
+    and exception.blackout_id = target_blackout_id
+    and exception.session_id = session.id
+    and exception.status = 'applied'
+    and session.status = exception.effective_status"
+PL/pgSQL function app_private.undo_season_blackout_v3(uuid,uuid,uuid) line 14 at SQL statement
+SQL function "undo_season_blackout_v3" statement 1
+PL/pgSQL function inline_code_block line 14 at assignment

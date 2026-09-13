@@ -10,7 +10,7 @@
     "started_at": "2026-09-13T17:41:13.786269+00:00",
     "seconds": 1.25,
     "exit_code": 0,
-    "log": "baseline-clean-frozen-install.log",
+    "log": "baseline-clean-frozen-install.txt",
     "sha256": "d82bcdad9713184a831b6f9661ff175bb1a43ff00f3f96b3f9370ae40d2cf4d1"
   },
   {
@@ -25,7 +25,7 @@
     "started_at": "2026-09-13T17:41:15.035287+00:00",
     "seconds": 0.79,
     "exit_code": 0,
-    "log": "baseline-production-audit-json.log",
+    "log": "baseline-production-audit-json.txt",
     "sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab"
   },
   {
@@ -39,7 +39,7 @@
     "started_at": "2026-09-13T17:41:15.824679+00:00",
     "seconds": 0.76,
     "exit_code": 0,
-    "log": "baseline-production-audit.log",
+    "log": "baseline-production-audit.txt",
     "sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
   },
   {
@@ -53,7 +53,7 @@
     "started_at": "2026-09-13T17:41:16.589569+00:00",
     "seconds": 1.11,
     "exit_code": 0,
-    "log": "baseline-production-policy.log",
+    "log": "baseline-production-policy.txt",
     "sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d"
   },
   {
@@ -66,7 +66,7 @@
     "started_at": "2026-09-13T17:41:17.703699+00:00",
     "seconds": 21.64,
     "exit_code": 0,
-    "log": "baseline-typecheck.log",
+    "log": "baseline-typecheck.txt",
     "sha256": "5d65ac4dbc3ad1bb341360c945472be9d3e9a1e8601d64e99ea8b86517a74a8a"
   },
   {
@@ -80,7 +80,7 @@
     "started_at": "2026-09-13T17:41:39.345309+00:00",
     "seconds": 3.65,
     "exit_code": 0,
-    "log": "baseline-unit.log",
+    "log": "baseline-unit.txt",
     "sha256": "8520c23dabd2bb2416a587bc6f207d04e77e764e7d2fcc69941f01886adb189d"
   },
   {
@@ -94,7 +94,7 @@
     "started_at": "2026-09-13T17:41:42.997504+00:00",
     "seconds": 0.33,
     "exit_code": 0,
-    "log": "baseline-release-truth.log",
+    "log": "baseline-release-truth.txt",
     "sha256": "b3b405d2c507a40c6ce37890d518571e09a9f37176cb2167e0b9c49d4b36c859"
   },
   {
@@ -108,7 +108,7 @@
     "started_at": "2026-09-13T17:41:43.326459+00:00",
     "seconds": 0.3,
     "exit_code": 0,
-    "log": "baseline-design-audit.log",
+    "log": "baseline-design-audit.txt",
     "sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31"
   },
   {
@@ -122,7 +122,7 @@
     "started_at": "2026-09-13T17:41:43.624925+00:00",
     "seconds": 0.58,
     "exit_code": 0,
-    "log": "baseline-auth-audit.log",
+    "log": "baseline-auth-audit.txt",
     "sha256": "ee96c3d7da056755cae8ba78e3bc1693f9fc6e48c2c8d40780ab5f2941d32b10"
   },
   {
@@ -136,7 +136,7 @@
     "started_at": "2026-09-13T17:41:44.205384+00:00",
     "seconds": 0.38,
     "exit_code": 0,
-    "log": "baseline-db-audit.log",
+    "log": "baseline-db-audit.txt",
     "sha256": "4aa411563f63f7a7f00f99defe8767b24008267138f0fea90d2cc8a839a70947"
   },
   {
@@ -150,7 +150,7 @@
     "started_at": "2026-09-13T17:41:44.584585+00:00",
     "seconds": 1.54,
     "exit_code": 0,
-    "log": "baseline-db-rls-audit.log",
+    "log": "baseline-db-rls-audit.txt",
     "sha256": "56d95dfb53e3109a18a2d4fbb62e195bbe60cc7183c43e4e7a15bb53b093bea9"
   },
   {
@@ -164,7 +164,7 @@
     "started_at": "2026-09-13T17:41:46.124178+00:00",
     "seconds": 0.29,
     "exit_code": 0,
-    "log": "baseline-release-audit-journey-bot.log",
+    "log": "baseline-release-audit-journey-bot.txt",
     "sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376"
   },
   {
@@ -178,7 +178,7 @@
     "started_at": "2026-09-13T17:41:46.409962+00:00",
     "seconds": 0.32,
     "exit_code": 0,
-    "log": "baseline-release-audit-runtime-env.log",
+    "log": "baseline-release-audit-runtime-env.txt",
     "sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607"
   },
   {
@@ -192,7 +192,7 @@
     "started_at": "2026-09-13T17:41:46.727192+00:00",
     "seconds": 44.58,
     "exit_code": 0,
-    "log": "baseline-build.log",
+    "log": "baseline-build.txt",
     "sha256": "cfbfbc1bc535850f51db585bfcd6516d602ac92c66a568cd4135ee8a208370bc"
   },
   {
@@ -206,7 +206,7 @@
     "started_at": "2026-09-13T17:42:31.307000+00:00",
     "seconds": 0.44,
     "exit_code": 0,
-    "log": "baseline-deploy-package-standalone-assets.log",
+    "log": "baseline-deploy-package-standalone-assets.txt",
     "sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52"
   }
 ]

@@ -69,8 +69,99 @@ duplicate handling must remain unchanged. No theme data is part of this flow.
 
 ## Resolution and validation
 
-Investigation in progress. No SQL change or new migration existed when the above
-inventory was completed. No finding is marked PASS/FIXED before regression proof.
+The original inventory was completed and committed in `f830346` before any SQL
+change. The implementation and runtime regressions are committed in `8b4f4c6`.
+All three findings are **FIXED**; none was suppressed or classified as a false positive.
+The [validation index](docs/audits/2026-09-13-sql-lint-pre-v42/validation.json)
+records commands, outcomes and evidence hashes. Earlier failed attempts remain
+separate evidence; their results were not rewritten as successful runs.
+
+| Finding | Root cause and correction | Runtime evidence |
+| --- | --- | --- |
+| themeplanning — FIXED | Qualify the schedule projection, status filter and ordering with the schedule table alias. Preserve output fields, tenant locks, worker limit and per-row exception handling. | Planning replacement/cancellation; due versus future tenants; current/previous exact releases; failed activation isolated to its tenant; audit correlation; release rollback; replay; a locked row is skipped; two workers execute once. |
+| blackout-undo — FIXED | Qualify the undo actor with the function's parameter scope. A normal publish/undo regression also exposed the existing booking trigger rejecting restoration while the same blackout remained published. Move the existing close operation immediately after the blackout lock, inside the same transaction. | A different undo actor is recorded without changing the publisher; exact affected session restored; history reversed rather than deleted; final invoices unchanged; cross-tenant refusal; overlapping closure causes full rollback; concurrent undo restores once; manually changed session status preserved; replay returns zero. |
+| import-stage — FIXED | Label the existing PL/pgSQL block and qualify both group/enrollment stage lookups with its selected program ID. Re-running lint then exposed the same hidden identifier conflict for `participant_id` in the payment branch's subscription/enrollment queries; qualify those two references in the same function. | Same stage code in another program/tenant stays independent; group/enrollment use the selected stage; wrong-program stage is rejected; crash/restart and replay keep one graph/manifest; independent group rollback preserves the existing stage; payment references bind the selected participant; existing 5,000-row and compensation contracts rerun. |
+
+The extra import diagnostic was `column reference "participant_id" is ambiguous`,
+SQLSTATE 42702, body line 187 after the first edit; the original source references
+are at lines 483 and 486 of the same import migration. It is the same source/scope
+problem within SQL-03, previously hidden behind lint's first error in that function.
+No new curriculum rule, stage/version selection rule, stable identifier or theme
+mapping was introduced. This existing import resolves `program_stages` using the
+tenant, selected program and imported code; versioned curriculum publication and
+mapping stay under the existing canonical curriculum contracts.
+
+### Migration and rollback impact
+
+One CLI-generated forward-only migration:
+`supabase/migrations/20260913175334_pre_v42_sql_identifier_ambiguities.sql`.
+Total: **148 migrations**. All 147 canonical migration hashes remain identical.
+The migration replaces three existing function bodies, preserves their signatures,
+return shapes, invoker/definer mode, search paths and service-only grants, and
+contains no table/column changes, data backfill, theme asset import or dependency update.
+No applied historical migration was modified or removed.
+
+The unchanged version-5 runtime handshake describes the existing 147-migration
+minimum compatible schema. Keeping it unchanged permits rollback to the canonical
+application. The release assertion separately pins the new artifact's complete
+148-migration lineage to fingerprint
+`9606805fdf875ef27b76986532a5e226c49e5e90d30358a5f3a58f921bd33417`,
+while also validating the unchanged minimum-lineage fingerprint and all applied
+migration versions. This does not relax the gate: a database with only 147 recorded
+migrations is rejected even if its functions were corrected during local iteration.
+Both the canonical main application and this candidate accept the upgraded
+handshake. The canonical release assertion also passes against the upgraded schema.
+The historical app floor and real compatibility anchor `12b4885` remain unchanged.
+
+### Definitive local validation
+
+- Frozen dependency install; unchanged production policy and `pnpm audit --prod`: PASS, zero advisories. No package manifest or lockfile change.
+- Typecheck, 464 unit contracts (zero failures/skips), production build and standalone packaging: PASS.
+- Repository truth, Lovable baseline, auth, migration, RLS, Journey Bot, runtime environment, Sprint 31 and default migration-command checks: PASS.
+- Legacy profile: reset to the canonical 147 migrations; actual live definitions and handshake compared with main; existing `db:migrate` applied only migration 148; all thirteen existing database checks passed.
+- Secure-default profile: fresh install of all 148 migrations with automatic API exposure disabled and secure default grants; the same thirteen database checks passed.
+- Each profile ran the nine SQL integration suites, planning/theme/undo concurrency, 20-way outbox deduplication/claims, provisioning transaction boundaries, 20/100-way onboarding contention, resumable import including 5,000 rows, certification/crash-window contracts and 102 API/storage assertions across six roles.
+- The unchanged SQL lint command: PASS on both profiles with zero errors. Security advisors: PASS on both profiles. `plpgsql.variable_conflict` remains `error`; no lint directive, allowlist or global suppression was added.
+- Live function ACLs, security mode, search paths and the full compatibility-handshake definition equal the canonical pre-change values on both profiles.
+
+The first theme-test fixture selected an obsolete v2 release; the existing v3
+activation trigger correctly rejected it. The fixture was corrected to select
+existing published v3 releases before the baseline test reproduced SQLSTATE 42702.
+The blackout baseline runtime test failed on the booking trigger before reaching
+its separately reproduced identifier error. Both normal paths now pass.
+
+### Existing import rollback limitation retained
+
+An enrollment import automatically appends immutable swim lifecycle evidence.
+The existing generic compensation path cannot delete that enrollment without
+violating the append-only trigger, and returns `needs_attention`. The regression
+proves this refusal is atomic and retains the imported graph, manifest, stage and
+lifecycle evidence. Independent group and unprocessed payment compensation pass.
+The failed initial expectation of automatic enrollment deletion is retained as
+failed test evidence. Automatic removal of protected enrollment history was not
+implemented; such imports still require explicit human reconciliation. This is an
+existing domain safeguard/limitation, not a lint suppression or a claimed automatic
+rollback success.
+
+### Files and review scope
+
+Runtime changes are limited to the new migration and
+`scripts/release/assert-runtime-schema-compatibility.mjs`. Regression coverage is
+in `tests/sql/portal_theme_schedule_integration.sql`, the existing holiday SQL
+suite, and the existing swim-canon, planning-concurrency and resumable-import runners.
+All remaining changes are audit evidence. No V4.2 product code, importer, Default
+integration, theme assets, portal redesign or dependency upgrade is included.
+
+Post-merge main CI is certified in
+[the baseline record](docs/audits/2026-09-13-post-reconciliation-main-baseline.md).
+The new featurebranch PR, its own Web CI and its requested Codex review are pending
+publication. Native paths/package graph are unchanged; the existing Android
+workflow's path filter does not require a new run for this SQL-only PR.
+
+Technical references: [PostgreSQL variable substitution](https://www.postgresql.org/docs/current/plpgsql-implementation.html)
+and [Supabase database lint](https://supabase.com/docs/reference/cli/supabase-db-lint).
+The installed CLI help and Supabase changelog were checked; no dependency or
+Postgres engine upgrade is part of this correction.
 
 No deployment performed.
 V4.2 has not started yet.

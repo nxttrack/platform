@@ -1,0 +1,15 @@
+BEGIN
+ERROR:  column reference "status" is ambiguous
+LINE 3:     where status = 'scheduled' and scheduled_for <= now()
+                  ^
+DETAIL:  It could refer to either a PL/pgSQL variable or a table column.
+QUERY:  select *
+    from public.tenant_portal_theme_schedule
+    where status = 'scheduled' and scheduled_for <= now()
+    order by scheduled_for
+    for update skip locked
+    limit greatest(1, least(target_limit, 200))
+CONTEXT:  PL/pgSQL function app_private.execute_due_portal_theme_schedules(integer) line 6 at FOR over SELECT rows
+SQL function "execute_due_portal_theme_schedules" statement 1
+SQL statement "select jsonb_agg(to_jsonb(r))              from public.execute_due_portal_theme_schedules(50) r"
+PL/pgSQL function inline_code_block line 51 at SQL statement

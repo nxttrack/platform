@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 design:audit /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/design/audit-lovable-baseline.mjs
+
+[design:audit] PASS Lovable source, Priority A routes, viewports and production mappings are pinned.
