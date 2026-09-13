@@ -1,5 +1,8 @@
 # FASE 0 — Main reconciliation vóór V4.2
 
+> Actuele FASE 0.1-status staat onderaan. De onderstaande FASE 0-runs zijn
+> historische resultaten; hun rode audit is in FASE 0.1 opnieuw uitgevoerd en groen.
+
 Datum: 13 september 2026. Branch: `codex/main-reconciliation-v42-prep`.
 Base: `0fa158fb0abc7fdfe781a103a4c83b016edcba45`; opnieuw gefetcht vóór publicatie,
 zonder verandering van origin/main. Dit is een reviewbare cleanup, met een
@@ -166,3 +169,115 @@ Er is uitsluitend een featurebranch-publicatie en PR naar main toegestaan.
 Er is niets gemergd of gedeployd; geen remote database, echte mail of betaling
 is uitgevoerd. De gebruiker beslist over de cleanup-PR en start V4.2 pas vanaf
 de daarna bijgewerkte main.
+
+## FASE 0.1 — review and dependency closure
+
+Uitgangspunt opnieuw gefetcht: PR #57, branch `codex/main-reconciliation-v42-prep`,
+HEAD `0228c7d387dcfbb448b661febca750f30d514053`; er waren bij aanvang geen nieuwere
+remote commits. De acht bestaande commits en hun ancestry zijn behouden. Geteste
+codehead: `1d9243dc11f4c0b97c0a032aac6f3171f48d2e2d`. Publicatie-, CI- en tweede-reviewbewijs wordt hieronder
+apart toegevoegd; de historische FASE 0-resultaten hierboven blijven ongewijzigd.
+
+### Reviewafhandeling
+
+- **P1 compatibility-anchor**: `git merge-base --is-ancestor
+  12b4885a55c439caa2a7aa180d597e72baf9d2d5 HEAD` geeft exit 0. De review noemt
+  een afgevlakte review-SHA `60b66a9`, niet de werkelijke PR-head. De correcte
+  ancestryhelper en de schemafloor zijn behouden. Een nieuwe regressie maakt een
+  checkout met uitsluitend `refs/heads/main`; de acceptatie van de echte head en
+  weigering van oude main zijn bewezen. Ook de bestaande schema- en rollback-CLI
+  slagen met `GITHUB_WORKSPACE` naar zo'n canonical-main checkout, 147 lokale
+  migraties en uitsluitend een synthetisch rollbackartefact. Geen deploy uitgevoerd.
+- **P2 child badge**: earned releases selecteren nu ook `stable_key`. De werkelijke
+  child-projectie vergelijkt earned/locked op die logische identiteit, bewaart de
+  historische award-ID, titel en datum, en behoudt tenantprioriteit, releasekeuze,
+  lifecycle/audience en surprisegeschiedenis. Acht gedragsregressies dekken huidige
+  en oudere awards, nooit verdiende keys, onafhankelijke keys, tenantoverrides,
+  surprise/history en ontbrekende historische releases.
+- Beide oorspronkelijke threads worden met dit bewijs beantwoord en pas daarna
+  resolved. Een nieuwe Codex-review op de gepushte head blijft een verplichte gate.
+
+### Productieadvisories en kleinst veilige update
+
+| Advisory | Ernst | Dependency vóór → na | Kwetsbaar / patched | Pad en aard |
+| --- | --- | --- | --- | --- |
+| [GHSA-p293-qw3h-jr36](https://github.com/advisories/GHSA-p293-qw3h-jr36) | critical | next 16.2.11 → 16.3.3 | >=16.0.0 <16.3.3 / >=16.3.3 | apps/web → next, direct |
+| [GHSA-2xp9-vwfh-vxw4](https://github.com/advisories/GHSA-2xp9-vwfh-vxw4) | critical | next 16.2.11 → 16.3.3 | >=16.0.0 <16.3.3 / >=16.3.3 | apps/web → next, direct |
+| [GHSA-rgj7-g3m4-5g8c](https://github.com/advisories/GHSA-rgj7-g3m4-5g8c) | high | sharp 0.35.0 → 0.35.4 | <0.35.4 / >=0.35.4 | apps/web → sharp, direct; ook Next optional |
+| [GHSA-w5vr-8v7q-w6rv](https://github.com/advisories/GHSA-w5vr-8v7q-w6rv) | moderate | baseline-browser-mapping 2.10.38 → 2.11.0 | >=2.0.0 <2.11.0 / >=2.11.0 | apps/web → next → mapping, transitief |
+
+De gekozen versies zijn de eerste patched upstreamversies. Next blijft major 16;
+React/DOM 19.2.7, Node 24.18.0 en Playwright 1.61.1 voldoen aan de gepubliceerde
+peer-/engine-ranges. Next accepteert Sharp ^0.35.3 en browser-mapping ^2.9.19.
+De bestaande Sharp-override is verhoogd; een gerichte
+`next>baseline-browser-mapping: 2.11.0` override houdt de transitieve resolutie op
+de kleinste veilige versie binnen die range. Geen audit-ignore, allowlist,
+thresholdwijziging, force-fix of verwijderde dependency om de audit te verbergen.
+
+Next env/SWC en Sharp-platformpakketten volgen hun upstream parentversies;
+libvips gaat 1.3.0 → 1.3.3, @swc/helpers 0.5.15 → 0.5.23 en @emnapi/runtime
+1.11.1 → 1.11.3 volgens de nieuwe packagegraph. Alle 40 gewijzigde packagenamen
+staan afzonderlijk in `phase-0.1/dependency-version-changes.json`; metadata,
+exacte ranges en paden staan in de aangrenzende JSON-bijlagen.
+
+De nieuwe native graph bracht een bestaande standalone-copyfout aan het licht:
+kopiëren over al getracete pnpm-links gaf `ERR_FS_CP_SYMLINK_TO_SUBDIRECTORY`.
+De packaging vervangt nu de betreffende pakketdirectory en bewaart relatieve
+symlinks. Een echte scriptregressie bewijst tweemaal packagen en verplaatsen zonder
+brondependencies. Daarnaast slagen PNG/WebP/AVIF encode/decode/resize met Sharp
+0.35.4 en HEIF 1.23.2, ook via de Next image optimizer in een verplaatst volledig
+standaloneartefact; alle Sharp/libvips shared objects resolven binnen dat artefact.
+Nexts gegenereerde root-params typeverwijzing is meegenomen.
+
+### Nieuwe lokale verificatie
+
+- Clean install na verwijderen van alleen de eigen node_modules, met frozen lockfile:
+  PASS. Productie-audit: **4 → 0 advisories**, ook de ongewijzigde moderate-gate PASS.
+- Typecheck, **454 units (0 failed/skipped)**, truth, Lovable, Journey Bot,
+  runtime-env, auth, migratie-, RLS- en Sprint31-audits: PASS.
+- Productiebuild en standalone packaging/relocatie: PASS.
+- Beide eigen lokale profielen, legacy en secure: **147/147 migraties**, clean-room,
+  upgradepreflight en schemaassertie PASS; 8 zwemcanon-SQL-suites, planningconcurrency,
+  outbox, provisioning, onboarding/capaciteit, 5.000-rijen import/restart/rollback,
+  certificering en crashwindows PASS. API/storage/rollenmatrix: **102 assertions
+  per profiel**. Security advisors op errorniveau: geen errors. Geen migratie gewijzigd.
+- Chromium smoke desktop/mobiel: **52 PASS**. Maintenance: **1 PASS** met het
+  bestaande maintenance-script. Chromium journey-herhaling loopt na lokale
+  tijdelijke-opslaguitputting; nog geen volledige PASS-claim voor die herhaling.
+- Lokale Firefox/WebKit-hostlibraries blijven een beperking. De ongewijzigde
+  GitHub CI installeert alle drie engines met `--with-deps`; die run moet werkelijk
+  tot de browsergate komen. Geen niet-uitgevoerde test als PASS geteld.
+
+De eerste browserpoging miste Chromiumbestanden achter oude cachelinks; opnieuw
+installeren loste dat op. De eerdere journey-poging strandde op
+`ERR_INSUFFICIENT_RESOURCES`/`ENOSPC` in de gedeelde tijdelijke opslag. De
+herhaling gebruikt eigen temp/output op lokale schijf; geen toleranties of tests
+versoepeld. De lokale databases zijn na de suites gestopt en verwijderd.
+
+Een **aanvullende, niet in canonical CI opgenomen PL/pgSQL-lintcheck** meldt op
+beide profielen drie bestaande ambigue kolomreferenties: `status` in
+`app_private.execute_due_portal_theme_schedules`, `actor_user_id` in
+`app_private.undo_season_blackout_v3` en `program_id` in `public.apply_import_chunk`.
+Dit is geen PASS en geen security-advisoruitkomst. De eerste twee functies staan
+al op origin/main; de derde komt uit de eerder geporte bron. Hun SQL is in FASE
+0.1 ongewijzigd. Diagnostiek blijft zichtbaar als afzonderlijk risico; bestaande
+migration-/RLS-/importcontracten zijn aantoonbaar groen. Historische migraties en
+schemafloor zijn hiervoor niet herschreven.
+
+### GitHub-verificatie en exitstatus
+
+Historische Web CI `34762394259` op `0228c7d` faalde bij de vier advisories;
+die eerdere skipstatussen worden niet achteraf gewijzigd. Android native CI
+`34762394257`, dezelfde exacte SHA, is inmiddels **SUCCESS**, inclusief native
+contract/lint/tests/debug- en instrumentation-APK-build. FASE 0.1 wijzigt geen
+Android/Gradle/native API-contract; eventuele automatische Android-run op de PR
+wordt gevolgd zonder een ongegronde handmatige rerun.
+
+Nieuwe Web CI en tweede Codex-review: **PENDING publicatie**. PR #57 blijft open;
+merge-ready wordt uitsluitend na de actuele groene CI- en reviewgates gemeld.
+Het bestaande aparte deploy-workflowresultaat `34762363783` had geen jobs en
+faalde op workflowvalidatie; er is geen deployment uitgevoerd of gestart.
+
+**Merge-commit blijft verplicht; niet squashen/rebasen. Main is niet gemergd en
+er is niets gedeployed. Geen V4.2-code, importer, Default 1.1, remote DB-wijziging
+of echte mail, betaling of notificatie toegevoegd/uitgevoerd.**

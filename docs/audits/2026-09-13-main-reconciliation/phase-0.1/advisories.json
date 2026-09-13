@@ -1,0 +1,66 @@
+[
+  {
+    "id": "GHSA-p293-qw3h-jr36",
+    "severity": "critical",
+    "dependency": "next",
+    "versions": [
+      "16.2.11"
+    ],
+    "vulnerableRange": ">=16.0.0 <16.3.3",
+    "patchedRange": ">=16.3.3",
+    "paths": [
+      "apps__web>next"
+    ],
+    "direct": true,
+    "remediationVersion": "16.3.3",
+    "source": "https://github.com/advisories/GHSA-p293-qw3h-jr36"
+  },
+  {
+    "id": "GHSA-w5vr-8v7q-w6rv",
+    "severity": "moderate",
+    "dependency": "baseline-browser-mapping",
+    "versions": [
+      "2.10.38"
+    ],
+    "vulnerableRange": ">=2.0.0 <2.11.0",
+    "patchedRange": ">=2.11.0",
+    "paths": [
+      "apps__web>next>baseline-browser-mapping"
+    ],
+    "direct": false,
+    "remediationVersion": "2.11.0",
+    "source": "https://github.com/advisories/GHSA-w5vr-8v7q-w6rv"
+  },
+  {
+    "id": "GHSA-rgj7-g3m4-5g8c",
+    "severity": "high",
+    "dependency": "sharp",
+    "versions": [
+      "0.35.0"
+    ],
+    "vulnerableRange": "<0.35.4",
+    "patchedRange": ">=0.35.4",
+    "paths": [
+      "apps__web>sharp"
+    ],
+    "direct": true,
+    "remediationVersion": "0.35.4",
+    "source": "https://github.com/advisories/GHSA-rgj7-g3m4-5g8c"
+  },
+  {
+    "id": "GHSA-2xp9-vwfh-vxw4",
+    "severity": "critical",
+    "dependency": "next",
+    "versions": [
+      "16.2.11"
+    ],
+    "vulnerableRange": ">=16.0.0 <16.3.3",
+    "patchedRange": ">=16.3.3",
+    "paths": [
+      "apps__web>next"
+    ],
+    "direct": true,
+    "remediationVersion": "16.3.3",
+    "source": "https://github.com/advisories/GHSA-2xp9-vwfh-vxw4"
+  }
+]

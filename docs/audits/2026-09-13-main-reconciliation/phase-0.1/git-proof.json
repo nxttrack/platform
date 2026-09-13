@@ -1,0 +1,31 @@
+{
+  "startingHead": "0228c7d387dcfbb448b661febca750f30d514053",
+  "testedCodeHead": "1d9243dc11f4c0b97c0a032aac6f3171f48d2e2d",
+  "branch": "codex/main-reconciliation-v42-prep",
+  "originMain": "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+  "ancestors": {
+    "0228c7d387dcfbb448b661febca750f30d514053": true,
+    "12b4885a55c439caa2a7aa180d597e72baf9d2d5": true,
+    "d539421": true,
+    "d87aa78": true,
+    "e1b8cb6": true,
+    "8a72f88": true,
+    "2f4317e": true,
+    "1bd62a1": true
+  },
+  "migrationFilesChanged": [],
+  "phase01ChangedFiles": [
+    "apps/web/lib/domain/child-badges.ts",
+    "apps/web/lib/domain/child-portal.ts",
+    "apps/web/next-env.d.ts",
+    "apps/web/package.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "scripts/deploy/package-standalone-assets.mjs",
+    "tests/unit/child-badges.test.ts",
+    "tests/unit/compatible-application-ancestry.test.ts",
+    "tests/unit/portal-child-projection.test.ts",
+    "tests/unit/standalone-sharp-packaging.test.mjs"
+  ],
+  "mergeRequired": "merge commit; no squash or rebase"
+}

@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:tenant-provisioning:db /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/db/test-tenant-provisioning-integration.mjs
+
+[test:tenant-provisioning:db] PASS seven failure boundaries, zero partial graphs, 20-way duplicate submit, exact graph, durable blocked invitations, resumable identity and idempotent opening.

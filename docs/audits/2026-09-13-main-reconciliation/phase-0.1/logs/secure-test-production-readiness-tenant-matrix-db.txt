@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:production-readiness-tenant-matrix:db /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/db/test-production-readiness-tenant-matrix.mjs
+
+[test:production-readiness-tenant-matrix] PASS 102 Tenant A→B table/storage attacks across six roles; anon/stale/inactive, platform no-write, grant-vs-RLS, wrong-FK, service-only RPC, service route and payload-key conflict.

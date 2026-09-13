@@ -69,3 +69,27 @@ Historische migraties, releases, snapshotcompatibiliteit, audits en consumers va
 featureflags blijven behouden. Readme/current-statusclaims worden gecorrigeerd;
 historische auditdocumenten worden niet gewist. Het eindrapport sluit deze ledger
 met werkelijke commits, checks, cleanupbewijs en resterende risico's.
+
+## FASE 0.1 — review and dependency closure
+
+De historische inventaris en eerdere rode runs hierboven blijven intact. P1
+compatibility is tegen echte Git-ancestry weerlegd en met een canonical-main-only
+regressie en schema-/rollbackasserties onderbouwd. P2 earned/locked badges is
+semantisch gecorrigeerd op stable_key met acht gedragsregressies.
+
+De vier REVIEW_REQUIRED-advisories zijn gericht geremedieerd: beide Next criticals
+GHSA-p293-qw3h-jr36/GHSA-2xp9-vwfh-vxw4 via 16.3.3, Sharp high
+GHSA-rgj7-g3m4-5g8c via 0.35.4 en transitieve browser-mapping moderate
+GHSA-w5vr-8v7q-w6rv via 2.11.0. Auditthreshold en gates blijven ongewijzigd.
+De benodigde standalone-copycorrectie bewaart relatieve native links.
+
+Nieuwe lokale evidence: clean frozen install, 454 units, typecheck/build/audits,
+beide 147-migratieprofielen, alle domeincontracten, 102 API/storage/rollenasserties
+per profiel, 52 Chromiumsmokes en maintenance groen. Journey-herhaling en nieuwe
+GitHub CI/review zijn bij deze publicatie nog pending. Extra PL/pgSQL-lint meldt
+drie bestaande diagnostieken; die staan afzonderlijk als risico in het rapport.
+
+Zie [FASE 0.1-validation](2026-09-13-main-reconciliation/phase-0.1/validation.json),
+[advisories](2026-09-13-main-reconciliation/phase-0.1/advisories.json),
+[alle dependencywijzigingen](2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json)
+en het actuele [rapport](../../MAIN-RECONCILIATION-REPORT.md).
