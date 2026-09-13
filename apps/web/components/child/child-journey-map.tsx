@@ -241,9 +241,13 @@ export function ChildJourneyMap({
       const marker = markerFor(selectedEntryId);
       if (!viewportElement || !marker) return;
       const bounds = viewportElement.getBoundingClientRect();
+      // Absolute children use the inner border edge as their coordinate origin.
+      // Keep measurement and endpoint verification in that same coordinate space.
+      const originX = bounds.left + viewportElement.clientLeft;
+      const originY = bounds.top + viewportElement.clientTop;
       const localRect = (rect: DOMRect): JourneyRect => ({
-        x: rect.left - bounds.left,
-        y: rect.top - bounds.top,
+        x: rect.left - originX,
+        y: rect.top - originY,
         width: rect.width,
         height: rect.height
       });
@@ -262,7 +266,7 @@ export function ChildJourneyMap({
       const aspect = mascotAspect(mascotKind);
       const placement = selectMascotPlacement({
         anchor: localRect(marker.getBoundingClientRect()),
-        bounds: { x: 0, y: 0, width: bounds.width, height: bounds.height },
+        bounds: { x: 0, y: 0, width: viewportElement.clientWidth, height: viewportElement.clientHeight },
         exclusions,
         preferredHeight: preferredWidth / aspect,
         preferredWidth
@@ -304,8 +308,8 @@ export function ChildJourneyMap({
         if (!viewportElement) return;
         const viewportBox = viewportElement.getBoundingClientRect();
         const mascotBox = element.getBoundingClientRect();
-        const endpointMatches = Math.abs(mascotBox.left - (viewportBox.left + mascotPlacement.x)) <= 1
-          && Math.abs(mascotBox.top - (viewportBox.top + mascotPlacement.y)) <= 1
+        const endpointMatches = Math.abs(mascotBox.left - (viewportBox.left + viewportElement.clientLeft + mascotPlacement.x)) <= 1
+          && Math.abs(mascotBox.top - (viewportBox.top + viewportElement.clientTop + mascotPlacement.y)) <= 1
           && Math.abs(mascotBox.width - mascotPlacement.width) <= 1
           && Math.abs(mascotBox.height - mascotPlacement.height) <= 1;
         stableEndpointFrames = endpointMatches ? stableEndpointFrames + 1 : 0;

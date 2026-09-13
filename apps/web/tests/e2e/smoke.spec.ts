@@ -17,6 +17,8 @@ const privateRoutes = [
   "/admin/berichten",
   "/portaal",
   "/portaal/badges",
+  "/kind",
+  "/kind/reis",
   "/instructor"
 ];
 
@@ -34,6 +36,13 @@ const marketingSubpages = [
 ] as const;
 
 test.describe("staging MVP smoke", () => {
+  test("child session API requires authentication and cannot be cached", async ({ request }) => {
+    const response = await request.get("/api/child/session");
+    expect(response.status()).toBe(401);
+    expect(await response.json()).toMatchObject({ error: "unauthorized" });
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  });
+
   test("health endpoint returns the expected payload", async ({ request }) => {
     const response = await request.get("/api/health");
 
