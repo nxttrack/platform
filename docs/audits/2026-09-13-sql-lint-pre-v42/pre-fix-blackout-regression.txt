@@ -11,12 +11,12 @@ INSERT 0 1
 INSERT 0 2
 INSERT 0 1
 INSERT 0 1
-                                set_config                                 
+                                set_config
 ---------------------------------------------------------------------------
  {"sub" : "16000000-0000-4000-8000-000000000001", "role" : "service_role"}
 (1 row)
 
-  set_config  
+  set_config
 --------------
  service_role
 (1 row)
@@ -30,14 +30,14 @@ INSERT 0 1
 INSERT 0 2
 INSERT 0 2
 INSERT 0 1
-                                                                                                                                                        publish_group_offering                                                                                                                                                         
+                                                                                                                                                        publish_group_offering
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {"blocking": [], "currency": "EUR", "warnings": [{"code": "booking_window", "message": "Zonder boekingsvenster is het aanbod direct en onbeperkt in tijd zichtbaar."}], "canPublish": true, "offeringId": "57000000-0000-4000-8000-000000000001", "contractVersion": "group_offering_v3", "occurrenceCount": 1, "totalPriceCents": 0}
 (1 row)
 
 DO
 INSERT 0 1
-                                                                                                                                                          publish_group_offering                                                                                                                                                           
+                                                                                                                                                          publish_group_offering
 -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
  {"blocking": [], "currency": "EUR", "warnings": [{"code": "booking_window", "message": "Zonder boekingsvenster is het aanbod direct en onbeperkt in tijd zichtbaar."}], "canPublish": true, "offeringId": "57000000-0000-4000-8000-000000000002", "contractVersion": "group_offering_v3", "occurrenceCount": 1, "totalPriceCents": 12100}
 (1 row)
@@ -50,7 +50,7 @@ INSERT 0 1
 DO
 INSERT 0 1
 INSERT 0 1
-                              set_config                              
+                              set_config
 ----------------------------------------------------------------------
  {"sub":"16000000-0000-4000-8000-000000000003","role":"service_role"}
 (1 row)

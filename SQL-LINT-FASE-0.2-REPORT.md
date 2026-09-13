@@ -154,8 +154,8 @@ integration, theme assets, portal redesign or dependency upgrade is included.
 
 Post-merge main CI is certified in
 [the baseline record](docs/audits/2026-09-13-post-reconciliation-main-baseline.md).
-The new featurebranch PR, its own Web CI and its requested Codex review are pending
-publication. Native paths/package graph are unchanged; the existing Android
+The featurebranch is published as [PR #58](https://github.com/nxttrack/platform/pull/58).
+Its own Web CI and Codex review are pending. Native paths/package graph are unchanged; the existing Android
 workflow's path filter does not require a new run for this SQL-only PR.
 
 Technical references: [PostgreSQL variable substitution](https://www.postgresql.org/docs/current/plpgsql-implementation.html)
@@ -165,3 +165,7 @@ Postgres engine upgrade is part of this correction.
 
 No deployment performed.
 V4.2 has not started yet.
+
+Evidence transcripts are normalized to LF with trailing whitespace removed for Git;
+raw and normalized SHA-256 hashes are retained in the validation index. Test results
+and failed-attempt history are unchanged.
