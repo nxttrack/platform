@@ -1,0 +1,299 @@
+{
+  "data": {
+    "repository": {
+      "pullRequest": {
+        "headRefOid": "c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f",
+        "reviewThreads": {
+          "pageInfo": {
+            "hasNextPage": false,
+            "endCursor": "Y3Vyc29yOnYyOpK0MjAyNi0wOS0xM1QxNTozOTo1NFrOoedF1A=="
+          },
+          "nodes": [
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf0",
+              "isResolved": true,
+              "isOutdated": false,
+              "path": "scripts/release/compatible-application-ancestry.mjs",
+              "line": 9,
+              "startLine": 7,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR56",
+                    "databaseId": 3999866490,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Use a compatibility anchor contained by this commit**\n\nDeploying this reviewed SHA always fails the pre-activation schema assertion: commit `60b66a9` has parent `0fa158f`, so neither the schema floor `541fe5f` nor mapped anchor `12b4885` is its ancestor. `git merge-base -h` defines `--is-ancestor` as checking whether the first commit is an ancestor of the second, and running the helper with this SHA produces `Application commit has no certified compatible ancestor`; `.github/workflows/deploy.yml` runs that assertion unconditionally before activation. The compatibility mapping must reference an ancestor actually present in the reviewed commit's history (or the required history must be merged into it).\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866490",
+                    "createdAt": "2026-09-13T14:25:04Z",
+                    "commit": {
+                      "oid": "c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uawUx",
+                    "databaseId": 3999991089,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Verified against actual PR head a529056475d0a809f5bfe78b02d227137f9c1df5 and original 0228c7d387dcfbb448b661febca750f30d514053: `git merge-base --is-ancestor 12b4885a55c439caa2a7aa180d597e72baf9d2d5 HEAD` exits 0. The flattened 60b66a9 mentioned in the review is not the real PR head/history. All eight reconciliation commits remain ancestors; no squash/rebase was used.\n\n33d7333 adds a canonical-main-only checkout regression: only refs/heads/main exists, the actual candidate passes, and old main 0fa158f is rejected. We also ran the existing release:assert-schema-compatibility (all 147 local migrations) and release:assert-rollback-target CLIs with GITHUB_WORKSPACE pointing to that main-only checkout; both passed. Rollback used only a synthetic local artifact, no deployment. Evidence: docs/audits/2026-09-13-main-reconciliation/phase-0.1/{git-proof.json,canonical-main-results.json,logs/canonical-main-*.txt}.\n\nThe production ancestry helper, immutable compatibility anchor, historical schema floor and merge-commit requirement are unchanged. Full unit suite: 454 passed, zero failed/skipped; both local database profile suites pass. Resolving based on actual ancestry and regression evidence, without changing correct production code solely to satisfy the synthetic-history finding.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999991089",
+                    "createdAt": "2026-09-13T15:20:31Z",
+                    "commit": {
+                      "oid": "c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5Yf2",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/lib/domain/child-portal.ts",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uaR59",
+                    "databaseId": 3999866493,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Match earned badges by stable key instead of release ID**\n\nWhen a child earned an older release of a badge and a newer release with the same `stable_key` becomes current, this ID comparison treats the current release as unearned and displays a locked badge alongside the earned historical award. The badge award RPC explicitly considers either the release ID or `resolved_badge_key = target_release.stable_key` to prevent re-awarding the same logical badge, so the child projection should likewise derive earned stable keys from the awarded releases rather than comparing only version-specific IDs.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999866493",
+                    "createdAt": "2026-09-13T14:25:05Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uawWX",
+                    "databaseId": 3999991191,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in b3f8b89, present in current head a529056475d0a809f5bfe78b02d227137f9c1df5. The earned-release query now selects stable_key. The actual child DTO projector derives earned logical keys from awarded historical releases and suppresses current locked releases sharing those keys. Historical award IDs, dates and release-derived titles remain unchanged; legacy titles still fall back to the award record.\n\nEight behavior tests cover earned current releases; earned old plus newer same-key releases; never-earned keys; independent keys; tenant override/newest-release selection; surprise/history; lifecycle/audience; and unawarded/missing historical release rows. Tenant priority and availability selection are preserved. Tests call the production projector, not a duplicate implementation. Full suite: 454 passed, zero failed/skipped; typecheck, build and 52 Chromium desktop/mobile smoke checks pass. Evidence: tests/unit/child-badges.test.ts and docs/audits/2026-09-13-main-reconciliation/phase-0.1/validation.json. Resolving after green regression tests.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r3999991191",
+                    "createdAt": "2026-09-13T15:20:33Z",
+                    "commit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    },
+                    "originalCommit": {
+                      "oid": "0228c7d387dcfbb448b661febca750f30d514053"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5vbl",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/lib/domain/child-portal.ts",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uazyT",
+                    "databaseId": 4000005267,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Filter non-active sessions out of the child agenda**\n\nWhen a future session has `draft` or `cancelled` status, this query still includes it because it filters only by group and end time. `apps/web/app/(child)/kind/agenda/page.tsx` then treats the first result as the next activity, and the detail page tells the child to enjoy the lesson, so a cancelled or unconfirmed lesson can be presented as scheduled. Restrict this projection to the active child-visible session status, as the graduation query already does.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000005267",
+                    "createdAt": "2026-09-13T15:26:41Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ua5Yw",
+                    "databaseId": 4000028208,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in 6a7c0fc: the child agenda now requests only scheduled sessions, keeping tenant/group/end-time/order/limit boundaries. A regression drives the real Supabase query builder with a local fetch stub, verifies the PostgREST status constraint against draft/scheduled/completed/cancelled rows, and proves no request is made without memberships. Today, agenda and lesson detail share this filtered DTO.\n\nPublished head: d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5. Full regression: 460 units passed, zero failed/skipped; typecheck, build, standalone packaging, production audit and all local repository/auth/migration/RLS audits passed. Evidence is retained under docs/audits/2026-09-13-main-reconciliation/phase-0.1/. Resolving after these green tests; the new head is being reviewed again.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000028208",
+                    "createdAt": "2026-09-13T15:36:43Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5vbn",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/app/(child)/kind/agenda/page.tsx",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uazyW",
+                    "databaseId": 4000005270,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Render child lesson times in the tenant time zone**\n\nWhen the Next.js host runs in UTC\u2014as in the inspected environment, and `.github/workflows/deploy.yml` does not set `TZ`\u2014these `Intl.DateTimeFormat` calls use UTC rather than the tenant/Amsterdam time zone. A 09:00 Dutch lesson is therefore rendered as 07:00 or 08:00 depending on DST, and the date chip can show the preceding day for early lessons. Pass the configured tenant time zone (or the established `Europe/Amsterdam` default) explicitly to all child lesson formatters.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000005270",
+                    "createdAt": "2026-09-13T15:26:41Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ua5Z6",
+                    "databaseId": 4000028282,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in 6a7c0fc: the tenant-bound timezone setting is projected with a validated Europe/Amsterdam fallback. All child lesson formatters (Today, agenda highlights/list/day+month chip, lesson detail) use it explicitly. The countdown now compares local calendar dates rather than elapsed 24-hour intervals. Regressions pass on UTC and Los Angeles hosts for CET/CEST, midnight/month boundaries, a different configured tenant zone, missing/invalid settings, and both DST transitions.\n\nPublished head: d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5. Full regression: 460 units passed, zero failed/skipped; typecheck, build, standalone packaging, production audit and all local repository/auth/migration/RLS audits passed. Evidence is retained under docs/audits/2026-09-13-main-reconciliation/phase-0.1/. Resolving after these green tests; the new head is being reviewed again.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000028282",
+                    "createdAt": "2026-09-13T15:36:45Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h5vbp",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/lib/domain/child-badges.ts",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7uazyY",
+                    "databaseId": 4000005272,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P2 Badge](https://img.shields.io/badge/P2-yellow?style=flat)</sub></sub>  Include legacy resolved keys in earned badge identities**\n\nFor awards created before immutable releases, `badge_release_id` is null while `resolved_badge_key` identifies the logical badge, so this set remains empty and the portal shows the earned historical award plus a locked current badge. Fresh evidence in the current head is that the award query in `child-portal.ts` still omits `resolved_badge_key`, while `20260802140000_versioned_badge_batches.sql` adds nullable `badge_release_id` without backfilling it; derive the earned key from the resolved snapshot when no release is attached.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000005272",
+                    "createdAt": "2026-09-13T15:26:41Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ua5ay",
+                    "databaseId": 4000028338,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in 6a7c0fc: the award query now selects resolved_badge_key, which supplies earned logical identity when no immutable release key is available. The actual immutable release takes precedence over a conflicting historical snapshot. New regressions cover a legacy snapshot suppressing a current locked duplicate, an independent key remaining locked, and release/snapshot precedence. Award title/date and existing surprise/history behavior are preserved.\n\nPublished head: d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5. Full regression: 460 units passed, zero failed/skipped; typecheck, build, standalone packaging, production audit and all local repository/auth/migration/RLS audits passed. Evidence is retained under docs/audits/2026-09-13-main-reconciliation/phase-0.1/. Resolving after these green tests; the new head is being reviewed again.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000028338",
+                    "createdAt": "2026-09-13T15:36:47Z",
+                    "commit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    },
+                    "originalCommit": {
+                      "oid": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "id": "PRRT_kwDOTCRwsc6h50XU",
+              "isResolved": true,
+              "isOutdated": true,
+              "path": "apps/web/lib/domain/child-portal.ts",
+              "line": null,
+              "startLine": null,
+              "comments": {
+                "pageInfo": {
+                  "hasNextPage": false
+                },
+                "nodes": [
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ua7Aj",
+                    "databaseId": 4000034851,
+                    "author": {
+                      "login": "chatgpt-codex-connector"
+                    },
+                    "body": "**<sub><sub>![P1 Badge](https://img.shields.io/badge/P1-orange?style=flat)</sub></sub>  Bound agenda sessions to membership dates**\n\nWhen an active or trial placement is created with a future `startsOn` value\u2014explicitly supported by `place_group_membership_atomic` via `target_starts_on`\u2014this query immediately adds the group to `groupIds`, so every scheduled session from now onward is shown even if it occurs before the child joins; an active membership with `ends_on` likewise exposes sessions after departure. Select the membership date bounds and retain only sessions whose tenant-local lesson date falls within at least one matching membership interval.\n\nUseful? React with \ud83d\udc4d\u00a0/ \ud83d\udc4e.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000034851",
+                    "createdAt": "2026-09-13T15:39:54Z",
+                    "commit": {
+                      "oid": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5"
+                    },
+                    "originalCommit": {
+                      "oid": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5"
+                    }
+                  },
+                  {
+                    "id": "PRRC_kwDOTCRwsc7ubBNp",
+                    "databaseId": 4000060265,
+                    "author": {
+                      "login": "TIXOCEO"
+                    },
+                    "body": "Fixed in 1b28cd8, published in c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f. The membership query now selects starts_on/ends_on. Agenda sessions must fall within at least one matching placement interval using the tenant-local lesson date, inclusive at both ends. The Data API scan is bounded around each interval; exact date filtering happens before the 24-lesson limit with stable pagination. Overlapping placements do not duplicate sessions, other groups/gaps stay independent, and query failures return an error instead of a partial agenda.\n\nRegressions cover before join/after departure, inclusive midnight boundaries in CET/CEST and New York/Kiritimati, open ends, overlaps, gaps, and 100 early ineligible rows before the first valid page. 464 units, typecheck, all local audits, build and packaging pass. The actual multi-interval OR/range/order request also returned HTTP 200 from an owned local PostgREST stack with all 147 migrations; no remote DB was used. Resolving after green tests; requesting another review of this head.",
+                    "url": "https://github.com/nxttrack/platform/pull/57#discussion_r4000060265",
+                    "createdAt": "2026-09-13T15:49:47Z",
+                    "commit": {
+                      "oid": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5"
+                    },
+                    "originalCommit": {
+                      "oid": "d42a65f219ac7b9c6c2443bf966b95cc24d1bdc5"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

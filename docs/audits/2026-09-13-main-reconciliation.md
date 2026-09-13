@@ -72,45 +72,30 @@ met werkelijke commits, checks, cleanupbewijs en resterende risico's.
 
 ## FASE 0.1 — review and dependency closure
 
-De historische inventaris en eerdere rode runs hierboven blijven intact. P1
-compatibility is tegen echte Git-ancestry weerlegd en met een canonical-main-only
-regressie en schema-/rollbackasserties onderbouwd. P2 earned/locked badges is
-semantisch gecorrigeerd op stable_key met acht gedragsregressies.
+De historische inventaris en eerdere rode runs blijven intact. Actuele geteste en
+beoordeelde codehead: `c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f`, na laatste
+runtimecorrectie `1b28cd818e56ae034bad73c924317080fbcf376c`. De acht oorspronkelijke
+commits, compatibility-anker en 147 byte-identieke migraties blijven behouden.
 
-De vier REVIEW_REQUIRED-advisories zijn gericht geremedieerd: beide Next criticals
-GHSA-p293-qw3h-jr36/GHSA-2xp9-vwfh-vxw4 via 16.3.3, Sharp high
-GHSA-rgj7-g3m4-5g8c via 0.35.4 en transitieve browser-mapping moderate
-GHSA-w5vr-8v7q-w6rv via 2.11.0. Auditthreshold en gates blijven ongewijzigd.
-De benodigde standalone-copycorrectie bewaart relatieve native links.
+Zes P1/P2-threads zijn onderbouwd resolved: ancestry, stable-key/legacy badges,
+lesstatus, tenanttijdzone en plaatsingsdatums. De vervolg-review op c6cd1c0 vond
+geen belangrijke nieuwe bevindingen. De vier eerdere REVIEW_REQUIRED-advisories
+zijn opgelost met Next 16.3.3, Sharp 0.35.4 en browser-mapping 2.11.0, zonder
+gewijzigde auditpolicy. Native packaging en één dubbele workflow-envkey zijn
+minimaal gecorrigeerd en getest.
 
-Nieuwe lokale evidence: clean frozen install, 454 units, typecheck/build/audits,
-beide 147-migratieprofielen, alle domeincontracten, 102 API/storage/rollenasserties
-per profiel, 52 Chromiumsmokes en maintenance groen. Journey-herhaling en nieuwe
-GitHub CI/review zijn bij deze publicatie nog pending. Extra PL/pgSQL-lint meldt
-drie bestaande diagnostieken; die staan afzonderlijk als risico in het rapport.
+Clean/frozen install, 464 units, typecheck/build/packaging/audits, beide lokale
+147-migratieprofielen en hun volledige contracten zijn groen. Web CI 34766746639
+en Android CI 34766746635 zijn SUCCESS op c6cd1c0; drie browserengines werkelijk
+uitgevoerd (31 PASS, 17 expliciete SKIP). Aanvullende PL/pgSQL-lint houdt drie
+bestaande diagnostieken als afzonderlijk risico; geen historische SQL herschreven.
 
-Zie [FASE 0.1-validation](2026-09-13-main-reconciliation/phase-0.1/validation.json),
-[advisories](2026-09-13-main-reconciliation/phase-0.1/advisories.json),
-[alle dependencywijzigingen](2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json)
-en het actuele [rapport](../../MAIN-RECONCILIATION-REPORT.md).
-
-### Vervolg na tweede Codex-review
-
-Op `a529056` zijn Web CI **34765275679** en Android native CI **34765275669**
-volledig SUCCESS. De echte Firefox/WebKit-run leverde samen met Chromium 31 PASS
-met 17 bestaande expliciete skips. De tweede review vond twee nieuwe P1
-(lesstatus/tijdzone) en één P2 (legacy badge-key). Correctiecode
-`6a7c0fc35f4919acb6d6f21f0a54f364ec16d144` heeft 460 groene units plus opnieuw
-groene typecheck/build/packaging/audits. `b1200dd` verwijdert een identieke dubbele
-workflow-envkey; 29 workflows zijn strikt gevalideerd. De nieuwe publicatie wordt
-opnieuw via CI en Codex beoordeeld. Zie het rapport en de follow-up evidence;
-eerdere 454-unit-/CI-runs blijven met hun eigen SHA bewaard.
-
-### Aanvullende P1 uit de derde review
-
-`d42a65f` heeft groene Web CI 34766100074 en Android CI 34766100069. Codex
-5191196954 vond ontbrekende plaatsingsdatums in de kindagenda. `1b28cd8`
-begrenst lessen inclusief op tenant-lokale instroom/uitstroom en past de
-24-limiet pas na filtering toe. 464 units en alle lokale build/auditgates zijn
-groen; echte lokale PostgREST-querysyntax is getest op 147 migraties. Geen SQL
-gewijzigd. Afsluitende CI/review wordt op de nieuwe publicatie gevolgd.
+Zie [het korte eindrapport](../../MAIN-RECONCILIATION-REPORT.md),
+[validation en alle loghashes](2026-09-13-main-reconciliation/phase-0.1/validation.json),
+[advisories met ranges/paden](2026-09-13-main-reconciliation/phase-0.1/advisories.json),
+[iedere dependencywijziging](2026-09-13-main-reconciliation/phase-0.1/dependency-version-changes.json)
+en [de bewaarde tussentijdse geschiedenis](2026-09-13-main-reconciliation/phase-0.1/REVIEW-AND-VALIDATION-HISTORY.md).
+De exacte laatste documentatie-SHA, CI en review worden in het
+[afsluitcommentaar](https://github.com/nxttrack/platform/pull/57#issuecomment-5654354386)
+gecontroleerd; runtime en dependencies blijven identiek aan c6cd1c0. Geen merge,
+deploy, remote DB-wijziging of echte provideractie uitgevoerd. Merge-commit vereist.
