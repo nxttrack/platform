@@ -7,6 +7,10 @@ const migration = readFileSync(
   "utf8"
 );
 const backupScript = readFileSync(new URL("../../scripts/storage/object-backup.mjs", import.meta.url), "utf8");
+const storageBucketContract = readFileSync(
+  new URL("../../scripts/storage/storage-bucket-contract.mjs", import.meta.url),
+  "utf8"
+);
 const erasureModule = readFileSync(new URL("../../apps/web/lib/storage/tenant-erasure.ts", import.meta.url), "utf8");
 const privateFileResponse = readFileSync(new URL("../../apps/web/lib/storage/private-file-response.ts", import.meta.url), "utf8");
 const documentRoute = readFileSync(new URL("../../apps/web/app/api/files/tenant-document/[id]/route.ts", import.meta.url), "utf8");
@@ -60,8 +64,8 @@ test("publication requires a separate service-only human-confirmed transition", 
 });
 
 test("private media objects participate in backup and verified tenant erasure", () => {
-  assert.match(backupScript, /tenant-documents,diploma-vault,participant-media,badge-studio-assets/);
-  assert.match(backupScript, /participant-media/);
+  assert.match(backupScript, /requiredStorageBucketNames/);
+  assert.match(storageBucketContract, /name: "participant-media"/);
   assert.match(erasureModule, /PARTICIPANT_MEDIA_BUCKET/);
   assert.match(erasureModule, /tenantPrivateBuckets = \[TENANT_DOCUMENTS_BUCKET, DIPLOMA_VAULT_BUCKET, PARTICIPANT_MEDIA_BUCKET, BADGE_STUDIO_ASSETS_BUCKET\]/);
 });

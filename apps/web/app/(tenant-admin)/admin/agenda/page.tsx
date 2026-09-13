@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "@/lib/date/business-date";
 import { AlertTriangle, CalendarDays, Clock, Users } from "lucide-react";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
@@ -19,7 +20,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const saved = getParam(params, "saved");
   const error = getParam(params, "error");
   const pendingCatchUps = data.catchUpRequests.filter((request) => request.status === "requested");
-  const todayKey = new Date().toISOString().slice(0, 10);
+  const todayKey = toAmsterdamDate();
   const todaySessions = data.sessionInsights.filter((insight) => insight.dayKey === todayKey);
   const overCapacitySessions = data.sessionInsights.filter((insight) => insight.status === "over_capacity").length;
 

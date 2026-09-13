@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarClock, FileText, MessageSquarePlus, Send, Settings2 } from "lucide-react";
+import { FileText, MessageSquarePlus, Send, Settings2 } from "lucide-react";
 
 import { RichTextEditor } from "@/components/communication/rich-text-editor";
 import { Button } from "@/components/ui/button";
@@ -291,27 +291,17 @@ export function NewsletterCampaignForm({
         <FieldDescription>Kies alleen een referentie bij ouders per programma, groep of badje. De server controleert het type en de organisatie opnieuw.</FieldDescription>
       </Field>
       <RichTextEditor
-        description="De nieuwsbrief blijft een concept totdat je planning en doelgroep afzonderlijk bevestigt."
+        description="Nieuwsbriefdelivery heeft nog geen geverifieerde sender. Je kunt de inhoud veilig als concept voorbereiden."
         required
         variables={editorVariables}
       />
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Field>
-          <FieldLabel htmlFor="campaign-status">Status</FieldLabel>
-          <NativeSelect defaultValue="draft" id="campaign-status" name="status">
-            <option value="draft">Concept</option>
-            <option value="scheduled">Inplannen</option>
-          </NativeSelect>
-        </Field>
-        <Field>
-          <FieldLabel htmlFor="campaign-scheduled-at">Gepland moment</FieldLabel>
-          <Input id="campaign-scheduled-at" name="scheduledAt" type="datetime-local" />
-        </Field>
+      <input name="status" type="hidden" value="draft" />
+      <div className="rounded-xl border border-warning/30 bg-warning/5 p-3 text-sm text-muted-foreground">
+        Concept-only: er wordt niets ingepland, verzonden of als deliverysucces geregistreerd.
       </div>
-      <Confirmation label="Bij inplannen: ik heb segment, toestemming, inhoud en verzendmoment gecontroleerd." />
       <SubmitButton>
-        <CalendarClock className="size-4" />
-        Nieuwsbrief opslaan
+        <FileText className="size-4" />
+        Concept opslaan
       </SubmitButton>
     </DirtyForm>
   );

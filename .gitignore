@@ -12,3 +12,6 @@ test-results
 *.log
 *.tsbuildinfo
 .DS_Store
+
+# Local Supabase CLI cache; never part of a reconciliation patch.
+supabase/.temp/

@@ -1,0 +1,1 @@
+PASS real owned loopback PostgREST accepted bounded multi-membership OR/range/order queries (3 HTTP 200 responses, nonexistent synthetic tenant, no rows exposed).

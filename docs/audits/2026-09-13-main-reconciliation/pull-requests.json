@@ -1,0 +1,862 @@
+[
+  {
+    "baseRefName": "staging",
+    "headRefName": "codex/parent-child-portals-v1",
+    "headRefOid": "68d4a79ccdc3ede3691bf1ec1782fb8f81c05466",
+    "mergeCommit": null,
+    "mergedAt": null,
+    "number": 56,
+    "state": "OPEN",
+    "title": "feat(portals): add session-bound parent and child experiences",
+    "updatedAt": "2026-08-13T00:23:57Z",
+    "url": "https://github.com/nxttrack/platform/pull/56",
+    "classification": "KEEP_AND_PORT",
+    "action": "Semantisch via deze main-PR; oude PR niet wijzigen of sluiten."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-parent-mobile-contrast",
+    "headRefOid": "1822d3dcd58a0b685c368395ba31aea794bb67ac",
+    "mergeCommit": null,
+    "mergedAt": null,
+    "number": 55,
+    "state": "OPEN",
+    "title": "fix(a11y): raise parent mobile contrast",
+    "updatedAt": "2026-08-04T00:28:41Z",
+    "url": "https://github.com/nxttrack/platform/pull/55",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-isolation-parent-display-contract",
+    "headRefOid": "3994759e446086b2da7a990a1b6be3008c3a860e",
+    "mergeCommit": {
+      "oid": "0fa158fb0abc7fdfe781a103a4c83b016edcba45"
+    },
+    "mergedAt": "2026-08-04T00:16:47Z",
+    "number": 54,
+    "state": "MERGED",
+    "title": "test(staging): align parent isolation with privacy display",
+    "updatedAt": "2026-08-04T00:16:48Z",
+    "url": "https://github.com/nxttrack/platform/pull/54",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-admin-session-run-uniqueness",
+    "headRefOid": "18c090fb4297aa730457c7196e4a9a68de27491b",
+    "mergeCommit": {
+      "oid": "7ca41016beef765eba01284a987c24bd1a576704"
+    },
+    "mergedAt": "2026-08-04T00:01:40Z",
+    "number": 53,
+    "state": "MERGED",
+    "title": "test(staging): isolate session evidence by workflow run",
+    "updatedAt": "2026-08-04T00:01:41Z",
+    "url": "https://github.com/nxttrack/platform/pull/53",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-admin-session-feedback-retry",
+    "headRefOid": "e9995a333f51049a392789776885aeed27142f72",
+    "mergeCommit": {
+      "oid": "1dde32f6d73d8e82060fb3a7bccc68a0c7a4bc0f"
+    },
+    "mergedAt": "2026-08-03T23:46:23Z",
+    "number": 52,
+    "state": "MERGED",
+    "title": "test(staging): make session mutation retry-safe",
+    "updatedAt": "2026-08-03T23:46:25Z",
+    "url": "https://github.com/nxttrack/platform/pull/52",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-admin-enrollment-gender-contract",
+    "headRefOid": "376f9703d9b88e08e712576520289fd5c34c88ad",
+    "mergeCommit": {
+      "oid": "b99f3a25ab1961008fccb0d11a25de67e77fd62c"
+    },
+    "mergedAt": "2026-08-03T23:32:36Z",
+    "number": 51,
+    "state": "MERGED",
+    "title": "fix(enrollment): enforce canonical participant gender",
+    "updatedAt": "2026-08-03T23:32:38Z",
+    "url": "https://github.com/nxttrack/platform/pull/51",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-admin-publish-navigation",
+    "headRefOid": "9a60b808ea063a1b25cd901258176cec4619f5bb",
+    "mergeCommit": {
+      "oid": "7971abd844fd06aad337cef6c0f34affba84a029"
+    },
+    "mergedAt": "2026-08-03T23:16:38Z",
+    "number": 50,
+    "state": "MERGED",
+    "title": "test(staging): reload after group publication",
+    "updatedAt": "2026-08-03T23:16:40Z",
+    "url": "https://github.com/nxttrack/platform/pull/50",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-intake-program-scope",
+    "headRefOid": "7388f88b1c59953215883bf357ffc1e8dd13d4ce",
+    "mergeCommit": {
+      "oid": "474029880a3be427de8a76fdcab8dc34b2cabbd1"
+    },
+    "mergedAt": "2026-08-03T22:56:46Z",
+    "number": 49,
+    "state": "MERGED",
+    "title": "test(staging): scope intake to canonical program",
+    "updatedAt": "2026-08-03T22:56:48Z",
+    "url": "https://github.com/nxttrack/platform/pull/49",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/harden-sprint4-admin-reruns",
+    "headRefOid": "fbe374da50846c49d3be53bfa6d824fc17a5d3f3",
+    "mergeCommit": {
+      "oid": "4ce606862a91c679bbce10aadae50d64ef6bc494"
+    },
+    "mergedAt": "2026-08-03T22:43:24Z",
+    "number": 48,
+    "state": "MERGED",
+    "title": "test(staging): make admin journey append-only",
+    "updatedAt": "2026-08-03T22:43:26Z",
+    "url": "https://github.com/nxttrack/platform/pull/48",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-phase16-assessment-baseline",
+    "headRefOid": "0e782bf1f693ed8df240b2d7238ee9351291becb",
+    "mergeCommit": {
+      "oid": "2c599346809be9585c61dc473e34b2bc1021b96d"
+    },
+    "mergedAt": "2026-08-03T22:27:30Z",
+    "number": 47,
+    "state": "MERGED",
+    "title": "test(staging): restore canonical assessment baseline",
+    "updatedAt": "2026-08-03T22:27:31Z",
+    "url": "https://github.com/nxttrack/platform/pull/47",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/harden-sprint4-admin-feedback-selectors",
+    "headRefOid": "5253ebf6803abd252ea74275e01f79b1ff5ea119",
+    "mergeCommit": {
+      "oid": "1bb5819a33910491d0c219699a829ea3c42dbc25"
+    },
+    "mergedAt": "2026-08-03T22:21:29Z",
+    "number": 46,
+    "state": "MERGED",
+    "title": "test(staging): scope admin feedback status",
+    "updatedAt": "2026-08-03T22:21:30Z",
+    "url": "https://github.com/nxttrack/platform/pull/46",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-admin-capacity-selectors",
+    "headRefOid": "5c83a5572e1c3396d663b38306fcc6ec7f5bee1a",
+    "mergeCommit": {
+      "oid": "aecc5bf34118f3434a7cdbc6afef8b9bc99fae8a"
+    },
+    "mergedAt": "2026-08-03T22:09:34Z",
+    "number": 45,
+    "state": "MERGED",
+    "title": "test(staging): scope capacity controls",
+    "updatedAt": "2026-08-03T22:09:35Z",
+    "url": "https://github.com/nxttrack/platform/pull/45",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-admin-selectors",
+    "headRefOid": "6709802927ab254a330dee52aa1eb6f4b213d698",
+    "mergeCommit": {
+      "oid": "e6bf44a21eeec21ebef8227cb2e85e0dd023196c"
+    },
+    "mergedAt": "2026-08-03T22:00:05Z",
+    "number": 44,
+    "state": "MERGED",
+    "title": "test(staging): scope admin wizard selectors",
+    "updatedAt": "2026-08-03T22:00:06Z",
+    "url": "https://github.com/nxttrack/platform/pull/44",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-admin-terminology",
+    "headRefOid": "798a188ab987e430d6715074b0da0a528aee3e1f",
+    "mergeCommit": {
+      "oid": "5c64ea51209800c6dbe7ee84708e4f51b03c24d0"
+    },
+    "mergedAt": "2026-08-03T21:46:26Z",
+    "number": 43,
+    "state": "MERGED",
+    "title": "test(staging): follow transactional group workflow",
+    "updatedAt": "2026-08-03T21:46:28Z",
+    "url": "https://github.com/nxttrack/platform/pull/43",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-parent-terminology",
+    "headRefOid": "a79acdd63766fee8a3c73d478348a2fe9d88cf85",
+    "mergeCommit": {
+      "oid": "1c03cc1570658250cd5c0140536ee51c58f22fa2"
+    },
+    "mergedAt": "2026-08-03T21:25:32Z",
+    "number": 42,
+    "state": "MERGED",
+    "title": "test(staging): follow parent portal terminology",
+    "updatedAt": "2026-08-03T21:25:34Z",
+    "url": "https://github.com/nxttrack/platform/pull/42",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-assessment-feedback",
+    "headRefOid": "904b79824ca023a5780e70a548d1a749b8a47a10",
+    "mergeCommit": {
+      "oid": "1f429080525ef912be82d36173a6a7c44fd46cf0"
+    },
+    "mergedAt": "2026-08-03T21:08:22Z",
+    "number": 41,
+    "state": "MERGED",
+    "title": "test(staging): assert canonical assessment feedback",
+    "updatedAt": "2026-08-03T21:08:24Z",
+    "url": "https://github.com/nxttrack/platform/pull/41",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-assessment-correction",
+    "headRefOid": "21a2e156dbbb6853e76d3970e388da8bdcc71090",
+    "mergeCommit": {
+      "oid": "f4ecbbbc52d598ce5db6f059b93c47f66b6c0ec1"
+    },
+    "mergedAt": "2026-08-03T20:54:33Z",
+    "number": 40,
+    "state": "MERGED",
+    "title": "test(staging): follow canonical assessment correction chain",
+    "updatedAt": "2026-08-03T20:54:35Z",
+    "url": "https://github.com/nxttrack/platform/pull/40",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-append-only-sprint4-fixtures",
+    "headRefOid": "ab33593d2f42c41eb338c587725b726cc7177864",
+    "mergeCommit": {
+      "oid": "2136eff98d0569359236c7288acab28332cbe23a"
+    },
+    "mergedAt": "2026-08-03T20:38:55Z",
+    "number": 39,
+    "state": "MERGED",
+    "title": "test(staging): preserve append-only Sprint 4 history",
+    "updatedAt": "2026-08-03T20:38:57Z",
+    "url": "https://github.com/nxttrack/platform/pull/39",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-sprint4-gender-locator",
+    "headRefOid": "f5632b6a5bc4809da9252b99c528c846792aa717",
+    "mergeCommit": {
+      "oid": "449a5bb0a8609f58155abf30a893868944140b2a"
+    },
+    "mergedAt": "2026-08-03T20:22:33Z",
+    "number": 38,
+    "state": "MERGED",
+    "title": "test(staging): align Sprint 4 intake gender label",
+    "updatedAt": "2026-08-03T20:22:34Z",
+    "url": "https://github.com/nxttrack/platform/pull/38",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-final-stage-destination",
+    "headRefOid": "450052ceee7650341ac0966cecc3215a698668ea",
+    "mergeCommit": {
+      "oid": "fafbbfbf75b15aa90e72180fa5d90e6de121a2f1"
+    },
+    "mergedAt": "2026-08-03T20:02:15Z",
+    "number": 37,
+    "state": "MERGED",
+    "title": "fix(parent-portal): target diploma after final stage",
+    "updatedAt": "2026-08-03T20:02:17Z",
+    "url": "https://github.com/nxttrack/platform/pull/37",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/seed-versioned-phase16-curriculum",
+    "headRefOid": "d28831edbdc1bbd28ce6d7d48b14f0a5404f3f1f",
+    "mergeCommit": {
+      "oid": "a9a04f106e08ac816ea97fdafddcad71948da6d4"
+    },
+    "mergedAt": "2026-08-03T19:49:30Z",
+    "number": 36,
+    "state": "MERGED",
+    "title": "test(staging): seed versioned swim journey",
+    "updatedAt": "2026-08-03T19:49:32Z",
+    "url": "https://github.com/nxttrack/platform/pull/36",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-phase16-mobile-payments",
+    "headRefOid": "16e6e22c6c621db84e71027b47c050b49c4864bb",
+    "mergeCommit": {
+      "oid": "0681acec10bfbf0a337d02fbc74aa6bdb0b31ebc"
+    },
+    "mergedAt": "2026-08-03T19:34:12Z",
+    "number": 35,
+    "state": "MERGED",
+    "title": "test(parent-portal): follow mobile payments navigation",
+    "updatedAt": "2026-08-03T19:34:14Z",
+    "url": "https://github.com/nxttrack/platform/pull/35",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-phase16-parent-first-name",
+    "headRefOid": "f81d8ed40f4d9b4c6eb3b97ac2a17a6aa8b69a6c",
+    "mergeCommit": {
+      "oid": "ca29e8faee89667ac8161fbf948d7a2c047f2cb6"
+    },
+    "mergedAt": "2026-08-03T19:23:17Z",
+    "number": 34,
+    "state": "MERGED",
+    "title": "test(parent-portal): assert privacy-safe journey heading",
+    "updatedAt": "2026-08-03T19:23:19Z",
+    "url": "https://github.com/nxttrack/platform/pull/34",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-phase16-planning-fixture",
+    "headRefOid": "4ae37d29e856ecbcbe81f0438757c50799dbff54",
+    "mergeCommit": {
+      "oid": "f9c3968cdd7e0b6c1ab77e212757d8c85e416fa0"
+    },
+    "mergedAt": "2026-08-03T19:11:10Z",
+    "number": 33,
+    "state": "MERGED",
+    "title": "test(staging): seed verified instructor qualification",
+    "updatedAt": "2026-08-03T19:11:12Z",
+    "url": "https://github.com/nxttrack/platform/pull/33",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/seed-theme-visual-matrix",
+    "headRefOid": "284f9aebac25e209daccd73956cf655f2710208e",
+    "mergeCommit": {
+      "oid": "fa00538e9119308be5f07ad44709a48eda71f2ac"
+    },
+    "mergedAt": "2026-08-03T19:00:11Z",
+    "number": 32,
+    "state": "MERGED",
+    "title": "fix(e2e): seed parent journey before theme matrix",
+    "updatedAt": "2026-08-03T19:00:12Z",
+    "url": "https://github.com/nxttrack/platform/pull/32",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-billing-event-compat",
+    "headRefOid": "99cf35f7e2ae9710cda3960d7878fa08817ee19f",
+    "mergeCommit": {
+      "oid": "1733c45f0fbef15d4dea68c6dbdf40263362f6cf"
+    },
+    "mergedAt": "2026-08-03T18:49:21Z",
+    "number": 31,
+    "state": "MERGED",
+    "title": "fix(migration): preserve legacy billing event types",
+    "updatedAt": "2026-08-03T18:49:21Z",
+    "url": "https://github.com/nxttrack/platform/pull/31",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/fix-gender-migration-order",
+    "headRefOid": "ee40120005f0f10b082f7c2cabb3e4a2e7f25403",
+    "mergeCommit": {
+      "oid": "80a406beaa80819acd642674edae1b405d991e5f"
+    },
+    "mergedAt": "2026-08-03T18:41:19Z",
+    "number": 30,
+    "state": "MERGED",
+    "title": "fix(migration): relax legacy gender check before backfill",
+    "updatedAt": "2026-08-03T18:41:20Z",
+    "url": "https://github.com/nxttrack/platform/pull/30",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/theme-deploy-memory",
+    "headRefOid": "15958cfc5981d78a9accf8e389882f9d503b82ca",
+    "mergeCommit": {
+      "oid": "43a7357218f14423b8110817a4b0eecb03d16251"
+    },
+    "mergedAt": "2026-08-03T18:32:12Z",
+    "number": 29,
+    "state": "MERGED",
+    "title": "fix(deploy): raise Node heap for release gates",
+    "updatedAt": "2026-08-03T18:32:13Z",
+    "url": "https://github.com/nxttrack/platform/pull/29",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "agent/swim-school-canon-v3-android",
+    "headRefOid": "fb99b9c54fed6eb9279f4c56df03d0ab8cd60183",
+    "mergeCommit": {
+      "oid": "197d319ded5cab0e527591aaf66da6acee2dc8c5"
+    },
+    "mergedAt": "2026-08-03T18:24:42Z",
+    "number": 28,
+    "state": "MERGED",
+    "title": "feat(parent-portal): replace legacy catalog with six-theme v3",
+    "updatedAt": "2026-08-03T18:24:42Z",
+    "url": "https://github.com/nxttrack/platform/pull/28",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "agent/swim-school-canon-v3-android",
+    "headRefOid": "8a4c5280ec75e7f79231f5ba70c2299cc1f6f401",
+    "mergeCommit": {
+      "oid": "154f3aa78a9f92dcb7b558218c277cb76ad2c578"
+    },
+    "mergedAt": "2026-08-03T00:28:10Z",
+    "number": 27,
+    "state": "MERGED",
+    "title": "feat: implement swim-school canon v3 and native Android apps",
+    "updatedAt": "2026-08-03T00:28:10Z",
+    "url": "https://github.com/nxttrack/platform/pull/27",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "5a31475c72592fbd6f15d37cfee39ee2b7dd7e74",
+    "mergeCommit": {
+      "oid": "99f1aed07101a6c78d83bd858730fa366ac6edae"
+    },
+    "mergedAt": "2026-07-08T01:17:31Z",
+    "number": 24,
+    "state": "MERGED",
+    "title": "ee",
+    "updatedAt": "2026-07-08T01:17:31Z",
+    "url": "https://github.com/nxttrack/platform/pull/24",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "production",
+    "headRefName": "staging",
+    "headRefOid": "0d57e0c2045fe03b7dc043a3e6cd32b706fd8e79",
+    "mergeCommit": {
+      "oid": "b3a3517f7350ce0b97e002790534c325e52bbbc0"
+    },
+    "mergedAt": "2026-06-24T19:24:50Z",
+    "number": 23,
+    "state": "MERGED",
+    "title": "Staging",
+    "updatedAt": "2026-06-24T19:24:50Z",
+    "url": "https://github.com/nxttrack/platform/pull/23",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "codex/fix-supabase-public-key-env",
+    "headRefOid": "7863d07c141f6f1cd1a963ace1066c8663c9999f",
+    "mergeCommit": {
+      "oid": "131f3fa9e033b9dab2d80bf6783de1780a7c0c31"
+    },
+    "mergedAt": "2026-06-24T09:00:38Z",
+    "number": 22,
+    "state": "MERGED",
+    "title": "[codex] Align Supabase public key env names",
+    "updatedAt": "2026-06-24T09:00:38Z",
+    "url": "https://github.com/nxttrack/platform/pull/22",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "codex/fix-standalone-static-assets",
+    "headRefOid": "c19650a0c4568cc128805681893ee6fec6e96e25",
+    "mergeCommit": {
+      "oid": "db245756aa33c5db969b4d1703499c8a95c8e623"
+    },
+    "mergedAt": "2026-06-24T08:50:15Z",
+    "number": 21,
+    "state": "MERGED",
+    "title": "[codex] Fix standalone static assets in staging deploy",
+    "updatedAt": "2026-06-24T08:50:15Z",
+    "url": "https://github.com/nxttrack/platform/pull/21",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "codex/phase2-shell-boundaries",
+    "headRefOid": "e5befb4cb92de8809531938333a4f09d0a27c632",
+    "mergeCommit": {
+      "oid": "5c544ae3693154b2de833ae70680caaa3a2e52d8"
+    },
+    "mergedAt": "2026-06-24T08:38:56Z",
+    "number": 20,
+    "state": "MERGED",
+    "title": "[codex] Complete Phase 2 shell auth boundaries",
+    "updatedAt": "2026-06-24T08:38:56Z",
+    "url": "https://github.com/nxttrack/platform/pull/20",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "production",
+    "headRefName": "staging",
+    "headRefOid": "2b9e31b46fb753bcfb7099460534647730bebfa0",
+    "mergeCommit": {
+      "oid": "5e44f80604a9a44df060311b21f9b79f24736cec"
+    },
+    "mergedAt": "2026-06-24T08:02:02Z",
+    "number": 19,
+    "state": "MERGED",
+    "title": "Staging",
+    "updatedAt": "2026-06-24T08:02:02Z",
+    "url": "https://github.com/nxttrack/platform/pull/19",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "5a89598cc7dff49185de2f898a0caa1672ea725d",
+    "mergeCommit": {
+      "oid": "2b9e31b46fb753bcfb7099460534647730bebfa0"
+    },
+    "mergedAt": "2026-06-24T01:01:41Z",
+    "number": 18,
+    "state": "MERGED",
+    "title": "[codex] Promote main to staging after Lovable marketing page",
+    "updatedAt": "2026-06-24T01:01:41Z",
+    "url": "https://github.com/nxttrack/platform/pull/18",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/lovable-nxttrack-marketing",
+    "headRefOid": "8b43507e450ce24ddf63a57777d04318628ac18f",
+    "mergeCommit": {
+      "oid": "5a89598cc7dff49185de2f898a0caa1672ea725d"
+    },
+    "mergedAt": "2026-06-24T00:59:44Z",
+    "number": 17,
+    "state": "MERGED",
+    "title": "[codex] Port Lovable NXTTRACK marketing page",
+    "updatedAt": "2026-06-24T00:59:45Z",
+    "url": "https://github.com/nxttrack/platform/pull/17",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f",
+    "mergeCommit": {
+      "oid": "6b475ff1863cdb80df6ed7994db8be55be13777d"
+    },
+    "mergedAt": "2026-06-23T23:57:27Z",
+    "number": 16,
+    "state": "MERGED",
+    "title": "Promote main to staging after trusted auth context sprint",
+    "updatedAt": "2026-06-23T23:57:27Z",
+    "url": "https://github.com/nxttrack/platform/pull/16",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-trusted-auth-context",
+    "headRefOid": "6e907bef36bfa23ad0331ceb7c32b1ecf9e39d67",
+    "mergeCommit": {
+      "oid": "1a0a9d925438e48fdd7a44135d1c2a9d34bd294f"
+    },
+    "mergedAt": "2026-06-23T23:55:48Z",
+    "number": 15,
+    "state": "MERGED",
+    "title": "[codex] Phase 3 trusted auth context sprint",
+    "updatedAt": "2026-06-23T23:55:48Z",
+    "url": "https://github.com/nxttrack/platform/pull/15",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "8d05e1cb6b2cfb6bf3e7d8cb9d14e36dd66c9e21",
+    "mergeCommit": {
+      "oid": "d020e3bd0e729833b9123face7a30d69ab8412d0"
+    },
+    "mergedAt": "2026-06-23T23:23:58Z",
+    "number": 14,
+    "state": "MERGED",
+    "title": "Promote main to staging after route guard contracts",
+    "updatedAt": "2026-06-23T23:23:58Z",
+    "url": "https://github.com/nxttrack/platform/pull/14",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-guard-contracts",
+    "headRefOid": "255dfbd577975a61b13915ab508ad3825683f04f",
+    "mergeCommit": {
+      "oid": "8d05e1cb6b2cfb6bf3e7d8cb9d14e36dd66c9e21"
+    },
+    "mergedAt": "2026-06-23T23:22:41Z",
+    "number": 13,
+    "state": "MERGED",
+    "title": "[codex] Phase 3 route guard contracts",
+    "updatedAt": "2026-06-23T23:22:41Z",
+    "url": "https://github.com/nxttrack/platform/pull/13",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "2ca17027138ef8c6b1fab6742362c635f6b4a71f",
+    "mergeCommit": {
+      "oid": "2c719a6e141cffeed5e446ec0105f73b43fe6e1c"
+    },
+    "mergedAt": "2026-06-23T23:01:00Z",
+    "number": 12,
+    "state": "MERGED",
+    "title": "Promote tenant routing contract to staging",
+    "updatedAt": "2026-06-23T23:01:00Z",
+    "url": "https://github.com/nxttrack/platform/pull/12",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-tenant-routing-contract",
+    "headRefOid": "d5c122537886d01465a0dcfc0ddbbff2e01c5805",
+    "mergeCommit": {
+      "oid": "2ca17027138ef8c6b1fab6742362c635f6b4a71f"
+    },
+    "mergedAt": "2026-06-23T22:59:44Z",
+    "number": 11,
+    "state": "MERGED",
+    "title": "Phase 3 tenant routing contract",
+    "updatedAt": "2026-06-23T22:59:44Z",
+    "url": "https://github.com/nxttrack/platform/pull/11",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "fc2f440da3d153ceadd4377a457b2935666d4f66",
+    "mergeCommit": {
+      "oid": "5713d447e47b7301a2f1f863313941405ba61bff"
+    },
+    "mergedAt": "2026-06-23T22:54:48Z",
+    "number": 10,
+    "state": "MERGED",
+    "title": "Promote main to staging after identity boundary migration",
+    "updatedAt": "2026-06-23T22:54:48Z",
+    "url": "https://github.com/nxttrack/platform/pull/10",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-identity-migration",
+    "headRefOid": "a05447f234a1436acdd7336acc3768632fd2613c",
+    "mergeCommit": {
+      "oid": "fc2f440da3d153ceadd4377a457b2935666d4f66"
+    },
+    "mergedAt": "2026-06-23T22:53:16Z",
+    "number": 9,
+    "state": "MERGED",
+    "title": "Phase 3 identity boundary migration",
+    "updatedAt": "2026-06-23T22:53:16Z",
+    "url": "https://github.com/nxttrack/platform/pull/9",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "fcd0558c0e64b25e5d4b722a522988aa44c34c84",
+    "mergeCommit": {
+      "oid": "63d2faa2a9c9e4397d4d257b5bd619e73a8d18bd"
+    },
+    "mergedAt": "2026-06-23T22:22:33Z",
+    "number": 8,
+    "state": "MERGED",
+    "title": "merge",
+    "updatedAt": "2026-06-23T22:22:34Z",
+    "url": "https://github.com/nxttrack/platform/pull/8",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-route-access-ci",
+    "headRefOid": "86e0f3c08823452a8c84d1131b379a2dfe692647",
+    "mergeCommit": {
+      "oid": "fcd0558c0e64b25e5d4b722a522988aa44c34c84"
+    },
+    "mergedAt": "2026-06-23T22:21:49Z",
+    "number": 7,
+    "state": "MERGED",
+    "title": "Phase 3 route access and CI foundation",
+    "updatedAt": "2026-06-23T22:21:49Z",
+    "url": "https://github.com/nxttrack/platform/pull/7",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "791f4721ab5a19d2eda1b1446ba4af66cd1d6674",
+    "mergeCommit": {
+      "oid": "7a3965dc14f1888023bae5102e805709845894da"
+    },
+    "mergedAt": "2026-06-23T21:58:10Z",
+    "number": 6,
+    "state": "MERGED",
+    "title": "merge",
+    "updatedAt": "2026-06-23T21:58:10Z",
+    "url": "https://github.com/nxttrack/platform/pull/6",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-3-auth-tenants-roles",
+    "headRefOid": "5a294f546f3628d2285a45430b8f9aea081719c8",
+    "mergeCommit": {
+      "oid": "791f4721ab5a19d2eda1b1446ba4af66cd1d6674"
+    },
+    "mergedAt": "2026-06-23T21:53:20Z",
+    "number": 5,
+    "state": "MERGED",
+    "title": "Phase 3 auth tenants roles foundation",
+    "updatedAt": "2026-06-23T21:53:20Z",
+    "url": "https://github.com/nxttrack/platform/pull/5",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "staging",
+    "headRefName": "main",
+    "headRefOid": "703c3eb1af8332a79f0e7c535f7664da8c9d0333",
+    "mergeCommit": {
+      "oid": "de26545e0241661cc594d08920812ec6e2f8ff4c"
+    },
+    "mergedAt": "2026-06-23T21:26:56Z",
+    "number": 4,
+    "state": "MERGED",
+    "title": "Merge",
+    "updatedAt": "2026-06-23T21:26:56Z",
+    "url": "https://github.com/nxttrack/platform/pull/4",
+    "classification": "SUPERSEDED",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-0-1-foundation",
+    "headRefOid": "b932723ff7310e41c1467d958de1c05d9c0fa8f5",
+    "mergeCommit": {
+      "oid": "7a988e3cb55c602f940388827c22116c48b07c61"
+    },
+    "mergedAt": "2026-06-23T21:15:55Z",
+    "number": 3,
+    "state": "MERGED",
+    "title": "Codex/phase 0 1 foundation",
+    "updatedAt": "2026-06-23T21:15:56Z",
+    "url": "https://github.com/nxttrack/platform/pull/3",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-2-app-scaffold",
+    "headRefOid": "c8705ede5caf2a9e6ad748262ffcb024036dce69",
+    "mergeCommit": {
+      "oid": "703c3eb1af8332a79f0e7c535f7664da8c9d0333"
+    },
+    "mergedAt": "2026-06-23T21:16:58Z",
+    "number": 2,
+    "state": "MERGED",
+    "title": "Phase 2 app scaffold and route skeletons",
+    "updatedAt": "2026-06-23T21:16:58Z",
+    "url": "https://github.com/nxttrack/platform/pull/2",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  },
+  {
+    "baseRefName": "main",
+    "headRefName": "codex/phase-0-1-foundation",
+    "headRefOid": "b932723ff7310e41c1467d958de1c05d9c0fa8f5",
+    "mergeCommit": {
+      "oid": "e539f3401bfbe18c42a12f07ba75f4dcd3f20227"
+    },
+    "mergedAt": "2026-06-23T20:25:52Z",
+    "number": 1,
+    "state": "MERGED",
+    "title": "Document Phase 0/1 foundation and Lovable UI audit",
+    "updatedAt": "2026-06-23T20:25:52Z",
+    "url": "https://github.com/nxttrack/platform/pull/1",
+    "classification": "ALREADY_PRESENT",
+    "action": "Behouden; geen remote statuswijziging."
+  }
+]

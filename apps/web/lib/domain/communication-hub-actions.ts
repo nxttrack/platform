@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { classifyContent } from "@/lib/security/content-classification";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getNewsletterDeliveryCapability } from "@/lib/email/newsletter-delivery-capability";
 import {
   communicationTemplateChannels,
   assessCommunicationContent,
@@ -484,6 +485,16 @@ export async function createNewsletterCampaignAction(formData: FormData) {
   const tenant = getActiveTenant(context);
   requireAdminRole(context.activeTenant?.roles ?? [], nextPath);
   const status = readEnum(formData, "status", newsletterStatuses, "draft");
+  const deliveryCapability = getNewsletterDeliveryCapability();
+  if (status !== "draft" && !deliveryCapability.enabled) {
+    redirectWithFeedback(
+      nextPath,
+      "error",
+      deliveryCapability.reason === "sender_not_implemented"
+        ? "Nieuwsbriefdelivery heeft nog geen geverifieerde sender. Sla de nieuwsbrief op als concept."
+        : "Nieuwsbriefdelivery staat uit. Sla de nieuwsbrief op als concept."
+    );
+  }
   if (status !== "draft" && !isHumanConfirmed(formData.get("humanConfirmation"))) {
     redirectWithFeedback(nextPath, "error", "Bevestig de planning of verzending.");
   }

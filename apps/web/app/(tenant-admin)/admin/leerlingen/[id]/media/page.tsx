@@ -51,7 +51,7 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="font-display text-lg font-bold">Privé tijdlijn</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">Eén leerling per foto. Concepten zijn alleen zichtbaar voor bevoegde medewerkers.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Eén leerling per foto of korte webrendition. Concepten zijn alleen zichtbaar voor bevoegde medewerkers.</p>
                 </div>
                 <StatusPill tone={data.consent.valid ? "success" : "warning"}>
                   {data.consent.valid ? "Toestemming actief" : "Publicatie geblokkeerd"}
@@ -62,16 +62,21 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
             {data.media.length === 0 ? (
               <div className="p-8 text-center">
                 <ImagePlus className="mx-auto size-8 text-primary" />
-                <p className="mt-3 font-semibold">Nog geen voortgangsfoto's</p>
-                <p className="mt-1 text-sm text-muted-foreground">Upload rechts de eerste foto zodra toestemming actief is.</p>
+                <p className="mt-3 font-semibold">Nog geen voortgangsmomenten</p>
+                <p className="mt-1 text-sm text-muted-foreground">Upload rechts de eerste foto of korte video zodra toestemming actief is.</p>
               </div>
             ) : (
               <div className="grid gap-4 p-4 md:grid-cols-2">
                 {data.media.map((media) => (
                   <article className="overflow-hidden rounded-xl border border-border bg-card" key={media.id}>
                     {!["deleted", "pending_deletion"].includes(media.status) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      media.media_type === "video" ? <video
+                        className="aspect-[4/3] w-full bg-muted object-cover"
+                        controls
+                        playsInline
+                        preload="metadata"
+                        src={`/api/files/participant-media/${media.id}?review=1`}
+                      /> : <img
                         alt={media.caption ? `${data.participant.display_name}: ${media.caption}` : `Voortgangsfoto van ${data.participant.display_name}`}
                         className="aspect-[4/3] w-full bg-muted object-cover"
                         loading="lazy"
@@ -97,7 +102,7 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
                           <input name="participantId" type="hidden" value={data.participant.id} />
                           <label className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
                             <input className="mt-1" name="confirmed" required type="checkbox" />
-                            Ik heb de foto, leerlingkoppeling en bijschrift visueel gecontroleerd en publiceer bewust.
+                            Ik heb het moment, de leerlingkoppeling en het bijschrift visueel gecontroleerd en publiceer bewust.
                           </label>
                           <SubmitButton>Bevestigen en publiceren</SubmitButton>
                         </DirtyForm>
@@ -139,9 +144,9 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
           </Card>
 
           <Card>
-            <h2 className="font-display text-lg font-bold">Foto uploaden</h2>
+            <h2 className="font-display text-lg font-bold">Foto of korte video uploaden</h2>
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              JPEG of PNG, maximaal 20 MB. GPS/EXIF en andere metadata worden door hercodering verwijderd.
+              JPEG, PNG of vooraf gemaakte MP4-webrendition, maximaal 20 MB. Beeldmetadata wordt door hercodering verwijderd; video moet vooraf privacyveilig zijn geëxporteerd.
             </p>
             {data.participant.is_test ? (
               <p className="mt-4 rounded-lg border border-warning/20 bg-warning/10 p-3 text-sm text-warning-foreground">
@@ -159,9 +164,9 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
               <DirtyForm action={uploadParticipantMediaAction} className="mt-4 space-y-4" encType="multipart/form-data">
                 <input name="participantId" type="hidden" value={data.participant.id} />
                 <label className="space-y-2 text-[13px] font-semibold">
-                  <span>Foto</span>
+                  <span>Foto of MP4-webrendition</span>
                   <input
-                    accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                    accept="image/jpeg,image/png,video/mp4,.jpg,.jpeg,.png,.mp4"
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm font-normal file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:font-semibold file:text-primary-foreground"
                     name="file"
                     required
@@ -169,6 +174,7 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
                   />
                 </label>
                 <TextAreaField label="Kort voortgangsbijschrift" name="caption" placeholder="Bijvoorbeeld: voor het eerst zelfstandig door het gat." />
+                <label className="flex items-start gap-2 text-xs leading-5 text-muted-foreground"><input className="mt-1" name="videoWebRenditionConfirmed" type="checkbox" />Voor video: ik bevestig dat dit een lage, browsergeschikte MP4-rendition zonder onnodige metadata is.</label>
                 <Field defaultValue={365} description="30–730 dagen; daarna wordt ook het opslagobject verwijderd." label="Bewaartermijn in dagen" name="retentionDays" type="number" />
                 <label className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
                   <input className="mt-1" name="downloadAllowed" type="checkbox" />
@@ -176,7 +182,7 @@ export default async function AdminParticipantMediaPage({ params, searchParams }
                 </label>
                 <label className="flex items-start gap-2 text-xs leading-5 text-muted-foreground">
                   <input className="mt-1" name="privacyConfirmed" required type="checkbox" />
-                  Ik bevestig dat deze foto nodig is voor voortgangscommunicatie, één leerling toont en geen onnodige omstanders bevat.
+                  Ik bevestig dat dit moment nodig is voor voortgangscommunicatie, één leerling toont en geen onnodige omstanders bevat.
                 </label>
                 <SubmitButton>Veilig uploaden als concept</SubmitButton>
               </DirtyForm>

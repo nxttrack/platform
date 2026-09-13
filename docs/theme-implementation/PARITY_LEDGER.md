@@ -5,7 +5,8 @@ This ledger maps the supplied visual contract to the production owner. “Refere
 | Contract surface | Canonical route | Production owner | Required parity |
 |---|---|---|---|
 | Shared shell | all portal routes | `AppShellClient` | 22px desktop inset, 238px sidebar, 18px gap, 72px header, 86px compact sidebar, mobile header and five-item bottom navigation |
-| Journey dashboard | `/portaal` | `PortalOverviewHero` + `PortalJourneyEngine` | theme scene, data-driven nodes, current detail, optional mascot, one/two canonical rings, three equal lower cards |
+| Parent dashboard (pre-V4.2) | `/portaal` | `ParentOverviewTop` | next lesson, current goal, canonical rings and links to development |
+| Child journey (pre-V4.2) | `/kind`, `/kind/reis` | `ChildJourneyMap` | session-bound child-safe timeline and immutable completion sequence |
 | Planning | `/portaal/planning` | existing planning domain page | lessons, cancellation, make-up, graduation invitation, holiday offer, seat hold and payment entry |
 | Lesson detail | `/portaal/lessen/[id]` | existing lesson page | lesson facts, cancellation and read-only permissions |
 | Development | `/portaal/ontwikkeling` | existing progress page | curriculum/version, 1–5 ratings or unassessed, carryover, rings, coverage and deep links |
@@ -19,6 +20,10 @@ This ledger maps the supplied visual contract to the production owner. “Refere
 | Children | `/portaal/kinderen` | existing family/access page | linked children, enrollment facts and relationship/access level |
 | Profile | `/portaal/profiel` | existing profile/preferences page | editable profile, communication preferences, push and unsaved-change handling |
 | Diploma verification | `/diploma-verificatie/[code]` | existing public verification page | low-intensity theme treatment and no private-file disclosure |
+
+The composition rows above were reconciled in Phase 0 on 13 September 2026.
+The remaining visual acceptance narrative is historical v3 evidence, not V4.2 acceptance.
+The current registry additionally retains the pre-V4.2 `ocean-quest` release.
 
 ## Theme declarations
 

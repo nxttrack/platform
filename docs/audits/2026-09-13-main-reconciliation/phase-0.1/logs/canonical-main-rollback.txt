@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 release:assert-rollback-target /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/release/assert-rollback-release.mjs
+
+[release:rollback-target] PASS commitSha=1a4822e214772b9525e838b933998b0cd48fe78d

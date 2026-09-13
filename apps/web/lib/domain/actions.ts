@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -122,58 +123,39 @@ export async function createSessionAction(formData: FormData) {
 }
 
 export async function createParticipantEnrollmentAction(formData: FormData) {
-  const tenant = await getActionTenant();
+  const { tenant, actorUserId } = await getWriteActionContext();
   const admin = createAdminClient();
   const guardianUserId = readOptional(formData, "guardianUserId");
-  const participantResult = await admin
-    .from("participants")
-    .insert({
-      tenant_id: tenant.id,
-      guardian_user_id: guardianUserId,
-      display_name: readRequired(formData, "displayName"),
-      birth_date: readOptional(formData, "birthDate"),
-      gender: normalizeBadgeGender(readOptional(formData, "gender")),
-      status: "active"
-    })
-    .select("id")
-    .single();
-
-  if (participantResult.error || !participantResult.data) {
-    redirect("/admin/leerlingen?error=participant");
-  }
-
-  const participantId = (participantResult.data as { id: string }).id;
-
-  if (guardianUserId) {
-    await admin.from("participant_guardians").upsert(
-      {
-        tenant_id: tenant.id,
-        participant_id: participantId,
-        guardian_user_id: guardianUserId,
-        relationship: "parent",
-        access_level: "primary",
-        status: "active"
-      },
-      { onConflict: "tenant_id,participant_id,guardian_user_id" }
-    );
-  }
-
-  const enrollmentResult = await admin.from("enrollments").insert({
-    tenant_id: tenant.id,
-    participant_id: participantId,
-    guardian_user_id: guardianUserId,
-    program_id: readRequired(formData, "programId"),
-    current_stage_id: readOptional(formData, "stageId"),
-    status: "active",
-    source: "manual",
-    starts_on: readOptional(formData, "startsOn") ?? new Date().toISOString().slice(0, 10)
+  const operationKey = readRequired(formData, "operationKey");
+  const participant = {
+    guardianUserId,
+    displayName: readRequired(formData, "displayName"),
+    birthDate: readOptional(formData, "birthDate"),
+    gender: normalizeBadgeGender(readOptional(formData, "gender"))
+  };
+  const enrollment = {
+    programId: readRequired(formData, "programId"),
+    stageId: readOptional(formData, "stageId"),
+    startsOn: readOptional(formData, "startsOn")
+  };
+  const { data, error } = await admin.rpc("create_participant_graph_atomic", {
+    target_actor_user_id: actorUserId,
+    target_tenant_id: tenant.id,
+    target_idempotency_key: operationKey,
+    target_request_fingerprint: fingerprint({ participant, enrollment }),
+    target_participant: participant,
+    target_enrollment: enrollment
   });
 
-  redirectAfterWrite("/admin/leerlingen", enrollmentResult.error);
+  const result = data as { outcome?: string } | null;
+  if (error || result?.outcome !== "created") {
+    redirect("/admin/leerlingen?error=participant");
+  }
+  redirect("/admin/leerlingen?saved=1");
 }
 
 export async function createGroupMembershipAction(formData: FormData) {
-  const tenant = await getActionTenant();
+  const { tenant, actorUserId } = await getWriteActionContext();
   const admin = createAdminClient();
   const groupId = readRequired(formData, "groupId");
   const enrollmentId = readRequired(formData, "enrollmentId");
@@ -183,38 +165,41 @@ export async function createGroupMembershipAction(formData: FormData) {
   const capacityBucket = status === "trial"
     ? "trial"
     : requestedBucket === "flex" ? "flex" : "regular";
-
-  if (status === "active" || status === "trial") {
-    const capacityOk = await groupHasCapacity({
-      tenantId: tenant.id,
-      groupId,
-      capacityWeight
-    });
-
-    if (!capacityOk) {
-      redirect("/admin/leerlingen?error=capacity");
-    }
-  }
-
-  const enrollmentResult = await admin.from("enrollments").select("participant_id").eq("tenant_id", tenant.id).eq("id", enrollmentId).single();
-
-  if (enrollmentResult.error || !enrollmentResult.data) {
-    redirect("/admin/leerlingen?error=enrollment");
-  }
-
-  const participantId = (enrollmentResult.data as { participant_id: string }).participant_id;
-  const { error } = await admin.from("group_memberships").insert({
-    tenant_id: tenant.id,
-    group_id: groupId,
-    enrollment_id: enrollmentId,
-    participant_id: participantId,
+  const command = {
+    groupId,
+    enrollmentId,
     status,
-    starts_on: readOptional(formData, "startsOn") ?? new Date().toISOString().slice(0, 10),
-    capacity_weight: capacityWeight,
-    capacity_bucket: capacityBucket
+    capacityBucket,
+    capacityWeight,
+    startsOn: readOptional(formData, "startsOn")
+  };
+  const { data, error } = await admin.rpc("place_group_membership_atomic", {
+    target_actor_user_id: actorUserId,
+    target_tenant_id: tenant.id,
+    target_idempotency_key: readRequired(formData, "operationKey"),
+    target_request_fingerprint: fingerprint(command),
+    target_group_id: groupId,
+    target_enrollment_id: enrollmentId,
+    target_status: status,
+    target_capacity_bucket: capacityBucket,
+    target_capacity_weight: capacityWeight,
+    target_starts_on: command.startsOn
   });
 
-  redirectAfterWrite("/admin/leerlingen", error);
+  const result = data as { outcome?: string } | null;
+  if (error || result?.outcome === "write_failed") {
+    redirect("/admin/leerlingen?error=placement");
+  }
+  if (result?.outcome === "capacity_full") {
+    redirect("/admin/leerlingen?error=capacity");
+  }
+  if (result?.outcome === "conflict") {
+    redirect("/admin/leerlingen?error=conflict");
+  }
+  if (result?.outcome !== "placed" && result?.outcome !== "already_placed") {
+    redirect("/admin/leerlingen?error=placement");
+  }
+  redirect("/admin/leerlingen?saved=1");
 }
 
 async function getActionTenant() {
@@ -223,23 +208,14 @@ async function getActionTenant() {
   return getActiveTenant(context);
 }
 
-async function groupHasCapacity(input: { tenantId: string; groupId: string; capacityWeight: number }) {
-  const admin = createAdminClient();
-  const [groupResult, membershipsResult] = await Promise.all([
-    admin.from("groups").select("capacity").eq("tenant_id", input.tenantId).eq("id", input.groupId).single(),
-    admin.from("group_memberships").select("capacity_weight, status").eq("tenant_id", input.tenantId).eq("group_id", input.groupId)
-  ]);
+async function getWriteActionContext() {
+  const context = await requirePrivateShellContext("/admin/leerlingen");
 
-  if (groupResult.error || !groupResult.data || membershipsResult.error) {
-    return false;
-  }
+  return { tenant: getActiveTenant(context), actorUserId: context.user.id };
+}
 
-  const capacity = Number((groupResult.data as { capacity: number }).capacity);
-  const used = ((membershipsResult.data ?? []) as { capacity_weight: number; status: string }[])
-    .filter((membership) => membership.status === "active" || membership.status === "trial")
-    .reduce((total, membership) => total + Number(membership.capacity_weight), 0);
-
-  return used + input.capacityWeight <= capacity;
+function fingerprint(value: unknown) {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
 }
 
 function redirectAfterWrite(path: `/${string}`, error: { message: string } | null) {

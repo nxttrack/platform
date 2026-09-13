@@ -25,7 +25,7 @@ test.describe("controlled staging communications", () => {
     await page.getByLabel("Rol binnen de zwemschool").selectOption("parent");
     await page.getByLabel("Organisatie").selectOption(tenantSlug);
     await page.getByRole("button", { name: "Organisatie-uitnodiging sturen" }).click();
-    await mutationExpect(page.getByText("Uitnodiging is verzonden.")).toBeVisible();
+    await mutationExpect(page.getByText("Uitnodiging is door de mailprovider geaccepteerd; aflevering is nog niet bevestigd.")).toBeVisible();
     await evidenceCommand("wait-delivery", [recipientEmail, startedAt, "auth_invitation"]);
 
     await page.goto("/wachtwoord-vergeten", { waitUntil: "domcontentloaded" });
@@ -41,7 +41,7 @@ test.describe("controlled staging communications", () => {
     const failedAttempt = page.locator("div").filter({ hasText: marker }).filter({ has: page.getByRole("button", { name: "Retry" }) }).first();
     await mutationExpect(failedAttempt).toBeVisible();
     await failedAttempt.getByRole("button", { name: "Retry" }).click();
-    await mutationExpect(page.getByText("Opgeslagen: mail_retry.")).toBeVisible();
+    await mutationExpect(page.getByText("Opgeslagen: mail_retry_accepted.")).toBeVisible();
 
     await evidenceCommand("verify-retry", [seed.notificationId]);
   });

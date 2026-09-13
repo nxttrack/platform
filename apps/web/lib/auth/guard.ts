@@ -47,7 +47,7 @@ export type RouteAccessDecision =
       matchedRoles: readonly AppRole[];
     };
 
-const privateShellPreference = ["platform_admin", "tenant_admin", "instructor", "parent"] as const satisfies readonly PrivateShellKey[];
+const privateShellPreference = ["platform_admin", "tenant_admin", "instructor", "parent", "child"] as const satisfies readonly PrivateShellKey[];
 
 export function evaluatePrivateShellAccess(input: PrivateShellAccessInput): RouteAccessDecision {
   const access = getPrivateShellForPath(input.pathname);

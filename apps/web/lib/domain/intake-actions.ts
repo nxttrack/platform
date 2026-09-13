@@ -216,92 +216,7 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
   const dedupeKey = createHash("sha256")
     .update([tenant.id, parentEmail, normalizeName(participantName), validation.programId ?? "", selectedOption].join("|"))
     .digest("hex");
-  const duplicateResult = await admin
-    .from("intake_submissions")
-    .select("id, received_at")
-    .eq("tenant_id", tenant.id)
-    .eq("dedupe_key", dedupeKey)
-    .gte("received_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1_000).toISOString())
-    .order("received_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (duplicateResult.error) {
-    return { ok: false, error: "write" };
-  }
-
-  const duplicate = duplicateResult.data as { id: string; received_at: string } | null;
-
-  // Double-clicks and browser retries are idempotent for ten minutes.
-  if (duplicate && Date.now() - new Date(duplicate.received_at).getTime() < 10 * 60 * 1_000) {
-    return { ok: true, reference: duplicate.id.slice(0, 8) };
-  }
-
-  const submissionResult = await admin
-    .from("intake_submissions")
-    .insert({
-      tenant_id: tenant.id,
-      form_id: validation.formId,
-      program_id: validation.programId,
-      selected_option: selectedOption,
-      parent_name: parentName,
-      parent_email: parentEmail,
-      parent_phone: readOptional(formData, "parentPhone"),
-      secondary_parent_name: secondaryParentName,
-      secondary_parent_email: secondaryParentEmail,
-      secondary_parent_phone: readOptional(formData, "secondaryParentPhone"),
-      participant_name: participantName,
-      participant_birth_date: participantBirthDate,
-      participant_gender: participantGender,
-      preferred_days: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
-      preferred_dayparts: preferredDayparts,
-      preferred_notes: preferredNotes,
-      message,
-      content_classification: classification.classification,
-      classification_reasons: classification.reasons,
-      swimming_experience: swimmingExperience,
-      recommendation_snapshot: recommendations.map((recommendation) => ({
-        groupId: recommendation.groupId,
-        stageId: recommendation.stageId,
-        weekday: recommendation.weekday,
-        daypart: recommendation.daypart,
-        startsAt: recommendation.startsAt,
-        endsAt: recommendation.endsAt,
-        waitBand: recommendation.waitBand,
-        rank: recommendation.rank,
-        reasons: recommendation.reasons
-      })),
-      selected_group_id: selectedRecommendation?.groupId ?? null,
-      selected_wait_band: selectedRecommendation?.waitBand ?? "long",
-      recommendation_version: "wait-time-v2",
-      consent_given: consentGiven,
-      source_hostname: await getRequestHostname(),
-      dedupe_key: dedupeKey,
-      duplicate_state: duplicate ? "possible_duplicate" : "unique",
-      duplicate_of_submission_id: duplicate?.id ?? null,
-      abuse_fingerprint: abuseFingerprint,
-      attribution_channel: attribution.channel,
-      attribution_source: attribution.source,
-      attribution_medium: attribution.medium,
-      attribution_campaign: attribution.campaign,
-      attribution_content: attribution.content,
-      attribution_term: attribution.term,
-      attribution_referrer_host: attribution.referrerHost,
-      attribution_landing_path: attribution.landingPath,
-      attribution_has_ad_click_id: attribution.hasAdClickId,
-      attribution_captured_at: attribution.capturedAt,
-      analytics_consent: analyticsConsent,
-      analytics_consent_version: "analytics-v1"
-    })
-    .select("id")
-    .single();
-
-  if (submissionResult.error || !submissionResult.data) {
-    return { ok: false, error: "write" };
-  }
-
-  const submissionId = (submissionResult.data as { id: string }).id;
-  const answerRows = relevantQuestions.flatMap((question) => {
+  const answers = relevantQuestions.flatMap((question) => {
     const answer = readQuestionAnswer(formData, question);
 
     if (!answer) {
@@ -310,55 +225,87 @@ async function submitIntake(formData: FormData): Promise<{ ok: true; reference: 
 
     return [
       {
-        ...classificationColumns(answer),
-        tenant_id: tenant.id,
-        submission_id: submissionId,
-        question_id: question.id,
-        field_key: question.fieldKey,
-        answer_text: typeof answer === "string" ? answer : null,
-        answer_json: Array.isArray(answer) ? answer : null
+        questionId: question.id,
+        fieldKey: question.fieldKey,
+        answerText: typeof answer === "string" ? answer : null,
+        answerJson: Array.isArray(answer) ? answer : null,
+        contentClassification: classificationColumns(answer).content_classification,
+        classificationReasons: classificationColumns(answer).classification_reasons
       }
     ];
   });
-
-  if (answerRows.length > 0) {
-    const answersResult = await admin.from("intake_answers").insert(answerRows);
-
-    if (answersResult.error) {
-      return { ok: false, error: "answers" };
-    }
-  }
-
-  const eventResult = await admin.from("tenant_events").insert({
-    tenant_id: tenant.id,
-    event_type: "intake.received",
-    subject_type: "intake_submission",
-    subject_id: submissionId,
-    content_classification: classification.classification,
-    classification_reasons: classification.reasons,
-    payload: {
-      selectedOption,
-      parentEmail,
-      participantName,
-      programId: validation.programId,
-      duplicateState: duplicate ? "possible_duplicate" : "unique",
-      duplicateOfSubmissionId: duplicate?.id ?? null,
-      swimmingExperience,
-      selectedGroupId: selectedRecommendation?.groupId ?? null,
-      selectedWaitBand: selectedRecommendation?.waitBand ?? "long",
-      recommendationVersion: "intake-v1",
-      attributionChannel: attribution.channel,
-      attributionSource: attribution.source,
-      attributionCampaign: attribution.campaign,
-      analyticsConsent
-    }
+  const submission = {
+    formId: validation.formId,
+    programId: validation.programId,
+    selectedOption,
+    parentName,
+    parentEmail,
+    parentPhone: readOptional(formData, "parentPhone"),
+    secondaryParentName,
+    secondaryParentEmail,
+    secondaryParentPhone: readOptional(formData, "secondaryParentPhone"),
+    participantName,
+    participantBirthDate,
+    participantGender,
+    preferredDays: formData.getAll("preferredDays").filter((value): value is string => typeof value === "string"),
+    preferredDayparts,
+    preferredNotes,
+    message,
+    contentClassification: classification.classification,
+    classificationReasons: classification.reasons,
+    swimmingExperience,
+    recommendationSnapshot: recommendations.map((recommendation) => ({
+      groupId: recommendation.groupId,
+      stageId: recommendation.stageId,
+      weekday: recommendation.weekday,
+      daypart: recommendation.daypart,
+      startsAt: recommendation.startsAt,
+      endsAt: recommendation.endsAt,
+      waitBand: recommendation.waitBand,
+      rank: recommendation.rank,
+      reasons: recommendation.reasons
+    })),
+    selectedGroupId: selectedRecommendation?.groupId ?? null,
+    selectedWaitBand: selectedRecommendation?.waitBand ?? "long",
+    recommendationVersion: "wait-time-v2",
+    consentGiven,
+    sourceHostname: await getRequestHostname(),
+    abuseFingerprint,
+    attributionChannel: attribution.channel,
+    attributionSource: attribution.source,
+    attributionMedium: attribution.medium,
+    attributionCampaign: attribution.campaign,
+    attributionContent: attribution.content,
+    attributionTerm: attribution.term,
+    attributionReferrerHost: attribution.referrerHost,
+    attributionLandingPath: attribution.landingPath,
+    attributionHasAdClickId: attribution.hasAdClickId,
+    attributionCapturedAt: attribution.capturedAt,
+    analyticsConsent,
+    analyticsConsentVersion: "analytics-v1"
+  };
+  const requestFingerprint = createHash("sha256")
+    .update(JSON.stringify({ submission, answers }))
+    .digest("hex");
+  const idempotencyWindow = Math.floor(Date.now() / (10 * 60 * 1_000));
+  const idempotencyKey = createHash("sha256")
+    .update(`intake:v1|${dedupeKey}|${idempotencyWindow}`)
+    .digest("hex");
+  const result = await admin.rpc("create_intake_submission_atomic", {
+    target_tenant_id: tenant.id,
+    target_idempotency_key: idempotencyKey,
+    target_request_fingerprint: requestFingerprint,
+    target_dedupe_key: dedupeKey,
+    target_submission: submission,
+    target_answers: answers
   });
+  const writeResult = result.data as { outcome?: string; submissionId?: string } | null;
 
-  if (eventResult.error) {
-    return { ok: false, error: "event" };
+  if (result.error || writeResult?.outcome !== "submitted" || !writeResult.submissionId) {
+    return { ok: false, error: "write" };
   }
 
-  return { ok: true, reference: submissionId.slice(0, 8) };
+  return { ok: true, reference: writeResult.submissionId.slice(0, 8) };
 }
 
 function classificationColumns(value: unknown) {

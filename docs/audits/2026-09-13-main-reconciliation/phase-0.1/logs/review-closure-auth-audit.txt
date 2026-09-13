@@ -1,0 +1,19 @@
+
+> @nxttrack/platform@0.0.0 auth:audit /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/auth/audit-route-access.mjs && node scripts/auth/audit-auth-boundary.mjs && tsx --test tests/unit/auth-invitation-target.test.ts
+
+Route access audit passed for 5 private shells.
+Auth boundary audit passed for apps/web.
+▶ invitation tenant targeting
+  ✔ never inherits an active tenant inside the platform shell (0.495682ms)
+  ✔ keeps an explicit target so role and tenant validation can reject mismatches (0.110749ms)
+  ✔ inherits the active tenant for an organization-admin invitation (0.086892ms)
+✔ invitation tenant targeting (1.523942ms)
+ℹ tests 3
+ℹ suites 1
+ℹ pass 3
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 115.465308

@@ -1,0 +1,4 @@
+PASS relocated native encode/decode/resize png
+PASS relocated native encode/decode/resize webp
+PASS relocated native encode/decode/resize avif
+PASS sharp 0.35.4 HEIF 1.23.2 all Sharp/libvips shared objects resolve within relocated artifact

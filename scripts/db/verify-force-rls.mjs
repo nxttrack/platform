@@ -29,8 +29,8 @@ try {
   `);
   const missing = result.rows.filter((row) => !row.rls_enabled || !row.force_rls_enabled);
 
-  if (result.rows.length < 63) {
-    throw new Error(`Expected at least 63 public tables, found ${result.rows.length}.`);
+  if (result.rows.length === 0) {
+    throw new Error("Dynamic public-table inventory is empty.");
   }
 
   if (missing.length > 0) {

@@ -21,6 +21,7 @@ type Props = {
     allLabel: string;
     options: Array<{ description?: string; label: string; value: string }>;
   };
+  contextSelectorPlacement?: "header" | "profile";
 };
 
 export function AppShell(props: Props) {

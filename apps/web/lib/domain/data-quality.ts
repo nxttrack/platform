@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -80,7 +81,7 @@ export async function getDataQualityDashboardData(): Promise<DataQualityDashboar
 export async function runDataQualityChecks(tenantId: string) {
   const admin = createAdminClient();
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = toAmsterdamDate(now);
   const [
     participantsResult,
     guardianLinksResult,

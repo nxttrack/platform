@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import {
@@ -263,7 +264,7 @@ function tenantDate(value: Date, timeZone: string) {
 function previousDate(value: string) {
   const date = new Date(`${value}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() - 1);
-  return date.toISOString().slice(0, 10);
+  return toAmsterdamDate(date);
 }
 
 function hasVerifiedHistory(value: unknown) {

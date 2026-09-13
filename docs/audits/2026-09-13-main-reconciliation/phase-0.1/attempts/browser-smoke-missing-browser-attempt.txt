@@ -1,0 +1,1815 @@
+
+> @nxttrack/platform@0.0.0 test:smoke:e2e /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> pnpm --filter @nxttrack/web exec playwright test tests/e2e/smoke.spec.ts tests/e2e/visual-performance.spec.ts --workers=2 --output=/dev/shm/nxttrack-phase01-smoke
+
+
+Running 52 tests using 2 workers
+
+  ✓   1 [chromium-desktop] › tests/e2e/smoke.spec.ts:46:7 › staging MVP smoke › health endpoint returns the expected payload (98ms)
+  ✓   2 [chromium-desktop] › tests/e2e/smoke.spec.ts:39:7 › staging MVP smoke › child session API requires authentication and cannot be cached (123ms)
+  ✘   4 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error (0ms)
+  ✓   3 [chromium-desktop] › tests/e2e/smoke.spec.ts:60:7 › staging MVP smoke › public responses expose the release security headers (80ms)
+  ✘   5 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error (0ms)
+  ✘   6 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error (retry #1) (2ms)
+  ✘   7 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error (retry #1) (1ms)
+  ✘   8 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error (2ms)
+  ✘   9 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error (1ms)
+  ✘  10 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error (retry #1) (2ms)
+  ✘  11 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error (retry #1) (1ms)
+  ✘  12 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error (1ms)
+  ✘  13 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error (1ms)
+  ✘  14 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error (retry #1) (1ms)
+  ✘  15 [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error (retry #1) (2ms)
+  ✘  16 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication (1ms)
+  ✘  17 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication (5ms)
+  ✘  18 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication (retry #1) (2ms)
+  ✘  19 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication (retry #1) (1ms)
+  ✘  20 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication (1ms)
+  ✘  21 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication (1ms)
+  ✘  22 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication (retry #1) (1ms)
+  ✘  23 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication (retry #1) (1ms)
+  ✘  24 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication (1ms)
+  ✘  25 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication (1ms)
+  ✘  26 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication (retry #1) (4ms)
+  ✘  27 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication (retry #1) (2ms)
+  ✘  28 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication (1ms)
+  ✘  29 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication (1ms)
+  ✘  30 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication (retry #1) (1ms)
+  ✘  31 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication (retry #1) (1ms)
+  ✘  32 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication (2ms)
+  ✘  33 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication (3ms)
+  ✘  34 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication (retry #1) (2ms)
+  ✘  35 [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication (retry #1) (2ms)
+  ✘  36 [chromium-desktop] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell (2ms)
+  ✘  37 [chromium-desktop] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition (1ms)
+  ✘  38 [chromium-desktop] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell (retry #1) (1ms)
+  ✘  39 [chromium-desktop] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition (retry #1) (2ms)
+  ✘  40 [chromium-desktop] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics (1ms)
+  ✘  41 [chromium-desktop] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures (2ms)
+  ✘  42 [chromium-desktop] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics (retry #1) (1ms)
+  ✘  43 [chromium-desktop] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures (retry #1) (1ms)
+  ✘  44 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time (1ms)
+  ✘  45 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time (1ms)
+  ✘  46 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time (retry #1) (1ms)
+  ✘  47 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time (retry #1) (2ms)
+  ✘  48 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time (5ms)
+  ✓  49 [chromium-mobile] › tests/e2e/smoke.spec.ts:39:7 › staging MVP smoke › child session API requires authentication and cannot be cached (39ms)
+  ✓  50 [chromium-mobile] › tests/e2e/smoke.spec.ts:46:7 › staging MVP smoke › health endpoint returns the expected payload (22ms)
+  ✓  51 [chromium-mobile] › tests/e2e/smoke.spec.ts:60:7 › staging MVP smoke › public responses expose the release security headers (74ms)
+  ✘  52 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error (2ms)
+  ✘  53 [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time (retry #1) (1ms)
+  ✘  54 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error (retry #1) (1ms)
+  ✘  55 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error (1ms)
+  ✘  56 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error (1ms)
+  ✘  57 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error (retry #1) (2ms)
+  ✘  58 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error (1ms)
+  ✘  59 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error (retry #1) (2ms)
+  ✘  60 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error (retry #1) (1ms)
+  ✘  61 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error (1ms)
+  ✘  62 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error (1ms)
+  ✘  63 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error (retry #1) (1ms)
+  ✘  64 [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error (retry #1) (7ms)
+  ✘  65 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication (1ms)
+  ✘  66 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication (1ms)
+  ✘  67 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication (retry #1) (3ms)
+  ✘  68 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication (retry #1) (1ms)
+  ✘  69 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication (3ms)
+  ✘  70 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication (2ms)
+  ✘  71 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication (retry #1) (1ms)
+  ✘  72 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication (retry #1) (1ms)
+  ✘  73 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication (6ms)
+  ✘  74 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication (1ms)
+  ✘  75 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication (retry #1) (1ms)
+  ✘  76 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication (retry #1) (1ms)
+  ✘  77 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication (1ms)
+  ✘  78 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication (4ms)
+  ✘  79 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication (retry #1) (1ms)
+  ✘  81 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication (1ms)
+  ✘  80 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication (retry #1) (1ms)
+  ✘  82 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication (retry #1) (1ms)
+  ✘  83 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication (2ms)
+  ✘  84 [chromium-mobile] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell (1ms)
+  ✘  85 [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication (retry #1) (1ms)
+  ✘  86 [chromium-mobile] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell (retry #1) (1ms)
+  ✘  87 [chromium-mobile] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition (1ms)
+  ✘  88 [chromium-mobile] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics (1ms)
+  ✘  89 [chromium-mobile] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition (retry #1) (6ms)
+  ✘  91 [chromium-mobile] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures (1ms)
+  ✘  90 [chromium-mobile] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics (retry #1) (1ms)
+  ✘  92 [chromium-mobile] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures (retry #1) (1ms)
+  ✘  93 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time (2ms)
+  ✘  94 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time (7ms)
+  ✘  95 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time (retry #1) (2ms)
+  ✘  96 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time (retry #1) (1ms)
+  ✘  97 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time (1ms)
+  ✘  98 [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time (retry #1) (3ms)
+
+
+  1) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  2) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [chromium-desktop] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [chromium-desktop] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [chromium-desktop] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [chromium-desktop] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-desktop/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-desktop-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-desktop-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-37bfd-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  25) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-074d7-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  26) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-34a78-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-56e0f-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  28) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-f4b26-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  29) [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-fc6a1-enders-without-server-error-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  30) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-93f2c-orm-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  31) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-a74a8-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  32) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bbd99-min-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  33) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-234da-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  34) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-bfc36-ten-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  35) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-2a5b6-aal-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  36) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-42a24-ges-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  37) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-b80f8-ind-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  38) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-9b224-eis-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  39) [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pr-e4f7d-tor-requires-authentication-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  40) [chromium-mobile] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ma-63904-ccessible-route-aware-shell-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  41) [chromium-mobile] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-ev-81f0d-has-a-dedicated-composition-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  42) [chromium-mobile] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-pu-c2c67-password-strength-semantics-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  43) [chromium-mobile] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/smoke-staging-MVP-smoke-in-9db0a-ord-and-activation-failures-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  44) [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--b9217-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  45) [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--13285-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  46) [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-mobile/error-context.md
+
+    Retry #1 ───────────────────────────────────────────────────────────────────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at /dev/shm/nxttrack-reconciliation-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell
+    ╔════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright was just installed or updated.       ║
+    ║ Please run the following command to download new browsers: ║
+    ║                                                            ║
+    ║     pnpm exec playwright install                           ║
+    ║                                                            ║
+    ║ <3 Playwright Team                                         ║
+    ╚════════════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-mobile-retry1/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-phase01-smoke/visual-performance-visual--99418-ty-and-acceptable-load-time-chromium-mobile-retry1/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  46 failed
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics
+    [chromium-desktop] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures
+    [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time
+    [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time
+    [chromium-desktop] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route root renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route login renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password forgotten renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route password reset renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:76:9 › staging MVP smoke › public route marketing swim schools renders without server error
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /platform/badges requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/badges requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /admin/berichten requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /portaal/badges requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /kind/reis requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:88:9 › staging MVP smoke › private route /instructor requires authentication
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:102:7 › staging MVP smoke › marketing subpages share an accessible route-aware shell
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:131:7 › staging MVP smoke › every canonical marketing subpage has a dedicated composition
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:153:7 › staging MVP smoke › public auth forms expose labelled controls and password strength semantics
+    [chromium-mobile] › tests/e2e/smoke.spec.ts:169:7 › staging MVP smoke › invitation acceptance distinguishes code, password and activation failures
+    [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › root has nonblank UI, basic accessibility and acceptable load time
+    [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › login has nonblank UI, basic accessibility and acceptable load time
+    [chromium-mobile] › tests/e2e/visual-performance.spec.ts:11:9 › visual, accessibility and performance smoke › marketing has nonblank UI, basic accessibility and acceptable load time
+  6 passed (32.0s)
+undefined
+/home/codex/repos/nxttrack-main-reconciliation-v42-prep/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test tests/e2e/smoke.spec.ts tests/e2e/visual-performance.spec.ts --workers=2 --output=/dev/shm/nxttrack-phase01-smoke
+ ELIFECYCLE  Command failed with exit code 1.

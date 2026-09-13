@@ -1,0 +1,446 @@
+[WebServer] (node:782955) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:783170) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+
+Running 13 tests using 1 worker
+
+(node:783827) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (2.4s)
+  ✓   2 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (2.0s)
+  ✓   3 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1.4s)
+  ✓   4 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (2.2s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1.7s)
+  ✓   6 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.2s)
+  ✓   7 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.6s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1.2s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1.1s)
+  ✓  10 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (3.5s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (2.2m)
+  ✘  12 [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (1.9m)
+(node:829749) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  13 [journey-chromium] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2.8s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+
+    Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write
+
+      50 |       await capture(page, testInfo, `ocean-quest-${viewport.name}-selected-doel-${node}`); renders += 1;
+      51 |     }
+    > 52 |     await context.close();
+         |                   ^
+      53 |   }
+      54 |
+      55 |   for (const theme of mascotThemes) {
+        at <worktree>/apps/web/tests/e2e/journey-visual.spec.ts:52:19
+
+    Error: ENOSPC: no space left on device, write
+
+    attachment #1: journey-nxttrack-default-desktop-initial-current (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-initial-current-e47ce68a2cb2cf91d230a5b800c0e4ae044a5284.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: journey-nxttrack-default-desktop-oldest-completion (image/png) ──────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-oldest-completion-d832070a97580d3d2ed170075feeb288f3a3e3e9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: journey-nxttrack-default-desktop-milestone-popup (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-milestone-popup-5006cfdfa08eb64f59a777ea55e29c159f3e8fa2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: journey-nxttrack-default-desktop-first-visit-tooltip (image/png) ────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-first-visit-tooltip-e636c1c5f43e01fa4a82ce05a4334610c75212f8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: journey-nxttrack-default-mobile-initial-current (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-initial-current-7f6463e0feef6dea92a78bfe3ab82a675594ddd8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: journey-nxttrack-default-mobile-oldest-completion (image/png) ───────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-oldest-completion-74d98e2f95069552675e6db4f0d7715837f4e7ac.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: journey-nxttrack-default-mobile-milestone-popup (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-milestone-popup-bb9040cb5867b5570f43232ba558cf004cc735d0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: journey-nxttrack-default-mobile-first-visit-tooltip (image/png) ─────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-first-visit-tooltip-019ddfd2f7f4c56c01d1654418208b4ac924f769.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: journey-dolphin-bay-desktop-initial-current (image/png) ─────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-initial-current-373ef54458a63f7d93587f8c8c1a0f18c37f7b8d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: journey-dolphin-bay-desktop-oldest-completion (image/png) ──────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-oldest-completion-f6eaf2c4e955f7f718071379e86874b0c0632465.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: journey-dolphin-bay-desktop-milestone-popup (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-milestone-popup-cc241a5a3132f7f63b16cf12fbae82bace615f44.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #12: journey-dolphin-bay-desktop-first-visit-tooltip (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-first-visit-tooltip-5c50dd98d9b891c50461241c41e43d32a0114367.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #13: journey-dolphin-bay-mobile-initial-current (image/png) ─────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-initial-current-f9f431dfa2f35bcfe530ba8ceadbd221d37ee0e7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #14: journey-dolphin-bay-mobile-oldest-completion (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-oldest-completion-968d5f83dd40025c14e1bc8d1892430c93aeda7d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #15: journey-dolphin-bay-mobile-milestone-popup (image/png) ─────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-milestone-popup-7996ded6dad2524f555986fd688ac509a3466840.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #16: journey-dolphin-bay-mobile-first-visit-tooltip (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-first-visit-tooltip-7cc66d952a04a5d2dee66e4d0562cc4ec1fe994c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #17: journey-turtle-trails-desktop-initial-current (image/png) ──────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-initial-current-fa6581cdb06a8d49c3a27da94a3ba4be29c5aa27.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #18: journey-turtle-trails-desktop-oldest-completion (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-oldest-completion-d286e4cdda47582b5b66e0ec9abeca1cf46c640a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #19: journey-turtle-trails-desktop-milestone-popup (image/png) ──────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-milestone-popup-fd3bc5da00a69fb6a21840d51067f222c778e3fc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #20: journey-turtle-trails-desktop-first-visit-tooltip (image/png) ──────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-first-visit-tooltip-8646b3f1ae2df12c95583847f02409e05c80296f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #21: journey-turtle-trails-mobile-initial-current (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-initial-current-43be1054722e8ddd637ebdd5c9ab3db3b5cf9534.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #22: journey-turtle-trails-mobile-oldest-completion (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-oldest-completion-da3a91f66bfeb10c469a7cb8b5c3399256940013.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #23: journey-turtle-trails-mobile-milestone-popup (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-milestone-popup-d56d28b0a1a9e6fbe78960290334fd2e2b3085ea.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #24: journey-turtle-trails-mobile-first-visit-tooltip (image/png) ───────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-first-visit-tooltip-07e01e63f2519c3bec25318616d23caaae2c0c12.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #25: journey-polar-splash-desktop-initial-current (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-initial-current-ca45d87b7f34cc1b56b7d4f37e66336d0c3687f1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #26: journey-polar-splash-desktop-oldest-completion (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-oldest-completion-505f4ff769f8c4284470081e5a345c5c54da9be5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #27: journey-polar-splash-desktop-milestone-popup (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-milestone-popup-94970558f91af155bacaddf63a1179c205b6a26a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #28: journey-polar-splash-desktop-first-visit-tooltip (image/png) ───────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-first-visit-tooltip-fc254f569609ee8c3783021ac0b95dc34ac3aff4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #29: journey-polar-splash-mobile-initial-current (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-initial-current-dfae2d1304bdb25d01edbfe7d123f6a865f838a4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #30: journey-polar-splash-mobile-oldest-completion (image/png) ──────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-oldest-completion-88455609f12fb88b030cc64f0b44d0890bad0b8e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #31: journey-polar-splash-mobile-milestone-popup (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-milestone-popup-b89a2595bf755de29602d72de1f94e75f3092bf1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #32: journey-polar-splash-mobile-first-visit-tooltip (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-first-visit-tooltip-4b6093dac68fef1e331edd2863d61c3c2913e169.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #33: journey-coastal-explorer-desktop-initial-current (image/png) ───────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-initial-current-5f47d82ff6d9a690545ee195968bde1133ce6832.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #34: journey-coastal-explorer-desktop-oldest-completion (image/png) ─────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-oldest-completion-4d8b115cc2568b7e86d79ca24d094bd51834d0b3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #35: journey-coastal-explorer-desktop-milestone-popup (image/png) ───────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-milestone-popup-b355a278726ce7fabad2af3462e17acc17bec229.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #36: journey-coastal-explorer-desktop-first-visit-tooltip (image/png) ───────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-first-visit-tooltip-0a4e7f197f18c9f5a375447e01e7eeafc7363e13.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #37: journey-coastal-explorer-mobile-initial-current (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-initial-current-96dfaec00f2884a7a300f8a8a6cf6d8e9bb5d067.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #38: journey-coastal-explorer-mobile-oldest-completion (image/png) ──────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-oldest-completion-622181056bb3b2156723974e75189dc19232c38f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #39: journey-coastal-explorer-mobile-milestone-popup (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-milestone-popup-55a8ebc9de8a03b2b5f590258c286e33fe007f20.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #40: journey-coastal-explorer-mobile-first-visit-tooltip (image/png) ────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-first-visit-tooltip-7f8dc2ff7ba8ad3856dbd53cd7c0262a8027764a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #41: journey-nationaal-zwem-abc-desktop-initial-current (image/png) ─────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-initial-current-a85eeceec8aa3544d44978b666b4cc79d8dc7d5a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #42: journey-nationaal-zwem-abc-desktop-oldest-completion (image/png) ───────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-oldest-completion-19e5c56072060e1304642b37e1821ddd4627b24a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #43: journey-nationaal-zwem-abc-desktop-milestone-popup (image/png) ─────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-milestone-popup-f86b23459e675436f4eb1c1ee3bfb6d8ca79bd11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #44: journey-nationaal-zwem-abc-desktop-first-visit-tooltip (image/png) ─────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-first-visit-tooltip-4b8ba5332bd6106c1848c5baf0813f73db1d5ecc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #45: journey-nationaal-zwem-abc-mobile-initial-current (image/png) ──────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-initial-current-17ed6cc94d2438f245e222e4948e31787bb40c6e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #46: journey-nationaal-zwem-abc-mobile-oldest-completion (image/png) ────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-oldest-completion-7abc12b30ab08957ade70fbf5fabeeea4e61ffcb.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #47: journey-nationaal-zwem-abc-mobile-milestone-popup (image/png) ──────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-milestone-popup-0fdfb782123b5d81dc810d25860468509b5e9f2c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #48: journey-nationaal-zwem-abc-mobile-first-visit-tooltip (image/png) ──────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-first-visit-tooltip-ebeb4e35c63a294748f7e7334114d81f52d6cb24.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #49: journey-ocean-quest-desktop-initial-current (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-initial-current-cacb1fbabbc7f85260950b5a7b9c2bf4f787b960.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #50: journey-ocean-quest-desktop-oldest-completion (image/png) ──────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-oldest-completion-4b4cb751e57ff5fe5dfd1539e9d6f89a34fb08f9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #51: journey-ocean-quest-desktop-milestone-popup (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-milestone-popup-4c3814a884906c07b03ebc9c257d5d89e5e9ebc7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #52: journey-ocean-quest-desktop-first-visit-tooltip (image/png) ────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-first-visit-tooltip-defc59f037c4f726e750c05f797ae80a7a24aae5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #53: journey-ocean-quest-mobile-initial-current (image/png) ─────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-initial-current-b3a1f4507e5d6feb053155dfa79ebd8f72abbccc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #54: journey-ocean-quest-mobile-oldest-completion (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-oldest-completion-28d2fa08c4b68460336a3f702e90ecf23a1f8029.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #55: journey-ocean-quest-mobile-milestone-popup (image/png) ─────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-milestone-popup-eb7de4b6a7a0f261f8c572610e0e0390e72e38bc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #56: journey-ocean-quest-mobile-first-visit-tooltip (image/png) ─────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-first-visit-tooltip-509b475972a09330cc109cefd563ae7bd09c9065.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #57: journey-ocean-quest-1280x720-selected-doel-1 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-1-c8daf120e8a45dead49657a1bb7aeb4bdd411822.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #58: journey-ocean-quest-1280x720-selected-doel-2 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-2-ed730529e5dcfcc067f3556e8bef8c2877fb73e5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #59: journey-ocean-quest-1280x720-selected-doel-3 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-3-b8040e9c7815669d1f724b4ab565e0b50ca2c098.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #60: journey-ocean-quest-1280x720-selected-doel-4 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-4-144809655db286d9032e432910fef1c63ce77b6e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #61: journey-ocean-quest-1280x720-selected-doel-5 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-5-cc0c840ccd0e7bfc38d4e9bfd6c2419eaffa3d60.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #62: journey-ocean-quest-1280x720-selected-doel-6 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-6-8b1f483aa80e91dd35b889dd66b62b2610dc5c43.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #63: journey-ocean-quest-1280x720-selected-doel-7 (image/png) ───────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-7-9062cf85595508e6e02a2a0f7939b8316c81a694.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #64: journey-ocean-quest-390x844-selected-doel-1 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-1-a541434e0d0c6efc3ca2110cb0640d9db1fefdc7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #65: journey-ocean-quest-390x844-selected-doel-2 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-2-b4a79ec702389ea52d36199d6e20f2a59bafe8e4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #66: journey-ocean-quest-390x844-selected-doel-3 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-3-94adff3443c7c897ad5b2ea93eb375a5308354b0.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #67: journey-ocean-quest-390x844-selected-doel-4 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-4-3969d8e90c52bfd577e8b56cfca4ec4f57423835.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #68: journey-ocean-quest-390x844-selected-doel-5 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-5-763f78d21f599632f44e29ce769910f4cd15680b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #69: journey-ocean-quest-390x844-selected-doel-6 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-6-fe7396784d7cbabdd0e68af712c551d57932ea54.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #70: journey-ocean-quest-390x844-selected-doel-7 (image/png) ────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-7-2bdadc424680fea0bb6a673a8e22458d8d0b7f92.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #71: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #72: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #73: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #74: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #75: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #76: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #77: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #78: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #79: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #80: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #81: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-12.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #82: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-13.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #83: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-14.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #84: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-15.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #85: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-16.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #86: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-17.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #87: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-18.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #88: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-19.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #89: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-20.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #90: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-21.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #91: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-22.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #92: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-23.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #93: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-24.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #94: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-25.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #95: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-26.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #96: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-27.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #97: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-28.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #98: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-29.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #99: screenshot (image/png) ─────────────────────────────────────────────────────────
+    test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-30.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/error-context.md
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+  12 passed (4.5m)
+undefined
+<worktree>/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test tests/e2e/journey-timeline.spec.ts tests/e2e/journey-visual.spec.ts --config=playwright.journey.config.ts --project=journey-chromium --workers=1

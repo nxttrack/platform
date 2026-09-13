@@ -43,7 +43,7 @@ export default async function PlatformInvitationsPage({ searchParams }: PageProp
         <p className="mt-2 text-sm text-muted-foreground">Nodig een NXTTRACK-teamlid of zwemschoolgebruiker uit met een veilige, tijdgebonden code.</p>
       </div>
 
-      <RouteFeedback success={sent ? delivery === "sent" ? "Uitnodiging is verzonden." : "Uitnodiging is aangemaakt; controleer de mailinstellingen als er geen bericht aankomt." : null} error={error ? invitationErrorMessage(error) : null} />
+      <RouteFeedback success={sent ? delivery === "accepted" ? "Uitnodiging is door de mailprovider geaccepteerd; aflevering is nog niet bevestigd." : "Uitnodiging is aangemaakt; mailtransport is uitgeschakeld of niet geconfigureerd." : null} error={error ? invitationErrorMessage(error) : null} />
 
       <div className="grid gap-5 2xl:grid-cols-[minmax(320px,0.65fr)_minmax(0,1.85fr)]">
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">

@@ -1,0 +1,65 @@
+
+> @nxttrack/platform@0.0.0 db:preflight-production-readiness-upgrade <worktree>
+> node scripts/db/preflight-production-readiness-upgrade.mjs
+
+{
+  "result": "PASS",
+  "readOnly": true,
+  "blockers": [],
+  "warnings": [],
+  "inventory": {
+    "migrationCount": 147,
+    "latestMigration": "20260908111450",
+    "liveGroupMembershipDuplicateCount": 0,
+    "manifestlessActiveImportCount": 0,
+    "incompleteOnboardingRunCount": 0,
+    "legacyIdempotencyConflictCount": 0,
+    "invitationInconsistencyCount": 0,
+    "expiredPendingInvitationCount": 0,
+    "legacyQueuedOrFailedEmail": [],
+    "expiredEmailWorkerLeaseCount": 0,
+    "noncanonicalEmailIdempotencyKeyCount": 0,
+    "buckets": [
+      {
+        "id": "badge-studio-assets",
+        "public": false
+      },
+      {
+        "id": "diploma-vault",
+        "public": false
+      },
+      {
+        "id": "participant-media",
+        "public": false
+      },
+      {
+        "id": "tenant-documents",
+        "public": false
+      },
+      {
+        "id": "tenant-media-assets",
+        "public": false
+      }
+    ],
+    "legacyPendingGrantCount": 0,
+    "unexpectedGrantCount": 0
+  },
+  "migrationFingerprint": {
+    "20260822002234_production_email_outbox.sql": {
+      "sha256": "a41443e10ebb53934ba6403552fbdad9174bbdd394c446caac87cfc745514b42",
+      "matchesExpected": true
+    },
+    "20260822004329_atomic_tenant_provisioning.sql": {
+      "sha256": "b6c4a1dc74ff0813c47a58ad195b86b065b7db1d13144467129b224b94925816",
+      "matchesExpected": true
+    },
+    "20260822010612_atomic_core_onboarding_writes.sql": {
+      "sha256": "352ba1dba8bc393228719959cbbbf7725d217d2b6210ca88b299b0014572a433",
+      "matchesExpected": true
+    },
+    "20260822012255_resumable_import_apply_rollback.sql": {
+      "sha256": "6997c62c3ab1f35fdb7e1c2106c292081cb05231422ca255756af0b9eb0764e2",
+      "matchesExpected": true
+    }
+  }
+}

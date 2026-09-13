@@ -89,6 +89,7 @@ export const themeAssetSlots = [
   "progress.journey.mobile",
   "progress.journey.desktop",
   "progress.empty",
+  "progress.chapter.completed",
   "badges.reference",
   "badges.locked",
   "badges.surprise",
@@ -141,7 +142,7 @@ export interface PortalThemeManifestV3 {
     publicDisplayName: string;
     requiresVerifiedLicenseForDisplayName: boolean;
     sectorMode: "generic" | "swim" | "swim-abc-gated";
-    mascot: "dolphin" | "sea-turtle" | "penguin" | "beach-lifeguard" | null;
+    mascot: "dolphin" | "sea-turtle" | "penguin" | "beach-lifeguard" | "manta" | null;
     journeyMetaphor: string;
     developmentLabel: string;
   };

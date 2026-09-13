@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
 import "server-only";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { buildTenantGrowthReport } from "@/lib/analytics/growth-cohorts";
@@ -8,8 +9,8 @@ import { getSwimFlowAnalytics } from "./swim-flow-analytics";
 export async function getGrowthAnalyticsData(from?: string, to?: string) {
   const context = await requirePrivateShellContext("/admin/rapportages/groei");
   const tenant = getActiveTenant(context);
-  const today = new Date().toISOString().slice(0, 10);
-  const yearAgo = new Date(Date.now() - 364 * 86_400_000).toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
+  const yearAgo = addAmsterdamCalendarDays(new Date(), -364);
   const period = { from: validDate(from) ?? yearAgo, to: validDate(to) ?? today };
   const [report, flow, drafts] = await Promise.all([
     buildTenantGrowthReport(tenant.id, period.from, period.to),

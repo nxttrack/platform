@@ -1,5 +1,7 @@
 "use server";
 
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -42,7 +44,7 @@ export async function createAttentionContactTaskAction(formData: FormData) {
       description: `${signal.data.recommended_action}\n\nBekijk altijd de volledige context. Er is geen bericht verstuurd en geen klant- of inschrijfstatus gewijzigd.`,
       priority: "high",
       status: "open",
-      due_on: new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10),
+      due_on: addAmsterdamCalendarDays(new Date(), 2),
       is_test: false,
       journey_run_id: null
     });
@@ -90,7 +92,7 @@ export async function saveEnrollmentPauseAction(formData: FormData) {
     starts_on: startsOn,
     expected_return_on: expectedReturnOn,
     reason_category: readEnum(formData, "reasonCategory", ["medical", "holiday", "schedule", "financial", "family", "other"] as const),
-    status: startsOn <= new Date().toISOString().slice(0, 10) ? "active" : "planned",
+    status: startsOn <= toAmsterdamDate() ? "active" : "planned",
     internal_note: readOptionalText(formData, "internalNote", 1000),
     created_by_user_id: userId
   });

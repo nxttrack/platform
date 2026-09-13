@@ -11,7 +11,7 @@ import { getThemeDisplayName } from "./portal-theme-registry";
 
 export type ResolvedPortalTheme = {
   manifest: PortalThemeManifestV2;
-  source: "assignment" | "fallback";
+  source: "assignment" | "child-preference" | "fallback";
   fallbackReason: "missing-assignment" | "unknown-release" | "incompatible-data" | null;
   displayName: string;
   verifiedLicense: boolean;
@@ -55,6 +55,35 @@ export const resolveTenantPortalTheme = cache(async (tenantId: string): Promise<
     verifiedLicense
   };
 });
+
+export async function resolveTenantChildPortalTheme(
+  tenantId: string,
+  preference: { themeKey: string; themeRelease: string } | null
+): Promise<ResolvedPortalTheme> {
+  if (!preference) return resolveTenantPortalTheme(tenantId);
+  const [availabilityResult, manifest] = await Promise.all([
+    createAdminClient()
+      .from("tenant_portal_theme_availability")
+      .select("is_enabled")
+      .eq("tenant_id", tenantId)
+      .eq("theme_key", preference.themeKey)
+      .eq("theme_release", preference.themeRelease)
+      .eq("is_enabled", true)
+      .maybeSingle(),
+    Promise.resolve(getThemeRelease(preference.themeKey, preference.themeRelease))
+  ]);
+  if (availabilityResult.error || !availabilityResult.data || !manifest) {
+    return resolveTenantPortalTheme(tenantId);
+  }
+  const verifiedLicense = await hasVerifiedThemeLicense(tenantId, manifest);
+  return {
+    manifest,
+    source: "child-preference",
+    fallbackReason: null,
+    displayName: getThemeDisplayName(manifest, verifiedLicense),
+    verifiedLicense
+  };
+}
 
 export async function resolveCurrentParentPortalTheme(returnPath: `/portaal${string}` | "/portaal") {
   const context = await requirePrivateShellContext(returnPath);

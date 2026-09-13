@@ -63,7 +63,7 @@ export async function buildParentNativeBootstrap(
       getParentFeedbackDataForContext(context)
     ]);
   const resolvedTheme = data.portalTheme;
-  const terminology = getPortalTerminology(resolvedTheme.manifest);
+  const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
   const groupById = new Map(data.groups.map((group) => [group.id, group]));
   const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const enrollmentById = new Map(

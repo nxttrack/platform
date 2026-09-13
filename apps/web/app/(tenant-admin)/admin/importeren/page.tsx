@@ -13,7 +13,7 @@ import { getImportFields } from "@/lib/domain/import-contract";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
-type ImportJob = { created_at: string; duplicate_count: number; id: string; import_type: string; invalid_count: number; mapping: Record<string, unknown>; row_count: number; source_name: string; status: string; summary: Record<string, unknown>; valid_count: number; validation_report: Record<string, unknown> };
+type ImportJob = { created_at: string; duplicate_count: number; id: string; import_type: string; invalid_count: number; mapping: Record<string, unknown>; reconciliation_state: string; rollback_state: string; row_count: number; source_name: string; status: string; summary: Record<string, unknown>; valid_count: number; validation_report: Record<string, unknown> };
 type ErrorRow = { row_number: number; validation_errors: unknown; validation_status: string };
 type ImportEvent = { created_at: string; event_type: string; details: Record<string, unknown> };
 
@@ -21,7 +21,7 @@ export default async function ImportsPage({ searchParams }: { searchParams?: Pro
   const context = await requirePrivateShellContext("/admin/importeren");
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
-  const { data, error } = await admin.from("import_jobs").select("id, import_type, source_name, status, row_count, valid_count, invalid_count, duplicate_count, mapping, summary, validation_report, created_at").eq("tenant_id", tenant.id).order("created_at", { ascending: false }).limit(20);
+  const { data, error } = await admin.from("import_jobs").select("id, import_type, source_name, status, reconciliation_state, rollback_state, row_count, valid_count, invalid_count, duplicate_count, mapping, summary, validation_report, created_at").eq("tenant_id", tenant.id).order("created_at", { ascending: false }).limit(20);
   if (error) throw new Error(`Could not load import jobs: ${error.message}`);
   const jobs = (data ?? []) as ImportJob[];
   const params = (await searchParams) ?? {};
@@ -51,9 +51,9 @@ function ImportWorkbench({ job, errorRows, events }: { job: ImportJob; errorRows
         <div className="grid gap-3 sm:grid-cols-3">
           <GateForm action={validateImportAction} disabled={!["mapping", "validated", "ready"].includes(job.status)} id={job.id} label="2. Valideren" />
           <GateForm action={dryRunImportAction} disabled={!["validated", "ready"].includes(job.status)} id={job.id} label="3. Dry-run" />
-          <GateForm action={applyImportAction} disabled={job.status !== "ready"} id={job.id} label="4. Apply" tone="primary" />
+          <GateForm action={applyImportAction} disabled={job.status !== "ready" && !(job.status === "failed" && job.reconciliation_state === "needs_attention" && job.rollback_state === "not_requested")} id={job.id} label={job.status === "failed" ? "4. Apply hervatten" : "4. Apply"} tone="primary" />
         </div>
-        {job.status === "completed" ? <form action={rollbackImportAction} className="rounded-2xl border border-warning/30 bg-warning/5 p-4"><input name="jobId" type="hidden" value={job.id} /><p className="text-sm text-muted-foreground">Rollback verwijdert uitsluitend records die door deze job zijn aangemaakt, in veilige omgekeerde volgorde.</p><Button className="mt-3" type="submit" variant="outline">Import terugdraaien</Button></form> : null}
+        {job.status === "completed" || (job.status === "failed" && job.reconciliation_state === "needs_attention") ? <form action={rollbackImportAction} className="rounded-2xl border border-warning/30 bg-warning/5 p-4"><input name="jobId" type="hidden" value={job.id} /><p className="text-sm text-muted-foreground">Rollback compenseert uitsluitend records uit het duurzame manifest. Mislukte compensaties blijven zichtbaar en hervatbaar.</p><Button className="mt-3" type="submit" variant="outline">{job.rollback_state === "needs_attention" ? "Rollback hervatten" : "Import terugdraaien"}</Button></form> : null}
         {errorRows.length ? <div className="rounded-2xl border border-danger/20 p-4"><h3 className="font-bold">Foutregels</h3><div className="mt-3 space-y-2">{errorRows.map((row) => <div className="rounded-lg bg-danger/5 px-3 py-2 text-sm" key={row.row_number}><span className="font-semibold">Rij {row.row_number}</span> · {formatErrors(row.validation_errors)} <StatusPill tone={row.validation_status === "duplicate" ? "warning" : "danger"}>{row.validation_status}</StatusPill></div>)}</div></div> : null}
       </div>
       <div className="rounded-2xl border border-border p-4"><h3 className="font-bold">Auditlog</h3><div className="mt-3 space-y-3">{events.map((event) => <div className="border-l-2 border-primary pl-3" key={`${event.created_at}-${event.event_type}`}><p className="text-sm font-semibold">{event.event_type}</p><p className="text-xs text-muted-foreground">{formatDate(event.created_at)}</p></div>)}</div></div>

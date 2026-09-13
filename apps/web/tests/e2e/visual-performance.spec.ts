@@ -21,7 +21,9 @@ test.describe("visual, accessibility and performance smoke", () => {
       expect(bodyText.length).toBeGreaterThan(20);
       expect(domContentLoadedMs).toBeLessThan(10_000);
 
-      const screenshot = await page.screenshot({ fullPage: true });
+      // A long page at Pixel 7's 2.625 DPR exceeds Chromium's capture height.
+      // CSS scale still captures the complete rendered page for this smoke check.
+      const screenshot = await page.screenshot({ fullPage: true, scale: "css" });
 
       expect(screenshot.byteLength).toBeGreaterThan(10_000);
       await testInfo.attach(`visual-${route.label}`, {

@@ -37,7 +37,7 @@ export default async function ParentLessonDetailPage({ params, searchParams }: P
   const error = getParam(rawParams, "error");
   const future = new Date(session.starts_at).getTime() > Date.now();
   const onTime = canCancelSession(data.settings, session.starts_at);
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

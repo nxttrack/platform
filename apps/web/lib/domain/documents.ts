@@ -25,6 +25,15 @@ export async function getParentDocuments(): Promise<PortalDocumentRow[]> {
   return getParentDocumentsForTenant(tenant.id);
 }
 
+export async function getParentDocumentsPageData() {
+  const context = await requirePrivateShellContext("/portaal/documenten");
+  const tenant = getActiveTenant(context);
+  return {
+    documents: await getParentDocumentsForTenant(tenant.id),
+    tenant
+  };
+}
+
 export function getParentDocumentsForTenant(tenantId: string) {
   return getDocuments({
     audiences: ["parents", "all_tenant"],

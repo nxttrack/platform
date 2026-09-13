@@ -141,6 +141,7 @@ function buildStepPayload(step: (typeof curriculumSteps)[number], formData: Form
     return {
       competencyIds: formData.getAll("competencyIds").map(String).filter(isUuid),
       context: {
+        childInstructionVideo: buildChildInstructionalVideo(formData),
         environment: optionalText(formData, "environment", 120),
         equipment: optionalText(formData, "equipment", 120),
         notes: optionalText(formData, "contextNotes", 500),
@@ -231,6 +232,39 @@ function requiredText(formData: FormData, name: string, maxLength: number) {
 function optionalText(formData: FormData, name: string, maxLength: number) {
   const value = String(formData.get(name) ?? "").trim();
   return value ? value.slice(0, maxLength) : null;
+}
+
+function buildChildInstructionalVideo(formData: FormData) {
+  const title = optionalText(formData, "childVideoTitle", 160);
+  const url = optionalContentUrl(formData, "childVideoUrl");
+  const captionsUrl = optionalContentUrl(formData, "childVideoCaptionsUrl");
+  const transcript = optionalText(formData, "childVideoTranscript", 8_000);
+  const approved = formData.get("childVideoApproved") === "on";
+  if (!title && !url && !captionsUrl && !transcript) return null;
+  if (approved && (!title || !url || !captionsUrl || !transcript)) {
+    throw new Error("An approved child video requires a title, video, captions and transcript");
+  }
+  return {
+    captionsUrl,
+    status: approved ? "approved" : "draft",
+    title,
+    transcript,
+    url
+  };
+}
+
+function optionalContentUrl(formData: FormData, name: string) {
+  const value = String(formData.get(name) ?? "").trim();
+  if (!value) return null;
+  if (value.length > 2_000) throw new Error(`Invalid ${name}`);
+  if (/^\/(?!\/)[A-Za-z0-9/_.,?=&%-]+$/.test(value)) return value;
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" || url.username || url.password) throw new Error();
+    return url.toString();
+  } catch {
+    throw new Error(`Invalid ${name}`);
+  }
 }
 
 function requiredInteger(formData: FormData, name: string, minimum: number, maximum: number) {

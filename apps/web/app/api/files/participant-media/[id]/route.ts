@@ -31,7 +31,7 @@ export async function GET(request: Request, context: RouteContext) {
   const mediaResult = await admin
     .from("participant_media")
     .select(
-      "id, tenant_id, participant_id, caption, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at, visibility"
+      "id, tenant_id, participant_id, caption, media_type, storage_bucket, storage_path, file_name, mime_type, size_bytes, malware_scan_status, download_allowed, status, consent_checked_at, published_at, expires_at, created_at, visibility"
     )
     .eq("id", id)
     .maybeSingle();

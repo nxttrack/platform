@@ -10,6 +10,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getTrustedAuthContextForRequest, requireAuthenticatedContext, requirePrivateShellContext } from "./server-guard";
 import { normalizeEmail } from "./tokens";
 import { getTrustedRequestOrigin } from "@/lib/http/trusted-request-origin";
+import { consumeParentReauthChallenge } from "./portal-session";
+import { readAndClearParentReauthCookie } from "./portal-session-actions";
 
 export async function loginAction(formData: FormData) {
   const nextPath = sanitizeRelativePath(formData.get("next"), "/portaal");
@@ -41,6 +43,16 @@ export async function loginAction(formData: FormData) {
 
   if (context.security.mustChangePassword) {
     redirect(`/auth/wachtwoord-wijzigen?next=${encodeURIComponent(nextPath)}`);
+  }
+
+  const reauthToken = await readAndClearParentReauthCookie();
+  if (reauthToken && context.session?.id) {
+    const returnPath = await consumeParentReauthChallenge({
+      newSessionId: context.session.id,
+      token: reauthToken,
+      userId: context.user.id
+    });
+    if (returnPath) redirect(returnPath);
   }
 
   redirect(nextPath === "/portaal" ? getDefaultRedirectForRoles(context.roles) : nextPath);
@@ -148,7 +160,7 @@ export async function createInvitationAction(formData: FormData) {
     redirect(`${returnPath}?error=invalid_role&kind=${invitationKind}`);
   }
 
-  let delivered = false;
+  let accepted = false;
 
   try {
     const result = await createInvitation({
@@ -160,12 +172,12 @@ export async function createInvitationAction(formData: FormData) {
       actor
     });
 
-    delivered = result.delivered;
+    accepted = result.accepted;
   } catch (error) {
     redirect(`${returnPath}?error=${invitationErrorCode(error)}&kind=${invitationKind}`);
   }
 
-  redirect(`${returnPath}?sent=1&delivery=${delivered ? "sent" : "skipped"}&kind=${invitationKind}`);
+  redirect(`${returnPath}?sent=1&delivery=${accepted ? "accepted" : "skipped"}&kind=${invitationKind}`);
 }
 
 function invitationErrorCode(error: unknown) {

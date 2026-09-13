@@ -13,13 +13,23 @@ const failures = [];
 
 const runtimeVariables = [
   {
+    name: "MAINTENANCE_NO_WRITE",
+    deploySource: "MAINTENANCE_NO_WRITE:",
+    writeLine: "printf 'MAINTENANCE_NO_WRITE=%s\\n' \"$MAINTENANCE_NO_WRITE\""
+  },
+  {
     name: "EMAIL_SENDING_ENABLED",
-    deploySource: "EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED || 'false' }}",
+    deploySource: "EMAIL_SENDING_ENABLED:",
     writeLine: "printf 'EMAIL_SENDING_ENABLED=%s\\n' \"$EMAIL_SENDING_ENABLED\""
   },
   {
+    name: "NEWSLETTER_DELIVERY_ENABLED",
+    deploySource: "NEWSLETTER_DELIVERY_ENABLED:",
+    writeLine: "printf 'NEWSLETTER_DELIVERY_ENABLED=%s\\n' \"$NEWSLETTER_DELIVERY_ENABLED\""
+  },
+  {
     name: "INTERNAL_JOBS_ENABLED",
-    deploySource: "INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED || 'false' }}",
+    deploySource: "INTERNAL_JOBS_ENABLED:",
     writeLine: "printf 'INTERNAL_JOBS_ENABLED=%s\\n' \"$INTERNAL_JOBS_ENABLED\""
   },
   {
@@ -47,7 +57,9 @@ for (const contract of runtimeVariables) {
 }
 
 for (const name of [
+  "MAINTENANCE_NO_WRITE",
   "EMAIL_SENDING_ENABLED",
+  "NEWSLETTER_DELIVERY_ENABLED",
   "INTERNAL_JOBS_ENABLED",
   "NEXT_PUBLIC_WEB_PUSH_VAPID_PUBLIC_KEY",
   "WEB_PUSH_VAPID_PRIVATE_KEY",

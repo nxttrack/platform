@@ -303,6 +303,17 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                             <div className="mt-3">
                               <TextAreaField fieldId={`note-${item.id}`} label="Korte update" name="note" />
                             </div>
+                            {section.canonical ? (
+                              <label className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
+                                <input
+                                  className="mt-1"
+                                  defaultChecked={currentObservation?.context_json.childVisible === true}
+                                  name="childVisible"
+                                  type="checkbox"
+                                />
+                                <span>Toon het positieve scorelabel als gecureerd compliment in kindmodus. De notitie zelf blijft verborgen.</span>
+                              </label>
+                            ) : null}
                             {currentObservation ? (
                               <div className="mt-3">
                                 <TextAreaField fieldId={`correction-${item.id}`} label="Reden voor wijziging" name="correctionReason" required />

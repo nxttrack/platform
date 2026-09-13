@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:resumable-import:db /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/db/test-resumable-import-integration.mjs
+
+[test:resumable-import:db] PASS batched mixed validation, duplicate rows, valid/double apply, blocked guardian mail, shared-Auth processing/accepted rollback refusal, crash resume, durable rollback retry, and 5,000 rows.

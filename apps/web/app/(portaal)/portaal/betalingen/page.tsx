@@ -41,7 +41,7 @@ export default async function ParentPaymentsPage({ searchParams }: PageProps) {
   const paidPayments = manualPayments.filter((payment) => payment.status === "paid");
   const openAmount = openPayments.reduce((total, payment) => total + payment.amount_cents, 0);
   const overdueAmount = overduePayments.reduce((total, payment) => total + payment.amount_cents, 0);
-  const terminology = getPortalTerminology(data.portalTheme.manifest);
+  const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
     <div className="space-y-6">

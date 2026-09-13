@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -645,7 +646,7 @@ async function runChildJourney(input: { config: JourneyBotConfigRow; ordinal: nu
       const isTerminal = isTerminalStage(currentStage);
 
       if (isTerminal) {
-        const completionDate = new Date().toISOString().slice(0, 10);
+        const completionDate = toAmsterdamDate();
         const releasedMemberships = await admin
           .from("group_memberships")
           .update({ ends_on: completionDate, status: "completed" })
@@ -851,7 +852,7 @@ async function createWaitlist(input: {
   stage: StageRow;
 }) {
   const admin = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
   const result = await admin
     .from("waitlist_entries")
     .insert({
@@ -940,7 +941,7 @@ async function placeInStage(input: {
       current_stage_id: input.stage.id,
       status: "active",
       source: SOURCE,
-      starts_on: new Date().toISOString().slice(0, 10),
+      starts_on: toAmsterdamDate(),
       is_test: true,
       journey_run_id: input.journey.run_id,
       test_metadata_json: testMetadata(input.journey)
@@ -956,7 +957,7 @@ async function placeInStage(input: {
       enrollment_id: enrollmentResult.data.id,
       participant_id: input.journey.participant_id,
       status: "active",
-      starts_on: new Date().toISOString().slice(0, 10),
+      starts_on: toAmsterdamDate(),
       capacity_weight: 1,
       source: SOURCE,
       is_test: true,
@@ -1168,7 +1169,7 @@ async function transferToStage(input: {
     return null;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
   const oldMembershipResult = await admin
     .from("group_memberships")
     .select("id")
@@ -1353,7 +1354,7 @@ async function simulateGraduation(input: {
     certificate_number: `TEST-${input.journey.smoke_run_id}-${input.diploma.code}`,
     title: `${input.diploma.label} · testdiploma`,
     status: "issued",
-    issued_on: new Date().toISOString().slice(0, 10),
+    issued_on: toAmsterdamDate(),
     notes: "Journey Simulation Bot · niet geldig als officieel diploma.",
     source: SOURCE,
     is_test: true,

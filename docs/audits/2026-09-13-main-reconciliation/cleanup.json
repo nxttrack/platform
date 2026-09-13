@@ -1,0 +1,41 @@
+{
+  "source": "e1b8cb6",
+  "removalCommit": "8a72f8817075ae41d0cf2e8458bfd56c6d7ee507",
+  "items": [
+    {
+      "classification": "OBSOLETE_REMOVE",
+      "path": "apps/web/components/parent/family-command-center.tsx",
+      "symbols": [
+        "FamilyCommandCenter",
+        "FamilyChild"
+      ],
+      "reason": "Geen imports of routeconsumers; alleen eigen definitie en voor PortalOverviewHero een verouderde PARITY_LEDGER-rij.",
+      "replacement": "/portaal gebruikt ParentOverviewTop; /kind gebruikt ChildJourneyMap.",
+      "verification": "Exacte symbol/path-search vóór en na; productiebuild vóór verwijdering; 444 units en typecheck na verwijdering; finale build en browserchecks.",
+      "action": "Bestand verwijderd; historische Git-blobs behouden."
+    },
+    {
+      "classification": "OBSOLETE_REMOVE",
+      "path": "apps/web/components/parent/portal-overview-hero.tsx",
+      "symbols": [
+        "PortalOverviewHero",
+        "PortalOverviewHeroChild"
+      ],
+      "reason": "Geen imports of routeconsumers; alleen eigen definitie en voor PortalOverviewHero een verouderde PARITY_LEDGER-rij.",
+      "replacement": "/portaal gebruikt ParentOverviewTop; /kind gebruikt ChildJourneyMap.",
+      "verification": "Exacte symbol/path-search vóór en na; productiebuild vóór verwijdering; 444 units en typecheck na verwijdering; finale build en browserchecks.",
+      "action": "Bestand verwijderd; historische Git-blobs behouden."
+    }
+  ],
+  "usageBefore": "docs/theme-implementation/PARITY_LEDGER.md:8:| Journey dashboard | `/portaal` | `PortalOverviewHero` + `PortalJourneyEngine` | theme scene, data-driven nodes, current detail, optional mascot, one/two canonical rings, three equal lower cards |\napps/web/components/parent/family-command-center.tsx:10:export type FamilyChild = {\napps/web/components/parent/family-command-center.tsx:21:export function FamilyCommandCenter({ children, contextParticipantId }: { children: FamilyChild[]; contextParticipantId?: string | null }) {\napps/web/components/parent/portal-overview-hero.tsx:8:export type PortalOverviewHeroChild = {\napps/web/components/parent/portal-overview-hero.tsx:18:export function PortalOverviewHero({\napps/web/components/parent/portal-overview-hero.tsx:28:  child: PortalOverviewHeroChild | null;\n",
+  "usageAfterOutsideAuditEvidence": "",
+  "retained": [
+    "PortalJourneyEngine",
+    "bestaande overview recipes",
+    "alle 147 migraties",
+    "theme releases en snapshotcompatibiliteit",
+    "actieve tenant featureflags",
+    "Android/native API",
+    "historische audits op bronref"
+  ]
+}
