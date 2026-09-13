@@ -54,23 +54,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test billing provider contracts
-        run: pnpm run test:billing-contract
-
-      - name: Test Journey Bot safety contracts
-        run: pnpm run test:journey-bot
-
-      - name: Test Communicationhub contracts
-        run: pnpm run test:communication-hub
-
-      - name: Test premium badge contracts
-        run: pnpm run test:badges
-
-      - name: Test swim-school canon and native API contracts
-        run: pnpm run test:swim-canon
-
-      - name: Test parent and child portal security contracts
-        run: pnpm run test:parent-child-portals
+      - name: Test every local unit contract
+        run: pnpm run test:unit
 
       - name: Audit Journey Bot foundation
         run: pnpm run release:audit-journey-bot
@@ -102,8 +87,8 @@ jobs:
       - name: Install Playwright browser engines
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium firefox webkit
 
-      - name: Run browser smoke tests
-        run: pnpm run test:e2e
+      - name: Run local browser smoke tests
+        run: pnpm run test:smoke:e2e
 
       - name: Validate Journey timeline in Chromium Firefox and WebKit
         run: pnpm run test:journey:e2e

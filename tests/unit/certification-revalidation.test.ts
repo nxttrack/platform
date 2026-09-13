@@ -31,17 +31,17 @@ test("dependency certification fails on moderate production advisories and pins 
   }
 });
 
-test("certification deploy enters verified maintenance containment before any migration", () => {
+test("canonical deploy enters verified maintenance containment before any migration", () => {
   const deploy = repositoryFile(".github/workflows/deploy.yml");
-  const containment = deploy.indexOf("Enter and verify certification maintenance containment");
+  const containment = deploy.indexOf("Enter and verify migration maintenance containment");
   const migration = deploy.indexOf("Run database migrations");
 
   assert.notEqual(containment, -1);
   assert.ok(containment < migration);
   assert.match(deploy.slice(containment, migration), /systemctl restart/);
   assert.match(deploy.slice(containment, migration), /maintenance_no_write|503/);
-  assert.match(deploy, /Snapshot and validate certification rollback target/);
-  assert.ok(deploy.indexOf("Snapshot and validate certification rollback target") < migration);
+  assert.match(deploy, /Snapshot and validate migration rollback target/);
+  assert.ok(deploy.indexOf("Snapshot and validate migration rollback target") < migration);
 });
 
 test("preview rollback target has an ancestry-checked immutable release identity", () => {
@@ -50,8 +50,10 @@ test("preview rollback target has an ancestry-checked immutable release identity
 
   assert.match(deploy, /release:assert-rollback-target/);
   assert.match(assertion, /541fe5fd6cee083cb809eef236382cfd2d519ed3/);
-  assert.match(assertion, /merge-base/);
-  assert.match(assertion, /--is-ancestor/);
+  assert.match(assertion, /assertCompatibleApplicationAncestry/);
+  const ancestry = repositoryFile("scripts/release/compatible-application-ancestry.mjs");
+  assert.match(ancestry, /merge-base/);
+  assert.match(ancestry, /--is-ancestor/);
   assert.match(assertion, /RELEASE_COMMIT_SHA/);
   assert.match(assertion, /exact-source-sha\.json/);
 
@@ -72,7 +74,7 @@ test("exact-SHA maintenance previews execute a read-only browser smoke", () => {
   const deploy = repositoryFile(".github/workflows/deploy.yml");
   const smoke = repositoryFile("apps/web/tests/e2e/production-readiness-maintenance-preview.spec.ts");
 
-  assert.match(deploy, /Production-readiness maintenance preview browser smoke/);
+  assert.match(deploy, /Maintenance release read-only browser smoke/);
   assert.match(deploy, /test:production-readiness-preview:e2e/);
   assert.match(smoke, /page\.goto/);
   assert.match(smoke, /\/api\/health/);

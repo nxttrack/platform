@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import { assertCompatibleApplicationAncestry } from "./compatible-application-ancestry.mjs";
 
 export const minimumRollbackAppSha = "541fe5fd6cee083cb809eef236382cfd2d519ed3";
 
@@ -46,9 +47,10 @@ export function assertRollbackRelease({ baseDirectory, releaseDirectory, sourceC
   }
   const commitSha = readReleaseCommitSha(resolvedRelease);
   execFileSync("git", ["cat-file", "-e", `${commitSha}^{commit}`], { cwd: sourceCheckout, stdio: "ignore" });
-  execFileSync("git", ["merge-base", "--is-ancestor", minimumRollbackAppSha, commitSha], {
-    cwd: sourceCheckout,
-    stdio: "ignore"
+  assertCompatibleApplicationAncestry({
+    sourceCheckout,
+    minimumAppSha: minimumRollbackAppSha,
+    candidateSha: commitSha
   });
   return { commitSha, releaseDirectory: resolvedRelease };
 }

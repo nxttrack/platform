@@ -6,12 +6,12 @@ test("maintenance preview is readable, healthy and rejects unsafe requests", asy
   const healthBody = await health.json();
   expect(healthBody).toMatchObject({ app: "nxttrack-platform", ok: true });
 
-  const login = await page.goto("/inloggen", { waitUntil: "domcontentloaded" });
+  const login = await page.goto("/login", { waitUntil: "domcontentloaded" });
   expect(login).not.toBeNull();
   expect(login!.status()).toBeLessThan(500);
   await expect(page.locator("body")).not.toBeEmpty();
 
   const denied = await request.post("/api/internal/email-outbox/process", { data: {} });
   expect(denied.status()).toBe(503);
-  expect((await denied.json()).code).toBe("maintenance_no_write");
+  expect((await denied.json()).error).toBe("maintenance_no_write");
 });

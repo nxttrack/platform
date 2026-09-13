@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { assertCompatibleApplicationAncestry } from "./compatible-application-ancestry.mjs";
 
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
@@ -29,10 +30,7 @@ if (!/^[0-9a-f]{40}$/.test(deployedSourceSha) || checkoutSha !== deployedSourceS
   throw new Error("Deployed source SHA does not match the retained source checkout.");
 }
 
-execFileSync("git", ["merge-base", "--is-ancestor", minimumAppSha, deployedSourceSha], {
-  cwd: sourceCheckout,
-  stdio: "ignore"
-});
+assertCompatibleApplicationAncestry({ sourceCheckout, minimumAppSha, candidateSha: deployedSourceSha });
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) throw new Error("DATABASE_URL is required.");

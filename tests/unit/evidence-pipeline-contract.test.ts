@@ -70,6 +70,6 @@ test("release evidence requires and retains the exact checked-out SHA", () => {
   assert.match(writer, /writeExactSourceArtifact/);
   assert.match(ci, /artifacts\/exact-source-sha\.json[\s\S]+if-no-files-found: error/);
   assert.match(deploy, /artifacts\/exact-source-sha\.json/);
-  assert.match(deploy, /ref: \$\{\{ inputs\.staging_preview_sha \|\| github\.sha \}\}/);
-  assert.match(deploy, /DEPLOYED_SOURCE_SHA: \$\{\{ inputs\.staging_preview_sha \|\| github\.sha \}\}/);
+  assert.match(deploy, /ref: \$\{\{ github\.sha \}\}/);
+  assert.match(deploy, /DEPLOYED_SOURCE_SHA: \$\{\{ github\.sha \}\}/);
 });

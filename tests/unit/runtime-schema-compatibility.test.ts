@@ -83,7 +83,8 @@ test("the compatibility bridge accepts the immediately previous schema and rejec
 test("the release assertion verifies the deployed SHA from the retained checkout", () => {
   assert.match(releaseAssertion, /GITHUB_WORKSPACE/);
   assert.match(releaseAssertion, /DEPLOYED_SOURCE_SHA/);
-  assert.match(releaseAssertion, /merge-base.*--is-ancestor.*minimumAppSha.*deployedSourceSha/);
+  assert.match(releaseAssertion, /assertCompatibleApplicationAncestry\(\{ sourceCheckout, minimumAppSha, candidateSha: deployedSourceSha \}\)/);
+  assert.match(read("scripts/release/compatible-application-ancestry.mjs"), /merge-base.*--is-ancestor.*anchor.*candidateSha/);
 });
 
 test("maintenance mode blocks every unsafe HTTP method before session work", () => {
@@ -93,7 +94,7 @@ test("maintenance mode blocks every unsafe HTTP method before session work", () 
   assert.ok(proxy.indexOf("MAINTENANCE_NO_WRITE") < proxy.indexOf("const supabase = createServerClient"));
 });
 
-test("certification deploys force all effect workers off and assert schema before activation", () => {
+test("main migration deployments require containment and assert schema before activation", () => {
   assert.match(deploy, /Checkout[\s\S]*?fetch-depth: 0[\s\S]*?Setup certified Node/);
   assert.match(deploy, /Setup certified Node[\s\S]*?node-version: "24\.18\.0"/);
   assert.match(deploy, /corepack prepare pnpm@10\.24\.0 --activate/);
@@ -104,11 +105,16 @@ test("certification deploys force all effect workers off and assert schema befor
     "INTERNAL_JOBS_ENABLED"
   ]) assert.match(deploy, new RegExp(`${setting}:`));
   assert.match(deploy, /release:assert-schema-compatibility/);
-  assert.match(deploy, /Run certification post-migration read-only verification/);
+  assert.match(deploy, /Run post-migration read-only verification/);
   assert.match(deploy, /DB_MIGRATION_REPAIR_EXISTING_SCHEMA.*false/);
-  assert.match(deploy, /RUN_DB_MIGRATIONS.*production-readiness-certification-sprint-2.*true/);
-  assert.match(deploy, /Phase 16 operational flow validation[\s\S]*?if: github\.ref_name != 'codex\/production-readiness-certification-sprint-2'/);
+  assert.doesNotMatch(deploy, /staging_preview_sha|STAGING_PREVIEW_SHA|codex\/production-readiness-certification-sprint-2/);
+  assert.match(deploy, /Guard migration containment[\s\S]*?if: env\.RUN_DB_MIGRATIONS == 'true'/);
+  for (const name of ["EMAIL_SENDING_ENABLED", "NEWSLETTER_DELIVERY_ENABLED", "INTERNAL_JOBS_ENABLED"]) {
+    assert.ok(deploy.includes(`test "$${name}" = "false"`));
+  }
+  assert.match(deploy, /Phase 16 operational flow validation[\s\S]*?if: env\.MAINTENANCE_NO_WRITE != 'true'/);
+  assert.match(deploy, /Write release evidence\n\s+if: env\.MAINTENANCE_NO_WRITE != 'true'/);
   assert.ok(deploy.indexOf("release:assert-schema-compatibility") < deploy.indexOf("Activate release"));
-  assert.ok(deploy.indexOf("Run database migrations") < deploy.indexOf("Run certification post-migration read-only verification"));
-  assert.ok(deploy.indexOf("Run certification post-migration read-only verification") < deploy.indexOf("Activate release"));
+  assert.ok(deploy.indexOf("Run database migrations") < deploy.indexOf("Run post-migration read-only verification"));
+  assert.ok(deploy.indexOf("Run post-migration read-only verification") < deploy.indexOf("Activate release"));
 });
