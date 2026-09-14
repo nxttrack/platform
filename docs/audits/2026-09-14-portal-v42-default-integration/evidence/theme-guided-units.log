@@ -1,0 +1,22 @@
+✔ both supplied Package 1.0 references become separate immutable release candidates (1149.160579ms)
+✔ corrupt recognized manifests and unavailable Default source contract never become guided imports (21.001345ms)
+✔ source hashes, identity mismatches and uploaded behavior are rejected before a draft exists (21.038141ms)
+✔ Studio import uses explicit locally supplied assets and never fetches URLs (46.466728ms)
+✔ an imported release cannot overwrite an existing built-in release (6.273713ms)
+✔ guided import uses explicit per-orientation images and anchors without curriculum or Default inference (1083.374303ms)
+✔ guided mapping rejects missing route review inputs, foreign assets, duplicate IDs and misregistered layers (4013.466801ms)
+✔ guided mapping cannot impersonate original Default or bypass a recognized package (1901.166113ms)
+✔ an archive containing multiple manifests cannot silently prefer the root manifest (15.747759ms)
+✔ legacy built-ins retain their actual release artwork without claiming Default 1.1 provenance (6.448367ms)
+✔ portable export roundtrip preserves manifest, worlds, anchors and bytes with no management metadata (2830.736148ms)
+✔ a new version rebases every delivery key without changing asset hashes or curriculum semantics (2815.461314ms)
+✔ modified raster bytes, external native references and unsafe tokens fail the release validation (1914.025034ms)
+✔ publishing rejects explicit fixture worlds even when the surrounding package is valid (1107.925029ms)
+ℹ tests 14
+ℹ suites 0
+ℹ pass 14
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8946.777137

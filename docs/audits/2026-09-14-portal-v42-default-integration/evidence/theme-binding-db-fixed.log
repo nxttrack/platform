@@ -1,0 +1,11 @@
+PASS world binding identities, tenant isolation, concurrent edits, complete rollback, immutable history, reconnect, curriculum unchanged, legacy opt-in and child/tenant/direct API enforcement
+PASS real storage, authorized SQL, concurrent revision conflict, review invalidation, immutable publication, restart reads, anonymous and authenticated denial; assignment count unchanged
+✔ real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts (2932.714045ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3234.284616
