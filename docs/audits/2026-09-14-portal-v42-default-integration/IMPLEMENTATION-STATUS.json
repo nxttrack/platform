@@ -1,0 +1,12 @@
+{
+  "status": "IN_PROGRESS",
+  "baseline": "afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80",
+  "branch": "codex/portal-v42-default-integration",
+  "blockers": [
+    "B01 ORIGINAL_DEFAULT_ASSETS_MISSING"
+  ],
+  "originalArtworkImported": false,
+  "visualQualityApproved": false,
+  "deploymentPerformed": false,
+  "remoteDatabaseModified": false
+}
