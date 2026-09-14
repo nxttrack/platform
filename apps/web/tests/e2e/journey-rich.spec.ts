@@ -124,3 +124,37 @@ test("visible pearls remain registered to the rendered smooth route in both orie
     expect(error).toBeLessThan(1);
   }
 });
+
+test("guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced",async({page})=>{
+  await page.setViewportSize({width:1440,height:900});await page.goto('/test-harness/journey-rich?count=7');
+  const scene=page.locator('[data-rich-journey]'),guide=scene.locator('[data-rich-guide]');
+  await expect(guide).toBeVisible();
+  await expect.poll(()=>guide.evaluate(element=>{
+    const box=element.getBoundingClientRect(),parent=element.closest('[data-rich-journey]')!,bounds=parent.getBoundingClientRect();
+    return box.left>=bounds.left && box.right<=bounds.right && box.top>=bounds.top && box.bottom<=bounds.bottom && [...parent.querySelectorAll('[data-rich-obstacle]')].every(obstacle=>{
+      const other=obstacle.getBoundingClientRect();return box.right<=other.left || box.left>=other.right || box.bottom<=other.top || box.top>=other.bottom;
+    });
+  })).toBe(true);
+  await scene.evaluate(()=>{
+    const original=Element.prototype.getBoundingClientRect;
+    const state=window as typeof window & {journeyObstacleReads:number;restoreJourneyMeasurements:()=>void};
+    state.journeyObstacleReads=0;state.restoreJourneyMeasurements=()=>{Element.prototype.getBoundingClientRect=original;};
+    Element.prototype.getBoundingClientRect=function(){if(this.matches('[data-rich-obstacle]')) state.journeyObstacleReads+=1;return original.call(this);};
+  });
+  const box=(await scene.boundingBox())!;
+  await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
+  await page.mouse.move(box.x+box.width/2+60,box.y+box.height/2+20,{steps:15});
+  await expect(guide).toHaveCount(0);
+  expect(await scene.evaluate(()=>(window as typeof window & {journeyObstacleReads:number}).journeyObstacleReads)).toBe(0);
+  await scene.evaluate(()=>(window as typeof window & {restoreJourneyMeasurements:()=>void}).restoreJourneyMeasurements());
+  await page.mouse.up();await expect(guide).toBeVisible();
+  await scene.evaluate(element=>{(element as HTMLElement).style.marginTop='200vh';});
+  await expect(guide).toHaveCount(0);
+  await scene.evaluate(element=>{(element as HTMLElement).style.marginTop='';});await expect(guide).toBeVisible();
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(scene).toHaveAttribute('data-reduced-motion','true');
+  await expect(guide.locator('[data-pulse]')).toHaveAttribute('data-pulse','false');
+  expect(await guide.evaluate(element=>element.getAnimations({subtree:true}).filter(animation=>animation.playState==='running').length)).toBe(0);
+  await scene.getByRole('button',{name:'Gids tonen'}).click();await expect(guide).toHaveCount(0);
+  await scene.getByRole('button',{name:'Alle 7 onderdelen',exact:true}).click();await expect(page.getByRole('dialog').locator('li')).toHaveCount(7);
+});

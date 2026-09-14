@@ -41,6 +41,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
   const clusters = useMemo(() => timeline.entries.flatMap((entry) => entry.kind === "event_cluster" ? [{ ...entry, anchorId: entry.anchorKey === "before:first" ? timeline.orderedNodes[0]?.id ?? null : timeline.orderedNodes[Number(entry.anchorKey.slice(6))]?.id ?? null }] : []), [timeline]);
   const [momentPositions, setMomentPositions] = useState<Array<{ id: string; x: number; y: number }>>([]);
   const [camera, setCamera] = useState<JourneyCamera>({ x: 0, y: 0, scale: 1 });
+  const [settledCamera, setSettledCamera] = useState(camera), [arriving, setArriving] = useState(false), [sceneVisible, setSceneVisible] = useState(false);
   const [guidePlacement, setGuidePlacement] = useState(hiddenGuide), [dragging, setDragging] = useState(false);
   const cameraRef = useRef(camera), initialized = useRef(false), restored = useRef<StoredView | null>(null), animation = useRef<number | null>(null), suppressClick = useRef(false);
   const lastRequestedId = useRef(requestedId);
@@ -57,6 +58,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
   const storageKey = `nxttrack:journey-view:${contextKey}`;
   const latest = useRef({ selected, camera, layoutKey }); latest.current = { selected, camera, layoutKey };
   const quiet = reducedMotion || systemReduced;
+  const cameraMoving = dragging || camera !== settledCamera;
   const url = (id: string | null | undefined) => id && presentation.assets[id] ? assetUrls?.[id] ?? presentationAssetUrl(presentation.assets[id]) : null;
 
   useLayoutEffect(() => {
@@ -68,6 +70,24 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     const media = matchMedia("(prefers-reduced-motion: reduce)"); const changed = () => setSystemReduced(media.matches);
     changed(); media.addEventListener("change", changed); return () => media.removeEventListener("change", changed);
   }, []);
+  useEffect(() => {
+    const element=root.current;if(!element) return;
+    let intersecting=false;
+    const changed=()=>setSceneVisible(intersecting && document.visibilityState==='visible');
+    const observer=new IntersectionObserver(([entry])=>{intersecting=entry.isIntersecting;changed();});
+    observer.observe(element);document.addEventListener('visibilitychange',changed);
+    return ()=>{observer.disconnect();document.removeEventListener('visibilitychange',changed);};
+  },[]);
+  useEffect(() => {
+    // Park only after the camera rests. No obstacle measurement loop on every pointer frame,
+    // and no forced travel through text or controls between safe placements.
+    setArriving(false);
+    if(dragging) return;
+    if(quiet) {setSettledCamera(camera);return;}
+    let arrival:ReturnType<typeof setTimeout>|undefined;
+    const settle=setTimeout(()=>{setSettledCamera(camera);setArriving(true);arrival=setTimeout(()=>setArriving(false),180);},80);
+    return ()=>{clearTimeout(settle);if(arrival) clearTimeout(arrival);};
+  },[camera,dragging,quiet]);
   useLayoutEffect(() => {
     try {
       const raw = sessionStorage.getItem(storageKey), value = raw ? JSON.parse(raw) as StoredView : null;
@@ -125,7 +145,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutKey]);
   useLayoutEffect(() => {
-    if (!root.current || !viewport.width || !viewport.height || !active || !guideEnabled || presentation.guide.mode === "none") { setGuidePlacement(hiddenGuide); return; }
+    if (!root.current || !viewport.width || !viewport.height || !active || !guideEnabled || presentation.guide.mode === "none" || cameraMoving || !sceneVisible) { setGuidePlacement(old=>old.mode==='hidden'?old:hiddenGuide); return; }
     const bounds = root.current.getBoundingClientRect();
     const rect = (element: Element) => { const box = element.getBoundingClientRect(); return { x: box.x - bounds.x, y: box.y - bounds.y, width: box.width, height: box.height }; };
     const target = root.current.querySelector(`[data-rich-node="${CSS.escape(active.id)}"]`);
@@ -134,10 +154,10 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     const height = presentation.guide.mode === "character" ? width / presentation.guide.aspectRatio : width;
     const placement = selectMascotPlacement({ anchor: rect(target), bounds: { x: 0, y: 0, width: viewport.width, height: viewport.height }, exclusions: [...root.current.querySelectorAll("[data-rich-obstacle]")].map(rect), preferredWidth: width, preferredHeight: height, clearance: 16 });
     setGuidePlacement((old) => JSON.stringify(old) === JSON.stringify(placement) ? old : placement);
-  }, [active, camera, detailOpen, guideEnabled, orientation, presentation.guide, viewport]);
+  }, [active, settledCamera, cameraMoving, sceneVisible, detailOpen, guideEnabled, orientation, presentation.guide, viewport]);
 
   useLayoutEffect(() => {
-    const element = root.current; if (!element || !viewport.width || !viewport.height) return;
+    const element = root.current; if (!element || !viewport.width || !viewport.height || cameraMoving || !sceneVisible) return;
     const bounds = element.getBoundingClientRect();
     const rect = (node: Element) => { const box = node.getBoundingClientRect(); return { x: box.x - bounds.x, y: box.y - bounds.y, width: box.width, height: box.height }; };
     const exclusions = [...element.querySelectorAll("[data-rich-obstacle]:not([data-journey-moment]), [data-rich-guide]")].map(rect);
@@ -152,7 +172,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
       placements.push({ id: cluster.id, x: placed.x, y: placed.y }); exclusions.push(placed);
     }
     setMomentPositions((previous) => JSON.stringify(previous) === JSON.stringify(placements) ? previous : placements);
-  }, [clusters, camera, viewport, detailOpen, guidePlacement]);
+  }, [clusters, settledCamera, cameraMoving, sceneVisible, viewport, detailOpen, guidePlacement]);
   function openMoments(cluster: string | null, trigger: HTMLElement) { momentTrigger.current = trigger; setMomentCluster(cluster); setMomentsOpen(true); }
 
   function selectNode(node: PortalJourneyViewNode, open: boolean, trigger?: HTMLElement) {
@@ -186,7 +206,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
     pointer.current = null; setDragging(false);
   }
-  const guideAsset = presentation.guide.mode === "character" ? url(presentation.guide.poses[dragging ? "travel" : detailOpen ? "look" : "idle"] ?? presentation.guide.poses.idle) : null;
+  const guideAsset = presentation.guide.mode === "character" ? url(presentation.guide.poses[!quiet && arriving ? "travel" : detailOpen ? "look" : "idle"] ?? presentation.guide.poses.idle) : null;
   const route = useMemo(() => journeyRoutePath(scene), [scene]);
 
   return <section ref={root} className={styles.scene} aria-label={title} tabIndex={0} onKeyDown={keyDown} data-rich-journey data-world-id={worldId} data-orientation={orientation} data-reduced-motion={quiet} data-node-count={nodes.length}>
@@ -206,15 +226,15 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
             {visible.length <= 7 || selected === node.id ? <span className={styles.label} data-rich-label data-rich-obstacle>{node.label}</span> : null}
           </div>;
         })}
-        {guideEnabled && guidePlacement.mode !== "hidden" && presentation.guide.mode !== "none" ? <div aria-hidden="true" className={styles.guide} data-rich-guide={presentation.guide.mode} style={{ left: (guidePlacement.x - camera.x) / camera.scale, top: (guidePlacement.y - camera.y) / camera.scale, width: guidePlacement.width, height: guidePlacement.height, transform: `scale(${1 / camera.scale})` }}>
-          {presentation.guide.mode === "route-light" ? <span className={styles.light} data-halo={presentation.guide.halo} data-pulse={!quiet && presentation.guide.pulse} /> : guideAsset ? <img src={guideAsset} alt="" draggable={false} /> : null}
+        {guideEnabled && !cameraMoving && sceneVisible && guidePlacement.mode !== "hidden" && presentation.guide.mode !== "none" ? <div aria-hidden="true" className={styles.guide} data-rich-guide={presentation.guide.mode} data-arriving={!quiet && arriving} style={{ left: (guidePlacement.x - camera.x) / camera.scale, top: (guidePlacement.y - camera.y) / camera.scale, width: guidePlacement.width, height: guidePlacement.height, transform: `scale(${1 / camera.scale})` }}>
+          {presentation.guide.mode === "route-light" ? <span className={styles.light} data-halo={presentation.guide.halo} data-pulse={!quiet && sceneVisible && presentation.guide.pulse} /> : guideAsset ? <img src={guideAsset} alt="" draggable={false} /> : null}
         </div> : null}
       </div>
     </div>
-    {momentPositions.map((position) => {
+    {!cameraMoving && sceneVisible ? momentPositions.map((position) => {
       const cluster = clusters.find((entry) => entry.id === position.id)!;
       return <button key={position.id} type="button" className={styles.moment} data-journey-moment data-rich-obstacle style={{ left: position.x, top: position.y }} aria-label={`${cluster.events.length} ${cluster.events.length === 1 ? "moment" : "momenten"} bij ${nodes.find((node) => node.id === cluster.anchorId)?.label ?? "deze reis"}`} onClick={(event) => openMoments(cluster.id, event.currentTarget)}><Award aria-hidden="true" /><span>{cluster.events.length}</span></button>;
-    })}
+    }):null}
     <header className={styles.heading} data-rich-obstacle><small>{model?.stageName ?? "Mijn reis"}</small><h1>{title}</h1><p>{world.name}</p></header>
     {lesson ? <Link className={styles.lesson} data-rich-obstacle href={lesson.href} aria-label={`Volgende les: ${lesson.label}`}>{lesson.label}</Link> : null}
     {scene.quality === "fixture-only" ? <p className={styles.fixture} data-rich-obstacle>Testweergave · originele wereldbeelden en ankers ontbreken</p> : null}

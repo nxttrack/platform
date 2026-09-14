@@ -1661,6 +1661,37 @@
           "sha256": "f5ae885507d2e18a4a494c9aee420e5168370705836d435a4c58b252038d5f0d"
         }
       ]
+    },
+    {
+      "name": "Stationary guide and complete badge history",
+      "report": "MOTION-HISTORY-CHECKPOINT.md",
+      "unitsFull": 505,
+      "typecheck": "PASS",
+      "chromiumRichSceneIncludingMotion": 7,
+      "chromiumAuthenticatedCollectionAfterHistoryChange": 1,
+      "fullIntegration": "IN_PROGRESS",
+      "logs": [
+        {
+          "path": "evidence/journey-motion-typecheck.log",
+          "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+        },
+        {
+          "path": "evidence/journey-motion-browser.log",
+          "sha256": "e25f1f6996ab635222ce9df2e5dc94ead295b433703bb065e37e50492cbbada5"
+        },
+        {
+          "path": "evidence/badge-history-typecheck.log",
+          "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+        },
+        {
+          "path": "evidence/journey-complete-history-units.log",
+          "sha256": "fe26b3243facbcfae030f97917ec3328767c6007a43bbab4071a1ee8c6a3854a"
+        },
+        {
+          "path": "evidence/journey-complete-history-browser.log",
+          "sha256": "0198644d8727e616de60887f9f0f09b075918e87b22aed81fcd15c7154b9fd3e"
+        }
+      ]
     }
   ]
 }

@@ -11,3 +11,16 @@ export async function readJourneyPages<T, E>(query: { range(from: number, to: nu
   }
   throw new Error("Journey data is too large to read safely in one request");
 }
+
+/** Keep related-ID queries below URL limits without silently dropping older releases. */
+export async function readJourneyIdBatches<T,E>(ids:readonly string[],query:(batch:string[])=>{range(from:number,to:number):PromiseLike<{data:T[]|null;error:E|null}>}):Promise<{data:T[]|null;error:E|null}> {
+  const unique=[...new Set(ids)],rows:T[]=[];
+  if(unique.length>100_000) throw new Error('Journey relation set is too large to read safely');
+  for(let offset=0;offset<unique.length;offset+=100) {
+    const result=await readJourneyPages(query(unique.slice(offset,offset+100)));
+    if(result.error) return {data:null,error:result.error};
+    rows.push(...result.data??[]);
+    if(rows.length>100_000) throw new Error('Journey relation history is too large to read safely');
+  }
+  return {data:rows,error:null};
+}

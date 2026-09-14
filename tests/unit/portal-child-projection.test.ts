@@ -27,7 +27,7 @@ test("child DTO is an explicit allowlist and strips assessment internals", () =>
 
 test("unearned surprises are absent at the server query boundary", () => {
   assert.match(childDomain, /badge_definition_releases[\s\S]*\.eq\("is_surprise", false\)/);
-  assert.match(childDomain, /releaseIds\.length[\s\S]*badge_definition_releases[\s\S]*\.in\("id", releaseIds\)/);
+  assert.match(childDomain, /readJourneyIdBatches\(releaseIds,ids=>admin\.from\("badge_definition_releases"\)[\s\S]*?\.in\("id", ids\)/);
   assert.match(childBadges, /isSurprise: false/);
   assert.match(childDomain, /select\("id, stable_key, category, is_surprise, name_default, name_boy, name_girl"\)/);
 });

@@ -1,4 +1,5 @@
 import { childAssessmentCompliment } from "./child-assessment-compliment";
+import { readJourneyIdBatches,readJourneyPages } from "./journey-query-pages";
 import "server-only";
 
 import { cache } from "react";
@@ -214,6 +215,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   });
   const canonicalJourney = getJourneyForEnrollment(journeys, enrollment?.id);
 
+  const badgeReadAt=new Date().toISOString();
   const [membershipResult, awardResult, mediaApprovalResult, programResult, stageResult, standardReleasesResult, certificatesResult, graduationInvitesResult] = await Promise.all([
     admin
       .from("group_memberships")
@@ -221,14 +223,15 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .in("status", ["active", "trial"]),
-    admin
+    readJourneyPages(admin
       .from("participant_badge_awards")
       .select("id, badge_release_id, resolved_badge_key, title, awarded_at, resolved_description, trigger_event_type, trigger_context_json")
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .eq("status", "awarded")
       .eq("visibility", "parent_visible")
-      .order("awarded_at", { ascending: false }),
+      .lte("awarded_at",badgeReadAt)
+      .order("awarded_at", { ascending: false }).order("id")),
     admin
       .from("portal_child_media_approvals")
       .select("media_id")
@@ -241,12 +244,13 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     enrollment?.current_stage_id
       ? admin.from("program_stages").select("id, name").eq("tenant_id", childSession.tenantId).eq("id", enrollment.current_stage_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    admin
+    readJourneyPages(admin
       .from("badge_definition_releases")
       .select("id, tenant_id, stable_key, release_number, name_default, name_boy, name_girl, category, audience, is_surprise")
       .or(`tenant_id.is.null,tenant_id.eq.${childSession.tenantId}`)
       .eq("is_surprise", false)
-      .order("release_number", { ascending: false }),
+      .lte("created_at",badgeReadAt)
+      .order("release_number", { ascending: false }).order("id")),
     admin
       .from("certificate_records")
       .select("id, title, issued_on")
@@ -277,15 +281,11 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       ? admin.from("groups").select("id, name, default_resource_id, offering_type").eq("tenant_id", childSession.tenantId).in("id", groupIds)
       : Promise.resolve({ data: [], error: null }),
     loadChildAgendaSessions(admin, childSession.tenantId, membershipResult.data ?? [], timeZone),
-    releaseIds.length
-      ? admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
-      : Promise.resolve({ data: [], error: null }),
+    readJourneyIdBatches(releaseIds,ids=>admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", ids).order("id")),
     mediaIds.length
       ? admin.from("participant_media").select("id, caption, media_type, published_at").eq("tenant_id", childSession.tenantId).eq("participant_id", childSession.participantId).eq("status", "published").gt("expires_at", new Date().toISOString()).in("id", mediaIds).order("published_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
-    standardReleaseIds.length
-      ? admin.from("badge_release_lifecycle").select("badge_release_id, availability, effective_at").in("badge_release_id", standardReleaseIds).order("effective_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
+    readJourneyIdBatches(standardReleaseIds,ids=>admin.from("badge_release_lifecycle").select("badge_release_id, availability, effective_at").in("badge_release_id", ids).lte("effective_at",badgeReadAt).order("effective_at", { ascending: false }).order("id")),
     graduationEventIds.length
       ? admin.from("graduation_events").select("id, title, resource_id, starts_at, ends_at, status").eq("tenant_id", childSession.tenantId).eq("status", "published").gte("ends_at", new Date().toISOString()).in("id", graduationEventIds).order("starts_at")
       : Promise.resolve({ data: [], error: null })

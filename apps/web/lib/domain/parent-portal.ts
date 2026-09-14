@@ -1,4 +1,5 @@
 import "server-only";
+import { readJourneyPages } from "./journey-query-pages";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
@@ -571,14 +572,15 @@ export async function getParentPortalDataForContext(
           .order("scored_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     loadedParticipantIds.length > 0
-      ? admin
+      ? readJourneyPages(admin
           .from("participant_badge_awards")
           .select("id, participant_id, enrollment_id, badge_definition_id, title, note, visibility, status, awarded_at, trigger_event_type, trigger_context_json, resolved_description, badge_release:badge_definition_releases!participant_badge_awards_badge_release_id_fkey(is_surprise)")
           .eq("tenant_id", tenant.id)
           .eq("visibility", "parent_visible")
           .eq("status", "awarded")
           .in("participant_id", loadedParticipantIds)
-          .order("awarded_at", { ascending: false })
+          .lte("awarded_at",new Date().toISOString())
+          .order("awarded_at", { ascending: false }).order("id"))
       : Promise.resolve({ data: [], error: null }),
     admin
       .from("tenant_notifications")
