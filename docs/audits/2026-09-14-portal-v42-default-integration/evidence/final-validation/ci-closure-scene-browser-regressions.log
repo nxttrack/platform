@@ -1,0 +1,19 @@
+
+Running 14 tests using 1 worker
+
+  ✓   1 [journey-chromium] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (1.5s)
+  ✓   2 [journey-chromium] › tests/e2e/journey-development.spec.ts:29:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (2.1s)
+  ✓   3 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (797ms)
+  ✓   4 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (1.6s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (664ms)
+  ✓   6 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (609ms)
+  ✓   7 [journey-chromium] › tests/e2e/journey-image-delivery.spec.ts:3:5 › published scene initially downloads only its measured orientation and changes assets when actually rotated (1.8s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (2.5s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (1.1s)
+  ✓  10 [journey-chromium] › tests/e2e/journey-rich.spec.ts:63:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (3.4s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-rich.spec.ts:91:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (600ms)
+  ✓  12 [journey-chromium] › tests/e2e/journey-rich.spec.ts:106:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (720ms)
+  ✓  13 [journey-chromium] › tests/e2e/journey-rich.spec.ts:121:5 › visible pearls remain registered to the rendered smooth route in both orientations (2.0s)
+  ✓  14 [journey-chromium] › tests/e2e/journey-rich.spec.ts:137:5 › guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced (1.2s)
+
+  14 passed (21.5s)
