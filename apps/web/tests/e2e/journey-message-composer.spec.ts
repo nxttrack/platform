@@ -46,7 +46,11 @@ test("real parent messages retain authorized references, private drafts, conflic
   const review = page.getByRole("dialog", { name: "Bericht controleren", exact: true });
   await expect(review).toContainText("Fictieve berichtenschool"); await expect(review).toContainText("Fictieve Lotte"); await expect(review).toContainText("Fictief rustig ademen");
   await expect(review.getByRole("button", { name: "Bericht versturen", exact: true })).toBeDisabled();
-  await review.getByRole("checkbox").check(); await page.screenshot({ path: info.outputPath("parent-confirm-message.png") });
+  await page.setViewportSize({ width: 390, height: 450 }); // Emulated visible area with a mobile keyboard, not a physical device claim.
+  await review.getByRole("checkbox").check();
+  await expect(review.getByRole("button", { name: "Venster sluiten" })).toBeInViewport();
+  await expect(review.getByRole("button", { name: "Bericht versturen", exact: true })).toBeInViewport();
+  await page.screenshot({ path: info.outputPath("parent-confirm-message.png") });
   await review.getByRole("button", { name: "Bericht versturen", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`kind=${fixture.child}.*thread=`));
   await expect(page.getByRole("log")).toContainText("Fictieve vraag na een verbindingsfout.");

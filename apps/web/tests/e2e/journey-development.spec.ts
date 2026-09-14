@@ -39,6 +39,7 @@ test("development retains readable long labels and reachable details across seve
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await dialog.getByText("Nog niet beoordeeld", { exact: true }).first().scrollIntoViewIfNeeded();
   await expect(dialog.getByText("Nog niet beoordeeld", { exact: true }).first()).toBeInViewport();
+  await expect(dialog.getByRole("button", { name: "Venster sluiten" })).toBeInViewport();
   await page.screenshot({ path: info.outputPath("development-390x844-text200-dialog.png") });
   await dialog.getByRole("button", { name: "Venster sluiten" }).click(); await expect(trigger).toBeFocused();
 });

@@ -1,12 +1,12 @@
 .overlay, .confirmOverlay { position: fixed; inset: 0; background: rgb(17 32 52 / 45%); z-index: 80; }
-.dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 81; display: flex; flex-direction: column; width: min(42rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); border-radius: 1.5rem; background: #fff; color: #172a46; box-shadow: 0 24px 90px #172a4640; overflow-y: auto; overscroll-behavior: contain; }
+.dialog { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 81; display: flex; flex-direction: column; width: min(42rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); border-radius: 1.5rem; background: #fff; color: #172a46; box-shadow: 0 24px 90px #172a4640; overflow: hidden; overscroll-behavior: contain; }
 .header { padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start; border-bottom: 1px solid #e4e9f2; flex: none; }
-.header > div { min-width: 0; flex: 1; }
+.header > div { min-width: 0; flex: 1; max-height: 28dvh; overflow-y: auto; overscroll-behavior: contain; }
 .header h2 { font-size: 1.25rem; font-weight: 800; overflow-wrap: anywhere; }
 .header p { margin-top: .35rem; color: #50617a; font-size: .875rem; }
 .close { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; background: #f1f4fa; }
-.body { padding: 1.25rem; flex: none; min-height: 0; overflow-wrap: anywhere; }
-.footer { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: flex-end; padding: 1rem 1.25rem; border-top: 1px solid #e4e9f2; flex: none; }
+.body { padding: 1.25rem; flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; overflow-wrap: anywhere; }
+.footer { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: flex-end; padding: 1rem 1.25rem; border-top: 1px solid #e4e9f2; flex: none; max-height: 30dvh; overflow-y: auto; }
 .footer button { min-height: 2.75rem; padding: .5rem 1rem; border-radius: .75rem; background: #e9edf9; font-weight: 700; }
 .confirmOverlay { z-index: 90; }
 .confirm { z-index: 91; width: min(30rem, calc(100vw - 2rem)); }
