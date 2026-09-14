@@ -44,3 +44,16 @@ test('tab changes retain the mounted draft after a failed flush',async({page})=>
   await expect(page.getByRole('tabpanel')).toHaveText('Andere inhoud');
   await expect(input).toHaveCount(0);
 });
+
+
+test('a failed manual form still asks before Back; cancel retains input and explicit discard resumes history',async({page})=>{
+ await page.goto('/test-harness/journey-rich?count=0&draft=start');
+ await page.getByRole('link',{name:'Open conceptfixture'}).click();
+ const input=page.getByRole('textbox',{name:'Fictief handmatig formulier'});await input.fill('Fictieve niet-opgeslagen tekst');
+ await page.getByRole('button',{name:'Simuleer mislukte inzending'}).click();
+ await expect(page.getByRole('alert').filter({hasText:'Fictieve inzending mislukt'})).toBeVisible();
+ page.once('dialog',dialog=>dialog.dismiss());await page.goBack();
+ await expect(page).toHaveURL(/draft=editor/);await expect(input).toHaveValue('Fictieve niet-opgeslagen tekst');
+ page.once('dialog',dialog=>dialog.accept());await page.goBack();
+ await expect(page).toHaveURL(/draft=start/);await expect(input).toHaveCount(0);
+});

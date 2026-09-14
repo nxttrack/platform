@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional (20.9s)
+
+  1 passed (21.4s)

@@ -7,5 +7,5 @@ export function registerDraftWriter(flush: () => Promise<boolean>,pending:()=>bo
 }
 export function hasPendingDraftWrites() {return [...writers].some(writer=>{try{return writer.pending();}catch{return true;}});}
 export async function flushDraftWriters() {
-  return (await Promise.all([...writers].map(async (writer) => { try { return await writer.flush(); } catch { return false; } }))).every(Boolean);
+  return (await Promise.all([...writers].map(async (writer) => { try { return !writer.pending() || await writer.flush(); } catch { return false; } }))).every(Boolean);
 }

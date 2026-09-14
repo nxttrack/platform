@@ -37,7 +37,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
 
       <div className="grid gap-5">
         <Card>
-          <form action={updateParentProfileAction} className="grid gap-4 md:grid-cols-2">
+          <DirtyForm action={updateParentProfileAction} className="grid gap-4 md:grid-cols-2">
             <Field defaultValue={data.profile?.full_name ?? data.user.displayName ?? ""} icon={<UserRound className="h-4 w-4" />} label="Naam" name="fullName" />
             <Field defaultValue={data.profile?.phone ?? ""} icon={<Phone className="h-4 w-4" />} label="Telefoon" name="phone" type="tel" />
             <div className="rounded-lg border border-border bg-muted px-3 py-3 md:col-span-2">
@@ -52,7 +52,7 @@ export default async function ParentProfilePage({ searchParams }: PageProps) {
                 Profiel opslaan
               </button>
             </div>
-          </form>
+          </DirtyForm>
         </Card>
       </div>
 

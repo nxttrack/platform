@@ -16,11 +16,13 @@ export async function updateParentProfileAction(formData: FormData) {
   const phone = readOptional(formData, "phone");
   const { error } = await admin
     .from("profiles")
-    .update({
+    .upsert({
+      id: context.user.id,
       full_name: fullName,
       phone
-    })
-    .eq("id", context.user.id);
+    }, { onConflict: "id" })
+    .select("id")
+    .single();
 
   revalidatePath("/portaal");
   revalidatePath("/portaal/profiel");
