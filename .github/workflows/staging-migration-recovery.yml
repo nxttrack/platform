@@ -75,7 +75,11 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
-          git fetch --no-tags origin main --depth=1
+          # Keep the complete checkout history available to the compatibility
+          # ancestry assertion. A depth-limited fetch would mark the release
+          # tip shallow and make a real certified ancestor appear missing.
+          git fetch --no-tags origin main
+          test "$(git rev-parse --is-shallow-repository)" = "false"
           test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_SHA"
           echo "[staging-recovery] source SHA=$RELEASE_SHA"
 
