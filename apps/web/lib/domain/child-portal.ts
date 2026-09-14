@@ -16,6 +16,7 @@ import type { EnrollmentRow } from "./core";
 import { loadChildAgendaSessions } from "./child-agenda";
 import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
 import { getPortalFeatureFlags, type PortalFeatureFlags } from "./portal-features";
+import { childJourneyView } from "./portal-journey-view";
 import {
   getJourneyForEnrollment,
   loadCanonicalSwimJourneys,
@@ -53,6 +54,7 @@ export type ChildSafeInstructionalVideoDto = {
 };
 
 export type ChildSafeJourneyDto = {
+  view?: import("./portal-journey-view").PortalJourneyView;
   stages: Array<{ id: string; name: string; sortOrder: number }>;
   currentStage: { id: string; name: string } | null;
   currentStageItems: Array<{
@@ -469,6 +471,7 @@ function projectChildSafeJourney(
     journey.itemCompletions.map((completion) => [completion.curriculum_item_id, completion])
   );
   return {
+    view: childJourneyView(journey) ?? undefined,
     stages: journey.stages.map((stage) => ({
       id: stage.id,
       name: stage.name,

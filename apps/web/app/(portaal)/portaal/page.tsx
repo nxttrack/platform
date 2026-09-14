@@ -13,8 +13,9 @@ import {
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { ParentOverviewTop } from "@/components/parent/parent-overview-top";
-import type { PortalJourneyNode } from "@/components/parent/portal-journey-engine";
+import { PortalJourney } from "@/components/portal/journey/portal-journey";
+import { parentJourneyView } from "@/lib/domain/portal-journey-view";
+import { legacyJourneyVisual } from "@/lib/theme/legacy-journey-presentation";
 import {
   formatLessonDate,
   getActiveEnrollmentForParticipant,
@@ -27,11 +28,6 @@ import {
   type ParentPortalSearchParams
 } from "@/lib/domain/parent-portal-selection";
 import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
-import {
-  orderJourneyNodes,
-  resolveJourneyDestination,
-  selectDefaultJourneyNode
-} from "@/lib/theme/portal-journey-contract";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
@@ -58,54 +54,14 @@ export default async function ParentHomePage({
       ? [selectedParticipantId]
       : data.participants.map((participant) => participant.id)
   );
-  const programById = new Map(data.programs.map((program) => [program.id, program]));
-  const groupById = new Map(data.groups.map((group) => [group.id, group]));
-  const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const enrollment = selectedParticipant
     ? getActiveEnrollmentForParticipant(data, selectedParticipant.id)
     : null;
   const journey = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
   const nextLesson = selectedParticipant ? getNextLesson(data, selectedParticipant.id) : null;
-  const locationId = nextLesson?.resource_id
-    ?? (nextLesson ? groupById.get(nextLesson.group_id)?.default_resource_id : null);
   const resolvedTheme = data.portalTheme;
+  const journeyVisual = legacyJourneyVisual(resolvedTheme.manifest);
   const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
-  const observationByItemId = new Map(
-    (journey?.effectiveObservations ?? []).map((observation) => [
-      observation.curriculum_item_id,
-      observation
-    ])
-  );
-  const openCarryoverItemIds = new Set(
-    (journey?.carryovers ?? [])
-      .filter((carryover) => carryover.status === "open")
-      .map((carryover) => carryover.curriculum_item_id)
-  );
-  const nodes: PortalJourneyNode[] = orderJourneyNodes((journey?.currentStageItems ?? []).map((item) => {
-    const observation = observationByItemId.get(item.id);
-    const blocked = item.context_json.blocked === true;
-    return {
-      id: item.stable_key,
-      label: item.name,
-      progressPercent: observation ? (observation.rating / 5) * 100 : 0,
-      assessed: Boolean(observation),
-      completed: observation?.rating === 5,
-      completedAt: observation?.rating === 5 ? observation.finalized_at : null,
-      curriculumOrder: item.sort_order,
-      lastUpdatedAt: observation?.finalized_at ?? null,
-      carryover: openCarryoverItemIds.has(item.id),
-      blocked,
-      blockedReason: blocked && typeof item.context_json.block_reason === "string"
-        ? item.context_json.block_reason
-        : null
-    };
-  }));
-  const destinationStage = resolveJourneyDestination({
-    stages: journey?.stages ?? [],
-    currentStageId: journey?.currentStage?.id,
-    programName: programById.get(enrollment?.program_id ?? "")?.name,
-    fallback: "jouw volgende doel"
-  });
   const visibleNotifications = data.notifications.filter(
     (notification) =>
       !notification.participant_id || visibleParticipantIds.has(notification.participant_id)
@@ -188,23 +144,12 @@ export default async function ParentHomePage({
 
   return (
     <div className="portal-dashboard dashboard-page">
-      <ParentOverviewTop
-        currentGoal={selectDefaultJourneyNode(nodes) ?? null}
-        destinationStage={destinationStage}
-        lesson={nextLesson ? {
-          dateLabel: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at),
-          groupName: groupById.get(nextLesson.group_id)?.name ?? null,
-          locationName: locationId ? resourceById.get(locationId)?.name ?? null : null
-        } : null}
-        participantId={participantId}
-        progressHref={participantContextHref("/portaal/ontwikkeling", participantId)}
-        program={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Nog geen programma"}
-        rings={journey?.rings ?? []}
-        sceneUrl={resolvedTheme.manifest.assets["overview.hero.desktop"]?.path ?? null}
-        stage={journey?.currentStage?.name ?? "Startniveau"}
-      />
+      <PortalJourney audience="parent" participantId={participantId} contextKey={`parent:${data.user.id}:${data.tenant.id}:${participantId}:${journey?.version.id ?? "none"}`}
+        title={selectedParticipant ? `De reis van ${selectedParticipant.display_name.split(" ")[0]}` : "Jouw leerreis"}
+        model={parentJourneyView(journey)} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls}
+        lesson={nextLesson ? { label: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at), href: participantContextHref(`/portaal/lessen/${nextLesson.id}`, participantId) } : null} />
 
-      <div className="portal-dashboard__cards dashboard-cards">
+      <details className="rounded-2xl border border-border bg-card p-4"><summary className="cursor-pointer font-bold">Praktisch, updates en berichten ({actions.length + unreadNotifications.length})</summary><div className="portal-dashboard__cards dashboard-cards mt-4">
         <DashboardCard
           emptyIcon={<CheckCircle2 />}
           emptyText="Je bent helemaal bij."
@@ -229,7 +174,7 @@ export default async function ParentHomePage({
           subtitle={`${unreadNotifications.length} ongelezen`}
           title="Berichten"
         />
-      </div>
+      </div></details>
     </div>
   );
 }

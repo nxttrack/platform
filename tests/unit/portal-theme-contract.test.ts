@@ -71,9 +71,9 @@ test("iedere release gebruikt dezelfde Journey Engine en parentprojectie", () =>
     new URL("../../apps/web/app/(portaal)/portaal/page.tsx", import.meta.url),
     "utf8"
   );
-  assert.match(overviewSource, /orderJourneyNodes/);
-  assert.match(overviewSource, /ParentOverviewTop/);
-  assert.match(overviewSource, /resolvedTheme\.manifest\.assets\["overview\.hero\.desktop"\]/);
+  assert.match(overviewSource, /parentJourneyView\(journey\)/);
+  assert.match(overviewSource, /PortalJourney/);
+  assert.match(overviewSource, /assetUrls=\{journeyVisual\.assetUrls\}/);
 });
 
 test("alle thema's gebruiken uitsluitend de neutrale badgeplaceholderfamilie", () => {
