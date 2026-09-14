@@ -1,0 +1,254 @@
+[
+  {
+    "file": "evidence/fresh-baseline-migrations.log",
+    "sha256": "66f92db67e243d6df164f86e5e5f2e33cb13b6a0b68d97a225f100695cadce01"
+  },
+  {
+    "file": "evidence/fresh-db-advisors.log",
+    "sha256": "4a0c46719749d97b176f3e8d9fda4de416be0a49cdca8ff6b2f1f0e26040c3b8"
+  },
+  {
+    "file": "evidence/fresh-db-audit-clean-room.log",
+    "sha256": "9909c810f122aa263eb8416a55bb9eed469a902bd736379d86fe76aaf0a02861"
+  },
+  {
+    "file": "evidence/fresh-db-preflight-production-readiness-upgrade.log",
+    "sha256": "aa5c168b9fa95c25e333e327fe472fd3e51924f52c16025405903b4b7f2c606a"
+  },
+  {
+    "file": "evidence/fresh-db-seed-production-readiness-upgrade-fixture.log",
+    "sha256": "c2a52cc480d63e37e28ec0e39423571247518d7ae7709fc44935c0e693db9ef7"
+  },
+  {
+    "file": "evidence/fresh-legacy-candidate-swim.log",
+    "sha256": "0f726f9a63589a4b3623467a86551b30335fda6bd7ac198bf365c4608266fd67"
+  },
+  {
+    "file": "evidence/fresh-legacy-clean-room.log",
+    "sha256": "e6a64b3b56308e04e42250b1663310b8905f3bd37048d7eb41017c0e07da1398"
+  },
+  {
+    "file": "evidence/fresh-release-assert-schema-compatibility.log",
+    "sha256": "dc8c8de77a20c9ea8f4dd973e4ea672b17e2d45bd1ec4e21796a403a20a16570"
+  },
+  {
+    "file": "evidence/fresh-secure-defaults.log",
+    "sha256": "6a12622934a4005fd472cc9b42759334bc57e9629f45eff01144c31d8a0ab080"
+  },
+  {
+    "file": "evidence/fresh-sql-lint.log",
+    "sha256": "e459fc6b0903767941ef1675e2012a4bfe784590d2d0915b41694a278885f5da"
+  },
+  {
+    "file": "evidence/fresh-test-core-onboarding-db.log",
+    "sha256": "ca37753917c7f3a45ce2ff3e6886626ca7f450d4f7b46c7ea3805b335cf3eec6"
+  },
+  {
+    "file": "evidence/fresh-test-email-outbox-db.log",
+    "sha256": "9dc60a258a968b499dd1cc34cf7e6a7c08b62bb30005ff4b9450b959844c4666"
+  },
+  {
+    "file": "evidence/fresh-test-instructor-review-db.log",
+    "sha256": "26a87c83afd51227d0f1d952b610662700d7b13f94086e2e2bcad70301432265"
+  },
+  {
+    "file": "evidence/fresh-test-planning-concurrency.log",
+    "sha256": "f68919451115c60c872a9c30b30c2f1ac879c45c01105221f4005304cd04fb06"
+  },
+  {
+    "file": "evidence/fresh-test-portal-messages-db.log",
+    "sha256": "ba0f57e02b24f588dbb116dac052dc4be8a53c8630732c2d0a3e05b29a6f28fc"
+  },
+  {
+    "file": "evidence/fresh-test-production-readiness-certification-db.log",
+    "sha256": "6d45a3e034189477b22b002ff0ed31b958595951e54eb86d3a68e00e8b73ac6c"
+  },
+  {
+    "file": "evidence/fresh-test-production-readiness-crash-windows-db.log",
+    "sha256": "11fdb671b10cff995f2f35b245e1044c13bddfb005df2be7c535021618cb87f3"
+  },
+  {
+    "file": "evidence/fresh-test-production-readiness-tenant-matrix-db.log",
+    "sha256": "15f28cf96dcc7c6bd97a625ccf4efc557cef954db569b45c3066998020d75c90"
+  },
+  {
+    "file": "evidence/fresh-test-resumable-import-db.log",
+    "sha256": "4adc8dacdb0cef66e6c4ae300830be173edc7489cb4f831abe723c86d7e25872"
+  },
+  {
+    "file": "evidence/fresh-test-swim-canon-db.log",
+    "sha256": "0f726f9a63589a4b3623467a86551b30335fda6bd7ac198bf365c4608266fd67"
+  },
+  {
+    "file": "evidence/fresh-test-tenant-provisioning-db.log",
+    "sha256": "dba0f1630b1031e27c4e967d01f7fac99881e3fd820501934ecdacca07aa1409"
+  },
+  {
+    "file": "evidence/fresh-test-theme-library-db.log",
+    "sha256": "a5fec0ae557305d3566531ad97c1b0400e9c7857195adf5d1d6f973ad1a0045f"
+  },
+  {
+    "file": "evidence/partial-missing-20260914101412.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-missing-20260914104650.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-missing-20260914124643.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-missing-20260914134016.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-missing-20260914142841.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-missing-20260914145431.log",
+    "sha256": "bc04041f65411f5daab4dda4f70236cf677ef0e2ba21539412791d3506720c07"
+  },
+  {
+    "file": "evidence/partial-restored-157.log",
+    "sha256": "ec52f42e1c331de7573f6b87e9b668a75ef7dd2c3ef187868811f4bd9bb5023e"
+  },
+  {
+    "file": "evidence/rich-world-transition-db-2.log",
+    "sha256": "e0a3044b7ef247bcfaae8e5096bd730b2ce0f8ab14e772ba732ab55f09eeb977"
+  },
+  {
+    "file": "evidence/rich-world-transition-db.log",
+    "sha256": "b9f602fc2394e63b05e54814a3a706f6842607e797e3c903585db17d9a5b288a"
+  },
+  {
+    "file": "evidence/rollback-baseline-migrations.log",
+    "sha256": "66f92db67e243d6df164f86e5e5f2e33cb13b6a0b68d97a225f100695cadce01"
+  },
+  {
+    "file": "evidence/rollback-canonical-schema.log",
+    "sha256": "33ec80c837870884d20eb2a028a622fc290829efb693cf81592e412737acd8ee"
+  },
+  {
+    "file": "evidence/rollback-canonical-swim.log",
+    "sha256": "082234b5bb5f8c410d59fd88dd60b58e025cc7cd5969541d60e1c69f8c353de2"
+  },
+  {
+    "file": "evidence/upgrade-151-artifact-rejection.log",
+    "sha256": "00313ea286b84d1c8b5dfb44b104d8d0b289714d487851e28f31552ec30084ac"
+  },
+  {
+    "file": "evidence/upgrade-157-artifact.log",
+    "sha256": "dc8c8de77a20c9ea8f4dd973e4ea672b17e2d45bd1ec4e21796a403a20a16570"
+  },
+  {
+    "file": "evidence/upgrade-baseline-count.log",
+    "sha256": "cdade5e17655c9986b5e1d9b43c8ff97655912e5b788d41d2def8f14834ac0e0"
+  },
+  {
+    "file": "evidence/upgrade-baseline-migrations.log",
+    "sha256": "77b654990c461df1506cd12323202704c51d17407a1ac137bf3e9f3080ee1a73"
+  },
+  {
+    "file": "evidence/upgrade-candidate-count.log",
+    "sha256": "23d715fc9c0cee08cd960a44c7082fd37c22f72b4fe3df49321a9a1d8121fd7f"
+  },
+  {
+    "file": "evidence/upgrade-candidate-migrations.log",
+    "sha256": "4a0bd4c87e999000eadcb0b1bbf10e5fff7f98a3feb4748d19bd663c674622d5"
+  },
+  {
+    "file": "evidence/upgrade-canonical-rollback-schema.log",
+    "sha256": "33ec80c837870884d20eb2a028a622fc290829efb693cf81592e412737acd8ee"
+  },
+  {
+    "file": "evidence/upgrade-canonical-rollback-swim.log",
+    "sha256": "7ac08fc9e8f270d7f540616087ca72ef1529982f1bd6655cdce43bf0313c9fe7"
+  },
+  {
+    "file": "evidence/upgrade-db-advisors.log",
+    "sha256": "4a0c46719749d97b176f3e8d9fda4de416be0a49cdca8ff6b2f1f0e26040c3b8"
+  },
+  {
+    "file": "evidence/upgrade-db-audit-clean-room-initial-failure.log",
+    "sha256": "4943be7552561d986bdda2d5fc9c4013e22fbf22b36815e859d02fd6dd031012"
+  },
+  {
+    "file": "evidence/upgrade-db-audit-clean-room.log",
+    "sha256": "e6a64b3b56308e04e42250b1663310b8905f3bd37048d7eb41017c0e07da1398"
+  },
+  {
+    "file": "evidence/upgrade-db-preflight-initial-failure.log",
+    "sha256": "994bbae64e6dd68ab23b7c3d9d9e7fb5a38f2ee50031f7659cdd3ed82e33de93"
+  },
+  {
+    "file": "evidence/upgrade-db-preflight-production-readiness-upgrade.log",
+    "sha256": "aa5c168b9fa95c25e333e327fe472fd3e51924f52c16025405903b4b7f2c606a"
+  },
+  {
+    "file": "evidence/upgrade-db-seed-production-readiness-upgrade-fixture.log",
+    "sha256": "c2a52cc480d63e37e28ec0e39423571247518d7ae7709fc44935c0e693db9ef7"
+  },
+  {
+    "file": "evidence/upgrade-release-assert-schema-compatibility.log",
+    "sha256": "dc8c8de77a20c9ea8f4dd973e4ea672b17e2d45bd1ec4e21796a403a20a16570"
+  },
+  {
+    "file": "evidence/upgrade-rich-transition-library.log",
+    "sha256": "6bb92821ad156fb5bb93041b2a69572a67fac22d67de26cf33070127a5e09142"
+  },
+  {
+    "file": "evidence/upgrade-sql-lint.log",
+    "sha256": "e459fc6b0903767941ef1675e2012a4bfe784590d2d0915b41694a278885f5da"
+  },
+  {
+    "file": "evidence/upgrade-test-core-onboarding-db.log",
+    "sha256": "ca37753917c7f3a45ce2ff3e6886626ca7f450d4f7b46c7ea3805b335cf3eec6"
+  },
+  {
+    "file": "evidence/upgrade-test-email-outbox-db.log",
+    "sha256": "9dc60a258a968b499dd1cc34cf7e6a7c08b62bb30005ff4b9450b959844c4666"
+  },
+  {
+    "file": "evidence/upgrade-test-instructor-review-db.log",
+    "sha256": "17560a760c69dc3b2f97fea88705fa400ffb621378f1dd56f3578ec725bc3813"
+  },
+  {
+    "file": "evidence/upgrade-test-planning-concurrency.log",
+    "sha256": "f68919451115c60c872a9c30b30c2f1ac879c45c01105221f4005304cd04fb06"
+  },
+  {
+    "file": "evidence/upgrade-test-portal-messages-db.log",
+    "sha256": "7559efcd1ea14053dad98a468ffbc80b05546a8a3f210f31df7fabf8d230c06c"
+  },
+  {
+    "file": "evidence/upgrade-test-production-readiness-certification-db.log",
+    "sha256": "6d45a3e034189477b22b002ff0ed31b958595951e54eb86d3a68e00e8b73ac6c"
+  },
+  {
+    "file": "evidence/upgrade-test-production-readiness-crash-windows-db.log",
+    "sha256": "11fdb671b10cff995f2f35b245e1044c13bddfb005df2be7c535021618cb87f3"
+  },
+  {
+    "file": "evidence/upgrade-test-production-readiness-tenant-matrix-db.log",
+    "sha256": "15f28cf96dcc7c6bd97a625ccf4efc557cef954db569b45c3066998020d75c90"
+  },
+  {
+    "file": "evidence/upgrade-test-resumable-import-db.log",
+    "sha256": "4adc8dacdb0cef66e6c4ae300830be173edc7489cb4f831abe723c86d7e25872"
+  },
+  {
+    "file": "evidence/upgrade-test-swim-canon-db.log",
+    "sha256": "0f726f9a63589a4b3623467a86551b30335fda6bd7ac198bf365c4608266fd67"
+  },
+  {
+    "file": "evidence/upgrade-test-tenant-provisioning-db.log",
+    "sha256": "dba0f1630b1031e27c4e967d01f7fac99881e3fd820501934ecdacca07aa1409"
+  },
+  {
+    "file": "evidence/upgrade-test-theme-library-db.log",
+    "sha256": "28bd2b5543d9067f0f28655bae42aec8ee68ee9243fc37a9b007cd334286487c"
+  }
+]

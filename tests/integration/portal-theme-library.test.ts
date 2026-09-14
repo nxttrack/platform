@@ -79,6 +79,15 @@ test("real storage and canonical SQL commands preserve optimistic review, public
     await assert.rejects(client.query("insert into public.portal_theme_asset select theme_key,theme_release,'rich.injected',asset_path,content_hash,mime_type,intrinsic_width,intrinsic_height,is_decorative,created_at,storage_object_key,byte_size from public.portal_theme_asset where theme_key=$1 and theme_release=$2 limit 1", [key, version]), /immutable/);
     await assert.rejects(client.query("update public.portal_theme_revision set document_json='{}' where theme_key=$1 and theme_release=$2", [key, version]), /permission denied|immutable/);
     await testWorldBindingContracts(client, databaseUrl!, manager, outsider, key, version, Object.keys(imported.presentation.worlds)[0]);
+    // Run the existing complete transition/carryover contract against this exact
+    // real published raster release as well as its normal native fallback run.
+    const transition = new pg.Client({ connectionString: databaseUrl }); await transition.connect();
+    try {
+      await transition.query("select set_config('test.portal_transition_presentation',$1,false)", [JSON.stringify({manager,theme:key,release:version,world:Object.keys(imported.presentation.worlds)[0]})]);
+      await transition.query(readFileSync(new URL("../sql/swim_canon_transition_carryover_integration.sql",import.meta.url),"utf8"));
+      assert.equal((await transition.query("select count(*) from public.tenants where id='22000000-0000-4000-8000-000000000001'")).rows[0].count,"0","Transition fixture rollback must leave no tenant");
+      console.log("PASS real bound rich chapter, reviewed transition, frozen source release/art/assessment provenance, later presentation revisions/rollback and carryover retry without historical changes");
+    } finally { await transition.end(); }
     await testCollectionContracts(client, databaseUrl!, manager, key, version, Object.keys(imported.presentation.worlds)[0]);
     await testImportRecoveryContracts(client,databaseUrl!,manager,outsider,importId);
     await testDefaultSourceProvenance(client, manager, imported, assets, imported.files, apiUrl!, serviceKey!);

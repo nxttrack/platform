@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 release:assert-schema-compatibility /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/release/assert-runtime-schema-compatibility.mjs
+
+[release:schema] PASS migrations=157 fingerprint=ec8535f2f83642e679a309bb3a4992af96581cf420e055abb2001069495157cd minimumSchemaFingerprint=2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba minimumAppSha=541fe5fd6cee083cb809eef236382cfd2d519ed3

@@ -1,0 +1,103 @@
+
+> @nxttrack/platform@0.0.0 db:audit-clean-room /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/audit-clean-room.mjs
+
+{
+  "result": "PASS",
+  "grantProfile": "legacy",
+  "migrationCount": 157,
+  "schemas": [
+    {
+      "schema": "app_private",
+      "tables": 7,
+      "sequences": 0
+    },
+    {
+      "schema": "auth",
+      "tables": 23,
+      "sequences": 1
+    },
+    {
+      "schema": "public",
+      "tables": 256,
+      "sequences": 0
+    },
+    {
+      "schema": "realtime",
+      "tables": 0,
+      "sequences": 0
+    },
+    {
+      "schema": "storage",
+      "tables": 10,
+      "sequences": 0
+    }
+  ],
+  "publicTables": {
+    "total": 256,
+    "rls": 256,
+    "force_rls": 256
+  },
+  "objects": {
+    "functions": 320,
+    "triggers": 271,
+    "indexes": 949,
+    "constraints": 2681
+  },
+  "buckets": [
+    {
+      "id": "badge-studio-assets",
+      "public": false
+    },
+    {
+      "id": "diploma-vault",
+      "public": false
+    },
+    {
+      "id": "participant-media",
+      "public": false
+    },
+    {
+      "id": "portal-theme-assets",
+      "public": false
+    },
+    {
+      "id": "portal-theme-imports",
+      "public": false
+    },
+    {
+      "id": "tenant-documents",
+      "public": false
+    },
+    {
+      "id": "tenant-media-assets",
+      "public": false
+    }
+  ],
+  "storagePolicies": [
+    {
+      "policyname": "Clean diploma files are scoped to certificate access",
+      "roles": "{authenticated}",
+      "cmd": "SELECT"
+    },
+    {
+      "policyname": "Clean tenant document files are scoped to organization roles",
+      "roles": "{authenticated}",
+      "cmd": "SELECT"
+    },
+    {
+      "policyname": "portal_child_session_restrictive",
+      "roles": "{authenticated}",
+      "cmd": "ALL"
+    }
+  ],
+  "canonicalOutboxKeyConstraintValidated": true,
+  "serviceWriteOnlyLedgerCount": 2,
+  "serviceOnlyFunctionCount": 25,
+  "publicOrAnonExecutableFunctionCount": 2,
+  "sentinel": {
+    "anon_table_select": true,
+    "authenticated_table_insert": true,
+    "anon_function_execute": true
+  }
+}

@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:production-readiness-crash-windows:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/test-production-readiness-crash-windows.mjs
+
+[test:production-readiness-crash-windows] PASS 100 atomic claims, provider-acceptance crash visibility, stale-token fencing, clock/backoff bounds, canonical keys, advisory timeout and deadlock recovery.

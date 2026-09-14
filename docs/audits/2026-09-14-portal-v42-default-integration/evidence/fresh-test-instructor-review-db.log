@@ -1,0 +1,18 @@
+
+> @nxttrack/platform@0.0.0 test:instructor-review:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> tsx --test tests/integration/instructor-assessment-review.test.ts
+
+PASS separate explicit child compliment, parent denial, stale-observation refusal, immutable text, replay once, no score/note/notification mutation
+PASS simultaneous competing finalizations: one commit, one stale-observation refusal, losing draft retained
+PASS failed canonical insert rolls back finalization, preserves draft and retries exactly once
+PASS revoked assignment denied and foreign-client draft cannot be silently adopted
+PASS existing private drafts, no early observation/notification, explicit review, canonical immutable finalization, response replay, concurrent-editor conflict, retained draft and reviewed correction
+✔ assessment drafts stay private until reviewed; finalization rejects a newer observation and preserves both editors (310.650903ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 449.072871

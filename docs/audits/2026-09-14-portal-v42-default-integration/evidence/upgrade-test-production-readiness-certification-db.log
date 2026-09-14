@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:production-readiness-certification:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/test-production-readiness-certification-integration.mjs
+
+[test:production-readiness-certification:db] PASS service-only import state, immutable provider acceptance, cross-tenant profile preservation, create-only membership, owned-child rollback, later-data refusal, crash-window Auth compensation, stale claim fencing, and shared Auth preservation.

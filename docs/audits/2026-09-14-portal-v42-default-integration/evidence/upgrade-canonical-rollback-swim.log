@@ -1,0 +1,28 @@
+/home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652
+          Error.captureStackTrace(err)
+                ^
+
+error: duplicate key value violates unique constraint "programs_pkey"
+    at /home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///tmp/nxttrack-v42-final-baseline/scripts/db/test-swim-canon-integration.mjs:29:5 {
+  length: 224,
+  severity: 'ERROR',
+  code: '23505',
+  detail: 'Key (id)=(30000000-0000-4000-8000-000000000001) already exists.',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'programs',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'programs_pkey',
+  file: 'nbtinsert.c',
+  line: '666',
+  routine: '_bt_check_unique'
+}
+
+Node.js v24.18.0

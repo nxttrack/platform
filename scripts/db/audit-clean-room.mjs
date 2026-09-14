@@ -25,6 +25,8 @@ const expectedBuckets = [
   "badge-studio-assets",
   "diploma-vault",
   "participant-media",
+  "portal-theme-assets",
+  "portal-theme-imports",
   "tenant-documents",
   "tenant-media-assets"
 ];
@@ -41,7 +43,19 @@ const serviceOnlyFunctions = [
   "public.complete_tenant_provisioning(uuid,uuid)",
   "public.apply_import_chunk(uuid,uuid,uuid,uuid,jsonb)",
   "public.rollback_import_chunk(uuid,uuid,uuid,uuid,integer)",
-  "public.runtime_schema_compatibility()"
+  "public.runtime_schema_compatibility()",
+  "public.save_portal_theme_draft(uuid,text,text,integer,jsonb,jsonb,jsonb,jsonb,jsonb)",
+  "public.review_portal_theme_release(uuid,text,text,integer,text,jsonb)",
+  "public.publish_portal_theme_release(uuid,text,text,integer,text)",
+  "public.set_portal_theme_management_mode(uuid,uuid,text,text)",
+  "public.bind_portal_theme_world(uuid,uuid,uuid,uuid,uuid,text,text,text,jsonb,uuid,text,uuid)",
+  "public.remove_portal_theme_world_binding(uuid,uuid,text)",
+  "public.start_child_portal_presentation_session_for_service(uuid,uuid,uuid,uuid,integer)",
+  "public.discover_portal_collection_for_service(uuid,uuid,uuid,uuid,text,text,uuid)",
+  "public.save_portal_collection_for_service(uuid,uuid,uuid,uuid,uuid,boolean)",
+  "public.read_portal_collection_for_service(uuid,uuid,uuid,uuid,uuid,timestamptz)",
+  "public.begin_portal_theme_import_cleanup(uuid,uuid)",
+  "public.finish_portal_theme_import_cleanup(uuid,uuid)"
 ];
 
 const client = new pg.Client({ connectionString });
@@ -72,7 +86,19 @@ try {
     join pg_namespace n on n.oid = c.relnamespace
     where n.nspname = 'public' and c.relkind in ('r', 'p')
   `);
-  assert.deepEqual(publicTables.rows[0], { total: 251, rls: 251, force_rls: 251 });
+  assert.deepEqual(publicTables.rows[0], { total: 256, rls: 256, force_rls: 256 });
+
+  // V4.2 adds five public tables and three private ledgers; every new ledger must
+  // retain forced RLS and independent denial of direct anonymous/parent reads and writes.
+  for (const name of ["portal_collection_items", "portal_collection_offers", "portal_theme_import_recovery_event"]) {
+    const table = `app_private.${name}`;
+    const result = await client.query(`select relrowsecurity as rls, relforcerowsecurity as force_rls,
+      has_table_privilege('anon', $1, 'select,insert,update,delete,truncate') as anon,
+      has_table_privilege('authenticated', $1, 'select,insert,update,delete,truncate') as authenticated,
+      has_table_privilege('service_role', $1, 'select') as service_read
+      from pg_class where oid = $1::regclass`, [table]);
+    assert.deepEqual(result.rows, [{ rls: true, force_rls: true, anon: false, authenticated: false, service_read: true }], `${table} boundary differs`);
+  }
 
   const objectCounts = await client.query(`
     select

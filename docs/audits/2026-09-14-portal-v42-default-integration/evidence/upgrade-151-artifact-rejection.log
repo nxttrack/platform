@@ -1,0 +1,14 @@
+
+> @nxttrack/platform@0.0.0 release:assert-schema-compatibility /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/release/assert-runtime-schema-compatibility.mjs
+
+file:///home/codex/repos/nxttrack-portal-v42-default-integration/scripts/release/assert-runtime-schema-compatibility.mjs:56
+  if (missing.length) throw new Error(`Database is missing ${missing.length} required migration(s).`);
+                            ^
+
+Error: Database is missing 6 required migration(s).
+    at file:///home/codex/repos/nxttrack-portal-v42-default-integration/scripts/release/assert-runtime-schema-compatibility.mjs:56:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.18.0
+ ELIFECYCLE  Command failed with exit code 1.

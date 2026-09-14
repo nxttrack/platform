@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:planning:concurrency /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/test-planning-concurrency.mjs
+
+[test:planning:concurrency] PASS serialized publication, SKIP LOCKED theme workers and idempotent concurrent blackout undo.
