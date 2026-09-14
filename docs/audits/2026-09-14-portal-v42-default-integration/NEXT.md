@@ -1,6 +1,6 @@
 # Final review continuation
 
-All independent implementation and local regression work is complete. Original Default1.1 manifests/anchors/96 images remain B01; status IMPLEMENTED_WITH_BLOCKERS, not art-ready. Branch codex/portal-v42-default-integration. Canonical main must remain afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80. Runtime source feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f.157 migrations, originals151 intact, contract5, fingerprint ec8535f2f83642e679a309bb3a4992af96581cf420e055abb2001069495157cd.
+All independent implementation and local regression work is complete. Original Default1.1 manifests/anchors/96 images remain B01; status IMPLEMENTED_WITH_BLOCKERS, not art-ready. Branch codex/portal-v42-default-integration. Canonical main must remain afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80. Runtime source 2485e1124b5557329048db91bbc45d3c8d76c9ac. First PR CI browser failures and corrections are appended to FINAL-VALIDATION.md.157 migrations, originals151 intact, contract5, fingerprint ec8535f2f83642e679a309bb3a4992af96581cf420e055abb2001069495157cd.
 
 Finish feature push/PR, wait unchanged Web CI, trigger/read Codex review and address findings. No merge/deployment/remote DB/provider action. Current exact PR state belongs in PR body and final response (GITHUB-REVIEW.md explains self-SHA/CI recording). Read FINAL-VALIDATION.md/FINAL-EVIDENCE.json and DATABASE-CERTIFICATION.md for actual evidence; historical checkpoint failures are not overwritten.
 

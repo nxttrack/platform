@@ -1,7 +1,8 @@
 # Final integration validation
 
 Canonical base: `afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80`.
-Latest application source: `feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f`.
+Application source for the original final checkpoint: `feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f`.
+Latest browser readiness correction: `2485e1124b5557329048db91bbc45d3c8d76c9ac`; see the appended CI closure record.
 Later evidence/test-only commits are identified separately. No source history was rewritten.
 
 ## Local checks
@@ -50,3 +51,15 @@ FINAL-EVIDENCE.json hashes retained raw final logs, measurements and screenshots
 Only local owned fixtures/DB/storage and the feature branch/PR are affected. No main merge, application deployment, remote DB migration, real provider action, email or payment occurred. Journey Bot remains retired.
 
 GitHub PR/CI/review results are recorded in GITHUB-REVIEW.md after the feature push; previous baseline runs do not certify this branch.
+
+## CI browser closure after the first PR review
+
+Web CI34869955374 on PR head a0c650f84cf1b1adf19d2b44758b9091e3f08473 failed:67 Journey tests passed,35 explicitly skipped,3 failed. The preceding52 smoke checks,505 units, build, audits and browser-engine installation passed. Superseded run34869927719 also failed (68passed/35skipped/2failed); neither run is presented as green. Raw failures are retained and hashed. GitHub evidence artifact10358489733 retains the traces/videos/screenshots for34869955374. The Codex review on a0c650f reported no major issues but does not certify this later fix.
+
+- WebKit draft fixture: its trace shows a filled DOM input whose React-controlled value was still empty, followed by a tab switch. The fictional editor now stays disabled until its simulated persistence guard is registered. Actual message/instructor editors already wait for their authorized draft load before exposing inputs. No production tab-save check was bypassed.
+- WebKit camera: the test captured an intermediate coalesced pointer frame before the final camera translation. Pending camera frames now count as moving, alongside dragging/settling. The regression waits for the observable settled state, then waits for the actual successful refresh response and still requires exactly the same transform/selection. No tolerance increase or retry was added.
+- Firefox development: the reloaded document and its subsequent client prefetches returned200, but Playwright's aggregate load wait timed out twice. The test now waits for DOMContentLoaded and still proves persisted filter/value, rendered rows, functioning focused dialogs, tab navigation and filter reset on that reloaded document. Final Firefox behavior must be certified by the new CI run, not inferred from Chromium.
+
+On correction source `2485e1124b5557329048db91bbc45d3c8d76c9ac`: pnpm typecheck PASS; all505 units PASS; production build and standalone packaging PASS;14 rich/development/draft/orientation browser regressions PASS against the newly built owned loopback standalone. New logs are in FINAL-EVIDENCE.json. The migration/lockfile/runtime schema contract are unchanged from the certified157 artifact; no additional DB rehearsal is represented as newly run for this UI/test-only correction.
+
+Final full Web CI and Codex review on the resulting PR head are recorded in the PR body and handoff response. No failed test is suppressed or counted as PASS. B01 authentic Default originals remains unchanged.

@@ -333,5 +333,50 @@
     "file": "evidence/final-browser/theme-draft-preview.png",
     "sha256": "269335e6cd79492d41ed4d58288ddc285f4192fbe6f38e6f5daa298e6d81d8ed",
     "bytes": 468530
+  },
+  {
+    "file": "evidence/final-validation/ci-34869955374-failed.log",
+    "sha256": "48fc0437f5671808aaa32ab12f68a3ef9c2590d95650e7f7a5032cf137e04be2",
+    "bytes": 51999
+  },
+  {
+    "file": "evidence/final-validation/ci-34869927719-failed.log",
+    "sha256": "dc2768e39434571c4a9939a0cf129fd55de772bc5b3978426b68211550f71dd4",
+    "bytes": 44463
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-typecheck.log",
+    "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4",
+    "bytes": 253
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-test-unit.log",
+    "sha256": "9a0cd39313a7d01bea5f47a5f4793a35fa2c75923da4258e387a62892c3d6715",
+    "bytes": 46794
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-production-build.log",
+    "sha256": "3a3b8304256f595c159f5a20eb2b6ff13079feab73dd6e47efe13e4498c1bf13",
+    "bytes": 5880
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-standalone-packaging.log",
+    "sha256": "2d564bda5aae459dcaa626877bc7c2744a1f4ef1196090abc21b815abcb7b08f",
+    "bytes": 249
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-build-results.json",
+    "sha256": "2399ca69478769fb9659a0c543e1564f5009e57c22df90a4ac8ea6b3111144b6",
+    "bytes": 443
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-scene-browser-regressions.log",
+    "sha256": "98966cbd530ba77f85d87cad35d93dc7f4cabb52cba5415cfc9dfc08844975b7",
+    "bytes": 2572
+  },
+  {
+    "file": "evidence/final-validation/ci-closure-browser-results.json",
+    "sha256": "67922f97e7e8581f5f1481aff80be68786942f6e24d977b485b37680d073faaf",
+    "bytes": 619
   }
 ]
