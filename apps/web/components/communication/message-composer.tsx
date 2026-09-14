@@ -76,7 +76,7 @@ function ScopedMessageComposer({ context, allowInternal = false, canReply = true
   }
   const flush = async () => equal(latest.current, stored.current) && !pending.current ? true : Boolean(await persist());
   const flushRef = useRef(flush); flushRef.current = flush;
-  useEffect(() => registerDraftWriter(() => flushRef.current()), []);
+  useEffect(() => registerDraftWriter(() => flushRef.current(),()=>!equal(latest.current,stored.current) || !!pending.current), []);
   useImperativeHandle(ref, () => ({ flush }));
   useEffect(() => {
     if (!loaded || !dirty || sending || conflictBlocked.current) return;

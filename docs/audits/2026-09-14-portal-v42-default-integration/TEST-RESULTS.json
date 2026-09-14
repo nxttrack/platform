@@ -1693,5 +1693,37 @@
         }
       ]
     }
-  ]
+  ],
+  "draft_navigation_checkpoint": {
+    "status": "PASS",
+    "unit_count": 505,
+    "browser_cases": 6,
+    "logs": [
+      {
+        "path": "evidence/draft-navigation-commit-typecheck.log",
+        "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+      },
+      {
+        "path": "evidence/draft-navigation-commit-units.log",
+        "sha256": "48f4141cc097c6503bb503d7bd69e1be779fcb89fbcdfe885d4ea855daf9e81f"
+      },
+      {
+        "path": "evidence/draft-navigation-final-browser.log",
+        "sha256": "6e50c84f3f7d948b0771eaad838d1e010381aba276b49098a90ca4e9c63fa1fb"
+      },
+      {
+        "path": "evidence/draft-navigation-final-browser-2.log",
+        "sha256": "1edf66752ef82728f5883cadf4fb6cc4472e39af55612c992eb09dbcdaeba0a4"
+      },
+      {
+        "path": "evidence/message-history-browser.log",
+        "sha256": "6d47c4dff7430d0fdb2c22feea95185dac761791eb4ef50d220f96b131fbea9a"
+      },
+      {
+        "path": "evidence/draft-history-auth-audit.log",
+        "sha256": "c92a153a840476d7300a85dfbcf1f9563ef81e4bf0d7d666c22bf2f479015e48"
+      }
+    ],
+    "whole_integration": "IN_PROGRESS"
+  }
 }

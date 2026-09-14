@@ -1,12 +1,21 @@
 "use client";
 
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import type { ComponentProps } from "react";
+import { useRef, useState, type ComponentProps } from "react";
+import { flushDraftWriters, hasPendingDraftWrites } from "@/components/portal/draft-navigation";
 
 import { cn } from "@/lib/utils";
 
-export function Tabs({ className, ...props }: ComponentProps<typeof TabsPrimitive.Root>) {
-  return <TabsPrimitive.Root className={cn("w-full", className)} {...props} />;
+export function Tabs({ className, value, defaultValue, onValueChange, ...props }: ComponentProps<typeof TabsPrimitive.Root>) {
+  const [local, setLocal] = useState(defaultValue);
+  const attempt = useRef(0);
+  function change(next: string) {
+    const request = ++attempt.current;
+    const apply = () => { if (request === attempt.current) { setLocal(next); onValueChange?.(next); } };
+    if (!hasPendingDraftWrites()) apply();
+    else void flushDraftWriters().then(saved => { if (saved && !hasPendingDraftWrites()) apply(); });
+  }
+  return <TabsPrimitive.Root className={cn("w-full", className)} value={value ?? local} onValueChange={change} {...props} />;
 }
 
 export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {

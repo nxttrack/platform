@@ -66,3 +66,34 @@ test("real parent messages retain authorized references, private drafts, conflic
   await expect(dialog.getByText("Over Fictieve Sam", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Fictief rustig ademen", { exact: true })).toHaveCount(0);
 });
+
+test('real private message draft survives failed browser Back and is restored after a successful save and Forward',async({page,baseURL})=>{
+  const file=process.env.PORTAL_MESSAGE_BROWSER_FIXTURE;
+  test.skip(!file,'Requires an explicitly seeded fictional local family');
+  if(!baseURL || !['localhost','127.0.0.1'].includes(new URL(baseURL).hostname)) throw new Error('Draft navigation writes require loopback application');
+  const f=JSON.parse(readFileSync(file!,'utf8'));
+  await page.goto(`/login?next=${encodeURIComponent(`/portaal?kind=${f.child}`)}`);
+  await page.getByLabel('E-mail',{exact:true}).fill(f.email);await page.getByLabel('Wachtwoord',{exact:true}).fill(f.password);
+  await page.getByRole('button',{name:'Inloggen',exact:true}).click();await expect(page).toHaveURL(/\/portaal\?kind=/);
+  const home=page.url();await page.getByRole('link',{name:'Inbox',exact:true}).first().click();await expect(page).toHaveURL(/\/portaal\/inbox/);
+  const inbox=page.url();await page.getByRole('button',{name:'Nieuw bericht',exact:true}).click();
+  const dialog=page.getByRole('dialog',{name:'Nieuw bericht',exact:true});
+  await dialog.getByRole('combobox',{name:'Kind bij bericht'}).selectOption(f.child);
+  const body=dialog.getByRole('textbox',{name:'Bericht',exact:true});await expect(body).toBeEnabled();
+  await page.route('**/portaal/inbox**',route=>route.request().method()==='POST'?route.abort('failed'):route.continue());
+  await dialog.getByRole('textbox',{name:'Onderwerp',exact:true}).fill('Fictief concept bij Terug');
+  await body.fill('Deze onverzonden tekst blijft bewaard bij een mislukte Terug-actie.');
+  const entries=await page.evaluate(()=>history.length);
+  await page.goBack();await expect(dialog.getByRole('alert')).toContainText('verbinding');
+  await expect(page).toHaveURL(inbox);await expect(body).toHaveValue('Deze onverzonden tekst blijft bewaard bij een mislukte Terug-actie.');
+  expect(await page.evaluate(()=>history.length)).toBe(entries);
+  await page.unroute('**/portaal/inbox**');
+  // Back itself retries the draft authority; it never sends the message.
+  await page.goBack();await expect(page).toHaveURL(home);
+  await page.goForward();await expect(page).toHaveURL(inbox);
+  await page.getByRole('button',{name:'Nieuw bericht',exact:true}).click();
+  await dialog.getByRole('combobox',{name:'Kind bij bericht'}).selectOption(f.child);
+  await expect(body).toHaveValue('Deze onverzonden tekst blijft bewaard bij een mislukte Terug-actie.');
+  await expect(dialog.getByText('Concept opgeslagen',{exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>history.length)).toBe(entries);
+});

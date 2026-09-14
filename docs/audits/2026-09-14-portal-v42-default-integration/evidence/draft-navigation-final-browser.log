@@ -1,0 +1,66 @@
+
+Running 4 tests using 1 worker
+
+  ✓  1 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (1.2s)
+  ✓  2 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (2.2s)
+  ✓  3 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (1.1s)
+  ✘  4 [journey-chromium] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments (26.6s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('dialog', { name: 'Kindcompliment publiceren', exact: true }).getByRole('alert')
+    Expected substring: "nog niet gepubliceerd"
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" with timeout 10000ms
+      - waiting for getByRole('dialog', { name: 'Kindcompliment publiceren', exact: true }).getByRole('alert')
+        - waiting for" http://localhost:58410/instructor/student/ed711c2b-8da9-4b6b-a7e2-ff4b3fe2e306" navigation to finish...
+        - navigated to "http://localhost:58410/instructor/student/ed711c2b-8da9-4b6b-a7e2-ff4b3fe2e306"
+
+
+      63 |     const beforeBack = page.url(), historyLength = await page.evaluate(() => history.length);
+      64 |     await page.evaluate(() => history.back());
+    > 65 |     await expect(publish.getByRole("alert")).toContainText("nog niet gepubliceerd");
+         |                                              ^
+      66 |     await expect(page).toHaveURL(beforeBack);
+      67 |     await expect(publish.getByRole("textbox", { name: "Positief compliment" })).toHaveValue("Je hebt heel rustig geoefend, goed gedaan!");
+      68 |     expect(await page.evaluate(() => history.length)).toBe(historyLength);
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-instructor-review.spec.ts:65:46
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/error-context.md
+
+    attachment #6: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final/journey-instructor-review--ec5ee-citly-published-compliments-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments 
+  3 passed (32.7s)
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts journey-instructor-review.spec.ts journey-draft-history.spec.ts --project=journey-chromium --retries=0 --workers=1 --output=/dev/shm/nxttrack-v42-browser-tmp/draft-navigation-final

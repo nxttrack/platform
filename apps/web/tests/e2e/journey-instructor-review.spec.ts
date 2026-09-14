@@ -18,13 +18,15 @@ test("separate instructor, parent and child sessions share only confirmed assess
   const parent = await parentContext.newPage(), child = await childContext.newPage();
   const dossier = `/instructor/student/${f.child}?tab=assessment`, development = `/portaal/ontwikkeling?kind=${f.child}`;
   try {
-    await login(page, f.teacherEmail, f.teacherPassword, dossier);
+    await login(page, f.teacherEmail, f.teacherPassword, "/instructor/leerlingen");
+    await page.locator(`a[href="/instructor/student/${f.child}"]`).first().click();
+    await page.getByRole("tab", { name: "Beoordelen", exact: true }).click();
     const card = page.locator(`[data-assessment-card="${f.item}"]`);
     await expect(card).toBeVisible({ timeout: 45_000 });
     await expect(card).toContainText("Nog niet beoordeeld");
     await card.locator("label").filter({ has: page.getByRole("radio", { name: /^3 van 5/ }) }).click();
     await expect(card.getByRole("status").first()).toHaveText("Privéconcept opgeslagen");
-    await page.reload(); await expect(card.getByRole("radio", { name: /^3 van 5/ })).toBeChecked();
+    await page.reload(); await page.getByRole("tab", { name: "Beoordelen", exact: true }).click(); await expect(card.getByRole("radio", { name: /^3 van 5/ })).toBeChecked();
     await expect(card).toContainText("Opgeslagen: Nog niet beoordeeld");
     await login(parent, f.email, f.password, development);
     const parentRow = parent.locator('[data-development-skill="fictional-breathing"]');
@@ -58,6 +60,15 @@ test("separate instructor, parent and child sessions share only confirmed assess
     const publish = page.getByRole("dialog", { name: "Kindcompliment publiceren", exact: true });
     await publish.getByRole("textbox", { name: "Positief compliment" }).fill("Je hebt heel rustig geoefend, goed gedaan!");
     await expect(publish.getByRole("button", { name: "Publiceer kindcompliment", exact: true })).toBeDisabled();
+    const beforeBack = page.url(), historyLength = await page.evaluate(() => history.length);
+    await page.evaluate(() => history.back());
+    await expect(publish.getByRole("alert")).toContainText("nog niet gepubliceerd");
+    await expect(page).toHaveURL(beforeBack);
+    await expect(publish.getByRole("textbox", { name: "Positief compliment" })).toHaveValue("Je hebt heel rustig geoefend, goed gedaan!");
+    expect(await page.evaluate(() => history.length)).toBe(historyLength);
+    await publish.getByRole("button", { name: "Venster sluiten" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Verder bewerken" }).click();
+    await expect(publish.getByRole("textbox", { name: "Positief compliment" })).toHaveValue("Je hebt heel rustig geoefend, goed gedaan!");
     await publish.getByRole("checkbox").check();
     await publish.getByRole("button", { name: "Publiceer kindcompliment", exact: true }).click();
     await expect(publish).not.toBeVisible();

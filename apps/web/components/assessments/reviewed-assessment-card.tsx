@@ -32,6 +32,9 @@ function ScopedAssessmentCard({ context, participantLabel, itemLabel, display }:
   const latest = useRef(input), stored = useRef<Input>(empty), saved = useRef(draft), effectiveContext = useRef(context), pending = useRef<Promise<InstructorAssessmentDraft | null> | null>(null), conflictBlocked = useRef(false), locked = useRef(false);
   latest.current = input;
   const dirty = !equal(input, stored.current);
+  const unsentCompliment = complimentOpen && compliment.length > 0;
+  const unsentComplimentRef = useRef(unsentCompliment);
+  unsentComplimentRef.current = unsentCompliment;
   function restore(value: InstructorAssessmentView) {
     const initial = value.draft ? draftInput(value.draft) : { ...empty, rating: value.current?.rating ?? null, visibility: value.current?.visibility ?? "parent_visible", baseObservationId: value.current?.id ?? null };
     effectiveContext.current = value.draft ? { ...context, sessionId: value.draft.review_session_id } : context;
@@ -63,11 +66,17 @@ function ScopedAssessmentCard({ context, participantLabel, itemLabel, display }:
     return result && !equal(latest.current, stored.current) ? persist() : result;
   }
   const flush = useRef<() => Promise<boolean>>(async () => true);
-  flush.current = async () => equal(latest.current, stored.current) && !pending.current ? true : Boolean(await persist());
-  useEffect(() => registerDraftWriter(() => flush.current()), []);
+  flush.current = async () => {
+    if (unsentComplimentRef.current) {
+      setError({ ok: false, code: "unavailable", message: "Je kindcompliment is nog niet gepubliceerd. Publiceer het bewust of sluit het venster en verwerp de tekst voordat je verdergaat." });
+      return false;
+    }
+    return equal(latest.current, stored.current) && !pending.current ? true : Boolean(await persist());
+  };
+  useEffect(() => registerDraftWriter(() => flush.current(), () => unsentComplimentRef.current || !equal(latest.current, stored.current) || !!pending.current), []);
   useEffect(() => { if (!view || !dirty || busy || conflictBlocked.current) return; const timer = setTimeout(() => void persist(), 700); return () => clearTimeout(timer); }, [input, view, busy]);
   useEffect(() => {
-    if (!dirty) return;
+    if (!dirty && !unsentCompliment) return;
     const leave = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = ""; };
     const link = (event: MouseEvent) => {
       if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -78,7 +87,7 @@ function ScopedAssessmentCard({ context, participantLabel, itemLabel, display }:
     };
     window.addEventListener("beforeunload", leave); document.addEventListener("click", link, true);
     return () => { window.removeEventListener("beforeunload", leave); document.removeEventListener("click", link, true); };
-  }, [dirty, input, view]);
+  }, [dirty, unsentCompliment, input, view]);
   async function openReview() { const result = await persist(); if (result) { setConfirmed(false); setReview(result); } }
   async function finalize() {
     if (!review || !confirmed || !equal(latest.current, draftInput(review))) return;
@@ -152,7 +161,11 @@ function ScopedAssessmentCard({ context, participantLabel, itemLabel, display }:
     <PortalDialog open={!!conflict} onOpenChange={(open) => { if (!open) setConflict(null); }} title="Beoordeling intussen gewijzigd" description="Vergelijk voordat je een nieuwe correctie voorbereidt. Er wordt nu nog niets gepubliceerd." footer={<><button className={button} type="button" onClick={() => { if (conflict) restore(conflict); setConflict(null); }}>Gebruik opgeslagen concept</button><button className={primary} type="button" onClick={keepInput}>Bereid mijn score voor als nieuwe correctie</button></>}>
       <div className="space-y-3"><p>Actuele opgeslagen beoordeling: {conflict?.current?.rating ?? "Onbekend"} / 5</p><p>Opgeslagen privéconcept: {conflict?.draft?.rating ?? "Geen"}</p><p>Jouw gekozen score: {input.rating} / 5</p><p>Na deze keuze moet je de correctiereden invullen en opnieuw controleren.</p></div>
     </PortalDialog>
-    <PortalDialog open={complimentOpen} onOpenChange={(open) => { if (!busy) setComplimentOpen(open); }} dirty={!!compliment && !busy} title="Kindcompliment publiceren" description={`Deze tekst wordt bij de beoordeling zichtbaar voor ${participantLabel}.`} returnFocusRef={complimentTrigger} footer={<button className={primary} type="button" disabled={!compliment.trim() || !complimentConfirmed || busy} onClick={() => void publishCompliment()}>Publiceer kindcompliment</button>}>
+    <PortalDialog open={complimentOpen} onOpenChange={(open) => {
+      if (busy) return;
+      setComplimentOpen(open);
+      if (!open) { setCompliment(""); setComplimentConfirmed(false); complimentOperation.current = null; setError(null); }
+    }} dirty={!!compliment && !busy} title="Kindcompliment publiceren" description={`Deze tekst wordt bij de beoordeling zichtbaar voor ${participantLabel}.`} returnFocusRef={complimentTrigger} footer={<button className={primary} type="button" disabled={!compliment.trim() || !complimentConfirmed || busy} onClick={() => void publishCompliment()}>Publiceer kindcompliment</button>}>
       <div className="space-y-4"><p>{view.item.name} · {view.current?.rating} / 5</p><label className="grid gap-2 font-semibold">Positief compliment<textarea className="rounded-xl border bg-background p-3" value={compliment} disabled={busy} maxLength={240} rows={4} onChange={(event) => setCompliment(event.target.value)} /></label><label className="flex gap-3"><input type="checkbox" checked={complimentConfirmed} disabled={busy} onChange={(event) => setComplimentConfirmed(event.target.checked)} />Deze tekst is bedoeld voor {participantLabel} en mag zichtbaar worden.</label><p className="text-sm">De gepubliceerde tekst blijft als historie bewaard.</p>{error ? <p role="alert">{error.message}</p> : null}</div>
     </PortalDialog>
   </article>;

@@ -3,6 +3,7 @@ import { PortalJourney } from "@/components/portal/journey/portal-journey";
 import type { PortalJourneyView } from "@/lib/domain/portal-journey-view";
 import { createDefaultJourneyFixture, defaultJourneyWorlds } from "@/lib/theme/default-journey-profile";
 import { RefreshJourneyFixture } from "./refresh-fixture";
+import { DraftNavigationFixture } from "./draft-fixture";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function RichJourneyHarness({ searchParams }: { searchParam
   return <main style={{ padding: "1rem", maxWidth: "1920px", margin: "auto" }}>
     <p style={{ marginBottom: ".5rem" }}>V4.2 rendererfixture · geen originele Default-artwork</p>
     <RefreshJourneyFixture />
+    {scalar(params.draft)?<DraftNavigationFixture editor={scalar(params.draft)==='editor'}/>:null}
     <PortalJourney events={events} audience="preview" contextKey={`fixture:${worldId}:${count}`} model={model} presentation={createDefaultJourneyFixture()} worldId={worldId} title="Jouw zwemreis" lesson={{ label: "Di 15 sep · 16:00", href: "/test-harness/journey-rich" }} />
     <div style={{ height: "70vh" }} aria-hidden="true" />
   </main>;
