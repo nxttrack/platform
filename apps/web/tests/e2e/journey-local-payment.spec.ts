@@ -1,8 +1,9 @@
 import {expect,test} from '@playwright/test';
 import {readFileSync} from 'node:fs';
 import {createRequire} from 'node:module';
+import {resolve} from 'node:path';
 // Root test tooling supplies pg; the web app does not depend on its driver/types.
-const pg=createRequire(import.meta.url)('pg') as {Client:new(options:{connectionString?:string})=>{
+const pg=createRequire(resolve(process.cwd(),'package.json'))('pg') as {Client:new(options:{connectionString?:string})=>{
  connect():Promise<void>;end():Promise<void>;
  query(sql:string,values:string[]):Promise<{rows:Array<Record<string,string|null>>}>;
 }};
