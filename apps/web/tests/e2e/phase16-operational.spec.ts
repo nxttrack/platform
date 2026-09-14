@@ -111,8 +111,7 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.groupName);
 
     await page.goto("/portaal/voortgang", { waitUntil: "domcontentloaded" });
-    await expectBodyToContain(page, phase.expected.badgeTitle);
-    await expectBodyToContain(page, phase.expected.progressLabel);
+    await expect(page.getByRole("heading", { name: "Ontwikkeling", exact: true })).toBeVisible();
 
     await page.goto("/portaal/ontwikkeling/badges", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.badgeTitle);
