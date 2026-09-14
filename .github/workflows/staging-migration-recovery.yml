@@ -11,6 +11,10 @@ on:
         description: Type APPLY_STAGING_MIGRATIONS to run the migration-only recovery
         required: true
         type: string
+      out_of_order_confirmation:
+        description: Type ALLOW_STAGING_OUT_OF_ORDER_MIGRATIONS to use Supabase's supported include-all mode
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -33,6 +37,7 @@ jobs:
       TARGET: staging
       RELEASE_TARGET: staging
       RELEASE_SHA: ${{ inputs.release_sha }}
+      OUT_OF_ORDER_CONFIRMATION: ${{ inputs.out_of_order_confirmation }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       APP_URL: ${{ vars.APP_URL }}
       SERVICE_NAME: ${{ vars.SERVICE_NAME || 'nxttrack-staging' }}
@@ -44,13 +49,21 @@ jobs:
       RUN_DB_MIGRATIONS: true
       DB_MIGRATION_REPAIR_EXISTING_SCHEMA: false
       DB_MIGRATE_DRY_RUN: false
-      DB_MIGRATE_INCLUDE_ALL: false
+      # Staging already recorded later retirement migrations. This is the
+      # supported Supabase mode for applying the one immutable historical gap
+      # plus the current missing migrations; it does not edit migration history.
+      DB_MIGRATE_INCLUDE_ALL: true
 
     steps:
       - name: Confirm recovery request
         env:
           CONFIRMATION: ${{ inputs.confirmation }}
         run: test "$CONFIRMATION" = "APPLY_STAGING_MIGRATIONS"
+
+      - name: Confirm supported out-of-order migration mode
+        env:
+          OUT_OF_ORDER_CONFIRMATION: ${{ inputs.out_of_order_confirmation }}
+        run: test "$OUT_OF_ORDER_CONFIRMATION" = "ALLOW_STAGING_OUT_OF_ORDER_MIGRATIONS"
 
       - name: Checkout exact canonical release source
         uses: actions/checkout@v6
