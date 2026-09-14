@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { analyzeThemePackage } from "../../apps/web/lib/theme/theme-package-adapters";
+import { analyzeThemePackage, mapGuidedThemePackage } from "../../apps/web/lib/theme/theme-package-adapters";
 import { readThemeArchive, writeThemeArchive } from "../../apps/web/lib/theme/theme-package-archive";
 
 const samples = { ocean: "NXTTRACK-Ocean-Quest-Referentiepakket-1.0.0.zip", golf: "NXTTRACK-De-Parelroute-Wereld-1-Referentiepakket-1.0.0.zip" };
@@ -74,4 +74,41 @@ test("an imported release cannot overwrite an existing built-in release", async 
   manifest.themeId = theme.id = "nxttrack-default"; manifest.version = "3.0.0";
   files.set("manifest.json", Buffer.from(JSON.stringify(manifest))); files.set("theme.json", Buffer.from(JSON.stringify(theme)));
   await assert.rejects(() => analyzeThemePackage(writeThemeArchive(files), "collision.zip"), /already exists/);
+});
+
+function guidedFixture() {
+  const original = readThemeArchive(sample("golf")), source = JSON.parse(original.get("theme.json")!.toString()), index = JSON.parse(original.get("assets.json")!.toString());
+  const files = new Map([...original].filter(([path]) => /\.(png|webp|jpe?g|avif)$/.test(path)));
+  const originalWorld = source.worlds[source.defaultWorld];
+  const scene = (orientation: "landscape" | "portrait") => ({ back: index[originalWorld.scenes[orientation].layers.back].path as string, mid: null as string | null, front: null, anchors: [[15, 55], [80, 50]] });
+  return { bytes: writeThemeArchive(files), mapping: { themeId: "guided-test", name: "Handmatig gekoppeld", release: "1.0.0", worlds: [{ id: "world-x", name: "Vrije wereldnaam", landscape: scene("landscape"), portrait: scene("portrait") }] } };
+}
+test("guided import uses explicit per-orientation images and anchors without curriculum or Default inference", async () => {
+  const { bytes, mapping } = guidedFixture(), imported = await mapGuidedThemePackage(bytes, mapping);
+  assert.equal(imported.dialect, "guided-1.0"); assert.equal(imported.presentation.role, "custom");
+  assert.equal(imported.presentation.pearlArtwork.mode, "none");
+  const world = imported.presentation.worlds["world-x"];
+  assert.notEqual(world.landscape.layers.back, world.portrait.layers.back);
+  assert.deepEqual(world.landscape.controlPoints.map(({ x, y }) => [x, y]), [[15, 55], [80, 50]]);
+  assert.equal(world.portrait.anchorSource.status, "adapted"); assert.equal(world.portrait.quality, "source-native");
+});
+test("guided mapping rejects missing route review inputs, foreign assets, duplicate IDs and misregistered layers", async () => {
+  const { bytes, mapping } = guidedFixture();
+  const noAnchors = structuredClone(mapping); noAnchors.worlds[0].portrait.anchors = [];
+  await assert.rejects(mapGuidedThemePackage(bytes, noAnchors), /routepunten/);
+  const foreign = structuredClone(mapping); foreign.worlds[0].landscape.back = "https://example.com/image.png";
+  await assert.rejects(mapGuidedThemePackage(bytes, foreign), /path/);
+  const duplicate = structuredClone(mapping); duplicate.worlds.push(duplicate.worlds[0]);
+  await assert.rejects(mapGuidedThemePackage(bytes, duplicate), /Dubbele/);
+  const wrongCanvas = structuredClone(mapping); wrongCanvas.worlds[0].landscape.mid = wrongCanvas.worlds[0].portrait.back;
+  await assert.rejects(mapGuidedThemePackage(bytes, wrongCanvas), /Unregistered/);
+});
+test("guided mapping cannot impersonate original Default or bypass a recognized package", async () => {
+  const { bytes, mapping } = guidedFixture();
+  await assert.rejects(mapGuidedThemePackage(bytes, { ...mapping, themeId: "nxttrack-default" }), /custom/);
+  await assert.rejects(mapGuidedThemePackage(sample("golf"), mapping), /genuinely manifestless/);
+});
+test("an archive containing multiple manifests cannot silently prefer the root manifest", async () => {
+  const files = new Map(readThemeArchive(sample("golf"))); files.set("nested/manifest.json", files.get("manifest.json")!);
+  await assert.rejects(analyzeThemePackage(writeThemeArchive(files), "ambiguous.zip"), /Multiple/);
 });

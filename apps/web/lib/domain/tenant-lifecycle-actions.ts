@@ -14,7 +14,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { deleteMollieCustomer, MollieApiError } from "./mollie";
 import type { MollieMode } from "./mollie-contract";
 import { eraseTenantStorageObjects } from "@/lib/storage/tenant-erasure";
-import { getThemeRelease } from "@/lib/theme/portal-theme-registry";
+import { getPublishedThemeRelease } from "@/lib/theme/theme-release-repository";
 
 export async function provisionTenantAction(formData: FormData) {
   const context = await requirePlatformAdministrator("/platform/onboarding");
@@ -37,7 +37,7 @@ export async function provisionTenantAction(formData: FormData) {
   const portalThemeKey = portalThemeSelection.slice(0, portalThemeSeparator);
   const portalThemeRelease = portalThemeSelection.slice(portalThemeSeparator + 1);
 
-  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || hostname !== `${slug}.nxttrack.nl` || !getThemeRelease(portalThemeKey, portalThemeRelease)) {
+  if (!isEmail(ownerEmail) || staff.length === 0 || staff.some((email) => !isEmail(email)) || stageNames.length === 0 || hostname !== `${slug}.nxttrack.nl` || !await getPublishedThemeRelease(portalThemeKey, portalThemeRelease)) {
     redirect("/platform/onboarding?error=validation");
   }
 

@@ -1,16 +1,17 @@
-import sharp from "sharp";
+import { inspectThemeRaster as imageMetadata } from "./theme-raster";
 
 import { defaultJourneyPalette } from "./default-journey-profile";
 import { parseJourneyPresentation, presentationId, presentationObject, presentationKeys, presentationText, presentationVersion, safeThemeSourcePath, type JourneyScene, type PresentationAsset, type PortalJourneyPresentationV1 } from "./portal-journey-presentation";
 import { validatePortalThemeManifest, type PortalThemeManifestV3 } from "./portal-theme-contract";
 import { defaultPortalTheme, getThemeRelease } from "./portal-theme-registry";
 import { readThemeArchive, readThemeJson, themeContentHash, themeImportLimits, themeReviewDigest, type ThemePackageFiles } from "./theme-package-archive";
+import { importPresentationPackage, PRESENTATION_PACKAGE_FORMAT } from "./theme-presentation-package";
 import { assertThemeSourceSchema } from "./theme-source-schema";
 
 export type ThemeImportFinding = { code: string; message: string; path?: string };
 export type ThemeImportAnalysis = {
   kind: "draft";
-  dialect: "package-1.0" | "studio-3.0" | "presentation-1.0";
+  dialect: "package-1.0" | "studio-3.0" | "presentation-1.0" | "guided-1.0";
   manifest: PortalThemeManifestV3;
   presentation: PortalJourneyPresentationV1;
   digest: string;
@@ -18,7 +19,7 @@ export type ThemeImportAnalysis = {
   findings: ThemeImportFinding[];
   files: ReadonlyMap<string, Buffer>;
 };
-export type GuidedThemeAnalysis = { kind: "guided"; sourceHash: string; images: { path: string; width: number; height: number; hash: string; hasAlpha: boolean }[]; findings: ThemeImportFinding[] };
+export type GuidedThemeAnalysis = { kind: "guided"; sourceHash: string; images: { path: string; width: number; height: number; hash: string; hasAlpha: boolean; mime: PresentationAsset["mime"] }[]; findings: ThemeImportFinding[] };
 type SourceScene = { width: number; height: number; layers: Partial<Record<"back" | "mid" | "front", string | null>>; anchors: [number, number][]; status?: string; safeZones?: { top?: number; bottom?: number } };
 type SourceTheme = {
   schemaVersion: "3.0"; id: string; name: string; kind: "default" | "custom"; description?: string;
@@ -29,18 +30,6 @@ type SourceTheme = {
   defaultWorld: string; collectibles?: { pool?: { id: string; title: string; asset?: string | null }[] };
 };
 
-async function imageMetadata(bytes: Buffer, path: string): Promise<Omit<PresentationAsset, "objectKey">> {
-  if (!bytes.length || bytes.length > themeImportLimits.file) throw new Error("Image exceeds byte budget");
-  const input = sharp(bytes, { limitInputPixels: 32 * 1024 * 1024, failOn: "warning", animated: false });
-  const meta = await input.metadata();
-  const mime = ({ png: "image/png", webp: "image/webp", avif: "image/avif", heif: "image/avif", jpeg: "image/jpeg" } as const)[meta.format as "png" | "webp" | "avif" | "heif" | "jpeg"];
-  const extension = path.split(".").at(-1)?.toLowerCase();
-  const expected = ({ png: "image/png", webp: "image/webp", avif: "image/avif", jpg: "image/jpeg", jpeg: "image/jpeg" } as const)[extension as "png" | "webp" | "avif" | "jpg" | "jpeg"];
-  if (!mime || (meta.format === "heif" && meta.compression !== "av1") || !meta.width || !meta.height || meta.width > 8192 || meta.height > 8192 || meta.width * meta.height > 32 * 1024 * 1024 || (meta.pages ?? 1) !== 1 || (expected && mime !== expected)) throw new Error(`Unsupported raster, dimensions or extension: ${path}`);
-  // Force actual decoding before accepting bytes; process one file at a time.
-  await input.stats();
-  return { sourcePath: safeThemeSourcePath(path), contentHash: themeContentHash(bytes), mime, width: meta.width, height: meta.height, hasAlpha: meta.hasAlpha ?? false, decorative: true };
-}
 function assetKey(themeId: string, release: string, metadata: Omit<PresentationAsset, "objectKey">): string {
   const extension = { "image/png": "png", "image/webp": "webp", "image/avif": "avif", "image/jpeg": "jpg" }[metadata.mime];
   return `${themeId}/${release}/${metadata.contentHash}.${extension}`;
@@ -69,12 +58,18 @@ export async function analyzeThemePackage(bytes: Buffer, inputName: string, opti
         if (!/\.(png|jpe?g|webp|avif)$/i.test(path)) continue;
         const meta = await imageMetadata(image, path); pixels += meta.width * meta.height;
         if (pixels > 256 * 1024 * 1024) throw new Error("Image set exceeds pixel budget");
-        images.push({ path, width: meta.width, height: meta.height, hash: meta.contentHash, hasAlpha: meta.hasAlpha });
+        images.push({ path, width: meta.width, height: meta.height, hash: meta.contentHash, hasAlpha: meta.hasAlpha, mime: meta.mime });
       }
       if (!images.length) throw new Error("No manifest or raster images found");
       return { kind: "guided", sourceHash, images, findings: [{ code: "MANUAL_MAPPING_REQUIRED", message: "Kies expliciet de wereld, oriëntatie en rol van ieder beeld. Er is nog niets opgeslagen of toegewezen." }] };
     }
+    if ([...files.keys()].some((path) => path !== "manifest.json" && /(^|\/)manifest\.json$/i.test(path))) throw new Error("Multiple package manifests are ambiguous");
     const manifest = readThemeJson(requiredFile(files, "manifest.json"), "manifest.json");
+    if (presentationObject(manifest, "manifest").format === PRESENTATION_PACKAGE_FORMAT) {
+      const imported = await importPresentationPackage(files, sourceHash, options.runtimeRelease);
+      if (getThemeRelease(imported.presentation.themeId, imported.presentation.runtimeRelease)) throw new Error("Release already exists; choose a new immutable release version");
+      return imported;
+    }
     assertThemeSourceSchema(manifest, "manifest");
     const info = presentationObject(manifest, "manifest");
     sourceVersion = presentationText(info.packageVersion, "package version");
@@ -177,4 +172,49 @@ function sourceThemeNativeManifest(theme: SourceTheme, release: string): PortalT
   const palette = theme.id === "nxttrack-default" ? defaultJourneyPalette : { primary: color.primary ?? native.tokens.color.primary, secondary: color.secondary ?? native.tokens.color.secondary, accent: color.gold ?? native.tokens.color.reward, attention: native.tokens.color.danger, ink: color.ink ?? color.text ?? native.tokens.color.text };
   Object.assign(native.tokens.color, { primary: palette.primary, secondary: palette.secondary, reward: palette.accent, danger: palette.attention, text: palette.ink, primaryStrong: palette.ink });
   return validatePortalThemeManifest(native);
+}
+
+/** Manifestless custom images only. Every world, layer and anchor is explicitly chosen by the manager. */
+export async function mapGuidedThemePackage(bytes: Buffer, input: unknown, signal?: AbortSignal): Promise<ThemeImportAnalysis> {
+  const inventory = await analyzeThemePackage(bytes, "guided.zip", { signal });
+  if (inventory.kind !== "guided") throw new Error("Guided mapping is only available for genuinely manifestless archives");
+  const mapping = presentationObject(input, "guided mapping");
+  presentationKeys(mapping, ["themeId", "name", "release", "worlds"], "guided mapping");
+  const themeId = presentationText(mapping.themeId, "theme ID", 64), name = presentationText(mapping.name, "theme name", 100), release = presentationVersion(mapping.release);
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(themeId) || themeId === "nxttrack-default" || getThemeRelease(themeId, release)) throw new Error("Kies een vrije custom thema-identiteit en versie");
+  if (!Array.isArray(mapping.worlds) || !mapping.worlds.length || mapping.worlds.length > 30) throw new Error("Koppel minimaal één wereld en maximaal dertig werelden");
+  const files = readThemeArchive(bytes, signal), assets: Record<string, PresentationAsset> = {}, deliveries = new Map<string, Buffer>(), sourceDigest = themeReviewDigest(mapping);
+  const sourceToId = new Map<string, string>();
+  async function ref(path: unknown, required: boolean): Promise<string | null> {
+    if (path === null && !required) return null;
+    const sourcePath = safeThemeSourcePath(path), entry = inventory.kind === "guided" ? inventory.images.find((image) => image.path === sourcePath) : null;
+    if (!entry) throw new Error("Kies een gecontroleerd beeld uit dit pakket");
+    const previous = sourceToId.get(sourcePath); if (previous) return previous;
+    const image = requiredFile(files, sourcePath), metadata = await imageMetadata(image, sourcePath), id = `image-${assetsCount()}`;
+    const objectKey = assetKey(themeId, release, metadata); assets[id] = { ...metadata, objectKey }; deliveries.set(objectKey, image); sourceToId.set(sourcePath, id); return id;
+  }
+  function assetsCount() { return Object.keys(assets).length + 1; }
+  const worlds: Record<string, unknown> = {};
+  for (const item of mapping.worlds) {
+    signal?.throwIfAborted(); const world = presentationObject(item, "guided world");
+    presentationKeys(world, ["id", "name", "landscape", "portrait"], "guided world");
+    const id = presentationId(world.id); if (Object.hasOwn(worlds, id)) throw new Error("Dubbele wereld-ID");
+    async function scene(value: unknown): Promise<JourneyScene> {
+      const scene = presentationObject(value, "guided scene"); presentationKeys(scene, ["back", "mid", "front", "anchors"], "guided scene");
+      const back = (await ref(scene.back, true))!, mid = await ref(scene.mid, false), front = await ref(scene.front, false);
+      if (!Array.isArray(scene.anchors) || scene.anchors.length < 2 || scene.anchors.length > 100) throw new Error("Plaats minimaal twee routepunten per oriëntatie");
+      const points = scene.anchors.map((point, index) => {
+        if (!Array.isArray(point) || point.length !== 2) throw new Error("Ongeldig routepunt");
+        return { slotId: `guided-${index}`, x: point[0] as number, y: point[1] as number };
+      });
+      return { intrinsic: { width: assets[back].width, height: assets[back].height }, layers: { back, mid, front }, controlPoints: points,
+        anchorSource: { path: "guided-mapping.json", sha256: sourceDigest, status: "adapted" },
+        safeZones: { topFraction: 0.15, bottomFraction: 0.2 }, parallax: { enabled: false, edgeCoverageApproved: false }, quality: "source-native" };
+    }
+    worlds[id] = { id, name: presentationText(world.name, "world name", 100), landscape: await scene(world.landscape), portrait: await scene(world.portrait) };
+  }
+  const presentation = parseJourneyPresentation({ presentationContract: "rich-swim-journey/1.0", themeId, sourcePackageVersion: "guided-1.0", runtimeRelease: release, role: "custom", journeyType: "rich-swim-journey", pearlArtwork: { mode: "none", byCriterionIdentity: {} }, guide: { mode: "none" }, worlds, supportSlots: {}, collectibles: { routeBinding: "none", pool: [] }, assets });
+  const manifest = sourceThemeNativeManifest({ id: themeId, name, kind: "custom", schemaVersion: "3.0", pearls: { artworkMode: "none" }, worlds: {}, defaultWorld: "" }, release);
+  const findings = [{ code: "GUIDED_MAPPING", message: "Beelden en routepunten zijn handmatig gekoppeld. Controleer beide oriëntaties vóór publicatie; er is geen originele Default-bron geïmporteerd." }];
+  return { kind: "draft", dialect: "guided-1.0", manifest, presentation, digest: themeReviewDigest({ manifest, presentation }), sourceHash: inventory.sourceHash, findings, files: deliveries };
 }

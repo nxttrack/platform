@@ -6,8 +6,15 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import type { AssessmentRatingDisplay, PortalThemeManifestV2 } from "./portal-theme-contract";
-import { defaultPortalTheme, getThemeRelease } from "./portal-theme-registry";
+import { defaultPortalTheme } from "./portal-theme-registry";
 import { getThemeDisplayName } from "./portal-theme-registry";
+import { getPublishedThemeRelease } from "./theme-release-repository";
+
+export const getTenantThemeManagementMode = cache(async (tenantId: string): Promise<"legacy" | "platform"> => {
+  const result = await createAdminClient().from("tenant_settings").select("portal_theme_management_mode").eq("tenant_id", tenantId).maybeSingle();
+  if (result.error) throw new Error("Theme management policy could not be loaded");
+  return result.data?.portal_theme_management_mode === "platform" ? "platform" : "legacy";
+});
 
 export type ResolvedPortalTheme = {
   manifest: PortalThemeManifestV2;
@@ -35,7 +42,7 @@ export const resolveTenantPortalTheme = cache(async (tenantId: string): Promise<
       verifiedLicense: false
     };
   }
-  const manifest = getThemeRelease(result.data.theme_key, result.data.theme_release);
+  const manifest = (await getPublishedThemeRelease(result.data.theme_key, result.data.theme_release))?.manifest;
   if (!manifest) {
     console.warn("[portal-theme] Default fallback used", { reason: "unknown-release" });
     return {
@@ -60,8 +67,8 @@ export async function resolveTenantChildPortalTheme(
   tenantId: string,
   preference: { themeKey: string; themeRelease: string } | null
 ): Promise<ResolvedPortalTheme> {
-  if (!preference) return resolveTenantPortalTheme(tenantId);
-  const [availabilityResult, manifest] = await Promise.all([
+  if (!preference || await getTenantThemeManagementMode(tenantId) === "platform") return resolveTenantPortalTheme(tenantId);
+  const [availabilityResult, release] = await Promise.all([
     createAdminClient()
       .from("tenant_portal_theme_availability")
       .select("is_enabled")
@@ -70,8 +77,9 @@ export async function resolveTenantChildPortalTheme(
       .eq("theme_release", preference.themeRelease)
       .eq("is_enabled", true)
       .maybeSingle(),
-    Promise.resolve(getThemeRelease(preference.themeKey, preference.themeRelease))
+    getPublishedThemeRelease(preference.themeKey, preference.themeRelease)
   ]);
+  const manifest = release?.manifest;
   if (availabilityResult.error || !availabilityResult.data || !manifest) {
     return resolveTenantPortalTheme(tenantId);
   }

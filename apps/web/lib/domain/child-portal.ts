@@ -6,12 +6,13 @@ import { requireChildPortalSession } from "@/lib/auth/portal-session";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { resolveChildTimeZone } from "@/lib/date/child-lesson-date";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getThemeDisplayName, getThemeRelease } from "@/lib/theme/portal-theme-registry";
+import { getThemeDisplayName } from "@/lib/theme/portal-theme-registry";
 import {
   resolveTenantChildPortalTheme,
   resolveTenantPortalTheme,
   type ResolvedPortalTheme
 } from "@/lib/theme/portal-theme-server";
+import { getPublishedThemeRelease } from "@/lib/theme/theme-release-repository";
 import type { EnrollmentRow } from "./core";
 import { loadChildAgendaSessions } from "./child-agenda";
 import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
@@ -177,7 +178,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .eq("tenant_id", childSession.tenantId)
       .eq("status", "active")
       .maybeSingle(),
-    admin.from("tenant_settings").select("timezone").eq("tenant_id", childSession.tenantId).maybeSingle()
+    admin.from("tenant_settings").select("timezone, portal_theme_management_mode").eq("tenant_id", childSession.tenantId).maybeSingle()
   ]);
 
   const legacyGuardianBound = participantResult.data?.guardian_user_id === childSession.userId;
@@ -187,7 +188,8 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   if (enrollmentResult.error) throw new Error("Child portal enrollment could not be loaded");
   if (preferencesResult.error || availableThemesResult.error || brandingResult.error || settingsResult.error) throw new Error("Child portal preferences could not be loaded");
   const timeZone = resolveChildTimeZone(settingsResult.data?.timezone);
-  const themePreference = preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
+  const platformManaged = settingsResult.data?.portal_theme_management_mode === "platform";
+  const themePreference = !platformManaged && preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
     themeKey: preferencesResult.data.theme_key,
     themeRelease: preferencesResult.data.theme_release
   } : null;
@@ -429,17 +431,17 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       readAloudEnabled: preferencesResult.data?.read_aloud_enabled ?? false,
       reducedMotion: preferencesResult.data?.reduced_motion ?? false,
       soundEnabled: preferencesResult.data?.sound_enabled ?? false,
-      themeKey: preferencesResult.data?.theme_key ?? null,
-      themeRelease: preferencesResult.data?.theme_release ?? null
+      themeKey: platformManaged ? null : preferencesResult.data?.theme_key ?? null,
+      themeRelease: platformManaged ? null : preferencesResult.data?.theme_release ?? null
     },
-    availableThemes: (availableThemesResult.data ?? []).flatMap((release) => {
-      const manifest = getThemeRelease(release.theme_key, release.theme_release);
+    availableThemes: platformManaged ? [] : (await Promise.all((availableThemesResult.data ?? []).map(async (release) => {
+      const manifest = (await getPublishedThemeRelease(release.theme_key, release.theme_release))?.manifest;
       return manifest ? [{
         key: release.theme_key,
         name: getThemeDisplayName(manifest),
         release: release.theme_release
       }] : [];
-    })
+    }))).flat()
   };
 });
 

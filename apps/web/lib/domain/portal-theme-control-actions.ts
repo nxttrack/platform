@@ -6,12 +6,13 @@ import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getThemeRelease } from "@/lib/theme/portal-theme-registry";
+import { getPublishedThemeRelease } from "@/lib/theme/theme-release-repository";
+import { getTenantThemeManagementMode } from "@/lib/theme/portal-theme-server";
 
 export async function activatePortalThemeAction(formData: FormData) {
   const context = await requireThemeManager();
   const tenantId = uuid(formData, "tenantId");
-  const [themeKey, themeRelease] = release(formData);
+  const [themeKey, themeRelease] = await release(formData);
   const result = await createAdminClient().rpc("activate_tenant_portal_theme", {
     target_actor_user_id: context.user.id,
     target_event_type: "activated",
@@ -28,7 +29,7 @@ export async function activatePortalThemeAction(formData: FormData) {
 export async function schedulePortalThemeAction(formData: FormData) {
   const context = await requireThemeManager();
   const tenantId = uuid(formData, "tenantId");
-  const [themeKey, themeRelease] = release(formData);
+  const [themeKey, themeRelease] = await release(formData);
   const scheduledFor = new Date(required(formData, "scheduledFor", 80));
   if (!Number.isFinite(scheduledFor.getTime()) || scheduledFor <= new Date()) redirect("/platform/themes?error=schedule");
   const result = await createAdminClient().rpc("schedule_tenant_portal_theme", {
@@ -60,7 +61,7 @@ export async function rollbackPortalThemeAction(formData: FormData) {
     .eq("id", current.data.previous_assignment_id)
     .eq("tenant_id", tenantId)
     .maybeSingle();
-  if (previous.error || !previous.data || !getThemeRelease(previous.data.theme_key, previous.data.theme_release)) {
+  if (previous.error || !previous.data || !await getPublishedThemeRelease(previous.data.theme_key, previous.data.theme_release)) {
     redirect("/platform/themes?error=no_rollback");
   }
   const result = await admin.rpc("activate_tenant_portal_theme", {
@@ -102,7 +103,7 @@ export async function setPortalThemeLicenseAction(formData: FormData) {
 export async function setPortalThemeAvailabilityAction(formData: FormData) {
   const context = await requireThemeManager();
   const tenantId = uuid(formData, "tenantId");
-  const [themeKey, themeRelease] = release(formData);
+  const [themeKey, themeRelease] = await release(formData);
   const availability = required(formData, "availability", 16);
   if (availability !== "enabled" && availability !== "disabled") {
     redirect("/platform/themes?error=availability");
@@ -125,7 +126,8 @@ export async function selectTenantPortalThemeAction(formData: FormData) {
     redirect("/admin?error=forbidden");
   }
   const tenant = getActiveTenant(context);
-  const [themeKey, themeRelease] = release(formData);
+  if (await getTenantThemeManagementMode(tenant.id) === "platform") redirect("/admin/branding?error=platform_managed");
+  const [themeKey, themeRelease] = await release(formData);
   const result = await createAdminClient().rpc("select_available_tenant_portal_theme", {
     target_actor_user_id: context.user.id,
     target_reason: required(formData, "reason", 1000),
@@ -135,7 +137,8 @@ export async function selectTenantPortalThemeAction(formData: FormData) {
   });
   if (result.error) redirect("/admin/branding?error=theme");
   revalidatePath("/admin/branding");
-  revalidatePath("/portaal");
+  revalidatePath("/portaal", "layout");
+  revalidatePath("/kind", "layout");
   redirect("/admin/branding?saved=theme");
 }
 
@@ -147,12 +150,12 @@ async function requireThemeManager() {
   return context;
 }
 
-function release(formData: FormData): [string, string] {
+async function release(formData: FormData): Promise<[string, string]> {
   const value = required(formData, "themeRelease", 120);
   const separator = value.lastIndexOf("@");
   const themeKey = value.slice(0, separator);
   const themeRelease = value.slice(separator + 1);
-  if (!getThemeRelease(themeKey, themeRelease)) redirect("/platform/themes?error=release");
+  if (!await getPublishedThemeRelease(themeKey, themeRelease)) redirect("/platform/themes?error=release");
   return [themeKey, themeRelease];
 }
 
@@ -178,6 +181,7 @@ function optional(formData: FormData, field: string, maxLength: number) {
 function finish(error: { message: string } | null, operation: string): never {
   if (error) redirect(`/platform/themes?error=${operation}`);
   revalidatePath("/platform/themes");
-  revalidatePath("/portaal");
+  revalidatePath("/portaal", "layout");
+  revalidatePath("/kind", "layout");
   redirect(`/platform/themes?saved=${operation}`);
 }
