@@ -1,31 +1,49 @@
-import type { JourneyPoint, JourneyScene } from "./portal-journey-presentation";
+import type { JourneyScene } from "./portal-journey-presentation";
 
 export type JourneyPosition = { x: number; y: number };
 export type JourneyCamera = { x: number; y: number; scale: number };
 
-/** Arc length uses intrinsic pixels, so portrait and landscape retain their own registration. */
+type RouteSegment = { from: JourneyPosition; first: JourneyPosition; second: JourneyPosition; to: JourneyPosition };
+function journeyRouteSegments(scene: JourneyScene): RouteSegment[] {
+  const portrait = scene.intrinsic.height > scene.intrinsic.width;
+  return scene.controlPoints.slice(1).map((to, index) => {
+    const from = scene.controlPoints[index], x = (from.x + to.x) / 2, y = (from.y + to.y) / 2;
+    // The reference route uses orientation-specific cubic tangents. Controls remain
+    // inside each registered anchor rectangle, so smoothing cannot overshoot the art.
+    return { from, to, first: portrait ? { x: from.x, y } : { x, y: from.y }, second: portrait ? { x: to.x, y } : { x, y: to.y } };
+  });
+}
+
+/** The same registered curve drives both visible route and marker arc-length placement. */
+export function journeyRoutePath(scene: JourneyScene): string {
+  const pixel = (point: JourneyPosition) => `${point.x / 100 * scene.intrinsic.width} ${point.y / 100 * scene.intrinsic.height}`;
+  return `M${pixel(scene.controlPoints[0])} ` + journeyRouteSegments(scene).map((segment) => `C${pixel(segment.first)},${pixel(segment.second)},${pixel(segment.to)}`).join(" ");
+}
+
+/** Intrinsic-pixel arc length keeps the two supplied orientations independently registered. */
 export function distributeJourneyNodes(scene: JourneyScene, count: number): JourneyPosition[] {
   if (!Number.isInteger(count) || count < 0 || count > 1000) throw new Error("Invalid journey node count");
   if (!count) return [];
-  const points = scene.controlPoints;
+  const points: JourneyPosition[] = [{ x: scene.controlPoints[0].x, y: scene.controlPoints[0].y }];
+  for (const segment of journeyRouteSegments(scene)) {
+    for (let step = 1; step <= 64; step++) {
+      const t = step / 64, u = 1 - t;
+      const coordinate = (key: "x" | "y") => u ** 3 * segment.from[key] + 3 * u ** 2 * t * segment.first[key] + 3 * u * t ** 2 * segment.second[key] + t ** 3 * segment.to[key];
+      points.push({ x: coordinate("x"), y: coordinate("y") });
+    }
+  }
   const lengths = points.slice(1).map((point, index) => distance(points[index], point, scene));
   const total = lengths.reduce((sum, length) => sum + length, 0);
   if (!total) return Array.from({ length: count }, () => ({ x: points[0].x, y: points[0].y }));
+  let segment = 0, traversed = 0;
   return Array.from({ length: count }, (_, index) => {
     const target = (count === 1 ? 0.5 : index / (count - 1)) * total;
-    let traversed = 0;
-    for (let segment = 0; segment < lengths.length; segment++) {
-      const length = lengths[segment];
-      if (traversed + length >= target || segment === lengths.length - 1) {
-        const fraction = length ? Math.max(0, Math.min(1, (target - traversed) / length)) : 0;
-        return { x: points[segment].x + (points[segment + 1].x - points[segment].x) * fraction, y: points[segment].y + (points[segment + 1].y - points[segment].y) * fraction };
-      }
-      traversed += length;
-    }
-    return { x: points.at(-1)!.x, y: points.at(-1)!.y };
+    while (segment < lengths.length - 1 && traversed + lengths[segment] < target) traversed += lengths[segment++];
+    const fraction = lengths[segment] ? Math.max(0, Math.min(1, (target - traversed) / lengths[segment])) : 0;
+    return { x: points[segment].x + (points[segment + 1].x - points[segment].x) * fraction, y: points[segment].y + (points[segment + 1].y - points[segment].y) * fraction };
   });
 }
-function distance(a: JourneyPoint, b: JourneyPoint, scene: JourneyScene): number {
+function distance(a: JourneyPosition, b: JourneyPosition, scene: JourneyScene): number {
   return Math.hypot((b.x - a.x) * scene.intrinsic.width / 100, (b.y - a.y) * scene.intrinsic.height / 100);
 }
 export function clampJourneyCamera(camera: JourneyCamera, scene: JourneyScene, viewport: { width: number; height: number }): JourneyCamera {

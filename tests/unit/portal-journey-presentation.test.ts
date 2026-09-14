@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { createDefaultJourneyFixture, defaultJourneyWorlds } from "../../apps/web/lib/theme/default-journey-profile";
-import { clampJourneyCamera, distributeJourneyNodes, focusJourneyCamera, journeyPageSize } from "../../apps/web/lib/theme/portal-journey-geometry";
+import { clampJourneyCamera, distributeJourneyNodes, focusJourneyCamera, journeyPageSize, journeyRoutePath } from "../../apps/web/lib/theme/portal-journey-geometry";
 import { parseJourneyPresentation, resolvePearlArtwork, safeThemeSourcePath, type PortalJourneyPresentationV1 } from "../../apps/web/lib/theme/portal-journey-presentation";
 import { defaultPortalTheme } from "../../apps/web/lib/theme/portal-theme-registry";
 import { validatePortalThemeManifest } from "../../apps/web/lib/theme/portal-theme-contract";
@@ -108,4 +108,22 @@ test("JSON rejects unsafe object keys, excessive nesting and malformed UTF-8", (
   assert.throws(() => readThemeJson(Buffer.from('{"__proto__": {}}'), "fixture"), /Reserved/);
   assert.throws(() => readThemeJson(Buffer.from("[".repeat(26) + "0" + "]".repeat(26)), "fixture"), /nesting/);
   assert.throws(() => readThemeJson(Buffer.from([0xff]), "fixture"), /UTF-8/);
+});
+
+
+test("registered cubic route and arc-length nodes share endpoints, stay inside anchor bounds and do not collapse degenerate segments", () => {
+  for (const orientation of ["portrait", "landscape"] as const) {
+    const scene = structuredClone(fixture().worlds["badje-01"][orientation]);
+    scene.controlPoints = [{ slotId: "a", x: 10, y: 80 }, { slotId: "duplicate", x: 10, y: 80 }, { slotId: "b", x: 90, y: 20 }];
+    const points = distributeJourneyNodes(scene, 7);
+    assert.deepEqual(points[0], { x: 10, y: 80 }); assert.deepEqual(points.at(-1), { x: 90, y: 20 });
+    assert.ok(points.every((point) => point.x >= 10 && point.x <= 90 && point.y >= 20 && point.y <= 80));
+    assert.equal(new Set(points.map((point) => JSON.stringify(point))).size, 7);
+    assert.match(journeyRoutePath(scene), /^M[\d.]+ [\d.]+ C/); assert.doesNotMatch(journeyRoutePath(scene), /NaN|Infinity| L/);
+    assert.ok(Math.abs(points[3].x - 50) < .01 && Math.abs(points[3].y - 50) < .01);
+    // Curvature is real: intermediate points are not on the straight anchor chord.
+    assert.ok(Math.abs(points[1].y - (80 - (points[1].x - 10) * .75)) > 1);
+    scene.controlPoints = scene.controlPoints.slice(0, 2);
+    assert.deepEqual(distributeJourneyNodes(scene, 2), [{ x: 10, y: 80 }, { x: 10, y: 80 }]);
+  }
 });

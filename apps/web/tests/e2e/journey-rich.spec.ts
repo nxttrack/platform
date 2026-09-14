@@ -108,3 +108,19 @@ test("badge moments remain separate from curriculum nodes, with a complete keybo
   await page.goto("/test-harness/journey-rich?count=0&moments=1"); await page.getByRole("button", { name: "Alle 3 momenten", exact: true }).click();
   await expect(page.getByRole("dialog").locator("[data-journey-event]")).toHaveCount(3);
 });
+
+test("visible pearls remain registered to the rendered smooth route in both orientations", async ({ page }) => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport); await page.goto("/test-harness/journey-rich?count=12");
+    const error = await page.locator("[data-rich-world]").evaluate((world) => {
+      const path = world.querySelector("svg path") as SVGPathElement;
+      const width = parseFloat((world as HTMLElement).style.width), height = parseFloat((world as HTMLElement).style.height);
+      const length = path.getTotalLength(); const samples = Array.from({ length: 5001 }, (_, index) => path.getPointAtLength(length * index / 5000));
+      return Math.max(...[...world.querySelectorAll("[data-rich-node]")].map((node) => {
+        const marker = node.parentElement!; const x = parseFloat(marker.style.left) / 100 * width, y = parseFloat(marker.style.top) / 100 * height;
+        return Math.min(...samples.map((sample) => Math.hypot(sample.x - x, sample.y - y)));
+      }));
+    });
+    expect(error).toBeLessThan(1);
+  }
+});

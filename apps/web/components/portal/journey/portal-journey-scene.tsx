@@ -6,7 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEve
 
 import { PortalDialog } from "../portal-dialog";
 import type { PortalJourneyView, PortalJourneyViewNode } from "@/lib/domain/portal-journey-view";
-import { clampJourneyCamera, distributeJourneyNodes, focusJourneyCamera, journeyPageSize, type JourneyCamera } from "@/lib/theme/portal-journey-geometry";
+import { clampJourneyCamera, distributeJourneyNodes, focusJourneyCamera, journeyPageSize, journeyRoutePath, type JourneyCamera } from "@/lib/theme/portal-journey-geometry";
 import { buildJourneyTimeline, selectDefaultJourneyNode, selectMascotPlacement, type JourneyMascotPlacement, type JourneyTimelineEvent } from "@/lib/theme/portal-journey-contract";
 import { presentationAssetUrl, resolvePearlArtwork, type PortalJourneyPresentationV1 } from "@/lib/theme/portal-journey-presentation";
 
@@ -147,7 +147,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
       const box = rect(anchor);
       if (box.x < 0 || box.y < 0 || box.x + box.width > viewport.width || box.y + box.height > viewport.height) continue;
       const placed = selectMascotPlacement({ anchor: box, bounds: { x: 0, y: 0, ...viewport }, exclusions, preferredWidth: 44, preferredHeight: 44, clearance: 12 });
-      if (placed.mode !== "candidate") continue; // Never visually attach a moment to an unrelated distant dock.
+      if (placed.mode !== "candidate" || placed.width < 44 || placed.height < 44) continue; // Never visually attach a moment to an unrelated distant dock.
       placements.push({ id: cluster.id, x: placed.x, y: placed.y }); exclusions.push(placed);
     }
     setMomentPositions((previous) => JSON.stringify(previous) === JSON.stringify(placements) ? previous : placements);
@@ -186,7 +186,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     pointer.current = null; setDragging(false);
   }
   const guideAsset = presentation.guide.mode === "character" ? url(presentation.guide.poses[dragging ? "travel" : detailOpen ? "look" : "idle"] ?? presentation.guide.poses.idle) : null;
-  const route = scene.controlPoints.map((point, index) => `${index ? "L" : "M"}${point.x / 100 * scene.intrinsic.width} ${point.y / 100 * scene.intrinsic.height}`).join(" ");
+  const route = useMemo(() => journeyRoutePath(scene), [scene]);
 
   return <section ref={root} className={styles.scene} aria-label={title} tabIndex={0} onKeyDown={keyDown} data-rich-journey data-world-id={worldId} data-orientation={orientation} data-reduced-motion={quiet} data-node-count={nodes.length}>
     <div ref={viewportRef} className={styles.viewport} data-dragging={dragging} onPointerDown={startPointer} onPointerMove={movePointer} onPointerUp={stopPointer} onPointerCancel={stopPointer} onLostPointerCapture={() => { pointer.current = null; setDragging(false); }} onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
