@@ -44,7 +44,7 @@ test("platformpreview rendert de volledige 7 × 13 desktop- en mobiele matrix", 
   );
   await signIn(page);
   await page.goto("/platform/themes");
-  await expect(page.getByRole("heading", { name: "Theme Control Center" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Themabibliotheek", exact: true })).toBeVisible();
 
   for (const theme of themes) {
     const card = page.locator(`[data-theme-preview="${theme}"]`);
@@ -514,8 +514,8 @@ async function assertDashboardLayout(
       return { bottom: rect.bottom, height: rect.height, left: rect.left, right: rect.right, top: rect.top, width: rect.width };
     };
     return {
-      childQuest: box(".child-today__quest"),
-      childMap: box(".child-today .child-journey-map"),
+      childQuest: box(".child-today [data-rich-journey]"),
+      childMap: box(".child-today [data-rich-journey]"),
       childNav: box(".child-shell__bottom-nav"),
       childSidebar: box(".child-shell__sidebar"),
       childHeader: box(".child-shell__header"),
