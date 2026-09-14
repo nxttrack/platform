@@ -1,0 +1,178 @@
+name: Production migration recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Exact canonical main SHA whose migrations may be applied
+        required: true
+        type: string
+      staging_release_sha:
+        description: Full SHA already validated on staging and equal to release_sha
+        required: true
+        type: string
+      confirmation:
+        description: Type APPLY_PRODUCTION_MIGRATIONS to run the migration-only recovery
+        required: true
+        type: string
+      production_approval_reference:
+        description: Link or identifier for the recorded production approval
+        required: true
+        type: string
+      production_foundation_run_id:
+        description: Successful production foundation audit run ID for this exact SHA
+        required: true
+        type: string
+      production_migration_rehearsal_run_id:
+        description: Successful production migration rehearsal run ID for this exact SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nxttrack-production-migration-recovery
+  cancel-in-progress: false
+
+jobs:
+  recover:
+    name: apply production migrations without application activation
+    if: github.ref_name == 'main'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: production
+
+    env:
+      CI: true
+      NEXT_TELEMETRY_DISABLED: 1
+      NODE_OPTIONS: --max-old-space-size=3072
+      TARGET: production
+      RELEASE_TARGET: production
+      RELEASE_CANONICAL_BRANCH: main
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+      PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
+      PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
+      PRODUCTION_MIGRATION_REHEARSAL_RUN_ID: ${{ inputs.production_migration_rehearsal_run_id }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      APP_URL: ${{ vars.APP_URL }}
+      SERVICE_NAME: ${{ vars.SERVICE_NAME || 'nxttrack-production' }}
+      BASE_DIR: /var/www/nxttrack/production
+      MAINTENANCE_NO_WRITE: ${{ vars.MAINTENANCE_NO_WRITE || 'false' }}
+      EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED || 'false' }}
+      NEWSLETTER_DELIVERY_ENABLED: ${{ vars.NEWSLETTER_DELIVERY_ENABLED || 'false' }}
+      INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED || 'false' }}
+      RUN_DB_MIGRATIONS: true
+      DB_MIGRATION_REPAIR_EXISTING_SCHEMA: false
+      DB_MIGRATE_DRY_RUN: false
+      DB_MIGRATE_INCLUDE_ALL: false
+
+    steps:
+      - name: Confirm production recovery request
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+          APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
+          FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
+          REHEARSAL_RUN_ID: ${{ inputs.production_migration_rehearsal_run_id }}
+        run: |
+          set -euo pipefail
+          test "$CONFIRMATION" = "APPLY_PRODUCTION_MIGRATIONS"
+          test "$RELEASE_SHA" = "$STAGING_RELEASE_SHA"
+          test "$RELEASE_SHA" =~ ^[a-f0-9]{40}$
+          test "${#APPROVAL_REFERENCE}" -ge 8
+          test "$FOUNDATION_RUN_ID" =~ ^[0-9]+$
+          test "$REHEARSAL_RUN_ID" =~ ^[0-9]+$
+
+      - name: Checkout exact canonical release source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+
+      - name: Verify exact canonical main source
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(git branch --show-current)" = ""
+          git fetch --no-tags origin main --depth=1
+          test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_SHA"
+          echo "[production-recovery] source SHA=$RELEASE_SHA"
+
+      - name: Verify current production evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_SHA: ${{ inputs.release_sha }}
+        run: node scripts/release/verify-production-evidence.mjs
+
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup certified pnpm
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          test "$(node --version)" = "v24.18.0"
+          test "$(pnpm --version)" = "10.24.0"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Guard migration containment
+        run: |
+          set -euo pipefail
+          test "$MAINTENANCE_NO_WRITE" = "true"
+          test "$EMAIL_SENDING_ENABLED" = "false"
+          test "$NEWSLETTER_DELIVERY_ENABLED" = "false"
+          test "$INTERNAL_JOBS_ENABLED" = "false"
+          test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
+          test "$DB_MIGRATE_INCLUDE_ALL" = "false"
+
+      - name: Restart old release into maintenance containment
+        run: |
+          set -euo pipefail
+          sudo systemctl restart "$SERVICE_NAME"
+          for attempt in {1..20}; do
+            status="$(curl --silent --show-error --output /tmp/nxttrack-production-maintenance-response --write-out '%{http_code}' \
+              --request POST --max-time 10 "$APP_URL/api/internal/email-outbox/process" || true)"
+            if [[ "$status" == "503" ]] && grep -q 'maintenance_no_write' /tmp/nxttrack-production-maintenance-response; then
+              echo "[production-recovery] maintenance containment PASS"
+              break
+            fi
+            if [[ "$attempt" == "20" ]]; then
+              echo "[production-recovery] maintenance containment was not proven" >&2
+              exit 1
+            fi
+            sleep 3
+          done
+
+      - name: Run read-only production upgrade preflight
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
+      - name: Apply official production migrations
+        run: pnpm run db:migrate
+
+      - name: Run post-migration read-only production preflight
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
+      - name: Assert complete runtime schema before activation
+        env:
+          DEPLOYED_SOURCE_SHA: ${{ inputs.release_sha }}
+        run: pnpm run release:assert-schema-compatibility
+
+      - name: Record migration parity without writes
+        run: pnpm run db:inventory-production-read-only
+
+      - name: Explicitly confirm no application activation
+        run: |
+          echo "[production-recovery] PASS migrations only; no release activation, Caddy reload or application deployment was performed by this workflow."
