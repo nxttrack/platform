@@ -21,7 +21,7 @@ export default async function ChildTodayPage() {
   const earnedBadges = data.badges.filter((badge) => badge.earned);
   const latestBadge = earnedBadges[0] ?? null;
   return <div className="child-page child-today" data-child-route-state="today">
-    <PortalJourney events={data.journey?.events} audience="child" contextKey={`child:${data.tenant.id}:${data.child.id}:${data.journey?.view?.curriculumVersionId ?? "none"}`} title={`Jouw reis, ${data.child.firstName}`} model={data.journey?.view ?? null} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls} reducedMotion={data.preferences.reducedMotion}
+    <PortalJourney events={data.journey?.events} audience="child" collectionContext={{ audience: "child", tenantId: data.tenant.id, participantId: data.child.id }} contextKey={`child:${data.tenant.id}:${data.child.id}:${data.journey?.view?.curriculumVersionId ?? "none"}`} title={`Jouw reis, ${data.child.firstName}`} model={data.journey?.view ?? null} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls} reducedMotion={data.preferences.reducedMotion}
       lesson={nextLesson ? { label: formatChildLessonDate(nextLesson.startsAt, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }, data.tenant.timeZone), href: "/kind/agenda" } : null} />
     <details className="child-card"><summary>Mijn les en momenten</summary>
       <aside className="child-today__info">

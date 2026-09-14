@@ -2,7 +2,7 @@
 
 import { ArrowLeft, ArrowRight, Award, Check, List, Minus, Plus, RotateCcw, Sparkles, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
 
 import { PortalDialog } from "../portal-dialog";
 import type { PortalJourneyView, PortalJourneyViewNode } from "@/lib/domain/portal-journey-view";
@@ -17,18 +17,19 @@ const noEvents: readonly JourneyTimelineEvent[] = [];
 const hiddenGuide: JourneyMascotPlacement = { x: 0, y: 0, width: 0, height: 0, mode: "hidden" };
 
 /** Shared parent/child/guarded-preview renderer. Receives no domain mutation capability. */
-export function PortalJourneyScene({ presentation, worldId, model, contextKey, title, lesson, events = noEvents, detailHref, selectedId: requestedId, onSelect, assetUrls, reducedMotion = false }: {
+export function PortalJourneyScene({ presentation, worldId, model, contextKey, title, lesson, events = noEvents, detailHref, selectedId: requestedId, onSelect, assetUrls, reducedMotion = false, collectionControls }: {
   presentation: PortalJourneyPresentationV1; worldId: string; model: PortalJourneyView | null; contextKey: string; title: string;
   events?: readonly JourneyTimelineEvent[];
+  collectionControls?: ReactNode;
   lesson?: { label: string; href: string } | null; detailHref: (id: string) => string;
   selectedId?: string | null; onSelect?: (id: string) => void; assetUrls?: Readonly<Record<string, string>>; reducedMotion?: boolean;
 }) {
   const world = presentation.worlds[worldId];
   if (!world) return <section className={styles.missing}><h1>{title}</h1><p>Er is nog geen wereld gekoppeld aan dit niveau. Je onderdelen blijven beschikbaar bij Ontwikkeling.</p></section>;
-  return <RegisteredScene key={contextKey} {...{ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion }} />;
+  return <RegisteredScene key={contextKey} {...{ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion, collectionControls }} />;
 }
 
-function RegisteredScene({ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion }: Omit<Parameters<typeof PortalJourneyScene>[0], "selectedId"> & { requestedId?: string | null }) {
+function RegisteredScene({ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion, collectionControls }: Omit<Parameters<typeof PortalJourneyScene>[0], "selectedId"> & { requestedId?: string | null }) {
   const world = presentation.worlds[worldId], nodes = model?.nodes ?? [];
   const root = useRef<HTMLElement>(null), viewportRef = useRef<HTMLDivElement>(null), lastTrigger = useRef<HTMLElement | null>(null), listTrigger = useRef<HTMLButtonElement>(null), momentTrigger = useRef<HTMLElement | null>(null);
   const currentGoalId = selectDefaultJourneyNode(nodes.map((node) => ({ ...node, progressPercent: node.progressPercent ?? 0 })))?.id ?? null;
@@ -224,6 +225,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
       </div>)}
     </div> : null}
     <nav className={styles.controls} aria-label="Wereld verkennen" data-rich-obstacle>
+      {collectionControls}
       <button ref={listTrigger} type="button" onClick={() => setListOpen(true)} aria-label={`Alle ${nodes.length} onderdelen`}><List aria-hidden="true" /></button>
       {clusters.length ? <button type="button" onClick={(event) => openMoments(null, event.currentTarget)} aria-label={`Alle ${clusters.reduce((count, entry) => count + entry.events.length, 0)} momenten`}><Award aria-hidden="true" /></button> : null}
       <button type="button" disabled={!nodes.length || selectedIndex === 0} onClick={() => relative(-1)} aria-label="Vorig onderdeel"><ArrowLeft aria-hidden="true" /></button>

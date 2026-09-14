@@ -15,8 +15,8 @@ const expectedFingerprint = "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8ac
 // Additive presentation storage preserves the existing application/schema minimum.
 // Previous applications retain their native contract and rollback compatibility.
 // This V4.2 artifact requires its complete, independently pinned migration lineage.
-const requiredArtifactMigrationVersion = "20260914134016";
-const expectedArtifactFingerprint = "a4aa824fa1e611ac0217354b6f999e372fd686462f7ad278c7c2d4a1868d9b03";
+const requiredArtifactMigrationVersion = "20260914142841";
+const expectedArtifactFingerprint = "bc2f1a0dcb05e2eb73942785f685f47d08a489fb119149199552679433b242c0";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
   .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
   .sort();

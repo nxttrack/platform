@@ -7,6 +7,8 @@ import { analyzeThemePackage } from "../../apps/web/lib/theme/theme-package-adap
 import { validateThemeDeliverySet } from "../../apps/web/lib/theme/theme-release-validation";
 import { testWorldBindingContracts } from "./theme-world-binding-contract";
 import { testDefaultSourceProvenance } from "./theme-default-source-contract";
+import { testCollectionContracts } from "./portal-collection-contract";
+import { parseJourneyPresentation } from "../../apps/web/lib/theme/portal-journey-presentation";
 
 const databaseUrl = process.env.PORTAL_THEME_TEST_DATABASE_URL;
 const apiUrl = process.env.PORTAL_THEME_TEST_API_URL;
@@ -18,8 +20,13 @@ if (!serviceKey || !anonKey) throw new Error("Local test API credentials require
 test("real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts", async () => {
   const manager = randomUUID(), outsider = randomUUID(), version = `99.0.${randomInt(1, 1_000_000_000)}`;
   const bytes = readFileSync(new URL("../fixtures/portal-v42/NXTTRACK-De-Parelroute-Wereld-1-Referentiepakket-1.0.0.zip", import.meta.url));
-  const imported = await analyzeThemePackage(bytes, "reference.zip", { runtimeRelease: version });
-  if (imported.kind !== "draft") throw new Error("Expected real reference package");
+  const source = await analyzeThemePackage(bytes, "reference.zip", { runtimeRelease: version });
+  if (source.kind !== "draft") throw new Error("Expected real reference package");
+  // Explicit fictional cosmetic pool for integration tests; never original Default artwork.
+  const assetId = Object.keys(source.presentation.assets)[0];
+  const imported = { ...source, presentation: parseJourneyPresentation({ ...source.presentation, collectibles: { routeBinding: "none", pool: [
+    { id: "fictional-shell", title: "Fictieve schelp", assetId }, { id: "fictional-stone", title: "Fictieve steen", assetId }
+  ] } }) };
   const assets = await validateThemeDeliverySet(imported.presentation, async (key) => imported.files.get(key)!);
   const key = imported.presentation.themeId;
   for (const [objectKey, body] of imported.files) {
@@ -70,6 +77,7 @@ test("real storage and canonical SQL commands preserve optimistic review, public
     await assert.rejects(client.query("insert into public.portal_theme_asset select theme_key,theme_release,'rich.injected',asset_path,content_hash,mime_type,intrinsic_width,intrinsic_height,is_decorative,created_at,storage_object_key,byte_size from public.portal_theme_asset where theme_key=$1 and theme_release=$2 limit 1", [key, version]), /immutable/);
     await assert.rejects(client.query("update public.portal_theme_revision set document_json='{}' where theme_key=$1 and theme_release=$2", [key, version]), /permission denied|immutable/);
     await testWorldBindingContracts(client, databaseUrl!, manager, outsider, key, version, Object.keys(imported.presentation.worlds)[0]);
+    await testCollectionContracts(client, databaseUrl!, manager, key, version, Object.keys(imported.presentation.worlds)[0]);
     await testDefaultSourceProvenance(client, manager, imported, assets, imported.files, apiUrl!, serviceKey!);
 
     // New application/DB connection reads the persisted release and every exact raster again.
