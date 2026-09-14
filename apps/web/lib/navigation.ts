@@ -98,7 +98,6 @@ export const platformNav: NavItem[] = [
   { href: "/platform/onboarding", label: "Onboarding", icon: "waves" },
   { href: "/platform/themes", label: "Ouderportaalthema’s", icon: "palette" },
   { href: "/platform/offboarding", label: "Offboarding", icon: "settings" },
-  { href: "/platform/test-tools/journey-bot", label: "Journey Bot", icon: "bot" },
   { href: "/platform/uitnodigingen", label: "Uitnodigingen", icon: "userPlus" },
   { href: "/platform/badges", label: "Badge Studio", icon: "award" },
   { href: "/platform/audit", label: "Audit Explorer", icon: "shield" },

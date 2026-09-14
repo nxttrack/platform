@@ -1,0 +1,43 @@
+{
+  "checked_at_utc": "2026-09-13T23:52:58.244911+00:00",
+  "code_head": "07d1e080ecba997eb428655ccc2c56255c323d7d",
+  "canonical_base": "77c22b1cb10833811c0552b3160fcef1844c6368",
+  "units": {
+    "pass": 451,
+    "failed": 0,
+    "skipped": 0
+  },
+  "frozen_install": "PASS",
+  "typecheck": "PASS",
+  "production_build": "PASS",
+  "standalone_packaging": "PASS",
+  "dependency_audit": "PASS: no known vulnerabilities",
+  "migration_audit": "PASS: 149",
+  "rls_audit": "PASS: 251 public tables / 149 migrations",
+  "auth_audit": "PASS",
+  "runtime_environment_audit": "PASS",
+  "repository_truth": "PASS",
+  "lovable_baseline_audit": "PASS",
+  "database": {
+    "staging_upgrade": "PASS: 148 / contract 4",
+    "canonical_fresh": "PASS: 149",
+    "retirement_transaction_contracts": "PASS: 7 scenarios on both staging and canonical schemas",
+    "clean_room": "PASS: actual legacy grant profile",
+    "swim_canon": "PASS",
+    "outbox": "PASS",
+    "onboarding": "PASS",
+    "resumable_import": "PASS: serial retry, 5000 rows; previous resource-contended run failed at chunk16"
+  },
+  "smoke": {
+    "result": "PASS",
+    "passed": 52,
+    "command": "pnpm test:smoke:e2e --workers=2",
+    "earlier_attempts": "Initial missing browser binaries; after install, default parallelism exhausted host disk/process resources. Gates unchanged; all tests rerun with two workers."
+  },
+  "journey_browsers": {
+    "local_full_gate": "NOT PASS: 10 passed, Chromium assertions under host resource pressure and Firefox/WebKit launch/library failures. Serial Chromium recheck and CI evidence pending at this snapshot."
+  },
+  "deployment": false,
+  "manual_bot_tick_by_agent": false,
+  "pr58_modified": false
+}

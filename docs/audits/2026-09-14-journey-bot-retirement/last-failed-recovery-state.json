@@ -1,0 +1,17 @@
+{
+  "query": "SELECT now() checked_at_utc,status,purged_at,deleted_auth_users,cardinality(pending_auth_user_ids) pending_auth_count,deleted_counts_json,(SELECT count(*) FROM public.journey_bot_runs WHERE id=p.run_id) run_exists,(SELECT count(*) FROM public.journey_bot_child_journeys WHERE run_id=p.run_id) child_journeys,(SELECT count(*) FROM public.swim_lifecycle_events WHERE journey_run_id=p.run_id) lifecycle_events,(SELECT count(*) FROM public.participants WHERE journey_run_id=p.run_id) participants FROM public.journey_bot_purge_receipts p WHERE id='622008e0-705b-4f1c-b1c7-45c1a8cbb370';",
+  "result": [
+    {
+      "checked_at_utc": "2026-09-13 23:32:05.28373+00",
+      "status": "pending",
+      "purged_at": null,
+      "deleted_auth_users": 0,
+      "pending_auth_count": 1,
+      "deleted_counts_json": {},
+      "run_exists": 1,
+      "child_journeys": 1,
+      "lifecycle_events": 3,
+      "participants": 1
+    }
+  ]
+}

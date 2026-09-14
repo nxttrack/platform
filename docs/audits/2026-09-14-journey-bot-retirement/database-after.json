@@ -1,0 +1,156 @@
+{
+  "query": "SELECT now() checked_at_utc,\n (SELECT count(*) FROM supabase_migrations.schema_migrations) migrations,\n (SELECT version FROM supabase_migrations.schema_migrations WHERE name='retire_journey_simulation_bot') retirement_version,\n public.runtime_schema_compatibility() compatibility,\n (SELECT jsonb_agg(jsonb_build_object('enabled',enabled,'paused',paused,'next_run_at',next_run_at,'run_until',run_until)) FROM public.journey_bot_configs) configs,\n (SELECT jsonb_object_agg(table_name,row_count) FROM (SELECT 'configs' table_name,count(*) row_count FROM public.journey_bot_configs UNION ALL SELECT 'runs',count(*) FROM public.journey_bot_runs UNION ALL SELECT 'children',count(*) FROM public.journey_bot_child_journeys UNION ALL SELECT 'events',count(*) FROM public.journey_bot_child_events UNION ALL SELECT 'issues',count(*) FROM public.journey_bot_issues UNION ALL SELECT 'purges',count(*) FROM public.journey_bot_purge_receipts) t) retained_row_counts,\n (SELECT jsonb_agg(jsonb_build_object('signature',s,'absent',to_regprocedure(s) IS NULL)) FROM unnest(ARRAY['public.claim_journey_bot_config(uuid,uuid,integer)','app_private.claim_journey_bot_config(uuid,uuid,integer)','public.purge_journey_bot_run(uuid,uuid)','app_private.purge_journey_bot_run(uuid,uuid)']) s) procedures,\n (SELECT jsonb_agg(jsonb_build_object('table',t,'role',r,'writable',has_table_privilege(r,'public.'||t,'insert,update,delete,truncate,references,trigger'),'readable',has_table_privilege(r,'public.'||t,'select'))) FROM unnest(ARRAY['journey_bot_configs','journey_bot_runs','journey_bot_child_journeys','journey_bot_child_events','journey_bot_issues','journey_bot_purge_receipts']) t CROSS JOIN unnest(ARRAY['anon','authenticated','service_role']) r) privileges,\n md5(pg_get_functiondef('app_private.prevent_swim_lifecycle_event_mutation()'::regprocedure)) lifecycle_guard_md5;",
+  "result": [
+    {
+      "checked_at_utc": "2026-09-13 23:45:09.775956+00",
+      "migrations": 148,
+      "retirement_version": "20260913234447",
+      "compatibility": "(4,4e3784649767be4c197db624b33995b3d1502f65,185101b4bfc6c68a98557ae7238c6f3164c139ce910f8a6e7af3bf81b20d70ad,20260823005756)",
+      "configs": [
+        {
+          "paused": true,
+          "enabled": false,
+          "run_until": null,
+          "next_run_at": null
+        }
+      ],
+      "retained_row_counts": {
+        "runs": 50,
+        "events": 10747,
+        "issues": 58,
+        "purges": 1,
+        "configs": 1,
+        "children": 264
+      },
+      "procedures": [
+        {
+          "absent": true,
+          "signature": "public.claim_journey_bot_config(uuid,uuid,integer)"
+        },
+        {
+          "absent": true,
+          "signature": "app_private.claim_journey_bot_config(uuid,uuid,integer)"
+        },
+        {
+          "absent": true,
+          "signature": "public.purge_journey_bot_run(uuid,uuid)"
+        },
+        {
+          "absent": true,
+          "signature": "app_private.purge_journey_bot_run(uuid,uuid)"
+        }
+      ],
+      "privileges": [
+        {
+          "role": "anon",
+          "table": "journey_bot_configs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "anon",
+          "table": "journey_bot_runs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "anon",
+          "table": "journey_bot_child_journeys",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "anon",
+          "table": "journey_bot_child_events",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "anon",
+          "table": "journey_bot_issues",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "anon",
+          "table": "journey_bot_purge_receipts",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_configs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_runs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_child_journeys",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_child_events",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_issues",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "authenticated",
+          "table": "journey_bot_purge_receipts",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_configs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_runs",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_child_journeys",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_child_events",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_issues",
+          "readable": true,
+          "writable": false
+        },
+        {
+          "role": "service_role",
+          "table": "journey_bot_purge_receipts",
+          "readable": true,
+          "writable": false
+        }
+      ],
+      "lifecycle_guard_md5": "fba8736afc1b6c528960824e8f1a0500"
+    }
+  ]
+}

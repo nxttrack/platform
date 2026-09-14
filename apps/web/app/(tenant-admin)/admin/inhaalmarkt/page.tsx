@@ -124,7 +124,7 @@ export default async function AdminMakeupMarketplacePage({ searchParams }: PageP
                           <div className="flex flex-wrap items-center gap-2">
                             <p className="font-bold">{match.participant_name}</p>
                             {match.expires_soon ? <StatusPill tone="warning">Credit verloopt snel</StatusPill> : null}
-                            {match.is_test ? <StatusPill tone="info">Journey Bot · intern</StatusPill> : null}
+                            {match.is_test ? <StatusPill tone="info">Testdata · intern</StatusPill> : null}
                           </div>
                           <p className="mt-1 text-sm text-muted-foreground">Matchscore {match.score}/100 · {Math.round(match.confidence * 100)}% confidence</p>
                         </div>

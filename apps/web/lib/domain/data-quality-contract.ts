@@ -469,9 +469,9 @@ export function detectDataQualityIssues(input: DataQualityInput): DataQualityFin
           entityId: record.id,
           issueType: "journey_bot_marker_drift",
           severity: "critical",
-          title: "Journey Bot-record mist een volledig testlabel",
+          title: "Historisch testrecord mist een volledig testlabel",
           description: "Bron, testvlag en run-ID vormen geen geldige combinatie. Daardoor kan testdata in dashboards of cleanup onbetrouwbaar worden behandeld.",
-          suggestedAction: "Controleer de oorspronkelijke Journey Bot-run en herstel de drie markers samen of archiveer het record gecontroleerd.",
+          suggestedAction: "Laat de historische testmarkeringen controleren; gebruik dit record niet als productiedata.",
           label: record.entityLabel,
           href: hrefForEntity(record.entityType, record.entityLabel),
           evidence: [

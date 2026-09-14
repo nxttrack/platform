@@ -40,7 +40,7 @@ export default async function AdminFollowUpPage({ searchParams }: PageProps) {
       {intakeFilter ? <Link className="inline-flex min-h-10 items-center text-sm font-semibold text-primary hover:underline" href="/admin/opvolging">Toon alle opvolgsignalen</Link> : null}
       <AdminListSurface>
         {visible.length === 0 ? (
-          <EmptyState>Geen live lead of ouder vraagt nu om opvolging. Journey Bot-data is bewust uitgesloten.</EmptyState>
+          <EmptyState>Geen live lead of ouder vraagt nu om opvolging. Testdata is bewust uitgesloten.</EmptyState>
         ) : (
           <div className="grid gap-4">
             {visible.map((item) => (
