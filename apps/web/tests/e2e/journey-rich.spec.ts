@@ -44,9 +44,14 @@ test("rich scene separates orientation, maintains camera on refresh and suppress
   await page.mouse.down(); await page.mouse.move(box.x + box.width / 2 + 100, box.y + box.height / 2 + 50, { steps: 8 }); await page.mouse.up();
   await expect(page.getByRole("complementary", { name: "Onderdeel bekijken" })).toHaveCount(0);
   await expect.poll(() => world.evaluate((element) => getComputedStyle(element).transform)).not.toBe(before);
+  // WebKit can acknowledge pointer-up before the coalesced camera frame is painted.
+  await expect(scene).toHaveAttribute("data-camera-moving", "false");
   const moved = await world.evaluate((element) => getComputedStyle(element).transform);
   // Same route navigation refreshes the server props without replacing the client context.
+  const refreshed = page.waitForResponse(response => response.url().includes("/test-harness/journey-rich?count=7") && response.request().headers()["rsc"] === "1");
   await page.getByRole("button", { name: "Fixture opnieuw laden" }).click();
+  expect((await refreshed).ok()).toBe(true);
+  await expect(scene).toHaveAttribute("data-camera-moving", "false");
   await expect(world).toHaveCSS("transform", moved);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(scene).toHaveAttribute("data-orientation", "portrait");
