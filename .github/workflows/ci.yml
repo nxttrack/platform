@@ -57,9 +57,6 @@ jobs:
       - name: Test every local unit contract
         run: pnpm run test:unit
 
-      - name: Audit Journey Bot foundation
-        run: pnpm run release:audit-journey-bot
-
       - name: Audit runtime environment contract
         run: pnpm run release:audit-runtime-env
 

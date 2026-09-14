@@ -1,4 +1,4 @@
-import { Bot, Clock3, Send, UserCheck } from "lucide-react";
+import { FlaskConical, Clock3, Send, UserCheck } from "lucide-react";
 
 import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { EmptyState } from "@/components/admin/domain-ui";
@@ -142,7 +142,7 @@ export default async function AdminWaitlistPage({ searchParams }: PageProps) {
         <AdminMetricCard icon={UserCheck} label="Te beoordelen" tone="warning" value={pendingIntakes.length} />
         <AdminMetricCard icon={Clock3} label="Op wachtlijst" value={visibleWaitlist.filter((entry) => entry.status === "waiting").length} />
         <AdminMetricCard icon={Send} label="Aanbiedingen" tone="success" value={data.slotOffers.filter((offer) => offer.status === "sent").length} />
-        <AdminMetricCard icon={Bot} label="Journey Bot" tone="info" value={data.waitlistEntries.filter((entry) => entry.is_test).length} />
+        <AdminMetricCard icon={FlaskConical} label="Testdata" tone="info" value={data.waitlistEntries.filter((entry) => entry.is_test).length} />
       </div>
 
       <AdminListSurface>

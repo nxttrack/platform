@@ -98,7 +98,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
 
       <AdminSection
         title="Leadherkomst en conversie"
-        description="First-party CRM-inzicht uit werkelijk verstuurde intakes. Journey Bot-data is uitgesloten; Google Analytics is hiervoor niet de bron van waarheid."
+        description="First-party CRM-inzicht uit werkelijk verstuurde intakes. Testdata is uitgesloten; Google Analytics is hiervoor niet de bron van waarheid."
       >
         <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <ReportMetric label="Leads" value={leadReport.totalLeads.toString()} />

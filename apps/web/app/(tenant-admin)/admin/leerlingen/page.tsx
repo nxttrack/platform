@@ -68,7 +68,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         <AdminMetricCard icon={UsersRound} label="Alle leerlingen" value={data.enrollments.length} />
         <AdminMetricCard icon={UserPlus} label="Actief" tone="success" value={data.enrollments.filter((enrollment) => enrollment.status === "active").length} />
         <AdminMetricCard icon={Clock3} label="Nog niet geplaatst" tone="warning" value={data.enrollments.filter((enrollment) => !data.groupMemberships.some((membership) => membership.enrollment_id === enrollment.id && ["active", "trial"].includes(membership.status))).length} />
-        <AdminMetricCard label="Journey Bot" tone="info" value={data.enrollments.filter((enrollment) => enrollment.is_test).length} />
+        <AdminMetricCard label="Testdata" tone="info" value={data.enrollments.filter((enrollment) => enrollment.is_test).length} />
       </div>
 
       <AdminFilterPills

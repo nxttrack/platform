@@ -67,7 +67,7 @@ export async function buildTenantGrowthReport(tenantId: string, from = oneYearAg
     byProgram: summarizeDimension(rows, (row) => row.program),
     byLocation: summarizeDimension(rows, (row) => row.location),
     byCampaign: summarizeDimension(rows, (row) => row.campaign),
-    evidence: ["Intakecohort op server-ontvangstdatum.", "Plaatsing uitsluitend via relationele intake_conversion_lineage.", "Diploma uitsluitend via uitgegeven certificate_records.", "Journey Bot- en overige testdata uitgesloten.", "Omzet en bezoekersprofielen worden in dit rapport bewust niet afgeleid."]
+    evidence: ["Intakecohort op server-ontvangstdatum.", "Plaatsing uitsluitend via relationele intake_conversion_lineage.", "Diploma uitsluitend via uitgegeven certificate_records.", "Testdata uitgesloten.", "Omzet en bezoekersprofielen worden in dit rapport bewust niet afgeleid."]
   };
 }
 

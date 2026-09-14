@@ -3,6 +3,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sqlFunctionBlocks } from "./sql-function-blocks.mjs";
 
 const rootDir = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = join(rootDir, "supabase", "migrations");
@@ -111,13 +112,12 @@ function checkPolicies() {
 }
 
 function checkSecurityDefiners() {
-  const functionBlocks = normalizedSql.match(/create\s+(?:or\s+replace\s+)?function\s+[\s\S]*?\$\$\s*;/g) ?? [];
+  const functionBlocks = sqlFunctionBlocks(normalizedSql);
 
   for (const block of functionBlocks) {
-    const nameMatch = block.match(/create\s+(?:or\s+replace\s+)?function\s+([a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*)/);
-    const functionName = nameMatch?.[1] ?? "unknown function";
+    const functionName = block.name;
 
-    if (!/\bsecurity\s+definer\b/.test(block)) {
+    if (!block.securityDefiner) {
       continue;
     }
 
@@ -129,7 +129,7 @@ function checkSecurityDefiners() {
       failures.push(`${functionName} is SECURITY DEFINER outside app_private.`);
     }
 
-    if (!/\bset\s+search_path\s*=/.test(block)) {
+    if (!block.explicitSearchPath) {
       failures.push(`${functionName} is SECURITY DEFINER without explicit search_path.`);
     }
 

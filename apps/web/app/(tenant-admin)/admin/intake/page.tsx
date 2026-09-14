@@ -1,4 +1,4 @@
-import { Bot, Inbox, SearchCheck } from "lucide-react";
+import { FlaskConical, Inbox, SearchCheck } from "lucide-react";
 
 import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { IntakeTable } from "@/components/admin/resource-tables";
@@ -53,7 +53,7 @@ export default async function AdminIntakePage({ searchParams }: PageProps) {
       <div className="grid gap-3 sm:grid-cols-3">
         <AdminMetricCard icon={Inbox} label="Aanvragen" value={submissions.length} />
         <AdminMetricCard icon={SearchCheck} label="Nieuw te beoordelen" tone="warning" value={submissions.filter((submission) => submission.status === "received").length} />
-        <AdminMetricCard icon={Bot} label="Journey Bot" tone="info" value={inbox.submissions.filter((submission) => submission.is_test).length} />
+        <AdminMetricCard icon={FlaskConical} label="Testdata" tone="info" value={inbox.submissions.filter((submission) => submission.is_test).length} />
       </div>
 
       <AdminFilterPills current={testFilter} href={(value) => `/admin/intake?testdata=${value}`} items={[{ label: "Alle", value: "all" }, { label: "Verberg testdata", value: "hide" }, { label: "Alleen testdata", value: "only" }]} />
