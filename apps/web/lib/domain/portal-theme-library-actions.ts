@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
-import { createThemeDraftFromImport, getManagedThemeRelease, publishThemeRelease, reviewThemeRelease, saveThemeDraft, saveGuidedThemeMapping } from "@/lib/theme/theme-release-repository";
+import { copyThemeReleaseToNewDraft, createThemeDraftFromImport, getManagedThemeRelease, publishThemeRelease, reviewThemeRelease, restoreThemeDraftRevision, saveThemeDraft, saveGuidedThemeMapping } from "@/lib/theme/theme-release-repository";
 import { readThemeJson } from "@/lib/theme/theme-package-archive";
 import { validateThemeReleaseDocument } from "@/lib/theme/theme-release-validation";
 
@@ -27,7 +27,7 @@ export async function createImportedThemeDraftAction(_: ThemeLibraryActionState,
   try {
     const actor = await manager(), result = await createThemeDraftFromImport(actor, text(form, "importId", 36));
     destination = `/platform/themes/${result.key}/${result.release}`; refresh();
-  } catch (error) { return { error: error instanceof Error ? error.message : "Concept opslaan mislukt" }; }
+  } catch (error) { unstable_rethrow(error); return { error: error instanceof Error ? error.message : "Concept opslaan mislukt" }; }
   redirect(destination);
 }
 
@@ -37,7 +37,7 @@ export async function saveGuidedThemeMappingAction(_: ThemeLibraryActionState, f
     const actor = await manager(); id = text(form, "importId", 36);
     await saveGuidedThemeMapping(actor, id, readThemeJson(Buffer.from(text(form, "mapping", 200_000)), "guided mapping"));
     refresh();
-  } catch (error) { return { error: error instanceof Error ? error.message : "Beeldkoppeling kon niet worden opgeslagen" }; }
+  } catch (error) { unstable_rethrow(error); return { error: error instanceof Error ? error.message : "Beeldkoppeling kon niet worden opgeslagen" }; }
   redirect(`/platform/themes/import?import=${id}`);
 }
 
@@ -56,7 +56,21 @@ export async function updateThemeLibraryAction(_: ThemeLibraryActionState, form:
     } else if (operation === "publish") {
       if (form.get("confirm") !== "on") throw new Error("Bevestig dat deze versie gepubliceerd mag worden");
       await publishThemeRelease(actor, record);
+    } else if (operation === "restore") {
+      if (form.get("confirmRestore") !== "on") throw new Error("Bevestig het herstel als nieuwe conceptrevisie");
+      await restoreThemeDraftRevision(actor, record, Number(text(form, "restoreRevision", 10)));
     } else throw new Error("Onbekende beheerhandeling");
     refresh(); return { saved: operation };
-  } catch (error) { return { error: error instanceof Error ? error.message : "Handeling kon niet worden afgerond" }; }
+  } catch (error) { unstable_rethrow(error); return { error: error instanceof Error ? error.message : "Handeling kon niet worden afgerond" }; }
+}
+
+export async function copyThemeVersionAction(_: ThemeLibraryActionState, form: FormData): Promise<ThemeLibraryActionState> {
+  let destination: string;
+  try {
+    const actor = await manager(), stored = await getManagedThemeRelease(text(form, "themeKey"), text(form, "release"));
+    if (!stored || stored.digest !== text(form, "digest", 64) || String(stored.revision) !== text(form, "revision", 20)) throw new Error("Laad de actuele bronversie voordat je een nieuw concept maakt");
+    const result = await copyThemeReleaseToNewDraft(actor, stored, text(form, "newVersion", 40));
+    refresh(); destination = `/platform/themes/${result.key}/${result.release}`;
+  } catch (error) { unstable_rethrow(error); return { error: error instanceof Error ? error.message : "Nieuwe versie kon niet worden gemaakt" }; }
+  redirect(destination);
 }

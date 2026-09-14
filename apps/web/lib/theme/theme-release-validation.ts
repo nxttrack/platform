@@ -56,12 +56,15 @@ export async function validateThemeDeliverySet(presentation: PortalJourneyPresen
   return rows;
 }
 
-export function assertThemePublishable(presentation: PortalJourneyPresentationV1): void {
+export function assertThemePublishable(presentation: PortalJourneyPresentationV1, provenance?: Record<string, unknown>): void {
   for (const world of Object.values(presentation.worlds)) for (const orientation of ["landscape", "portrait"] as const) {
     const scene = world[orientation];
     if (!scene.layers.back || scene.quality === "fixture-only" || scene.anchorSource.status === "fixture-only") throw new Error("Een technische fixture is geen publiceerbare wereld. Voeg de echte beelden en gecontroleerde ankers toe.");
   }
   if (presentation.themeId !== "nxttrack-default") return;
+  // Only a server adapter verified against the actual original source may assert this provenance.
+  // Editing display JSON or copying reference art cannot manufacture Default source verification.
+  if (provenance?.dialect !== "default-source-1.1") throw new Error("De originele Default-bron is nog niet geverifieerd. Presentatievelden alleen zijn geen bronbewijs.");
   if (presentation.sourcePackageVersion !== "1.1.0" || Object.keys(presentation.worlds).length !== 6) throw new Error("Origineel Default 1.1-pakket met zes werelden vereist");
   for (const expected of defaultJourneyWorlds) {
     const world = presentation.worlds[expected.id]; if (!world) throw new Error(`Default-wereld ontbreekt: ${expected.id}`);

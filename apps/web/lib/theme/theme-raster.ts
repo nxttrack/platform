@@ -6,6 +6,7 @@ export async function inspectThemeRaster(bytes: Buffer, path: string): Promise<O
   if (!bytes.length || bytes.length > themeImportLimits.file) throw new Error("Image exceeds byte budget");
   const input = sharp(bytes, { limitInputPixels: 32 * 1024 * 1024, failOn: "warning", animated: false });
   const meta = await input.metadata();
+  if (meta.orientation && meta.orientation !== 1) throw new Error("Exporteer de afbeelding zonder EXIF-rotatie, zodat de zichtbare afmetingen en ankers overeenkomen");
   const mime = ({ png: "image/png", webp: "image/webp", avif: "image/avif", heif: "image/avif", jpeg: "image/jpeg" } as const)[meta.format as "png" | "webp" | "avif" | "heif" | "jpeg"];
   const extension = path.split(".").at(-1)?.toLowerCase();
   const expected = ({ png: "image/png", webp: "image/webp", avif: "image/avif", jpg: "image/jpeg", jpeg: "image/jpeg" } as const)[extension as "png" | "webp" | "avif" | "jpg" | "jpeg"];

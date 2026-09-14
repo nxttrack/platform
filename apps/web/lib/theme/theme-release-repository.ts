@@ -6,6 +6,9 @@ import { getThemeRelease, portalThemeCatalog } from "./portal-theme-registry";
 import { analyzeThemePackage, mapGuidedThemePackage, type ThemeImportAnalysis, type GuidedThemeAnalysis } from "./theme-package-adapters";
 import { readThemeArchive, themeContentHash, themeImportLimits } from "./theme-package-archive";
 import { assertThemePublishable, validateThemeDeliverySet, validateThemeReleaseDocument, type ThemeReleaseDocument } from "./theme-release-validation";
+import { exportPresentationPackage, importPresentationPackage } from "./theme-presentation-package";
+import { presentationVersion } from "./portal-journey-presentation";
+import { compareThemeDocuments } from "./theme-revision-tools";
 
 export type StoredThemeRelease = ThemeReleaseDocument & {
   status: "draft" | "review" | "published"; revision: number; digest: string; reviewDigest: string | null;
@@ -168,8 +171,35 @@ export async function reviewThemeRelease(actorId: string, stored: StoredThemeRel
 }
 
 export async function publishThemeRelease(actorId: string, stored: StoredThemeRelease) {
-  assertThemePublishable(stored.presentation);
+  assertThemePublishable(stored.presentation, stored.provenance);
   await validateThemeDeliverySet(stored.presentation, readThemeDelivery);
   const result = await createAdminClient().rpc("publish_portal_theme_release", { p_actor: actorId, p_theme: stored.manifest.theme.key, p_release: stored.manifest.theme.release, p_revision: stored.revision, p_digest: stored.digest });
   if (result.error) throw new Error("Publicatie geblokkeerd: de review ontbreekt of de inhoud is gewijzigd.");
+}
+
+export async function getThemeRevisionHistory(stored: StoredThemeRelease) {
+  const result = await createAdminClient().from("portal_theme_revision").select("revision, document_json, content_digest, created_at")
+    .eq("theme_key", stored.manifest.theme.key).eq("theme_release", stored.manifest.theme.release).order("revision", { ascending: false }).limit(100);
+  if (result.error) throw new Error("Revisiegeschiedenis niet beschikbaar");
+  return (result.data ?? []).map((row) => ({ revision: row.revision as number, digest: row.content_digest as string, createdAt: row.created_at as string,
+    differences: compareThemeDocuments(validateThemeReleaseDocument(row.document_json.manifest, row.document_json.presentation), stored) }));
+}
+
+export async function copyThemeReleaseToNewDraft(actorId: string, stored: StoredThemeRelease, newVersion: string) {
+  const release = presentationVersion(newVersion);
+  if (release === stored.manifest.theme.release || await getPublishedThemeRelease(stored.manifest.theme.key, release) || await getManagedThemeRelease(stored.manifest.theme.key, release)) throw new Error("Kies een nieuw, ongebruikt versienummer");
+  const bytes = await exportPresentationPackage(stored, readThemeDelivery);
+  const rebased = await importPresentationPackage(readThemeArchive(bytes), themeContentHash(bytes), release);
+  await storeThemeDeliveries(rebased);
+  await saveThemeDraft(actorId, rebased, 0, { ...stored.provenance, copiedFrom: { themeKey: stored.manifest.theme.key, release: stored.manifest.theme.release, revision: stored.revision, digest: stored.digest } }, rebased.findings);
+  return { key: stored.manifest.theme.key, release };
+}
+
+export async function restoreThemeDraftRevision(actorId: string, stored: StoredThemeRelease, revision: number) {
+  if (stored.status === "published" || !Number.isInteger(revision) || revision < 1 || revision >= stored.revision) throw new Error("Kies een eerdere revisie van dit concept");
+  const result = await createAdminClient().from("portal_theme_revision").select("document_json, content_digest")
+    .eq("theme_key", stored.manifest.theme.key).eq("theme_release", stored.manifest.theme.release).eq("revision", revision).single();
+  if (result.error || !result.data) throw new Error("Revisie niet beschikbaar");
+  const row = result.data, document = validateThemeReleaseDocument(row.document_json.manifest, row.document_json.presentation);
+  return saveThemeDraft(actorId, document, stored.revision, { ...stored.provenance, restoredFrom: { revision, digest: row.content_digest } }, row.document_json.findings);
 }

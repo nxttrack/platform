@@ -246,7 +246,8 @@ begin
     raise exception 'fixture_theme_cannot_be_published' using errcode = '22023';
   end if;
   if p_theme = 'nxttrack-default' and (
-    current_release.presentation_json->>'sourcePackageVersion' is distinct from '1.1.0'
+    current_release.source_provenance_json->>'dialect' is distinct from 'default-source-1.1'
+    or current_release.presentation_json->>'sourcePackageVersion' is distinct from '1.1.0'
     or exists(select 1 from unnest(array['badje-01','badje-02','badje-03','badje-a','badje-b','badje-c']) expected(id)
       where not (current_release.presentation_json->'worlds' ? expected.id))
     or (select count(*) from jsonb_object_keys(current_release.presentation_json->'worlds')) <> 6

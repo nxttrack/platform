@@ -6,6 +6,7 @@ import pg from "pg";
 import { analyzeThemePackage } from "../../apps/web/lib/theme/theme-package-adapters";
 import { validateThemeDeliverySet } from "../../apps/web/lib/theme/theme-release-validation";
 import { testWorldBindingContracts } from "./theme-world-binding-contract";
+import { testDefaultSourceProvenance } from "./theme-default-source-contract";
 
 const databaseUrl = process.env.PORTAL_THEME_TEST_DATABASE_URL;
 const apiUrl = process.env.PORTAL_THEME_TEST_API_URL;
@@ -69,6 +70,7 @@ test("real storage and canonical SQL commands preserve optimistic review, public
     await assert.rejects(client.query("insert into public.portal_theme_asset select theme_key,theme_release,'rich.injected',asset_path,content_hash,mime_type,intrinsic_width,intrinsic_height,is_decorative,created_at,storage_object_key,byte_size from public.portal_theme_asset where theme_key=$1 and theme_release=$2 limit 1", [key, version]), /immutable/);
     await assert.rejects(client.query("update public.portal_theme_revision set document_json='{}' where theme_key=$1 and theme_release=$2", [key, version]), /permission denied|immutable/);
     await testWorldBindingContracts(client, databaseUrl!, manager, outsider, key, version, Object.keys(imported.presentation.worlds)[0]);
+    await testDefaultSourceProvenance(client, manager, imported, assets, imported.files, apiUrl!, serviceKey!);
 
     // New application/DB connection reads the persisted release and every exact raster again.
     const restarted = new pg.Client({ connectionString: databaseUrl }); await restarted.connect();
