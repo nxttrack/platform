@@ -2,7 +2,7 @@ import { Award, CalendarDays, Map, MessageCircleHeart, Sparkles } from "lucide-r
 import Link from "next/link";
 
 import { PortalJourney } from "@/components/portal/journey/portal-journey";
-import { legacyJourneyVisual } from "@/lib/theme/legacy-journey-presentation";
+import { resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
 import { formatChildLessonDate } from "@/lib/date/child-lesson-date";
 import { getChildPortalData } from "@/lib/domain/child-portal";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
@@ -13,7 +13,7 @@ export default async function ChildTodayPage() {
   const data = await getChildPortalData();
   const nextLesson = data.lessons[0] ?? null;
   const theme = data.theme.manifest;
-  const journeyVisual = legacyJourneyVisual(theme);
+  const journeyVisual = await resolvePortalJourneyVisual(data.tenant.id, data.journey?.view ?? null, theme);
   const terminology = getPortalTerminology(theme, data.tenant.sector);
   const latestCompliment = data.journey?.effectiveObservations.find(
     (observation) => observation.childVisible

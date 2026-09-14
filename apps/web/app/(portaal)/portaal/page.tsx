@@ -15,7 +15,7 @@ import type { ReactNode } from "react";
 
 import { PortalJourney } from "@/components/portal/journey/portal-journey";
 import { parentJourneyView } from "@/lib/domain/portal-journey-view";
-import { legacyJourneyVisual } from "@/lib/theme/legacy-journey-presentation";
+import { resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
 import {
   formatLessonDate,
   getActiveEnrollmentForParticipant,
@@ -60,7 +60,7 @@ export default async function ParentHomePage({
   const journey = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
   const nextLesson = selectedParticipant ? getNextLesson(data, selectedParticipant.id) : null;
   const resolvedTheme = data.portalTheme;
-  const journeyVisual = legacyJourneyVisual(resolvedTheme.manifest);
+  const journeyVisual = await resolvePortalJourneyVisual(data.tenant.id, parentJourneyView(journey), resolvedTheme.manifest);
   const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
   const visibleNotifications = data.notifications.filter(
     (notification) =>

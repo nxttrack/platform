@@ -7,9 +7,11 @@ import { getActiveTenant } from "@/lib/domain/core";
 import { selectTenantPortalThemeAction } from "@/lib/domain/portal-theme-control-actions";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
-  getThemeDisplayName,
-  portalThemeCatalog
+  getThemeDisplayName
 } from "@/lib/theme/portal-theme-registry";
+
+import { getPublishedThemeCatalog } from "@/lib/theme/theme-release-repository";
+import { getTenantThemeManagementMode } from "@/lib/theme/portal-theme-server";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,8 @@ export default async function BrandingPage({ searchParams }: { searchParams?: Pr
   const enabledReleases = new Set(
     (availability.data ?? []).map((item) => `${item.theme_key}@${item.theme_release}`)
   );
-  const selectableThemes = portalThemeCatalog.filter((theme) =>
+  const platformManaged = await getTenantThemeManagementMode(tenant.id) === "platform";
+  const selectableThemes = (await getPublishedThemeCatalog()).filter((theme) =>
     enabledReleases.has(`${theme.theme.key}@${theme.theme.release}`)
   );
   const activeThemeKey = assignment.data
@@ -54,7 +57,7 @@ export default async function BrandingPage({ searchParams }: { searchParams?: Pr
           <h2 className="mt-1 text-xl font-bold">Kies een beschikbaar thema</h2>
           <p className="mt-1 text-sm text-muted-foreground">Platformbeheer bepaalt de catalogus. Je keuze gebruikt overal dezelfde routes, functies en gegevens.</p>
         </div>
-        {selectableThemes.length ? (
+        {platformManaged ? <p className="mt-5 rounded-xl border p-4">Je thema en werelden worden door platformbeheer ingesteld.</p> : selectableThemes.length ? (
           <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {selectableThemes.map((theme) => {
               const releaseKey = `${theme.theme.key}@${theme.theme.release}`;
