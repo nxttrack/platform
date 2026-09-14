@@ -209,7 +209,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
   const guideAsset = presentation.guide.mode === "character" ? url(presentation.guide.poses[!quiet && arriving ? "travel" : detailOpen ? "look" : "idle"] ?? presentation.guide.poses.idle) : null;
   const route = useMemo(() => journeyRoutePath(scene), [scene]);
 
-  return <section ref={root} className={styles.scene} aria-label={title} tabIndex={0} onKeyDown={keyDown} data-rich-journey data-world-id={worldId} data-orientation={orientation} data-reduced-motion={quiet} data-node-count={nodes.length}>
+  return <section ref={root} className={styles.scene} aria-label={title} aria-busy={viewport.width === 0 || viewport.height === 0} tabIndex={0} onKeyDown={keyDown} data-rich-journey data-world-id={worldId} data-orientation={orientation} data-reduced-motion={quiet} data-node-count={nodes.length}>
     <div ref={viewportRef} className={styles.viewport} data-dragging={dragging} onPointerDown={startPointer} onPointerMove={movePointer} onPointerUp={stopPointer} onPointerCancel={stopPointer} onLostPointerCapture={() => { pointer.current = null; setDragging(false); }} onClickCapture={(event) => { if (suppressClick.current) { event.preventDefault(); event.stopPropagation(); suppressClick.current = false; } }}>
       <div className={styles.world} data-rich-world style={{ width: scene.intrinsic.width, height: scene.intrinsic.height, transform: `translate3d(${camera.x}px,${camera.y}px,0) scale(${camera.scale})` }}>
         {/* Do not download the SSR fallback orientation before ResizeObserver measures this scene. */}

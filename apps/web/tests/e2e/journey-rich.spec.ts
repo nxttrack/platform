@@ -87,6 +87,7 @@ test("selection leaves the canonical current goal intact and keyboard navigation
   await page.goto("/test-harness/journey-rich?count=48");
   const scene = page.locator("[data-rich-journey]");
   await expect(scene.locator('[data-rich-node="fixture-3"]')).toHaveAttribute("aria-current", "step");
+  await expect(scene).toHaveAttribute("aria-busy", "false");
   await scene.focus(); await page.keyboard.press("End");
   await expect(scene.locator('[data-rich-node="fixture-48"]')).toHaveAttribute("data-selected", "true");
   await expect(scene.locator('[data-rich-node="fixture-48"]')).not.toHaveAttribute("aria-current", "step");
