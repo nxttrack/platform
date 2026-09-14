@@ -1,0 +1,20 @@
+{
+  "jobs": [
+    {
+      "id": "10d83006-c705-4440-8d16-5e85cd841b13",
+      "status": "failed",
+      "tenant_id": "51d03109-9d93-418f-a739-194cdba07b44",
+      "apply_error_code": "chunk_write_failed",
+      "created_by_user_id": "2e045c9f-2244-421e-9edf-097c684d6b4a"
+    }
+  ],
+  "count": 149,
+  "latest": "20260913182211",
+  "contract": {
+    "contract_version": 5,
+    "minimum_compatible_app_sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+    "minimum_schema_fingerprint": "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
+    "required_migration_version": "20260908111450"
+  },
+  "manifest_count": 1
+}

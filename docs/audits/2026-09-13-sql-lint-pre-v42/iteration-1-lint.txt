@@ -1,0 +1,5 @@
+Connecting to remote database...
+Linting schema: app_private
+Linting schema: extensions
+Linting schema: public
+{"results":[{"function":"public.apply_import_chunk","issues":[{"level":"error","message":"column reference \"participant_id\" is ambiguous","statement":{"lineNumber":"187","text":"SQL statement"},"query":{"position":"174","text":"select subscription.id                      from public.subscriptions subscription\n        where subscription.tenant_id = target_tenant_id and subscription.participant_id = participant_id and subscription.status = 'active'\n        order by subscription.created_at, subscription.id limit 1"},"detail":"It could refer to either a PL/pgSQL variable or a table column.","sqlState":"42702"}]}],"message":"db lint"}

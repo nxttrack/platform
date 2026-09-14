@@ -1,0 +1,38 @@
+[
+  {
+    "profile": "staging",
+    "migrations": 151,
+    "contract": {
+      "contract_version": 5,
+      "minimum_compatible_app_sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+      "minimum_schema_fingerprint": "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
+      "required_migration_version": "20260908111450"
+    },
+    "canonical_application_accepts": true,
+    "candidate_application_accepts": true
+  },
+  {
+    "profile": "canonical",
+    "migrations": 151,
+    "contract": {
+      "contract_version": 5,
+      "minimum_compatible_app_sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+      "minimum_schema_fingerprint": "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
+      "required_migration_version": "20260908111450"
+    },
+    "canonical_application_accepts": true,
+    "candidate_application_accepts": true
+  },
+  {
+    "profile": "fresh",
+    "migrations": 151,
+    "contract": {
+      "contract_version": 5,
+      "minimum_compatible_app_sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+      "minimum_schema_fingerprint": "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
+      "required_migration_version": "20260908111450"
+    },
+    "canonical_application_accepts": true,
+    "candidate_application_accepts": true
+  }
+]

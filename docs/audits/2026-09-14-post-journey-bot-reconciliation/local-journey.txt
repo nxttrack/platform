@@ -1,0 +1,1862 @@
+
+> @nxttrack/platform@0.0.0 test:journey:e2e /home/codex/repos/nxttrack-sql-lint-pre-v42
+> pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts --workers=1 --output=/tmp/nxttrack-phase05-evidence/journey-results
+
+[WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+
+Running 39 tests using 1 worker
+
+  ✓   1 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (1.5s)
+  ✓   2 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (2.1s)
+  ✓   3 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1.3s)
+  ✓   4 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (1.8s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1.1s)
+  ✓   6 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.2s)
+  ✓   7 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.0s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1.0s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1.1s)
+  ✓  10 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (3.3s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (2.1m)
+  ✘  12 [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (2.3m)
+  ✓  13 [journey-chromium] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2.5s)
+  ✘  14 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (1ms)
+  ✘  15 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (1ms)
+  ✘  16 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1ms)
+  ✘  17 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (1ms)
+  ✘  18 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1ms)
+  ✘  19 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1ms)
+  ✘  20 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1ms)
+  ✘  21 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1ms)
+  ✘  22 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1ms)
+  ✘  23 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (1ms)
+  ✘  24 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (1ms)
+  ✘  25 [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (1ms)
+  ✘  26 [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2ms)
+  ✘  27 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (1ms)
+  ✘  28 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (1ms)
+  ✘  29 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1ms)
+  ✘  30 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (1ms)
+  ✘  31 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1ms)
+  ✘  32 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1ms)
+  ✘  33 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1ms)
+  ✘  34 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1ms)
+  ✘  35 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1ms)
+  ✘  36 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (1ms)
+  ✘  37 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (1ms)
+  ✘  38 [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (2ms)
+  ✘  39 [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (1ms)
+
+
+  1) [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+
+    Error: page.screenshot: Target crashed
+    Browser logs:
+
+    <launching> /home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-phqIxP --remote-debugging-pipe --no-startup-window
+    <launched> pid=2738254
+    [pid=2738254][err] [0914/033242.670255:WARNING:sandbox/policy/linux/sandbox_linux.cc:404] InitializeSandbox() called with multiple threads in process gpu-process.
+    [pid=2738254][err] [0914/033245.311201:INFO:CONSOLE:1] "Unable to preventDefault inside passive event listener invocation.", source: http://localhost:58200/_next/static/chunks/1lq4em-0qdtu6.js (1)
+    [pid=2738254][err] [0914/033504.526055:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033510.725957:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033515.429877:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033522.524027:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033528.506920:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033535.680423:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033541.555478:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033548.241287:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033554.067956:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033600.419093:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033606.237702:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033612.743623:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033617.418446:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033624.529355:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033630.423400:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033642.471051:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033651.816233:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033700.520815:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033703.322101:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033706.174181:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033708.924862:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033711.684372:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033714.385415:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033715.722430:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033717.098395:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] [0914/033718.498813:INFO:CONSOLE:2] "Uncaught SecurityError: Failed to read the 'localStorage' property from 'Window': Access is denied for this document.", source:  (2)
+    [pid=2738254][err] Received signal 11 SEGV_MAPERR 000000000000
+    [pid=2738254][err] #0 0x5ddf2c59c423 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x2eac422)
+    [pid=2738254][err] #1 0x5ddf30644fa4 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x6f54fa3)
+    [pid=2738254][err] #2 0x710772245330 (/usr/lib/x86_64-linux-gnu/libc.so.6+0x4532f)
+    [pid=2738254][err] #3 0x5ddf30137e17 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x6a47e16)
+    [pid=2738254][err] #4 0x5ddf2f7e8084 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x60f8083)
+    [pid=2738254][err] #5 0x5ddf2b124671 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x1a34670)
+    [pid=2738254][err] #6 0x5ddf2bcfada1 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x260ada0)
+    [pid=2738254][err] #7 0x710772f88585 (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.8000.0+0x5d584)
+    [pid=2738254][err] #8 0x710772fe7977 (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.8000.0+0xbc976)
+    [pid=2738254][err] #9 0x710772f87a23 (/usr/lib/x86_64-linux-gnu/libglib-2.0.so.0.8000.0+0x5ca22)
+    [pid=2738254][err] #10 0x5ddf2b128121 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x1a38120)
+    [pid=2738254][err] #11 0x5ddf2c593609 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x2ea3608)
+    [pid=2738254][err] #12 0x5ddf2c592d21 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x2ea2d20)
+    [pid=2738254][err] #13 0x5ddf2d7f3a7f (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4103a7e)
+    [pid=2738254][err] #14 0x5ddf2d7369a6 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x40469a5)
+    [pid=2738254][err] #15 0x5ddf2d736b26 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4046b25)
+    [pid=2738254][err] #16 0x5ddf2d73589e (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x404589d)
+    [pid=2738254][err] #17 0x5ddf2d736ff9 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4046ff8)
+    [pid=2738254][err] #18 0x5ddf2d73625e (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x404625d)
+    [pid=2738254][err] #19 0x5ddf2e0f4250 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4a0424f)
+    [pid=2738254][err] #20 0x5ddf2e0f5502 (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4a05501)
+    [pid=2738254][err] #21 0x71077222a1ca (/usr/lib/x86_64-linux-gnu/libc.so.6+0x2a1c9)
+    [pid=2738254][err] #22 0x71077222a28b (/usr/lib/x86_64-linux-gnu/libc.so.6+0x2a28a)
+    [pid=2738254][err] #23 0x5ddf2dc2564a (/home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell+0x4535649)
+    [pid=2738254][err]   r8: 0000000000000004  r9: 000000000000fffe r10: 0000000000000000 r11: 0000000000000000
+    [pid=2738254][err]  r12: 0000000000000000 r13: 00001cbc0139c8f0 r14: 00001cbc00de5000 r15: 0000000000000001
+    [pid=2738254][err]   di: 0000000000000000  si: 00005ddf34ba9a40  bp: 00007fff50f173e0  bx: 0000000000000001
+    [pid=2738254][err]   dx: 50d44d0000000000  ax: 00001cbc0046cc30  cx: 00005ddf2ff532f0  sp: 00007fff50f17390
+    [pid=2738254][err]   ip: 00005ddf2ff5343c efl: 0000000000010202 cgf: 002b000000000033 erf: 0000000000000004
+    [pid=2738254][err]  trp: 000000000000000e msk: 0000000000000000 cr2: 0000000000000000
+    [pid=2738254][err] [end of stack trace]
+    Call log:
+      - taking page screenshot
+        - disabled all CSS animations
+      - waiting for fonts to load...
+      - fonts loaded
+
+
+      156 |   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+      157 |   const artifactPath = testInfo.outputPath(`journey-${name}.png`);
+    > 158 |   const image = await page.screenshot({ animations: "disabled", fullPage: false, path: artifactPath });
+          |                            ^
+      159 |   expect(image.byteLength).toBeGreaterThan(10_000);
+      160 |   await testInfo.attach(`journey-${name}`, { contentType: "image/png", path: artifactPath });
+      161 | }
+        at capture (/home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web/tests/e2e/journey-visual.spec.ts:158:28)
+        at /home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web/tests/e2e/journey-visual.spec.ts:90:5
+
+    Error: ENOSPC: no space left on device, write
+
+    attachment #1: journey-nxttrack-default-desktop-initial-current (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-initial-current-59e9ad59bbbe9298cfdc184be1883009e09acdc8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: journey-nxttrack-default-desktop-oldest-completion (image/png) ──────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-oldest-completion-8f1e4358ddf672006913d1177cf07dda5bcecadd.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: journey-nxttrack-default-desktop-milestone-popup (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-milestone-popup-2e7a5551a5b4d8d7bfb80d043f6a831fa9181569.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #4: journey-nxttrack-default-desktop-first-visit-tooltip (image/png) ────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-desktop-first-visit-tooltip-f51edbb7b4bde7670b40b7fbb612fb51b6640c06.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #5: journey-nxttrack-default-mobile-initial-current (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-initial-current-bd7a19ff41f1c950bfeb9458044773be0fc1ffa4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #6: journey-nxttrack-default-mobile-oldest-completion (image/png) ───────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-oldest-completion-0e2822af80df59f559cd89267d0272a9371e6032.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #7: journey-nxttrack-default-mobile-milestone-popup (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-milestone-popup-a681f31ff385df3f023fe104b1c55f95ee0f4297.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #8: journey-nxttrack-default-mobile-first-visit-tooltip (image/png) ─────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-mobile-first-visit-tooltip-3c2cb5c37c922a86cdaa7c55ca2baa81ea933f21.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #9: journey-dolphin-bay-desktop-initial-current (image/png) ─────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-initial-current-a8bb022ffebbebccf9ff4d0ec665a943e11a49fa.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #10: journey-dolphin-bay-desktop-oldest-completion (image/png) ──────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-oldest-completion-b2af90f5e3bcb3277fe1bffbf5f3013e4ce08802.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #11: journey-dolphin-bay-desktop-milestone-popup (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-milestone-popup-67a9897df74964699cfc41665240a02064ff8532.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #12: journey-dolphin-bay-desktop-first-visit-tooltip (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-desktop-first-visit-tooltip-caa6e4f8ba7953b8726cab180a492a091f648b9e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #13: journey-dolphin-bay-mobile-initial-current (image/png) ─────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-initial-current-f09664d7e57bd8e77d70e750005b9a2054561a2f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #14: journey-dolphin-bay-mobile-oldest-completion (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-oldest-completion-337ee6314c9d7491c720d3ee4a6d945131674d7c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #15: journey-dolphin-bay-mobile-milestone-popup (image/png) ─────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-milestone-popup-15cacf16e0da1745955d552f318e528914b1a4a1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #16: journey-dolphin-bay-mobile-first-visit-tooltip (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-mobile-first-visit-tooltip-24b7c2db8b955b2d006eaa98683913c9d1f28b0b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #17: journey-turtle-trails-desktop-initial-current (image/png) ──────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-initial-current-c42bbc4233f9e4d627b78392ac75352e7c1d09b2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #18: journey-turtle-trails-desktop-oldest-completion (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-oldest-completion-9f4767a2014bcb9dd1d7e61e783d17f86b6b76ae.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #19: journey-turtle-trails-desktop-milestone-popup (image/png) ──────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-milestone-popup-49c3a7cf589a76b8b6a4f1e5c00adcf6f948bf5d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #20: journey-turtle-trails-desktop-first-visit-tooltip (image/png) ──────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-desktop-first-visit-tooltip-473da0443c893e4d78ed533f4959bdf51fea8af6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #21: journey-turtle-trails-mobile-initial-current (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-initial-current-0a2f889da153c77899062d5dd461361a29aecbdc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #22: journey-turtle-trails-mobile-oldest-completion (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-oldest-completion-fc39fc880e423500d112bcb5e92d77e50dc0dd4a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #23: journey-turtle-trails-mobile-milestone-popup (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-milestone-popup-f54661d512333d18468f77954574c4c5529bc92b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #24: journey-turtle-trails-mobile-first-visit-tooltip (image/png) ───────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-mobile-first-visit-tooltip-963d76d2dda1c59bd690880eaf10a25eb303c1fe.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #25: journey-polar-splash-desktop-initial-current (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-initial-current-1fc3a640c87e06232ba771eb92201f9636471e00.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #26: journey-polar-splash-desktop-oldest-completion (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-oldest-completion-f500c4b76825b93be358f5fd812bab0488f7d30c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #27: journey-polar-splash-desktop-milestone-popup (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-milestone-popup-e2abb45e35573e37967d90207f9c7592aaef2dcd.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #28: journey-polar-splash-desktop-first-visit-tooltip (image/png) ───────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-desktop-first-visit-tooltip-232d745b2ab9f906e7abc3b3436d1ee5dbdfce06.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #29: journey-polar-splash-mobile-initial-current (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-initial-current-2bd1b26f208fa651ad90f4ab0f0fdc4c0a58f2ee.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #30: journey-polar-splash-mobile-oldest-completion (image/png) ──────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-oldest-completion-4ea6e042867e97d1785421cf629a134200cb1a16.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #31: journey-polar-splash-mobile-milestone-popup (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-milestone-popup-a994c6a06e2b1aea363ef9c890b802b4d3a04719.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #32: journey-polar-splash-mobile-first-visit-tooltip (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-mobile-first-visit-tooltip-cfdac9a81fdb7601a526296caf43ab0ec8626a6f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #33: journey-coastal-explorer-desktop-initial-current (image/png) ───────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-initial-current-241c0acf7dc9dd6f259deb73a66768be39f8d724.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #34: journey-coastal-explorer-desktop-oldest-completion (image/png) ─────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-oldest-completion-f7daa6e5f0c3ed40e631632d166801d5dfeca47f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #35: journey-coastal-explorer-desktop-milestone-popup (image/png) ───────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-milestone-popup-021d8c9ca5c7602423c40572c87ac7ad7c5a0128.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #36: journey-coastal-explorer-desktop-first-visit-tooltip (image/png) ───────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-desktop-first-visit-tooltip-293754bef2a798c0e95c151ab856a00106ad928b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #37: journey-coastal-explorer-mobile-initial-current (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-initial-current-22d455e619b2c64a7e663e6c152105e47ef88fba.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #38: journey-coastal-explorer-mobile-oldest-completion (image/png) ──────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-oldest-completion-a12996ad0f5aea20dca4c6b02d81c4b39223dddb.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #39: journey-coastal-explorer-mobile-milestone-popup (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-milestone-popup-ca1c906c21981a758409dd76a379756042a47d8d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #40: journey-coastal-explorer-mobile-first-visit-tooltip (image/png) ────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-mobile-first-visit-tooltip-daeb68a465076e48e69b1f02e966bd15ac7127ee.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #41: journey-nationaal-zwem-abc-desktop-initial-current (image/png) ─────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-initial-current-a0601ba3f1d1747f96da33d3e8a6df0278db64f5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #42: journey-nationaal-zwem-abc-desktop-oldest-completion (image/png) ───────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-oldest-completion-c5c549d72df3c1494c8548dd088134a3e417ea8e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #43: journey-nationaal-zwem-abc-desktop-milestone-popup (image/png) ─────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-milestone-popup-83cd076535736458ec8e8b950718503eb891d44d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #44: journey-nationaal-zwem-abc-desktop-first-visit-tooltip (image/png) ─────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-desktop-first-visit-tooltip-ee05c006c862370aead084fa1c8f9218b4278b8b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #45: journey-nationaal-zwem-abc-mobile-initial-current (image/png) ──────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-initial-current-82e6f169f07171de4815519f5d7faf553364804e.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #46: journey-nationaal-zwem-abc-mobile-oldest-completion (image/png) ────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-oldest-completion-45a594a55bedea6767bb462397d91594cc8508df.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #47: journey-nationaal-zwem-abc-mobile-milestone-popup (image/png) ──────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-milestone-popup-8af2c4ca0386fa7b63743a461112525eaeb19bcc.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #48: journey-nationaal-zwem-abc-mobile-first-visit-tooltip (image/png) ──────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-mobile-first-visit-tooltip-7fb214d54fa858b58cdeea9bb457f2aed3a0cbc4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #49: journey-ocean-quest-desktop-initial-current (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-initial-current-cb68b8e3113540068079230e1c7f50580ece8f85.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #50: journey-ocean-quest-desktop-oldest-completion (image/png) ──────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-oldest-completion-6d879df380fee5ee438b6480c0f672452ec59f64.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #51: journey-ocean-quest-desktop-milestone-popup (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-milestone-popup-99847b2c42d8dd96b773b90071d50ae85e0ed953.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #52: journey-ocean-quest-desktop-first-visit-tooltip (image/png) ────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-desktop-first-visit-tooltip-ee024879d23b14e0ca6ea6ec4b8e58dec0930ad2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #53: journey-ocean-quest-mobile-initial-current (image/png) ─────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-initial-current-c3ce4852c433178fc4973c4d8f862dd373d3c475.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #54: journey-ocean-quest-mobile-oldest-completion (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-oldest-completion-a6c6d9216c444fc44d61ede91d5785dc3f9b926a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #55: journey-ocean-quest-mobile-milestone-popup (image/png) ─────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-milestone-popup-ffc1a4325b3a9209bd08a3e4e8398012d998108f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #56: journey-ocean-quest-mobile-first-visit-tooltip (image/png) ─────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-first-visit-tooltip-7e5cf25b06105478710243a6a5b3127adbeacee2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #57: journey-ocean-quest-1280x720-selected-doel-1 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-1-c13ef11b02dfe73526cac3494176f508d1ea0e50.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #58: journey-ocean-quest-1280x720-selected-doel-2 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-2-73a82828e100893f13cce9bb05177ed0b2ff28a7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #59: journey-ocean-quest-1280x720-selected-doel-3 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-3-335cc3c8ffb5a7af60702f2f302de1c7609ad333.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #60: journey-ocean-quest-1280x720-selected-doel-4 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-4-7785a0c806a59e1070ff0ea07f8b747abf999102.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #61: journey-ocean-quest-1280x720-selected-doel-5 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-5-f8ae1f359360bea2f60da8656784b3f8c4a4072c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #62: journey-ocean-quest-1280x720-selected-doel-6 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-6-3b245cda17c00e32565c57de87cd765fd5b30dcf.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #63: journey-ocean-quest-1280x720-selected-doel-7 (image/png) ───────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-1280x720-selected-doel-7-67b58894f2a93f210b0a69e1a02a5449930bb074.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #64: journey-ocean-quest-390x844-selected-doel-1 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-1-0be729824c110f8f7ea19196f5951314fa5dffc5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #65: journey-ocean-quest-390x844-selected-doel-2 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-2-0678da3e5b075ca31615bf351fee3e6dd6f2455d.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #66: journey-ocean-quest-390x844-selected-doel-3 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-3-5562860f0fd50ce86d5df96926a6028a61563115.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #67: journey-ocean-quest-390x844-selected-doel-4 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-4-45281dd7b0ca97cd95f83cac93f13974cc6bfabb.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #68: journey-ocean-quest-390x844-selected-doel-5 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-5-c30c7d05003f0bdd64d95ccaf91b1ac1a7d57dd1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #69: journey-ocean-quest-390x844-selected-doel-6 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-6-2322247f7b2aa60595a84662b8e3686561206f0a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #70: journey-ocean-quest-390x844-selected-doel-7 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-390x844-selected-doel-7-6be1f406f7e9e76458a8387886ed9afee519832a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #71: journey-ocean-quest-320x568-selected-doel-1 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-1-890b3e5f23c11c06466e26b411b69d83b359026f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #72: journey-ocean-quest-320x568-selected-doel-2 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-2-51130a07fec2e9cfda7fb9a32a256c10ca99ad6b.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #73: journey-ocean-quest-320x568-selected-doel-3 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-3-40814d17ff4d7248aee1f5fee985958abbfa6724.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #74: journey-ocean-quest-320x568-selected-doel-4 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-4-6072bee71ec4657b080fc5860116c7e93df74e17.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #75: journey-ocean-quest-320x568-selected-doel-5 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-5-873f22c55a16b0d87d48f3ab3065dabfbf97229c.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #76: journey-ocean-quest-320x568-selected-doel-6 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-6-fb7f07f8c8afc7628161ae679b65a50bc254afa4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #77: journey-ocean-quest-320x568-selected-doel-7 (image/png) ────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-320x568-selected-doel-7-ea2891880c66b80d327ec4401525e4ca7f9022f4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #78: journey-dolphin-bay-dense-12-popup (image/png) ─────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-dolphin-bay-dense-12-popup-f9101bebe537f67f50c68eeef4a22269e69f6801.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #79: journey-turtle-trails-dense-12-popup (image/png) ───────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-turtle-trails-dense-12-popup-5c159fcd8b9dcaefa47be2a1e2441f3a703a029a.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #80: journey-polar-splash-dense-12-popup (image/png) ────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-polar-splash-dense-12-popup-b1f5668bdbb0d5fe9e915d63c2e631d84f2533c9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #81: journey-coastal-explorer-dense-12-popup (image/png) ────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-coastal-explorer-dense-12-popup-2b1e10e83be8a1726dd44f22674d3f8033a9b8dd.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #82: journey-ocean-quest-dense-12-popup (image/png) ─────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-dense-12-popup-9222a6e764e9825271f647b3ed52c3193c8f6e99.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #83: journey-nxttrack-default-no-mascot-no-reserved-layer (image/png) ───────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nxttrack-default-no-mascot-no-reserved-layer-8bdc59336e3e1134e8edde69a3c1dfe306918c16.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #84: journey-nationaal-zwem-abc-no-mascot-no-reserved-layer (image/png) ─────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-nationaal-zwem-abc-no-mascot-no-reserved-layer-4d3a499adb96d10ba0c3c8a3c25f8fbbc05d9393.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #85: journey-ocean-quest-mobile-landscape (image/png) ───────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/attachments/journey-ocean-quest-mobile-landscape-45a1fa5b2d45bba268f815f306e72e0e8e6e856f.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #86: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #87: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #88: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-3.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #89: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-4.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #90: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-5.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #91: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-6.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #92: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-7.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #93: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-8.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #94: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-9.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #95: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-10.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #96: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-11.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #97: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-12.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #98: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-13.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #99: screenshot (image/png) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-14.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #100: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-15.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #101: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-16.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #102: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-17.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #103: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-18.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #104: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-19.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #105: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-20.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #106: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-21.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #107: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-22.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #108: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-23.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #109: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-24.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #110: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-25.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #111: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-26.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #112: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-27.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #113: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-28.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #114: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-29.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #115: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-30.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #116: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-31.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #117: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-32.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #118: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-33.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #119: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-34.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #120: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-35.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #121: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-36.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #122: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-37.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #123: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-38.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #124: screenshot (image/png) ────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/test-failed-39.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/error-context.md
+
+  2) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  6) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  8) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  9) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  10) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  11) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  13) [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  14) [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Please install them with the following command:      ║
+    ║                                                      ║
+    ║     sudo pnpm exec playwright install-deps           ║
+    ║                                                      ║
+    ║ Alternatively, use apt:                              ║
+    ║     sudo apt-get install libxcursor1\                ║
+    ║         libgtk-3-0t64\                               ║
+    ║         libpangocairo-1.0-0\                         ║
+    ║         libcairo-gobject2\                           ║
+    ║         libgdk-pixbuf-2.0-0                          ║
+    ║                                                      ║
+    ║ <3 Playwright Team                                   ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-firefox/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-firefox/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-firefox/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  15) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-alle-30-o-320ba-rent-staat-los-van-selected-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  16) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-mouse-dra-f29d8-ige-route-zonder-drag-click-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  17) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-touch-axi-8b3e6-werkt-een-horizontale-swipe-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  18) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-i-b11c9-updeeplinks-zijn-child-safe-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  19) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-popupinho-69c3a-risebadge-en-herstelt-focus-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  20) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-live-even-e930d--selectie-en-geopende-popup-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  21) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-tooltip-e-5d35c-neer-storage-geblokkeerd-is-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  22) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-dezelfde--81ad4-eswitch-geen-tweede-tooltip-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  23) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-lege-onbe-eb23b-ry-loze-states-falen-veilig-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  24) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-axe-48px--9b088-ascot-recipes-blijven-groen-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  25) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-timeline-630-echte-bc99b--minimaal-12px-vrije-ruimte-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  26) [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27) [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+
+    Error: browserType.launch:
+    ╔══════════════════════════════════════════════════════╗
+    ║ Host system is missing dependencies to run browsers. ║
+    ║ Missing libraries:                                   ║
+    ║     libgtk-4.so.1                                    ║
+    ║     libpangocairo-1.0.so.0                           ║
+    ║     libgdk_pixbuf-2.0.so.0                           ║
+    ║     libcairo-gobject.so.2                            ║
+    ║     libgraphene-1.0.so.0                             ║
+    ║     liblcms2.so.2                                    ║
+    ║     libevent-2.1.so.7                                ║
+    ║     libopus.so.0                                     ║
+    ║     libgstallocators-1.0.so.0                        ║
+    ║     libgstapp-1.0.so.0                               ║
+    ║     libgstpbutils-1.0.so.0                           ║
+    ║     libgstaudio-1.0.so.0                             ║
+    ║     libgsttag-1.0.so.0                               ║
+    ║     libgstvideo-1.0.so.0                             ║
+    ║     libgstgl-1.0.so.0                                ║
+    ║     libgstcodecparsers-1.0.so.0                      ║
+    ║     libgstfft-1.0.so.0                               ║
+    ║     libflite.so.1                                    ║
+    ║     libflite_usenglish.so.1                          ║
+    ║     libflite_cmu_grapheme_lang.so.1                  ║
+    ║     libflite_cmu_grapheme_lex.so.1                   ║
+    ║     libflite_cmu_indic_lang.so.1                     ║
+    ║     libflite_cmu_indic_lex.so.1                      ║
+    ║     libflite_cmulex.so.1                             ║
+    ║     libflite_cmu_time_awb.so.1                       ║
+    ║     libflite_cmu_us_awb.so.1                         ║
+    ║     libflite_cmu_us_kal16.so.1                       ║
+    ║     libflite_cmu_us_kal.so.1                         ║
+    ║     libflite_cmu_us_rms.so.1                         ║
+    ║     libflite_cmu_us_slt.so.1                         ║
+    ║     libwebpdemux.so.2                                ║
+    ║     libavif.so.16                                    ║
+    ║     libharfbuzz-icu.so.0                             ║
+    ║     libepoxy.so.0                                    ║
+    ║     libwebpmux.so.3                                  ║
+    ║     libwayland-server.so.0                           ║
+    ║     libwayland-egl.so.1                              ║
+    ║     libwayland-client.so.0                           ║
+    ║     libmanette-0.2.so.0                              ║
+    ║     libenchant-2.so.2                                ║
+    ║     libhyphen.so.0                                   ║
+    ║     libsecret-1.so.0                                 ║
+    ║     libwoff2dec.so.1.0.2                             ║
+    ║     libGLESv2.so.2                                   ║
+    ║     libx264.so                                       ║
+    ╚══════════════════════════════════════════════════════╝
+
+    Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-webkit/error-context.md
+
+    attachment #2: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-webkit/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-journey-pro-ee235-interaction-latency-budgets-journey-webkit/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  27 failed
+    [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+    [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+    [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+  12 passed (5.0m)
+undefined
+/home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.journey.config.ts --workers=1 --output=/tmp/nxttrack-phase05-evidence/journey-results
+ ELIFECYCLE  Command failed with exit code 1.

@@ -12,12 +12,22 @@ const sourceCheckout = process.env.GITHUB_WORKSPACE || root;
 const minimumAppSha = "541fe5fd6cee083cb809eef236382cfd2d519ed3";
 const requiredMigrationVersion = "20260908111450";
 const expectedFingerprint = "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba";
+// Body-only SQL corrections preserve the 147-migration minimum handshake so
+// the canonical previous application can roll back safely. This artifact still
+// requires its complete, independently pinned migration lineage.
+const requiredArtifactMigrationVersion = "20260914012126";
+const expectedArtifactFingerprint = "a76d447721af7264e4aa7984fb3172727baa68f45f03c07d01eb4d6567a957ec";
 const versions = readdirSync(new URL("../../supabase/migrations/", import.meta.url))
   .flatMap((file) => /^([0-9]{14})_.*\.sql$/.exec(file)?.[1] ?? [])
   .sort();
 const localFingerprint = createHash("sha256").update(versions.join("\n")).digest("hex");
 
-if (versions.at(-1) !== requiredMigrationVersion || localFingerprint !== expectedFingerprint) {
+const minimumFingerprint = createHash("sha256")
+  .update(versions.filter((version) => version <= requiredMigrationVersion).join("\n"))
+  .digest("hex");
+if (versions.at(-1) !== requiredArtifactMigrationVersion
+  || localFingerprint !== expectedArtifactFingerprint
+  || minimumFingerprint !== expectedFingerprint) {
   throw new Error("Local migration lineage does not match the runtime schema contract.");
 }
 
@@ -54,7 +64,7 @@ try {
     || contract.required_migration_version !== requiredMigrationVersion) {
     throw new Error("Database runtime schema contract does not match this application artifact.");
   }
-  console.log(`[release:schema] PASS migrations=${versions.length} fingerprint=${expectedFingerprint} minimumAppSha=${minimumAppSha}`);
+  console.log(`[release:schema] PASS migrations=${versions.length} fingerprint=${localFingerprint} minimumSchemaFingerprint=${expectedFingerprint} minimumAppSha=${minimumAppSha}`);
 } finally {
   await client.end();
 }

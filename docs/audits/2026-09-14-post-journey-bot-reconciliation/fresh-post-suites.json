@@ -1,0 +1,798 @@
+{
+  "profile": "fresh",
+  "label": "post-suites",
+  "migration_count": 151,
+  "history": [
+    {
+      "version": "20260623222604",
+      "name": "identity_boundary"
+    },
+    {
+      "version": "20260624103000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624113000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624123000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624124823",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624132927",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624154647",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624160304",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624162125",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624163501",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624172043",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624180636",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624182824",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260624234957",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625002003",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625003245",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625012653",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625014622",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625015503",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625073048",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625080954",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625084636",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625102000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625113000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625123000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625124500",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625130000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625131000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625132000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625132123",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625134225",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625140136",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625142335",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625144350",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625151113",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625153837",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625160031",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625162949",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625165527",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625170953",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625184526",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625191853",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625202802",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260625234654",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260626005132",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260626093000",
+      "name": "legacy_remote_history"
+    },
+    {
+      "version": "20260707152802",
+      "name": "phase_3_auth_flows"
+    },
+    {
+      "version": "20260707160455",
+      "name": "phase_4_core_domain_model"
+    },
+    {
+      "version": "20260707162139",
+      "name": "phase_5_public_tenant_site_intake"
+    },
+    {
+      "version": "20260707163627",
+      "name": "phase_6_waitlist_placement_slot_offers"
+    },
+    {
+      "version": "20260707165845",
+      "name": "phase_7_parent_portal_self_service"
+    },
+    {
+      "version": "20260707171704",
+      "name": "phase_8_instructor_shell_attendance_progress"
+    },
+    {
+      "version": "20260707173644",
+      "name": "phase_9_progress_badges_notifications"
+    },
+    {
+      "version": "20260707180102",
+      "name": "phase_10_graduation_diploma_vault"
+    },
+    {
+      "version": "20260707181731",
+      "name": "phase_11_manual_payments_subscriptions"
+    },
+    {
+      "version": "20260707195442",
+      "name": "phase_12_admin_operations"
+    },
+    {
+      "version": "20260707202417",
+      "name": "phase_13_hardening_auth_service_only_policies"
+    },
+    {
+      "version": "20260707232548",
+      "name": "phase_13_platform_email_settings"
+    },
+    {
+      "version": "20260708235317",
+      "name": "phase_17_communication_storage_documents"
+    },
+    {
+      "version": "20260709002203",
+      "name": "phase_18_planning_capacity_catchup"
+    },
+    {
+      "version": "20260709005834",
+      "name": "phase_20_billing_automation_boundary"
+    },
+    {
+      "version": "20260720232500",
+      "name": "reload_postgrest_schema"
+    },
+    {
+      "version": "20260722023000",
+      "name": "phase_24_force_rls_owner_hardening"
+    },
+    {
+      "version": "20260723120000",
+      "name": "phase_25_premium_operations"
+    },
+    {
+      "version": "20260723140000",
+      "name": "phase_26_planning_undo"
+    },
+    {
+      "version": "20260723153000",
+      "name": "phase_27_billing_activation_hardening"
+    },
+    {
+      "version": "20260723211500",
+      "name": "phase_28_mollie_mandate_collection_lifecycle"
+    },
+    {
+      "version": "20260723213000",
+      "name": "phase_28_incasso_consent_delivery_audit"
+    },
+    {
+      "version": "20260723214500",
+      "name": "phase_28_incasso_terminal_completion"
+    },
+    {
+      "version": "20260723220000",
+      "name": "phase_29_refunds_chargebacks_dunning"
+    },
+    {
+      "version": "20260723221000",
+      "name": "phase_29_refund_reservation"
+    },
+    {
+      "version": "20260723221500",
+      "name": "phase_29_refund_reservation_resync"
+    },
+    {
+      "version": "20260724090000",
+      "name": "sprint_31_safe_intake_onboarding_import_offboarding"
+    },
+    {
+      "version": "20260724120000",
+      "name": "dynamic_public_intake_wizard"
+    },
+    {
+      "version": "20260724170000",
+      "name": "journey_simulation_bot"
+    },
+    {
+      "version": "20260724183000",
+      "name": "journey_bot_trustworthy_outcomes"
+    },
+    {
+      "version": "20260725100000",
+      "name": "privacy_first_analytics_lead_attribution"
+    },
+    {
+      "version": "20260725150000",
+      "name": "secure_invitation_lifecycle"
+    },
+    {
+      "version": "20260725160000",
+      "name": "guardian_view_only_enforcement"
+    },
+    {
+      "version": "20260725170000",
+      "name": "secure_slot_offer_verification"
+    },
+    {
+      "version": "20260725180000",
+      "name": "offboarding_erasure_lifecycle"
+    },
+    {
+      "version": "20260725190000",
+      "name": "content_classification_and_malware"
+    },
+    {
+      "version": "20260725200000",
+      "name": "journey_bot_staging_boundary"
+    },
+    {
+      "version": "20260725201000",
+      "name": "journey_bot_complete_purge"
+    },
+    {
+      "version": "20260726120000",
+      "name": "ui_saved_views_platform_scope"
+    },
+    {
+      "version": "20260726123000",
+      "name": "ui_reversible_bulk_operations"
+    },
+    {
+      "version": "20260726150000",
+      "name": "platform_tenant_administration_audit"
+    },
+    {
+      "version": "20260726163000",
+      "name": "invitation_acceptance_rpc_bridge"
+    },
+    {
+      "version": "20260726210000",
+      "name": "data_quality_smart_signals"
+    },
+    {
+      "version": "20260726223000",
+      "name": "predictive_operations_placement"
+    },
+    {
+      "version": "20260726224500",
+      "name": "confirmed_direct_placement"
+    },
+    {
+      "version": "20260726230000",
+      "name": "learning_capacity_intelligence"
+    },
+    {
+      "version": "20260727090000",
+      "name": "family_crm_intelligence"
+    },
+    {
+      "version": "20260727091000",
+      "name": "makeup_marketplace_booking"
+    },
+    {
+      "version": "20260727092000",
+      "name": "makeup_decision_and_attendance"
+    },
+    {
+      "version": "20260727100000",
+      "name": "automation_recipe_gallery"
+    },
+    {
+      "version": "20260727101000",
+      "name": "privacy_safe_participant_media"
+    },
+    {
+      "version": "20260727101100",
+      "name": "private_storage_clean_read_enforcement"
+    },
+    {
+      "version": "20260727120000",
+      "name": "communication_hub"
+    },
+    {
+      "version": "20260727180000",
+      "name": "premium_badges"
+    },
+    {
+      "version": "20260728100000",
+      "name": "badge_studio_image_assets"
+    },
+    {
+      "version": "20260728110000",
+      "name": "tenant_site_page_cms"
+    },
+    {
+      "version": "20260729100000",
+      "name": "premium_crm_pipeline"
+    },
+    {
+      "version": "20260729110000",
+      "name": "empty_seat_recovery"
+    },
+    {
+      "version": "20260729120000",
+      "name": "daily_operational_cockpit"
+    },
+    {
+      "version": "20260729130000",
+      "name": "instructor_replacement_assistant"
+    },
+    {
+      "version": "20260729140000",
+      "name": "explainable_retention_signals"
+    },
+    {
+      "version": "20260729150000",
+      "name": "tenant_site_cms_2"
+    },
+    {
+      "version": "20260729160000",
+      "name": "lesson_plan_assistant"
+    },
+    {
+      "version": "20260729170000",
+      "name": "platform_tenant_health"
+    },
+    {
+      "version": "20260729180000",
+      "name": "premium_engagement_foundation"
+    },
+    {
+      "version": "20260729190000",
+      "name": "audit_support_and_dashboard_preferences"
+    },
+    {
+      "version": "20260729200000",
+      "name": "seasonal_planning"
+    },
+    {
+      "version": "20260729210000",
+      "name": "management_summary_drafts"
+    },
+    {
+      "version": "20260729220000",
+      "name": "shadow_entitlements"
+    },
+    {
+      "version": "20260731100000",
+      "name": "badge_studio_completion"
+    },
+    {
+      "version": "20260801120000",
+      "name": "parent_portal_theme_engine_v2_1"
+    },
+    {
+      "version": "20260802120000",
+      "name": "swim_school_canon_foundation"
+    },
+    {
+      "version": "20260802130000",
+      "name": "canonical_assessments_and_progress"
+    },
+    {
+      "version": "20260802140000",
+      "name": "versioned_badge_batches"
+    },
+    {
+      "version": "20260802150000",
+      "name": "curriculum_wizard_and_migrations"
+    },
+    {
+      "version": "20260802160000",
+      "name": "swim_progress_command_api"
+    },
+    {
+      "version": "20260802170000",
+      "name": "transition_carryover_commands"
+    },
+    {
+      "version": "20260802180000",
+      "name": "badge_share_capability_events"
+    },
+    {
+      "version": "20260802190000",
+      "name": "structured_group_planning"
+    },
+    {
+      "version": "20260802200000",
+      "name": "immutable_billing_documents"
+    },
+    {
+      "version": "20260802210000",
+      "name": "holidays_and_paid_offerings"
+    },
+    {
+      "version": "20260802220000",
+      "name": "rolling_analytics_and_capacity_forecasts"
+    },
+    {
+      "version": "20260802230000",
+      "name": "native_mobile_commands"
+    },
+    {
+      "version": "20260803190000",
+      "name": "parent_portal_six_theme_pack_v3"
+    },
+    {
+      "version": "20260811120000",
+      "name": "parent_child_portal_session_security"
+    },
+    {
+      "version": "20260811130000",
+      "name": "ocean_quest_seventh_theme"
+    },
+    {
+      "version": "20260811140000",
+      "name": "child_safe_curriculum_media_contract"
+    },
+    {
+      "version": "20260811180455",
+      "name": "portal_theme_public_rpc_wrappers"
+    },
+    {
+      "version": "20260812120000",
+      "name": "stable_journey_completion_sequence"
+    },
+    {
+      "version": "20260822002234",
+      "name": "production_email_outbox"
+    },
+    {
+      "version": "20260822004329",
+      "name": "atomic_tenant_provisioning"
+    },
+    {
+      "version": "20260822010612",
+      "name": "atomic_core_onboarding_writes"
+    },
+    {
+      "version": "20260822012255",
+      "name": "resumable_import_apply_rollback"
+    },
+    {
+      "version": "20260822225251",
+      "name": "production_readiness_certification"
+    },
+    {
+      "version": "20260822233930",
+      "name": "restrict_platform_only_tenant_mutations"
+    },
+    {
+      "version": "20260822235045",
+      "name": "canonical_email_outbox_idempotency_keys"
+    },
+    {
+      "version": "20260823000225",
+      "name": "runtime_schema_compatibility_contract"
+    },
+    {
+      "version": "20260823001941",
+      "name": "secure_default_function_grants"
+    },
+    {
+      "version": "20260823002720",
+      "name": "close_prebound_import_identity_gap"
+    },
+    {
+      "version": "20260823005756",
+      "name": "close_service_ledger_default_grants"
+    },
+    {
+      "version": "20260908111450",
+      "name": "production_readiness_recertification"
+    },
+    {
+      "version": "20260913232635",
+      "name": "fix_journey_bot_purge_dependency_order"
+    },
+    {
+      "version": "20260913234447",
+      "name": "retire_journey_simulation_bot"
+    },
+    {
+      "version": "20260914012125",
+      "name": "pre_v42_sql_identifier_ambiguities"
+    },
+    {
+      "version": "20260914012126",
+      "name": "bind_import_payment_enrollment"
+    }
+  ],
+  "artifact_fingerprint": "a76d447721af7264e4aa7984fb3172727baa68f45f03c07d01eb4d6567a957ec",
+  "contract": [
+    {
+      "contract_version": 5,
+      "minimum_compatible_app_sha": "541fe5fd6cee083cb809eef236382cfd2d519ed3",
+      "minimum_schema_fingerprint": "2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba",
+      "required_migration_version": "20260908111450"
+    }
+  ],
+  "functions": [
+    {
+      "signature": "app_private.execute_due_portal_theme_schedules(integer)",
+      "security_definer": true,
+      "settings": [
+        "search_path=public, app_private, pg_temp"
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION app_private.execute_due_portal_theme_schedules(target_limit integer DEFAULT 50)\n RETURNS TABLE(schedule_id uuid, assignment_id uuid, status text)\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'app_private', 'pg_temp'\nAS $function$\ndeclare\n  scheduled public.tenant_portal_theme_schedule%rowtype;\n  activated_assignment_id uuid;\nbegin\n  for scheduled in\n    select schedule.*\n    from public.tenant_portal_theme_schedule as schedule\n    where schedule.status = 'scheduled' and schedule.scheduled_for <= now()\n    order by schedule.scheduled_for\n    for update skip locked\n    limit greatest(1, least(target_limit, 200))\n  loop\n    begin\n      activated_assignment_id := app_private.activate_tenant_portal_theme(\n        scheduled.tenant_id,\n        scheduled.theme_key,\n        scheduled.theme_release,\n        scheduled.created_by_platform_admin_id,\n        scheduled.reason,\n        scheduled.ticket_reference,\n        scheduled.id::text,\n        'activated'\n      );\n      update public.tenant_portal_theme_schedule\n      set status = 'executed', executed_at = now()\n      where id = scheduled.id;\n      schedule_id := scheduled.id;\n      assignment_id := activated_assignment_id;\n      status := 'executed';\n      return next;\n    exception when others then\n      update public.tenant_portal_theme_schedule\n      set status = 'failed'\n      where id = scheduled.id;\n      schedule_id := scheduled.id;\n      assignment_id := null;\n      status := 'failed';\n      return next;\n    end;\n  end loop;\nend;\n$function$\n"
+    },
+    {
+      "signature": "app_private.prevent_swim_lifecycle_event_mutation()",
+      "security_definer": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION app_private.prevent_swim_lifecycle_event_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\nbegin\n  raise exception 'Swim lifecycle events are append-only';\nend;\n$function$\n"
+    },
+    {
+      "signature": "app_private.undo_season_blackout_v3(uuid,uuid,uuid)",
+      "security_definer": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION app_private.undo_season_blackout_v3(target_tenant_id uuid, target_blackout_id uuid, actor_user_id uuid)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public', 'pg_temp'\nAS $function$\ndeclare\n  changed_count integer := 0;\nbegin\n  perform app_private.assert_swim_command_actor(actor_user_id);\n  if not app_private.user_has_swim_permission(actor_user_id, target_tenant_id, 'holiday.manage') then\n    raise exception 'Insufficient holiday management permission';\n  end if;\n  perform 1 from public.season_blackout_periods\n  where tenant_id = target_tenant_id and id = target_blackout_id\n  for update;\n  if not found then raise exception 'Blackout not found in tenant'; end if;\n\n  -- Release this closure under its row lock before the booking trigger validates\n  -- restored sessions. Any later error rolls this status change back as well.\n  update public.season_blackout_periods\n  set status = 'closed'\n  where tenant_id = target_tenant_id\n    and id = target_blackout_id\n    and status = 'published';\n\n  update public.sessions session\n  set status = exception.before_status\n  from public.schedule_occurrence_exceptions exception\n  where exception.tenant_id = target_tenant_id\n    and exception.blackout_id = target_blackout_id\n    and exception.session_id = session.id\n    and exception.status = 'applied'\n    and session.status = exception.effective_status;\n  get diagnostics changed_count = row_count;\n  update public.schedule_occurrence_exceptions\n  set status = 'reversed', reversed_at = now(), reversed_by_user_id = actor_user_id\n  where tenant_id = target_tenant_id\n    and blackout_id = target_blackout_id\n    and status = 'applied';\n  update public.season_schedule_change_events\n  set status = 'undone', undone_at = now(), undone_by_user_id = undo_season_blackout_v3.actor_user_id\n  where tenant_id = target_tenant_id\n    and blackout_id = target_blackout_id\n    and status = 'applied';\n  update public.season_financial_adjustment_proposals\n  set status = 'dismissed', reviewed_at = now(), reviewed_by_user_id = actor_user_id\n  where tenant_id = target_tenant_id\n    and blackout_id = target_blackout_id\n    and status = 'proposed';\n  return changed_count;\nend;\n$function$\n"
+    },
+    {
+      "signature": "apply_import_chunk(uuid,uuid,uuid,uuid,jsonb)",
+      "security_definer": false,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.apply_import_chunk(target_actor_user_id uuid, target_tenant_id uuid, target_job_id uuid, target_claim_token uuid, target_rows jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SET search_path TO 'public', 'pg_temp'\nAS $function$\n<<import_chunk>>\ndeclare\n  job public.import_jobs%rowtype;\n  import_row public.import_rows%rowtype;\n  command jsonb;\n  data jsonb;\n  record_type text;\n  created_target_id uuid;\n  invitation_id uuid;\n  outbox_id uuid;\n  guardian_user_id uuid;\n  program_id uuid;\n  stage_id uuid;\n  resource_id uuid;\n  participant_id uuid;\n  subscription_id uuid;\n  enrollment_id uuid;\n  payment_status text;\n  capacity_value integer;\n  processed_count integer := 0;\n  invitations jsonb := '[]'::jsonb;\n  failed_row_number integer;\n  failure_marker text := current_setting('nxttrack.test_import_failure', true);\nbegin\n  if jsonb_typeof(target_rows) <> 'array'\n    or jsonb_array_length(target_rows) < 1\n    or jsonb_array_length(target_rows) > 250\n  then raise exception 'Apply chunk must contain between 1 and 250 rows'; end if;\n  if not exists (\n    select 1 from public.tenant_memberships membership\n    where membership.tenant_id = target_tenant_id and membership.user_id = target_actor_user_id\n      and membership.status = 'active' and membership.role in ('tenant_owner', 'tenant_admin')\n  ) then raise exception 'Tenant administrator required'; end if;\n\n  select * into job from public.import_jobs candidate\n  where candidate.tenant_id = target_tenant_id and candidate.id = target_job_id\n  for update;\n  if job.id is null or job.status <> 'applying' or job.apply_claim_token <> target_claim_token\n    or job.apply_lease_expires_at <= now()\n  then raise exception 'Import apply claim is invalid or expired'; end if;\n\n  begin\n    for command in select value from jsonb_array_elements(target_rows)\n    loop\n      select * into import_row from public.import_rows candidate\n      where candidate.tenant_id = target_tenant_id and candidate.import_job_id = target_job_id\n        and candidate.id = (command ->> 'rowId')::uuid\n      for update;\n      if import_row.id is null then raise exception 'Import row outside claimed job'; end if;\n      if import_row.validation_status = 'applied' then continue; end if;\n      if import_row.validation_status <> 'valid' then raise exception 'Only valid import rows can be applied'; end if;\n      failed_row_number := import_row.row_number;\n      data := import_row.normalized_data;\n      record_type := data ->> 'record_type';\n      if record_type not in ('participants', 'guardians', 'groups', 'enrollments', 'payments') then\n        raise exception 'Unsupported import record type';\n      end if;\n\n      if record_type = 'guardians' then\n        if jsonb_typeof(command -> 'invitation') <> 'object'\n          or lower(trim(command #>> '{invitation,email}')) <> lower(trim(data ->> 'email'))\n          or command #>> '{invitation,codeHash}' !~ '^[a-f0-9]{64}$'\n          or jsonb_typeof(command #> '{invitation,message}') <> 'object'\n        then raise exception 'Guardian invitation command is invalid'; end if;\n        insert into public.auth_invitations (\n          email, tenant_id, role, invited_by_user_id, status, delivery_status,\n          expires_at, code_hash, requires_password_setup, invitee_name, identity_status,\n          import_job_id, import_row_id\n        ) values (\n          lower(trim(data ->> 'email')), target_tenant_id, 'parent', target_actor_user_id,\n          'pending', 'pending', (command #>> '{invitation,expiresAt}')::timestamptz,\n          command #>> '{invitation,codeHash}', false, trim(data ->> 'full_name'), 'pending',\n          target_job_id, import_row.id\n        ) returning id into invitation_id;\n\n        select public.enqueue_email_outbox(\n          target_tenant_id, 'auth.invitation',\n          'import:' || target_job_id::text || ':' || import_row.id::text,\n          (command #> '{invitation,message}') || jsonb_build_object(\n            'recipientUserId', null, 'relatedId', invitation_id,\n            'relatedType', 'auth_invitation', 'tenantId', target_tenant_id,\n            'to', lower(trim(data ->> 'email'))\n          ),\n          'auth_invitation', invitation_id, 5\n        ) into outbox_id;\n        update public.email_outbox set next_attempt_at = now() + interval '100 years' where id = outbox_id;\n\n        insert into public.import_manifest_entries (\n          tenant_id, import_job_id, import_row_id, record_type, target_table, target_id, apply_attempt\n        ) values\n          (target_tenant_id, target_job_id, import_row.id, record_type, 'auth_invitations', invitation_id, job.apply_attempts),\n          (target_tenant_id, target_job_id, import_row.id, record_type, 'email_outbox', outbox_id, job.apply_attempts);\n        created_target_id := invitation_id;\n        invitations := invitations || jsonb_build_array(jsonb_build_object(\n          'invitationId', invitation_id, 'email', lower(trim(data ->> 'email')),\n          'fullName', trim(data ->> 'full_name'), 'rowId', import_row.id\n        ));\n      elsif record_type = 'participants' then\n        guardian_user_id := null;\n        if nullif(trim(data ->> 'guardian_email'), '') is not null then\n          select profile.id into guardian_user_id\n          from public.profiles profile\n          join public.tenant_memberships membership\n            on membership.user_id = profile.id and membership.tenant_id = target_tenant_id\n           and membership.role = 'parent' and membership.status in ('invited', 'active')\n          where lower(profile.email) = lower(trim(data ->> 'guardian_email'))\n          order by membership.created_at, membership.id limit 1;\n          if guardian_user_id is null then raise exception 'Participant guardian identity is not ready'; end if;\n        end if;\n        insert into public.participants (\n          tenant_id, guardian_user_id, display_name, birth_date, external_reference, status, source\n        ) values (\n          target_tenant_id, guardian_user_id, trim(data ->> 'display_name'),\n          nullif(data ->> 'birth_date', '')::date, nullif(trim(data ->> 'external_reference'), ''),\n          'active', 'import'\n        ) returning id into created_target_id;\n        if guardian_user_id is not null then\n          insert into public.participant_guardians (\n            tenant_id, participant_id, guardian_user_id, relationship, access_level, status\n          ) values (target_tenant_id, created_target_id, guardian_user_id, 'parent', 'primary', 'active');\n        end if;\n        insert into public.import_manifest_entries (\n          tenant_id, import_job_id, import_row_id, record_type, target_table, target_id, apply_attempt\n        ) values (target_tenant_id, target_job_id, import_row.id, record_type, 'participants', created_target_id, job.apply_attempts);\n      elsif record_type = 'groups' then\n        select program.id into program_id from public.programs program\n        where program.tenant_id = target_tenant_id and program.code = data ->> 'program_code' and program.status = 'active';\n        if program_id is null then raise exception 'Import group program not found'; end if;\n        stage_id := null;\n        if nullif(trim(data ->> 'stage_code'), '') is not null then\n          select stage.id into stage_id from public.program_stages stage\n          where stage.tenant_id = target_tenant_id and stage.program_id = import_chunk.program_id and stage.code = data ->> 'stage_code';\n          if stage_id is null then raise exception 'Import group stage not found'; end if;\n        end if;\n        resource_id := null;\n        if nullif(trim(data ->> 'resource_code'), '') is not null then\n          select resource.id into resource_id from public.resources resource\n          where resource.tenant_id = target_tenant_id and resource.code = data ->> 'resource_code';\n          if resource_id is null then raise exception 'Import group resource not found'; end if;\n        end if;\n        capacity_value := greatest(coalesce(nullif(data ->> 'capacity', '')::integer, 10), 0);\n        insert into public.groups (\n          tenant_id, program_id, stage_id, default_resource_id, name, code, status,\n          capacity, regular_capacity, flex_capacity, trial_capacity, hard_capacity,\n          capacity_borrowing, default_weekday, default_start_time, default_end_time\n        ) values (\n          target_tenant_id, program_id, stage_id, resource_id, trim(data ->> 'name'), trim(data ->> 'code'), 'active',\n          capacity_value, capacity_value, 0, 0, capacity_value, 'none',\n          coalesce(nullif(data ->> 'weekday', '')::integer, 1),\n          nullif(data ->> 'start_time', '')::time, nullif(data ->> 'end_time', '')::time\n        ) returning id into created_target_id;\n        insert into public.import_manifest_entries (\n          tenant_id, import_job_id, import_row_id, record_type, target_table, target_id, apply_attempt\n        ) values (target_tenant_id, target_job_id, import_row.id, record_type, 'groups', created_target_id, job.apply_attempts);\n      elsif record_type = 'enrollments' then\n        select participant.id into participant_id from public.participants participant\n        where participant.tenant_id = target_tenant_id and (\n          participant.external_reference = data ->> 'participant_reference'\n          or lower(trim(participant.display_name)) = lower(trim(data ->> 'participant_reference'))\n        ) order by participant.created_at, participant.id limit 1;\n        select program.id into program_id from public.programs program\n        where program.tenant_id = target_tenant_id and program.code = data ->> 'program_code' and program.status = 'active';\n        if participant_id is null or program_id is null then raise exception 'Import enrollment reference not found'; end if;\n        stage_id := null;\n        if nullif(trim(data ->> 'stage_code'), '') is not null then\n          select stage.id into stage_id from public.program_stages stage\n          where stage.tenant_id = target_tenant_id and stage.program_id = import_chunk.program_id and stage.code = data ->> 'stage_code';\n          if stage_id is null then raise exception 'Import enrollment stage not found'; end if;\n        end if;\n        select participant.guardian_user_id into guardian_user_id from public.participants participant where participant.id = participant_id;\n        insert into public.enrollments (\n          tenant_id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on\n        ) values (\n          target_tenant_id, participant_id, guardian_user_id, program_id, stage_id, 'active', 'import',\n          coalesce(nullif(data ->> 'starts_on', '')::date, current_date)\n        ) returning id into created_target_id;\n        insert into public.import_manifest_entries (\n          tenant_id, import_job_id, import_row_id, record_type, target_table, target_id, apply_attempt\n        ) values (target_tenant_id, target_job_id, import_row.id, record_type, 'enrollments', created_target_id, job.apply_attempts);\n      else\n        select participant.id into participant_id from public.participants participant\n        where participant.tenant_id = target_tenant_id and (\n          participant.external_reference = data ->> 'participant_reference'\n          or lower(trim(participant.display_name)) = lower(trim(data ->> 'participant_reference'))\n        ) order by participant.created_at, participant.id limit 1;\n        select subscription.id, subscription.enrollment_id into subscription_id, enrollment_id from public.subscriptions subscription\n        where subscription.tenant_id = target_tenant_id and subscription.participant_id = import_chunk.participant_id and subscription.status = 'active'\n        order by subscription.created_at, subscription.id limit 1;\n        select enrollment.id into enrollment_id from public.enrollments enrollment\n        where enrollment.tenant_id = target_tenant_id and enrollment.participant_id = import_chunk.participant_id\n          and enrollment.id = import_chunk.enrollment_id and enrollment.status = 'active'\n        order by enrollment.created_at, enrollment.id limit 1;\n        if participant_id is null or subscription_id is null or enrollment_id is null then raise exception 'Import payment reference not found'; end if;\n        select participant.guardian_user_id into guardian_user_id from public.participants participant where participant.id = participant_id;\n        payment_status := case when data ->> 'status' in ('due', 'overdue', 'paid', 'waived', 'cancelled') then data ->> 'status' else 'due' end;\n        insert into public.manual_payments (\n          tenant_id, subscription_id, participant_id, enrollment_id, guardian_user_id,\n          amount_cents, currency, due_on, paid_on, status, method, recorded_by_user_id\n        ) values (\n          target_tenant_id, subscription_id, participant_id, enrollment_id, guardian_user_id,\n          round(replace(data ->> 'amount_eur', ',', '.')::numeric * 100)::integer,\n          'EUR', (data ->> 'due_on')::date,\n          case when payment_status = 'paid' then current_date else null end,\n          payment_status, 'import', target_actor_user_id\n        ) returning id into created_target_id;\n        insert into public.import_manifest_entries (\n          tenant_id, import_job_id, import_row_id, record_type, target_table, target_id, apply_attempt\n        ) values (target_tenant_id, target_job_id, import_row.id, record_type, 'manual_payments', created_target_id, job.apply_attempts);\n      end if;\n\n      if failure_marker = 'row:' || import_row.row_number::text then raise exception 'Injected import row failure'; end if;\n      update public.import_rows\n      set validation_status = 'applied', target_table = case record_type\n            when 'guardians' then 'auth_invitations' when 'payments' then 'manual_payments' else record_type end,\n          target_id = created_target_id, apply_attempts = apply_attempts + 1, applied_at = now()\n      where id = import_row.id;\n      processed_count := processed_count + 1;\n    end loop;\n  exception when others then\n    update public.import_jobs\n    set status = 'failed', reconciliation_state = 'needs_attention',\n        apply_error_code = 'chunk_write_failed', apply_claim_token = null, apply_lease_expires_at = null\n    where id = target_job_id;\n    insert into public.import_job_events (\n      tenant_id, import_job_id, event_type, actor_user_id, details, event_key\n    ) values (\n      target_tenant_id, target_job_id, 'failed', target_actor_user_id,\n      jsonb_build_object('errorCode', 'chunk_write_failed', 'rowNumber', failed_row_number, 'attempt', job.apply_attempts),\n      'apply-failed:' || job.apply_attempts::text || ':' || coalesce(failed_row_number::text, 'unknown')\n    ) on conflict (import_job_id, event_key) where event_key is not null do nothing;\n    return jsonb_build_object('outcome', 'needs_attention', 'errorCode', 'chunk_write_failed', 'rowNumber', failed_row_number);\n  end;\n\n  update public.import_jobs\n  set apply_lease_expires_at = now() + interval '5 minutes' where id = target_job_id;\n  return jsonb_build_object('outcome', 'applied', 'processed', processed_count, 'invitations', invitations);\nend;\n$function$\n"
+    },
+    {
+      "signature": "runtime_schema_compatibility()",
+      "security_definer": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "acl": "{postgres=X/postgres,service_role=X/postgres}",
+      "definition": "CREATE OR REPLACE FUNCTION public.runtime_schema_compatibility()\n RETURNS TABLE(contract_version integer, minimum_compatible_app_sha text, minimum_schema_fingerprint text, required_migration_version text)\n LANGUAGE sql\n IMMUTABLE\n SET search_path TO ''\nAS $function$\n  select\n    5,\n    '541fe5fd6cee083cb809eef236382cfd2d519ed3'::text,\n    '2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba'::text,\n    '20260908111450'::text;\n$function$\n"
+    }
+  ],
+  "retired_procedures": 4,
+  "archive_tables": [
+    {
+      "table": "public.journey_bot_configs",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    },
+    {
+      "table": "public.journey_bot_runs",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    },
+    {
+      "table": "public.journey_bot_child_journeys",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    },
+    {
+      "table": "public.journey_bot_child_events",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    },
+    {
+      "table": "public.journey_bot_issues",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    },
+    {
+      "table": "public.journey_bot_purge_receipts",
+      "rows": 0,
+      "privileges": [
+        {
+          "role": "anon",
+          "writable": false,
+          "readable": false
+        },
+        {
+          "role": "authenticated",
+          "writable": false,
+          "readable": true
+        },
+        {
+          "role": "service_role",
+          "writable": false,
+          "readable": true
+        }
+      ]
+    }
+  ],
+  "active_configurations": 0,
+  "variable_conflict": "error"
+}

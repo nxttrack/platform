@@ -15,6 +15,13 @@ test("the canonical semantic port is a real compatible ancestor", () => {
   assert.equal(assertCompatibleApplicationAncestry({ sourceCheckout, minimumAppSha, candidateSha }), reconciledApplicationAnchors[minimumAppSha]);
 });
 
+test("post-retirement canonical main remains an eligible application rollback ancestor", () => {
+  const canonicalMain = "47347d124ae8ebec447324eb2f571977a8e91442";
+  execFileSync("git", ["merge-base", "--is-ancestor", canonicalMain, candidateSha], { cwd: sourceCheckout });
+  assert.equal(assertCompatibleApplicationAncestry({ sourceCheckout, minimumAppSha, candidateSha: canonicalMain }),
+    reconciledApplicationAnchors[minimumAppSha]);
+});
+
 test("a canonical main-only checkout retains the anchor without source branch refs", () => {
   const checkout = mkdtempSync(join(tmpdir(), "nxttrack-canonical-main-"));
   try {

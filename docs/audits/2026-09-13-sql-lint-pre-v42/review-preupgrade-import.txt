@@ -1,0 +1,16 @@
+
+> @nxttrack/platform@0.0.0 test:resumable-import:db /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/test-resumable-import-integration.mjs
+
+file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:692
+    throw new Error(`${message}: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`);
+          ^
+
+Error: group stage resolves the selected program: expected "applied", received "needs_attention"
+    at assertEqual (file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:692:11)
+    at testStageIdentityAndRecovery (file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:88:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:22:3
+
+Node.js v24.18.0
+ ELIFECYCLE  Command failed with exit code 1.

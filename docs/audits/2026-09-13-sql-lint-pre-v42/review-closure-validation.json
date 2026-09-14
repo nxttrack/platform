@@ -1,0 +1,764 @@
+{
+  "tested_code_head": "2ecf785587e340328e0922db17230398711adfa2",
+  "migration_count": 149,
+  "added_migration": "20260913182211_bind_import_payment_enrollment.sql",
+  "review_finding": {
+    "priority": "P1",
+    "thread": "PRRT_kwDOTCRwsc6h649Z",
+    "url": "https://github.com/nxttrack/platform/pull/58#discussion_r4000448989",
+    "root_cause": "Independent participant enrollment selection did not follow the selected active subscription.",
+    "regression_before": "FAIL: incorrect enrollment UUID was selected.",
+    "regression_after": "PASS: exact subscription enrollment; inactive linked enrollment rejected."
+  },
+  "local": [
+    {
+      "name": "frozen-install",
+      "command": [
+        "pnpm",
+        "install",
+        "--frozen-lockfile"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:41.174212+00:00",
+      "seconds": 0.66,
+      "exit_code": 0,
+      "log": "final-149-frozen-install.txt",
+      "sha256": "227fe0be78e95e30506ff73d28de8d7295a5d4cee6ffcc41666c444241250c15",
+      "raw_sha256": "227fe0be78e95e30506ff73d28de8d7295a5d4cee6ffcc41666c444241250c15"
+    },
+    {
+      "name": "production-audit",
+      "command": [
+        "pnpm",
+        "audit",
+        "--prod"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:41.835354+00:00",
+      "seconds": 0.81,
+      "exit_code": 0,
+      "log": "final-149-production-audit.txt",
+      "sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955",
+      "raw_sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
+    },
+    {
+      "name": "production-audit-json",
+      "command": [
+        "pnpm",
+        "audit",
+        "--prod",
+        "--json"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:42.643210+00:00",
+      "seconds": 0.81,
+      "exit_code": 0,
+      "log": "final-149-production-audit-json.txt",
+      "sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab",
+      "raw_sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:43.456528+00:00",
+      "seconds": 3.05,
+      "exit_code": 0,
+      "log": "final-149-typecheck.txt",
+      "sha256": "9b168730e28fc0289d8323ffdde7e57a753bf8339060736889005863a9fac9fe",
+      "raw_sha256": "5d65ac4dbc3ad1bb341360c945472be9d3e9a1e8601d64e99ea8b86517a74a8a"
+    },
+    {
+      "name": "units",
+      "command": [
+        "pnpm",
+        "run",
+        "test:unit"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:46.509911+00:00",
+      "seconds": 2.69,
+      "exit_code": 0,
+      "log": "final-149-units.txt",
+      "sha256": "a6195bf78a67355839bd120331156a1a98def18e90c8635e7393505e1a91b414",
+      "raw_sha256": "a6195bf78a67355839bd120331156a1a98def18e90c8635e7393505e1a91b414"
+    },
+    {
+      "name": "security-audit-dependencies",
+      "command": [
+        "pnpm",
+        "run",
+        "security:audit-dependencies"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:49.197584+00:00",
+      "seconds": 1.02,
+      "exit_code": 0,
+      "log": "final-149-security-audit-dependencies.txt",
+      "sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d",
+      "raw_sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d"
+    },
+    {
+      "name": "release-truth",
+      "command": [
+        "pnpm",
+        "run",
+        "release:truth"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:50.216791+00:00",
+      "seconds": 0.35,
+      "exit_code": 0,
+      "log": "final-149-release-truth.txt",
+      "sha256": "84f837480b4ede9a586c93f6298bd990a75cdb740e633ce1bb62c493cd1b349b",
+      "raw_sha256": "84f837480b4ede9a586c93f6298bd990a75cdb740e633ce1bb62c493cd1b349b"
+    },
+    {
+      "name": "design-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "design:audit"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:50.564989+00:00",
+      "seconds": 0.3,
+      "exit_code": 0,
+      "log": "final-149-design-audit.txt",
+      "sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31",
+      "raw_sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31"
+    },
+    {
+      "name": "auth-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "auth:audit"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:50.865776+00:00",
+      "seconds": 0.59,
+      "exit_code": 0,
+      "log": "final-149-auth-audit.txt",
+      "sha256": "f23cbb52805a361544f6b2582b1bed698ac15f00d8b32553cb0e4764caf10f6c",
+      "raw_sha256": "f23cbb52805a361544f6b2582b1bed698ac15f00d8b32553cb0e4764caf10f6c"
+    },
+    {
+      "name": "db-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "db:audit"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:51.459128+00:00",
+      "seconds": 0.39,
+      "exit_code": 0,
+      "log": "final-149-db-audit.txt",
+      "sha256": "f19652c3157edb71c8be953d7c391a41a14ad8b954e9f7e931f05af6d18d213d",
+      "raw_sha256": "f19652c3157edb71c8be953d7c391a41a14ad8b954e9f7e931f05af6d18d213d"
+    },
+    {
+      "name": "db-rls-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "db:rls-audit"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:51.849302+00:00",
+      "seconds": 1.37,
+      "exit_code": 0,
+      "log": "final-149-db-rls-audit.txt",
+      "sha256": "294eabfd46aea226d85c5d2d8409c70b60ea47a1aca81108be778ba17044f241",
+      "raw_sha256": "294eabfd46aea226d85c5d2d8409c70b60ea47a1aca81108be778ba17044f241"
+    },
+    {
+      "name": "release-audit-journey-bot",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-journey-bot"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:53.224115+00:00",
+      "seconds": 0.3,
+      "exit_code": 0,
+      "log": "final-149-release-audit-journey-bot.txt",
+      "sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376",
+      "raw_sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376"
+    },
+    {
+      "name": "release-audit-runtime-env",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-runtime-env"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:53.526036+00:00",
+      "seconds": 0.28,
+      "exit_code": 0,
+      "log": "final-149-release-audit-runtime-env.txt",
+      "sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607",
+      "raw_sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607"
+    },
+    {
+      "name": "release-audit-sprint31",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-sprint31"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:53.810822+00:00",
+      "seconds": 0.29,
+      "exit_code": 0,
+      "log": "final-149-release-audit-sprint31.txt",
+      "sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44",
+      "raw_sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44"
+    },
+    {
+      "name": "db-migrate",
+      "command": [
+        "pnpm",
+        "run",
+        "db:migrate"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:54.096901+00:00",
+      "seconds": 0.31,
+      "exit_code": 0,
+      "log": "final-149-db-migrate.txt",
+      "sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185",
+      "raw_sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185"
+    },
+    {
+      "name": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:24:54.408242+00:00",
+      "seconds": 7.17,
+      "exit_code": 0,
+      "log": "final-149-build.txt",
+      "sha256": "c18f9178847f9ead6bc2d087aff8f90964a6077e4597aec6a55dffa90095b3d5",
+      "raw_sha256": "b5be16c18807c92d627406f9d936f0ef13dd8d738f1009081c7b4b080aa8188d"
+    },
+    {
+      "name": "deploy-package-standalone-assets",
+      "command": [
+        "pnpm",
+        "run",
+        "deploy:package-standalone-assets"
+      ],
+      "head": "2ecf785587e340328e0922db17230398711adfa2",
+      "started_at": "2026-09-13T18:25:01.580324+00:00",
+      "seconds": 0.48,
+      "exit_code": 0,
+      "log": "final-149-deploy-package-standalone-assets.txt",
+      "sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52",
+      "raw_sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52"
+    }
+  ],
+  "database_profiles": {
+    "legacy": [
+      {
+        "name": "db:audit-clean-room",
+        "exitCode": 0,
+        "seconds": 0.4,
+        "log": "legacy-149-db-audit-clean-room.txt",
+        "sha256": "bbe22c5f000cbe2e1530f2f81c040d74ad039faab62bec4f9eaa55dbd60d0872"
+      },
+      {
+        "name": "db:preflight-production-readiness-upgrade",
+        "exitCode": 0,
+        "seconds": 0.41,
+        "log": "legacy-149-db-preflight-production-readiness-upgrade.txt",
+        "sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e"
+      },
+      {
+        "name": "release:assert-schema-compatibility",
+        "exitCode": 0,
+        "seconds": 0.37,
+        "log": "legacy-149-release-assert-schema-compatibility.txt",
+        "sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad"
+      },
+      {
+        "name": "test:swim-canon:db",
+        "exitCode": 0,
+        "seconds": 0.78,
+        "log": "legacy-149-test-swim-canon-db.txt",
+        "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+      },
+      {
+        "name": "test:planning:concurrency",
+        "exitCode": 0,
+        "seconds": 0.58,
+        "log": "legacy-149-test-planning-concurrency.txt",
+        "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+      },
+      {
+        "name": "test:email-outbox:db",
+        "exitCode": 0,
+        "seconds": 0.5,
+        "log": "legacy-149-test-email-outbox-db.txt",
+        "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+      },
+      {
+        "name": "test:tenant-provisioning:db",
+        "exitCode": 0,
+        "seconds": 0.66,
+        "log": "legacy-149-test-tenant-provisioning-db.txt",
+        "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+      },
+      {
+        "name": "test:core-onboarding:db",
+        "exitCode": 0,
+        "seconds": 1.34,
+        "log": "legacy-149-test-core-onboarding-db.txt",
+        "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+      },
+      {
+        "name": "test:resumable-import:db",
+        "exitCode": 0,
+        "seconds": 3.35,
+        "log": "legacy-149-test-resumable-import-db.txt",
+        "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+      },
+      {
+        "name": "test:production-readiness-certification:db",
+        "exitCode": 0,
+        "seconds": 0.48,
+        "log": "legacy-149-test-production-readiness-certification-db.txt",
+        "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+      },
+      {
+        "name": "test:production-readiness-crash-windows:db",
+        "exitCode": 0,
+        "seconds": 1.97,
+        "log": "legacy-149-test-production-readiness-crash-windows-db.txt",
+        "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+      },
+      {
+        "name": "db:seed-production-readiness-upgrade-fixture",
+        "exitCode": 0,
+        "seconds": 0.38,
+        "log": "legacy-149-db-seed-production-readiness-upgrade-fixture.txt",
+        "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+      },
+      {
+        "name": "test:production-readiness-tenant-matrix:db",
+        "exitCode": 0,
+        "seconds": 1.43,
+        "log": "legacy-149-test-production-readiness-tenant-matrix-db.txt",
+        "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+      }
+    ],
+    "secure": [
+      {
+        "name": "db:audit-clean-room",
+        "exitCode": 0,
+        "seconds": 0.43,
+        "log": "secure-149-db-audit-clean-room.txt",
+        "sha256": "809c25faf1de73476f0336963fefd4517f10682f7400dc82f7f448f546e5194f"
+      },
+      {
+        "name": "db:preflight-production-readiness-upgrade",
+        "exitCode": 0,
+        "seconds": 0.4,
+        "log": "secure-149-db-preflight-production-readiness-upgrade.txt",
+        "sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e"
+      },
+      {
+        "name": "release:assert-schema-compatibility",
+        "exitCode": 0,
+        "seconds": 0.39,
+        "log": "secure-149-release-assert-schema-compatibility.txt",
+        "sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad"
+      },
+      {
+        "name": "test:swim-canon:db",
+        "exitCode": 0,
+        "seconds": 0.76,
+        "log": "secure-149-test-swim-canon-db.txt",
+        "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+      },
+      {
+        "name": "test:planning:concurrency",
+        "exitCode": 0,
+        "seconds": 0.56,
+        "log": "secure-149-test-planning-concurrency.txt",
+        "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+      },
+      {
+        "name": "test:email-outbox:db",
+        "exitCode": 0,
+        "seconds": 0.53,
+        "log": "secure-149-test-email-outbox-db.txt",
+        "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+      },
+      {
+        "name": "test:tenant-provisioning:db",
+        "exitCode": 0,
+        "seconds": 0.6,
+        "log": "secure-149-test-tenant-provisioning-db.txt",
+        "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+      },
+      {
+        "name": "test:core-onboarding:db",
+        "exitCode": 0,
+        "seconds": 1.2,
+        "log": "secure-149-test-core-onboarding-db.txt",
+        "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+      },
+      {
+        "name": "test:resumable-import:db",
+        "exitCode": 0,
+        "seconds": 6.0,
+        "log": "secure-149-test-resumable-import-db.txt",
+        "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+      },
+      {
+        "name": "test:production-readiness-certification:db",
+        "exitCode": 0,
+        "seconds": 0.47,
+        "log": "secure-149-test-production-readiness-certification-db.txt",
+        "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+      },
+      {
+        "name": "test:production-readiness-crash-windows:db",
+        "exitCode": 0,
+        "seconds": 2.04,
+        "log": "secure-149-test-production-readiness-crash-windows-db.txt",
+        "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+      },
+      {
+        "name": "db:seed-production-readiness-upgrade-fixture",
+        "exitCode": 0,
+        "seconds": 0.4,
+        "log": "secure-149-db-seed-production-readiness-upgrade-fixture.txt",
+        "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+      },
+      {
+        "name": "test:production-readiness-tenant-matrix:db",
+        "exitCode": 0,
+        "seconds": 1.22,
+        "log": "secure-149-test-production-readiness-tenant-matrix-db.txt",
+        "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+      }
+    ]
+  },
+  "lint_and_advisors": [
+    {
+      "profile": "legacy",
+      "name": "sql-lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "lint",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56622/postgres?sslmode=disable",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "legacy-149-final-sql-lint.txt",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    {
+      "profile": "legacy",
+      "name": "security-advisors",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56622/postgres?sslmode=disable",
+        "--type",
+        "security",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "legacy-149-final-security-advisors.txt",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    {
+      "profile": "secure",
+      "name": "sql-lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "lint",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56722/postgres?sslmode=disable",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "secure-149-final-sql-lint.txt",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    {
+      "profile": "secure",
+      "name": "security-advisors",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56722/postgres?sslmode=disable",
+        "--type",
+        "security",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "secure-149-final-security-advisors.txt",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    }
+  ],
+  "logs": {
+    "canonical-app-on-149-schema.txt": {
+      "raw_sha256": "1be45b2d0d9096ce8dd32161d842876296bf4302c42ee5ff0ada2be19c171a5e",
+      "sha256": "1be45b2d0d9096ce8dd32161d842876296bf4302c42ee5ff0ada2be19c171a5e"
+    },
+    "final-149-auth-audit.txt": {
+      "raw_sha256": "f23cbb52805a361544f6b2582b1bed698ac15f00d8b32553cb0e4764caf10f6c",
+      "sha256": "f23cbb52805a361544f6b2582b1bed698ac15f00d8b32553cb0e4764caf10f6c"
+    },
+    "final-149-build.txt": {
+      "raw_sha256": "b5be16c18807c92d627406f9d936f0ef13dd8d738f1009081c7b4b080aa8188d",
+      "sha256": "c18f9178847f9ead6bc2d087aff8f90964a6077e4597aec6a55dffa90095b3d5"
+    },
+    "final-149-db-audit.txt": {
+      "raw_sha256": "f19652c3157edb71c8be953d7c391a41a14ad8b954e9f7e931f05af6d18d213d",
+      "sha256": "f19652c3157edb71c8be953d7c391a41a14ad8b954e9f7e931f05af6d18d213d"
+    },
+    "final-149-db-migrate.txt": {
+      "raw_sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185",
+      "sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185"
+    },
+    "final-149-db-rls-audit.txt": {
+      "raw_sha256": "294eabfd46aea226d85c5d2d8409c70b60ea47a1aca81108be778ba17044f241",
+      "sha256": "294eabfd46aea226d85c5d2d8409c70b60ea47a1aca81108be778ba17044f241"
+    },
+    "final-149-deploy-package-standalone-assets.txt": {
+      "raw_sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52",
+      "sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52"
+    },
+    "final-149-design-audit.txt": {
+      "raw_sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31",
+      "sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31"
+    },
+    "final-149-frozen-install.txt": {
+      "raw_sha256": "227fe0be78e95e30506ff73d28de8d7295a5d4cee6ffcc41666c444241250c15",
+      "sha256": "227fe0be78e95e30506ff73d28de8d7295a5d4cee6ffcc41666c444241250c15"
+    },
+    "final-149-production-audit-json.txt": {
+      "raw_sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab",
+      "sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab"
+    },
+    "final-149-production-audit.txt": {
+      "raw_sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955",
+      "sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
+    },
+    "final-149-release-audit-journey-bot.txt": {
+      "raw_sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376",
+      "sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376"
+    },
+    "final-149-release-audit-runtime-env.txt": {
+      "raw_sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607",
+      "sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607"
+    },
+    "final-149-release-audit-sprint31.txt": {
+      "raw_sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44",
+      "sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44"
+    },
+    "final-149-release-truth.txt": {
+      "raw_sha256": "84f837480b4ede9a586c93f6298bd990a75cdb740e633ce1bb62c493cd1b349b",
+      "sha256": "84f837480b4ede9a586c93f6298bd990a75cdb740e633ce1bb62c493cd1b349b"
+    },
+    "final-149-security-audit-dependencies.txt": {
+      "raw_sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d",
+      "sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d"
+    },
+    "final-149-typecheck.txt": {
+      "raw_sha256": "5d65ac4dbc3ad1bb341360c945472be9d3e9a1e8601d64e99ea8b86517a74a8a",
+      "sha256": "9b168730e28fc0289d8323ffdde7e57a753bf8339060736889005863a9fac9fe"
+    },
+    "final-149-units.txt": {
+      "raw_sha256": "a6195bf78a67355839bd120331156a1a98def18e90c8635e7393505e1a91b414",
+      "sha256": "a6195bf78a67355839bd120331156a1a98def18e90c8635e7393505e1a91b414"
+    },
+    "legacy-149-db-audit-clean-room.txt": {
+      "raw_sha256": "bbe22c5f000cbe2e1530f2f81c040d74ad039faab62bec4f9eaa55dbd60d0872",
+      "sha256": "bbe22c5f000cbe2e1530f2f81c040d74ad039faab62bec4f9eaa55dbd60d0872"
+    },
+    "legacy-149-db-preflight-production-readiness-upgrade.txt": {
+      "raw_sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e",
+      "sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e"
+    },
+    "legacy-149-db-seed-production-readiness-upgrade-fixture.txt": {
+      "raw_sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884",
+      "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+    },
+    "legacy-149-final-security-advisors.txt": {
+      "raw_sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    "legacy-149-final-sql-lint.txt": {
+      "raw_sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    "legacy-149-release-assert-schema-compatibility.txt": {
+      "raw_sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad",
+      "sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad"
+    },
+    "legacy-149-test-core-onboarding-db.txt": {
+      "raw_sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503",
+      "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+    },
+    "legacy-149-test-email-outbox-db.txt": {
+      "raw_sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d",
+      "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+    },
+    "legacy-149-test-planning-concurrency.txt": {
+      "raw_sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a",
+      "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+    },
+    "legacy-149-test-production-readiness-certification-db.txt": {
+      "raw_sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0",
+      "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+    },
+    "legacy-149-test-production-readiness-crash-windows-db.txt": {
+      "raw_sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8",
+      "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+    },
+    "legacy-149-test-production-readiness-tenant-matrix-db.txt": {
+      "raw_sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2",
+      "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+    },
+    "legacy-149-test-resumable-import-db.txt": {
+      "raw_sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891",
+      "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+    },
+    "legacy-149-test-swim-canon-db.txt": {
+      "raw_sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2",
+      "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+    },
+    "legacy-149-test-tenant-provisioning-db.txt": {
+      "raw_sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1",
+      "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+    },
+    "p1-payment-enrollment-after.txt": {
+      "raw_sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891",
+      "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+    },
+    "p1-payment-enrollment-before.txt": {
+      "raw_sha256": "2ef00eee8f11929720e35a54e8781019d0a276689d723606e71e1d576876c140",
+      "sha256": "2ef00eee8f11929720e35a54e8781019d0a276689d723606e71e1d576876c140"
+    },
+    "preupgrade-import-resume-proof.txt": {
+      "raw_sha256": "055f1b0af94675e767502818238b38c818793ab90ab576ed3e2e70e1b93f9e2e",
+      "sha256": "055f1b0af94675e767502818238b38c818793ab90ab576ed3e2e70e1b93f9e2e"
+    },
+    "review-preupgrade-import.txt": {
+      "raw_sha256": "884f66f8bb38b61965999fbd1e7a5f7f83d0e89b5f9509e71197b3139ebe587f",
+      "sha256": "884f66f8bb38b61965999fbd1e7a5f7f83d0e89b5f9509e71197b3139ebe587f"
+    },
+    "review-upgrade-147-to-149.txt": {
+      "raw_sha256": "117c30ba9eddac205fed6a8006de4fdaefab11595287848f013d3bfe998b1e6c",
+      "sha256": "117c30ba9eddac205fed6a8006de4fdaefab11595287848f013d3bfe998b1e6c"
+    },
+    "runtime-149-compatibility-proof.txt": {
+      "raw_sha256": "66412d1704572a2cf772a63f8b219d40f8e2da7fcc42648f66b7f047b3f9fae6",
+      "sha256": "66412d1704572a2cf772a63f8b219d40f8e2da7fcc42648f66b7f047b3f9fae6"
+    },
+    "secure-149-db-audit-clean-room.txt": {
+      "raw_sha256": "809c25faf1de73476f0336963fefd4517f10682f7400dc82f7f448f546e5194f",
+      "sha256": "809c25faf1de73476f0336963fefd4517f10682f7400dc82f7f448f546e5194f"
+    },
+    "secure-149-db-preflight-production-readiness-upgrade.txt": {
+      "raw_sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e",
+      "sha256": "a87bb36ecc50e8aba3589f80b758e40782e9cefd8914c8132535c9aacb8d236e"
+    },
+    "secure-149-db-seed-production-readiness-upgrade-fixture.txt": {
+      "raw_sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884",
+      "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+    },
+    "secure-149-final-security-advisors.txt": {
+      "raw_sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    "secure-149-final-sql-lint.txt": {
+      "raw_sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    "secure-149-release-assert-schema-compatibility.txt": {
+      "raw_sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad",
+      "sha256": "f59821a4e0b42229587b8986916bdfa50555ee6336ff0318b11ee7034008d6ad"
+    },
+    "secure-149-test-core-onboarding-db.txt": {
+      "raw_sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503",
+      "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+    },
+    "secure-149-test-email-outbox-db.txt": {
+      "raw_sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d",
+      "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+    },
+    "secure-149-test-planning-concurrency.txt": {
+      "raw_sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a",
+      "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+    },
+    "secure-149-test-production-readiness-certification-db.txt": {
+      "raw_sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0",
+      "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+    },
+    "secure-149-test-production-readiness-crash-windows-db.txt": {
+      "raw_sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8",
+      "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+    },
+    "secure-149-test-production-readiness-tenant-matrix-db.txt": {
+      "raw_sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2",
+      "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+    },
+    "secure-149-test-resumable-import-db.txt": {
+      "raw_sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891",
+      "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+    },
+    "secure-149-test-swim-canon-db.txt": {
+      "raw_sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2",
+      "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+    },
+    "secure-149-test-tenant-provisioning-db.txt": {
+      "raw_sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1",
+      "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+    }
+  },
+  "canonical_baseline": "77c22b1cb10833811c0552b3160fcef1844c6368",
+  "latest_head_gate_source": "https://github.com/nxttrack/platform/pull/58"
+}

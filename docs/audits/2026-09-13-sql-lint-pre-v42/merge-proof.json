@@ -1,0 +1,17 @@
+{
+  "pr": 57,
+  "merge_commit": "77c22b1cb10833811c0552b3160fcef1844c6368",
+  "canonical_main": "77c22b1cb10833811c0552b3160fcef1844c6368",
+  "parents": [
+    "0fa158fb0abc7fdfe781a103a4c83b016edcba45",
+    "d9e983b93de9d2a52ee221dcbd2fbc6dafd86c44"
+  ],
+  "commit_date": "2026-09-13T19:32:32+02:00",
+  "merged_at": "2026-09-13T17:32:32Z",
+  "merged": true,
+  "merge_method": "merge",
+  "anchor_ancestry_exit": 0,
+  "approved_head_ancestry_exit": 0,
+  "tree_identical_to_approved_head": true,
+  "no_deployment_performed": true
+}

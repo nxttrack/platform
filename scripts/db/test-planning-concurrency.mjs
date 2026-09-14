@@ -133,7 +133,9 @@ try {
     throw new Error("Concurrent publication did not leave exactly one group with two reservations.");
   }
 
-  console.log("[test:planning:concurrency] PASS two concurrent admins produced one serialized publication and one transactional conflict.");
+  await testThemeWorkerConcurrency();
+  await testBlackoutUndoConcurrency();
+  console.log("[test:planning:concurrency] PASS serialized publication, SKIP LOCKED theme workers and idempotent concurrent blackout undo.");
 } finally {
   await Promise.allSettled([adminA.end(), adminB.end()]);
   if (setup._connected) {
@@ -161,4 +163,45 @@ async function publish(client, tenantIdValue, actorId, idempotencyKey, payload) 
     [tenantIdValue, actorId, idempotencyKey, JSON.stringify(payload)]
   );
   return result.rows[0]?.result;
+}
+
+async function testThemeWorkerConcurrency() {
+  await setup.query("insert into public.platform_memberships (user_id,role,status) values ($1,'platform_admin','active')",[actorA]);
+  const release = (await setup.query(`select theme_key,release from public.portal_theme_release
+    where status='published' and portal_contract='parent-portal/1.2' and manifest_schema_version=3
+    order by theme_key,release limit 1`)).rows[0];
+  const planned = await setup.query(`select public.schedule_tenant_portal_theme($1,$2,$3,now()+interval '1 day',$4,'Concurrent schedule') as id`,[tenantId,release.theme_key,release.release,actorA]);
+  const id = planned.rows[0].id;
+  await setup.query("update public.tenant_portal_theme_schedule set created_at=now()-interval '2 days',scheduled_for=now()-interval '1 hour' where id=$1",[id]);
+  await adminA.query('begin');
+  try {
+    await adminA.query('select id from public.tenant_portal_theme_schedule where id=$1 for update',[id]);
+    const skipped = await adminB.query('select * from public.execute_due_portal_theme_schedules(1)');
+    if (skipped.rowCount !== 0) throw new Error('A claimed theme schedule was not skipped');
+  } finally {
+    await adminA.query('rollback');
+  }
+  const attempts = await Promise.all([adminA,adminB].map(client => client.query('select * from public.execute_due_portal_theme_schedules(1)')));
+  const rows = attempts.flatMap(r=>r.rows);
+  if (rows.length !== 1 || rows[0].schedule_id !== id || rows[0].status !== 'executed') throw new Error('Concurrent theme workers did not execute exactly once');
+  const audit = await setup.query("select count(*)::integer as count from public.portal_theme_audit_event where tenant_id=$1 and event_type='activated' and request_correlation_id=$2",[tenantId,id]);
+  if (audit.rows[0].count !== 1) throw new Error('Concurrent theme activation duplicated its audit event');
+}
+
+async function testBlackoutUndoConcurrency() {
+  const season = randomUUID();
+  const blackout = randomUUID();
+  await setup.query("insert into public.planning_seasons (id,tenant_id,name,starts_on,ends_on,status,created_by_user_id) values ($1,$2,'Concurrent undo','2026-09-01','2026-09-30','active',$3)",[season,tenantId,actorA]);
+  await setup.query(`insert into public.season_blackout_periods (id,tenant_id,season_id,name,starts_at,ends_at,session_handling,financial_handling,status,created_by_user_id,published_by_user_id,published_at)
+    values ($1,$2,$3,'Concurrent closure','2026-09-01','2026-10-01','cancel','no_change','published',$4,$4,now())`,[blackout,tenantId,season,actorA]);
+  await setup.query(`insert into public.schedule_occurrence_exceptions (tenant_id,blackout_id,session_id,exception_type,before_status,effective_status,applied_by_user_id)
+    select tenant_id,$2,id,'holiday_closure',status,'cancelled',$3 from public.sessions where tenant_id=$1`,[tenantId,blackout,actorA]);
+  await setup.query("update public.sessions set status='cancelled' where tenant_id=$1",[tenantId]);
+  // A later manual status change must not be overwritten by undo.
+  await setup.query("update public.sessions set status='completed' where id=(select id from public.sessions where tenant_id=$1 order by id limit 1)",[tenantId]);
+  const results = await Promise.all([[adminA,actorA],[adminB,actorB]].map(([client,actor])=>client.query('select public.undo_season_blackout_v3($1,$2,$3) as changed',[tenantId,blackout,actor])));
+  const counts=results.map(r=>r.rows[0].changed).sort();
+  if (JSON.stringify(counts)!=='[0,1]') throw new Error(`Concurrent undo did not restore once: ${counts}`);
+  const statuses=await setup.query('select status,count(*)::integer as count from public.sessions where tenant_id=$1 group by status order by status',[tenantId]);
+  if (JSON.stringify(statuses.rows)!=='[{"status":"completed","count":1},{"status":"scheduled","count":1}]') throw new Error('Undo changed a manual status or failed to restore the eligible lesson');
 }

@@ -1,0 +1,13 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /tmp/nxttrack-phase05-partial
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] Using Supabase CLI 2.117.0.
+[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=false dryRun=false
+Connecting to remote database...
+Do you want to push these migrations to the remote database?
+ • 20260914012125_pre_v42_sql_identifier_ambiguities.sql
+ [Y/n] y
+Applying migration 20260914012125_pre_v42_sql_identifier_ambiguities.sql...
+Finished supabase db push.

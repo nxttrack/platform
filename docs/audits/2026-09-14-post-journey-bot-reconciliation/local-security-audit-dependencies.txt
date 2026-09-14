@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 security:audit-dependencies /home/codex/repos/nxttrack-sql-lint-pre-v42
+> pnpm audit --prod --audit-level moderate
+
+No known vulnerabilities found

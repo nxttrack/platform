@@ -1,0 +1,16 @@
+
+> @nxttrack/platform@0.0.0 test:resumable-import:db /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/test-resumable-import-integration.mjs
+
+file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:692
+    throw new Error(`${message}: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}`);
+          ^
+
+Error: payment uses the selected subscription enrollment, not the oldest active enrollment: expected "504e37b8-33f9-4480-a09d-9d7c1411b459", received "ecdea9ee-0061-4db6-96d1-5b50f6eaa695"
+    at assertEqual (file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:692:11)
+    at testPaymentReferenceIdentity (file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:160:3)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/db/test-resumable-import-integration.mjs:23:3
+
+Node.js v24.18.0
+ ELIFECYCLE  Command failed with exit code 1.

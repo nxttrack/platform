@@ -1,0 +1,783 @@
+{
+  "canonical_baseline": "77c22b1cb10833811c0552b3160fcef1844c6368",
+  "tested_code_head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+  "local": [
+    {
+      "name": "frozen-install",
+      "command": [
+        "pnpm",
+        "install",
+        "--frozen-lockfile"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:04:52.981360+00:00",
+      "seconds": 0.83,
+      "exit_code": 0,
+      "log": "final-frozen-install.txt",
+      "sha256": "d15ff355e4fd8a976892d7d0792dcdea1f4e1f6da8d46c09d79a88ddbe67b866",
+      "raw_sha256": "d15ff355e4fd8a976892d7d0792dcdea1f4e1f6da8d46c09d79a88ddbe67b866"
+    },
+    {
+      "name": "production-audit",
+      "command": [
+        "pnpm",
+        "audit",
+        "--prod"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:04:53.808300+00:00",
+      "seconds": 0.8,
+      "exit_code": 0,
+      "log": "final-production-audit.txt",
+      "sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955",
+      "raw_sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
+    },
+    {
+      "name": "production-audit-json",
+      "command": [
+        "pnpm",
+        "audit",
+        "--prod",
+        "--json"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:04:54.607923+00:00",
+      "seconds": 0.59,
+      "exit_code": 0,
+      "log": "final-production-audit-json.txt",
+      "sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab",
+      "raw_sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab"
+    },
+    {
+      "name": "typecheck",
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:04:55.199007+00:00",
+      "seconds": 26.96,
+      "exit_code": 0,
+      "log": "final-typecheck.txt",
+      "sha256": "9b168730e28fc0289d8323ffdde7e57a753bf8339060736889005863a9fac9fe",
+      "raw_sha256": "5d65ac4dbc3ad1bb341360c945472be9d3e9a1e8601d64e99ea8b86517a74a8a"
+    },
+    {
+      "name": "units",
+      "command": [
+        "pnpm",
+        "run",
+        "test:unit"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:22.156759+00:00",
+      "seconds": 3.42,
+      "exit_code": 0,
+      "log": "final-units.txt",
+      "sha256": "84db02fb2f0bfecec2a027e58c702581c455d122f955aef2ed557c9d4778a80d",
+      "raw_sha256": "84db02fb2f0bfecec2a027e58c702581c455d122f955aef2ed557c9d4778a80d"
+    },
+    {
+      "name": "security-audit-dependencies",
+      "command": [
+        "pnpm",
+        "run",
+        "security:audit-dependencies"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:25.573262+00:00",
+      "seconds": 1.12,
+      "exit_code": 0,
+      "log": "final-security-audit-dependencies.txt",
+      "sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d",
+      "raw_sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d"
+    },
+    {
+      "name": "release-truth",
+      "command": [
+        "pnpm",
+        "run",
+        "release:truth"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:26.697495+00:00",
+      "seconds": 0.38,
+      "exit_code": 0,
+      "log": "final-release-truth.txt",
+      "sha256": "91caf06c3a89fc367a1e4988e67954627f9b14a1f308fcda6ac9eb0f4cf05093",
+      "raw_sha256": "91caf06c3a89fc367a1e4988e67954627f9b14a1f308fcda6ac9eb0f4cf05093"
+    },
+    {
+      "name": "design-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "design:audit"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:27.080522+00:00",
+      "seconds": 0.33,
+      "exit_code": 0,
+      "log": "final-design-audit.txt",
+      "sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31",
+      "raw_sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31"
+    },
+    {
+      "name": "auth-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "auth:audit"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:27.409891+00:00",
+      "seconds": 0.73,
+      "exit_code": 0,
+      "log": "final-auth-audit.txt",
+      "sha256": "536a56a275b2fc048671c8e02efc48124ed2295aef92992cb25cc9808da777d0",
+      "raw_sha256": "536a56a275b2fc048671c8e02efc48124ed2295aef92992cb25cc9808da777d0"
+    },
+    {
+      "name": "db-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "db:audit"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:28.136425+00:00",
+      "seconds": 0.45,
+      "exit_code": 0,
+      "log": "final-db-audit.txt",
+      "sha256": "0099b1643e237f4123cb70ce6bf1a8fcc87c612b4ba3627d27b0d80d22ebfdb3",
+      "raw_sha256": "0099b1643e237f4123cb70ce6bf1a8fcc87c612b4ba3627d27b0d80d22ebfdb3"
+    },
+    {
+      "name": "db-rls-audit",
+      "command": [
+        "pnpm",
+        "run",
+        "db:rls-audit"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:28.585098+00:00",
+      "seconds": 1.48,
+      "exit_code": 0,
+      "log": "final-db-rls-audit.txt",
+      "sha256": "dfcd8a4f4cc2ed913c0c2cb86ee2b51eede6b95f66b8f3a4ab31e84f29162c37",
+      "raw_sha256": "dfcd8a4f4cc2ed913c0c2cb86ee2b51eede6b95f66b8f3a4ab31e84f29162c37"
+    },
+    {
+      "name": "release-audit-journey-bot",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-journey-bot"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:30.067470+00:00",
+      "seconds": 0.35,
+      "exit_code": 0,
+      "log": "final-release-audit-journey-bot.txt",
+      "sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376",
+      "raw_sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376"
+    },
+    {
+      "name": "release-audit-runtime-env",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-runtime-env"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:30.414583+00:00",
+      "seconds": 0.3,
+      "exit_code": 0,
+      "log": "final-release-audit-runtime-env.txt",
+      "sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607",
+      "raw_sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607"
+    },
+    {
+      "name": "release-audit-sprint31",
+      "command": [
+        "pnpm",
+        "run",
+        "release:audit-sprint31"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:30.718552+00:00",
+      "seconds": 0.3,
+      "exit_code": 0,
+      "log": "final-release-audit-sprint31.txt",
+      "sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44",
+      "raw_sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44"
+    },
+    {
+      "name": "db-migrate",
+      "command": [
+        "pnpm",
+        "run",
+        "db:migrate"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:31.017209+00:00",
+      "seconds": 0.3,
+      "exit_code": 0,
+      "log": "final-db-migrate.txt",
+      "sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185",
+      "raw_sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185"
+    },
+    {
+      "name": "build",
+      "command": [
+        "pnpm",
+        "run",
+        "build"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:31.314309+00:00",
+      "seconds": 12.56,
+      "exit_code": 0,
+      "log": "final-build.txt",
+      "sha256": "e55d33a45420c0c61b942a952866392511aa024fbc0e3d17fd436728090bd2f4",
+      "raw_sha256": "79a3d94a7939af611c45f5b6d1bf0a3614728d663f8c0e78f5476429a79533e9"
+    },
+    {
+      "name": "deploy-package-standalone-assets",
+      "command": [
+        "pnpm",
+        "run",
+        "deploy:package-standalone-assets"
+      ],
+      "head": "8b4f4c6dce287c223b097afad1831730a4a49d4a",
+      "started_at": "2026-09-13T18:05:43.876047+00:00",
+      "seconds": 0.54,
+      "exit_code": 0,
+      "log": "final-deploy-package-standalone-assets.txt",
+      "sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52",
+      "raw_sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52"
+    }
+  ],
+  "database_profiles": {
+    "legacy": [
+      {
+        "name": "db:audit-clean-room",
+        "exitCode": 0,
+        "seconds": 0.43,
+        "log": "legacy-db-audit-clean-room.txt",
+        "sha256": "a57e651339bc729900532daec89fd8e1779239a71ff024568f656abb0376e213"
+      },
+      {
+        "name": "db:preflight-production-readiness-upgrade",
+        "exitCode": 0,
+        "seconds": 0.38,
+        "log": "legacy-db-preflight-production-readiness-upgrade.txt",
+        "sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38"
+      },
+      {
+        "name": "release:assert-schema-compatibility",
+        "exitCode": 0,
+        "seconds": 0.4,
+        "log": "legacy-release-assert-schema-compatibility.txt",
+        "sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe"
+      },
+      {
+        "name": "test:swim-canon:db",
+        "exitCode": 0,
+        "seconds": 0.86,
+        "log": "legacy-test-swim-canon-db.txt",
+        "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+      },
+      {
+        "name": "test:planning:concurrency",
+        "exitCode": 0,
+        "seconds": 0.63,
+        "log": "legacy-test-planning-concurrency.txt",
+        "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+      },
+      {
+        "name": "test:email-outbox:db",
+        "exitCode": 0,
+        "seconds": 0.69,
+        "log": "legacy-test-email-outbox-db.txt",
+        "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+      },
+      {
+        "name": "test:tenant-provisioning:db",
+        "exitCode": 0,
+        "seconds": 0.67,
+        "log": "legacy-test-tenant-provisioning-db.txt",
+        "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+      },
+      {
+        "name": "test:core-onboarding:db",
+        "exitCode": 0,
+        "seconds": 1.75,
+        "log": "legacy-test-core-onboarding-db.txt",
+        "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+      },
+      {
+        "name": "test:resumable-import:db",
+        "exitCode": 0,
+        "seconds": 6.51,
+        "log": "legacy-test-resumable-import-db.txt",
+        "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+      },
+      {
+        "name": "test:production-readiness-certification:db",
+        "exitCode": 0,
+        "seconds": 0.61,
+        "log": "legacy-test-production-readiness-certification-db.txt",
+        "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+      },
+      {
+        "name": "test:production-readiness-crash-windows:db",
+        "exitCode": 0,
+        "seconds": 2.42,
+        "log": "legacy-test-production-readiness-crash-windows-db.txt",
+        "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+      },
+      {
+        "name": "db:seed-production-readiness-upgrade-fixture",
+        "exitCode": 0,
+        "seconds": 0.49,
+        "log": "legacy-db-seed-production-readiness-upgrade-fixture.txt",
+        "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+      },
+      {
+        "name": "test:production-readiness-tenant-matrix:db",
+        "exitCode": 0,
+        "seconds": 1.58,
+        "log": "legacy-test-production-readiness-tenant-matrix-db.txt",
+        "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+      }
+    ],
+    "secure": [
+      {
+        "name": "db:audit-clean-room",
+        "exitCode": 0,
+        "seconds": 0.41,
+        "log": "secure-db-audit-clean-room.txt",
+        "sha256": "0aeb9e375c6aeee4d3e237a2469b54cdf9f55035c501108827bbf623816c2182"
+      },
+      {
+        "name": "db:preflight-production-readiness-upgrade",
+        "exitCode": 0,
+        "seconds": 0.39,
+        "log": "secure-db-preflight-production-readiness-upgrade.txt",
+        "sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38"
+      },
+      {
+        "name": "release:assert-schema-compatibility",
+        "exitCode": 0,
+        "seconds": 0.38,
+        "log": "secure-release-assert-schema-compatibility.txt",
+        "sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe"
+      },
+      {
+        "name": "test:swim-canon:db",
+        "exitCode": 0,
+        "seconds": 0.82,
+        "log": "secure-test-swim-canon-db.txt",
+        "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+      },
+      {
+        "name": "test:planning:concurrency",
+        "exitCode": 0,
+        "seconds": 0.62,
+        "log": "secure-test-planning-concurrency.txt",
+        "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+      },
+      {
+        "name": "test:email-outbox:db",
+        "exitCode": 0,
+        "seconds": 0.56,
+        "log": "secure-test-email-outbox-db.txt",
+        "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+      },
+      {
+        "name": "test:tenant-provisioning:db",
+        "exitCode": 0,
+        "seconds": 0.5,
+        "log": "secure-test-tenant-provisioning-db.txt",
+        "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+      },
+      {
+        "name": "test:core-onboarding:db",
+        "exitCode": 0,
+        "seconds": 1.03,
+        "log": "secure-test-core-onboarding-db.txt",
+        "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+      },
+      {
+        "name": "test:resumable-import:db",
+        "exitCode": 0,
+        "seconds": 5.82,
+        "log": "secure-test-resumable-import-db.txt",
+        "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+      },
+      {
+        "name": "test:production-readiness-certification:db",
+        "exitCode": 0,
+        "seconds": 0.53,
+        "log": "secure-test-production-readiness-certification-db.txt",
+        "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+      },
+      {
+        "name": "test:production-readiness-crash-windows:db",
+        "exitCode": 0,
+        "seconds": 2.0,
+        "log": "secure-test-production-readiness-crash-windows-db.txt",
+        "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+      },
+      {
+        "name": "db:seed-production-readiness-upgrade-fixture",
+        "exitCode": 0,
+        "seconds": 0.46,
+        "log": "secure-db-seed-production-readiness-upgrade-fixture.txt",
+        "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+      },
+      {
+        "name": "test:production-readiness-tenant-matrix:db",
+        "exitCode": 0,
+        "seconds": 1.56,
+        "log": "secure-test-production-readiness-tenant-matrix-db.txt",
+        "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+      }
+    ]
+  },
+  "lint_and_advisors": [
+    {
+      "profile": "legacy",
+      "name": "sql-lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "lint",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56622/postgres?sslmode=disable",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "legacy-final-sql-lint.txt",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    {
+      "profile": "legacy",
+      "name": "security-advisors",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56622/postgres?sslmode=disable",
+        "--type",
+        "security",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "legacy-final-security-advisors.txt",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    {
+      "profile": "secure",
+      "name": "sql-lint",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "lint",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56722/postgres?sslmode=disable",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "secure-final-sql-lint.txt",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    {
+      "profile": "secure",
+      "name": "security-advisors",
+      "command": [
+        "pnpm",
+        "exec",
+        "supabase",
+        "db",
+        "advisors",
+        "--db-url",
+        "postgresql://postgres:postgres@127.0.0.1:56722/postgres?sslmode=disable",
+        "--type",
+        "security",
+        "--level",
+        "error",
+        "--fail-on",
+        "error"
+      ],
+      "exit_code": 0,
+      "log": "secure-final-security-advisors.txt",
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    }
+  ],
+  "logs": {
+    "canonical-app-on-upgraded-schema.txt": {
+      "sha256": "1be45b2d0d9096ce8dd32161d842876296bf4302c42ee5ff0ada2be19c171a5e",
+      "raw_sha256": "1be45b2d0d9096ce8dd32161d842876296bf4302c42ee5ff0ada2be19c171a5e"
+    },
+    "final-auth-audit.txt": {
+      "sha256": "536a56a275b2fc048671c8e02efc48124ed2295aef92992cb25cc9808da777d0",
+      "raw_sha256": "536a56a275b2fc048671c8e02efc48124ed2295aef92992cb25cc9808da777d0"
+    },
+    "final-build.txt": {
+      "sha256": "e55d33a45420c0c61b942a952866392511aa024fbc0e3d17fd436728090bd2f4",
+      "raw_sha256": "79a3d94a7939af611c45f5b6d1bf0a3614728d663f8c0e78f5476429a79533e9"
+    },
+    "final-db-audit.txt": {
+      "sha256": "0099b1643e237f4123cb70ce6bf1a8fcc87c612b4ba3627d27b0d80d22ebfdb3",
+      "raw_sha256": "0099b1643e237f4123cb70ce6bf1a8fcc87c612b4ba3627d27b0d80d22ebfdb3"
+    },
+    "final-db-migrate.txt": {
+      "sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185",
+      "raw_sha256": "c83dc0adc55fb64ef93e2f646c66583964bdcf7a7df12e997490774d3589d185"
+    },
+    "final-db-rls-audit.txt": {
+      "sha256": "dfcd8a4f4cc2ed913c0c2cb86ee2b51eede6b95f66b8f3a4ab31e84f29162c37",
+      "raw_sha256": "dfcd8a4f4cc2ed913c0c2cb86ee2b51eede6b95f66b8f3a4ab31e84f29162c37"
+    },
+    "final-deploy-package-standalone-assets.txt": {
+      "sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52",
+      "raw_sha256": "d8e873f4f8120e3cd763e1f081d3f3ae35da689b35b48c8bef2c1acf52fa5f52"
+    },
+    "final-design-audit.txt": {
+      "sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31",
+      "raw_sha256": "b0edd278fac3d038ca405bc28feb4be3f2dd48656500ecc040bdf79e2df57b31"
+    },
+    "final-frozen-install.txt": {
+      "sha256": "d15ff355e4fd8a976892d7d0792dcdea1f4e1f6da8d46c09d79a88ddbe67b866",
+      "raw_sha256": "d15ff355e4fd8a976892d7d0792dcdea1f4e1f6da8d46c09d79a88ddbe67b866"
+    },
+    "final-production-audit-json.txt": {
+      "sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab",
+      "raw_sha256": "51568a53140e61fe83b4db963d10b15aff2251b1b5ff113e7e0623eb346ad8ab"
+    },
+    "final-production-audit.txt": {
+      "sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955",
+      "raw_sha256": "15950a68a7ed99c59779717acefdceb3f69cfd31bde67d2c954f2a3cea4d7955"
+    },
+    "final-release-audit-journey-bot.txt": {
+      "sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376",
+      "raw_sha256": "2dffa2f6693c3762665099d3146fc29124d45815af058bef7eb387b7a8370376"
+    },
+    "final-release-audit-runtime-env.txt": {
+      "sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607",
+      "raw_sha256": "a8baf82d2f94a5e93240b5fd13d79bce85914279b69edfd2681f575dd8189607"
+    },
+    "final-release-audit-sprint31.txt": {
+      "sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44",
+      "raw_sha256": "d7ad9548603610ee26be2bcaaa5fdb4cc09aaf57d53454925a3cb9df2ba28c44"
+    },
+    "final-release-truth.txt": {
+      "sha256": "91caf06c3a89fc367a1e4988e67954627f9b14a1f308fcda6ac9eb0f4cf05093",
+      "raw_sha256": "91caf06c3a89fc367a1e4988e67954627f9b14a1f308fcda6ac9eb0f4cf05093"
+    },
+    "final-security-audit-dependencies.txt": {
+      "sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d",
+      "raw_sha256": "e6bca9bc0d44d3c6634dba76cf8116ad80f7982a82a955a7ed1aebf58099a07d"
+    },
+    "final-typecheck.txt": {
+      "sha256": "9b168730e28fc0289d8323ffdde7e57a753bf8339060736889005863a9fac9fe",
+      "raw_sha256": "5d65ac4dbc3ad1bb341360c945472be9d3e9a1e8601d64e99ea8b86517a74a8a"
+    },
+    "final-units.txt": {
+      "sha256": "84db02fb2f0bfecec2a027e58c702581c455d122f955aef2ed557c9d4778a80d",
+      "raw_sha256": "84db02fb2f0bfecec2a027e58c702581c455d122f955aef2ed557c9d4778a80d"
+    },
+    "iteration-1-lint.txt": {
+      "sha256": "02c443c40debfab63e5d8bcd2176e6429414c88fa15af333e13048a06b8fbe40",
+      "raw_sha256": "02c443c40debfab63e5d8bcd2176e6429414c88fa15af333e13048a06b8fbe40"
+    },
+    "iteration-2-import-regression.txt": {
+      "sha256": "e5007a37f29282e6d7548cd9d8e5a07cafa11ea24c614762de47c6222c86eda5",
+      "raw_sha256": "e5007a37f29282e6d7548cd9d8e5a07cafa11ea24c614762de47c6222c86eda5"
+    },
+    "iteration-2-lint.txt": {
+      "sha256": "2ae9d8eb308127fedae2713e0dfe5c14bd060ccfa73989a22f2cbdaee2a6a285",
+      "raw_sha256": "2ae9d8eb308127fedae2713e0dfe5c14bd060ccfa73989a22f2cbdaee2a6a285"
+    },
+    "legacy-db-audit-clean-room.txt": {
+      "sha256": "a57e651339bc729900532daec89fd8e1779239a71ff024568f656abb0376e213",
+      "raw_sha256": "a57e651339bc729900532daec89fd8e1779239a71ff024568f656abb0376e213"
+    },
+    "legacy-db-preflight-production-readiness-upgrade.txt": {
+      "sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38",
+      "raw_sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38"
+    },
+    "legacy-db-seed-production-readiness-upgrade-fixture.txt": {
+      "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884",
+      "raw_sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+    },
+    "legacy-final-security-advisors.txt": {
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122",
+      "raw_sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    "legacy-final-sql-lint.txt": {
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707",
+      "raw_sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    "legacy-release-assert-schema-compatibility.txt": {
+      "sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe",
+      "raw_sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe"
+    },
+    "legacy-test-core-onboarding-db.txt": {
+      "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503",
+      "raw_sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+    },
+    "legacy-test-email-outbox-db.txt": {
+      "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d",
+      "raw_sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+    },
+    "legacy-test-planning-concurrency.txt": {
+      "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a",
+      "raw_sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+    },
+    "legacy-test-production-readiness-certification-db.txt": {
+      "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0",
+      "raw_sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+    },
+    "legacy-test-production-readiness-crash-windows-db.txt": {
+      "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8",
+      "raw_sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+    },
+    "legacy-test-production-readiness-tenant-matrix-db.txt": {
+      "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2",
+      "raw_sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+    },
+    "legacy-test-resumable-import-db.txt": {
+      "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891",
+      "raw_sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+    },
+    "legacy-test-swim-canon-db.txt": {
+      "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2",
+      "raw_sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+    },
+    "legacy-test-tenant-provisioning-db.txt": {
+      "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1",
+      "raw_sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+    },
+    "new-artifact-rejects-147.txt": {
+      "sha256": "41d520200fd76f0a0a04da81bec18d3ec770a7604728e4ec2f965ba74ef1d381",
+      "raw_sha256": "41d520200fd76f0a0a04da81bec18d3ec770a7604728e4ec2f965ba74ef1d381"
+    },
+    "pre-fix-blackout-regression.txt": {
+      "sha256": "091b2bc5026ffd9e1c64bd7260814c06953bfa71dc11ca43581e6f68c3e792b4",
+      "raw_sha256": "30856ead798b60e8584710a53635b3778213beef547d5cd8a3867495d4cc2f6f"
+    },
+    "pre-fix-import-regression.txt": {
+      "sha256": "cc67368fe5b74e57152a15ffca28fb235a0b2cc101d51549e537ced7fd1c3781",
+      "raw_sha256": "cc67368fe5b74e57152a15ffca28fb235a0b2cc101d51549e537ced7fd1c3781"
+    },
+    "pre-fix-theme-corrected-fixture.txt": {
+      "sha256": "2fe781373715f58bd47eecfe570f588c2a867c77643c76bea054dac27709b4a7",
+      "raw_sha256": "2fe781373715f58bd47eecfe570f588c2a867c77643c76bea054dac27709b4a7"
+    },
+    "runtime-compatibility-proof.txt": {
+      "sha256": "f292086f9a3d23ab6ecddb0e96583243919b5e7881fdeb632c951a5f149e5bce",
+      "raw_sha256": "f292086f9a3d23ab6ecddb0e96583243919b5e7881fdeb632c951a5f149e5bce"
+    },
+    "secure-db-audit-clean-room.txt": {
+      "sha256": "0aeb9e375c6aeee4d3e237a2469b54cdf9f55035c501108827bbf623816c2182",
+      "raw_sha256": "0aeb9e375c6aeee4d3e237a2469b54cdf9f55035c501108827bbf623816c2182"
+    },
+    "secure-db-preflight-production-readiness-upgrade.txt": {
+      "sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38",
+      "raw_sha256": "42e72b9bb4a8555e1580dff669a83128ee331bb9584c54cce3bd979b7816dc38"
+    },
+    "secure-db-seed-production-readiness-upgrade-fixture.txt": {
+      "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884",
+      "raw_sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+    },
+    "secure-final-security-advisors.txt": {
+      "sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122",
+      "raw_sha256": "64fa33315bdc09ae5f706724227803823541d247bfb1a890205bc2f029b62122"
+    },
+    "secure-final-sql-lint.txt": {
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707",
+      "raw_sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+    },
+    "secure-release-assert-schema-compatibility.txt": {
+      "sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe",
+      "raw_sha256": "7f4dee19a20c28495d96644d995d319ab271948b45873b3d0ccf907a9a8f76fe"
+    },
+    "secure-test-core-onboarding-db.txt": {
+      "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503",
+      "raw_sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+    },
+    "secure-test-email-outbox-db.txt": {
+      "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d",
+      "raw_sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+    },
+    "secure-test-planning-concurrency.txt": {
+      "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a",
+      "raw_sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+    },
+    "secure-test-production-readiness-certification-db.txt": {
+      "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0",
+      "raw_sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+    },
+    "secure-test-production-readiness-crash-windows-db.txt": {
+      "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8",
+      "raw_sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+    },
+    "secure-test-production-readiness-tenant-matrix-db.txt": {
+      "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2",
+      "raw_sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+    },
+    "secure-test-resumable-import-db.txt": {
+      "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891",
+      "raw_sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+    },
+    "secure-test-swim-canon-db.txt": {
+      "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2",
+      "raw_sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+    },
+    "secure-test-tenant-provisioning-db.txt": {
+      "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1",
+      "raw_sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+    },
+    "upgrade-147-to-148.txt": {
+      "sha256": "855f860b234f877db4f55bbc87432ebf361139fd2026cd61e233a1ed0e171178",
+      "raw_sha256": "855f860b234f877db4f55bbc87432ebf361139fd2026cd61e233a1ed0e171178"
+    },
+    "upgrade-reset-to-147.txt": {
+      "sha256": "0bc434f54282e15985cbeae782766d8c54804878620423bae284c44b766a2282",
+      "raw_sha256": "0bc434f54282e15985cbeae782766d8c54804878620423bae284c44b766a2282"
+    }
+  },
+  "github_phase02": {
+    "pr": 58,
+    "url": "https://github.com/nxttrack/platform/pull/58",
+    "recorded_web_ci": {
+      "head": "d8f523d722740f5ecebc7814249a4c99679a1aee",
+      "run_id": 34773973289,
+      "conclusion": "success"
+    },
+    "final_gate_source": "Exact final-head CI, review and thread conclusions are retained in the PR handoff."
+  },
+  "no_deployment_performed": true,
+  "v42_started": false,
+  "transcript_format": "UTF-8 LF, trailing whitespace and blank EOF lines normalized for Git. Raw hashes retained; test output meaning and outcomes unchanged.",
+  "review_closure": "review-closure-validation.json"
+}

@@ -1,0 +1,9 @@
+(node:2669278) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///tmp/nxttrack-phase02-canonical-app/apps/web/lib/release/schema-compatibility.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /tmp/nxttrack-phase02-canonical-app/apps/web/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2669278) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web/lib/release/schema-compatibility.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web/package.json.
+legacy: PASS 148 migrations, both application health contracts, unchanged ACLs/settings and conflict=error
+secure: PASS 148 migrations, both application health contracts, unchanged ACLs/settings and conflict=error

@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 release:assert-schema-compatibility /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/release/assert-runtime-schema-compatibility.mjs
+
+[release:schema] PASS migrations=148 fingerprint=9606805fdf875ef27b76986532a5e226c49e5e90d30358a5f3a58f921bd33417 minimumSchemaFingerprint=2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba minimumAppSha=541fe5fd6cee083cb809eef236382cfd2d519ed3
