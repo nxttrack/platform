@@ -1,3 +1,7 @@
+import Link from "next/link";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { ThemeLibraryTable } from "@/components/platform/theme-library-table";
+import { validateThemeReleaseDocument } from "@/lib/theme/theme-release-validation";
 import { ArrowLeftRight, CalendarClock, History, Palette, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +25,12 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
     searchParams ?? Promise.resolve({} as Record<string, string | string[] | undefined>)
   ]);
   if (!data.authorized) return <p className="rounded-xl border border-danger/20 bg-danger/10 p-5 text-danger">Geen toegang.</p>;
+  const imported = await createAdminClient().from("portal_theme_release").select("manifest_json, presentation_json, status, import_revision").not("presentation_json", "is", null).order("created_at", { ascending: false });
+  if (imported.error) throw new Error("Themabibliotheek niet beschikbaar");
+  const libraryRows = (imported.data ?? []).map((row) => {
+    const checked = validateThemeReleaseDocument(row.manifest_json, row.presentation_json);
+    return { key: checked.manifest.theme.key, release: checked.manifest.theme.release, name: checked.manifest.theme.displayName, role: checked.presentation.role, status: row.status, worlds: Object.keys(checked.presentation.worlds).length, revision: row.import_revision };
+  });
   const assignmentByTenant = new Map(data.assignments.map((row) => [row.tenant_id, row]));
   const scheduleByTenant = new Map(data.schedules.map((row) => [row.tenant_id, row]));
   const nationalLicenseByTenant = new Map(
@@ -39,10 +49,12 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Platformbeheer · immutable releases" title="Theme Control Center" subtitle="Preview, activeer, plan en rol tenantthema’s gecontroleerd terug." />
+      <PageHeader kicker="Platformbeheer · immutable releases" title="Themabibliotheek" subtitle="Preview, activeer, plan en rol tenantthema’s gecontroleerd terug." />
       {saved ? <p className="rounded-xl border border-success/25 bg-success/10 p-4 text-sm font-semibold text-success">Theme-operatie is transactioneel opgeslagen.</p> : null}
       {error ? <p className="rounded-xl border border-danger/25 bg-danger/10 p-4 text-sm font-semibold text-danger">Theme-operatie is veilig gestopt; de vorige actieve release bleef behouden.</p> : null}
 
+      <Link className="inline-flex rounded-lg border p-3 font-bold" href="/platform/themes/bindings">Werelden aan een curriculum koppelen</Link>
+      <ThemeLibraryTable rows={libraryRows} />
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {data.catalog.map((theme) => {
           return (
@@ -89,7 +101,7 @@ export default async function PortalThemeControlCenterPage({ searchParams }: Pag
                         );
                         const enabled = availability?.is_enabled ?? false;
                         return (
-                          <form action={setPortalThemeAvailabilityAction} className="rounded-lg border border-border bg-background p-2" key={`${tenant.id}:${theme.theme.key}`}>
+                          <form action={setPortalThemeAvailabilityAction} className="rounded-lg border border-border bg-background p-2" key={`${tenant.id}:${theme.theme.key}:${theme.theme.release}`}>
                             <input name="tenantId" type="hidden" value={tenant.id} />
                             <input name="themeRelease" type="hidden" value={`${theme.theme.key}@${theme.theme.release}`} />
                             <input name="availability" type="hidden" value={enabled ? "disabled" : "enabled"} />

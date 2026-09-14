@@ -1,0 +1,7 @@
+# Final review continuation
+
+All independent implementation and local regression work is complete. Original Default1.1 manifests/anchors/96 images remain B01; status IMPLEMENTED_WITH_BLOCKERS, not art-ready. Branch codex/portal-v42-default-integration. Canonical main must remain afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80. Runtime source 2485e1124b5557329048db91bbc45d3c8d76c9ac. First PR CI browser failures and corrections are appended to FINAL-VALIDATION.md.157 migrations, originals151 intact, contract5, fingerprint ec8535f2f83642e679a309bb3a4992af96581cf420e055abb2001069495157cd.
+
+Finish feature push/PR, wait unchanged Web CI, trigger/read Codex review and address findings. No merge/deployment/remote DB/provider action. Current exact PR state belongs in PR body and final response (GITHUB-REVIEW.md explains self-SHA/CI recording). Read FINAL-VALIDATION.md/FINAL-EVIDENCE.json and DATABASE-CERTIFICATION.md for actual evidence; historical checkpoint failures are not overwritten.
+
+Edit ONLY /home/codex/repos/nxttrack-portal-v42-default-integration. Preserve original worktree changes. Owned final standalone checkout /dev/shm/nxttrack-v42-build, local app58410, development DB/API58522/58521; fresh/upgrade/rollback local profiles separate. Private credentials outside Git under /tmp/nxttrack-v42-evidence and /tmp/nxttrack-v42-final-evidence; never print. No subagents authorized. Physical devices and real provider environments NOT TESTED. Local payment HTTP stub is explicitly loaded test tooling only.

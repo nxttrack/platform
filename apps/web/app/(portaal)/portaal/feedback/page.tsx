@@ -1,5 +1,6 @@
 import { CheckCircle2, MessageSquareHeart, ShieldCheck } from "lucide-react";
 
+import { DirtyForm } from "@/components/ui/dirty-form";
 import { Button } from "@/components/ui/button";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { RouteFeedback } from "@/components/ui/route-feedback";
@@ -38,7 +39,7 @@ export default async function ParentFeedbackPage({ searchParams }: PageProps) {
         {open.length === 0 ? <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-soft"><CheckCircle2 className="mx-auto size-8 text-success" /><h2 className="mt-3 font-bold">Je bent helemaal bij</h2><p className="mt-1 text-sm text-muted-foreground">Er staan geen open feedbackvragen klaar.</p></div> : open.map((request) => {
           const campaign = campaigns.get(request.campaign_id);
           return (
-            <form action={submitParentFeedbackAction} className="rounded-2xl border border-border bg-card p-5 shadow-card" key={request.id}>
+            <DirtyForm action={submitParentFeedbackAction} className="rounded-2xl border border-border bg-card p-5 shadow-card" key={request.id}>
               <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-primary">{participants.get(request.participant_id) ?? "Jouw kind"}</p><h2 className="mt-1 text-xl font-bold">{campaign?.name ?? "Korte evaluatie"}</h2></div><StatusPill tone="info">± 1 minuut</StatusPill></div>
               <p className="mt-5 text-base font-semibold">{campaign?.prompt ?? "Hoe waarschijnlijk is het dat je ons aanbeveelt?"}</p>
               <fieldset className="mt-3"><legend className="sr-only">Score van nul tot tien</legend><div className="grid grid-cols-6 gap-2 sm:grid-cols-11">{Array.from({ length: 11 }, (_, score) => <label className="group cursor-pointer" key={score}><input className="peer sr-only" name="score" required type="radio" value={score} /><span className="grid h-11 place-items-center rounded-xl border border-border bg-background text-sm font-bold transition peer-checked:border-primary peer-checked:bg-primary peer-checked:text-primary-foreground peer-focus-visible:ring-2 peer-focus-visible:ring-ring">{score}</span></label>)}</div><div className="mt-2 flex justify-between text-xs text-muted-foreground"><span>Niet waarschijnlijk</span><span>Zeer waarschijnlijk</span></div></fieldset>
@@ -46,7 +47,7 @@ export default async function ParentFeedbackPage({ searchParams }: PageProps) {
               <label className="mt-4 flex items-start gap-3 rounded-xl border border-border bg-muted/30 p-3 text-sm"><input className="mt-1" name="followUpAllowed" type="checkbox" /><span><strong>De {terminology.organization} mag persoonlijk opvolgen</strong><br /><span className="text-muted-foreground">Zonder dit vinkje blijft je reactie alleen onderdeel van de analyse.</span></span></label>
               <input name="requestId" type="hidden" value={request.id} />
               <Button className="mt-4 w-full sm:w-auto" type="submit">Feedback veilig versturen</Button>
-            </form>
+            </DirtyForm>
           );
         })}
         {visibleRequests.filter((row) => row.status === "completed").slice(0, 3).map((request) => <article className="flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/20 p-4" key={request.id}><div className="flex items-center gap-3"><ShieldCheck className="size-5 text-success" /><div><p className="font-semibold">{campaigns.get(request.campaign_id)?.name ?? "Feedback"}</p><p className="text-xs text-muted-foreground">Veilig ontvangen</p></div></div><StatusPill tone="success">score {responses.get(request.id)?.score ?? "—"}</StatusPill></article>)}

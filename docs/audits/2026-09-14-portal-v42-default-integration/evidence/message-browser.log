@@ -1,0 +1,54 @@
+
+Running 1 test using 1 worker
+
+(node:3716259) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send (15.4s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('dialog', { name: 'Nieuw bericht', exact: true }).getByText('Concept opgeslagen', { exact: true })
+    Expected: visible
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" with timeout 10000ms
+      - waiting for getByRole('dialog', { name: 'Nieuw bericht', exact: true }).getByText('Concept opgeslagen', { exact: true })
+
+
+      16 |   const body = dialog.getByRole("textbox", { name: "Bericht", exact: true });
+      17 |   await body.fill("Fictieve vraag over ademen — nog niet verzonden.");
+    > 18 |   await expect(dialog.getByText("Concept opgeslagen", { exact: true })).toBeVisible();
+         |                                                                         ^
+      19 |   await page.reload(); await expect(body).toHaveValue("Fictieve vraag over ademen — nog niet verzonden.");
+      20 |   // A separate authenticated browser reads the same durable private draft.
+      21 |   const other = await browser.newContext({ storageState: await page.context().storageState() });
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-message-composer.spec.ts:18:73
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/message-browser-results/journey-message-composer-r-6f8b5-t-choices-and-explicit-send-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/message-browser-results/journey-message-composer-r-6f8b5-t-choices-and-explicit-send-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../tmp/nxttrack-v42-evidence/message-browser-results/journey-message-composer-r-6f8b5-t-choices-and-explicit-send-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/message-browser-results/journey-message-composer-r-6f8b5-t-choices-and-explicit-send-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-v42-evidence/message-browser-results/journey-message-composer-r-6f8b5-t-choices-and-explicit-send-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send 
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts journey-message-composer --project=journey-chromium --workers=1 --output=/tmp/nxttrack-v42-evidence/message-browser-results

@@ -1,0 +1,8 @@
+
+> @nxttrack/platform@0.0.0 typecheck /home/codex/repos/nxttrack-portal-v42-default-integration
+> pnpm --filter @nxttrack/web typecheck
+
+
+> @nxttrack/web@0.0.0 typecheck /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web
+> tsc --noEmit
+

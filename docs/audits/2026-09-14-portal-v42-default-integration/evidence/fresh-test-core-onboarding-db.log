@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:core-onboarding:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/test-core-onboarding-writes-integration.mjs
+
+[test:core-onboarding:db] PASS participant/intake failure rollback and replay; placement failure rollback; 20-way and 100-way one-seat claims each produced one placement and controlled capacity responses.

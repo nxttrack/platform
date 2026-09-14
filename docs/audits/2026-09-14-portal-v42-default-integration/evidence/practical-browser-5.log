@@ -1,0 +1,54 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional (22.5s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator:  getByRole('textbox', { name: 'Naam', exact: true })
+    Expected: "Fictieve proefouder"
+    Received: ""
+    Timeout:  10000ms
+
+    Call log:
+      - Expect "toHaveValue" with timeout 10000ms
+      - waiting for getByRole('textbox', { name: 'Naam', exact: true })
+        24 × locator resolved to <input value="" type="text" name="fullName" class="h-11 w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+           - unexpected value ""
+
+
+      27 |  await page.goto(`/portaal/planning?kind=${f.otherChild}`);await expect(page.locator('#lessen')).not.toContainText('Fictieve instructiegroep');
+      28 |  await page.goto('/portaal/profiel');await page.getByRole('textbox',{name:'Naam',exact:true}).fill('Fictieve proefouder');
+    > 29 |  await page.getByRole('button',{name:'Profiel opslaan',exact:true}).click();await expect(page).toHaveURL(/saved=1/);await page.reload();await expect(page.getByRole('textbox',{name:'Naam',exact:true})).toHaveValue('Fictieve proefouder');
+         |                                                                                                                                                                                                          ^
+      30 |  await page.goto(`/portaal/feedback?kind=${f.child}`);const form=page.locator('form').filter({has:page.getByRole('button',{name:'Feedback veilig versturen'})});
+      31 |  await form.getByRole('radio',{name:'8',exact:true}).check({force:true});
+      32 |  await form.getByRole('textbox').fill('Fictieve feedback voor een lokale controle.');
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-parent-practical.spec.ts:29:202
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-5/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-5/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-5/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-5/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-5/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional 
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts journey-parent-practical.spec.ts --project=journey-chromium --retries=0 --workers=1 --output=/dev/shm/nxttrack-v42-browser-tmp/practical-5

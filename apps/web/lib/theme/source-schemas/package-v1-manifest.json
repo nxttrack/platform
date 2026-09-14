@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:nxttrack:theme-package:1.0:manifest",
+  "type": "object",
+  "properties": {
+    "format": {
+      "const": "nxttrack-theme"
+    },
+    "packageVersion": {
+      "const": "1.0"
+    },
+    "engineContract": {
+      "const": "journey-3.0"
+    },
+    "themeId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{1,63}$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)$"
+    },
+    "themeFile": {
+      "const": "theme.json"
+    },
+    "assetsFile": {
+      "const": "assets.json"
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 2000
+    },
+    "changeNote": {
+      "type": "string",
+      "maxLength": 2000
+    }
+  },
+  "required": [
+    "format",
+    "packageVersion",
+    "engineContract",
+    "themeId",
+    "version",
+    "themeFile",
+    "assetsFile"
+  ],
+  "additionalProperties": false
+}

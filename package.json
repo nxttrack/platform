@@ -32,6 +32,8 @@
     "themes:import-kit": "node scripts/theme/import-six-theme-kit-assets.mjs",
     "themes:export-native": "tsx scripts/theme/export-native-theme-tokens.ts",
     "test:portal-themes": "tsx --test tests/unit/portal-theme-contract.test.ts tests/unit/portal-theme-six-by-thirteen.test.ts tests/unit/portal-journey-engine.test.ts tests/unit/portal-journey-collision.test.ts tests/unit/portal-journey-schema.test.ts tests/unit/learner-assessment-contract.test.ts tests/unit/portal-theme-schema.test.ts",
+    "test:portal-messages:db": "tsx --test tests/integration/portal-message-composer.test.ts",
+    "test:instructor-review:db": "tsx --test tests/integration/instructor-assessment-review.test.ts",
     "test:parent-child-portals": "tsx --test tests/unit/portal-session-contract.test.ts tests/unit/portal-child-projection.test.ts tests/unit/portal-visual-matrix-contract.test.ts",
     "test:swim-canon": "tsx --test tests/unit/swim-progress-contract.test.ts tests/unit/swim-permissions-contract.test.ts tests/unit/swim-canon-schema.test.ts tests/unit/swim-assessment-schema.test.ts tests/unit/swim-badge-batch-schema.test.ts tests/unit/swim-curriculum-wizard-schema.test.ts tests/unit/swim-transition-carryover-schema.test.ts tests/unit/swim-group-planning-schema.test.ts tests/unit/billing-document-contract.test.ts tests/unit/swim-flow-analytics-contract.test.ts tests/unit/swim-analytics-forecast-schema.test.ts tests/unit/native-mobile-contract.test.ts",
     "test:swim-canon:db": "node scripts/db/test-swim-canon-integration.mjs",
@@ -125,7 +127,8 @@
     "test:smoke:e2e": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/smoke.spec.ts tests/e2e/visual-performance.spec.ts",
     "test:e2e": "pnpm --filter @nxttrack/web test:e2e",
     "hardening:local": "pnpm run typecheck && pnpm run test:billing-contract && pnpm run test:intake-recommendations && pnpm run test:data-quality && pnpm run test:smart-signals && pnpm run test:predictive-operations && pnpm run test:analytics && pnpm run test:family-crm && pnpm run test:crm-pipeline && pnpm run test:empty-seat-recovery && pnpm run test:operational-cockpit && pnpm run test:instructor-replacement && pnpm run test:retention-signals && pnpm run test:lesson-plans && pnpm run test:tenant-health && pnpm run test:premium-suite && pnpm run test:automation-recipes && pnpm run test:communication-hub && pnpm run test:badges && pnpm run test:content-security && pnpm run test:participant-media && pnpm run test:site-cms && pnpm run test:demo-seed && pnpm run auth:audit && pnpm run db:audit && pnpm run db:rls-audit && pnpm run release:audit-sprint31 && pnpm run release:audit-runtime-env && pnpm run build && pnpm run deploy:package-standalone-assets && pnpm run staging:gate",
-    "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e"
+    "hardening:smoke": "pnpm run hardening:local && pnpm run test:e2e",
+    "test:theme-library:db": "tsx --test tests/integration/portal-theme-library.test.ts"
   },
   "engines": {
     "node": ">=24.18.0 <25"

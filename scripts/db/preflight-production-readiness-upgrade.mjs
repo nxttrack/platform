@@ -185,11 +185,15 @@ try {
     report.inventory.noncanonicalEmailIdempotencyKeyCount = 0;
   }
 
+  // Accept exactly the inventory certified by the applied lineage. A pre-V4.2
+  // database still needs the original five buckets; newer imports add two private buckets.
+  const requiredBuckets = [...expectedBuckets, ...(await migrationApplied("20260914101412")
+    ? ["portal-theme-assets", "portal-theme-imports"] : [])].sort();
   const buckets = await client.query("select id, public from storage.buckets order by id");
   report.inventory.buckets = buckets.rows;
   if (
-    buckets.rows.length !== expectedBuckets.length ||
-    buckets.rows.some((bucket, index) => bucket.id !== expectedBuckets[index] || bucket.public !== false)
+    buckets.rows.length !== requiredBuckets.length ||
+    buckets.rows.some((bucket, index) => bucket.id !== requiredBuckets[index] || bucket.public !== false)
   ) {
     block("unexpected_storage_bucket_inventory", buckets.rows);
   }

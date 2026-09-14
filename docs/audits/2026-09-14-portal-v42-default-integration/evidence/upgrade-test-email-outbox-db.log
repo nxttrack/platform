@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:email-outbox:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/test-email-outbox-integration.mjs
+
+[test:email-outbox:db] PASS service-only grants, 20-way enqueue dedupe, 20-way atomic claim, retry, acceptance, lease exhaustion and immutable lifecycle events.

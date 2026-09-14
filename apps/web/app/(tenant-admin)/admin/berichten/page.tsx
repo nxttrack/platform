@@ -79,7 +79,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
       <Feedback saved={saved} error={error} />
       <RouteFeedback error={error && !["confirmation", "visibility"].includes(error) ? error : null} success={success} />
 
-      <ThreadWorkspace
+      <ThreadWorkspace currentUserId={hub.currentUserId} tenantId={hub.tenant.id}
         baseHref="/admin/berichten"
         instructors={hub.instructors}
         filters={filters}

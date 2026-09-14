@@ -1,0 +1,71 @@
+
+> @nxttrack/platform@0.0.0 test:journey:e2e /dev/shm/nxttrack-v42-build
+> pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts --project=journey-chromium --workers=1 journey-rich.spec.ts journey-development.spec.ts journey-draft-history.spec.ts
+
+[WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+
+Running 13 tests using 1 worker
+
+  ✓   1 [journey-chromium] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (1.3s)
+  ✓   2 [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (1.9s)
+  ✓   3 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (906ms)
+  ✓   4 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (1.6s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (693ms)
+  ✓   6 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (718ms)
+  ✓   7 [journey-chromium] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (2.9s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (1.2s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-rich.spec.ts:58:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (3.8s)
+  ✘  10 [journey-chromium] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (10.8s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-rich.spec.ts:100:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (1.3s)
+  ✓  12 [journey-chromium] › tests/e2e/journey-rich.spec.ts:115:5 › visible pearls remain registered to the rendered smooth route in both orientations (2.3s)
+  ✓  13 [journey-chromium] › tests/e2e/journey-rich.spec.ts:131:5 › guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced (1.4s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: locator('[data-rich-journey]').locator('[data-rich-node="fixture-48"]')
+    Expected: "true"
+    Timeout: 10000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" with timeout 10000ms
+      - waiting for locator('[data-rich-journey]').locator('[data-rich-node="fixture-48"]')
+
+
+      89 |   await expect(scene.locator('[data-rich-node="fixture-3"]')).toHaveAttribute("aria-current", "step");
+      90 |   await scene.focus(); await page.keyboard.press("End");
+    > 91 |   await expect(scene.locator('[data-rich-node="fixture-48"]')).toHaveAttribute("data-selected", "true");
+         |                                                                ^
+      92 |   await expect(scene.locator('[data-rich-node="fixture-48"]')).not.toHaveAttribute("aria-current", "step");
+      93 |   await page.keyboard.press("Home");
+      94 |   await expect(scene.locator('[data-rich-node="fixture-1"]')).toHaveAttribute("data-selected", "true");
+        at /dev/shm/nxttrack-v42-build/apps/web/tests/e2e/journey-rich.spec.ts:91:64
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/journey-rich-selection-lea-edef6-ation-reaches-every-segment-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results/journey-rich-selection-lea-edef6-ation-reaches-every-segment-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/journey-rich-selection-lea-edef6-ation-reaches-every-segment-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/journey-rich-selection-lea-edef6-ation-reaches-every-segment-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace test-results/journey-rich-selection-lea-edef6-ation-reaches-every-segment-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment 
+  12 passed (34.0s)
+undefined
+/dev/shm/nxttrack-v42-build/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.journey.config.ts --project=journey-chromium --workers=1 journey-rich.spec.ts journey-development.spec.ts journey-draft-history.spec.ts
+ ELIFECYCLE  Command failed with exit code 1.

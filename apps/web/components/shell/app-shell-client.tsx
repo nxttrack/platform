@@ -1,4 +1,5 @@
 "use client";
+import { flushDraftWriters } from "@/components/portal/draft-navigation";
 
 import {
   Award,
@@ -369,7 +370,9 @@ function ContextSelector({ selector }: { selector: NonNullable<Props["contextSel
   const value = searchParams.get(selector.parameter) ?? "";
   const selected = selector.options.find((option) => option.value === value);
 
-  function selectContext(nextValue: string) {
+  async function selectContext(nextValue: string) {
+    const source=window.location.href;
+    if(!await flushDraftWriters() || window.location.href!==source) return;
     const params = new URLSearchParams(searchParams.toString());
     if (nextValue) params.set(selector.parameter, nextValue);
     else params.delete(selector.parameter);

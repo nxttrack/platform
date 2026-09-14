@@ -1,0 +1,6 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] RUN_DB_MIGRATIONS is not true. Skipping migration execution.

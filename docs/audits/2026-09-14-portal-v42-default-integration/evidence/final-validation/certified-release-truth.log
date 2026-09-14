@@ -1,0 +1,12 @@
+
+> @nxttrack/platform@0.0.0 release:truth /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/release/audit-repository-truth.mjs
+
+[release:truth] canonical=main current=codex/portal-v42-default-integration sha=feee0c0a1d3b
+[release:truth] origin/main sha=afb53f6e4f72 head-only=31 branch-only=0
+[release:truth] origin/staging sha=6f9aec33d4e2 head-only=166 branch-only=142
+[release:truth] origin/production sha=ba8932b5ecc5 head-only=537 branch-only=32
+[release:truth] Warnings:
+- origin/staging contains 142 commit(s) outside the current canonical history; do not merge it wholesale.
+- origin/production contains 32 commit(s) outside the current canonical history; do not merge it wholesale.
+[release:truth] PASS Canonical source and release invariants are explicit.

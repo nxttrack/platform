@@ -1,0 +1,22 @@
+[
+  {
+    "source": "2485e1124b5557329048db91bbc45d3c8d76c9ac",
+    "command": [
+      "pnpm",
+      "build"
+    ],
+    "log": "ci-closure-production-build.log",
+    "exit_code": 0,
+    "seconds": 7.94
+  },
+  {
+    "source": "2485e1124b5557329048db91bbc45d3c8d76c9ac",
+    "command": [
+      "pnpm",
+      "deploy:package-standalone-assets"
+    ],
+    "log": "ci-closure-standalone-packaging.log",
+    "exit_code": 0,
+    "seconds": 0.41
+  }
+]

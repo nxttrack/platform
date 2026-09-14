@@ -1,0 +1,30 @@
+Fictional local parent, two children and authorized curriculum reference created; private fixture file written; no email/provider delivery.
+Fictional qualified instructor, published curriculum/stage, parent and child-mode test context created locally; no external delivery.
+/dev/shm/nxttrack-v42-build/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652
+          Error.captureStackTrace(err)
+                ^
+
+error: insert or update on table "certificate_records" violates foreign key constraint "certificate_records_stage_fk"
+    at /dev/shm/nxttrack-v42-build/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///dev/shm/nxttrack-v42-build/scripts/db/seed-portal-private-files-browser.mjs:29:3 {
+  length: 384,
+  severity: 'ERROR',
+  code: '23503',
+  detail: 'Key (tenant_id, stage_id)=(f4bd5028-1142-4b96-bae4-f4416184d6d7, 4112ef12-93b0-440f-b605-01c7f9134624) is not present in table "program_stages".',
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: 'public',
+  table: 'certificate_records',
+  column: undefined,
+  dataType: undefined,
+  constraint: 'certificate_records_stage_fk',
+  file: 'ri_triggers.c',
+  line: '2599',
+  routine: 'ri_ReportViolation'
+}
+
+Node.js v24.18.0

@@ -1,0 +1,247 @@
+Build	Validate Journey timeline in Chromium Firefox and WebKit	﻿2026-09-14T16:43:13.1585431Z ##[group]Run pnpm run test:journey:e2e
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.1585798Z ^[[36;1mpnpm run test:journey:e2e^[[0m
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.1623443Z shell: /usr/bin/bash -e {0}
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.1623719Z ##[endgroup]
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.4622487Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.4624082Z > @nxttrack/platform@0.0.0 test:journey:e2e /home/runner/work/platform/platform
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.4625462Z > pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:13.4626189Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:16.1304964Z [WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:17.2751087Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:17.2752069Z Running 105 tests using 2 workers
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:17.2775116Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:18.4750951Z   -    2 [journey-chromium] › tests/e2e/journey-collection.spec.ts:12:5 › real family collection needs explicit save, survives network retry/reload and shares immutable discoveries with child mode
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:20.0642857Z   ✓    3 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (1.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:20.2206209Z   ✓    1 [journey-chromium] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (2.3s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:22.8441315Z   ✓    4 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (2.8s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:23.6817186Z   ✓    5 [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (3.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:23.9711197Z   -    7 [journey-chromium] › tests/e2e/journey-image-delivery.spec.ts:3:5 › published scene initially downloads only its measured orientation and changes assets when actually rotated
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:24.0101698Z   ✓    6 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (1.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:24.4089707Z   -    8 [journey-chromium] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:24.7780986Z   -   10 [journey-chromium] › tests/e2e/journey-local-payment.spec.ts:10:5 › local provider snapshots drive the real webhook and parent payment status; forged amount cannot settle
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.0040828Z   -   11 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.1995774Z   ✓    9 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (1.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.2416111Z   -   12 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:74:5 › real private message draft survives failed browser Back and is restored after a successful save and Forward
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.5153124Z   -   13 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.5539619Z   -   14 [journey-chromium] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:25.8648207Z   -   16 [journey-chromium] › tests/e2e/journey-theme-import-recovery.spec.ts:4:5 › rejected source retries as a separate attempt and explicit cleanup preserves import history and runtime releases
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:27.9719985Z   ✓   17 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (2.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:30.1190283Z   ✓   18 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (2.1s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:30.1332236Z   ✓   15 [journey-chromium] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (4.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:31.7863602Z   ✓   19 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:31.9553170Z   ✓   20 [journey-chromium] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (1.8s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:34.7719436Z   ✓   21 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (3.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:36.8290531Z   ✓   23 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (2.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:38.5496688Z   ✓   24 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:38.5907306Z   ✓   22 [journey-chromium] › tests/e2e/journey-rich.spec.ts:58:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (6.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:39.9858271Z   ✓   26 [journey-chromium] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (1.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:40.2255740Z   ✓   25 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:41.7200981Z   ✓   27 [journey-chromium] › tests/e2e/journey-rich.spec.ts:101:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (1.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:41.9401359Z   ✓   28 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:43.3554035Z   ✓   30 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:45.4526867Z   ✓   29 [journey-chromium] › tests/e2e/journey-rich.spec.ts:116:5 › visible pearls remain registered to the rendered smooth route in both orientations (3.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:46.9335928Z   ✓   31 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (3.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:43:47.2498898Z   ✓   32 [journey-chromium] › tests/e2e/journey-rich.spec.ts:132:5 › guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced (1.8s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:45:53.8819174Z   ✓   33 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (2.1m)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:45:56.2550539Z   -   35 [journey-firefox] › tests/e2e/journey-collection.spec.ts:12:5 › real family collection needs explicit save, survives network retry/reload and shares immutable discoveries with child mode
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:19.5669982Z   ✓   34 [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (2.5m)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:22.1680215Z   ✓   37 [journey-chromium] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:25.3211250Z   ✓   38 [journey-firefox] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (2.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:27.1536791Z   ✓   39 [journey-firefox] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (1.8s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:28.1914360Z   ✓   40 [journey-firefox] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (1.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:29.4301381Z   ✓   41 [journey-firefox] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (1.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:29.7655758Z   -   42 [journey-firefox] › tests/e2e/journey-image-delivery.spec.ts:3:5 › published scene initially downloads only its measured orientation and changes assets when actually rotated
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:30.0892341Z   -   43 [journey-firefox] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:30.4176179Z   -   44 [journey-firefox] › tests/e2e/journey-local-payment.spec.ts:10:5 › local provider snapshots drive the real webhook and parent payment status; forged amount cannot settle
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:30.7498854Z   -   45 [journey-firefox] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:31.0747119Z   -   46 [journey-firefox] › tests/e2e/journey-message-composer.spec.ts:74:5 › real private message draft survives failed browser Back and is restored after a successful save and Forward
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:32.2947248Z   -   47 [journey-firefox] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:32.6394366Z   -   48 [journey-firefox] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:37.2776952Z   ✓   49 [journey-firefox] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (4.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:38.7764403Z   ✓   50 [journey-firefox] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (1.5s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:43.7323616Z   ✓   51 [journey-firefox] › tests/e2e/journey-rich.spec.ts:58:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (4.9s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:44.6789873Z   ✓   52 [journey-firefox] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (931ms)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:46.2056530Z   ✓   53 [journey-firefox] › tests/e2e/journey-rich.spec.ts:101:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (1.5s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:49.6707692Z   ✓   54 [journey-firefox] › tests/e2e/journey-rich.spec.ts:116:5 › visible pearls remain registered to the rendered smooth route in both orientations (3.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:51.3562305Z   ✓   55 [journey-firefox] › tests/e2e/journey-rich.spec.ts:132:5 › guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced (1.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:51.6838067Z   -   56 [journey-firefox] › tests/e2e/journey-theme-import-recovery.spec.ts:4:5 › rejected source retries as a separate attempt and explicit cleanup preserves import history and runtime releases
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:54.0121356Z   ✓   57 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (2.3s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:55.6283246Z   ✓   58 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (1.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:55.9604897Z   -   59 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:57.9848853Z   ✓   60 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (2.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:46:59.2145645Z   ✓   61 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:00.2371740Z   ✓   62 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:01.2676658Z   ✓   63 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:02.5867964Z   ✓   64 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (1.3s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:04.0237487Z   ✓   65 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (1.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:07.7174406Z   ✓   66 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (3.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:08.5925051Z   -   67 [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:08.6046741Z   -   68 [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:08.9458217Z   -   69 [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:11.5979302Z   -   70 [journey-webkit] › tests/e2e/journey-collection.spec.ts:12:5 › real family collection needs explicit save, survives network retry/reload and shares immutable discoveries with child mode
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:16.3929589Z   ✓   71 [journey-webkit] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (4.8s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:23.4051838Z   ✓   72 [journey-webkit] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (7.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:27.8364237Z   ✓   73 [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (4.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:35.1247433Z   ✓   74 [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (7.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:49.1079215Z   ✘   75 [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (13.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:52.2710974Z   ✓   76 [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (2.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:52.8926244Z   -   77 [journey-webkit] › tests/e2e/journey-image-delivery.spec.ts:3:5 › published scene initially downloads only its measured orientation and changes assets when actually rotated
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:53.4653126Z   -   78 [journey-webkit] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:54.0612662Z   -   79 [journey-webkit] › tests/e2e/journey-local-payment.spec.ts:10:5 › local provider snapshots drive the real webhook and parent payment status; forged amount cannot settle
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:54.6371675Z   -   80 [journey-webkit] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:55.2234490Z   -   81 [journey-webkit] › tests/e2e/journey-message-composer.spec.ts:74:5 › real private message draft survives failed browser Back and is restored after a successful save and Forward
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:55.8442323Z   -   82 [journey-webkit] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:47:56.3865968Z   -   83 [journey-webkit] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:11.3941874Z   ✓   84 [journey-webkit] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (15.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:28.1099020Z   ✘   85 [journey-webkit] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (16.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:39.9481254Z   ✓   86 [journey-webkit] › tests/e2e/journey-rich.spec.ts:58:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (11.2s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:42.2377979Z   ✓   87 [journey-webkit] › tests/e2e/journey-rich.spec.ts:86:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (2.3s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:45.1579634Z   ✓   88 [journey-webkit] › tests/e2e/journey-rich.spec.ts:101:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (2.9s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:48.2476709Z   ✓   89 [journey-webkit] › tests/e2e/journey-rich.spec.ts:116:5 › visible pearls remain registered to the rendered smooth route in both orientations (3.1s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:51.7461686Z   ✓   90 [journey-webkit] › tests/e2e/journey-rich.spec.ts:132:5 › guide parks clear of controls, does not measure obstacles during drag and stops when offscreen or motion is reduced (3.5s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:52.3352029Z   -   91 [journey-webkit] › tests/e2e/journey-theme-import-recovery.spec.ts:4:5 › rejected source retries as a separate attempt and explicit cleanup preserves import history and runtime releases
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:48:56.5286766Z   ✓   92 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (4.1s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:02.2126048Z   ✓   93 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (5.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:02.9710817Z   -   94 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:08.6441468Z   ✓   95 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (5.7s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:12.0422016Z   ✘   36 [journey-firefox] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (3.2m)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:13.0380659Z   ✓   96 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (4.4s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:20.6130802Z   ✓   98 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (7.6s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:21.2067201Z   ✓   97 [journey-firefox] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (7.9s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:23.1352820Z   -  100 [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:24.4512779Z   -  101 [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:27.0982646Z   ✓   99 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (6.5s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:30.1411079Z   ✓  102 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (3.0s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:32.6723150Z   ✓  103 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (2.5s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:38.5337512Z   ✓  104 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (5.9s)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.1351991Z   -  105 [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2267521Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2293886Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2296080Z   1) [journey-firefox] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2297388Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2297675Z     Test timeout of 180000ms exceeded.
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2298028Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2300802Z     Error: page.reload: Test timeout of 180000ms exceeded.
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2301471Z     Call log:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2301948Z       - waiting for navigation until "load"
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2302821Z         - navigated to "http://localhost:3107/test-harness/journey-development"
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2303418Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2303430Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2304065Z        5 |   const rows = page.locator("[data-development-skill]"); await expect(rows).toHaveCount(2);
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2305200Z        6 |   await page.getByRole("searchbox", { name: "Zoek onderdelen" }).fill("Ademen"); await expect(rows).toHaveCount(1);
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2306491Z     >  7 |   await page.reload(); await expect(page.getByRole("searchbox", { name: "Zoek onderdelen" })).toHaveValue("Ademen"); await expect(rows).toHaveCount(1);
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2307314Z          |              ^
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2307980Z        8 |   const trigger = page.getByRole("button", { name: "Bekijk Ademen", exact: true }); await trigger.click();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2309353Z        9 |   const dialog = page.getByRole("dialog", { name: "Ademen", exact: true }); await expect(dialog).toBeVisible();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2311023Z       10 |   await expect(dialog.getByText("3 / 5", { exact: true })).toHaveCount(2); // actual score and real mastery threshold
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2312489Z         at /home/runner/work/platform/platform/apps/web/tests/e2e/journey-development.spec.ts:7:14
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2313254Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2314402Z     attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2315625Z     test-results/journey-development-develo-9f781--historical-values-distinct-journey-firefox/video.webm
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2316538Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2316838Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2317647Z     Error Context: test-results/journey-development-develo-9f781--historical-values-distinct-journey-firefox/error-context.md
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2318208Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2319080Z     attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2319865Z     test-results/journey-development-develo-9f781--historical-values-distinct-journey-firefox/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2320410Z     Usage:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2320525Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2321091Z         pnpm exec playwright show-trace test-results/journey-development-develo-9f781--historical-values-distinct-journey-firefox/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2321674Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2322039Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2322537Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2323143Z   2) [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2323644Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2323801Z     Error: expect(locator).toBeVisible() failed
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2324016Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2324237Z     Locator: getByRole('status').filter({ hasText: 'Opslag mislukt' })
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2324610Z     Expected: visible
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2324834Z     Timeout: 10000ms
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2325072Z     Error: element(s) not found
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2325238Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2325320Z     Call log:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2325582Z       - Expect "toBeVisible" with timeout 10000ms
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2326035Z       - waiting for getByRole('status').filter({ hasText: 'Opslag mislukt' })
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2326336Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2326342Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2326731Z       37 |   const input=page.getByRole('textbox',{name:'Fictief concept'});await input.fill('Fictief tabconcept');
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2327398Z       38 |   await page.getByRole('tab',{name:'Andere tab',exact:true}).click();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2328008Z     > 39 |   await expect(page.getByRole('status').filter({hasText:'Opslag mislukt'})).toBeVisible();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2328813Z          |                                                                             ^
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2329255Z       40 |   await expect(input).toHaveValue('Fictief tabconcept');
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2329881Z       41 |   await expect(page.getByRole('tab',{name:'Concept',exact:true})).toHaveAttribute('aria-selected','true');
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2330845Z       42 |   await page.getByRole('checkbox',{name:'Simuleer opslagfout'}).uncheck();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2332061Z         at /home/runner/work/platform/platform/apps/web/tests/e2e/journey-draft-history.spec.ts:39:77
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2332817Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2333565Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2334910Z     test-results/journey-draft-history-tab--18107--draft-after-a-failed-flush-journey-webkit/test-failed-1.png
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2336338Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2336825Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2337478Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2338929Z     test-results/journey-draft-history-tab--18107--draft-after-a-failed-flush-journey-webkit/video.webm
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2340312Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2340807Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2341642Z     Error Context: test-results/journey-draft-history-tab--18107--draft-after-a-failed-flush-journey-webkit/error-context.md
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2342561Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2343480Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2344740Z     test-results/journey-draft-history-tab--18107--draft-after-a-failed-flush-journey-webkit/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2345810Z     Usage:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2345981Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2346923Z         pnpm exec playwright show-trace test-results/journey-draft-history-tab--18107--draft-after-a-failed-flush-journey-webkit/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2347912Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2348703Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2349212Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2350369Z   3) [journey-webkit] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2351398Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2351695Z     Error: expect(locator).toHaveCSS(expected) failed
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2352100Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2352521Z     Locator:  locator('[data-rich-journey]').locator('[data-rich-world]')
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2353367Z     Expected: "matrix(1.010526, 0, 0, 1.010526, -102.176941, -192.905258)"
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2354182Z     Received: "matrix(1.010526, 0, 0, 1.010526, -39.176941, -160.905258)"
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2354775Z     Timeout:  10000ms
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2354983Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2355114Z     Call log:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2355534Z       - Expect "toHaveCSS" with timeout 10000ms
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2356337Z       - waiting for locator('[data-rich-journey]').locator('[data-rich-world]')
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2357730Z         23 × locator resolved to <div data-rich-world="true" class="portal-journey-scene-module__8OLKda__world">…</div>
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2359188Z            - unexpected value "matrix(1.010526, 0, 0, 1.010526, -39.176941, -160.905258)"
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2359758Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2359767Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2360366Z       48 |   // Same route navigation refreshes the server props without replacing the client context.
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2361516Z       49 |   await page.getByRole("button", { name: "Fixture opnieuw laden" }).click();
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2362391Z     > 50 |   await expect(world).toHaveCSS("transform", moved);
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2363000Z          |                       ^
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2363636Z       51 |   await page.setViewportSize({ width: 390, height: 844 });
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2364532Z       52 |   await expect(scene).toHaveAttribute("data-orientation", "portrait");
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2365756Z       53 |   await expect(scene.locator('[data-rich-node="fixture-4"]')).toHaveAttribute("data-selected", "true");
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2366974Z         at /home/runner/work/platform/platform/apps/web/tests/e2e/journey-rich.spec.ts:50:23
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2367588Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2368293Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2369939Z     test-results/journey-rich-rich-scene-se-0d613-uppresses-clicks-after-drag-journey-webkit/test-failed-1.png
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2371696Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2372234Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2372932Z     attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2374442Z     test-results/journey-rich-rich-scene-se-0d613-uppresses-clicks-after-drag-journey-webkit/video.webm
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2375910Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2376436Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2377361Z     Error Context: test-results/journey-rich-rich-scene-se-0d613-uppresses-clicks-after-drag-journey-webkit/error-context.md
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2378529Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2379234Z     attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2380509Z     test-results/journey-rich-rich-scene-se-0d613-uppresses-clicks-after-drag-journey-webkit/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2381467Z     Usage:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2381653Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2382631Z         pnpm exec playwright show-trace test-results/journey-rich-rich-scene-se-0d613-uppresses-clicks-after-drag-journey-webkit/trace.zip
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2383646Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2384255Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2384752Z 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2384869Z   3 failed
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2386309Z     [journey-firefox] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2388303Z     [journey-webkit] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2390415Z     [journey-webkit] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag 
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2391548Z   35 skipped
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2391858Z   67 passed (6.4m)
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2587279Z undefined
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2596322Z /home/runner/work/platform/platform/apps/web:
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2598170Z  ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.journey.config.ts
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.2983666Z  ELIFECYCLE  Command failed with exit code 1.
+Build	Validate Journey timeline in Chromium Firefox and WebKit	2026-09-14T16:49:39.3175774Z ##[error]Process completed with exit code 1.

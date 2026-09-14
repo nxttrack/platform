@@ -7,6 +7,7 @@ import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { BadgeStudioAsset } from "./badge-system-contract";
 import { getActiveTenant } from "./core";
+import { readJourneyIdBatches } from "./journey-query-pages";
 
 export async function getPlatformBadgeData() {
   const context = await requirePrivateShellContext("/platform/badges");
@@ -120,7 +121,7 @@ export async function getParentBadgeWallDataForContext(
   const tenant = getActiveTenant(context);
   if (!context.activeTenant?.roles.includes("parent")) redirect("/portaal?error=forbidden");
   const admin = createAdminClient();
-  const [participants, guardianLinks, settings, preferences, catalog, overrides, customBadges, awards, collections, collectionItems, shareAssets] = await Promise.all([
+  const [participants, guardianLinks, settings, preferences, catalog, overrides, customBadges, collections, collectionItems, shareAssets] = await Promise.all([
     admin.from("participants").select("id, display_name, gender, status").eq("tenant_id", tenant.id).eq("guardian_user_id", context.user.id),
     admin.from("participant_guardians").select("participant_id").eq("tenant_id", tenant.id).eq("guardian_user_id", context.user.id).eq("status", "active"),
     admin.from("tenant_badge_module_settings").select("*").eq("tenant_id", tenant.id).maybeSingle(),
@@ -128,7 +129,6 @@ export async function getParentBadgeWallDataForContext(
     admin.from("badge_catalog_definitions").select("*").eq("status", "active").order("sort_order"),
     admin.from("tenant_badge_settings").select("*").eq("tenant_id", tenant.id),
     admin.from("tenant_custom_badges").select("*").eq("tenant_id", tenant.id).eq("status", "active"),
-    admin.from("participant_badge_awards").select("*").eq("tenant_id", tenant.id).eq("visibility", "parent_visible").eq("status", "awarded").order("awarded_at", { ascending: false }),
     admin.from("badge_collections").select("*").or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`).eq("status", "active").order("sort_order"),
     admin.from("badge_collection_items").select("*").order("sort_order"),
     admin.from("badge_share_assets").select("*").eq("tenant_id", tenant.id)
@@ -141,7 +141,6 @@ export async function getParentBadgeWallDataForContext(
     ["badge catalog", catalog.error],
     ["badge overrides", overrides.error],
     ["custom badges", customBadges.error],
-    ["badge awards", awards.error],
     ["badge collections", collections.error],
     ["badge collection items", collectionItems.error],
     ["badge share assets", shareAssets.error]
@@ -154,12 +153,18 @@ export async function getParentBadgeWallDataForContext(
     ? await admin.from("participants").select("id, display_name, gender, status").eq("tenant_id", tenant.id).in("id", [...participantIds])
     : { data: [], error: null };
   assertResults([["linked participants", linkedParticipants.error]]);
+  const readAt=new Date().toISOString();
+  const awards=await readJourneyIdBatches([...participantIds],ids=>admin.from("participant_badge_awards").select("*")
+    .eq("tenant_id",tenant.id).in("participant_id",ids).eq("visibility","parent_visible").eq("status","awarded")
+    .lte("awarded_at",readAt).order("awarded_at",{ascending:false}).order("id"));
+  assertResults([["badge awards",awards.error]]);
 
   // This function intentionally uses the service client because the parent
   // portal combines multiple tenant-scoped sources. Re-apply the surprise
   // boundary before constructing the view model: an unearned surprise may not
   // influence payload rows, relationship rows, counts, metadata or assets.
-  const linkedAwards = (awards.data ?? []).filter((award) => participantIds.has(award.participant_id));
+  const linkedAwards = (awards.data ?? []).filter((award) => participantIds.has(award.participant_id))
+    .sort((a,b)=>String(b.awarded_at).localeCompare(String(a.awarded_at)) || String(a.id).localeCompare(String(b.id)));
   const earnedCatalogIds = new Set(linkedAwards.flatMap((award) =>
     award.catalog_definition_id ? [award.catalog_definition_id] : []
   ));

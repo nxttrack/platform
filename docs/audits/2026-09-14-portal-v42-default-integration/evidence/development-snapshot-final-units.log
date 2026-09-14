@@ -1,0 +1,14 @@
+✔ development retains school order and real thresholds independently of the personal route order (2.799524ms)
+✔ history distinguishes corrections and retractions without reviving them as current scores (0.608162ms)
+✔ child history contains only explicit compliments and neither audience receives private context (0.942368ms)
+✔ missing previous assessments remain unknown, including a correction of a private observation (0.414288ms)
+✔ chapter projection reads frozen scores and dates without filling gaps from today's assessments (0.991392ms)
+✔ a captured chapter retains its own curriculum metadata across a later curriculum version (0.255377ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 230.47777

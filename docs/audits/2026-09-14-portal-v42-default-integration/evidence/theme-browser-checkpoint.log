@@ -1,0 +1,8 @@
+
+Running 3 tests using 1 worker
+
+  ✓  1 [chromium-desktop] › tests/e2e/theme-library-persistence.spec.ts:6:5 › platform import, draft editing, preview and immutable publication persist across browser sessions (25.4s)
+  ✓  2 [chromium-desktop] › tests/e2e/theme-library-persistence.spec.ts:84:5 › a manifestless image archive requires explicit mapping and resumes its saved preview after reload (8.5s)
+  ✓  3 [chromium-desktop] › tests/e2e/theme-library-persistence.spec.ts:117:5 › platform world binding is explicit, replaces an optimistic revision and rolls back the full presentation (4.9s)
+
+  3 passed (39.6s)

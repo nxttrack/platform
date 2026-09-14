@@ -1,0 +1,24 @@
+[
+  {
+    "name": "ci-closure-scene-browser-regressions",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@nxttrack/web",
+      "exec",
+      "playwright",
+      "test",
+      "--config=playwright.v42-local.config.ts",
+      "--project=journey-chromium",
+      "--workers=1",
+      "journey-rich.spec.ts",
+      "journey-development.spec.ts",
+      "journey-draft-history.spec.ts",
+      "journey-image-delivery.spec.ts"
+    ],
+    "exit_code": 0,
+    "seconds": 22.19,
+    "log": "ci-closure-scene-browser-regressions.log",
+    "sha256": "98966cbd530ba77f85d87cad35d93dc7f4cabb52cba5415cfc9dfc08844975b7"
+  }
+]

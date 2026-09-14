@@ -27,7 +27,7 @@ export async function startChildPortalSessionAction(formData: FormData) {
     throw new Error("A session, tenant and child are required to enter child mode");
   }
 
-  const result = await createAdminClient().rpc("start_child_portal_session_for_service", {
+  const result = await createAdminClient().rpc("start_child_portal_presentation_session_for_service", {
     p_context_version: CHILD_PORTAL_CONTEXT_VERSION,
     p_participant_id: participantId,
     p_session_id: sessionId,

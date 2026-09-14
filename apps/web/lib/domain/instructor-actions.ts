@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
 import { classifyContent } from "@/lib/security/content-classification";
 import { parseLearnerAssessmentValue } from "./learner-assessment";
 import { getActiveTenant } from "./core";
@@ -303,10 +302,6 @@ export async function scoreProgressItemAction(formData: FormData) {
   const score = readScore(formData, "score");
   const note = readOptional(formData, "note");
   const visibility = readEnum(formData, "visibility", noteVisibilities, "parent_visible");
-  const childVisible = visibility === "parent_visible" && formData.get("childVisible") === "on";
-  const operationId = readOptional(formData, "operationId") ?? crypto.randomUUID();
-  const correctsObservationId = readOptional(formData, "correctsObservationId");
-  const correctionReason = readOptional(formData, "correctionReason");
   const membership = sessionId
     ? await getSessionMembership({
         tenantId: tenant.id,
@@ -340,96 +335,8 @@ export async function scoreProgressItemAction(formData: FormData) {
   }
 
   if (enrollmentResult.data.curriculum_version_id) {
-    const itemResult = await admin
-      .from("curriculum_items")
-      .select("id, identity_id, name, mastery_threshold")
-      .eq("tenant_id", tenant.id)
-      .eq("curriculum_version_id", enrollmentResult.data.curriculum_version_id)
-      .eq("id", itemId)
-      .maybeSingle();
-
-    if (itemResult.error || !itemResult.data) {
-      redirectWithStatus(nextPath, "error", "progress");
-    }
-    if (correctsObservationId && (!correctionReason || correctionReason.length < 3)) {
-      redirectWithStatus(nextPath, "error", "correction-reason");
-    }
-
-    const supabase = await createClient();
-    const observedAt = new Date().toISOString();
-    const assessmentResult = await supabase.rpc("finalize_swim_assessment", {
-      target_client_operation_id: operationId,
-      target_context_json: {
-        channel: "instructor_web",
-        childVisible,
-        formulaVersion: "swim_progress_v3"
-      },
-      target_corrects_observation_id: correctsObservationId,
-      target_correction_reason: correctsObservationId ? correctionReason : null,
-      target_curriculum_item_id: itemId,
-      target_device_id: "instructor-web",
-      target_enrollment_id: membership.enrollment_id,
-      target_idempotency_key: `assessment:web:${operationId}`,
-      target_note: note,
-      target_observed_at: observedAt,
-      target_participant_id: participantId,
-      target_rating: score,
-      target_session_id: sessionId,
-      target_source: correctsObservationId ? "admin_command" : "manual",
-      target_tenant_id: tenant.id,
-      target_visibility: visibility
-    });
-
-    revalidateInstructorPaths(nextPath);
-
-    if (assessmentResult.error || !assessmentResult.data) {
-      redirectWithStatus(nextPath, "error", "progress");
-    }
-
-    const positiveLabel = getPositiveScoreLabel(score);
-    if (visibility === "parent_visible") {
-      await createParentNotificationsForParticipant({
-        tenantId: tenant.id,
-        organizationName: tenant.name,
-        participantId,
-        type: "progress_score",
-        title: correctsObservationId ? "Voortgang bijgewerkt" : "Nieuwe voortgang",
-        message: `${itemResult.data.name}: ${positiveLabel}`
-      });
-    }
-
-    if (score >= Number(itemResult.data.mastery_threshold)) {
-      const [completedCountResult, identityResult] = await Promise.all([
-        admin
-          .from("swim_progress_projections")
-          .select("id", { count: "exact", head: true })
-          .eq("tenant_id", tenant.id)
-          .eq("participant_id", participantId)
-          .eq("scope_kind", "item")
-          .gte("progress_fraction", 0.8),
-        admin
-          .from("curriculum_item_identities")
-          .select("stable_key")
-          .eq("tenant_id", tenant.id)
-          .eq("id", itemResult.data.identity_id)
-          .maybeSingle()
-      ]);
-      const triggerContext = {
-        count: completedCountResult.count ?? 1,
-        entityId: String(assessmentResult.data),
-        skill: identityResult.data?.stable_key ?? itemResult.data.id
-      };
-      await evaluateBadgeTriggerSet({
-        tenantId: tenant.id,
-        participantId,
-        events: [
-          { eventType: "progress_item_completed", eventContext: triggerContext },
-          { eventType: "skill_completed", eventContext: triggerContext }
-        ]
-      });
-    }
-
-    redirectWithStatus(nextPath, "saved", "progress");
+    // Canonical assessments must use the persisted review/optimistic-lock flow.
+    redirectWithStatus(nextPath, "error", "review-required");
   }
 
   if (!moduleId) {
@@ -473,26 +380,14 @@ export async function scoreProgressItemAction(formData: FormData) {
   if (scoreResult.error || !scoreResult.data) {
     redirectWithStatus(nextPath, "error", "progress");
   }
-
-  if (visibility === "parent_visible") {
-    await createParentNotificationsForParticipant({
-      tenantId: tenant.id,
-      organizationName: tenant.name,
-      participantId,
-      type: "progress_score",
-      title: "Nieuwe voortgang",
-      message: `${itemResult.data.name}: ${positiveLabel}`,
-      relatedProgressScoreId: scoreResult.data.id
-    });
-  }
-
-  if (score >= 4) {
+  if (visibility === "parent_visible" && score >= 4) {
     const completedCountResult = await admin
       .from("participant_progress_scores")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id)
       .eq("participant_id", participantId)
       .eq("status", "active")
+      .eq("visibility", "parent_visible")
       .gte("score", 4);
     const triggerContext = {
       count: completedCountResult.count ?? 1,

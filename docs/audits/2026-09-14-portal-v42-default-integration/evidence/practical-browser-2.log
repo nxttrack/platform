@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:4:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional (3.1m)
+
+
+  1) [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:4:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional 
+
+    Test timeout of 180000ms exceeded.
+
+    Error: locator.click: Test timeout of 180000ms exceeded.
+    Call log:
+      - waiting for getByRole('link', { name: 'Planning', exact: true }).first()
+
+
+       9 |  await page.goto('/login?next=/portaal');await page.getByLabel('E-mail',{exact:true}).fill(f.email);await page.getByLabel('Wachtwoord',{exact:true}).fill(f.password);await page.getByRole('button',{name:'Inloggen',exact:true}).click();
+      10 |  await expect(page).toHaveURL(/\/portaal$/);
+    > 11 |  await page.getByRole('link',{name:'Planning',exact:true}).first().click();
+         |                                                                    ^
+      12 |  await expect(page.locator('#lessen')).toContainText('Fictieve instructiegroep');
+      13 |  await page.locator(`a[href*="/portaal/lessen/${f.lesson}"]`).click();
+      14 |  await expect(page.locator('main')).toContainText('Fictieve instructiegroep');
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-parent-practical.spec.ts:11:68
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-2/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-2/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-2/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-2/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-v42-browser-tmp/practical-2/journey-parent-practical-r-6e666--feedback-remain-functional-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:4:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional 
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts journey-parent-practical.spec.ts --project=journey-chromium --retries=0 --workers=1 --output=/dev/shm/nxttrack-v42-browser-tmp/practical-2

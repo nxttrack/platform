@@ -1,38 +1,30 @@
-import { ChildJourneyMap } from "@/components/child/child-journey-map";
-import { SwimJourneyRings } from "@/components/progress/swim-journey-rings";
-import { childJourneyEvents, childJourneyNodes } from "@/lib/domain/child-journey-view";
-import { getChildPortalData } from "@/lib/domain/child-portal";
-import { notFound } from "next/navigation";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { PortalJourney } from "@/components/portal/journey/portal-journey";
+import { PortalDevelopment } from "@/components/portal/development/portal-development";
+import { getChildPortalData } from "@/lib/domain/child-portal";
+import { resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
 
 export const dynamic = "force-dynamic";
+type Params = Record<string, string | string[] | undefined>;
+const value = (entry: string | string[] | undefined) => Array.isArray(entry) ? entry[0] : entry;
 
-export default async function ChildJourneyPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
-  const [data, params]: [Awaited<ReturnType<typeof getChildPortalData>>, Record<string, string | string[] | undefined>] = await Promise.all([getChildPortalData(), searchParams ?? Promise.resolve({})]);
-  const theme = data.theme.manifest;
-  const requestedItem = Array.isArray(params.onderdeel) ? params.onderdeel[0] : params.onderdeel;
-  const selectedItem = requestedItem ? data.journey?.currentStageItems.find((item) => item.stableKey === requestedItem) ?? null : null;
-  if (requestedItem && !selectedItem) notFound();
-  const observation = selectedItem ? data.journey?.effectiveObservations.find((entry) => entry.curriculumItemId === selectedItem.id) ?? null : null;
-  const childVisibleTip = observation?.childVisible ? observation.positiveLabel : null;
-  return <div className="child-page" data-child-route-state={selectedItem ? "goal-detail" : "journey"}>
-    <header className="child-page__heading"><span>Mijn reis</span><h1>Kijk eens hoe ver je al bent!</h1><p>Iedere stap die je oefent brengt je dichter bij je volgende doel.</p></header>
-    <ChildJourneyMap desktopArtwork={theme.assets["progress.journey.desktop"]?.path ?? null} events={childJourneyEvents(data.journey)} mascotKind={theme.experience.mascot} mascotUrl={theme.assets["mascot.idle"]?.path ?? null} mobileArtwork={theme.assets["progress.journey.mobile"]?.path ?? null} nodes={childJourneyNodes(data.journey)} />
-    <div className="child-journey-support-grid">
-      <section className="child-card"><small>Mijn doelen</small><h2>{data.journey?.currentStage?.name ?? "Mijn huidige reis"}</h2>{data.journey?.currentStageItems.length ? <ol className="child-goal-list">{data.journey.currentStageItems.map((item) => {
-        const itemObservation = data.journey?.effectiveObservations.find((entry) => entry.curriculumItemId === item.id);
-        return <li key={item.id}><Link href={`/kind/reis?onderdeel=${encodeURIComponent(item.stableKey)}`}><span>{item.name}</span><strong>{itemObservation ? `${itemObservation.rating} / 5` : "Nieuw"}</strong></Link></li>;
-      })}</ol> : <p>Je doelen worden zichtbaar zodra jouw programma is gestart.</p>}</section>
-      <section className="child-card"><small>Afgeronde hoofdstukken</small><h2>Mijn eerdere avonturen</h2>{data.journey?.chapterSnapshots.length ? <ol className="child-chapter-list">{data.journey.chapterSnapshots.map((snapshot) => <li key={snapshot.id}><span aria-hidden="true">✓</span><div><strong>{data.journey?.stages.find((stage) => stage.id === snapshot.curriculumStageId)?.name ?? "Afgerond hoofdstuk"}</strong><small>{formatDate(snapshot.completedAt)} · {snapshot.badgeAwardCount} {snapshot.badgeAwardCount === 1 ? "badge" : "badges"}</small></div></li>)}</ol> : <p>Een afgerond hoofdstuk blijft hier als vaste herinnering bewaard.</p>}</section>
-    </div>
-    {selectedItem ? <section className="child-goal-detail">
-      <article className="child-card"><small>Mijn doel</small><h2>{selectedItem.name}</h2><p>{selectedItem.description || "Oefen dit onderdeel stap voor stap tijdens je lessen."}</p><strong>{observation ? `${observation.rating} van 5 stappen behaald` : "Nog niet beoordeeld"}</strong></article>
-      <article className="child-card child-goal-support"><small>Tip voor jou</small><h2>{childVisibleTip ?? "Blijf rustig oefenen"}</h2><p>Vraag je trainer tijdens de les om dit onderdeel samen nog eens te proberen.</p>{selectedItem.instructionalVideo ? <div className="child-instruction-video"><video controls playsInline preload="metadata"><source src={selectedItem.instructionalVideo.url} /><track default kind="captions" label="Nederlands" src={selectedItem.instructionalVideo.captionsUrl} srcLang="nl" /></video><strong>{selectedItem.instructionalVideo.title}</strong><details><summary>Lees het transcript</summary><p>{selectedItem.instructionalVideo.transcript}</p></details></div> : null}</article>
-    </section> : null}
-    {data.journey?.rings.length ? <section className="child-card child-rings-card"><h2>Mijn voortgang</h2><SwimJourneyRings labels={{ stage: "badje", diploma: "diploma" }} rings={data.journey.rings} /></section> : null}
+export default async function ChildJourneyPage({ searchParams }: { searchParams?: Promise<Params> }) {
+  const [data, params] = await Promise.all([getChildPortalData(), searchParams ?? Promise.resolve<Params>({})]);
+  const chapterId = value(params.hoofdstuk), selectedId = value(params.onderdeel) ?? value(params.focus);
+  const chapter = chapterId ? data.journey?.chapterSnapshots.find((snapshot) => snapshot.id === chapterId) : null;
+  if (chapterId && !chapter) notFound();
+  const model = chapter ? chapter.view ?? null : data.journey?.view ?? null;
+  if (selectedId && !(chapter ? model?.nodes.some((item) => item.id === selectedId) : data.journey?.development?.items.some((item) => item.id === selectedId))) notFound();
+  const visual = chapter ? chapter.visual : await resolvePortalJourneyVisual(data.tenant.id, model, data.theme.manifest);
+  return <div className="child-page" data-child-route-state={chapter ? "chapter" : selectedId ? "goal-detail" : "journey"}>
+    {chapter ? <div className="child-card"><p>Een bewaarde herinnering · {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeZone: data.tenant.timeZone }).format(new Date(chapter.completedAt))}</p><Link className="mt-2 inline-flex rounded-lg border p-3" href="/kind/reis">Mijn huidige reis</Link></div> : null}
+    {visual ? <PortalJourney events={chapter ? chapter.events : data.journey?.events} audience="child" collectionContext={{ audience: "child", tenantId: data.tenant.id, participantId: data.child.id }} contextKey={`child:${data.tenant.id}:${data.child.id}:${data.journey?.view?.curriculumVersionId ?? "none"}${chapter ? `:chapter:${chapter.id}` : ""}`} title={chapter ? model?.stageName ?? "Mijn eerdere reis" : `Jouw reis, ${data.child.firstName}`} model={model} presentation={visual.presentation} worldId={visual.worldId} assetUrls={visual.assetUrls} reducedMotion={data.preferences.reducedMotion} /> : <section className="child-card"><h1>De beelden van deze herinnering zijn niet beschikbaar</h1><p>De opgeslagen scores en momenten blijven behouden.</p></section>}
+    {data.journey?.development ? <section id="reis-ontwikkeling" aria-label="Mijn onderdelen en momenten">
+      <PortalDevelopment key={`${data.child.id}:${data.journey.view?.curriculumVersionId}`} audience="child" participantId={data.child.id} contextKey={`child:${data.tenant.id}:${data.child.id}:${data.journey.view?.curriculumVersionId}`} model={data.journey.development}
+        chapters={data.journey.chapterSnapshots.map((snapshot) => ({ id: snapshot.id, stageId: snapshot.curriculumStageId, title: data.journey!.stages.find((stage) => stage.id === snapshot.curriculumStageId)?.name ?? "Afgerond hoofdstuk", completedAt: snapshot.completedAt, badgeCount: snapshot.badgeAwardCount, themeRelease: snapshot.themeRelease, available: !!snapshot.visual, items: snapshot.view?.nodes.map((item) => ({ id: item.id, label: item.label, rating: item.rating })) ?? [] }))}
+        badges={data.badges.filter((badge) => badge.earned).map((badge) => ({ id: badge.id, title: badge.title, date: badge.earnedAt, description: null }))}
+        itemContent={Object.fromEntries(data.journey.currentStageItems.flatMap((item) => item.instructionalVideo ? [[item.stableKey, <section className="child-instruction-video" key={item.stableKey}><h3 className="font-bold">{item.instructionalVideo.title}</h3><video controls playsInline preload="metadata"><source src={item.instructionalVideo.url} /><track default kind="captions" label="Nederlands" src={item.instructionalVideo.captionsUrl} srcLang="nl" /></video><details><summary>Lees het transcript</summary><p>{item.instructionalVideo.transcript}</p></details></section>]] : []))} />
+    </section> : <section className="child-card"><h2>Mijn onderdelen</h2><p>Je doelen worden zichtbaar zodra jouw programma is gestart.</p></section>}
   </div>;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat("nl-NL", { day: "numeric", month: "long", year: "numeric" }).format(new Date(value));
 }

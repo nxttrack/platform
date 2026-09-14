@@ -1,0 +1,44 @@
+
+> @nxttrack/platform@0.0.0 test:theme-library:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> tsx --test tests/integration/portal-theme-library.test.ts
+
+PASS world binding identities, tenant isolation, concurrent edits, complete rollback, immutable history, reconnect, curriculum unchanged, legacy opt-in and child/tenant/direct API enforcement
+✖ real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts (2303.28784ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 0
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2597.050902
+
+✖ failing tests:
+
+test at tests/integration/portal-theme-library.test.ts:2:2567
+✖ real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts (2303.28784ms)
+  error: Actor mismatch
+      at /home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652:17
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async TestContext.<anonymous> (/home/codex/repos/nxttrack-portal-v42-default-integration/tests/integration/portal-theme-library.test.ts:87:7)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    length: 175,
+    severity: 'ERROR',
+    code: 'P0001',
+    detail: undefined,
+    hint: undefined,
+    position: undefined,
+    internalPosition: undefined,
+    internalQuery: undefined,
+    where: 'PL/pgSQL function app_private.publish_curriculum_version(uuid,integer,uuid,text) line 11 at RAISE',
+    schema: undefined,
+    table: undefined,
+    column: undefined,
+    dataType: undefined,
+    constraint: undefined,
+    file: 'pl_exec.c',
+    line: '3911',
+    routine: 'exec_stmt_raise'
+  }
+ ELIFECYCLE  Command failed with exit code 1.

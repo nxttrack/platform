@@ -1,0 +1,24 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] Using Supabase CLI 2.117.0.
+[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=false dryRun=false
+Connecting to remote database...
+Skipping migration README.md... (file name must match pattern "<timestamp>_name.sql")
+Do you want to push these migrations to the remote database?
+ • 20260914101412_portal_theme_import_release_lifecycle.sql
+ • 20260914104650_portal_theme_world_bindings.sql
+ • 20260914124643_portal_message_composer_drafts.sql
+ • 20260914134016_reviewed_instructor_assessments.sql
+ • 20260914142841_portal_journey_collections.sql
+ • 20260914145431_portal_theme_import_recovery.sql
+ [Y/n] y
+Applying migration 20260914101412_portal_theme_import_release_lifecycle.sql...
+Applying migration 20260914104650_portal_theme_world_bindings.sql...
+Applying migration 20260914124643_portal_message_composer_drafts.sql...
+Applying migration 20260914134016_reviewed_instructor_assessments.sql...
+Applying migration 20260914142841_portal_journey_collections.sql...
+Applying migration 20260914145431_portal_theme_import_recovery.sql...
+Finished supabase db push.

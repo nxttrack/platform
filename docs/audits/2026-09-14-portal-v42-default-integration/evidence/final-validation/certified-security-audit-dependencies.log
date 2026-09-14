@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 security:audit-dependencies /home/codex/repos/nxttrack-portal-v42-default-integration
+> pnpm audit --prod --audit-level moderate
+
+No known vulnerabilities found

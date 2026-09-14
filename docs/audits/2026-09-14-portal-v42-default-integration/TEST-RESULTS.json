@@ -1,0 +1,1725 @@
+{
+  "status": "IMPLEMENTED_WITH_BLOCKERS",
+  "baseline": "afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80",
+  "branch": "codex/portal-v42-default-integration",
+  "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+  "acceptance": [
+    {
+      "id": "AC-001",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Actuele Gitbasis",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Controleer HEAD, branch en merge-base vóór wijzigingen.",
+      "expected": "Behoud nieuwere gebruikerswijzigingen. Gebruik de gecontroleerde auditbasis of motiveer een andere passende basis; voer geen stille branchmerge uit.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "BASELINE.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-002",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Integriteit van de referenties",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Bereken de hashes van HTML en PDF en vergelijk de standalone HTML met het bronpakket.",
+      "expected": "De oorspronkelijke V4.2-referentie is byte voor byte gelijk aan de bijbehorende bronexport. Afwijkende bronbestanden zijn expliciet benoemd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "BASELINE.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-003",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Originele Default-bronroot",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Zoek en valideer de authentieke configuratie, ankerkaarten en afzonderlijke rasterassets.",
+      "expected": "Zonder originele bestanden blijft de visuele acceptatie geblokkeerd. Een PDF-voorbeeld geldt niet als originele bronasset.",
+      "status": "BLOCKED",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "B01: original Default source/assets/anchors unavailable; corresponding fixture/reference contracts do not certify originals."
+    },
+    {
+      "id": "AC-004",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Alle 96 semantische assets",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Vergelijk de geselecteerde leveringsbestanden met het originele assets-manifest en de PDF-inventaris.",
+      "expected": "De 36 scènelagen, 2 previews, 6 collectibles en 52 ondersteunende slots zijn verantwoord. PNG en WebP zijn bestandsvarianten, geen extra semantische slots.",
+      "status": "BLOCKED",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "B01: original Default source/assets/anchors unavailable; corresponding fixture/reference contracts do not certify originals."
+    },
+    {
+      "id": "AC-005",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Werkelijke beeldafmetingen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Meet de ontvangen afbeeldingen en registreer hashes en transparantie.",
+      "expected": "De werkelijke afmetingen, hashes en alpha-eigenschappen blijven bewaard. Niet-gehaalde minimum- en 4K-doelen worden als kwaliteitswaarschuwing getoond.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs."
+    },
+    {
+      "id": "AC-006",
+      "priority": "P0",
+      "area": "Bronnen en basis",
+      "title": "Zes wereldidentiteiten",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Lees het manifest en de wereldkoppelingen.",
+      "expected": "Alle zes opgegeven wereld-ID’s en namen zijn correct. Letter-ID’s zoals badje-a worden niet naar een getal geconverteerd.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs."
+    },
+    {
+      "id": "AC-007",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Bestaand pakketformaat 1.0",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer beide V4.2-referentiepakketten.",
+      "expected": "De import levert een gecontroleerd concept op, respecteert het standaard/custom-beleid en wijzigt niet automatisch de actieve toewijzing.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-008",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Default-configuratiestructuur",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer bronpakket 1.1 met config/manifest.json.",
+      "expected": "De expliciete bronadapter wordt gebruikt. Een corrupt herkend manifest wordt niet omzeild door terug te vallen op begeleide beeldimport.",
+      "status": "BLOCKED",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "B01: original Default source/assets/anchors unavailable; corresponding fixture/reference contracts do not certify originals."
+    },
+    {
+      "id": "AC-009",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Bestaande Studio-JSON",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer een ondersteunde oude Studio-export.",
+      "expected": "Bekende velden behouden hun betekenis. Een niet-ondersteunde variant geeft een duidelijke fout of waarschuwing, zonder stil gegevensverlies.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-010",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Afbeeldingen zonder manifest",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer uitsluitend gewone lokale testafbeeldingen.",
+      "expected": "De begeleide koppeling vraagt bevestiging van de assetrollen. Bestandsnamen maken niet automatisch curriculumkoppelingen aan.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-011",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Asset-ID’s met punten",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer journey.*-ID’s en de volledige ondersteunende slotcatalogus.",
+      "expected": "ID’s worden niet onterecht geweigerd of botsend opgeschoond. Semantische ID’s en bestandspaden blijven gescheiden.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-012",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Gescheiden versienummers",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer bronversie 1.1 naast een bestaande runtimeversie 3.0.0.",
+      "expected": "Bronversie, themarelease, manifestversie en portaalversie blijven aparte begrippen. De bestaande gepubliceerde release wordt niet overschreven.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs."
+    },
+    {
+      "id": "AC-013",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Compatibiliteit van manifest schema 3",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Valideer de oude catalogus en de bestaande native projectie.",
+      "expected": "Het oude exacte contract blijft geldig. De nieuwe presentatie-sidecar heeft eigen validatie en wordt niet als onbekend veld in een oud clientcontract geduwd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-014",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Validatie van uploads",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Voer uitsluitend lokale type- en limietcontroles met synthetische testdata uit.",
+      "expected": "Server en browser hanteren overeenkomende contracten. Geüploade code wordt nooit uitgevoerd; niet-toegestane inhoud wordt geweigerd of inert gehouden volgens het bronadapterbeleid.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-015",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Eén runtimevariant per slot",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer een bron met zowel PNG als WebP voor hetzelfde slot.",
+      "expected": "Eén geschikte variant wordt voor runtime gebruikt. Metadata en herkomst van de overige leveringsvarianten blijven beschikbaar.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs."
+    },
+    {
+      "id": "AC-016",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Afgebroken import",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Annuleer een gewone lokale import tijdens verwerking.",
+      "expected": "Er ontstaat geen half gepubliceerde release of gewijzigde actieve toewijzing. Tijdelijke bestanden en objectreferenties worden opgeruimd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "Fault-injected interrupted/rejected local imports, explicit retry and bounded rejected-source cleanup; immutable references retained. No general runtime-asset GC claim."
+    },
+    {
+      "id": "AC-017",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Review gekoppeld aan inhoud",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Wijzig een anker nadat de visuele controle is afgetekend.",
+      "expected": "De eerdere review vervalt. Publiceren vereist beoordeling van de nieuwe inhoud en de bijbehorende digest.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-018",
+      "priority": "P0",
+      "area": "Contract en import",
+      "title": "Export en herimport",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Exporteer een thema en importeer het opnieuw.",
+      "expected": "Semantiek, assetinhoud en wereldkoppelingen in het thema blijven gelijk. De export bevat geen echte tenanttoewijzingen of leerlinggegevens.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md; THEME-EDITOR-CHECKPOINT.md; IMPORT-RECOVERY-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-019",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Registratie van de lagen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Verplaats en verklein de scène terwijl een landmark en zijn anker worden gevolgd.",
+      "expected": "De lagen en interactie gebruiken dezelfde scèneparent. Hun relatieve positie blijft gelijk; lagen worden niet onafhankelijk gecropt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-020",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Afzonderlijke portraitcompositie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open beide oriëntaties van alle zes werelden.",
+      "expected": "Portrait gebruikt de afzonderlijk aangeleverde compositie. Een uitsnede van landscape wordt niet als een geleverde portraitasset gepresenteerd.",
+      "status": "BLOCKED",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "B01: original Default source/assets/anchors unavailable; corresponding fixture/reference contracts do not certify originals."
+    },
+    {
+      "id": "AC-021",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Runtime-lichtgids",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open Default zonder een rasterasset voor de gids.",
+      "expected": "Een runtime-lichtgids werkt zonder Manta, zeester of automatisch icoon. De wereld blijft ook bruikbaar wanneer de gids is uitgeschakeld.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-022",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Regressie van karaktergidsen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een expliciet ondersteund custom- of Ocean Quest-compatibiliteitsvoorbeeld.",
+      "expected": "De optionele grotere karaktergids en beschikbare poses blijven werken. De Default-lichtgids breekt deze afzonderlijke capability niet.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-023",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Neutrale parels afdwingen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Koppel in lokale testdata bewust een progress.stage.skill-asset aan een Default-onderdeel.",
+      "expected": "De asset wordt niet als vaardigheidsafbeelding getoond in parel, onderdelenlijst of detailkaart. Gewone statussen en selectieringen blijven zichtbaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-024",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Nul en één onderdeel",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Render een leerling zonder onderdelen en een leerling met precies één onderdeel.",
+      "expected": "Een eerlijke lege toestand respectievelijk één bereikbaar punt verschijnt. Er ontstaan geen ongeldige getallen of een camera buiten de scène.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-025",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Variabel aantal onderdelen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Render 4, 5, 7, 12, 24 en 48 onderdelen, inclusief persoonlijke events en lange labels.",
+      "expected": "Alle items zijn bereikbaar via de scène en de toegankelijke lijst. Ankers vormen geen maximumaantal; labels stapelen niet onleesbaar op elkaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-026",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Plaatsing van de gids",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Selecteer de eerste en laatste parel en open vervolgens de detailkaart.",
+      "expected": "De gids bedekt geen parel, tekst of bediening. Bij onvoldoende ruimte wordt een veilige alternatieve positie gebruikt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-027",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Parallax standaard uit",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een nieuwe Default-release met de aangeleverde instellingen.",
+      "expected": "Extra decoratieve parallax staat uit. De gebruiker kan de volledige geregistreerde wereld wel met de camera verplaatsen.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs."
+    },
+    {
+      "id": "AC-028",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Verminderde beweging",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Schakel verminderde beweging in via het besturingssysteem en de beschikbare gebruikersvoorkeur.",
+      "expected": "Parallax, automatische cameravolging en animatielussen stoppen. Handmatige selectie, toetsenbordbediening en de volledige onderdelenlijst blijven bruikbaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-029",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Vrij verkennen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Gebruik slepen, swipen en trackpadbediening en klik daarna op een parel.",
+      "expected": "Slepen veroorzaakt geen ongewenste klik. Cameragrenzen en herstel werken; buiten de scène blijft de pagina normaal bedienbaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-030",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Selectie en camera behouden",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Ververs gegevens, sluit een pop-up en gebruik browser Terug.",
+      "expected": "De gekozen ID en camerapositie blijven behouden zolang het onderdeel bestaat. Er volgt geen onnodige scroll-reset.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-031",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Compacte voortgangspod",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Inspecteer de kleinste viewport met lange labels en beide ringen.",
+      "expected": "De pod is maximaal 50% van de scènebreedte. Alleen de achtergrond heeft ongeveer 40% dekking; tekst, percentages en zichtbare ringen blijven helder.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-032",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Compact lesmoment",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Inspecteer Home op mobiel en desktop.",
+      "expected": "Het lesmoment staat compact rechtsboven en overlapt geen wereldtitel of bediening.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-033",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Sluitbare parelkaart",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open en sluit de kaart met X, Escape en de mobiele sleepgreep waar beschikbaar.",
+      "expected": "De kaart begint gesloten, geeft de focus correct terug en maakt de geselecteerde parel niet onbereikbaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-034",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Ontbrekende wereldkoppeling",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een niveau waarvoor de wereldkoppeling ontbreekt of ongeldig is.",
+      "expected": "Een veilige, herkenbare fallback en beheermelding verschijnen. Het systeem doet niet alsof zes verschillende werelden zijn geleverd wanneer het dezelfde wereld herhaalt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-035",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Watertextuur en transparantie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Bekijk de textuur en alpha-assets op lichte en donkere ondergrond.",
+      "expected": "De watertextuur gebruikt no-repeat en cover. Normale alpha-compositing geeft geen werkachtergrond of zichtbaar schaakbord; losse accenten behouden hun transparantie.",
+      "status": "BLOCKED",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "B01: original Default source/assets/anchors unavailable; corresponding fixture/reference contracts do not certify originals."
+    },
+    {
+      "id": "AC-036",
+      "priority": "P0",
+      "area": "Journey en Default",
+      "title": "Alle 52 ondersteunende slots",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Bezoek de passende route of toestand voor iedere vastgelegde slotbestemming.",
+      "expected": "Ieder slot is geregistreerd en bewust toegepast of gemotiveerd niet nodig. Decoratie draagt geen vaardigheidsbetekenis; essentiële informatie blijft in HTML.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "GEOMETRY-HISTORY-CHECKPOINT.md; MOTION-HISTORY-CHECKPOINT.md; VISUAL-REVIEW.md; SUPPORT-SLOTS.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "52 slots explicitly catalogued and preserved, none rendered; individual non-rendering decisions in SUPPORT-SLOTS.json."
+    },
+    {
+      "id": "AC-037",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Canonieke voortgangsringen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Vergelijk ouder- en leerlingweergave met de bestaande serverprojecties.",
+      "expected": "Voortgang, dekking en formuleversie komen overeen met de bron. Het prototypegemiddelde over vijf badjes wordt niet gebruikt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-038",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Beheersingsdrempel en scoreschaal",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Test de canonieke leerlijn en een ondersteunde oude voortgangsfixture.",
+      "expected": "De bestaande schaaladapter en drempels blijven leidend. Een losse beoordeling wordt niet ten onrechte als volledige diplomavoortgang uitgelegd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-039",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Werkelijke behaalde volgorde",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Leg afrondingen vast in een andere volgorde dan het curriculum, met bekende completion_sequence-waarden.",
+      "expected": "De werkelijke behaalde volgorde blijft stabiel. Historisch afgeleide volgorde behoudt de bestaande legacy_inferred-herkomstmarkering.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-040",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Correctiehistorie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Corrigeer een lokaal vastgelegde observatie via de bestaande workflow.",
+      "expected": "Audit en chronologie blijven behouden. Het systeem verzint geen afrondingsdatum en verwijdert geen historische momentopname.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-041",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Meegenomen onderdelen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een leerling met een nog openstaand meegenomen onderdeel.",
+      "expected": "Transferstatus en herkomst kloppen. Het onderdeel telt niet dubbel mee in de voortgang.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-042",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Historisch hoofdstuk",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een oude hoofdstukmomentopname nadat een nieuwe themarelease is gepubliceerd.",
+      "expected": "De oude themaversie, afbeelding en historie blijven beschikbaar. Huidige scores worden niet als historisch resultaat gepresenteerd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-043",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Geen automatische diploma-afgifte",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Markeer in een lokale fixture alle vereiste vaardigheden als beheerst.",
+      "expected": "De afzonderlijke overgangs- en afzwemworkflow blijft vereist. De themalaag maakt geen diploma of certificaat aan.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-044",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Ouderweergave alleen-lezen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open Ontwikkeling en een pareldetail als ouder.",
+      "expected": "Er zijn geen scorebewerkingsacties. De bijbehorende lokale autorisatiecontracttest bevestigt dat ontbreken van schrijfrechten wordt gehandhaafd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-045",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Kindveilige dataprojectie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Inspecteer de werkelijk aan de kindclient verzonden gegevens in de lokale fixtureflow.",
+      "expected": "De payload bevat geen oudergesprek, betaalgegevens of interne notitie. Alleen toegestane ChildSafe-velden worden verzonden.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-046",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Binding van de kindsessie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Controleer met eigen geïsoleerde fixtures de toegestane en niet-toegestane leerlingselectie.",
+      "expected": "Een sessie geeft geen toegang buiten de gekoppelde familie en leerling. Niet-toegestane selectie heeft eenduidig veilig foutgedrag.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DATABASE-CERTIFICATION.md; DEVELOPMENT-CHECKPOINT.md; INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-047",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Conceptbeoordeling van de instructeur",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Klik een nieuwe score aan zonder deze te bewaren.",
+      "expected": "Ouder en leerling zien nog geen gepubliceerde wijziging. Het concept en de scrollpositie van de instructeur blijven behouden.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-048",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Controleren en bewaren",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Controleer en bewaar een beoordeling in de lokale instructeurflow.",
+      "expected": "De bestaande service of RPC verwerkt de wijziging. Een afzonderlijke ouder- en kindsessie leest daarna de nieuwe toegestane serverprojectie.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-049",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Interne lesnotitie",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Voeg een interne lesnotitie toe.",
+      "expected": "De notitie is niet zichtbaar en niet geserialiseerd in ouder- of kinddata. Een ouderbericht blijft een afzonderlijke handeling.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-050",
+      "priority": "P0",
+      "area": "Canon en rollen",
+      "title": "Expliciet kindcompliment",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Publiceer een kindcompliment afzonderlijk van een ouderupdate.",
+      "expected": "De juiste doelgroep ontvangt het compliment. Een ouderupdate wordt niet automatisch als kinddata gepubliceerd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "INSTRUCTOR-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-051",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Home en Ontwikkeling zijn verschillend",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Wissel bij dezelfde leerling tussen Home en Ontwikkeling.",
+      "expected": "Home is de schermvullende wereld. Ontwikkeling heeft de afgesproken lijst-, historie- en mijlpalenweergave; geen dubbele startpagina.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DEVELOPMENT-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-052",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Zoeken, filters en sortering",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Zoek op naam, filter op status, sorteer numerieke waarden en herstel de filters.",
+      "expected": "Resultaten, consistente rijhoogten en eventuele paginering kloppen. Onbeoordeelde onderdelen sorteren voorspelbaar.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DEVELOPMENT-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-053",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Historie en mijlpalen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Filter op één onderdeel en open een historisch evenement.",
+      "expected": "De getoonde geschiedenis heeft een echte bron. Speelse verzameldingen verschijnen niet als behaalde leervaardigheden.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DEVELOPMENT-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-054",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Heen en terug via een deep link",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Ga van Ontwikkeling naar een parel, vervolgens naar historie en gebruik browser Terug.",
+      "expected": "De juiste leerling en stabiele onderdeel-ID blijven behouden. Camera en relevante bestaande queryparameters worden hersteld.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "DEVELOPMENT-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-055",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Gesprekscontext",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Start een vraag vanuit een onderdeel en vanuit een les.",
+      "expected": "Het concept en het uiteindelijke bericht bevatten de juiste geautoriseerde verwijzing. Er verschijnt geen label van een andere leerling.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-056",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Berichtconcept bewaren",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Sluit en heropen een gesprek en herlaad volgens het vastgelegde opslagbeleid.",
+      "expected": "De tekst blijft aan de juiste gebruiker, tenant en thread gekoppeld. Het concept lekt niet naar een andere context.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-057",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Mislukt versturen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Simuleer een gewone serverfout in de lokale berichtservice.",
+      "expected": "Er verschijnt geen fictieve succesmelding. Het concept blijft intact en opnieuw proberen is mogelijk.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-058",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Leesstatus en archiveren",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Archiveer, herstel en markeer berichten via de bestaande service.",
+      "expected": "De interface blijft na herladen consistent. Aflever- of leesclaims verschijnen alleen als de backend die ondersteunt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-059",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Focus en toegankelijkheid van pop-ups",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open alle categorieën pop-ups en gebruik toetsenbord, Escape en de terugactie.",
+      "expected": "Focus blijft binnen een modal en keert terug naar de trigger. Titel en beschrijving zijn toegankelijk; waarschuwingen voor onopgeslagen invoer werken.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-060",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Mobiel toetsenbord",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een antwoordveld en een formulier met een ingeperkte zichtbare viewport.",
+      "expected": "Actiebalk en sluiten blijven bereikbaar. De inhoud kan scrollen en wordt niet afgesneden door het toetsenbord.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "390x450 visible-viewport emulation in actual message review; no physical keyboard/device claim."
+    },
+    {
+      "id": "AC-061",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Genest formulier",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open een bevestigingsvenster vanuit een formulier en keer terug.",
+      "expected": "De oorspronkelijke invoer blijft behouden. De tweede dialoog vervangt of wist het formulier niet.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "MESSAGES-CHECKPOINT.md; DRAFT-NAVIGATION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-062",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Afmelden van een les",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Meld een lokale testles af binnen en buiten de ingestelde afmeldtermijn.",
+      "expected": "De echte schoolpolicy en tijdzone worden gebruikt. Een credit ontstaat alleen bij recht daarop; de status blijft na herladen correct.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-063",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Inhaalles boeken of aanvragen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Doorloop beide flows met gecontroleerde lokale capaciteit.",
+      "expected": "Idempotentie, creditverbruik, servercapaciteit en conflictafhandeling kloppen. Een aanvraag is niet automatisch een bevestigde boeking.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-064",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Betaling",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Doorloop geslaagde en mislukte betalingen via de lokale testprovider.",
+      "expected": "De bestaande service en webhook blijven de autoriteit. Een normale portaalclient heeft geen knop die zelf een factuur betaald maakt.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "Actual production standalone webhook fetched loopback provider snapshots; paid/failed/amount mismatch/idempotency and parent reload verified. Live/sandbox checkout and recurring provider mandates were not exercised."
+    },
+    {
+      "id": "AC-065",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Toestemming voor media",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open gepubliceerde en ingetrokken testmedia.",
+      "expected": "De bestaande afgeschermde route respecteert toestemming en verloopdatum. De kindsessie gebruikt haar eigen toegestane mediaprojectie.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-066",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Documentdownloads",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Open factuur-, document- en certificaatacties.",
+      "expected": "Bevoegde gebruikers ontvangen het juiste echte document. De productieroute serveert geen fictief prototypebewijs als een uitgegeven certificaat.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-067",
+      "priority": "P0",
+      "area": "Pagina’s en dialogs",
+      "title": "Gezin, profiel en feedback",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Wissel tussen kinderen en bewaar toegestane instellingen en feedback.",
+      "expected": "Contexten blijven gescheiden. De werkelijke serveropslag en validatie verwerken de handelingen.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "PRACTICAL-PORTAL-CHECKPOINT.md; FEATURE-PARITY.md; DATABASE-CERTIFICATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-068",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Nieuwe release wordt gevonden",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer en publiceer een nieuwe release in de lokale bibliotheek.",
+      "expected": "De werkelijke resolver kan de nieuwe import laden; deze blijft niet beperkt tot vooraf ingecodeerde releases.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-069",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Importeren, publiceren en toewijzen zijn apart",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Importeer en publiceer een thema zonder het toe te wijzen.",
+      "expected": "De bestaande actieve portaaltoewijzing blijft ongewijzigd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-070",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Koppeling per wereld en niveau",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Koppel één echt programma- en curriculumniveau aan een gepubliceerde wereld.",
+      "expected": "Andere niveaus en tenants blijven ongewijzigd. De handeling muteert geen inschrijving of curriculum.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-071",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Platformbeheer en bestaand beleid",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Test een nieuw platform-managed doel en een nog niet gemigreerd oud doel.",
+      "expected": "Bij het nieuwe doel beheert alleen platform de toewijzing; een oude tenant- of kindselector omzeilt dit niet. Het bestaande beleid buiten de migratiescope blijft intact.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-072",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Duurzame opslag na herstart",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Sluit de browser, herstart de app en open de bibliotheek opnieuw.",
+      "expected": "Concepten, releases en koppelingen staan daadwerkelijk in de database. Een geheugenadapter of open browsertab geldt niet als bewijs van persistentie.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "Different dev/production processes and browser sessions reloaded the same actual local DB/storage records; no remote process restarted."
+    },
+    {
+      "id": "AC-073",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Geïsoleerde preview",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Klik door de preview, inclusief scenario’s en zichtbare mutatieknoppen.",
+      "expected": "Dezelfde renderer wordt gebruikt, maar hoofdgegevens, database en actieve toewijzing worden niet gewijzigd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-074",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Gelijktijdige bewerking",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Laat twee bevoegde testbeheerders hetzelfde concept bewerken.",
+      "expected": "Er volgt controle op revisieconflicten. Een wijziging gaat niet stil verloren en een onjuiste digest kan niet worden gepubliceerd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-075",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Terugzetten van een release",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Activeer een vorige release na een gewijzigde wereldkoppeling.",
+      "expected": "De presentatie wordt hersteld met een auditrecord. Scores, curriculum en collectiegegevens blijven ongewijzigd.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-076",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Licentie, beschikbaarheid en planning",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Controleer de bestaande licentie-, beschikbaarheids- en geplande-activeringsflows.",
+      "expected": "De bestaande regels blijven werken met de dynamische resolver; ongeoorloofde activering wordt niet mogelijk.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-077",
+      "priority": "P0",
+      "area": "Bibliotheek en duurzaamheid",
+      "title": "Historische assetverwijzingen",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Archiveer een ongebruikt concept en bekijk daarna een oudere hoofdstukmomentopname.",
+      "expected": "Referentiebeheer voorkomt dat een oude wereld, bewaarde vondst of gepubliceerde versie zijn afbeeldingen verliest.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-EDITOR-CHECKPOINT.md; DATABASE-CERTIFICATION.md; IMPORT-RECOVERY-CHECKPOINT.md; COLLECTION-CHECKPOINT.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-078",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Zeven viewports en tekstvergroting",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Controleer alle afgesproken schermformaten en 200% tekstvergroting; voer de relevante toegankelijkheidscontroles uit.",
+      "expected": "Tekst, contrast, focus en labels blijven bruikbaar. Essentiële bediening overlapt niet; horizontaal scrollen is alleen aanwezig waar het bewust is ontworpen.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-079",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Netwerk en beelddecodering",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Meet laden op mobiel met één actieve wereld en vertraagde lokale responses.",
+      "expected": "Niet alle 96 assets worden tegelijk inline geladen. De interface blijft bruikbaar bij beeldfouten; prestatieclaims zijn gebaseerd op metingen.",
+      "status": "PARTIAL",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "limitation": "Generic/reference and labelled fixture contract passed; authentic Default 1.1 source/artwork/transfer verification still requires B01 inputs.",
+      "scope": "Actual imported reference artwork measured on mobile with500ms delayed responses; no inline rasters, failed images keep all items readable. Opposite-orientation requests forbidden until actual rotation. Original Default transfer/decoding measurement blocked by B01."
+    },
+    {
+      "id": "AC-080",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Standalone build en assets",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Bouw en start de applicatie en controleer de URLs van nieuwe gepubliceerde assets.",
+      "expected": "De gebruikte deploymentvorm neemt alle noodzakelijke bestanden mee. Nieuwe assets geven geen 404 door een ontbrekende public-map.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-081",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Native en oude clients",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Voer de bestaande contracttests voor native thema’s en bootstrap uit.",
+      "expected": "Oude clients blijven bruikbaar. De presentatie-sidecar breekt geen streng gevalideerd bestaand clientcontract.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-082",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Bestaande suites",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Voer de relevante type-, auth-, zwemcanon-, thema-, betaal-, media- en berichtentests uit.",
+      "expected": "Vooraf aanwezige fouten worden apart gerapporteerd. Nieuwe fouten worden niet verborgen of overgeslagen om een groen resultaat te tonen.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f"
+    },
+    {
+      "id": "AC-083",
+      "priority": "P0",
+      "area": "Kwaliteit en build",
+      "title": "Eindbewijs op dezelfde build",
+      "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
+      "action": "Vergelijk screenshots, testresultaten en het uiteindelijke HEAD.",
+      "expected": "Bewijs hoort bij dezelfde eindbuild. Commando’s zijn reproduceerbaar; overgeslagen tests tellen niet als geslaagd en blokkades zijn expliciet.",
+      "status": "PASS",
+      "evidenceRequired": [
+        "testnaam en exact commando",
+        "resultaat, exitcode en buildcommit",
+        "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "VISUAL-REVIEW.md; FINAL-VALIDATION.md"
+      ],
+      "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "scope": "Latest changed runtime is built and browser-tested; exact unchanged artifact sections reuse their recorded DB/contract evidence. Final PR CI and review recorded separately; no skipped case reported as passed."
+    }
+  ],
+  "localChecks": [
+    {
+      "command": [
+        "pnpm",
+        "security:audit-dependencies"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.84,
+      "log": "certified-security-audit-dependencies.log",
+      "sha256": "47f8b569d01eb8cc7a59789fbf2d432df7623e53cc54d43cab889bd71ccc78ae"
+    },
+    {
+      "command": [
+        "pnpm",
+        "release:truth"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.34,
+      "log": "certified-release-truth.log",
+      "sha256": "d1968682a94a34133ec6bb1ecbc2e9615c9ded38b0f726015143558c83ab91f8"
+    },
+    {
+      "command": [
+        "pnpm",
+        "design:audit"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.31,
+      "log": "certified-design-audit.log",
+      "sha256": "81f61aab005017382a1120bf1bf2200fb5257af4b1c686ed271befa573387855"
+    },
+    {
+      "command": [
+        "pnpm",
+        "typecheck"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 2.95,
+      "log": "certified-typecheck.log",
+      "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+    },
+    {
+      "command": [
+        "pnpm",
+        "test:unit"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 11.14,
+      "log": "certified-test-unit.log",
+      "sha256": "a734d40a4bea652d5bf2071e34c2307dd427c40349f6b076c8224dabd1e72a45"
+    },
+    {
+      "command": [
+        "pnpm",
+        "release:audit-runtime-env"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.29,
+      "log": "certified-release-audit-runtime-env.log",
+      "sha256": "65012d3773a6f1f5c822359cbfcf02d4b44f9448fdffdc8c3f178565be4d7cf3"
+    },
+    {
+      "command": [
+        "pnpm",
+        "auth:audit"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.57,
+      "log": "certified-auth-audit.log",
+      "sha256": "811fc7cb881521dc3bd4cb8d0c10d433ea212022839b1cb349415c9a6a3a0386"
+    },
+    {
+      "command": [
+        "pnpm",
+        "db:audit"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.41,
+      "log": "certified-db-audit.log",
+      "sha256": "c09c5cc60025a9d037d26b2cb88159ac5950bdd8bbfff132b721d99b00eb8d2f"
+    },
+    {
+      "command": [
+        "pnpm",
+        "db:rls-audit"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 1.59,
+      "log": "certified-db-rls-audit.log",
+      "sha256": "a192c2e7ef01bc9445815ddfb94d63ce18e1a2f02f62f435c81e8590866eefb7"
+    },
+    {
+      "command": [
+        "pnpm",
+        "db:migrate"
+      ],
+      "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+      "exit_code": 0,
+      "seconds": 0.28,
+      "log": "certified-db-migrate.log",
+      "sha256": "2a6ab3c4ef258be8271c2f0158484552b2afff4f690cd376ab756b839f12d5f0"
+    }
+  ],
+  "databaseEvidence": "DATABASE-EVIDENCE.json",
+  "browserEvidence": "FINAL-VALIDATION.md",
+  "ci": {
+    "status": "PENDING_FEATURE_PR"
+  },
+  "notes": [
+    "Historical failures are retained as failures; rerun results refer to their precise source commit.",
+    "Final documentation/test-only commits do not change the runtime artifact; CI validates the eventual PR head."
+  ],
+  "finalEvidence": "FINAL-EVIDENCE.json"
+}

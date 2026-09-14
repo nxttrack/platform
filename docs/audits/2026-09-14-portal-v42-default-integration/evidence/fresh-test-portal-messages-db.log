@@ -1,0 +1,18 @@
+
+> @nxttrack/platform@0.0.0 test:portal-messages:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> tsx --test tests/integration/portal-message-composer.test.ts
+
+PASS assigned instructor internal/public separation, current recipient confirmation, concurrent send exactly once, in-app notification atomicity, delegated view-only and restricted child session, direct native null-safe boundary
+PASS atomic new thread and reply via canonical command, explicit confirmation, ordinary failure rollback with draft retained, retry exactly once and no real delivery
+PASS durable private composer, no autosave delivery, actor/tenant/child/thread isolation, null guardian denial, public/internal enforcement, optimistic edits, reconnect, expiry and revision-bound discard
+✔ private composer drafts persist per actor/context, reject cross-context access and serialize concurrent edits (247.151289ms)
+PASS valid curriculum and lesson reference snapshots, sibling denial, draft reference restoration and tenant-timezone membership boundary
+✔ references bind the exact child curriculum and local-date lesson membership and survive a sent message (85.992193ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 478.098947

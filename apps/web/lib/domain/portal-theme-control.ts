@@ -2,7 +2,7 @@ import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { portalThemeCatalog } from "@/lib/theme/portal-theme-registry";
+import { getPublishedThemeCatalog } from "@/lib/theme/theme-release-repository";
 
 export type ThemeAssignmentRow = {
   id: string;
@@ -27,7 +27,7 @@ export type ThemeScheduleRow = {
 export async function getPortalThemeControlCenterData() {
   const context = await requirePrivateShellContext("/platform/themes");
   if (!context.platform?.roles.some((role) => role === "platform_owner" || role === "platform_admin")) {
-    return { authorized: false as const, assignments: [], auditEvents: [], availability: [], catalog: portalThemeCatalog, licenses: [], schedules: [], tenants: [] };
+    return { authorized: false as const, assignments: [], auditEvents: [], availability: [], catalog: [], licenses: [], schedules: [], tenants: [] };
   }
   const admin = createAdminClient();
   const [tenants, assignments, schedules, auditEvents, licenses, availability] = await Promise.all([
@@ -43,7 +43,7 @@ export async function getPortalThemeControlCenterData() {
   }
   return {
     authorized: true as const,
-    catalog: portalThemeCatalog,
+    catalog: await getPublishedThemeCatalog(),
     tenants: (tenants.data ?? []) as Array<{ id: string; name: string; slug: string; status: string }>,
     assignments: (assignments.data ?? []) as ThemeAssignmentRow[],
     schedules: (schedules.data ?? []) as ThemeScheduleRow[],

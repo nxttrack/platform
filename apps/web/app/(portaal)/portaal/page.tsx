@@ -11,10 +11,14 @@ import {
   Waves
 } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-import { ParentOverviewTop } from "@/components/parent/parent-overview-top";
-import type { PortalJourneyNode } from "@/components/parent/portal-journey-engine";
+import { PortalJourney } from "@/components/portal/journey/portal-journey";
+import { journeyBadgeEvents } from "@/lib/domain/journey-badge-events";
+import { parentJourneyView } from "@/lib/domain/portal-journey-view";
+import { resolveHistoricalJourneyVisual, resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
+import { chapterJourneyView } from "@/lib/domain/portal-development-view";
 import {
   formatLessonDate,
   getActiveEnrollmentForParticipant,
@@ -27,11 +31,6 @@ import {
   type ParentPortalSearchParams
 } from "@/lib/domain/parent-portal-selection";
 import { getJourneyForEnrollment } from "@/lib/domain/swim-progress";
-import {
-  orderJourneyNodes,
-  resolveJourneyDestination,
-  selectDefaultJourneyNode
-} from "@/lib/theme/portal-journey-contract";
 import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +42,7 @@ export default async function ParentHomePage({
 }) {
   const [data, params] = await Promise.all([
     getParentPortalData(),
-    searchParams ?? Promise.resolve({})
+    searchParams ?? Promise.resolve<ParentPortalSearchParams>({})
   ]);
   const selectedParticipantId = getSelectedParticipantId(
     params,
@@ -58,54 +57,22 @@ export default async function ParentHomePage({
       ? [selectedParticipantId]
       : data.participants.map((participant) => participant.id)
   );
-  const programById = new Map(data.programs.map((program) => [program.id, program]));
-  const groupById = new Map(data.groups.map((group) => [group.id, group]));
-  const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
   const enrollment = selectedParticipant
     ? getActiveEnrollmentForParticipant(data, selectedParticipant.id)
     : null;
   const journey = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
   const nextLesson = selectedParticipant ? getNextLesson(data, selectedParticipant.id) : null;
-  const locationId = nextLesson?.resource_id
-    ?? (nextLesson ? groupById.get(nextLesson.group_id)?.default_resource_id : null);
   const resolvedTheme = data.portalTheme;
+  const chapterId = Array.isArray(params.hoofdstuk) ? params.hoofdstuk[0] : params.hoofdstuk;
+  const chapter = chapterId ? journey?.chapterSnapshots.find((snapshot) => snapshot.id === chapterId) : null;
+  if (chapterId && !chapter) notFound();
+  const journeyEvents = journeyBadgeEvents(journey, data.badgeAwards.filter((award) => award.participant_id === participantId && (!award.enrollment_id || award.enrollment_id === enrollment?.id) && (!chapter || chapter.badge_award_ids.includes(award.id))).map((award) => ({
+    id: award.id, title: award.title, awardedAt: award.awarded_at, description: award.resolved_description ?? null,
+    isSurprise: award.badge_release?.is_surprise === true, triggerEventType: award.trigger_event_type ?? null, triggerContext: award.trigger_context_json ?? {}
+  })));
+  const journeyModel = chapter && journey ? chapterJourneyView(journey, chapter) : parentJourneyView(journey);
+  const journeyVisual = chapter ? await resolveHistoricalJourneyVisual(chapter) : await resolvePortalJourneyVisual(data.tenant.id, journeyModel, resolvedTheme.manifest);
   const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
-  const observationByItemId = new Map(
-    (journey?.effectiveObservations ?? []).map((observation) => [
-      observation.curriculum_item_id,
-      observation
-    ])
-  );
-  const openCarryoverItemIds = new Set(
-    (journey?.carryovers ?? [])
-      .filter((carryover) => carryover.status === "open")
-      .map((carryover) => carryover.curriculum_item_id)
-  );
-  const nodes: PortalJourneyNode[] = orderJourneyNodes((journey?.currentStageItems ?? []).map((item) => {
-    const observation = observationByItemId.get(item.id);
-    const blocked = item.context_json.blocked === true;
-    return {
-      id: item.stable_key,
-      label: item.name,
-      progressPercent: observation ? (observation.rating / 5) * 100 : 0,
-      assessed: Boolean(observation),
-      completed: observation?.rating === 5,
-      completedAt: observation?.rating === 5 ? observation.finalized_at : null,
-      curriculumOrder: item.sort_order,
-      lastUpdatedAt: observation?.finalized_at ?? null,
-      carryover: openCarryoverItemIds.has(item.id),
-      blocked,
-      blockedReason: blocked && typeof item.context_json.block_reason === "string"
-        ? item.context_json.block_reason
-        : null
-    };
-  }));
-  const destinationStage = resolveJourneyDestination({
-    stages: journey?.stages ?? [],
-    currentStageId: journey?.currentStage?.id,
-    programName: programById.get(enrollment?.program_id ?? "")?.name,
-    fallback: "jouw volgende doel"
-  });
   const visibleNotifications = data.notifications.filter(
     (notification) =>
       !notification.participant_id || visibleParticipantIds.has(notification.participant_id)
@@ -188,23 +155,13 @@ export default async function ParentHomePage({
 
   return (
     <div className="portal-dashboard dashboard-page">
-      <ParentOverviewTop
-        currentGoal={selectDefaultJourneyNode(nodes) ?? null}
-        destinationStage={destinationStage}
-        lesson={nextLesson ? {
-          dateLabel: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at),
-          groupName: groupById.get(nextLesson.group_id)?.name ?? null,
-          locationName: locationId ? resourceById.get(locationId)?.name ?? null : null
-        } : null}
-        participantId={participantId}
-        progressHref={participantContextHref("/portaal/ontwikkeling", participantId)}
-        program={enrollment ? programById.get(enrollment.program_id)?.name ?? "Programma" : "Nog geen programma"}
-        rings={journey?.rings ?? []}
-        sceneUrl={resolvedTheme.manifest.assets["overview.hero.desktop"]?.path ?? null}
-        stage={journey?.currentStage?.name ?? "Startniveau"}
-      />
+      {chapter ? <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4"><p>Een bewaarde herinnering · {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(chapter.completed_at))}</p><Link className="rounded-lg border p-3" href={participantContextHref("/portaal", participantId)}>Huidige reis</Link></div> : null}
+      {journeyVisual ? <PortalJourney events={journeyEvents} audience="parent" participantId={participantId} collectionContext={participantId ? { audience: "parent", actorId: data.user.id, tenantId: data.tenant.id, participantId } : undefined} allowCollectionDiscovery={!!participantId && data.mutableParticipantIds.includes(participantId)} contextKey={`parent:${data.user.id}:${data.tenant.id}:${participantId}:${journey?.version.id ?? "none"}${chapter ? `:chapter:${chapter.id}` : ""}`}
+        title={chapter ? journeyModel?.stageName ?? "Eerdere reis" : selectedParticipant ? `De reis van ${selectedParticipant.display_name.split(" ")[0]}` : "Jouw leerreis"}
+        model={journeyModel} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls}
+        lesson={!chapter && nextLesson ? { label: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at), href: participantContextHref(`/portaal/lessen/${nextLesson.id}`, participantId) } : null} /> : <section className="rounded-xl border bg-card p-5"><h1 className="text-xl font-bold">Deze historische wereld is niet beschikbaar</h1><p>De oorspronkelijke scores en hoofdstuksamenvatting blijven bewaard.</p><Link href={participantContextHref(`/portaal/ontwikkeling?hoofdstuk=${encodeURIComponent(chapterId!)}`, participantId)}>Bekijk de herinnering</Link></section>}
 
-      <div className="portal-dashboard__cards dashboard-cards">
+      <details className="rounded-2xl border border-border bg-card p-4"><summary className="cursor-pointer font-bold">Praktisch, updates en berichten ({actions.length + unreadNotifications.length})</summary><div className="portal-dashboard__cards dashboard-cards mt-4">
         <DashboardCard
           emptyIcon={<CheckCircle2 />}
           emptyText="Je bent helemaal bij."
@@ -229,7 +186,7 @@ export default async function ParentHomePage({
           subtitle={`${unreadNotifications.length} ongelezen`}
           title="Berichten"
         />
-      </div>
+      </div></details>
     </div>
   );
 }

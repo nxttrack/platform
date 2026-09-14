@@ -1,3 +1,5 @@
+import { childAssessmentCompliment } from "./child-assessment-compliment";
+import { readJourneyIdBatches,readJourneyPages } from "./journey-query-pages";
 import "server-only";
 
 import { cache } from "react";
@@ -6,16 +8,23 @@ import { requireChildPortalSession } from "@/lib/auth/portal-session";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { resolveChildTimeZone } from "@/lib/date/child-lesson-date";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getThemeDisplayName, getThemeRelease } from "@/lib/theme/portal-theme-registry";
+import { getThemeDisplayName } from "@/lib/theme/portal-theme-registry";
 import {
   resolveTenantChildPortalTheme,
   resolveTenantPortalTheme,
   type ResolvedPortalTheme
 } from "@/lib/theme/portal-theme-server";
+import { getPublishedThemeRelease } from "@/lib/theme/theme-release-repository";
 import type { EnrollmentRow } from "./core";
 import { loadChildAgendaSessions } from "./child-agenda";
 import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
 import { getPortalFeatureFlags, type PortalFeatureFlags } from "./portal-features";
+import { journeyBadgeEvents, type JourneyBadgeAward } from "./journey-badge-events";
+import { childJourneyView } from "./portal-journey-view";
+import { chapterJourneyView, childDevelopmentView, type PortalDevelopmentView } from "./portal-development-view";
+import { latestJourneyObservations } from "./swim-assessment-order";
+import { resolveHistoricalJourneyVisual } from "@/lib/theme/portal-journey-server";
+import type { ResolvedJourneyVisual } from "@/lib/theme/legacy-journey-presentation";
 import {
   getJourneyForEnrollment,
   loadCanonicalSwimJourneys,
@@ -53,6 +62,8 @@ export type ChildSafeInstructionalVideoDto = {
 };
 
 export type ChildSafeJourneyDto = {
+  view?: import("./portal-journey-view").PortalJourneyView;
+  development?: PortalDevelopmentView;
   stages: Array<{ id: string; name: string; sortOrder: number }>;
   currentStage: { id: string; name: string } | null;
   currentStageItems: Array<{
@@ -81,6 +92,9 @@ export type ChildSafeJourneyDto = {
     id: string;
     themeKey: string;
     themeRelease: string;
+    view?: import("./portal-journey-view").PortalJourneyView;
+    visual?: ResolvedJourneyVisual | null;
+    events?: import("../theme/portal-journey-contract").JourneyTimelineEvent[];
   }>;
   events: Array<{
     anchorNodeId: string | null;
@@ -175,7 +189,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .eq("tenant_id", childSession.tenantId)
       .eq("status", "active")
       .maybeSingle(),
-    admin.from("tenant_settings").select("timezone").eq("tenant_id", childSession.tenantId).maybeSingle()
+    admin.from("tenant_settings").select("timezone, portal_theme_management_mode").eq("tenant_id", childSession.tenantId).maybeSingle()
   ]);
 
   const legacyGuardianBound = participantResult.data?.guardian_user_id === childSession.userId;
@@ -185,7 +199,8 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   if (enrollmentResult.error) throw new Error("Child portal enrollment could not be loaded");
   if (preferencesResult.error || availableThemesResult.error || brandingResult.error || settingsResult.error) throw new Error("Child portal preferences could not be loaded");
   const timeZone = resolveChildTimeZone(settingsResult.data?.timezone);
-  const themePreference = preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
+  const platformManaged = settingsResult.data?.portal_theme_management_mode === "platform";
+  const themePreference = !platformManaged && preferencesResult.data?.theme_key && preferencesResult.data.theme_release ? {
     themeKey: preferencesResult.data.theme_key,
     themeRelease: preferencesResult.data.theme_release
   } : null;
@@ -200,6 +215,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
   });
   const canonicalJourney = getJourneyForEnrollment(journeys, enrollment?.id);
 
+  const badgeReadAt=new Date().toISOString();
   const [membershipResult, awardResult, mediaApprovalResult, programResult, stageResult, standardReleasesResult, certificatesResult, graduationInvitesResult] = await Promise.all([
     admin
       .from("group_memberships")
@@ -207,14 +223,15 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .in("status", ["active", "trial"]),
-    admin
+    readJourneyPages(admin
       .from("participant_badge_awards")
       .select("id, badge_release_id, resolved_badge_key, title, awarded_at, resolved_description, trigger_event_type, trigger_context_json")
       .eq("tenant_id", childSession.tenantId)
       .eq("participant_id", childSession.participantId)
       .eq("status", "awarded")
       .eq("visibility", "parent_visible")
-      .order("awarded_at", { ascending: false }),
+      .lte("awarded_at",badgeReadAt)
+      .order("awarded_at", { ascending: false }).order("id")),
     admin
       .from("portal_child_media_approvals")
       .select("media_id")
@@ -227,12 +244,13 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     enrollment?.current_stage_id
       ? admin.from("program_stages").select("id, name").eq("tenant_id", childSession.tenantId).eq("id", enrollment.current_stage_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
-    admin
+    readJourneyPages(admin
       .from("badge_definition_releases")
       .select("id, tenant_id, stable_key, release_number, name_default, name_boy, name_girl, category, audience, is_surprise")
       .or(`tenant_id.is.null,tenant_id.eq.${childSession.tenantId}`)
       .eq("is_surprise", false)
-      .order("release_number", { ascending: false }),
+      .lte("created_at",badgeReadAt)
+      .order("release_number", { ascending: false }).order("id")),
     admin
       .from("certificate_records")
       .select("id, title, issued_on")
@@ -263,15 +281,11 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       ? admin.from("groups").select("id, name, default_resource_id, offering_type").eq("tenant_id", childSession.tenantId).in("id", groupIds)
       : Promise.resolve({ data: [], error: null }),
     loadChildAgendaSessions(admin, childSession.tenantId, membershipResult.data ?? [], timeZone),
-    releaseIds.length
-      ? admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", releaseIds)
-      : Promise.resolve({ data: [], error: null }),
+    readJourneyIdBatches(releaseIds,ids=>admin.from("badge_definition_releases").select("id, stable_key, category, is_surprise, name_default, name_boy, name_girl").in("id", ids).order("id")),
     mediaIds.length
       ? admin.from("participant_media").select("id, caption, media_type, published_at").eq("tenant_id", childSession.tenantId).eq("participant_id", childSession.participantId).eq("status", "published").gt("expires_at", new Date().toISOString()).in("id", mediaIds).order("published_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
-    standardReleaseIds.length
-      ? admin.from("badge_release_lifecycle").select("badge_release_id, availability, effective_at").in("badge_release_id", standardReleaseIds).order("effective_at", { ascending: false })
-      : Promise.resolve({ data: [], error: null }),
+    readJourneyIdBatches(standardReleaseIds,ids=>admin.from("badge_release_lifecycle").select("badge_release_id, availability, effective_at").in("badge_release_id", ids).lte("effective_at",badgeReadAt).order("effective_at", { ascending: false }).order("id")),
     graduationEventIds.length
       ? admin.from("graduation_events").select("id, title, resource_id, starts_at, ends_at, status").eq("tenant_id", childSession.tenantId).eq("status", "published").gte("ends_at", new Date().toISOString()).in("id", graduationEventIds).order("starts_at")
       : Promise.resolve({ data: [], error: null })
@@ -349,7 +363,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     latestAvailabilityByReleaseId,
     gender: participantGender
   });
-  const journey = projectChildSafeJourney(canonicalJourney, awards.map((award) => {
+  const journey = await projectChildSafeJourney(canonicalJourney, awards.map((award) => {
     const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
     return {
       id: award.id,
@@ -427,17 +441,17 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
       readAloudEnabled: preferencesResult.data?.read_aloud_enabled ?? false,
       reducedMotion: preferencesResult.data?.reduced_motion ?? false,
       soundEnabled: preferencesResult.data?.sound_enabled ?? false,
-      themeKey: preferencesResult.data?.theme_key ?? null,
-      themeRelease: preferencesResult.data?.theme_release ?? null
+      themeKey: platformManaged ? null : preferencesResult.data?.theme_key ?? null,
+      themeRelease: platformManaged ? null : preferencesResult.data?.theme_release ?? null
     },
-    availableThemes: (availableThemesResult.data ?? []).flatMap((release) => {
-      const manifest = getThemeRelease(release.theme_key, release.theme_release);
+    availableThemes: platformManaged ? [] : (await Promise.all((availableThemesResult.data ?? []).map(async (release) => {
+      const manifest = (await getPublishedThemeRelease(release.theme_key, release.theme_release))?.manifest;
       return manifest ? [{
         key: release.theme_key,
         name: getThemeDisplayName(manifest),
         release: release.theme_release
       }] : [];
-    })
+    }))).flat()
   };
 });
 
@@ -445,30 +459,17 @@ function firstName(value: string | null) {
   return value?.trim().split(/\s+/)[0] || "Trainer";
 }
 
-function projectChildSafeJourney(
+async function projectChildSafeJourney(
   journey: CanonicalSwimJourney | null,
-  earnedAwards: Array<{
-    awardedAt: string;
-    description: string | null;
-    id: string;
-    isSurprise: boolean;
-    title: string;
-    triggerContext: Record<string, unknown>;
-    triggerEventType: string | null;
-  }>
-): ChildSafeJourneyDto | null {
+  earnedAwards: JourneyBadgeAward[]
+): Promise<ChildSafeJourneyDto | null> {
   if (!journey) return null;
-  const stableKeyByItemId = new Map(journey.currentStageItems.map((item) => [item.id, item.stable_key]));
-  const stableKeyByObservationId = new Map(
-    journey.effectiveObservations.map((observation) => [
-      observation.id,
-      stableKeyByItemId.get(observation.curriculum_item_id) ?? null
-    ])
-  );
   const completionByItemId = new Map(
     journey.itemCompletions.map((completion) => [completion.curriculum_item_id, completion])
   );
   return {
+    view: childJourneyView(journey) ?? undefined,
+    development: childDevelopmentView(journey),
     stages: journey.stages.map((stage) => ({
       id: stage.id,
       name: stage.name,
@@ -489,45 +490,30 @@ function projectChildSafeJourney(
       completionSequence: completionByItemId.get(item.id)?.completion_sequence ?? null,
       completionOrderStatus: completionByItemId.get(item.id)?.order_status ?? null
     })),
-    effectiveObservations: journey.effectiveObservations.map((observation) => {
-      const childVisible = observation.context_json.childVisible === true;
+    effectiveObservations: latestJourneyObservations(journey.effectiveObservations.filter((row) => row.visibility === "parent_visible")).map((observation) => {
+      const compliment = childAssessmentCompliment(observation);
+      const childVisible = compliment !== null;
       return {
         childVisible,
         curriculumItemId: observation.curriculum_item_id,
         finalizedAt: observation.finalized_at,
-        positiveLabel: childVisible ? observation.positive_label : null,
+        positiveLabel: compliment,
         rating: observation.rating
       };
     }),
-    chapterSnapshots: journey.chapterSnapshots.map((snapshot) => ({
+    chapterSnapshots: await Promise.all(journey.chapterSnapshots.map(async (snapshot) => ({
       artworkId: snapshot.artwork_id,
       badgeAwardCount: snapshot.badge_award_ids.length,
       completedAt: snapshot.completed_at,
       curriculumStageId: snapshot.curriculum_stage_id,
       id: snapshot.id,
       themeKey: snapshot.theme_key,
-      themeRelease: snapshot.theme_release
-    })),
-    events: earnedAwards.flatMap((award) => {
-      const journeyEligible = award.isSurprise
-        || award.triggerEventType === "progress_item_completed"
-        || award.triggerEventType === "skill_completed"
-        || award.triggerContext.showInJourney === true;
-      if (!journeyEligible) return [];
-      const contextEntityId = typeof award.triggerContext.entityId === "string"
-        ? award.triggerContext.entityId
-        : typeof award.triggerContext.eventId === "string"
-          ? award.triggerContext.eventId
-          : null;
-      return [{
-        anchorNodeId: contextEntityId ? stableKeyByObservationId.get(contextEntityId) ?? null : null,
-        description: award.description,
-        earnedAt: award.awardedAt,
-        eventType: award.isSurprise ? "surprise_badge" as const : "badge" as const,
-        id: award.id,
-        label: award.title
-      }];
-    }),
+      themeRelease: snapshot.theme_release,
+      events: journeyBadgeEvents(journey, earnedAwards.filter((award) => snapshot.badge_award_ids.includes(award.id))),
+      view: chapterJourneyView(journey, snapshot),
+      visual: await resolveHistoricalJourneyVisual(snapshot)
+    }))),
+    events: journeyBadgeEvents(journey, earnedAwards),
     rings: journey.rings.map((ring) => ({ ...ring }))
   };
 }
