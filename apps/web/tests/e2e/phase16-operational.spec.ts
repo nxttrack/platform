@@ -97,6 +97,7 @@ test.describe("phase 16 operational happy path", () => {
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
     const firstName = firstNameOf(phase.expected.participantName);
     const journeyHeadings = [
+      `De reis van ${firstName}`,
       `De leerreis van ${firstName}!`,
       `De zwemreis van ${firstName}!`,
       `Op weg naar ${phase.expected.programName}!`
