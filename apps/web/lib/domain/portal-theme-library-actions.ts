@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect, unstable_rethrow } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
-import { copyThemeReleaseToNewDraft, createThemeDraftFromImport, getManagedThemeRelease, publishThemeRelease, reviewThemeRelease, restoreThemeDraftRevision, saveThemeDraft, saveGuidedThemeMapping } from "@/lib/theme/theme-release-repository";
+import { cleanupRejectedThemeImport, retryStoredThemeImport, copyThemeReleaseToNewDraft, createThemeDraftFromImport, getManagedThemeRelease, publishThemeRelease, reviewThemeRelease, restoreThemeDraftRevision, saveThemeDraft, saveGuidedThemeMapping } from "@/lib/theme/theme-release-repository";
 import { readThemeJson } from "@/lib/theme/theme-package-archive";
 import { validateThemeReleaseDocument } from "@/lib/theme/theme-release-validation";
 
@@ -20,6 +20,22 @@ function text(form: FormData, key: string, limit = 200) {
 }
 function refresh() {
   revalidatePath("/platform/themes", "layout"); revalidatePath("/portaal", "layout"); revalidatePath("/kind", "layout"); revalidatePath("/admin/branding");
+}
+
+export async function recoverThemeImportAction(_: ThemeLibraryActionState,form:FormData):Promise<ThemeLibraryActionState> {
+  let destination:string|null=null;
+  try {
+    const actor=await manager(),id=text(form,"importId",36),operation=text(form,"operation");
+    if(operation==='retry') {
+      const result=await retryStoredThemeImport(actor,id);destination=`/platform/themes/import?import=${result.id}`;
+    } else if(operation==='cleanup') {
+      if(form.get('confirmCleanup')!=='on') throw new Error("Bevestig het opruimen van dit afgewezen bronbestand");
+      await cleanupRejectedThemeImport(actor,id);
+    } else throw new Error("Onbekende importhandeling");
+    refresh();
+  } catch(error) { unstable_rethrow(error);return {error:error instanceof Error?error.message:"De importhandeling kon niet worden afgerond"}; }
+  if(destination) redirect(destination);
+  return {saved:'cleanup'};
 }
 
 export async function createImportedThemeDraftAction(_: ThemeLibraryActionState, form: FormData): Promise<ThemeLibraryActionState> {

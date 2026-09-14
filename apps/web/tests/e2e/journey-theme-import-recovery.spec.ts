@@ -1,0 +1,36 @@
+import { expect,test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+
+test("rejected source retries as a separate attempt and explicit cleanup preserves import history and runtime releases",async({page,baseURL},info)=>{
+  const file=process.env.THEME_IMPORT_RECOVERY_BROWSER_FIXTURE;
+  test.skip(!file || !process.env.THEME_LIBRARY_TEST_EMAIL || !process.env.THEME_LIBRARY_TEST_PASSWORD,'Requires a fictional local manager and rejected import fixture');
+  if(!baseURL || !['localhost','127.0.0.1'].includes(new URL(baseURL).hostname)) throw new Error('Import recovery test requires loopback application');
+  const f=JSON.parse(readFileSync(file!,'utf8'));
+  await page.goto('/login?next=%2Fplatform%2Fthemes%2Fimport');
+  await page.getByLabel('E-mail',{exact:true}).fill(process.env.THEME_LIBRARY_TEST_EMAIL!);
+  await page.getByLabel('Wachtwoord',{exact:true}).fill(process.env.THEME_LIBRARY_TEST_PASSWORD!);
+  await page.getByRole('button',{name:'Inloggen',exact:true}).click();
+  await expect(page.getByRole('heading',{name:'Importeer een nieuwe zwemwereld'})).toBeVisible({timeout:45000});
+  await page.getByText('Opgeslagen imports hervatten',{exact:true}).click();
+  const retry=page.locator(`[data-theme-import="${f.retryId}"]`);
+  await retry.getByRole('button',{name:'Analyse opnieuw proberen'}).click();
+  await expect(page.getByRole('button',{name:'Bewaar als concept'})).toBeVisible({timeout:45000});
+  const newId=new URL(page.url()).searchParams.get('import');expect(newId).not.toBe(f.retryId);
+  await expect(page.getByText(new RegExp(`versie ${f.release.replaceAll('.','\\.')}`))).toBeVisible();
+  await page.reload();await expect(page.getByRole('button',{name:'Bewaar als concept'})).toBeVisible();
+  await page.getByText('Opgeslagen imports hervatten',{exact:true}).click();
+  await expect(retry).toContainText('Afgewezen');
+  await expect(page.locator(`[data-theme-import="${newId}"]`)).toContainText('Nieuwe poging uit bewaarde bron');
+  const missing=page.locator(`[data-theme-import="${f.missingId}"]`);
+  await missing.getByRole('button',{name:'Analyse opnieuw proberen'}).click();
+  await expect(missing.getByRole('alert')).toContainText('Upload het pakket opnieuw');
+  const cleanup=page.locator(`[data-theme-import="${f.cleanupId}"]`);
+  await cleanup.getByRole('checkbox').check();
+  await cleanup.getByRole('button',{name:'Afgewezen bron opruimen'}).click();
+  await expect(cleanup).toContainText('Afgewezen bron opgeruimd');
+  await page.reload();await page.getByText('Opgeslagen imports hervatten',{exact:true}).click();
+  await expect(cleanup).toContainText('Afgewezen bron opgeruimd');
+  await expect(cleanup.getByRole('button')).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Bewaar als concept'})).toBeVisible();
+  await page.screenshot({path:info.outputPath('import-recovery.png'),fullPage:true});
+});

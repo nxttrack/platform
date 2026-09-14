@@ -71,14 +71,15 @@ export async function storeThemeDeliveries(analysis: ThemeImportAnalysis, signal
   return rows;
 }
 
-export async function analyzeStoredThemeImport(actorId: string, bytes: Buffer, name: string, runtimeRelease?: string, signal?: AbortSignal) {
+export async function analyzeStoredThemeImport(actorId: string, bytes: Buffer, name: string, runtimeRelease?: string, signal?: AbortSignal, retryOf?: string) {
   if (!bytes.length || bytes.length > themeImportLimits.archive || name.length > 160 || !/\.(zip|json)$/i.test(name)) throw new Error("Kies een ZIP- of JSON-bestand binnen de uploadlimiet");
+  if (runtimeRelease) presentationVersion(runtimeRelease);
   const admin = createAdminClient();
   const recent = await admin.from("portal_theme_import").select("id", { count: "exact", head: true }).eq("created_by_user_id", actorId).gte("created_at", new Date(Date.now() - 60 * 60 * 1000).toISOString());
   if (recent.error) throw new Error("Import storage unavailable");
   if ((recent.count ?? 0) >= 20) throw new Error("Er zijn te veel imports gestart. Rond de openstaande imports eerst af.");
   const id = crypto.randomUUID(), hash = themeContentHash(bytes), objectKey = `${id}/${hash}`;
-  const record = await admin.from("portal_theme_import").insert({ id, created_by_user_id: actorId, source_hash: hash, source_name: name, source_object_key: objectKey, byte_size: bytes.length });
+  const record = await admin.from("portal_theme_import").insert({ id, created_by_user_id: actorId, source_hash: hash, source_name: name, source_object_key: objectKey, byte_size: bytes.length, requested_runtime_release: runtimeRelease ?? null, retry_of: retryOf ?? null });
   if (record.error) throw new Error("Import could not be registered");
   try {
     signal?.throwIfAborted();
@@ -106,6 +107,44 @@ export async function analyzeStoredThemeImport(actorId: string, bytes: Buffer, n
     await admin.from("portal_theme_import").update({ status: "rejected", analysis_json: { error: error instanceof Error ? error.message.slice(0, 500) : "Import failed" } }).eq("id", id);
     throw error;
   }
+}
+
+/** Copy verified bytes into a new quarantined attempt; failed evidence remains unchanged. */
+export async function retryStoredThemeImport(actorId: string, importId: string) {
+  const admin = createAdminClient();
+  const result = await admin.from("portal_theme_import").select("status,source_name,source_hash,source_object_key,requested_runtime_release").eq("id",importId).single();
+  if (result.error || !result.data || !["received","rejected"].includes(result.data.status)) throw new Error("Deze import kan niet opnieuw worden geanalyseerd. Open de opgeslagen analyse of upload het bronpakket opnieuw.");
+  const record=result.data, response=await admin.storage.from("portal-theme-imports").download(record.source_object_key);
+  if(response.error || !response.data || response.data.size>themeImportLimits.archive) throw new Error("Het oorspronkelijke bronbestand is niet beschikbaar. Upload het pakket opnieuw.");
+  const bytes=Buffer.from(await response.data.arrayBuffer());
+  if(themeContentHash(bytes)!==record.source_hash) throw new Error("Het bronbestand wijkt af van de vastgelegde hash. Upload het oorspronkelijke pakket opnieuw.");
+  return analyzeStoredThemeImport(actorId,bytes,record.source_name,record.requested_runtime_release ?? undefined,undefined,importId);
+}
+
+/** Only rejected quarantine objects, never runtime deliveries or release/snapshot assets. */
+export async function cleanupRejectedThemeImport(actorId: string,importId: string) {
+  if(!/^[a-f\d]{8}(-[a-f\d]{4}){3}-[a-f\d]{12}$/i.test(importId)) throw new Error("Ongeldige import");
+  const admin=createAdminClient(), start=await admin.rpc("begin_portal_theme_import_cleanup",{p_actor:actorId,p_import:importId});
+  if(start.error || !start.data) throw new Error("Alleen een afgewezen import zonder concept- of releaseverwijzing kan worden opgeruimd.");
+  if(start.data.cleaned) return;
+  const bucket=admin.storage.from("portal-theme-imports"), keys:string[]=[];
+  // Exactly two bounded levels exist in this private bucket. Unexpected content fails closed.
+  for(const prefix of [importId,`${importId}/preview`]) {
+    const listed=await bucket.list(prefix,{limit:1000});
+    if(listed.error || !listed.data || listed.data.length>=1000) throw new Error("Opruimen kon niet worden afgerond. Probeer opnieuw; de importhistorie blijft bewaard.");
+    for(const object of listed.data) {
+      if(prefix===importId && object.name==='preview' && !object.id) continue;
+      const key=`${prefix}/${object.name}`;
+      if(!object.id || !/^[a-f0-9]{64}$/.test(object.name) || (prefix===importId && key!==start.data.sourceObjectKey)) throw new Error("Onverwachte quarantaine-inhoud; automatische verwijdering is gestopt.");
+      keys.push(key);
+    }
+  }
+  if(keys.length) {
+    const removed=await bucket.remove(keys);
+    if(removed.error) throw new Error("Quarantaine-opslag kon niet volledig worden opgeruimd. Probeer dezelfde handeling opnieuw.");
+  }
+  const finished=await admin.rpc("finish_portal_theme_import_cleanup",{p_actor:actorId,p_import:importId});
+  if(finished.error) throw new Error("De bestanden zijn opgeruimd; bevestig opnieuw om de importstatus bij te werken.");
 }
 
 export async function saveThemeDraft(actorId: string, document: ThemeReleaseDocument, expectedRevision: number, provenance: Record<string, unknown>, findings: ThemeImportAnalysis["findings"]) {

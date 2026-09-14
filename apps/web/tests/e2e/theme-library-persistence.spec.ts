@@ -121,9 +121,11 @@ test("platform world binding is explicit, replaces an optimistic revision and ro
   await page.getByLabel("E-mail", { exact: true }).fill(process.env.THEME_LIBRARY_TEST_EMAIL!); await page.getByLabel("Wachtwoord", { exact: true }).fill(process.env.THEME_LIBRARY_TEST_PASSWORD!);
   await page.getByRole("button", { name: "Inloggen", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Wereldkoppelingen", exact: true })).toBeVisible({ timeout: 45_000 });
-  const tenantId = await page.locator('select[name="tenant"] option').filter({ hasText: /^Fictional visual tenant$/ }).first().getAttribute("value");
+  const tenantId = process.env.THEME_LIBRARY_TEST_TENANT ?? await page.locator('select[name="tenant"] option').filter({ hasText: /^Fictional visual tenant$/ }).first().getAttribute("value");
   expect(tenantId).toBeTruthy(); await page.locator('select[name="tenant"]').selectOption(tenantId!); await page.getByRole("button", { name: "Openen", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`tenant=${tenantId}`));
   const mode = page.locator("section").filter({ has: page.getByRole("heading", { name: "Themakeuze beheren", exact: true }) });
+  await expect(mode).toBeVisible();
   if (await mode.getByRole("button", { name: "Platformbeheer inschakelen", exact: true }).count()) {
     await mode.getByLabel("Reden", { exact: true }).fill("Fictieve browsertest expliciet platformbeheer"); await mode.getByRole("button", { name: "Platformbeheer inschakelen", exact: true }).click();
     await expect(mode.getByRole("button", { name: "Bestaande themakeuze herstellen", exact: true })).toBeVisible();

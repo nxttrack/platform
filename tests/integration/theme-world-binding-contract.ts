@@ -29,6 +29,11 @@ export async function testWorldBindingContracts(client: pg.Client, databaseUrl: 
   await assert.rejects(client.query(bind, args(null)), /platform_managed_target_required/);
   await assert.rejects(client.query("select public.set_portal_theme_management_mode($1,$2,'platform','Explicit opt in')", [tenantAdmin, tenant]), /platform_theme_manager_required/);
   await client.query("select public.set_portal_theme_management_mode($1,$2,'platform','Explicit opt in')", [manager, tenant]);
+  const draftVersion=randomUUID(),draftStage=randomUUID();
+  await client.query("insert into public.curriculum_versions(id,tenant_id,program_id,version_number,name) values($1,$2,$3,2,'Unpublished cannot bind')",[draftVersion,tenant,program]);
+  await client.query("insert into public.curriculum_stages(id,tenant_id,curriculum_version_id,stable_key,name) values($1,$2,$3,'draft-stage','Not published')",[draftStage,tenant,draftVersion]);
+  const draftArgs=args(null);draftArgs[3]=draftVersion;draftArgs[4]=draftStage;
+  await assert.rejects(client.query(bind,draftArgs),/published_curriculum_required/);
   // Must reject even selecting the already active release: the historical early-return cannot bypass policy.
   await assert.rejects(client.query(selectTheme, [tenant, theme, release, tenantAdmin]), /theme_is_platform_managed/);
   await assert.rejects(client.query(prefs, [session, tenantAdmin, tenant, participant, theme, release]), /theme_is_platform_managed/);

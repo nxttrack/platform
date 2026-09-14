@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ThemeGuidedMapping } from "./theme-guided-mapping";
 import { createImportedThemeDraftAction } from "@/lib/domain/portal-theme-library-actions";
@@ -13,6 +13,7 @@ export function ThemePackageImport({ initialResult = null }: { initialResult?: T
   const [state, action, saving] = useActionState(createImportedThemeDraftAction, {});
   const [result, setResult] = useState<ThemeImportResult | null>(initialResult), [error, setError] = useState(""), [busy, setBusy] = useState(false), [progress, setProgress] = useState(0);
   const [version, setVersion] = useState(""); const upload = useRef<XMLHttpRequest | null>(null);
+  useEffect(() => () => { const request=upload.current; if(request && request.readyState!==XMLHttpRequest.DONE) { request.onload=null;request.onerror=null;request.onabort=null;request.abort(); } },[]);
   function start(file?: File) {
     if (!file || busy) return;
     if (file.size > 64 * 1024 * 1024 || !/\.(zip|json)$/i.test(file.name)) { setError("Kies een ZIP of ondersteunde Studio-JSON van maximaal 64 MiB."); return; }
@@ -21,9 +22,9 @@ export function ThemePackageImport({ initialResult = null }: { initialResult?: T
     request.open("POST", "/api/platform/themes/import"); request.setRequestHeader("Content-Type", "application/octet-stream"); request.setRequestHeader("x-theme-filename", encodeURIComponent(file.name));
     if (version) request.setRequestHeader("x-theme-release", version);
     request.upload.onprogress = (event) => { if (event.lengthComputable) setProgress(event.loaded / event.total); };
-    request.onload = () => { try { const data = JSON.parse(request.responseText); if (request.status !== 200) setError(data.error ?? "Import mislukt"); else { setResult(data); router.replace(`/platform/themes/import?import=${data.id}`); } } catch { setError("Geen geldige reactie ontvangen. Het actieve portaal is niet gewijzigd."); } setBusy(false); };
-    request.onerror = () => { setError("Verbinding verbroken. Controleer de opgeslagen imports voordat je opnieuw probeert."); setBusy(false); };
-    request.onabort = () => { setError("Import geannuleerd. Een eventueel ontvangen bronbestand blijft in quarantaine."); setBusy(false); };
+    request.onload = () => { try { const data = JSON.parse(request.responseText); if (request.status !== 200) setError(data.error ?? "Import mislukt"); else { setResult(data); router.replace(`/platform/themes/import?import=${data.id}`); } } catch { setError("Geen geldige reactie ontvangen. Het actieve portaal is niet gewijzigd."); } setBusy(false);router.refresh(); };
+    request.onerror = () => { setError("Verbinding verbroken. Controleer de opgeslagen imports voordat je opnieuw probeert."); setBusy(false);router.refresh(); };
+    request.onabort = () => { setError("Import geannuleerd. Een eventueel ontvangen bronbestand blijft in quarantaine."); setBusy(false);router.refresh(); };
     request.send(file);
   }
   return <div className="space-y-5">

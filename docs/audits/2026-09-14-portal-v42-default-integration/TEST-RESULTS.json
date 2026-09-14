@@ -1602,6 +1602,65 @@
           "sha256": "904c1467532d02437b7a4f843cbc502bf4240424c0fe8fcdce62e3c70f65faee"
         }
       ]
+    },
+    {
+      "name": "Import recovery and published curriculum binding guard",
+      "report": "IMPORT-RECOVERY-CHECKPOINT.md",
+      "typecheck": "PASS",
+      "unitsFull": 504,
+      "migrationAudit": 157,
+      "rlsPublicTables": 256,
+      "sqlLint": "PASS",
+      "localThemeLifecycleRecovery": "PASS",
+      "chromiumRecovery": 1,
+      "existingThemeBrowser": {
+        "originalRunPassed": 3,
+        "originalRunFailed": 1,
+        "failedBindingRerun": "PASS after waiting for loaded tenant mode"
+      },
+      "fullIntegration": "IN_PROGRESS",
+      "logs": [
+        {
+          "path": "evidence/import-recovery-db.log",
+          "sha256": "304e04db80feb0864301d32aa856c9dba7e6a152e5dcb7bffd8bf76c3e21564d"
+        },
+        {
+          "path": "evidence/import-recovery-typecheck.log",
+          "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+        },
+        {
+          "path": "evidence/import-recovery-units.log",
+          "sha256": "e6065ea5ae123753180151d9ed2b9dccc89e39d4ddc6e6cccc5a9e226c66aea0"
+        },
+        {
+          "path": "evidence/import-recovery-migration-audit.log",
+          "sha256": "c09c5cc60025a9d037d26b2cb88159ac5950bdd8bbfff132b721d99b00eb8d2f"
+        },
+        {
+          "path": "evidence/import-recovery-rls-audit.log",
+          "sha256": "a192c2e7ef01bc9445815ddfb94d63ce18e1a2f02f62f435c81e8590866eefb7"
+        },
+        {
+          "path": "evidence/import-recovery-sql-lint.log",
+          "sha256": "d9c17f3f41d4c4b3d90671089f63f7f54b14dcd3b03c327ae4227d63eca6228b"
+        },
+        {
+          "path": "evidence/import-recovery-browser-1.log",
+          "sha256": "57909cabc391a0bf8aa4c9aad510d85d703c222ae9f57527f92c6d4d3ede7059"
+        },
+        {
+          "path": "evidence/theme-library-after-recovery-browser.log",
+          "sha256": "b84bdf56a843151f17236375f54e6f63b9d7902519a4b0781893b90fab83f8f3"
+        },
+        {
+          "path": "evidence/theme-binding-published-fixture-browser.log",
+          "sha256": "ae4ca1ca3e70670a193631c1a2ad8f5ca17e278c6a1de9b28e7458102858e9c5"
+        },
+        {
+          "path": "evidence/theme-binding-wait-for-tenant-browser.log",
+          "sha256": "f5ae885507d2e18a4a494c9aee420e5168370705836d435a4c58b252038d5f0d"
+        }
+      ]
     }
   ]
 }

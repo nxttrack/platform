@@ -9,6 +9,7 @@ import { testWorldBindingContracts } from "./theme-world-binding-contract";
 import { testDefaultSourceProvenance } from "./theme-default-source-contract";
 import { testCollectionContracts } from "./portal-collection-contract";
 import { parseJourneyPresentation } from "../../apps/web/lib/theme/portal-journey-presentation";
+import { testImportRecoveryContracts } from "./theme-import-recovery-contract";
 
 const databaseUrl = process.env.PORTAL_THEME_TEST_DATABASE_URL;
 const apiUrl = process.env.PORTAL_THEME_TEST_API_URL;
@@ -18,7 +19,7 @@ for (const value of [databaseUrl, apiUrl]) if (!value || !["localhost", "127.0.0
 if (!serviceKey || !anonKey) throw new Error("Local test API credentials required");
 
 test("real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts", async () => {
-  const manager = randomUUID(), outsider = randomUUID(), version = `99.0.${randomInt(1, 1_000_000_000)}`;
+  const manager = randomUUID(), outsider = randomUUID(), importId=randomUUID(), version = `99.0.${randomInt(1, 1_000_000_000)}`;
   const bytes = readFileSync(new URL("../fixtures/portal-v42/NXTTRACK-De-Parelroute-Wereld-1-Referentiepakket-1.0.0.zip", import.meta.url));
   const source = await analyzeThemePackage(bytes, "reference.zip", { runtimeRelease: version });
   if (source.kind !== "draft") throw new Error("Expected real reference package");
@@ -36,10 +37,11 @@ test("real storage and canonical SQL commands preserve optimistic review, public
   }
   const client = new pg.Client({ connectionString: databaseUrl }); await client.connect();
   const saveSql = "select public.save_portal_theme_draft($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7::jsonb,$8::jsonb,$9::jsonb) as result";
-  const args = (revision: number, actor = manager, manifest = imported.manifest) => [actor, key, version, revision, JSON.stringify(manifest), JSON.stringify(imported.presentation), JSON.stringify({ test: "fictional local reference package", sourceHash: imported.sourceHash }), JSON.stringify(imported.findings), JSON.stringify(assets)];
+  const args = (revision: number, actor = manager, manifest = imported.manifest) => [actor, key, version, revision, JSON.stringify(manifest), JSON.stringify(imported.presentation), JSON.stringify({ test: "fictional local reference package", sourceHash: imported.sourceHash,importId,sourceObjectKey:`${importId}/${imported.sourceHash}` }), JSON.stringify(imported.findings), JSON.stringify(assets)];
   try {
     await client.query("insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data) values($1,'authenticated','authenticated',$2,'{}','{}'),($3,'authenticated','authenticated',$4,'{}','{}')", [manager, `${manager}@example.test`, outsider, `${outsider}@example.test`]);
     await client.query("insert into public.platform_memberships(user_id,role,status) values($1,'platform_admin','active')", [manager]);
+    await client.query("insert into public.portal_theme_import(id,created_by_user_id,source_hash,source_name,source_object_key,byte_size,status) values($1,$2,$3,'fictional-library-source.zip',$4,$5,'analyzed')",[importId,manager,imported.sourceHash,`${importId}/${imported.sourceHash}`,bytes.length]);
     await client.query("set role service_role");
     await assert.rejects(client.query(saveSql, args(0, outsider)), /platform_theme_manager_required/);
     const first = (await client.query(saveSql, args(0))).rows[0].result;
@@ -78,6 +80,7 @@ test("real storage and canonical SQL commands preserve optimistic review, public
     await assert.rejects(client.query("update public.portal_theme_revision set document_json='{}' where theme_key=$1 and theme_release=$2", [key, version]), /permission denied|immutable/);
     await testWorldBindingContracts(client, databaseUrl!, manager, outsider, key, version, Object.keys(imported.presentation.worlds)[0]);
     await testCollectionContracts(client, databaseUrl!, manager, key, version, Object.keys(imported.presentation.worlds)[0]);
+    await testImportRecoveryContracts(client,databaseUrl!,manager,outsider,importId);
     await testDefaultSourceProvenance(client, manager, imported, assets, imported.files, apiUrl!, serviceKey!);
 
     // New application/DB connection reads the persisted release and every exact raster again.
