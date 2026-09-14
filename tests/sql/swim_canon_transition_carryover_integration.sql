@@ -190,6 +190,21 @@ select public.finalize_swim_assessment(
   'transition-assessment-two'
 );
 
+-- Late entry for an older observation must not replace the newer public rating.
+select public.finalize_swim_assessment(
+  '22000000-0000-4000-8000-000000000001', '82000000-0000-4000-8000-000000000001',
+  '92000000-0000-4000-8000-000000000001', '72000000-0000-4000-8000-000000000002',
+  4, 'Older public observation', 'parent_visible', '{}'::jsonb, now() - interval '1 day',
+  null, null, null, 'manual', 'transition-older', 'integration', 'transition-older-public'
+);
+-- An internal assessment remains internal even when a chapter is captured afterwards.
+select public.finalize_swim_assessment(
+  '22000000-0000-4000-8000-000000000001', '82000000-0000-4000-8000-000000000001',
+  '92000000-0000-4000-8000-000000000001', '72000000-0000-4000-8000-000000000001',
+  1, 'PRIVATE_SNAPSHOT_NOTE', 'internal', '{}'::jsonb, now(),
+  null, null, null, 'manual', 'transition-private', 'integration', 'transition-private-observation'
+);
+
 create temporary table transition_test_results (
   result_key text primary key,
   result_id uuid not null
@@ -251,6 +266,27 @@ begin
   if (select count(*) from public.curriculum_items where curriculum_version_id = '42000000-0000-4000-8000-000000000001') <> 3 then
     raise exception 'Transition duplicated a curriculum item';
   end if;
+end;
+$$;
+
+create temporary table frozen_transition_chapter as
+select * from public.portal_journey_chapter_snapshots where enrollment_id = '92000000-0000-4000-8000-000000000001';
+do $$
+declare
+  frozen jsonb;
+  mastered jsonb;
+  open_item jsonb;
+  completion public.portal_journey_item_completions%rowtype;
+begin
+  select completion_data_json into strict frozen from frozen_transition_chapter;
+  if frozen->>'visibility' <> 'parent_visible' or frozen->>'snapshotVersion' <> '2' then raise exception 'Missing snapshot visibility provenance'; end if;
+  select value into mastered from jsonb_array_elements(frozen->'items') where value->>'stableKey' = 'beheerst-onderdeel';
+  select value into open_item from jsonb_array_elements(frozen->'items') where value->>'stableKey' = 'open-onderdeel';
+  if mastered->>'rating' <> '5' or open_item->>'rating' <> '3' then raise exception 'Snapshot used stale or internal assessment: %', frozen; end if;
+  if mastered->>'name' <> 'Beheerst onderdeel' or (mastered->>'masteryThreshold')::int <> 4 then raise exception 'Frozen immutable curriculum metadata missing'; end if;
+  select * into strict completion from public.portal_journey_item_completions where enrollment_id = '92000000-0000-4000-8000-000000000001' and curriculum_item_id = '72000000-0000-4000-8000-000000000002';
+  if (mastered->>'completionSequence')::int <> completion.completion_sequence or (mastered->>'completedAt')::timestamptz <> completion.completed_at or mastered->>'completionOrderStatus' <> completion.order_status then raise exception 'Snapshot lost canonical completion provenance'; end if;
+  if frozen::text like '%PRIVATE_SNAPSHOT_NOTE%' then raise exception 'Internal note entered public snapshot'; end if;
 end;
 $$;
 
@@ -321,6 +357,12 @@ begin
   if retry_result <> (select result_id from transition_test_results where result_key = 'carryover-batch') then
     raise exception 'Idempotent carryover retry returned another batch';
   end if;
+end;
+$$;
+
+do $$
+begin
+  if (select completion_data_json from public.portal_journey_chapter_snapshots where enrollment_id = '92000000-0000-4000-8000-000000000001') is distinct from (select completion_data_json from frozen_transition_chapter) then raise exception 'Later carryover/retry rewrote the historical chapter'; end if;
 end;
 $$;
 

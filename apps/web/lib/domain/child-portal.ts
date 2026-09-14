@@ -17,7 +17,12 @@ import type { EnrollmentRow } from "./core";
 import { loadChildAgendaSessions } from "./child-agenda";
 import { genderedBadgeTitle, projectChildSafeBadges, type ChildSafeBadgeDto } from "./child-badges";
 import { getPortalFeatureFlags, type PortalFeatureFlags } from "./portal-features";
+import { journeyBadgeEvents, type JourneyBadgeAward } from "./journey-badge-events";
 import { childJourneyView } from "./portal-journey-view";
+import { chapterJourneyView, childDevelopmentView, type PortalDevelopmentView } from "./portal-development-view";
+import { latestJourneyObservations } from "./swim-assessment-order";
+import { resolveHistoricalJourneyVisual } from "@/lib/theme/portal-journey-server";
+import type { ResolvedJourneyVisual } from "@/lib/theme/legacy-journey-presentation";
 import {
   getJourneyForEnrollment,
   loadCanonicalSwimJourneys,
@@ -56,6 +61,7 @@ export type ChildSafeInstructionalVideoDto = {
 
 export type ChildSafeJourneyDto = {
   view?: import("./portal-journey-view").PortalJourneyView;
+  development?: PortalDevelopmentView;
   stages: Array<{ id: string; name: string; sortOrder: number }>;
   currentStage: { id: string; name: string } | null;
   currentStageItems: Array<{
@@ -84,6 +90,9 @@ export type ChildSafeJourneyDto = {
     id: string;
     themeKey: string;
     themeRelease: string;
+    view?: import("./portal-journey-view").PortalJourneyView;
+    visual?: ResolvedJourneyVisual | null;
+    events?: import("../theme/portal-journey-contract").JourneyTimelineEvent[];
   }>;
   events: Array<{
     anchorNodeId: string | null;
@@ -353,7 +362,7 @@ export const getChildPortalData = cache(async (): Promise<ChildPortalDto> => {
     latestAvailabilityByReleaseId,
     gender: participantGender
   });
-  const journey = projectChildSafeJourney(canonicalJourney, awards.map((award) => {
+  const journey = await projectChildSafeJourney(canonicalJourney, awards.map((award) => {
     const release = award.badge_release_id ? releaseById.get(award.badge_release_id) : null;
     return {
       id: award.id,
@@ -449,31 +458,17 @@ function firstName(value: string | null) {
   return value?.trim().split(/\s+/)[0] || "Trainer";
 }
 
-function projectChildSafeJourney(
+async function projectChildSafeJourney(
   journey: CanonicalSwimJourney | null,
-  earnedAwards: Array<{
-    awardedAt: string;
-    description: string | null;
-    id: string;
-    isSurprise: boolean;
-    title: string;
-    triggerContext: Record<string, unknown>;
-    triggerEventType: string | null;
-  }>
-): ChildSafeJourneyDto | null {
+  earnedAwards: JourneyBadgeAward[]
+): Promise<ChildSafeJourneyDto | null> {
   if (!journey) return null;
-  const stableKeyByItemId = new Map(journey.currentStageItems.map((item) => [item.id, item.stable_key]));
-  const stableKeyByObservationId = new Map(
-    journey.effectiveObservations.map((observation) => [
-      observation.id,
-      stableKeyByItemId.get(observation.curriculum_item_id) ?? null
-    ])
-  );
   const completionByItemId = new Map(
     journey.itemCompletions.map((completion) => [completion.curriculum_item_id, completion])
   );
   return {
     view: childJourneyView(journey) ?? undefined,
+    development: childDevelopmentView(journey),
     stages: journey.stages.map((stage) => ({
       id: stage.id,
       name: stage.name,
@@ -494,7 +489,7 @@ function projectChildSafeJourney(
       completionSequence: completionByItemId.get(item.id)?.completion_sequence ?? null,
       completionOrderStatus: completionByItemId.get(item.id)?.order_status ?? null
     })),
-    effectiveObservations: journey.effectiveObservations.map((observation) => {
+    effectiveObservations: latestJourneyObservations(journey.effectiveObservations.filter((row) => row.visibility === "parent_visible")).map((observation) => {
       const childVisible = observation.context_json.childVisible === true;
       return {
         childVisible,
@@ -504,35 +499,19 @@ function projectChildSafeJourney(
         rating: observation.rating
       };
     }),
-    chapterSnapshots: journey.chapterSnapshots.map((snapshot) => ({
+    chapterSnapshots: await Promise.all(journey.chapterSnapshots.map(async (snapshot) => ({
       artworkId: snapshot.artwork_id,
       badgeAwardCount: snapshot.badge_award_ids.length,
       completedAt: snapshot.completed_at,
       curriculumStageId: snapshot.curriculum_stage_id,
       id: snapshot.id,
       themeKey: snapshot.theme_key,
-      themeRelease: snapshot.theme_release
-    })),
-    events: earnedAwards.flatMap((award) => {
-      const journeyEligible = award.isSurprise
-        || award.triggerEventType === "progress_item_completed"
-        || award.triggerEventType === "skill_completed"
-        || award.triggerContext.showInJourney === true;
-      if (!journeyEligible) return [];
-      const contextEntityId = typeof award.triggerContext.entityId === "string"
-        ? award.triggerContext.entityId
-        : typeof award.triggerContext.eventId === "string"
-          ? award.triggerContext.eventId
-          : null;
-      return [{
-        anchorNodeId: contextEntityId ? stableKeyByObservationId.get(contextEntityId) ?? null : null,
-        description: award.description,
-        earnedAt: award.awardedAt,
-        eventType: award.isSurprise ? "surprise_badge" as const : "badge" as const,
-        id: award.id,
-        label: award.title
-      }];
-    }),
+      themeRelease: snapshot.theme_release,
+      events: journeyBadgeEvents(journey, earnedAwards.filter((award) => snapshot.badge_award_ids.includes(award.id))),
+      view: chapterJourneyView(journey, snapshot),
+      visual: await resolveHistoricalJourneyVisual(snapshot)
+    }))),
+    events: journeyBadgeEvents(journey, earnedAwards),
     rings: journey.rings.map((ring) => ({ ...ring }))
   };
 }

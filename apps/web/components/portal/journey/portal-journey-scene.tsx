@@ -1,38 +1,44 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Check, List, Minus, Plus, RotateCcw, Sparkles, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, Check, List, Minus, Plus, RotateCcw, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 
 import { PortalDialog } from "../portal-dialog";
 import type { PortalJourneyView, PortalJourneyViewNode } from "@/lib/domain/portal-journey-view";
 import { clampJourneyCamera, distributeJourneyNodes, focusJourneyCamera, journeyPageSize, type JourneyCamera } from "@/lib/theme/portal-journey-geometry";
-import { selectDefaultJourneyNode, selectMascotPlacement, type JourneyMascotPlacement } from "@/lib/theme/portal-journey-contract";
+import { buildJourneyTimeline, selectDefaultJourneyNode, selectMascotPlacement, type JourneyMascotPlacement, type JourneyTimelineEvent } from "@/lib/theme/portal-journey-contract";
 import { presentationAssetUrl, resolvePearlArtwork, type PortalJourneyPresentationV1 } from "@/lib/theme/portal-journey-presentation";
 
 import styles from "./portal-journey-scene.module.css";
 
 type StoredView = { selectedId: string | null; camera: JourneyCamera; layoutKey: string; at: number };
+const noEvents: readonly JourneyTimelineEvent[] = [];
 const hiddenGuide: JourneyMascotPlacement = { x: 0, y: 0, width: 0, height: 0, mode: "hidden" };
 
 /** Shared parent/child/guarded-preview renderer. Receives no domain mutation capability. */
-export function PortalJourneyScene({ presentation, worldId, model, contextKey, title, lesson, detailHref, selectedId: requestedId, onSelect, assetUrls, reducedMotion = false }: {
+export function PortalJourneyScene({ presentation, worldId, model, contextKey, title, lesson, events = noEvents, detailHref, selectedId: requestedId, onSelect, assetUrls, reducedMotion = false }: {
   presentation: PortalJourneyPresentationV1; worldId: string; model: PortalJourneyView | null; contextKey: string; title: string;
+  events?: readonly JourneyTimelineEvent[];
   lesson?: { label: string; href: string } | null; detailHref: (id: string) => string;
   selectedId?: string | null; onSelect?: (id: string) => void; assetUrls?: Readonly<Record<string, string>>; reducedMotion?: boolean;
 }) {
   const world = presentation.worlds[worldId];
   if (!world) return <section className={styles.missing}><h1>{title}</h1><p>Er is nog geen wereld gekoppeld aan dit niveau. Je onderdelen blijven beschikbaar bij Ontwikkeling.</p></section>;
-  return <RegisteredScene key={contextKey} {...{ presentation, worldId, model, contextKey, title, lesson, detailHref, requestedId, onSelect, assetUrls, reducedMotion }} />;
+  return <RegisteredScene key={contextKey} {...{ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion }} />;
 }
 
-function RegisteredScene({ presentation, worldId, model, contextKey, title, lesson, detailHref, requestedId, onSelect, assetUrls, reducedMotion }: Omit<Parameters<typeof PortalJourneyScene>[0], "selectedId"> & { requestedId?: string | null }) {
+function RegisteredScene({ presentation, worldId, model, contextKey, title, lesson, events, detailHref, requestedId, onSelect, assetUrls, reducedMotion }: Omit<Parameters<typeof PortalJourneyScene>[0], "selectedId"> & { requestedId?: string | null }) {
   const world = presentation.worlds[worldId], nodes = model?.nodes ?? [];
-  const root = useRef<HTMLElement>(null), viewportRef = useRef<HTMLDivElement>(null), lastTrigger = useRef<HTMLElement | null>(null), listTrigger = useRef<HTMLButtonElement>(null);
+  const root = useRef<HTMLElement>(null), viewportRef = useRef<HTMLDivElement>(null), lastTrigger = useRef<HTMLElement | null>(null), listTrigger = useRef<HTMLButtonElement>(null), momentTrigger = useRef<HTMLElement | null>(null);
   const currentGoalId = selectDefaultJourneyNode(nodes.map((node) => ({ ...node, progressPercent: node.progressPercent ?? 0 })))?.id ?? null;
   const [viewport, setViewport] = useState({ width: 0, height: 0 });
   const [selected, setSelected] = useState<string | null>(() => nodes.some((node) => node.id === requestedId) ? requestedId! : currentGoalId ?? nodes[0]?.id ?? null);
   const [detailOpen, setDetailOpen] = useState(false), [listOpen, setListOpen] = useState(false), [guideEnabled, setGuideEnabled] = useState(true), [systemReduced, setSystemReduced] = useState(false);
+  const [momentsOpen, setMomentsOpen] = useState(false), [momentCluster, setMomentCluster] = useState<string | null>(null);
+  const timeline = useMemo(() => buildJourneyTimeline({ nodes: nodes.map((node) => ({ ...node, progressPercent: node.progressPercent ?? 0 })), events }), [nodes, events]);
+  const clusters = useMemo(() => timeline.entries.flatMap((entry) => entry.kind === "event_cluster" ? [{ ...entry, anchorId: entry.anchorKey === "before:first" ? timeline.orderedNodes[0]?.id ?? null : timeline.orderedNodes[Number(entry.anchorKey.slice(6))]?.id ?? null }] : []), [timeline]);
+  const [momentPositions, setMomentPositions] = useState<Array<{ id: string; x: number; y: number }>>([]);
   const [camera, setCamera] = useState<JourneyCamera>({ x: 0, y: 0, scale: 1 });
   const [guidePlacement, setGuidePlacement] = useState(hiddenGuide), [dragging, setDragging] = useState(false);
   const cameraRef = useRef(camera), initialized = useRef(false), restored = useRef<StoredView | null>(null), animation = useRef<number | null>(null), suppressClick = useRef(false);
@@ -129,6 +135,25 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     setGuidePlacement((old) => JSON.stringify(old) === JSON.stringify(placement) ? old : placement);
   }, [active, camera, detailOpen, guideEnabled, orientation, presentation.guide, viewport]);
 
+  useLayoutEffect(() => {
+    const element = root.current; if (!element || !viewport.width || !viewport.height) return;
+    const bounds = element.getBoundingClientRect();
+    const rect = (node: Element) => { const box = node.getBoundingClientRect(); return { x: box.x - bounds.x, y: box.y - bounds.y, width: box.width, height: box.height }; };
+    const exclusions = [...element.querySelectorAll("[data-rich-obstacle]:not([data-journey-moment]), [data-rich-guide]")].map(rect);
+    const placements: typeof momentPositions = [];
+    for (const cluster of clusters) {
+      const anchor = cluster.anchorId ? element.querySelector(`[data-rich-node="${CSS.escape(cluster.anchorId)}"]`) : null;
+      if (!anchor) continue; // Off-page and unanchored moments remain in the complete accessible list.
+      const box = rect(anchor);
+      if (box.x < 0 || box.y < 0 || box.x + box.width > viewport.width || box.y + box.height > viewport.height) continue;
+      const placed = selectMascotPlacement({ anchor: box, bounds: { x: 0, y: 0, ...viewport }, exclusions, preferredWidth: 44, preferredHeight: 44, clearance: 12 });
+      if (placed.mode !== "candidate") continue; // Never visually attach a moment to an unrelated distant dock.
+      placements.push({ id: cluster.id, x: placed.x, y: placed.y }); exclusions.push(placed);
+    }
+    setMomentPositions((previous) => JSON.stringify(previous) === JSON.stringify(placements) ? previous : placements);
+  }, [clusters, camera, viewport, detailOpen, guidePlacement]);
+  function openMoments(cluster: string | null, trigger: HTMLElement) { momentTrigger.current = trigger; setMomentCluster(cluster); setMomentsOpen(true); }
+
   function selectNode(node: PortalJourneyViewNode, open: boolean, trigger?: HTMLElement) {
     if (trigger) lastTrigger.current = trigger;
     const index = nodes.findIndex((entry) => entry.id === node.id);
@@ -185,6 +210,10 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
         </div> : null}
       </div>
     </div>
+    {momentPositions.map((position) => {
+      const cluster = clusters.find((entry) => entry.id === position.id)!;
+      return <button key={position.id} type="button" className={styles.moment} data-journey-moment data-rich-obstacle style={{ left: position.x, top: position.y }} aria-label={`${cluster.events.length} ${cluster.events.length === 1 ? "moment" : "momenten"} bij ${nodes.find((node) => node.id === cluster.anchorId)?.label ?? "deze reis"}`} onClick={(event) => openMoments(cluster.id, event.currentTarget)}><Award aria-hidden="true" /><span>{cluster.events.length}</span></button>;
+    })}
     <header className={styles.heading} data-rich-obstacle><small>{model?.stageName ?? "Mijn reis"}</small><h1>{title}</h1><p>{world.name}</p></header>
     {lesson ? <Link className={styles.lesson} data-rich-obstacle href={lesson.href} aria-label={`Volgende les: ${lesson.label}`}>{lesson.label}</Link> : null}
     {scene.quality === "fixture-only" ? <p className={styles.fixture} data-rich-obstacle>Testweergave · originele wereldbeelden en ankers ontbreken</p> : null}
@@ -196,6 +225,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     </div> : null}
     <nav className={styles.controls} aria-label="Wereld verkennen" data-rich-obstacle>
       <button ref={listTrigger} type="button" onClick={() => setListOpen(true)} aria-label={`Alle ${nodes.length} onderdelen`}><List aria-hidden="true" /></button>
+      {clusters.length ? <button type="button" onClick={(event) => openMoments(null, event.currentTarget)} aria-label={`Alle ${clusters.reduce((count, entry) => count + entry.events.length, 0)} momenten`}><Award aria-hidden="true" /></button> : null}
       <button type="button" disabled={!nodes.length || selectedIndex === 0} onClick={() => relative(-1)} aria-label="Vorig onderdeel"><ArrowLeft aria-hidden="true" /></button>
       <button type="button" disabled={!nodes.length || selectedIndex === nodes.length - 1} onClick={() => relative(1)} aria-label="Volgend onderdeel"><ArrowRight aria-hidden="true" /></button>
       <button type="button" onClick={() => focusIndex(selectedIndex, detailOpen, cameraRef.current.scale * 1.2)} aria-label="Inzoomen"><Plus aria-hidden="true" /></button>
@@ -205,6 +235,10 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     </nav>
     <p className={styles.pageInfo} aria-live="polite">{nodes.length > pageSize ? `Deel ${pageIndex + 1} van ${Math.ceil(nodes.length / pageSize)} · alle ${nodes.length} onderdelen beschikbaar in de lijst` : "Sleep door de wereld of gebruik de pijlen"}</p>
     {active && detailOpen ? <aside className={styles.detail} aria-label="Onderdeel bekijken" data-rich-obstacle><button type="button" className={styles.close} onClick={closeDetail} aria-label="Detailkaart sluiten"><X aria-hidden="true" /></button><small>{nodeStatus(active)}</small><h2>{active.label}</h2><p>{active.description ?? "Dit onderdeel oefen je tijdens de les."}</p>{active.positiveLabel ? <p>{active.positiveLabel}</p> : null}<Link href={detailHref(active.id)}>Ontwikkeling en historie <ArrowRight aria-hidden="true" /></Link></aside> : null}
+    <PortalDialog open={momentsOpen} onOpenChange={setMomentsOpen} title="Bijzondere momenten" description="Echte behaalde badges, naast je leeronderdelen. Ze veranderen je beoordelingen en lesdoel niet." returnFocusRef={momentTrigger}>
+      <ol className={styles.momentList}>{clusters.filter((cluster) => !momentCluster || cluster.id === momentCluster).flatMap((cluster) => cluster.events).map((event) => <li key={event.id} data-journey-event={event.id}><h3>{event.label}</h3><time dateTime={event.earnedAt}>{momentDate(event.earnedAt)}</time><p>{event.eventType === "surprise_badge" ? "Verrassingsbadge" : "Badge behaald"}</p>{event.description ? <p>{event.description}</p> : null}</li>)}</ol>
+      {momentCluster ? <button type="button" className={styles.allMoments} onClick={() => setMomentCluster(null)}>Alle momenten bekijken</button> : null}
+    </PortalDialog>
     <PortalDialog open={listOpen} onOpenChange={setListOpen} title="Alle onderdelen" description="Ieder onderdeel blijft bereikbaar. Een selectie verandert geen beoordeling of lesdoel." returnFocusRef={listTrigger}>
       <ol className={styles.list}>{nodes.map((node) => <li key={node.id}><button type="button" onClick={() => { setListOpen(false); selectNode(node, true); }}><span>{node.label}<small>{nodeStatus(node)}</small></span><ArrowRight aria-hidden="true" /></button></li>)}</ol>
       {!nodes.length ? <p>Er zijn nog geen onderdelen gekoppeld.</p> : null}
@@ -215,3 +249,5 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
 export function nodeStatus(node: PortalJourneyViewNode): string {
   return node.completed ? "Behaald" : node.state === "carryover" ? "Meegenomen onderdeel" : node.rating === null ? "Nog niet beoordeeld" : `${node.rating} van 5 · aan het oefenen`;
 }
+
+function momentDate(value: string) { return Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long", timeZone: "Europe/Amsterdam" }).format(new Date(value)) : "Datum niet vastgelegd"; }

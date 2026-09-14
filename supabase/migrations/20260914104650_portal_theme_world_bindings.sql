@@ -503,15 +503,28 @@ begin
     and item.curriculum_version_id = new.curriculum_version_id
     and item.curriculum_stage_id = target_case.from_stage_id;
 
+  -- Freeze the public assessment at transition time. Historical rows are not rewritten.
+  -- The marker lets readers distinguish safe snapshots from older payloads without visibility provenance.
   select jsonb_build_object(
+    'snapshotVersion', 2,
+    'visibility', 'parent_visible',
+    'programId', (select v.program_id from public.curriculum_versions v where v.tenant_id = new.tenant_id and v.id = new.curriculum_version_id),
+    'stageName', (select s.name from public.curriculum_stages s where s.tenant_id = new.tenant_id and s.id = target_case.from_stage_id),
     'items',
     coalesce(
       jsonb_agg(
         jsonb_build_object(
           'itemId', item.id,
           'stableKey', identity.stable_key,
+          'identityId', item.identity_id,
+          'name', item.name,
+          'description', item.description,
+          'masteryThreshold', item.mastery_threshold,
+          'visibility', 'parent_visible',
           'rating', observation.rating,
-          'completedAt', case when observation.rating = 5 then observation.finalized_at else null end,
+          'completedAt', completion.completed_at,
+          'completionSequence', completion.completion_sequence,
+          'completionOrderStatus', completion.order_status,
           'lastUpdatedAt', observation.finalized_at
         )
         order by item.sort_order, item.name
@@ -540,12 +553,21 @@ begin
   join public.curriculum_item_identities identity
     on identity.tenant_id = item.tenant_id
    and identity.id = item.identity_id
+  left join public.portal_journey_item_completions completion
+    on completion.tenant_id = item.tenant_id
+   and completion.enrollment_id = new.enrollment_id
+   and completion.curriculum_item_id = item.id
+   and exists (select 1 from public.swim_assessment_observations completed_observation
+     where completed_observation.tenant_id = completion.tenant_id
+       and completed_observation.id = completion.completion_observation_id
+       and completed_observation.visibility = 'parent_visible')
   left join lateral (
     select candidate.rating, candidate.finalized_at
     from public.swim_assessment_observations candidate
     where candidate.tenant_id = new.tenant_id
       and candidate.enrollment_id = new.enrollment_id
       and candidate.curriculum_item_id = item.id
+      and candidate.visibility = 'parent_visible'
       and not exists (
         select 1
         from public.swim_assessment_retractions retraction
@@ -564,7 +586,7 @@ begin
               and correction_retraction.observation_id = correction.id
           )
       )
-    order by candidate.finalized_at desc, candidate.id
+    order by candidate.observed_at desc, candidate.finalized_at desc, candidate.id desc
     limit 1
   ) observation on true
   where item.tenant_id = new.tenant_id

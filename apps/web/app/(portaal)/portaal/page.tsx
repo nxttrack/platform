@@ -11,11 +11,14 @@ import {
   Waves
 } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
 import { PortalJourney } from "@/components/portal/journey/portal-journey";
+import { journeyBadgeEvents } from "@/lib/domain/journey-badge-events";
 import { parentJourneyView } from "@/lib/domain/portal-journey-view";
-import { resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
+import { resolveHistoricalJourneyVisual, resolvePortalJourneyVisual } from "@/lib/theme/portal-journey-server";
+import { chapterJourneyView } from "@/lib/domain/portal-development-view";
 import {
   formatLessonDate,
   getActiveEnrollmentForParticipant,
@@ -39,7 +42,7 @@ export default async function ParentHomePage({
 }) {
   const [data, params] = await Promise.all([
     getParentPortalData(),
-    searchParams ?? Promise.resolve({})
+    searchParams ?? Promise.resolve<ParentPortalSearchParams>({})
   ]);
   const selectedParticipantId = getSelectedParticipantId(
     params,
@@ -60,7 +63,15 @@ export default async function ParentHomePage({
   const journey = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
   const nextLesson = selectedParticipant ? getNextLesson(data, selectedParticipant.id) : null;
   const resolvedTheme = data.portalTheme;
-  const journeyVisual = await resolvePortalJourneyVisual(data.tenant.id, parentJourneyView(journey), resolvedTheme.manifest);
+  const chapterId = Array.isArray(params.hoofdstuk) ? params.hoofdstuk[0] : params.hoofdstuk;
+  const chapter = chapterId ? journey?.chapterSnapshots.find((snapshot) => snapshot.id === chapterId) : null;
+  if (chapterId && !chapter) notFound();
+  const journeyEvents = journeyBadgeEvents(journey, data.badgeAwards.filter((award) => award.participant_id === participantId && (!award.enrollment_id || award.enrollment_id === enrollment?.id) && (!chapter || chapter.badge_award_ids.includes(award.id))).map((award) => ({
+    id: award.id, title: award.title, awardedAt: award.awarded_at, description: award.resolved_description ?? null,
+    isSurprise: award.badge_release?.is_surprise === true, triggerEventType: award.trigger_event_type ?? null, triggerContext: award.trigger_context_json ?? {}
+  })));
+  const journeyModel = chapter && journey ? chapterJourneyView(journey, chapter) : parentJourneyView(journey);
+  const journeyVisual = chapter ? await resolveHistoricalJourneyVisual(chapter) : await resolvePortalJourneyVisual(data.tenant.id, journeyModel, resolvedTheme.manifest);
   const terminology = getPortalTerminology(resolvedTheme.manifest, data.tenant.sector);
   const visibleNotifications = data.notifications.filter(
     (notification) =>
@@ -144,10 +155,11 @@ export default async function ParentHomePage({
 
   return (
     <div className="portal-dashboard dashboard-page">
-      <PortalJourney audience="parent" participantId={participantId} contextKey={`parent:${data.user.id}:${data.tenant.id}:${participantId}:${journey?.version.id ?? "none"}`}
-        title={selectedParticipant ? `De reis van ${selectedParticipant.display_name.split(" ")[0]}` : "Jouw leerreis"}
-        model={parentJourneyView(journey)} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls}
-        lesson={nextLesson ? { label: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at), href: participantContextHref(`/portaal/lessen/${nextLesson.id}`, participantId) } : null} />
+      {chapter ? <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4"><p>Een bewaarde herinnering · {new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium" }).format(new Date(chapter.completed_at))}</p><Link className="rounded-lg border p-3" href={participantContextHref("/portaal", participantId)}>Huidige reis</Link></div> : null}
+      {journeyVisual ? <PortalJourney events={journeyEvents} audience="parent" participantId={participantId} contextKey={`parent:${data.user.id}:${data.tenant.id}:${participantId}:${journey?.version.id ?? "none"}${chapter ? `:chapter:${chapter.id}` : ""}`}
+        title={chapter ? journeyModel?.stageName ?? "Eerdere reis" : selectedParticipant ? `De reis van ${selectedParticipant.display_name.split(" ")[0]}` : "Jouw leerreis"}
+        model={journeyModel} presentation={journeyVisual.presentation} worldId={journeyVisual.worldId} assetUrls={journeyVisual.assetUrls}
+        lesson={!chapter && nextLesson ? { label: formatLessonDate(nextLesson.starts_at, nextLesson.ends_at), href: participantContextHref(`/portaal/lessen/${nextLesson.id}`, participantId) } : null} /> : <section className="rounded-xl border bg-card p-5"><h1 className="text-xl font-bold">Deze historische wereld is niet beschikbaar</h1><p>De oorspronkelijke scores en hoofdstuksamenvatting blijven bewaard.</p><Link href={participantContextHref(`/portaal/ontwikkeling?hoofdstuk=${encodeURIComponent(chapterId!)}`, participantId)}>Bekijk de herinnering</Link></section>}
 
       <details className="rounded-2xl border border-border bg-card p-4"><summary className="cursor-pointer font-bold">Praktisch, updates en berichten ({actions.length + unreadNotifications.length})</summary><div className="portal-dashboard__cards dashboard-cards mt-4">
         <DashboardCard

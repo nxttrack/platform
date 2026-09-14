@@ -29,10 +29,15 @@ export default async function RichJourneyHarness({ searchParams }: { searchParam
       { key: "diploma", kind: "diploma", label: "Diploma", progressPercent: null, coveragePercent: null, assessedCount: 0, contributingCount: 12, formulaVersion: "swim_progress_v3" }
     ]
   };
+  const events = scalar(params.moments) === "1" ? [
+    { id: "badge-a", label: "Rustig geprobeerd", earnedAt: "2026-09-14T08:05:00Z", eventType: "badge" as const, anchorNodeId: "fixture-2", description: "Een fictieve badge naast de leerroute." },
+    { id: "badge-b", label: "Verrassing in de les", earnedAt: "2026-09-14T08:06:00Z", eventType: "surprise_badge" as const, anchorNodeId: "fixture-2" },
+    { id: "badge-c", label: "Eerder moment", earnedAt: "2026-08-01T08:00:00Z", eventType: "badge" as const, anchorNodeId: null }
+  ] : [];
   return <main style={{ padding: "1rem", maxWidth: "1920px", margin: "auto" }}>
     <p style={{ marginBottom: ".5rem" }}>V4.2 rendererfixture · geen originele Default-artwork</p>
     <RefreshJourneyFixture />
-    <PortalJourney audience="preview" contextKey={`fixture:${worldId}:${count}`} model={model} presentation={createDefaultJourneyFixture()} worldId={worldId} title="Jouw zwemreis" lesson={{ label: "Di 15 sep · 16:00", href: "/test-harness/journey-rich" }} />
+    <PortalJourney events={events} audience="preview" contextKey={`fixture:${worldId}:${count}`} model={model} presentation={createDefaultJourneyFixture()} worldId={worldId} title="Jouw zwemreis" lesson={{ label: "Di 15 sep · 16:00", href: "/test-harness/journey-rich" }} />
     <div style={{ height: "70vh" }} aria-hidden="true" />
   </main>;
 }

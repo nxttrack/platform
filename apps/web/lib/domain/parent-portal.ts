@@ -134,6 +134,10 @@ export type ParentBadgeAwardRow = {
   visibility: string;
   status: string;
   awarded_at: string;
+  trigger_event_type?: string | null;
+  trigger_context_json?: Record<string, unknown> | null;
+  resolved_description?: string | null;
+  badge_release?: { is_surprise: boolean } | null;
 };
 
 export type ParentBadgeDefinitionRow = {
@@ -569,7 +573,7 @@ export async function getParentPortalDataForContext(
     loadedParticipantIds.length > 0
       ? admin
           .from("participant_badge_awards")
-          .select("id, participant_id, enrollment_id, badge_definition_id, title, note, visibility, status, awarded_at")
+          .select("id, participant_id, enrollment_id, badge_definition_id, title, note, visibility, status, awarded_at, trigger_event_type, trigger_context_json, resolved_description, badge_release:badge_definition_releases!participant_badge_awards_badge_release_id_fkey(is_surprise)")
           .eq("tenant_id", tenant.id)
           .eq("visibility", "parent_visible")
           .eq("status", "awarded")
@@ -822,7 +826,7 @@ export async function getParentPortalDataForContext(
     progressItems: (progressItemsResult.data ?? []) as ParentProgressItemRow[],
     progressScores: (progressScoresResult.data ?? []) as ParentProgressScoreRow[],
     swimJourneys,
-    badgeAwards: (badgeAwardsResult.data ?? []) as ParentBadgeAwardRow[],
+    badgeAwards: (badgeAwardsResult.data ?? []).map((award) => ({ ...award, badge_release: Array.isArray(award.badge_release) ? award.badge_release[0] ?? null : award.badge_release })) as ParentBadgeAwardRow[],
     badgeDefinitions: (badgeDefinitionsResult.data ?? []) as ParentBadgeDefinitionRow[],
     notifications: (notificationsResult.data ?? []) as ParentNotificationRow[],
     graduationEvents,

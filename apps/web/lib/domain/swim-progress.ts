@@ -125,6 +125,8 @@ export type CanonicalJourneyChapterSnapshot = {
   completion_data_json: Record<string, unknown>;
   badge_award_ids: string[];
   completed_at: string;
+  world_binding_id?: string | null;
+  presentation_snapshot_json?: unknown;
 };
 
 export type SwimJourneyRing = {
@@ -147,6 +149,7 @@ export type CanonicalSwimJourney = {
   items: CanonicalCurriculumItem[];
   currentStageItems: CanonicalCurriculumItem[];
   effectiveObservations: CanonicalAssessmentObservation[];
+  assessmentHistory?: Array<CanonicalAssessmentObservation & { historyStatus: "recorded" | "corrected" | "retracted" }>;
   carryovers: CanonicalItemCarryover[];
   itemCompletions: CanonicalJourneyItemCompletion[];
   chapterSnapshots: CanonicalJourneyChapterSnapshot[];
@@ -249,7 +252,7 @@ export async function loadCanonicalSwimJourneys(input: {
         .order("completion_sequence"),
       admin
         .from("portal_journey_chapter_snapshots")
-        .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, transition_case_id, theme_key, theme_release, artwork_id, route_order_json, completion_data_json, badge_award_ids, completed_at")
+        .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, transition_case_id, theme_key, theme_release, artwork_id, route_order_json, completion_data_json, badge_award_ids, completed_at, world_binding_id, presentation_snapshot_json")
         .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
         .order("completed_at", { ascending: false })
@@ -373,6 +376,9 @@ export async function loadCanonicalSwimJourneys(input: {
       effectiveObservations: effectiveObservations.filter(
         (observation) => observation.enrollment_id === enrollment.id
       ),
+      assessmentHistory: allObservations.filter((observation) => observation.enrollment_id === enrollment.id
+        && (!input.parentVisibleOnly || observation.visibility === "parent_visible"))
+        .map((observation) => ({ ...observation, historyStatus: retractedIds.has(observation.id) ? "retracted" : activeCorrections.has(observation.id) ? "corrected" : "recorded" })),
       carryovers: carryovers.filter((carryover) => carryover.enrollment_id === enrollment.id),
       itemCompletions: itemCompletions.filter((completion) => completion.enrollment_id === enrollment.id),
       chapterSnapshots: chapterSnapshots.filter((snapshot) => snapshot.enrollment_id === enrollment.id),

@@ -6,6 +6,8 @@ import { defaultPortalTheme } from "./portal-theme-registry";
 import type { PortalThemeManifestV3 } from "./portal-theme-contract";
 import { getPublishedThemeRelease } from "./theme-release-repository";
 import { parseJourneyPresentation } from "./portal-journey-presentation";
+import { matchesThemeDocument } from "./theme-document-equality";
+import type { CanonicalJourneyChapterSnapshot } from "@/lib/domain/swim-progress";
 
 /** Called after participant access is established. No stage-name or ordinal inference. */
 export async function resolvePortalJourneyVisual(tenantId: string, model: Pick<PortalJourneyView, "programId" | "curriculumVersionId" | "stageId"> | null, nativeTheme: PortalThemeManifestV3): Promise<ResolvedJourneyVisual> {
@@ -27,4 +29,23 @@ export async function resolvePortalJourneyVisual(tenantId: string, model: Pick<P
   // A newly published multi-world release never guesses which curriculum stage means 'badje-01'.
   // Existing native illustration remains until a manager explicitly binds this stage.
   return legacyJourneyVisual(nativeTheme.assets["progress.journey.desktop"] ? nativeTheme : defaultPortalTheme);
+}
+
+/** The caller has authorized the chapter's participant. Never substitute today's assignment. */
+export async function resolveHistoricalJourneyVisual(snapshot: CanonicalJourneyChapterSnapshot): Promise<ResolvedJourneyVisual | null> {
+  const release = await getPublishedThemeRelease(snapshot.theme_key, snapshot.theme_release);
+  if (!release) return null;
+  if (!snapshot.presentation_snapshot_json) {
+    if (release.manifest.assets["progress.journey.desktop"]?.path !== snapshot.artwork_id) return null;
+    return legacyJourneyVisual(release.manifest);
+  }
+  try {
+    const saved = snapshot.presentation_snapshot_json as { worldId?: unknown; presentation?: unknown; criterionArtwork?: unknown };
+    if (!release.presentation || typeof saved.worldId !== "string" || !Object.hasOwn(release.presentation.worlds, saved.worldId)
+      || !matchesThemeDocument(JSON.stringify(saved.presentation), release.presentation)) return null;
+    const presentation = parseJourneyPresentation({ ...release.presentation, pearlArtwork: { ...release.presentation.pearlArtwork, byCriterionIdentity: saved.criterionArtwork } });
+    const back = presentation.worlds[saved.worldId].landscape.layers.back;
+    if (!back || `/portal-themes/${presentation.assets[back].objectKey}` !== snapshot.artwork_id) return null;
+    return { presentation, worldId: saved.worldId, source: "published" };
+  } catch { return null; } // Incomplete historical data is an explicit empty state, never current artwork.
 }

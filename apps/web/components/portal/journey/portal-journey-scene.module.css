@@ -60,3 +60,10 @@
 @keyframes glow { from { opacity: .8; } to { opacity: 1; } }
 @media (max-width: 480px) { .scene { border-radius: 1rem; min-height: 36rem; height: calc(100dvh - 9rem); } .heading { left: .6rem; top: .7rem; padding: .55rem .65rem; max-width: 62%; } .lesson { right: .6rem; top: .7rem; } .controls { grid-template-columns: repeat(3, 2.75rem); } .pod { gap: .3rem; padding: .4rem; } .ring { width: 3.8rem; } .fixture { left: .6rem; top: 7.5rem; max-width: calc(100% - 1.2rem); } }
 @media (prefers-reduced-motion: reduce) { .light { animation: none !important; } }
+
+.moment { position: absolute; z-index: 5; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 1rem; border: 2px solid #fff; background: #fff1cc; color: #725018; box-shadow: 0 2px 8px #172a4630; }
+.moment > span { position: absolute; right: -3px; top: -5px; font-size: 12px; border-radius: 50%; background: #fff; min-width: 18px; }
+.momentList { display: grid; gap: 1rem; }
+.momentList li { border: 1px solid #dbe3f1; border-radius: 1rem; padding: 1rem; }
+.momentList h3 { font-weight: 800; } .momentList time { font-size: .8rem; color: #50617a; }
+.momentList p { margin-top: .5rem; } .allMoments { margin-top: 1rem; min-height: 44px; padding: .5rem; font-weight: 700; }

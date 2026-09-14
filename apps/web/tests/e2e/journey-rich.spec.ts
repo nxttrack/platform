@@ -92,3 +92,19 @@ test("selection leaves the canonical current goal intact and keyboard navigation
   await expect(scene.locator('[data-rich-node="fixture-3"]')).toHaveAttribute("aria-current", "step");
   await expect(page.getByRole("complementary", { name: "Onderdeel bekijken" })).toHaveCount(0);
 });
+
+
+test("badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 }); await page.goto("/test-harness/journey-rich?count=7&moments=1");
+  const scene = page.locator("[data-rich-journey]"); await expect(scene).toHaveAttribute("data-node-count", "7");
+  const goal = scene.locator('[data-rich-node="fixture-3"]'); await expect(goal).toHaveAttribute("aria-current", "step");
+  const trigger = page.getByRole("button", { name: "Alle 3 momenten", exact: true }); await trigger.click();
+  const dialog = page.getByRole("dialog", { name: "Bijzondere momenten" }); await expect(dialog.locator("[data-journey-event]")).toHaveCount(3);
+  await expect(dialog.getByText("Verrassingsbadge", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("1 augustus 2026", { exact: true })).toBeVisible();
+  await page.keyboard.press("Escape"); await expect(trigger).toBeFocused(); await expect(goal).toHaveAttribute("aria-current", "step");
+  await page.setViewportSize({ width: 390, height: 844 }); await trigger.click(); await expect(dialog.locator("[data-journey-event]")).toHaveCount(3);
+  await page.keyboard.press("Escape");
+  await page.goto("/test-harness/journey-rich?count=0&moments=1"); await page.getByRole("button", { name: "Alle 3 momenten", exact: true }).click();
+  await expect(page.getByRole("dialog").locator("[data-journey-event]")).toHaveCount(3);
+});
