@@ -32,7 +32,9 @@ test('real parent planning, explicit cancellation, invitation, profile and priva
  await form.getByRole('textbox').fill('Fictieve feedback voor een lokale controle.');
  await form.getByRole('button',{name:'Feedback veilig versturen'}).click();await expect(page).toHaveURL(/saved=response/);await page.reload();await expect(page.getByText('score 8',{exact:true})).toBeVisible();
  for(const path of ['betalingen','documenten','ontwikkeling/media','ontwikkeling/badges','kinderen']){
-  const response=await page.goto(`/portaal/${path}`);expect(response?.status(),path).toBe(200);await expect(page.locator('main')).toBeVisible();await expect(page.getByText('Application error',{exact:false})).toHaveCount(0);
+  const response=await page.goto(`/portaal/${path}`);expect(response?.status(),path).toBe(200);
+  // Wait for the streamed loading boundary to leave before checking the final landmark.
+  await expect(page.locator('main')).toHaveCount(1);await expect(page.locator('main')).toBeVisible();await expect(page.getByText('Application error',{exact:false})).toHaveCount(0);
  }
  await page.screenshot({path:info.outputPath('parent-practical-family.png')});
 });

@@ -61,6 +61,9 @@ test("rich Default fixture has all six distinct world identities and a readable 
     await page.goto("/test-harness/journey-rich?world=badje-a&count=12");
     const scene = page.locator("[data-rich-journey]");
     const pod = page.getByLabel("Voortgang en dekking", { exact: true });
+    // Production can stream the loading boundary before the actual scene.
+    await expect(scene).toBeVisible();
+    await expect(pod).toBeVisible();
     const bounds = await scene.boundingBox(), podBounds = await pod.boundingBox();
     expect(bounds).not.toBeNull(); expect(podBounds).not.toBeNull();
     expect(podBounds!.width).toBeLessThanOrEqual(bounds!.width / 2);
