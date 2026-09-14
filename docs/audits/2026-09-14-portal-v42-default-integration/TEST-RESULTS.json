@@ -1510,6 +1510,26 @@
         "evidence/rich-editor-finite-browser.log",
         "evidence/journey-latest-finite-units.log"
       ]
+    },
+    {
+      "name": "Canonical Development and Journey moments",
+      "commit": "5ccbe7746885218e1c7ae1f30984d4415d710085",
+      "report": "DEVELOPMENT-CHECKPOINT.md",
+      "unitsFull": 496,
+      "additionalFocusedFile": {
+        "tests": 6,
+        "result": "PASS"
+      },
+      "chromium": {
+        "tests": 7,
+        "result": "PASS"
+      },
+      "firefox": "BLOCKED_HOST_LIBRARIES",
+      "webkit": "BLOCKED_HOST_LIBRARIES",
+      "swimCanonDb": "PASS",
+      "sqlLint": "PASS",
+      "typecheck": "PASS",
+      "fullIntegration": "IN_PROGRESS"
     }
   ]
 }

@@ -1,0 +1,56 @@
+
+Running 7 tests using 1 worker
+
+(node:3166441) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [journey-chromium] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (2.5s)
+  ✘  2 [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (3.2s)
+(node:3168291) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  3 [journey-chromium] › tests/e2e/journey-rich.spec.ts:10:5 › rich scene keeps every node reachable with a closed initial detail and neutral pearls (7.4s)
+  ✓  4 [journey-chromium] › tests/e2e/journey-rich.spec.ts:31:5 › rich scene separates orientation, maintains camera on refresh and suppresses clicks after drag (2.1s)
+  ✓  5 [journey-chromium] › tests/e2e/journey-rich.spec.ts:58:5 › rich Default fixture has all six distinct world identities and a readable compact progress pod (6.7s)
+  ✓  6 [journey-chromium] › tests/e2e/journey-rich.spec.ts:83:5 › selection leaves the canonical current goal intact and keyboard navigation reaches every segment (1.8s)
+  ✓  7 [journey-chromium] › tests/e2e/journey-rich.spec.ts:97:5 › badge moments remain separate from curriculum nodes, with a complete keyboard-accessible history (2.1s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text 
+
+    Error: locator.scrollIntoViewIfNeeded: Error: strict mode violation: getByRole('dialog', { name: /^Rustig drijven/ }).getByText('Nog niet beoordeeld', { exact: true }) resolved to 2 elements:
+        1) <dd>Nog niet beoordeeld</dd> aka getByText('Nog niet beoordeeld').nth(3)
+        2) <dd>Nog niet beoordeeld</dd> aka getByText('Nog niet beoordeeld').nth(4)
+
+    Call log:
+      - waiting for getByRole('dialog', { name: /^Rustig drijven/ }).getByText('Nog niet beoordeeld', { exact: true })
+
+
+      38 |   await expect(dialog.getByRole("button", { name: "Venster sluiten" })).toBeVisible();
+      39 |   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    > 40 |   await dialog.getByText("Nog niet beoordeeld", { exact: true }).scrollIntoViewIfNeeded();
+         |                                                                  ^
+      41 |   await expect(dialog.getByText("Nog niet beoordeeld", { exact: true })).toBeInViewport();
+      42 |   await page.screenshot({ path: info.outputPath("development-390x844-text200-dialog.png") });
+      43 |   await dialog.getByRole("button", { name: "Venster sluiten" }).click(); await expect(trigger).toBeFocused();
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-development.spec.ts:40:66
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-moments-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-moments-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../tmp/nxttrack-v42-evidence/development-moments-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-moments-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-v42-evidence/development-moments-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text 
+  6 passed (27.5s)
