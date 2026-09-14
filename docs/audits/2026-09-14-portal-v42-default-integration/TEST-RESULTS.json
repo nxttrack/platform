@@ -1540,6 +1540,21 @@
       "chromiumExistingRichTests": 5,
       "chromiumAdditionalRegistrationTests": 1,
       "fullIntegration": "IN_PROGRESS"
+    },
+    {
+      "name": "Private messages and reviewed atomic send",
+      "commit": "e691cecc5cadd48042d41667cd80e34554017955",
+      "report": "MESSAGES-CHECKPOINT.md",
+      "unitsFull": 502,
+      "typecheck": "PASS",
+      "authAudit": "PASS",
+      "migrationAudit": 154,
+      "rlsTables": 255,
+      "localMessageDbContracts": 2,
+      "swimCanonSuites": 9,
+      "chromiumAuthenticatedMessageFlow": 1,
+      "sqlLint": "PASS",
+      "fullIntegration": "IN_PROGRESS"
     }
   ]
 }

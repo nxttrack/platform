@@ -1,0 +1,11 @@
+
+> @nxttrack/platform@0.0.0 db:audit /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/audit-migrations.mjs
+
+[db:audit] Migration audit failed:
+- 20260914124643_portal_message_composer_drafts.sql: creates a security definer function in public schema (public.save_message_composer_draft).
+- 20260914124643_portal_message_composer_drafts.sql: creates a security definer function in public schema (public.discard_message_composer_draft).
+- 20260914124643_portal_message_composer_drafts.sql: creates a security definer function in public schema (public.send_message_composer_draft).
+- 20260914124643_portal_message_composer_drafts.sql: creates a security definer function in public schema (public.read_message_composer_draft).
+- 20260914124643_portal_message_composer_drafts.sql: creates a security definer function in public schema (public.set_message_thread_personal_archive).
+ ELIFECYCLE  Command failed with exit code 1.

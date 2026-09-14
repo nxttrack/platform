@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 db:audit /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/audit-migrations.mjs
+
+[db:audit] Checked 154 migration file(s).
