@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 [chromium-desktop] › tests/e2e/theme-library-persistence.spec.ts:156:5 › a published version forks into a new editable concept, validates assets and restores an earlier revision without rewriting history (27.2s)
+
+  1 passed (27.9s)

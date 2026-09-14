@@ -1,0 +1,24 @@
+✔ Default fixtures preserve six visual IDs, separate orientations and explicit missing-art provenance (12.981482ms)
+✔ strict native schema 3 stays unchanged and rejects rich sidecar fields inside it (3.249474ms)
+✔ dotted support IDs stay distinct from source paths and cannot enable criterion artwork (7.401055ms)
+✔ presentation rejects extra behavior, learner records, unbounded numbers and URL references (7.234384ms)
+✔ review digest changes on anchor edits, not JSON key order (5.061321ms)
+✔ arc length route supports 0, 1, 4, 5, 7, 12, 24 and 48 items in portrait (2.583696ms)
+✔ arc length route supports 0, 1, 4, 5, 7, 12, 24 and 48 items in landscape (0.575742ms)
+✔ ZIP roundtrip preserves bytes and Default dialect markers; no config-directory stripping (2.398575ms)
+✔ ZIP rejects duplicate case paths, executable entries, symlinks and excessive declared expansion (1.033647ms)
+✔ JSON rejects unsafe object keys, excessive nesting and malformed UTF-8 (0.696355ms)
+✔ parent and child use real mastery thresholds and canonical weighted progress/coverage (1.542598ms)
+✔ repeated observations select the canonical latest observed time, finalized time and ID without mutating history (0.75192ms)
+✔ correction preserves completion sequence and original time without inventing new dates (0.261986ms)
+✔ unknown progress remains unknown and private assessments/notes never enter either projection (0.520729ms)
+✔ a parent update is not a child compliment until explicitly marked child-visible (0.24473ms)
+✔ open carryover uses existing identity once and never creates a second assessment (0.223369ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 400.793425

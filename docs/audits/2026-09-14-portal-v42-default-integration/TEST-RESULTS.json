@@ -1492,5 +1492,24 @@
       "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
       "passed": 3
     }
+  ],
+  "checkpoints": [
+    {
+      "report": "THEME-EDITOR-CHECKPOINT.md",
+      "commits": [
+        "5fd3bc3",
+        "d1f91ad"
+      ],
+      "status": "PARTIAL_IMPLEMENTATION_VALIDATED",
+      "evidence": [
+        "evidence/theme-editor-final-typecheck.log",
+        "evidence/theme-editor-all-units.log",
+        "evidence/theme-editor-provenance-units.log",
+        "evidence/theme-editor-provenance-db.log",
+        "evidence/theme-browser-editor-controls-fixed.log",
+        "evidence/rich-editor-finite-browser.log",
+        "evidence/journey-latest-finite-units.log"
+      ]
+    }
   ]
 }
