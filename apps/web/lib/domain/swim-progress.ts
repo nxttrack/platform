@@ -1,3 +1,4 @@
+import { readJourneyPages } from "./journey-query-pages";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -191,71 +192,86 @@ export async function loadCanonicalSwimJourneys(input: {
   }
 
   const admin = createAdminClient();
+  const readAt = new Date().toISOString();
   const observationsQuery = admin
     .from("swim_assessment_observations")
     .select("id, participant_id, enrollment_id, curriculum_version_id, curriculum_item_id, rating, positive_label, note, visibility, context_json, source, observed_at, finalized_at, corrects_observation_id, correction_reason, session_id")
     .eq("tenant_id", input.tenantId)
     .in("enrollment_id", enrollmentIds)
     .order("observed_at", { ascending: false })
-    .order("finalized_at", { ascending: false });
+    .order("finalized_at", { ascending: false })
+    .order("id", { ascending: false })
+    .lte("finalized_at", readAt);
 
   const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, itemCompletionsResult, chapterSnapshotsResult] =
     await Promise.all([
-      admin
+      readJourneyPages(admin
         .from("curriculum_versions")
         .select("id, program_id, version_number, name, formula_version, weighting_enabled, status")
         .eq("tenant_id", input.tenantId)
         .eq("status", "published")
-        .in("id", versionIds),
-      admin
+        .in("id", versionIds)
+        .order("id")),
+      readJourneyPages(admin
         .from("curriculum_stages")
         .select("id, curriculum_version_id, stable_key, name, description, color_hex, sort_order")
         .eq("tenant_id", input.tenantId)
         .in("curriculum_version_id", versionIds)
-        .order("sort_order"),
-      admin
+        .order("sort_order")
+        .order("id")),
+      readJourneyPages(admin
         .from("curriculum_items")
         .select("id, curriculum_version_id, curriculum_stage_id, identity_id, name, description, context_json, weight, mastery_threshold, contributes_to_stage, contributes_to_diploma, required_for_transition, required_for_graduation, sort_order")
         .eq("tenant_id", input.tenantId)
         .in("curriculum_version_id", versionIds)
-        .order("sort_order"),
-      admin
+        .order("sort_order")
+        .order("id")),
+      readJourneyPages(admin
         .from("curriculum_item_identities")
         .select("id, stable_key")
-        .eq("tenant_id", input.tenantId),
-      admin
+        .eq("tenant_id", input.tenantId)
+        .order("id")),
+      readJourneyPages(admin
         .from("enrollment_stage_assignments")
         .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, status, starts_at")
         .eq("tenant_id", input.tenantId)
         .eq("status", "active")
-        .in("enrollment_id", enrollmentIds),
-      observationsQuery,
-      admin
+        .in("enrollment_id", enrollmentIds)
+        .order("id")),
+      readJourneyPages(observationsQuery),
+      readJourneyPages(admin
         .from("swim_assessment_retractions")
-        .select("observation_id")
-        .eq("tenant_id", input.tenantId),
-      admin
+        .select("observation_id, observation:swim_assessment_observations!swim_assessment_retractions_observation_fk!inner(enrollment_id)")
+        .eq("tenant_id", input.tenantId)
+        .in("observation.enrollment_id", enrollmentIds)
+        .lte("created_at", readAt)
+        .order("id")),
+      readJourneyPages(admin
         .from("swim_progress_projections")
         .select("enrollment_id, participant_id, curriculum_version_id, scope_kind, scope_key, scope_id, progress_fraction, coverage_fraction, assessed_count, contributing_count, formula_version, calculated_at")
         .eq("tenant_id", input.tenantId)
-        .in("enrollment_id", enrollmentIds),
-      admin
+        .in("enrollment_id", enrollmentIds)
+        .order("id")),
+      readJourneyPages(admin
         .from("swim_item_carryovers")
         .select("id, participant_id, enrollment_id, curriculum_item_id, curriculum_item_identity_id, from_stage_id, to_stage_id, transition_case_id, status, completed_observation_id, completed_at")
         .eq("tenant_id", input.tenantId)
-        .in("enrollment_id", enrollmentIds),
-      admin
+        .in("enrollment_id", enrollmentIds)
+        .order("id")),
+      readJourneyPages(admin
         .from("portal_journey_item_completions")
         .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, curriculum_item_id, completion_observation_id, completion_sequence, completed_at, order_status")
         .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
-        .order("completion_sequence"),
-      admin
+        .order("completion_sequence")
+        .order("id")),
+      readJourneyPages(admin
         .from("portal_journey_chapter_snapshots")
         .select("id, enrollment_id, participant_id, curriculum_version_id, curriculum_stage_id, transition_case_id, theme_key, theme_release, artwork_id, route_order_json, completion_data_json, badge_award_ids, completed_at, world_binding_id, presentation_snapshot_json")
         .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
         .order("completed_at", { ascending: false })
+        .order("id"))
     ]);
 
   assertResult(versionsResult.error, "curriculumversies");
