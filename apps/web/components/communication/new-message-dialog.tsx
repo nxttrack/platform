@@ -7,9 +7,9 @@ import { PortalDialog } from "@/components/portal/portal-dialog";
 import { MessageComposer, type MessageComposerHandle } from "./message-composer";
 import type { MessageComposerContext } from "@/lib/domain/message-composer-contract";
 
-export function NewMessageDialog({ scopeKey, returnPath, participants, initialParticipantId, initialOpen = false, itemId = null, sessionId = null }: {
+export function NewMessageDialog({ scopeKey, returnPath, participants, initialParticipantId, initialOpen = false, itemId = null, sessionId = null, allowGeneral = true }: {
   scopeKey: string; returnPath: string; participants: Array<{ id: string; label: string }>;
-  initialParticipantId: string | null; initialOpen?: boolean; itemId?: string | null; sessionId?: string | null;
+  allowGeneral?: boolean; initialParticipantId: string | null; initialOpen?: boolean; itemId?: string | null; sessionId?: string | null;
 }) {
   const [open, setOpen] = useState(initialOpen), [participantId, setParticipantId] = useState(initialParticipantId);
   const [reference, setReference] = useState({ curriculumItemId: itemId, sessionId });
@@ -30,7 +30,7 @@ export function NewMessageDialog({ scopeKey, returnPath, participants, initialPa
     <button ref={trigger} aria-label="Nieuw bericht" title="Nieuw bericht" type="button" className="grid size-11 place-items-center rounded-full border border-border bg-background text-primary shadow-soft focus-visible:ring-2 focus-visible:ring-ring" onClick={() => setOpen(true)}><Plus aria-hidden="true" className="size-5" /></button>
     <PortalDialog open={open} onOpenChange={(next) => { if (next) setOpen(true); else if (!busy) void close(); }} title="Nieuw bericht" description="Kies over wie je schrijft. Controleer je bericht voordat je het verstuurt." returnFocusRef={trigger}>
       <div className="space-y-5">
-        <label className="grid gap-2 font-semibold">Over wie gaat je bericht?<select className="min-h-11 rounded-xl border bg-background p-3" aria-label="Kind bij bericht" value={participantId ?? ""} disabled={busy} onChange={(event) => void changeContext(event.target.value || null)}><option value="">Algemene vraag</option>{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.label}</option>)}</select></label>
+        <label className="grid gap-2 font-semibold">Over wie gaat je bericht?<select className="min-h-11 rounded-xl border bg-background p-3" aria-label="Kind bij bericht" value={participantId ?? ""} disabled={busy} onChange={(event) => void changeContext(event.target.value || null)}>{allowGeneral ? <option value="">Algemene vraag</option> : null}{participants.map((participant) => <option key={participant.id} value={participant.id}>{participant.label}</option>)}</select></label>
         <MessageComposer scopeKey={scopeKey} ref={composer} context={context} onSent={() => setOpen(false)} />
       </div>
     </PortalDialog>

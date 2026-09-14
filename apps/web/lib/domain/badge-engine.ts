@@ -100,7 +100,7 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
       ) === index
   );
   if (events.length === 0) {
-    return { awarded: [], skipped: ["Geen badge-events aangeboden."] };
+    return { confirmed: true, awarded: [], skipped: ["Geen badge-events aangeboden."] };
   }
   const admin = createAdminClient();
   const eventTypes = [...new Set(events.map((event) => event.eventType))];
@@ -119,18 +119,18 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
   ]);
 
   if (platformResult.error || tenantResult.error || participantResult.error || releasesResult.error || overrideResult.error) {
-    return { awarded: [], skipped: ["Badgevoorwaarden konden niet veilig worden geladen."] };
+    return { confirmed: false, awarded: [], skipped: ["Badgevoorwaarden konden niet veilig worden geladen."] };
   }
   if (!participantResult.data || participantResult.data.status !== "active") {
-    return { awarded: [], skipped: ["De leerling is niet actief of bestaat niet."] };
+    return { confirmed: true, awarded: [], skipped: ["De leerling is niet actief of bestaat niet."] };
   }
   const platform = platformResult.data;
   const tenant = tenantResult.data;
   if (platform?.badges_module_available === false || platform?.automatic_badges_available === false) {
-    return { awarded: [], skipped: ["Automatische badges zijn platformbreed uitgeschakeld."] };
+    return { confirmed: true, awarded: [], skipped: ["Automatische badges zijn platformbreed uitgeschakeld."] };
   }
   if (tenant?.badges_enabled === false || tenant?.automatic_badges_enabled === false) {
-    return { awarded: [], skipped: ["Automatische badges zijn voor deze organisatie uitgeschakeld."] };
+    return { confirmed: true, awarded: [], skipped: ["Automatische badges zijn voor deze organisatie uitgeschakeld."] };
   }
 
   const latestReleaseBySource = new Map<string, BadgeRelease>();
@@ -180,6 +180,7 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
   }
 
   let awarded: BadgeAwardResult[] = [];
+  let confirmed = true;
   if (eligibleReleaseIds.size) {
     const sourceEventId = readUuidValue(events.find((event) => readUuidValue(event.eventContext.entityId))?.eventContext.entityId);
     const eventType = eventTypes.slice().sort().join("+");
@@ -202,6 +203,7 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
       target_visibility: "parent_visible"
     });
     if (batchResult.error || !batchResult.data) {
+      confirmed = false;
       skipped.push("De badge-batch kon niet transactioneel worden verwerkt.");
     } else {
       const itemsResult = await admin
@@ -210,6 +212,7 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
         .eq("tenant_id", input.tenantId)
         .eq("batch_id", batchResult.data);
       if (itemsResult.error) {
+        confirmed = false;
         skipped.push("Het resultaat van de badge-batch kon niet worden bevestigd.");
       } else {
         awarded = (itemsResult.data ?? []).map((item) => ({
@@ -237,7 +240,7 @@ export async function evaluateBadgeTriggerSet(input: BadgeTriggerSetInput) {
     is_test: participantResult.data.is_test === true
   });
 
-  return { awarded, skipped };
+  return { confirmed, awarded, skipped };
 }
 
 export async function awardBadge(input: BadgeAwardInput): Promise<BadgeAwardResult> {

@@ -1,3 +1,4 @@
+import { childAssessmentCompliment } from "./child-assessment-compliment";
 import { childJourneyView, parentJourneyView, type PortalJourneyViewNode } from "./portal-journey-view";
 import { compareAssessmentRecency, latestJourneyObservations } from "./swim-assessment-order";
 import type { CanonicalJourneyChapterSnapshot, CanonicalSwimJourney } from "./swim-progress";
@@ -64,7 +65,7 @@ function project(journey: CanonicalSwimJourney, audience: "parent" | "child"): P
       : visible.slice(index + 1).find((other) => other.curriculum_item_id === row.curriculum_item_id && other.historyStatus === "recorded");
     return { id: row.id, itemId: item.stable_key, label: item.name, at: row.observed_at, finalizedAt: row.finalized_at,
       rating: row.rating, previousRating: previous?.rating ?? null, status: row.historyStatus, correction: row.corrects_observation_id !== null,
-      current: current.has(row.id), positiveLabel: audience === "parent" || row.context_json.childVisible === true ? row.positive_label : null };
+      current: current.has(row.id), positiveLabel: audience === "parent" ? row.positive_label : childAssessmentCompliment(row) };
   });
   return { stageId: journey.currentStage?.id ?? null, stageName: journey.currentStage?.name ?? null, stages, items, history };
 }

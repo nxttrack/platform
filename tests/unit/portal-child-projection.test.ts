@@ -19,7 +19,8 @@ test("child DTO is an explicit allowlist and strips assessment internals", () =>
   );
   assert.doesNotMatch(dtoContract, /\bnote\b|correction|carryover|guardian|billing|email|phone|serial/i);
   assert.doesNotMatch(dtoContract, /CanonicalSwimJourney/);
-  assert.match(childDomain, /positiveLabel: childVisible \? observation\.positive_label : null/);
+  assert.match(childDomain, /const compliment = childAssessmentCompliment\(observation\)/);
+  assert.match(childDomain, /positiveLabel: compliment/);
   assert.match(childDomain, /journey: ChildSafeJourneyDto \| null/);
   assert.doesNotMatch(childDomain, /Zwemprogramma|Huidig badje/);
 });

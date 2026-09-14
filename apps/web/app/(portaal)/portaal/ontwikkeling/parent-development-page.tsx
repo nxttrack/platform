@@ -26,7 +26,7 @@ export default async function ParentDevelopmentPage({ searchParams }: { searchPa
   // Existing non-canonical/non-swim programs retain their established progress modules and actions.
   if (!journey) return <LegacyParentDevelopmentPage searchParams={Promise.resolve({ ...params, kind: participant.id })} />;
   const model = parentDevelopmentView(journey), selectedItem = value(params.onderdeel) ?? value(params.focus), selectedChapter = value(params.hoofdstuk);
-  if (selectedItem && !model.items.some((item) => item.id === selectedItem)) notFound();
+  if (selectedItem && !model.items.some((item) => item.id === selectedItem || item.curriculumItemId === selectedItem)) notFound();
   if (selectedChapter && !journey.chapterSnapshots.some((entry) => entry.id === selectedChapter)) notFound();
   const chapters = await Promise.all(journey.chapterSnapshots.map(async (snapshot) => {
     const visual = await resolveHistoricalJourneyVisual(snapshot), view = chapterJourneyView(journey, snapshot);

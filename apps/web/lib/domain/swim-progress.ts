@@ -59,6 +59,7 @@ export type CanonicalAssessmentObservation = {
   curriculum_item_id: string;
   rating: 1 | 2 | 3 | 4 | 5;
   positive_label: string;
+  child_compliment?: string | null;
   note: string | null;
   visibility: "internal" | "parent_visible";
   context_json: Record<string, unknown>;
@@ -203,7 +204,7 @@ export async function loadCanonicalSwimJourneys(input: {
     .order("id", { ascending: false })
     .lte("finalized_at", readAt);
 
-  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, itemCompletionsResult, chapterSnapshotsResult] =
+  const [versionsResult, stagesResult, itemsResult, identitiesResult, assignmentsResult, observationsResult, retractionsResult, projectionsResult, carryoversResult, itemCompletionsResult, chapterSnapshotsResult, complimentsResult] =
     await Promise.all([
       readJourneyPages(admin
         .from("curriculum_versions")
@@ -271,7 +272,11 @@ export async function loadCanonicalSwimJourneys(input: {
         .eq("tenant_id", input.tenantId)
         .in("enrollment_id", enrollmentIds)
         .order("completed_at", { ascending: false })
-        .order("id"))
+        .order("id")),
+      readJourneyPages(admin.from("swim_child_compliments")
+        .select("observation_id, message")
+        .eq("tenant_id", input.tenantId).in("enrollment_id", enrollmentIds)
+        .lte("published_at", readAt).order("id"))
     ]);
 
   assertResult(versionsResult.error, "curriculumversies");
@@ -285,6 +290,7 @@ export async function loadCanonicalSwimJourneys(input: {
   assertResult(carryoversResult.error, "carryoveronderdelen");
   assertResult(itemCompletionsResult.error, "vaste journeyvolgorde");
   assertResult(chapterSnapshotsResult.error, "historische journeyhoofdstukken");
+  assertResult(complimentsResult.error, "gepubliceerde kindcomplimenten");
 
   const versions = (versionsResult.data ?? []) as CanonicalCurriculumVersion[];
   const stages = (stagesResult.data ?? []) as CanonicalCurriculumStage[];
@@ -301,9 +307,11 @@ export async function loadCanonicalSwimJourneys(input: {
     weight: Number(item.weight)
   }));
   const assignments = (assignmentsResult.data ?? []) as CanonicalStageAssignment[];
+  const complimentByObservation = new Map((complimentsResult.data ?? []).map((row) => [row.observation_id, row.message]));
   const allObservations = ((observationsResult.data ?? []) as CanonicalAssessmentObservation[]).map((observation) => ({
     ...observation,
-    context_json: asObject(observation.context_json)
+    context_json: asObject(observation.context_json),
+    child_compliment: observation.visibility === "parent_visible" ? complimentByObservation.get(observation.id) ?? null : null
   }));
   const retractedIds = new Set(
     ((retractionsResult.data ?? []) as Array<{ observation_id: string }>).map((retraction) => retraction.observation_id)

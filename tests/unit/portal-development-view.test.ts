@@ -32,6 +32,9 @@ test("child history contains only explicit compliments and neither audience rece
   assert.equal(childDevelopmentView(journey).history[0].positiveLabel, null);
   journey.assessmentHistory[0].context_json.childVisible = true;
   assert.equal(childDevelopmentView(journey).history[0].positiveLabel, "Feedback a");
+  journey.assessmentHistory[0].child_compliment = "Een afzonderlijk gepubliceerd compliment";
+  assert.equal(childDevelopmentView(journey).history[0].positiveLabel, "Een afzonderlijk gepubliceerd compliment");
+  assert.equal(parentDevelopmentView(journey).history[0].positiveLabel, "Feedback a");
   for (const project of [parentDevelopmentView, childDevelopmentView]) {
     const view = project(journey); assert.equal(view.history.length, 1);
     assert.doesNotMatch(JSON.stringify(view), /PRIVATE_|context_json|private-session|"note"|correction_reason/);

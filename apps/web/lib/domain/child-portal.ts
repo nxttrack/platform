@@ -1,3 +1,4 @@
+import { childAssessmentCompliment } from "./child-assessment-compliment";
 import "server-only";
 
 import { cache } from "react";
@@ -490,12 +491,13 @@ async function projectChildSafeJourney(
       completionOrderStatus: completionByItemId.get(item.id)?.order_status ?? null
     })),
     effectiveObservations: latestJourneyObservations(journey.effectiveObservations.filter((row) => row.visibility === "parent_visible")).map((observation) => {
-      const childVisible = observation.context_json.childVisible === true;
+      const compliment = childAssessmentCompliment(observation);
+      const childVisible = compliment !== null;
       return {
         childVisible,
         curriculumItemId: observation.curriculum_item_id,
         finalizedAt: observation.finalized_at,
-        positiveLabel: childVisible ? observation.positive_label : null,
+        positiveLabel: compliment,
         rating: observation.rating
       };
     }),

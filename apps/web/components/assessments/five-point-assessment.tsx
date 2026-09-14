@@ -16,6 +16,7 @@ type Props = {
   name?: string;
   readOnly?: boolean;
   required?: boolean;
+  onChange?: (value: LearnerAssessmentValue) => void;
 };
 
 export function FivePointAssessment({
@@ -24,7 +25,8 @@ export function FivePointAssessment({
   label = "Beoordeling",
   name = "score",
   readOnly = false,
-  required = false
+  required = false,
+  onChange
 }: Props) {
   if (readOnly) {
     return (
@@ -49,7 +51,9 @@ export function FivePointAssessment({
           <label className="five-point-assessment__option" key={level.value}>
             <input
               className="peer sr-only"
-              defaultChecked={value === level.value}
+              defaultChecked={onChange ? undefined : value === level.value}
+              checked={onChange ? value === level.value : undefined}
+              onChange={onChange ? () => onChange(level.value) : undefined}
               name={name}
               required={required}
               type="radio"

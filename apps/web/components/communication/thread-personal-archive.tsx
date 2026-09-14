@@ -4,14 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MessageComposerContext } from "@/lib/domain/message-composer-contract";
 import { archiveMessageThreadAction } from "@/lib/domain/message-composer-actions";
-import { flushMessageComposers } from "./message-composer-navigation";
+import { flushDraftWriters } from "@/components/portal/draft-navigation";
 
 export function ThreadPersonalArchive({ context, archived }: { context: MessageComposerContext; archived: boolean }) {
   const [busy, setBusy] = useState(false), [error, setError] = useState<string | null>(null), router = useRouter();
   async function change() {
     setBusy(true); setError(null);
     try {
-      if (!await flushMessageComposers()) { setError("Bewaar eerst je gewijzigde concept. Het gesprek is niet verplaatst."); return; }
+      if (!await flushDraftWriters()) { setError("Bewaar eerst je gewijzigde concept. Het gesprek is niet verplaatst."); return; }
       const result = await archiveMessageThreadAction(context, !archived);
       if (!result.ok) { setError(result.message); return; }
       const target = new URL(context.returnPath, "https://portal.invalid"); target.searchParams.delete("thread");

@@ -6,7 +6,7 @@ import { PortalDialog } from "@/components/portal/portal-dialog";
 import { loadMessageComposerAction, saveMessageComposerAction, discardMessageComposerAction, sendMessageComposerAction } from "@/lib/domain/message-composer-actions";
 import { messageThreadHref, type MessageComposerContext, type MessageComposerDraft, type MessageComposerError, type MessageComposerInput, type MessageComposerLoad } from "@/lib/domain/message-composer-contract";
 import { messageVisibilityLabels, threadTypeLabels, threadTypes } from "@/lib/domain/communication-hub-contract";
-import { flushMessageComposers, registerMessageComposer } from "./message-composer-navigation";
+import { flushDraftWriters, registerDraftWriter } from "@/components/portal/draft-navigation";
 import styles from "./message-composer.module.css";
 
 export type MessageComposerHandle = { flush: () => Promise<boolean> };
@@ -76,7 +76,7 @@ function ScopedMessageComposer({ context, allowInternal = false, canReply = true
   }
   const flush = async () => equal(latest.current, stored.current) && !pending.current ? true : Boolean(await persist());
   const flushRef = useRef(flush); flushRef.current = flush;
-  useEffect(() => registerMessageComposer(() => flushRef.current()), []);
+  useEffect(() => registerDraftWriter(() => flushRef.current()), []);
   useImperativeHandle(ref, () => ({ flush }));
   useEffect(() => {
     if (!loaded || !dirty || sending || conflictBlocked.current) return;
@@ -97,13 +97,14 @@ function ScopedMessageComposer({ context, allowInternal = false, canReply = true
       if (target.origin !== location.origin || target.protocol !== location.protocol) return; // beforeunload protects external navigation.
       if (target.pathname === location.pathname && target.search === location.search) return;
       event.preventDefault(); event.stopImmediatePropagation();
-      void flushMessageComposers().then((saved) => { if (saved && mounted.current) router.push(`${target.pathname}${target.search}${target.hash}`); });
+      void flushDraftWriters().then((saved) => { if (saved && mounted.current) router.push(`${target.pathname}${target.search}${target.hash}`); });
     };
     window.document.addEventListener("click", navigate, true);
     return () => window.document.removeEventListener("click", navigate, true);
   }, [dirty, input, loaded]);
   async function openReview() {
     const saved = await persist(); if (!saved) return;
+    if (!await flushDraftWriters()) { setError({ ...networkError, message: "Een ander concept kon niet worden opgeslagen. Controleer dat concept voordat je verdergaat." }); return; }
     setConfirmed(false); setReview(saved);
   }
   async function send() {
@@ -144,6 +145,7 @@ function ScopedMessageComposer({ context, allowInternal = false, canReply = true
   const recipientLabel = input.visibility === "public_to_thread" ? loaded.recipient?.label ?? "Ontvanger niet beschikbaar" : "Intern — niet zichtbaar voor ouders";
   return <div className={styles.form} data-message-composer>
     {loaded.participantLabel ? <p><strong>Over {loaded.participantLabel}</strong></p> : null}
+    {input.visibility === "public_to_thread" && !loaded.recipient ? <p role="alert" className={styles.error}>Er is geen geldige ontvanger gekoppeld. Je concept blijft bewaard; de school moet eerst de oudertoegang herstellen.</p> : null}
     {reference.label ? <div className={styles.reference}><strong>{reference.label}</strong>{reference.startsAt ? <time dateTime={reference.startsAt}>{new Intl.DateTimeFormat("nl-NL", { dateStyle: "long", timeStyle: "short", timeZone: reference.timeZone ?? "Europe/Amsterdam" }).format(new Date(reference.startsAt))}</time> : null}<span>Deze verwijzing blijft bij het bericht bewaard.</span></div> : null}
     <p className={styles.hint}>Concepten zijn alleen voor jou zichtbaar en blijven 30 dagen beschikbaar. Opslaan verstuurt niets.</p>
     {!context.threadId ? <><label htmlFor={`${fieldId}-subject`}>Onderwerp<input id={`${fieldId}-subject`} value={input.subject} maxLength={180} disabled={sending} onChange={(event) => setInput({ ...input, subject: event.target.value })} /></label><label htmlFor={`${fieldId}-type`}>Categorie<select id={`${fieldId}-type`} value={input.threadType} disabled={sending} onChange={(event) => setInput({ ...input, threadType: event.target.value as MessageComposerInput["threadType"] })}>{threadTypes.filter((type) => type !== "internal").map((type) => <option value={type} key={type}>{threadTypeLabels[type]}</option>)}</select></label></> : null}

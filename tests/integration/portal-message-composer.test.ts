@@ -128,6 +128,9 @@ test("private composer drafts persist per actor/context, reject cross-context ac
     assert.equal((await client.query("select count(*) from public.tenant_notifications where tenant_id=$1",[tenant])).rows[0].count,"0");
     await client.query("update public.tenant_settings set instructors_can_reply_to_parents=true where tenant_id=$1",[tenant]);
     await authenticate(client,instructor);
+    const recipient=(await client.query("select public.read_message_composer_draft($1,$2,$3,null,null,'public_to_thread') as view",[tenant,thread,child])).rows[0].view.recipient;
+    assert.equal(recipient.id,parent,"A bound guardian remains the recipient when an optional profile row is missing");
+    assert.equal(recipient.kind,"guardian");assert.ok(recipient.label);
     const publicDraft=(await client.query(save,args(0,"Fictional reply by instructor"))).rows[0].draft;
     const guardedSend="select public.send_message_composer_draft($1,$2,$3,$4,true,'personal','[]',$5) as result";
     await assert.rejects(client.query(guardedSend,[tenant,publicDraft.id,publicDraft.revision,publicDraft.operation_id,otherParent]),/message_recipient_changed/);

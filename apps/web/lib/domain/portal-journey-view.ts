@@ -1,3 +1,4 @@
+import { childAssessmentCompliment } from "./child-assessment-compliment";
 import { orderJourneyNodes } from "../theme/portal-journey-contract";
 import type { CanonicalSwimJourney } from "./swim-progress";
 import { latestJourneyObservations } from "./swim-assessment-order";
@@ -69,7 +70,7 @@ function projectJourney(journey: CanonicalSwimJourney, audience: "parent" | "chi
       completionSequence: completion?.completion_sequence ?? null,
       completionOrderStatus: completion?.order_status ?? null,
       curriculumOrder: item.sort_order, lastUpdatedAt: observation?.finalized_at ?? null,
-      positiveLabel: observation && (audience === "parent" || observation.context_json.childVisible === true) ? observation.positive_label : null
+      positiveLabel: observation ? audience === "parent" ? observation.positive_label : childAssessmentCompliment(observation) : null
     };
   });
   // Zero is only the existing ordering helper's sentinel, never the displayed unknown progress.

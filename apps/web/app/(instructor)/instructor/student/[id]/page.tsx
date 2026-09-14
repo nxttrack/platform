@@ -1,6 +1,9 @@
 import { Award, ChartNoAxesColumnIncreasing, ClipboardCheck, Eye, Lock, MessageSquare, Sparkles, Star, UserRound } from "lucide-react";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { ReviewedAssessmentCard } from "@/components/assessments/reviewed-assessment-card";
+import { NewMessageDialog } from "@/components/communication/new-message-dialog";
+import { latestJourneyObservations } from "@/lib/domain/swim-assessment-order";
 import { FivePointAssessment } from "@/components/assessments/five-point-assessment";
 import { RemainingBadgesCommand } from "@/components/badges/remaining-badges-command";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -57,7 +60,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
   const scoreByItemId = new Map(scores.map((score) => [score.item_id, score]));
   const canonicalJourney = getJourneyForEnrollment(data.swimJourneys, enrollment?.id);
   const canonicalObservationByItemId = new Map(
-    (canonicalJourney?.effectiveObservations ?? []).map((observation) => [
+    latestJourneyObservations(canonicalJourney?.effectiveObservations ?? []).map((observation) => [
       observation.curriculum_item_id,
       observation
     ])
@@ -195,7 +198,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                   <h2 className="text-lg font-bold text-foreground">Huidige voortgang</h2>
                   <p className="mt-1 text-sm text-muted-foreground">De laatste definitieve beoordeling per onderdeel; dekking blijft afzonderlijk zichtbaar.</p>
                 </div>
-                <StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill>
+                <div className="flex items-center gap-3"><StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill><NewMessageDialog scopeKey={`${data.user.id}:${data.tenant.id}`} returnPath={`/instructor/berichten?kind=${participant.id}`} participants={[{ id: participant.id, label: participant.display_name }]} initialParticipantId={participant.id} allowGeneral={false} /></div>
               </div>
               {canonicalJourney ? <SwimJourneyRings className="mt-5" rings={canonicalJourney.rings} /> : null}
               <div className="mt-4 space-y-4">
@@ -256,7 +259,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                 <h2 className="text-lg font-bold text-foreground">Progress modules</h2>
                 <p className="mt-1 text-sm text-muted-foreground">Canonieke 1–5 beoordeling; een wijziging wordt als correctie toegevoegd en overschrijft nooit historie.</p>
               </div>
-              <StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill>
+              <div className="flex items-center gap-3"><StatusPill tone={scoreCount > 0 ? "success" : "neutral"}>{scoreCount} scores</StatusPill><NewMessageDialog scopeKey={`${data.user.id}:${data.tenant.id}`} returnPath={`/instructor/berichten?kind=${participant.id}`} participants={[{ id: participant.id, label: participant.display_name }]} initialParticipantId={participant.id} allowGeneral={false} /></div>
             </div>
             <div className="mt-4 space-y-4">
               {progressSections.length === 0 ? <EmptyState>Publiceer en koppel eerst een leerlijn aan deze inschrijving.</EmptyState> : null}
@@ -269,17 +272,16 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                     <div className="space-y-3">
                       {section.items.length === 0 ? <EmptyState>Dit badje heeft nog geen onderdelen.</EmptyState> : null}
                       {section.items.map((item) => {
-                        const legacyScore = section.canonical ? null : scoreByItemId.get(item.id);
-                        const currentObservation = section.canonical ? item.currentObservation : null;
-                        const currentScore = currentObservation?.rating ?? legacyScore?.score ?? null;
+                        if (section.canonical) return enrollment ? <ReviewedAssessmentCard key={item.id} context={{ actorId: data.user.id, tenantId: data.tenant.id, participantId: participant.id, enrollmentId: enrollment.id, itemId: item.id, sessionId: null }} participantLabel={participant.display_name} itemLabel={item.name} display={assessmentDisplay} /> : null;
+                        const legacyScore = scoreByItemId.get(item.id);
+                        const currentScore = legacyScore?.score ?? null;
 
                         return (
                           <form action={scoreProgressItemAction} className="rounded-lg border border-border bg-muted/30 p-3" key={item.id}>
                             <input name="participantId" type="hidden" value={participant.id} />
-                            {section.canonical ? null : <input name="moduleId" type="hidden" value={section.id} />}
+                            <input name="moduleId" type="hidden" value={section.id} />
                             <input name="itemId" type="hidden" value={item.id} />
                             <input name="operationId" type="hidden" value={crypto.randomUUID()} />
-                            {currentObservation ? <input name="correctsObservationId" type="hidden" value={currentObservation.id} /> : null}
                             <input name="next" type="hidden" value={`/instructor/student/${participant.id}?tab=assessment`} />
                             <div className="flex flex-wrap items-start justify-between gap-3">
                               <div className="min-w-0">
@@ -295,7 +297,7 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                                 required
                                 value={currentScore ? parseLearnerAssessmentValue(currentScore) : null}
                               />
-                              <SelectField defaultValue={currentObservation?.visibility ?? legacyScore?.visibility ?? "parent_visible"} fieldId={`visibility-${item.id}`} label="Zichtbaarheid" name="visibility">
+                              <SelectField defaultValue={legacyScore?.visibility ?? "parent_visible"} fieldId={`visibility-${item.id}`} label="Zichtbaarheid" name="visibility">
                                 <option value="parent_visible">Zichtbaar voor ouder</option>
                                 <option value="internal">Alleen intern</option>
                               </SelectField>
@@ -303,25 +305,9 @@ export default async function InstructorStudentPage({ params, searchParams }: Pa
                             <div className="mt-3">
                               <TextAreaField fieldId={`note-${item.id}`} label="Korte update" name="note" />
                             </div>
-                            {section.canonical ? (
-                              <label className="mt-3 flex items-start gap-2 text-sm text-muted-foreground">
-                                <input
-                                  className="mt-1"
-                                  defaultChecked={currentObservation?.context_json.childVisible === true}
-                                  name="childVisible"
-                                  type="checkbox"
-                                />
-                                <span>Toon het positieve scorelabel als gecureerd compliment in kindmodus. De notitie zelf blijft verborgen.</span>
-                              </label>
-                            ) : null}
-                            {currentObservation ? (
-                              <div className="mt-3">
-                                <TextAreaField fieldId={`correction-${item.id}`} label="Reden voor wijziging" name="correctionReason" required />
-                              </div>
-                            ) : null}
                             <Button className="mt-3" type="submit">
                               <Star className="h-4 w-4" />
-                              {currentObservation ? "Correctie vastleggen" : "Beoordeling vastleggen"}
+                              Beoordeling vastleggen
                             </Button>
                           </form>
                         );
@@ -593,6 +579,7 @@ function Feedback({ saved, error, success }: { saved?: string; error?: string; s
   }
 
   if (error) {
+    if (error === "review-required") return <p role="alert" className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">Open Beoordelen en controleer je concept voordat je de beoordeling bewaart.</p>;
     return <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-semibold text-danger">Actie is niet gelukt: {error}.</p>;
   }
 
