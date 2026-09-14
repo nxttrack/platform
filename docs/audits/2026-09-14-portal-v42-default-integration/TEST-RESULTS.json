@@ -1530,6 +1530,16 @@
       "sqlLint": "PASS",
       "typecheck": "PASS",
       "fullIntegration": "IN_PROGRESS"
+    },
+    {
+      "name": "Registered route and complete canonical history",
+      "commit": "8d849b8147b08e9b5e40ef859e9c506321742040",
+      "report": "GEOMETRY-HISTORY-CHECKPOINT.md",
+      "unitsFull": 500,
+      "typecheck": "PASS",
+      "chromiumExistingRichTests": 5,
+      "chromiumAdditionalRegistrationTests": 1,
+      "fullIntegration": "IN_PROGRESS"
     }
   ]
 }

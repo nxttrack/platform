@@ -1,0 +1,19 @@
+✔ Default fixtures preserve six visual IDs, separate orientations and explicit missing-art provenance (4.239273ms)
+✔ strict native schema 3 stays unchanged and rejects rich sidecar fields inside it (1.434174ms)
+✔ dotted support IDs stay distinct from source paths and cannot enable criterion artwork (3.37917ms)
+✔ presentation rejects extra behavior, learner records, unbounded numbers and URL references (4.233365ms)
+✔ review digest changes on anchor edits, not JSON key order (4.394721ms)
+✔ arc length route supports 0, 1, 4, 5, 7, 12, 24 and 48 items in portrait (6.688126ms)
+✔ arc length route supports 0, 1, 4, 5, 7, 12, 24 and 48 items in landscape (3.616461ms)
+✔ ZIP roundtrip preserves bytes and Default dialect markers; no config-directory stripping (2.497385ms)
+✔ ZIP rejects duplicate case paths, executable entries, symlinks and excessive declared expansion (0.961989ms)
+✔ JSON rejects unsafe object keys, excessive nesting and malformed UTF-8 (0.533159ms)
+✔ registered cubic route and arc-length nodes share endpoints, stay inside anchor bounds and do not collapse degenerate segments (2.344814ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 244.656118
