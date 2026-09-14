@@ -4,9 +4,11 @@ test("development searches and restores filters, opens a focused dialog and keep
   await page.goto("/test-harness/journey-development");
   const rows = page.locator("[data-development-skill]"); await expect(rows).toHaveCount(2);
   await page.getByRole("searchbox", { name: "Zoek onderdelen" }).fill("Ademen"); await expect(rows).toHaveCount(1);
-  // The streamed page is usable before Firefox's aggregate load event; prove the
-  // restored filter, rendered result and working dialog on the reloaded document.
-  await page.reload({ waitUntil: "domcontentloaded" }); await expect(page.getByRole("searchbox", { name: "Zoek onderdelen" })).toHaveValue("Ademen"); await expect(rows).toHaveCount(1);
+  // A commit-level full document navigation avoids a Firefox protocol binding
+  // race around the streamed page's late RSC/prefetch responses. Session storage
+  // survives this real reload, and the DOM assertions below prove the restored
+  // filter, rendered result and working dialog on the new document.
+  await page.goto("/test-harness/journey-development", { waitUntil: "commit" }); await expect(page.getByRole("searchbox", { name: "Zoek onderdelen" })).toHaveValue("Ademen"); await expect(rows).toHaveCount(1);
   const trigger = page.getByRole("button", { name: "Bekijk Ademen", exact: true }); await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Ademen", exact: true }); await expect(dialog).toBeVisible();
   await expect(dialog.getByText("3 / 5", { exact: true })).toHaveCount(2); // actual score and real mastery threshold
