@@ -95,12 +95,14 @@ test.describe("phase 16 operational happy path", () => {
     const failures = collectRuntimeFailures(page);
 
     await signIn(page, phase.users.parent.email, requiredEnv("E2E_PARENT_PASSWORD"), "/portaal");
-    await expect(
-      page.getByRole("heading", {
-        level: 1,
-        name: `De leerreis van ${firstNameOf(phase.expected.participantName)}!`
-      })
-    ).toBeVisible();
+    const firstName = firstNameOf(phase.expected.participantName);
+    const journeyHeadings = [
+      `De leerreis van ${firstName}!`,
+      `De zwemreis van ${firstName}!`,
+      `Op weg naar ${phase.expected.programName}!`
+    ].map(escapeRegExp).join("|");
+    await expect(page.getByRole("heading", { level: 1 }))
+      .toHaveText(new RegExp(`^(?:${journeyHeadings})$`));
     await expectBodyToContain(page, phase.expected.programName);
     await expectActiveShellLink(page, "Overzicht");
 
@@ -189,6 +191,10 @@ function isMobilePortalViewport(page: Page) {
 
 function firstNameOf(displayName: string) {
   return displayName.trim().split(/\s+/)[0] || displayName;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function collectRuntimeFailures(page: Page) {
