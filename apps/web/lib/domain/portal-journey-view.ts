@@ -1,5 +1,6 @@
 import { orderJourneyNodes } from "../theme/portal-journey-contract";
 import type { CanonicalSwimJourney } from "./swim-progress";
+import { latestJourneyObservations } from "./swim-assessment-order";
 
 export type PortalJourneyViewNode = Readonly<{
   id: string;
@@ -48,7 +49,7 @@ export function childJourneyView(journey: CanonicalSwimJourney | null): PortalJo
 }
 
 function projectJourney(journey: CanonicalSwimJourney, audience: "parent" | "child"): PortalJourneyView {
-  const observations = new Map(journey.effectiveObservations.filter((row) => row.visibility === "parent_visible").map((row) => [row.curriculum_item_id, row]));
+  const observations = new Map(latestJourneyObservations(journey.effectiveObservations.filter((row) => row.visibility === "parent_visible")).map((row) => [row.curriculum_item_id, row]));
   const completions = new Map(journey.itemCompletions.map((row) => [row.curriculum_item_id, row]));
   const carryovers = new Set(journey.carryovers.filter((row) => row.status === "open" && row.to_stage_id === journey.currentStage?.id).map((row) => row.curriculum_item_id));
   const items = [...journey.currentStageItems, ...journey.items.filter((item) => carryovers.has(item.id) && !journey.currentStageItems.some((current) => current.id === item.id))];

@@ -1,4 +1,11 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+
+const geometryErrors = new WeakMap<Page, string[]>();
+test.beforeEach(({ page }) => {
+  const errors: string[] = []; geometryErrors.set(page, errors);
+  page.on("console", (message) => { if (/Infinity|NaN/.test(message.text())) errors.push(message.text()); });
+});
+test.afterEach(({ page }) => { expect(geometryErrors.get(page)).toEqual([]); });
 
 test("rich scene keeps every node reachable with a closed initial detail and neutral pearls", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

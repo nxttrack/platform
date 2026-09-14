@@ -29,6 +29,9 @@ function distance(a: JourneyPoint, b: JourneyPoint, scene: JourneyScene): number
   return Math.hypot((b.x - a.x) * scene.intrinsic.width / 100, (b.y - a.y) * scene.intrinsic.height / 100);
 }
 export function clampJourneyCamera(camera: JourneyCamera, scene: JourneyScene, viewport: { width: number; height: number }): JourneyCamera {
+  // Keyboard input or a hidden container can precede the first ResizeObserver delivery.
+  // Never manufacture scale=0: markers and the guide compensate by dividing by scale.
+  if (!(viewport.width > 0 && viewport.height > 0)) return { x: 0, y: 0, scale: Number.isFinite(camera.scale) && camera.scale > 0 ? camera.scale : 1 };
   const cover = Math.max(viewport.width / scene.intrinsic.width, viewport.height / scene.intrinsic.height);
   const scale = Math.max(cover, Math.min(cover * 3, Number.isFinite(camera.scale) ? camera.scale : cover));
   const clamp = (value: number, min: number) => Math.max(min, Math.min(0, Number.isFinite(value) ? value : min / 2));

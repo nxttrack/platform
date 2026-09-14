@@ -83,6 +83,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
   }, [requestedId, nodes, selected]);
 
   function updateCamera(next: JourneyCamera) {
+    if (!viewport.width || !viewport.height) return;
     const bounded = clampJourneyCamera(next, scene, viewport); cameraRef.current = bounded;
     if (animation.current !== null) cancelAnimationFrame(animation.current);
     animation.current = requestAnimationFrame(() => { setCamera(bounded); animation.current = null; });
@@ -117,12 +118,12 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layoutKey]);
   useLayoutEffect(() => {
-    if (!root.current || !active || !guideEnabled || presentation.guide.mode === "none") { setGuidePlacement(hiddenGuide); return; }
+    if (!root.current || !viewport.width || !viewport.height || !active || !guideEnabled || presentation.guide.mode === "none") { setGuidePlacement(hiddenGuide); return; }
     const bounds = root.current.getBoundingClientRect();
     const rect = (element: Element) => { const box = element.getBoundingClientRect(); return { x: box.x - bounds.x, y: box.y - bounds.y, width: box.width, height: box.height }; };
     const target = root.current.querySelector(`[data-rich-node="${CSS.escape(active.id)}"]`);
     if (!target) { setGuidePlacement(hiddenGuide); return; }
-    const width = presentation.guide.mode === "character" ? orientation === "portrait" ? presentation.guide.widthMobile : presentation.guide.widthDesktop : 22;
+    const width = presentation.guide.mode === "character" ? orientation === "portrait" ? presentation.guide.widthMobile : presentation.guide.widthDesktop : presentation.guide.halo ? 54 : 22;
     const height = presentation.guide.mode === "character" ? width / presentation.guide.aspectRatio : width;
     const placement = selectMascotPlacement({ anchor: rect(target), bounds: { x: 0, y: 0, width: viewport.width, height: viewport.height }, exclusions: [...root.current.querySelectorAll("[data-rich-obstacle]")].map(rect), preferredWidth: width, preferredHeight: height, clearance: 16 });
     setGuidePlacement((old) => JSON.stringify(old) === JSON.stringify(placement) ? old : placement);
@@ -168,7 +169,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
         {(["back", "mid", "front"] as const).map((layer) => {
           const src = url(scene.layers[layer]); return src ? <img key={`${orientation}:${layer}:${src}`} src={src} alt="" draggable={false} decoding="async" className={`${styles.layer} ${layer === "front" ? styles.front : ""}`} data-rich-layer={layer} style={{ objectFit: scene.quality === "legacy-crop" ? "cover" : "fill" }} width={scene.intrinsic.width} height={scene.intrinsic.height} onError={(event) => { event.currentTarget.style.visibility = "hidden"; }} /> : null;
         })}
-        <svg className={styles.route} aria-hidden="true" viewBox={`0 0 ${scene.intrinsic.width} ${scene.intrinsic.height}`}><path d={route} fill="none" stroke="white" strokeWidth={3} strokeDasharray="2 9" vectorEffect="non-scaling-stroke" /></svg>
+        <svg className={styles.route} data-glow={guideEnabled && presentation.guide.mode === "route-light" && presentation.guide.routeGlow} aria-hidden="true" viewBox={`0 0 ${scene.intrinsic.width} ${scene.intrinsic.height}`}><path d={route} fill="none" stroke="white" strokeWidth={3} strokeDasharray="2 9" vectorEffect="non-scaling-stroke" /></svg>
         {visible.map((node, index) => {
           const artwork = resolvePearlArtwork(presentation, node.criterionIdentity);
           return <div key={node.id} className={styles.marker} style={{ left: `${points[index].x}%`, top: `${points[index].y}%`, transform: `translate(-50%, -50%) scale(${1 / camera.scale})` }}>
@@ -180,7 +181,7 @@ function RegisteredScene({ presentation, worldId, model, contextKey, title, less
           </div>;
         })}
         {guideEnabled && guidePlacement.mode !== "hidden" && presentation.guide.mode !== "none" ? <div aria-hidden="true" className={styles.guide} data-rich-guide={presentation.guide.mode} style={{ left: (guidePlacement.x - camera.x) / camera.scale, top: (guidePlacement.y - camera.y) / camera.scale, width: guidePlacement.width, height: guidePlacement.height, transform: `scale(${1 / camera.scale})` }}>
-          {presentation.guide.mode === "route-light" ? <span className={styles.light} data-pulse={!quiet && presentation.guide.pulse} /> : guideAsset ? <img src={guideAsset} alt="" draggable={false} /> : null}
+          {presentation.guide.mode === "route-light" ? <span className={styles.light} data-halo={presentation.guide.halo} data-pulse={!quiet && presentation.guide.pulse} /> : guideAsset ? <img src={guideAsset} alt="" draggable={false} /> : null}
         </div> : null}
       </div>
     </div>

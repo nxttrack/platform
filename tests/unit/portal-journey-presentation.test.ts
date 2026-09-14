@@ -68,6 +68,10 @@ for (const orientation of ["portrait", "landscape"] as const) {
     }
     const viewport = orientation === "portrait" ? { width: 360, height: 650 } : { width: 1440, height: 720 };
     const camera = clampJourneyCamera({ x: -9999, y: 9999, scale: NaN }, scene, viewport);
+    for (const scale of [0, NaN, 1]) {
+      const unmeasured = clampJourneyCamera({ x: 0, y: 0, scale }, scene, { width: 0, height: 0 });
+      assert.ok(unmeasured.scale > 0 && Number.isFinite(1 / unmeasured.scale));
+    }
     assert.equal(camera.y, 0);
     assert.ok(camera.x <= 0 && camera.x >= viewport.width - scene.intrinsic.width * camera.scale);
     const selected = focusJourneyCamera({ x: 100, y: 100 }, camera, scene, viewport);

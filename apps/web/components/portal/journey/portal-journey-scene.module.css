@@ -6,6 +6,7 @@
 .layer { z-index: 0; }
 .front { z-index: 3; }
 .route { z-index: 1; }
+.route[data-glow="true"] path { filter: drop-shadow(0 0 3px #fff2ae); }
 .marker { position: absolute; z-index: 4; transform-origin: center; display: flex; flex-direction: column; align-items: center; width: 48px; height: 48px; }
 .pearl { width: 48px; height: 48px; flex: none; display: grid; place-items: center; position: relative; border-radius: 50%; border: 3px solid #fff; background: radial-gradient(circle at 30% 25%, #fff, #eef2ff 48%, #bfcaef); box-shadow: 0 3px 14px #172a4630; font-weight: 800; color: #334c7b; }
 .pearl[data-selected="true"] { outline: 3px solid #4d63e6; outline-offset: 5px; }
@@ -16,7 +17,9 @@
 .label { flex: none; margin-top: .8rem; display: block; width: 10rem; text-align: center; font-size: .82rem; font-weight: 800; line-height: 1.3; color: #172a46; background: rgb(255 255 255 / 88%); border-radius: .75rem; padding: .3rem .5rem; overflow-wrap: anywhere; max-height: 3.9rem; overflow: hidden; }
 .guide { position: absolute; z-index: 2; transform-origin: 0 0; pointer-events: none; }
 .guide img { width: 100%; height: 100%; object-fit: contain; }
-.light { display: block; width: 100%; height: 100%; border-radius: 50%; background: #fff8b6; box-shadow: 0 0 12px 8px #fff1a080, 0 0 30px 16px #fff6c950; }
+.guide[data-rich-guide="route-light"] { display: grid; place-items: center; }
+.light { display: block; width: 22px; height: 22px; max-width: 100%; max-height: 100%; border-radius: 50%; background: #fff8b6; }
+.light[data-halo="true"] { box-shadow: 0 0 8px 6px #fff1a080; }
 .light[data-pulse="true"] { animation: glow 3s ease-in-out infinite alternate; }
 .heading { position: absolute; top: 1.1rem; left: 1.15rem; max-width: 62%; background: rgb(255 255 255 / 86%); border-radius: 1rem; padding: .65rem .85rem; pointer-events: none; }
 .heading small { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }

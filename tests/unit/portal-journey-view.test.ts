@@ -27,6 +27,19 @@ test("parent and child use real mastery thresholds and canonical weighted progre
   }
 });
 
+test("repeated observations select the canonical latest observed time, finalized time and ID without mutating history", () => {
+  const journey = journeyFixture(), original = journey.effectiveObservations[0];
+  const older = { ...original, id: "observation-old", rating: 1 as const, observed_at: "2026-09-13T08:00:00Z", finalized_at: "2026-09-15T08:00:00Z" };
+  const winner = { ...original, id: "observation-z", rating: 5 as const };
+  for (const input of [[original, winner, older], [older, winner, original]]) {
+    journey.effectiveObservations = input;
+    for (const project of [parentJourneyView, childJourneyView]) assert.equal(project(journey)!.nodes.find((node) => node.curriculumItemId === "a")?.rating, 5);
+    assert.deepEqual(journey.effectiveObservations, input);
+  }
+  journey.effectiveObservations = [winner, { ...original, id: "observation-a", rating: 2, finalized_at: "2026-09-14T08:06:00Z" }];
+  assert.equal(parentJourneyView(journey)!.nodes.find((node) => node.curriculumItemId === "a")?.rating, 2);
+});
+
 test("correction preserves completion sequence and original time without inventing new dates", () => {
   const journey = journeyFixture(); journey.effectiveObservations[0].rating = 1;
   const view = childJourneyView(journey)!;
