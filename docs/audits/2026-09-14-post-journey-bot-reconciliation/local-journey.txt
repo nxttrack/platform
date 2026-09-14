@@ -47,9 +47,9 @@ Running 39 tests using 1 worker
   ✘  39 [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (1ms)
 
 
-  1) [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
+  1) [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
 
-    Error: page.screenshot: Target crashed 
+    Error: page.screenshot: Target crashed
     Browser logs:
 
     <launching> /home/codex/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-edgeupdater --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints,msForceBrowserSignIn,msEdgeUpdateLaunchServicesPreferredVersion --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/playwright_chromiumdev_profile-phqIxP --remote-debugging-pipe --no-startup-window
@@ -631,9 +631,9 @@ Running 39 tests using 1 worker
 
     Error Context: ../../../../../../tmp/nxttrack-phase05-evidence/journey-results/journey-visual-86-gerichte-57e37-verplichte-artifactcontract-journey-chromium/error-context.md
 
-  2) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected 
+  2) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -660,9 +660,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  3) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click 
+  3) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -689,9 +689,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  4) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe 
+  4) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -718,9 +718,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  5) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe 
+  5) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -747,9 +747,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  6) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus 
+  6) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -776,9 +776,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  7) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup 
+  7) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -805,9 +805,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  8) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is 
+  8) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -834,9 +834,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  9) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip 
+  9) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -863,9 +863,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  10) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig 
+  10) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -892,9 +892,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  11) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen 
+  11) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -921,9 +921,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  12) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte 
+  12) [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -950,9 +950,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  13) [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
+  13) [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -979,9 +979,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  14) [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets 
+  14) [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Please install them with the following command:      ║
@@ -1008,9 +1008,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  15) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected 
+  15) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1071,9 +1071,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  16) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click 
+  16) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1134,9 +1134,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  17) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe 
+  17) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1197,9 +1197,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  18) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe 
+  18) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1260,9 +1260,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  19) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus 
+  19) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1323,9 +1323,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  20) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup 
+  20) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1386,9 +1386,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  21) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is 
+  21) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1449,9 +1449,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  22) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip 
+  22) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1512,9 +1512,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  23) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig 
+  23) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1575,9 +1575,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  24) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen 
+  24) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1638,9 +1638,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  25) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte 
+  25) [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1701,9 +1701,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  26) [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
+  26) [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1764,9 +1764,9 @@ Running 39 tests using 1 worker
 
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
-  27) [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets 
+  27) [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
 
-    Error: browserType.launch: 
+    Error: browserType.launch:
     ╔══════════════════════════════════════════════════════╗
     ║ Host system is missing dependencies to run browsers. ║
     ║ Missing libraries:                                   ║
@@ -1828,33 +1828,33 @@ Running 39 tests using 1 worker
     ────────────────────────────────────────────────────────────────────────────────────────────────
 
   27 failed
-    [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen 
-    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte 
-    [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
-    [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen 
-    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte 
-    [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract 
-    [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets 
+    [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+    [journey-firefox] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+    [journey-firefox] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-firefox] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen
+    [journey-webkit] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte
+    [journey-webkit] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract
+    [journey-webkit] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets
   12 passed (5.0m)
 undefined
 /home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web:

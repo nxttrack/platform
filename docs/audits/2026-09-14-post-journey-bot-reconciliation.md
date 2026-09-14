@@ -159,7 +159,9 @@ are recorded in the PR body after completion, avoiding a self-referencing eviden
 commit. Android is not manually triggered: no native workflow path changed.
 
 The [validation index](2026-09-14-post-journey-bot-reconciliation/validation.json)
-contains raw transcript hashes, results and explicit local limitations. Historical
+contains transcript hashes, original raw hashes, results and explicit local limitations.
+New text transcripts normalize line endings/trailing whitespace only; the raw logs
+remain under `/tmp/nxttrack-phase05-evidence`. Test results are unchanged. Historical
 FASE 0.2 transcripts remain untouched.
 
 ## Safety and exit boundary
