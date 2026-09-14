@@ -1,7 +1,8 @@
-import { Bell, Check, ListChecks, MailOpen, MessageSquare, Plus } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Bell, Check, ListChecks, MailOpen, MessageSquare } from "lucide-react";
 import type { ReactNode } from "react";
-import { AdminActionDrawer } from "@/components/admin/action-drawer";
-import { NewThreadForm } from "@/components/communication/communication-forms";
+import { NewMessageDialog } from "@/components/communication/new-message-dialog";
 import { ThreadWorkspace } from "@/components/communication/thread-workspace";
 import { ParentSectionNav } from "@/components/parent/parent-section-nav";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
@@ -27,14 +28,20 @@ export default async function ParentInboxPage({ searchParams }: PageProps) {
   const error = getParam(params, "error");
   const success = getParam(params, "success");
   const selectedThreadId = getParam(params, "thread");
+  const requestedParticipant = getParam(params, "kind");
+  if (requestedParticipant && requestedParticipant !== "all" && !data.participants.some((participant) => participant.id === requestedParticipant)) notFound();
   const selectedParticipantId = getSelectedParticipantId(params, data.participants.map((participant) => participant.id));
-  const visibleThreads = selectedParticipantId ? hub.threads.filter((thread) => thread.participant_id === selectedParticipantId) : hub.threads;
+  const archived = getParam(params, "archief") === "1";
+  const participantThreads = selectedParticipantId ? hub.threads.filter((thread) => thread.participant_id === selectedParticipantId) : hub.threads;
+  const visibleThreads = participantThreads.filter((thread) => hub.archivedThreadIds.includes(thread.id) === archived);
   const visibleThreadIds = new Set(visibleThreads.map((thread) => thread.id));
   const visibleMessages = hub.messages.filter((message) => visibleThreadIds.has(message.thread_id));
   const visibleParticipants = selectedParticipantId ? hub.participants.filter((participant) => participant.id === selectedParticipantId) : hub.participants;
   const visibleNotifications = data.notifications.filter((notification) => !selectedParticipantId || !notification.participant_id || notification.participant_id === selectedParticipantId);
   const unreadNotifications = visibleNotifications.filter((notification) => notification.status === "unread");
-  const inboxHref = participantContextHref("/portaal/inbox", selectedParticipantId);
+  const normalInboxHref = participantContextHref("/portaal/inbox", selectedParticipantId);
+  const archiveHref = `${normalInboxHref}${normalInboxHref.includes("?") ? "&" : "?"}archief=1`;
+  const inboxHref = archived ? archiveHref : normalInboxHref;
   const terminology = getPortalTerminology(data.portalTheme.manifest, data.tenant.sector);
 
   return (
@@ -87,20 +94,11 @@ export default async function ParentInboxPage({ searchParams }: PageProps) {
                 <ListChecks aria-hidden="true" className="size-5" />
               </button>
             </form>
-            <AdminActionDrawer
-              description={`Kies een kind en schrijf je vraag. De ${terminology.organization} ziet alleen de context die bij dit gesprek hoort.`}
-              icon={<Plus aria-hidden="true" className="size-5" />}
-              title="Nieuw bericht"
-              triggerAriaLabel="Nieuw bericht"
-              triggerIconOnly
-              triggerLabel="Nieuw bericht"
-              width="wide"
-            >
-              <NewThreadForm next={inboxHref} parentMode participants={visibleParticipants} />
-            </AdminActionDrawer>
+            <NewMessageDialog key={`${hub.currentUserId}:${hub.tenant.id}:${selectedParticipantId}:${getParam(params, "nieuw")}:${getParam(params, "onderdeel")}:${getParam(params, "les")}`} scopeKey={`${hub.currentUserId}:${hub.tenant.id}`} returnPath={inboxHref} participants={visibleParticipants.filter((participant) => data.mutableParticipantIds.includes(participant.id))} initialParticipantId={selectedParticipantId} initialOpen={getParam(params, "nieuw") === "1"} itemId={getParam(params, "onderdeel") ?? null} sessionId={getParam(params, "les") ?? null} />
           </div>
         </div>
-        <ThreadWorkspace baseHref={inboxHref} messages={visibleMessages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={visibleThreads} unreadThreadIds={hub.unreadThreadIds.filter((threadId) => visibleThreadIds.has(threadId))} />
+        <nav aria-label="Gespreksmappen" className="mb-3 flex gap-3"><Link aria-current={!archived ? "page" : undefined} className="rounded-xl border p-3" href={normalInboxHref}>Mijn inbox</Link><Link aria-current={archived ? "page" : undefined} className="rounded-xl border p-3" href={archiveHref}>Mijn archief ({participantThreads.filter((thread) => hub.archivedThreadIds.includes(thread.id)).length})</Link></nav>
+        <ThreadWorkspace archivedThreadIds={hub.archivedThreadIds} writableParticipantIds={data.mutableParticipantIds} tenantId={hub.tenant.id} currentUserId={hub.currentUserId} baseHref={inboxHref} messages={visibleMessages} mode="parent" people={hub.people} selectedThreadId={selectedThreadId} threads={visibleThreads} unreadThreadIds={hub.unreadThreadIds.filter((threadId) => visibleThreadIds.has(threadId))} />
       </section>
 
       <section className="scroll-mt-24 rounded-xl border border-border bg-card p-5 shadow-soft" id="mededelingen">

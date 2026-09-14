@@ -104,10 +104,11 @@ test("analytics accepteert alleen semantische, PII-vrije properties", () => {
 });
 
 test("gedeelde PortalShell, routeframe, ronde kindselector en exacte Inboxacties zijn aangesloten", async () => {
-  const [layout, shell, inbox] = await Promise.all([
+  const [layout, shell, inbox, newMessage] = await Promise.all([
     readFile(path.join(root, "apps/web/app/(portaal)/portaal/layout.tsx"), "utf8"),
     readFile(path.join(root, "apps/web/components/shell/app-shell-client.tsx"), "utf8"),
-    readFile(path.join(root, "apps/web/app/(portaal)/portaal/inbox/parent-inbox-page.tsx"), "utf8")
+    readFile(path.join(root, "apps/web/app/(portaal)/portaal/inbox/parent-inbox-page.tsx"), "utf8"),
+    readFile(path.join(root, "apps/web/components/communication/new-message-dialog.tsx"), "utf8")
   ]);
   assert.match(layout, /PortalRouteFrame/);
   assert.match(layout, /Alle kinderen/);
@@ -115,7 +116,8 @@ test("gedeelde PortalShell, routeframe, ronde kindselector en exacte Inboxacties
   assert.doesNotMatch(layout, /getProgressNavigationLabel/);
   assert.match(shell, /rounded-full/);
   assert.match(inbox, /Alles als gelezen markeren/);
-  assert.match(inbox, /Nieuw bericht/);
+  assert.match(inbox, /<NewMessageDialog/);
+  assert.match(newMessage, /aria-label="Nieuw bericht"/);
 });
 
 test("runtime gebruikt de letterlijke shellankers en exact zeven compatibilityredirects", async () => {

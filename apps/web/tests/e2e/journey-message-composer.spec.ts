@@ -1,0 +1,68 @@
+import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
+
+test("real parent messages retain authorized references, private drafts, conflict choices and explicit send", async ({ page, browser, baseURL }, info) => {
+  const file = process.env.PORTAL_MESSAGE_BROWSER_FIXTURE;
+  test.skip(!file, "Requires an explicitly seeded fictional parent in an isolated local database");
+  if (!baseURL || !["localhost", "127.0.0.1"].includes(new URL(baseURL).hostname)) throw new Error("Message browser writes require a loopback application");
+  const fixture = JSON.parse(readFileSync(file!, "utf8")) as { email: string; password: string; child: string; otherChild: string; item: string };
+  const href = `/portaal/inbox?${new URLSearchParams({ kind: fixture.child, nieuw: "1", onderdeel: fixture.item })}`;
+  await page.goto(`/login?next=${encodeURIComponent(href)}`);
+  await page.getByLabel("E-mail", { exact: true }).fill(fixture.email); await page.getByLabel("Wachtwoord", { exact: true }).fill(fixture.password);
+  await page.getByRole("button", { name: "Inloggen", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Nieuw bericht", exact: true });
+  await expect(dialog).toBeVisible({ timeout: 45_000 });
+  await expect(dialog.getByText("Fictief rustig ademen", { exact: true })).toBeVisible();
+  const body = dialog.getByRole("textbox", { name: "Bericht", exact: true });
+  await body.fill("Fictieve vraag over ademen — nog niet verzonden.");
+  await expect(dialog.getByText("Concept opgeslagen", { exact: true })).toBeVisible();
+  await page.reload(); await expect(body).toHaveValue("Fictieve vraag over ademen — nog niet verzonden.");
+  // A separate authenticated browser reads the same durable private draft.
+  const other = await browser.newContext({ storageState: await page.context().storageState() });
+  const second = await other.newPage(); await second.goto(href);
+  const remote = second.getByRole("dialog", { name: "Nieuw bericht", exact: true });
+  await expect(remote.getByRole("textbox", { name: "Bericht", exact: true })).toHaveValue("Fictieve vraag over ademen — nog niet verzonden.");
+  await remote.getByRole("textbox", { name: "Bericht", exact: true }).fill("Fictieve versie uit het andere venster.");
+  await expect(remote.getByText("Concept opgeslagen", { exact: true })).toBeVisible();
+  await body.fill("Bewust gekozen eigen fictieve versie.");
+  await dialog.getByRole("button", { name: "Controleren en versturen" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("ander venster");
+  await dialog.getByRole("button", { name: "Opgeslagen concept bekijken" }).click();
+  const conflict = page.getByRole("dialog", { name: "Concept gewijzigd", exact: true });
+  await expect(conflict).toContainText("Fictieve versie uit het andere venster.");
+  await conflict.getByRole("button", { name: "Bewaar mijn invoer" }).click();
+  await expect(dialog.getByText("Concept opgeslagen", { exact: true })).toBeVisible();
+  await other.close();
+  // Offline/failed server action preserves typed text and the dialog; retry is explicit.
+  await page.route("**/portaal/inbox**", (route) => route.request().method() === "POST" ? route.abort("failed") : route.continue());
+  await body.fill("Fictieve vraag na een verbindingsfout.");
+  await dialog.getByRole("button", { name: "Controleren en versturen" }).click();
+  await expect(dialog.getByRole("alert")).toContainText("verbinding");
+  await expect(body).toHaveValue("Fictieve vraag na een verbindingsfout.");
+  await page.unroute("**/portaal/inbox**");
+  await dialog.getByRole("button", { name: "Opnieuw opslaan", exact: true }).click();
+  await expect(dialog.getByText("Concept opgeslagen", { exact: true })).toBeVisible();
+  await dialog.getByRole("button", { name: "Controleren en versturen" }).click();
+  const review = page.getByRole("dialog", { name: "Bericht controleren", exact: true });
+  await expect(review).toContainText("Fictieve berichtenschool"); await expect(review).toContainText("Fictieve Lotte"); await expect(review).toContainText("Fictief rustig ademen");
+  await expect(review.getByRole("button", { name: "Bericht versturen", exact: true })).toBeDisabled();
+  await review.getByRole("checkbox").check(); await page.screenshot({ path: info.outputPath("parent-confirm-message.png") });
+  await review.getByRole("button", { name: "Bericht versturen", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`kind=${fixture.child}.*thread=`));
+  await expect(page.getByRole("log")).toContainText("Fictieve vraag na een verbindingsfout.");
+  await expect(page.getByRole("log").getByRole("link", { name: "Fictief rustig ademen" })).toHaveAttribute("href", new RegExp(`kind=${fixture.child}.*onderdeel=${fixture.item}`));
+  await expect(page.getByRole("log").locator("article")).toHaveCount(1);
+  await page.getByRole("button", { name: "Archiveer voor mij", exact: true }).click();
+  await expect(page.getByRole("log")).toHaveCount(0);
+  await page.getByRole("link", { name: "Mijn archief (1)", exact: true }).click();
+  await expect(page.getByRole("log")).toContainText("Fictieve vraag na een verbindingsfout.");
+  await page.getByRole("button", { name: "Herstel naar mijn inbox", exact: true }).click();
+  await expect(page.getByRole("log")).toHaveCount(0);
+  await page.getByRole("link", { name: "Mijn inbox", exact: true }).click();
+  await expect(page.getByRole("log")).toContainText("Fictieve vraag na een verbindingsfout.");
+  // Changing participant cannot expose the previous child's new-thread draft.
+  await page.goto(`/portaal/inbox?kind=${fixture.otherChild}&nieuw=1`);
+  await expect(dialog.getByRole("textbox", { name: "Bericht", exact: true })).toHaveValue("");
+  await expect(dialog.getByText("Over Fictieve Sam", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("Fictief rustig ademen", { exact: true })).toHaveCount(0);
+});
