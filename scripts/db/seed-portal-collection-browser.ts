@@ -41,6 +41,9 @@ try {
   const world = Object.keys(presentation.worlds)[0];
   fixture.binding = (await client.query("select public.bind_portal_theme_world($1,$2,$3,$4,$5,$6,$7,$8,'{}',null,'Fictional collection browser world',null) as id", [manager,fixture.tenant,fixture.program,fixture.version,fixture.stage,presentation.themeId,release,world])).rows[0].id;
   fixture.theme = presentation.themeId; fixture.release = release;
+  fixture.orientationPaths = Object.fromEntries((["portrait", "landscape"] as const).map(orientation => [orientation,
+    Object.values(presentation.worlds[world][orientation].layers).flatMap(id => id ? [`/portal-themes/${presentation.assets[id].objectKey}`] : [])
+  ]));
   await client.query("commit");
   await writeFile(file, JSON.stringify(fixture), { mode: 0o600 });
   console.log("Fictional cosmetic pool imported, reviewed, published and bound through existing commands in the owned local fixture; no provider action.");

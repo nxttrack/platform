@@ -1,0 +1,20 @@
+import {expect,test} from '@playwright/test';
+import {readFileSync} from 'node:fs';
+test('published scene initially downloads only its measured orientation and changes assets when actually rotated',async({page,baseURL},info)=>{
+ const file=process.env.PORTAL_COLLECTION_BROWSER_FIXTURE;
+ test.skip(!file,'Requires explicitly seeded fictional family and real local published reference artwork');
+ if(!baseURL||!['localhost','127.0.0.1'].includes(new URL(baseURL).hostname))throw new Error('Loopback image verification only');
+ const f=JSON.parse(readFileSync(file!,'utf8')) as {child:string;email:string;password:string;orientationPaths:Record<'portrait'|'landscape',string[]>};
+ if(!f.orientationPaths)throw new Error('Seed a current fixture with both exact source orientation paths');
+ const requested=new Set<string>();page.on('request',request=>requested.add(new URL(request.url()).pathname));
+ await page.setViewportSize({width:390,height:844});await page.goto(`/login?next=${encodeURIComponent(`/portaal?kind=${f.child}`)}`);await page.getByLabel('E-mail',{exact:true}).fill(f.email);await page.getByLabel('Wachtwoord',{exact:true}).fill(f.password);await page.getByRole('button',{name:'Inloggen',exact:true}).click();
+ const scene=page.locator('[data-rich-journey]');await expect(scene).toHaveAttribute('data-orientation','portrait');
+ await expect.poll(()=>scene.locator('[data-rich-layer]').evaluateAll(images=>images.length===3&&images.every(image=>(image as HTMLImageElement).complete&&(image as HTMLImageElement).naturalWidth>0))).toBe(true);
+ for(const path of f.orientationPaths.portrait)expect(requested.has(path),path).toBe(true);
+ for(const path of f.orientationPaths.landscape)expect(requested.has(path),`Must not preload opposite orientation ${path}`).toBe(false);
+ const portraitRequests=[...requested].filter(path=>path.startsWith('/portal-themes/'));
+ await page.setViewportSize({width:1440,height:900});await expect(scene).toHaveAttribute('data-orientation','landscape');
+ await expect.poll(()=>scene.locator('[data-rich-layer]').evaluateAll(images=>images.length===3&&images.every(image=>(image as HTMLImageElement).complete&&(image as HTMLImageElement).naturalWidth>0))).toBe(true);
+ for(const path of f.orientationPaths.landscape)expect(requested.has(path),path).toBe(true);
+ await info.attach('orientation-requests.json',{body:JSON.stringify({portraitRequests,afterRotation:[...requested].filter(path=>path.startsWith('/portal-themes/'))},null,2),contentType:'application/json'});
+});
