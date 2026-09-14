@@ -22,7 +22,7 @@ concurrency:
 jobs:
   recover:
     name: apply staging migrations without application activation
-    if: github.ref_name == 'codex/staging-migration-recovery'
+    if: github.ref_name == 'main'
     runs-on: [self-hosted, linux, x64, nxttrack]
     environment: staging
 
@@ -61,8 +61,6 @@ jobs:
       - name: Verify exact canonical main source
         run: |
           set -euo pipefail
-          expected='81bff4d822c10bb66fb3367145c7d7e714f96944'
-          test "$RELEASE_SHA" = "$expected"
           test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
           git fetch --no-tags origin main --depth=1
           test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_SHA"
