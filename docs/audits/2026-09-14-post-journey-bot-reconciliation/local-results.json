@@ -1,0 +1,194 @@
+[
+  {
+    "name": "clean-frozen-install",
+    "command": [
+      "pnpm",
+      "install",
+      "--frozen-lockfile"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 1.69,
+    "log": "local-clean-frozen-install.log"
+  },
+  {
+    "name": "production-audit",
+    "command": [
+      "pnpm",
+      "audit",
+      "--prod"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.83,
+    "log": "local-production-audit.log"
+  },
+  {
+    "name": "production-audit-json",
+    "command": [
+      "pnpm",
+      "audit",
+      "--prod",
+      "--json"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.8,
+    "log": "local-production-audit-json.log"
+  },
+  {
+    "name": "typecheck",
+    "command": [
+      "pnpm",
+      "typecheck"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 25.3,
+    "log": "local-typecheck.log"
+  },
+  {
+    "name": "units",
+    "command": [
+      "pnpm",
+      "run",
+      "test:unit"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 6.13,
+    "log": "local-units.log"
+  },
+  {
+    "name": "security-audit-dependencies",
+    "command": [
+      "pnpm",
+      "run",
+      "security:audit-dependencies"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 1.1,
+    "log": "local-security-audit-dependencies.log"
+  },
+  {
+    "name": "release-truth",
+    "command": [
+      "pnpm",
+      "run",
+      "release:truth"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.37,
+    "log": "local-release-truth.log"
+  },
+  {
+    "name": "design-audit",
+    "command": [
+      "pnpm",
+      "run",
+      "design:audit"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.31,
+    "log": "local-design-audit.log"
+  },
+  {
+    "name": "auth-audit",
+    "command": [
+      "pnpm",
+      "run",
+      "auth:audit"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.64,
+    "log": "local-auth-audit.log"
+  },
+  {
+    "name": "db-audit",
+    "command": [
+      "pnpm",
+      "run",
+      "db:audit"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.38,
+    "log": "local-db-audit.log"
+  },
+  {
+    "name": "db-rls-audit",
+    "command": [
+      "pnpm",
+      "run",
+      "db:rls-audit"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 1.47,
+    "log": "local-db-rls-audit.log"
+  },
+  {
+    "name": "release-audit-runtime-env",
+    "command": [
+      "pnpm",
+      "run",
+      "release:audit-runtime-env"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.3,
+    "log": "local-release-audit-runtime-env.log"
+  },
+  {
+    "name": "release-audit-sprint31",
+    "command": [
+      "pnpm",
+      "run",
+      "release:audit-sprint31"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.3,
+    "log": "local-release-audit-sprint31.log"
+  },
+  {
+    "name": "db-migrate",
+    "command": [
+      "pnpm",
+      "run",
+      "db:migrate"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.31,
+    "log": "local-db-migrate.log"
+  },
+  {
+    "name": "build",
+    "command": [
+      "pnpm",
+      "run",
+      "build"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 50.37,
+    "log": "local-build.log"
+  },
+  {
+    "name": "deploy-package-standalone-assets",
+    "command": [
+      "pnpm",
+      "run",
+      "deploy:package-standalone-assets"
+    ],
+    "head": "c9e88e234d6d7a46c7e54aeb7e506f75cf98ce53",
+    "exit_code": 0,
+    "seconds": 0.71,
+    "log": "local-deploy-package-standalone-assets.log"
+  }
+]

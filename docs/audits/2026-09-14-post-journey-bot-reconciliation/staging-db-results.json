@@ -1,0 +1,190 @@
+[
+  {
+    "name": "db:audit-clean-room",
+    "command": [
+      "pnpm",
+      "run",
+      "db:audit-clean-room"
+    ],
+    "exit_code": 0,
+    "seconds": 0.65,
+    "log": "staging-db-audit-clean-room.log",
+    "sha256": "7e0f3eac7848bbbf459f9c38e831462e494c41980a17143c6a03baec23948749"
+  },
+  {
+    "name": "db:preflight-production-readiness-upgrade",
+    "command": [
+      "pnpm",
+      "run",
+      "db:preflight-production-readiness-upgrade"
+    ],
+    "exit_code": 0,
+    "seconds": 0.56,
+    "log": "staging-db-preflight-production-readiness-upgrade.log",
+    "sha256": "c0313f2e4bc643f89d7c68ae854dc6324eda32fa1d3abc1c00224dddb4ccc006"
+  },
+  {
+    "name": "release:assert-schema-compatibility",
+    "command": [
+      "pnpm",
+      "run",
+      "release:assert-schema-compatibility"
+    ],
+    "exit_code": 0,
+    "seconds": 0.57,
+    "log": "staging-release-assert-schema-compatibility.log",
+    "sha256": "211120085c9833bfb725054c3235caf17d1e091387bde8e6c1bbb989e32335eb"
+  },
+  {
+    "name": "test:swim-canon:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:swim-canon:db"
+    ],
+    "exit_code": 0,
+    "seconds": 1.07,
+    "log": "staging-test-swim-canon-db.log",
+    "sha256": "43e5bdd229501b795694760965e8f05931f9125f9032344cfe7a0352cbda7da2"
+  },
+  {
+    "name": "test:planning:concurrency",
+    "command": [
+      "pnpm",
+      "run",
+      "test:planning:concurrency"
+    ],
+    "exit_code": 0,
+    "seconds": 0.89,
+    "log": "staging-test-planning-concurrency.log",
+    "sha256": "b6b46e2704948ace39917341ef1493305c399871a90d921c40b32df39959493a"
+  },
+  {
+    "name": "test:email-outbox:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:email-outbox:db"
+    ],
+    "exit_code": 0,
+    "seconds": 0.98,
+    "log": "staging-test-email-outbox-db.log",
+    "sha256": "29f5b8ca909c9b22a6fdc230d4d1d8288465a3e0135ac2381730bf5ea1e1e17d"
+  },
+  {
+    "name": "test:tenant-provisioning:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:tenant-provisioning:db"
+    ],
+    "exit_code": 0,
+    "seconds": 0.93,
+    "log": "staging-test-tenant-provisioning-db.log",
+    "sha256": "c40096e33c963f221520e1aa0364a6a2a59fafa1ee1bf7f8344c09f40c7244f1"
+  },
+  {
+    "name": "test:core-onboarding:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:core-onboarding:db"
+    ],
+    "exit_code": 0,
+    "seconds": 2.39,
+    "log": "staging-test-core-onboarding-db.log",
+    "sha256": "6180dc351b3c64f7cff7bfadb95624c6496f5d8c221ede916890b7988903a503"
+  },
+  {
+    "name": "test:resumable-import:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:resumable-import:db"
+    ],
+    "exit_code": 0,
+    "seconds": 6.41,
+    "log": "staging-test-resumable-import-db.log",
+    "sha256": "587f2055e4bfbc29bbb51c3e2a93ed70941391beee6b3acedfa64b151d7f8891"
+  },
+  {
+    "name": "test:production-readiness-certification:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:production-readiness-certification:db"
+    ],
+    "exit_code": 0,
+    "seconds": 0.58,
+    "log": "staging-test-production-readiness-certification-db.log",
+    "sha256": "b2b50972ba83340e03f7b409acc629c44e72cfaf302e8766c21cfb88e473fea0"
+  },
+  {
+    "name": "test:production-readiness-crash-windows:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:production-readiness-crash-windows:db"
+    ],
+    "exit_code": 0,
+    "seconds": 2.12,
+    "log": "staging-test-production-readiness-crash-windows-db.log",
+    "sha256": "fc3d210a0216246c52fad006e16ebf4d667c972e771b3884ac8dc4a38097d9d8"
+  },
+  {
+    "name": "db:seed-production-readiness-upgrade-fixture",
+    "command": [
+      "pnpm",
+      "run",
+      "db:seed-production-readiness-upgrade-fixture"
+    ],
+    "exit_code": 0,
+    "seconds": 0.54,
+    "log": "staging-db-seed-production-readiness-upgrade-fixture.log",
+    "sha256": "c4a31b95c6d3b7129b2afdf0f076e9e5a060ca04c0f680b9d5be45b32e36d884"
+  },
+  {
+    "name": "test:production-readiness-tenant-matrix:db",
+    "command": [
+      "pnpm",
+      "run",
+      "test:production-readiness-tenant-matrix:db"
+    ],
+    "exit_code": 0,
+    "seconds": 1.71,
+    "log": "staging-test-production-readiness-tenant-matrix-db.log",
+    "sha256": "f7c5f6db88f18c7c6cca192341a8b9c30f5c9ec0013d047c5655bee1f5013fa2"
+  },
+  {
+    "name": "db:advisors",
+    "command": [
+      "pnpm",
+      "run",
+      "db:advisors"
+    ],
+    "exit_code": 0,
+    "seconds": 2.82,
+    "log": "staging-db-advisors.log",
+    "sha256": "d6581ea8ebf26b5bb8df1523c3d930b17e0b170879ff16e47c69f564674a2df3"
+  },
+  {
+    "name": "sql-lint",
+    "command": [
+      "pnpm",
+      "exec",
+      "supabase",
+      "db",
+      "lint",
+      "--db-url",
+      "postgresql://postgres:postgres@127.0.0.1:57922/postgres?sslmode=disable",
+      "--level",
+      "error",
+      "--fail-on",
+      "error"
+    ],
+    "exit_code": 0,
+    "seconds": 1.24,
+    "log": "staging-sql-lint.log",
+    "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707"
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "removed_files_still_absent": [
+    ".github/workflows/journey-bot-staging-smoke.yml",
+    ".github/workflows/journey-bot-staging-tick.yml",
+    ".github/workflows/journey-bot-staging-window.yml",
+    "apps/web/app/(platform-admin)/platform/test-tools/journey-bot/page.tsx",
+    "apps/web/app/api/internal/journey-bot/tick/route.ts",
+    "apps/web/lib/domain/journey-bot-actions.ts",
+    "apps/web/lib/domain/journey-bot-contract.ts",
+    "apps/web/lib/domain/journey-bot.ts",
+    "apps/web/tests/e2e/journey-bot-staging.spec.ts",
+    "apps/web/tests/e2e/journey-bot-window-control.spec.ts",
+    "scripts/release/audit-journey-bot.mjs",
+    "scripts/staging/assert-journey-bot-tick.mjs",
+    "scripts/staging/seed-journey-bot-waterlijn.mjs",
+    "tests/unit/journey-bot-contract.test.ts",
+    "tests/unit/journey-bot-tick-evaluator.test.ts"
+  ],
+  "bot_scripts_absent": true,
+  "bot_seed_absent": true,
+  "package_manifest_unchanged_from_main": true,
+  "lockfile_unchanged_from_main": true,
+  "ordinary_journey_gate_present": true
+}

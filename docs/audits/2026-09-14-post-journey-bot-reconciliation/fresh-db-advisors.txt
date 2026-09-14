@@ -1,0 +1,9 @@
+
+> @nxttrack/platform@0.0.0 db:advisors /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/supabase-advisors.mjs
+
+[db:advisors] Using Supabase CLI 2.117.0.
+[db:advisors] Running Supabase advisors: type=security level=error fail-on=error.
+Connecting to remote database...
+No issues found
+[db:advisors] PASS No unresolved advisor findings at the configured fail level.

@@ -1,0 +1,15 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] Using Supabase CLI 2.117.0.
+[db:migrate] Running Supabase migrations with explicit opt-in. includeAll=true dryRun=true
+DRY RUN: migrations will *not* be pushed to the database.
+Connecting to remote database...
+Skipping migration README.md... (file name must match pattern "<timestamp>_name.sql")
+Would push these migrations:
+ • 20260908111450_production_readiness_recertification.sql
+ • 20260913175334_pre_v42_sql_identifier_ambiguities.sql
+ • 20260913182211_bind_import_payment_enrollment.sql
+Finished supabase db push.

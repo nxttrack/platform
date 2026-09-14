@@ -1,0 +1,14 @@
+ WARN  using --force I sure hope you know what you are doing
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +398
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 398, reused 318, downloaded 27, added 155
+Progress: resolved 398, reused 318, downloaded 60, added 225
+Progress: resolved 398, reused 318, downloaded 78, added 348
+ WARN  GET https://registry.npmjs.org/@supabase/cli-linux-arm64/-/cli-linux-arm64-2.117.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@supabase/cli-windows-x64/-/cli-windows-x64-2.117.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 398, reused 318, downloaded 78, added 396
+ WARN  GET https://registry.npmjs.org/@supabase/cli-linux-arm64/-/cli-linux-arm64-2.117.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@supabase/cli-windows-x64/-/cli-windows-x64-2.117.0.tgz error (ERR_PNPM_ENOSPC). Will retry in 1 minute. 1 retries left.

@@ -1,11 +1,67 @@
 Canonical baseline:
-77c22b1cb10833811c0552b3160fcef1844c6368
+47347d124ae8ebec447324eb2f571977a8e91442
 
-# FASE 0.2 — SQL lint ambiguities before V4.2
+# FASE 0.2 / 0.5 — SQL lint closure after Journey Bot retirement
 
-Current candidate: **149 migrations**, consisting of the 147 canonical migrations
-and two forward-only corrections. The original three lint findings are FIXED.
-The additional Codex P1 and its current validation are detailed below.
+## Post-Journey-Bot reconciliation
+
+The current candidate contains **151 migrations**. Main was merged into the
+existing PR #58 branch with merge commit
+`1036a0752e8a9336dc7f1237e6dee5337198429d`; all six original PR commits remain
+ancestors. GitHub reported MERGEABLE at this task's preflight and Git produced no
+text conflicts. Main's Journey Bot removals remain intact.
+
+The two unmerged SQL-correction migrations have been replaced, byte-for-byte, by:
+
+- `20260914012125_pre_v42_sql_identifier_ambiguities.sql`
+- `20260914012126_bind_import_payment_enrollment.sql`
+
+Both now follow the applied bot-retirement migrations. All 149 canonical main
+migration files remain unchanged. These replacements change ordering only; they
+introduce no new curriculum, theme, payment or bot behavior.
+
+Fresh installation reaches 151. Canonical main upgrades 149 → 150 → 151 with the
+normal migration command; the candidate release guard rejects both incomplete
+intermediate states. The staging-like 148-migration database upgrades to 151 with
+`DB_MIGRATE_INCLUDE_ALL=true pnpm run db:migrate` (and the existing explicit
+execution/connection settings). This flag is still necessary for the *pre-existing*
+missing canonical `20260908111450` migration. Without it, the command safely
+refuses the older gap, changes nothing and exits 1. With it, the exact three missing
+migrations are applied and replay is a no-op. No migration repair was used.
+
+The minimum runtime handshake remains **contract 5**, required version
+`20260908111450`, minimum fingerprint
+`2b38518a37e41adb2da11224561e44e185c28ca45a962e1f8acfd361aab38aba`.
+The candidate artifact separately pins all 151 migrations with fingerprint
+`a76d447721af7264e4aa7984fb3172727baa68f45f03c07d01eb4d6567a957ec`.
+The exact canonical application health contract accepts the upgraded databases;
+canonical main and `12b4885` remain valid application ancestors.
+
+Current local validation: clean/frozen install, zero production advisories,
+455 units, typecheck, build, packaging and repository/auth/runtime/migration/RLS
+checks pass. All 15 DB checks pass on each of three isolated local profiles,
+including SQL lint, security advisors and the API/storage/role matrix. Local
+browser and exact-head GitHub CI/review conclusions are recorded in the
+[FASE 0.5 certification](docs/audits/2026-09-14-post-journey-bot-reconciliation.md)
+and the current PR body.
+
+Journey Bot is retired. The former staging-tick blocker and runtime bot audit are
+**not current merge requirements**. Historical bot tables and read-only grants
+remain; runner, RPCs, workflows, menu and bot seed have not returned. Manual
+product testing and ordinary learner Journey UI tests remain in scope.
+
+No deployment, remote database change, provider action or application release was
+performed. V4.2 is NOT STARTED. PR #58 remains for user review and merge.
+
+---
+
+## Historical evidence — before Journey Bot retirement
+
+Everything below records the earlier 147/148/149-migration branch and its original
+baseline `77c22b1cb10833811c0552b3160fcef1844c6368`. Its original migration
+filenames, validation counts, bot checks and staging-tick hold are historical;
+they are superseded as current conclusions by the section above. Historical
+transcripts and evidence files have not been rewritten.
 
 ## Original inventory, completed before code changes
 
