@@ -1,0 +1,112 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "security:audit-dependencies"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.84,
+    "log": "certified-security-audit-dependencies.log",
+    "sha256": "47f8b569d01eb8cc7a59789fbf2d432df7623e53cc54d43cab889bd71ccc78ae"
+  },
+  {
+    "command": [
+      "pnpm",
+      "release:truth"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.34,
+    "log": "certified-release-truth.log",
+    "sha256": "d1968682a94a34133ec6bb1ecbc2e9615c9ded38b0f726015143558c83ab91f8"
+  },
+  {
+    "command": [
+      "pnpm",
+      "design:audit"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.31,
+    "log": "certified-design-audit.log",
+    "sha256": "81f61aab005017382a1120bf1bf2200fb5257af4b1c686ed271befa573387855"
+  },
+  {
+    "command": [
+      "pnpm",
+      "typecheck"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 2.95,
+    "log": "certified-typecheck.log",
+    "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+  },
+  {
+    "command": [
+      "pnpm",
+      "test:unit"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 11.14,
+    "log": "certified-test-unit.log",
+    "sha256": "a734d40a4bea652d5bf2071e34c2307dd427c40349f6b076c8224dabd1e72a45"
+  },
+  {
+    "command": [
+      "pnpm",
+      "release:audit-runtime-env"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.29,
+    "log": "certified-release-audit-runtime-env.log",
+    "sha256": "65012d3773a6f1f5c822359cbfcf02d4b44f9448fdffdc8c3f178565be4d7cf3"
+  },
+  {
+    "command": [
+      "pnpm",
+      "auth:audit"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.57,
+    "log": "certified-auth-audit.log",
+    "sha256": "811fc7cb881521dc3bd4cb8d0c10d433ea212022839b1cb349415c9a6a3a0386"
+  },
+  {
+    "command": [
+      "pnpm",
+      "db:audit"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.41,
+    "log": "certified-db-audit.log",
+    "sha256": "c09c5cc60025a9d037d26b2cb88159ac5950bdd8bbfff132b721d99b00eb8d2f"
+  },
+  {
+    "command": [
+      "pnpm",
+      "db:rls-audit"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 1.59,
+    "log": "certified-db-rls-audit.log",
+    "sha256": "a192c2e7ef01bc9445815ddfb94d63ce18e1a2f02f62f435c81e8590866eefb7"
+  },
+  {
+    "command": [
+      "pnpm",
+      "db:migrate"
+    ],
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "exit_code": 0,
+    "seconds": 0.28,
+    "log": "certified-db-migrate.log",
+    "sha256": "2a6ab3c4ef258be8271c2f0158484552b2afff4f690cd376ab756b839f12d5f0"
+  }
+]

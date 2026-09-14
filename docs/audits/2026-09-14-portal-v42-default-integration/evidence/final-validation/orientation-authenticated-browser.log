@@ -1,0 +1,17 @@
+
+Running 12 tests using 1 worker
+
+  ✓   1 [journey-chromium] › tests/e2e/journey-collection.spec.ts:12:5 › real family collection needs explicit save, survives network retry/reload and shares immutable discoveries with child mode (9.4s)
+  ✓   2 [journey-chromium] › tests/e2e/journey-image-delivery.spec.ts:3:5 › published scene initially downloads only its measured orientation and changes assets when actually rotated (1.8s)
+  ✓   3 [journey-chromium] › tests/e2e/journey-instructor-review.spec.ts:12:5 › separate instructor, parent and child sessions share only confirmed assessments and explicitly published compliments (19.0s)
+  ✓   4 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send (9.4s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:74:5 › real private message draft survives failed browser Back and is restored after a successful save and Forward (2.3s)
+  ✓   6 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional (8.2s)
+  ✓   7 [journey-chromium] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes (3.1s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-theme-import-recovery.spec.ts:4:5 › rejected source retries as a separate attempt and explicit cleanup preserves import history and runtime releases (5.5s)
+  ✓   9 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:6:5 › platform import, draft editing, preview and immutable publication persist across browser sessions (25.2s)
+  ✓  10 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:84:5 › a manifestless image archive requires explicit mapping and resumes its saved preview after reload (7.7s)
+  ✓  11 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:117:5 › platform world binding is explicit, replaces an optimistic revision and rolls back the full presentation (3.4s)
+  ✓  12 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:158:5 › a published version forks into a new editable concept, validates assets and restores an earlier revision without rewriting history (23.0s)
+
+  12 passed (2.0m)

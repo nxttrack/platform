@@ -1,12 +1,18 @@
 {
-  "status": "IN_PROGRESS",
+  "status": "IMPLEMENTED_WITH_BLOCKERS",
   "baseline": "afb53f6e4f72ac8fb0cba88ab98e43373fc7ed80",
   "branch": "codex/portal-v42-default-integration",
+  "runtimeSourceCommit": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+  "migrations": 157,
+  "schemaContract": 5,
+  "artifactFingerprint": "ec8535f2f83642e679a309bb3a4992af96581cf420e055abb2001069495157cd",
   "blockers": [
     "B01 ORIGINAL_DEFAULT_ASSETS_MISSING"
   ],
   "originalArtworkImported": false,
   "visualQualityApproved": false,
   "deploymentPerformed": false,
-  "remoteDatabaseModified": false
+  "remoteDatabaseModified": false,
+  "providerActionsPerformed": false,
+  "journeyBotRetired": true
 }

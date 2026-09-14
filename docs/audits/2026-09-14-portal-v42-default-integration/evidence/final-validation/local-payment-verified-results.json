@@ -1,0 +1,32 @@
+[
+  {
+    "name": "seed-local-payment-verified",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-local-payment-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.81,
+    "log": "seed-local-payment-verified.log",
+    "sha256": "5a08b230cd22c9763d72488d4fbe520daae4230b9020a8e70b7014a472c3c9a5"
+  },
+  {
+    "name": "local-payment-verified-browser",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@nxttrack/web",
+      "exec",
+      "playwright",
+      "test",
+      "--config=playwright.v42-local.config.ts",
+      "--project=journey-chromium",
+      "--workers=1",
+      "journey-local-payment.spec.ts"
+    ],
+    "exit_code": 0,
+    "seconds": 4.76,
+    "log": "local-payment-verified-browser.log",
+    "sha256": "d582bc325204ff7465203ccf553fa42832d311f8bbab91701573c2dbcba234b4"
+  }
+]

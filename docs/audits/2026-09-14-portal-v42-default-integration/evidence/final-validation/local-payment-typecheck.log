@@ -1,0 +1,14 @@
+
+> @nxttrack/platform@0.0.0 typecheck /home/codex/repos/nxttrack-portal-v42-default-integration
+> pnpm --filter @nxttrack/web typecheck
+
+
+> @nxttrack/web@0.0.0 typecheck /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web
+> tsc --noEmit
+
+tests/e2e/journey-local-payment.spec.ts(3,16): error TS7016: Could not find a declaration file for module 'pg'. '/home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/esm/index.mjs' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/pg` if it exists or add a new declaration (.d.ts) file containing `declare module 'pg';`
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @nxttrack/web@0.0.0 typecheck: `tsc --noEmit`
+Exit status 2
+ ELIFECYCLE  Command failed with exit code 2.

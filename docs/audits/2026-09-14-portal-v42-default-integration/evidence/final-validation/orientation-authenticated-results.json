@@ -1,0 +1,96 @@
+[
+  {
+    "name": "seed-orientation-message",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-message-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.22,
+    "log": "seed-orientation-message.log",
+    "sha256": "a02ebdcf53cbd457b283ea1543265b4cc970f26343c5431704a54e5d28fe97d9"
+  },
+  {
+    "name": "seed-orientation-assessment",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-assessment-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.45,
+    "log": "seed-orientation-assessment.log",
+    "sha256": "8d83bb25a486de7473d887602bfa07ea472fa2fef93653d8e1bb64add68eb2d4"
+  },
+  {
+    "name": "seed-orientation-collection",
+    "command": [
+      "pnpm",
+      "exec",
+      "tsx",
+      "scripts/db/seed-portal-collection-browser.ts"
+    ],
+    "exit_code": 0,
+    "seconds": 3.02,
+    "log": "seed-orientation-collection.log",
+    "sha256": "35c89ef806a0a460b2f987d4d93799d5afb28d0c1d6b3a057f0b1900e61421bd"
+  },
+  {
+    "name": "seed-orientation-practical",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-practical-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.57,
+    "log": "seed-orientation-practical.log",
+    "sha256": "2f32efef40aa6c24262a7064c8050108b6dcf1dbd56c0649eb0bde0b601a219c"
+  },
+  {
+    "name": "seed-orientation-private-files",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-private-files-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.79,
+    "log": "seed-orientation-private-files.log",
+    "sha256": "17fd0e96b01911c89db10727b0ec1e0e641ed4696e1251cf34abf8e1b2f1dcd4"
+  },
+  {
+    "name": "seed-orientation-recovery",
+    "command": [
+      "node",
+      "scripts/db/seed-portal-import-recovery-browser.mjs"
+    ],
+    "exit_code": 0,
+    "seconds": 0.21,
+    "log": "seed-orientation-recovery.log",
+    "sha256": "8132df9c2a4e6cfc7bb2a4b64c161abb33cf9aae7112dccbab5c14546cc2ce6e"
+  },
+  {
+    "name": "orientation-authenticated-browser",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@nxttrack/web",
+      "exec",
+      "playwright",
+      "test",
+      "--config=playwright.v42-local.config.ts",
+      "--project=journey-chromium",
+      "--workers=1",
+      "journey-message-composer.spec.ts",
+      "journey-instructor-review.spec.ts",
+      "journey-collection.spec.ts",
+      "journey-image-delivery.spec.ts",
+      "journey-parent-practical.spec.ts",
+      "journey-private-files.spec.ts",
+      "journey-theme-import-recovery.spec.ts",
+      "theme-library-persistence.spec.ts"
+    ],
+    "exit_code": 0,
+    "seconds": 119.68,
+    "log": "orientation-authenticated-browser.log",
+    "sha256": "0f76b50cd6c27e160da4d2c43e24bfe9b03fd2b49a9de55447f86757704652c7"
+  }
+]

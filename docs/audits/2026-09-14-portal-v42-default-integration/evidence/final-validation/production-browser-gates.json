@@ -1,0 +1,24 @@
+[
+  {
+    "command": [
+      "pnpm",
+      "test:smoke:e2e",
+      "--workers=1"
+    ],
+    "exit_code": 0,
+    "seconds": 34.53,
+    "log": "test-smoke-e2e-production.log",
+    "sha256": "538092dcfe2c79194f08fc7e215af5d0bcb129c4760f441dc0364c485cc001e5"
+  },
+  {
+    "command": [
+      "pnpm",
+      "test:journey:e2e",
+      "--workers=1"
+    ],
+    "exit_code": 1,
+    "seconds": 321.58,
+    "log": "test-journey-e2e-production.log",
+    "sha256": "73d5813161f2fdc43f6ecb76a5d226fb05e0f67ce70589350633aa2bfca6c823"
+  }
+]

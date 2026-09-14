@@ -1,0 +1,22 @@
+[
+  {
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "command": [
+      "pnpm",
+      "build"
+    ],
+    "log": "measured-production-build.log",
+    "exit_code": 0,
+    "seconds": 7.31
+  },
+  {
+    "source": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+    "command": [
+      "pnpm",
+      "deploy:package-standalone-assets"
+    ],
+    "log": "measured-standalone-packaging.log",
+    "exit_code": 0,
+    "seconds": 0.39
+  }
+]
