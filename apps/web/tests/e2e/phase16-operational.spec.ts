@@ -104,7 +104,7 @@ test.describe("phase 16 operational happy path", () => {
     ].map(escapeRegExp).join("|");
     await expect(page.getByRole("heading", { level: 1 }))
       .toHaveText(new RegExp(`^(?:${journeyHeadings})$`));
-    await expectBodyToContain(page, phase.expected.programName);
+    await expectBodyToContain(page, phase.expected.stageLabel);
     await expectActiveShellLink(page, "Overzicht");
 
     await page.goto("/portaal/lessen", { waitUntil: "domcontentloaded" });
@@ -129,6 +129,7 @@ test.describe("phase 16 operational happy path", () => {
 
     await page.goto("/portaal/ontwikkeling/diplomas", { waitUntil: "domcontentloaded" });
     await expectBodyToContain(page, phase.expected.certificateTitle);
+    await expectBodyToContain(page, phase.expected.programName);
 
     await page.goto("/portaal/ontwikkeling/media", { waitUntil: "domcontentloaded" });
     await expect(page.getByRole("heading", { name: "Besloten media" })).toBeVisible();
