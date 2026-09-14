@@ -39,11 +39,14 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Zoek en valideer de authentieke configuratie, ankerkaarten en afzonderlijke rasterassets.",
       "expected": "Zonder originele bestanden blijft de visuele acceptatie geblokkeerd. Een PDF-voorbeeld geldt niet als originele bronasset.",
-      "status": "NOT_RUN",
+      "status": "BLOCKED",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "B01 ORIGINAL_DEFAULT_ASSETS_MISSING; original source/assets still required"
       ]
     },
     {
@@ -54,11 +57,14 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Vergelijk de geselecteerde leveringsbestanden met het originele assets-manifest en de PDF-inventaris.",
       "expected": "De 36 scènelagen, 2 previews, 6 collectibles en 52 ondersteunende slots zijn verantwoord. PNG en WebP zijn bestandsvarianten, geen extra semantische slots.",
-      "status": "NOT_RUN",
+      "status": "BLOCKED",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "B01 ORIGINAL_DEFAULT_ASSETS_MISSING; original source/assets still required"
       ]
     },
     {
@@ -99,11 +105,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer beide V4.2-referentiepakketten.",
       "expected": "De import levert een gecontroleerd concept op, respecteert het standaard/custom-beleid en wijzigt niet automatisch de actieve toewijzing.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -114,11 +126,14 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer bronpakket 1.1 met config/manifest.json.",
       "expected": "De expliciete bronadapter wordt gebruikt. Een corrupt herkend manifest wordt niet omzeild door terug te vallen op begeleide beeldimport.",
-      "status": "NOT_RUN",
+      "status": "BLOCKED",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "B01 ORIGINAL_DEFAULT_ASSETS_MISSING; original source/assets still required"
       ]
     },
     {
@@ -129,11 +144,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer een ondersteunde oude Studio-export.",
       "expected": "Bekende velden behouden hun betekenis. Een niet-ondersteunde variant geeft een duidelijke fout of waarschuwing, zonder stil gegevensverlies.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -144,11 +165,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer uitsluitend gewone lokale testafbeeldingen.",
       "expected": "De begeleide koppeling vraagt bevestiging van de assetrollen. Bestandsnamen maken niet automatisch curriculumkoppelingen aan.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -159,11 +186,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer journey.*-ID’s en de volledige ondersteunende slotcatalogus.",
       "expected": "ID’s worden niet onterecht geweigerd of botsend opgeschoond. Semantische ID’s en bestandspaden blijven gescheiden.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -174,11 +207,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer bronversie 1.1 naast een bestaande runtimeversie 3.0.0.",
       "expected": "Bronversie, themarelease, manifestversie en portaalversie blijven aparte begrippen. De bestaande gepubliceerde release wordt niet overschreven.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -204,11 +243,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Voer uitsluitend lokale type- en limietcontroles met synthetische testdata uit.",
       "expected": "Server en browser hanteren overeenkomende contracten. Geüploade code wordt nooit uitgevoerd; niet-toegestane inhoud wordt geweigerd of inert gehouden volgens het bronadapterbeleid.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -249,11 +294,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Wijzig een anker nadat de visuele controle is afgetekend.",
       "expected": "De eerdere review vervalt. Publiceren vereist beoordeling van de nieuwe inhoud en de bijbehorende digest.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -264,11 +315,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Exporteer een thema en importeer het opnieuw.",
       "expected": "Semantiek, assetinhoud en wereldkoppelingen in het thema blijven gelijk. De export bevat geen echte tenanttoewijzingen of leerlinggegevens.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -534,11 +591,14 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Bezoek de passende route of toestand voor iedere vastgelegde slotbestemming.",
       "expected": "Ieder slot is geregistreerd en bewust toegepast of gemotiveerd niet nodig. Decoratie draagt geen vaardigheidsbetekenis; essentiële informatie blijft in HTML.",
-      "status": "NOT_RUN",
+      "status": "BLOCKED",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "B01 ORIGINAL_DEFAULT_ASSETS_MISSING; original source/assets still required"
       ]
     },
     {
@@ -1014,11 +1074,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer en publiceer een nieuwe release in de lokale bibliotheek.",
       "expected": "De werkelijke resolver kan de nieuwe import laden; deze blijft niet beperkt tot vooraf ingecodeerde releases.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1029,11 +1095,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Importeer en publiceer een thema zonder het toe te wijzen.",
       "expected": "De bestaande actieve portaaltoewijzing blijft ongewijzigd.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1044,11 +1116,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Koppel één echt programma- en curriculumniveau aan een gepubliceerde wereld.",
       "expected": "Andere niveaus en tenants blijven ongewijzigd. De handeling muteert geen inschrijving of curriculum.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1059,11 +1137,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Test een nieuw platform-managed doel en een nog niet gemigreerd oud doel.",
       "expected": "Bij het nieuwe doel beheert alleen platform de toewijzing; een oude tenant- of kindselector omzeilt dit niet. Het bestaande beleid buiten de migratiescope blijft intact.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1089,11 +1173,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Klik door de preview, inclusief scenario’s en zichtbare mutatieknoppen.",
       "expected": "Dezelfde renderer wordt gebruikt, maar hoofdgegevens, database en actieve toewijzing worden niet gewijzigd.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1104,11 +1194,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Laat twee bevoegde testbeheerders hetzelfde concept bewerken.",
       "expected": "Er volgt controle op revisieconflicten. Een wijziging gaat niet stil verloren en een onjuiste digest kan niet worden gepubliceerd.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1119,11 +1215,17 @@
       "precondition": "Eigen geïsoleerde lokale testomgeving met fictieve gegevens. Voor beeldafhankelijke acceptatie zijn de originele Default-bestanden vereist.",
       "action": "Activeer een vorige release na een gewijzigde wereldkoppeling.",
       "expected": "De presentatie wordt hersteld met een auditrecord. Scores, curriculum en collectiegegevens blijven ongewijzigd.",
-      "status": "NOT_RUN",
+      "status": "CHECKPOINT_PASS_FINAL_CERTIFICATION_PENDING",
       "evidenceRequired": [
         "testnaam en exact commando",
         "resultaat, exitcode en buildcommit",
         "screenshot of assertionlog waar van toepassing"
+      ],
+      "evidence": [
+        "THEME-LIFECYCLE-CHECKPOINT.md",
+        "evidence/theme-checkpoint-units.log",
+        "evidence/theme-binding-db-fixed.log",
+        "evidence/theme-browser-checkpoint.log"
       ]
     },
     {
@@ -1296,6 +1398,99 @@
       "result": "PASS",
       "log": "/tmp/nxttrack-v42-checkpoint-units.log",
       "scope": "presentation/import checkpoint working tree"
+    },
+    {
+      "command": "pnpm test:unit",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-checkpoint-units.log",
+      "sha256": "1e556c2959a208bcba5959aaf7e3730f97bebf8082260a5060173c4b3526cc11",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
+      "passed": 485
+    },
+    {
+      "command": "pnpm typecheck",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-checkpoint-typecheck.log",
+      "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm db:audit",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/migration-static-fixed.log",
+      "sha256": "a2c19998503a5fe300144e411fd07b8826d0a5aea78d9642242dee7c4e6c31b3",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm db:rls-audit",
+      "exitCode": 0,
+      "result": "PASS_WITH_WARNINGS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/rls-static.log",
+      "sha256": "430b31bffa9727279c80ea3d50aa26a85dea9905fea58a88bca51a995822b3ce",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm auth:audit",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/auth-static.log",
+      "sha256": "91d76c4b6f0078b29d71cffacec9695e680f06c02b3543607133a95822764732",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm exec tsx --test tests/unit/migration-audit-functions.test.mjs",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/migration-audit-regression.log",
+      "sha256": "e6680495935b5198a94c623992a02d097d8c2fe23e07a65826e6b1d3bf9f76ca",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
+      "passed": 1
+    },
+    {
+      "command": "pnpm exec tsx --test tests/unit/theme-package-adapters.test.ts tests/unit/theme-release-validation.test.ts",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-guided-units.log",
+      "sha256": "b675acdfeaf98a44f7784dffafd3d668f5be5a0b76cbeb36d519d2ea54f21175",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
+      "passed": 14
+    },
+    {
+      "command": "pnpm test:theme-library:db (explicit loopback fixtures)",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-binding-db-fixed.log",
+      "sha256": "83d80b796018bfcd5238d025745579b1ac7f03dbd6b85bc10a296caf40c203d3",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
+      "passed": 1
+    },
+    {
+      "command": "pnpm exec supabase db lint --db-url LOCAL_LOOPBACK_WITH_SSLMODE_DISABLE --level error --fail-on error",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-dev-sql-lint-local.log",
+      "sha256": "b645300041a205dee1a5383f48132bb9d76d8beb551a49606bbfb77e5ddec707",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm db:advisors (explicit loopback DATABASE_URL)",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-dev-security-advisors.log",
+      "sha256": "df6c37d9d0fef1bb77d2e12e4295ff2b5726535ae2e77c22dcd5e20a02a5e072",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification."
+    },
+    {
+      "command": "pnpm --filter @nxttrack/web exec playwright test tests/e2e/theme-library-persistence.spec.ts --project=chromium-desktop --retries=0 --workers=1 (local test manager)",
+      "exitCode": 0,
+      "result": "PASS",
+      "log": "docs/audits/2026-09-14-portal-v42-default-integration/evidence/theme-browser-checkpoint.log",
+      "sha256": "ba7c081068288aa1ab679400ef4880c1666fe34c10adf7873a2275529f7d2f3f",
+      "scope": "Theme lifecycle implementation checkpoint. DB schema applied locally for development; migration history still canonical 151. Not final fresh/upgrade/CI certification.",
+      "passed": 3
     }
   ]
 }
