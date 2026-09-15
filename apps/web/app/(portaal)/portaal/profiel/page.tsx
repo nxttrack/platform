@@ -129,7 +129,7 @@ function PreferenceToggle({ defaultChecked, description, label, name }: { defaul
       <input className="mt-1 size-5 accent-primary" defaultChecked={defaultChecked} name={name} type="checkbox" />
       <span>
         <span className="block text-sm font-bold text-foreground">{label}</span>
-        <span className="mt-1 block text-xs leading-5 text-muted-foreground">{description}</span>
+        <span className="mt-1 block text-xs leading-5 text-foreground">{description}</span>
       </span>
     </label>
   );
