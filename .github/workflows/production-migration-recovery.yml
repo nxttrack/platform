@@ -81,10 +81,10 @@ jobs:
           set -euo pipefail
           test "$CONFIRMATION" = "APPLY_PRODUCTION_MIGRATIONS"
           test "$RELEASE_SHA" = "$STAGING_RELEASE_SHA"
-          test "$RELEASE_SHA" =~ ^[a-f0-9]{40}$
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
           test "${#APPROVAL_REFERENCE}" -ge 8
-          test "$FOUNDATION_RUN_ID" =~ ^[0-9]+$
-          test "$REHEARSAL_RUN_ID" =~ ^[0-9]+$
+          [[ "$FOUNDATION_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$REHEARSAL_RUN_ID" =~ ^[0-9]+$ ]]
 
       - name: Checkout exact canonical release source
         uses: actions/checkout@v6
