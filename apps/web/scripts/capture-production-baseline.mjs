@@ -232,6 +232,21 @@ async function assertExpectedSurface(page, route) {
     throw new Error(`tenant host resolved to a platform or unavailable page for ${route.productionRoute}`);
   }
 
+  // The tenant homepage intentionally shows only the first three programs. The
+  // seeded Phase 16 program is asserted on the complete program and intake
+  // routes below; here we require the homepage's own program surface and at
+  // least one rendered program link instead of assuming the seeded item is in
+  // that curated subset.
+  if (route.id === "tenant-home") {
+    const programLinks = await page.locator('a[href^="/intake?programma="]').count();
+
+    if (!body.includes("Programma's met actuele wachttijd") || programLinks < 1) {
+      throw new Error(`tenant homepage does not render its program surface (${programLinks} program link(s))`);
+    }
+
+    return;
+  }
+
   if (!expectedProgram || !body.includes(expectedProgram)) {
     throw new Error(`tenant page ${route.productionRoute} does not contain seeded program '${expectedProgram ?? "missing"}'`);
   }
