@@ -608,6 +608,10 @@ jobs:
         if: env.MAINTENANCE_NO_WRITE == 'true'
         run: pnpm run test:production-readiness-preview:e2e
 
+      - name: Reset interrupted parent and child preview rollout
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
+
       - name: Phase 16 operational flow validation
         if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run phase16:flow
