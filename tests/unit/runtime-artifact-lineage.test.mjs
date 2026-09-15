@@ -9,6 +9,7 @@ import test from "node:test";
 const root = fileURLToPath(new URL("../..", import.meta.url));
 const retirementVersions = ["20260913232635", "20260913234447"];
 const correctionVersions = ["20260914012125", "20260914012126"];
+const latestArtifactVersion = "20260915090000";
 
 // Execute the actual release guard. No database connection is made: a complete
 // artifact must reach the DATABASE_URL check, and incomplete artifacts must fail
@@ -54,4 +55,8 @@ test("150-migration artifacts cannot omit any individual correction or retiremen
   for (const version of [...correctionVersions, ...retirementVersions]) {
     assert.match(inspectArtifact([version]), /Local migration lineage does not match/);
   }
+});
+
+test("the badge RLS repair is part of the pinned complete artifact", () => {
+  assert.match(inspectArtifact([latestArtifactVersion]), /Local migration lineage does not match/);
 });

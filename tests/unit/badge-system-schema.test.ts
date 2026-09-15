@@ -14,6 +14,10 @@ const completionMigration = readFileSync(
   new URL("../../supabase/migrations/20260731100000_badge_studio_completion.sql", import.meta.url),
   "utf8"
 );
+const rlsRepairMigration = readFileSync(
+  new URL("../../supabase/migrations/20260915090000_fix_badge_collection_rls_recursion.sql", import.meta.url),
+  "utf8"
+);
 const badgeActions = readFileSync(
   new URL("../../apps/web/lib/domain/badge-system-actions.ts", import.meta.url),
   "utf8"
@@ -124,6 +128,15 @@ test("shareformats zijn laag-gebaseerd, versieerbaar en privacyveilig voorbereid
   assert.match(migration, /version integer not null default 1/);
   assert.match(migration, /share_first_name_only boolean not null default true/);
   assert.match(migration, /status in \('queued', 'generating', 'generated', 'failed'\)/);
+});
+
+test("badge collection RLS voorkomt wederzijdse policy-recursie", () => {
+  assert.match(rlsRepairMigration, /current_user_can_view_badge_collection\(target_collection_id uuid\)/);
+  assert.match(rlsRepairMigration, /current_user_can_view_badge_collection_item\([\s\S]+target_custom_badge_id uuid/);
+  assert.match(rlsRepairMigration, /using \(app_private\.current_user_can_view_badge_collection\(id\)\)/);
+  assert.match(rlsRepairMigration, /current_user_can_view_badge_collection_item\([\s\S]+collection_id,[\s\S]+catalog_definition_id,[\s\S]+custom_badge_id/);
+  assert.doesNotMatch(rlsRepairMigration, /create policy badge_collections_surprise_safe_read[\s\S]+from public\.badge_collection_items/);
+  assert.doesNotMatch(rlsRepairMigration, /create policy badge_collection_items_surprise_safe_read[\s\S]+from public\.badge_collections/);
 });
 
 test("studio-afbeeldingen zijn privé, gescand, begrensd en RLS-beveiligd", () => {
