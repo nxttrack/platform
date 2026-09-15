@@ -9,6 +9,7 @@ import {
   portalThemeCatalog,
   resolveRegisteredTheme
 } from "../../apps/web/lib/theme/portal-theme-registry";
+import { portalThemeCssVariables } from "../../apps/web/lib/theme/portal-theme-web";
 import {
   parentPortalRouteIds,
   validatePortalThemeManifest
@@ -97,6 +98,16 @@ test("interactieve themakleuren halen WCAG AA met witte tekst", () => {
     assert.ok(
       contrastRatio(theme.tokens.color.primaryStrong, "#FFFFFF") >= 4.5,
       `${theme.theme.key} primaryStrong must meet WCAG AA`
+    );
+  }
+});
+
+test("webondersteunende thematekst wordt veilig afgeleid voor lichte portaloppervlakken", () => {
+  for (const theme of portalThemeCatalog) {
+    const value = portalThemeCssVariables(theme)["--portal-text-muted"];
+    assert.equal(
+      value,
+      `color-mix(in srgb, ${theme.tokens.color.textMuted} 78%, ${theme.tokens.color.text})`
     );
   }
 });
