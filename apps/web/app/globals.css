@@ -543,8 +543,6 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
     .child-today__quest, .child-today__info { grid-column: auto; }
     .child-today__info { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; gap: 14px; }
     .child-quick-grid { grid-template-columns: 1fr; }
-    /* Keep the shared rich Journey scene clear of the fixed mobile navigation. */
-    .child-today [data-rich-journey] { height: calc(100dvh - 12.25rem); min-height: 0; }
     .child-profile-exit { display: block; }
     .child-profile-exit button { min-height: 48px; width: 100%; border: 1px solid color-mix(in srgb, var(--portal-attention) 22%, transparent); border-radius: 14px; color: var(--portal-attention); background: color-mix(in srgb, var(--portal-attention) 7%, white); font-size: 12px; font-weight: 850; }
   }
@@ -565,7 +563,6 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
       height: clamp(240px, calc(100svh - 306px), 560px);
       min-height: 0;
     }
-    .child-today [data-rich-journey] { height: clamp(240px, calc(100svh - 306px), 560px); }
     .child-journey-map__world { background-image: linear-gradient(0deg, rgb(2 48 72 / 7%), transparent 45%, rgb(2 48 72 / 7%)), var(--child-journey-mobile); }
     .child-journey-map__nodes::before { top: 8%; right: 49%; bottom: 8%; left: auto; width: 9px; height: auto; background: repeating-linear-gradient(180deg, rgb(255 255 255 / 92%) 0 5px, transparent 5px 18px); transform: rotate(2deg); }
     .child-journey-map__nodes button .child-journey-map__orb { width: 54px; height: 54px; }

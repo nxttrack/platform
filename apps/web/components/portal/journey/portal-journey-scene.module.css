@@ -60,7 +60,8 @@
 .empty { position: absolute; top: 45%; left: 10%; right: 10%; padding: 1.25rem; border-radius: 1rem; text-align: center; background: #ffffffd9; }
 .missing { padding: 2rem; border: 1px solid #dbe3f1; border-radius: 1rem; background: #fff; }
 @keyframes glow { from { opacity: .8; } to { opacity: 1; } }
-@media (max-width: 480px) { .scene { border-radius: 1rem; min-height: 36rem; height: calc(100dvh - 9rem); } .heading { left: .6rem; top: .7rem; padding: .55rem .65rem; max-width: 62%; } .lesson { right: .6rem; top: .7rem; } .controls { grid-template-columns: repeat(3, 2.75rem); } .pod { gap: .3rem; padding: .4rem; } .ring { width: 3.8rem; } .fixture { left: .6rem; top: 7.5rem; max-width: calc(100% - 1.2rem); } }
+@media (max-width: 1023px) { .scene { height: calc(100dvh - 12.25rem); min-height: 0; } }
+@media (max-width: 480px) { .scene { border-radius: 1rem; min-height: 0; height: clamp(240px, calc(100svh - 306px), 560px); } .heading { left: .6rem; top: .7rem; padding: .55rem .65rem; max-width: 62%; } .lesson { right: .6rem; top: .7rem; } .controls { grid-template-columns: repeat(3, 2.75rem); } .pod { gap: .3rem; padding: .4rem; } .ring { width: 3.8rem; } .fixture { left: .6rem; top: 7.5rem; max-width: calc(100% - 1.2rem); } }
 @media (prefers-reduced-motion: reduce) { .light, .guide { animation: none !important; } }
 
 .moment { position: absolute; z-index: 5; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 1rem; border: 2px solid #fff; background: #fff1cc; color: #725018; box-shadow: 0 2px 8px #172a4630; }
