@@ -238,6 +238,57 @@ jobs:
           test "$INTERNAL_JOBS_ENABLED" = "false"
           test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
 
+      - name: Repair stale shared release metadata before migration snapshot
+        if: env.RUN_DB_MIGRATIONS == 'true'
+        run: |
+          set -euo pipefail
+
+          CURRENT_RELEASE="$(readlink -f "$BASE_DIR/current")"
+          ENV_FILE="$BASE_DIR/shared/.env"
+          test -d "$CURRENT_RELEASE"
+          test -s "$ENV_FILE"
+          test -s "$CURRENT_RELEASE/artifacts/exact-source-sha.json"
+
+          CURRENT_RELEASE_SHA="$(CURRENT_RELEASE="$CURRENT_RELEASE" node --input-type=module <<'NODE'
+          import { readFileSync } from "node:fs";
+          import { join } from "node:path";
+
+          const artifact = JSON.parse(readFileSync(join(process.env.CURRENT_RELEASE, "artifacts/exact-source-sha.json"), "utf8"));
+          if (artifact?.purpose !== "nxttrack-exact-source-sha" || !/^[a-f0-9]{40}$/.test(artifact.commitSha ?? "")) {
+            throw new Error("Current release exact-source artifact is invalid.");
+          }
+          process.stdout.write(artifact.commitSha);
+          NODE
+          )"
+          CURRENT_ENV_SHA="$(awk -F= '/^RELEASE_COMMIT_SHA=/{print $2; exit}' "$ENV_FILE")"
+          CURRENT_MAINTENANCE="$(awk -F= '/^MAINTENANCE_NO_WRITE=/{print $2; exit}' "$ENV_FILE")"
+
+          if [[ "$CURRENT_ENV_SHA" == "$CURRENT_RELEASE_SHA" && "$CURRENT_MAINTENANCE" == "true" ]]; then
+            echo "[deploy] shared release metadata already matches the current release and migration containment."
+            exit 0
+          fi
+
+          BACKUP_FILE="$BASE_DIR/shared/.env.before-migration-${GITHUB_RUN_ID}"
+          cp --dereference --preserve=mode "$ENV_FILE" "$BACKUP_FILE"
+          chgrp nxttrack-deploy "$BACKUP_FILE"
+
+          TEMP_FILE="$(mktemp "$BASE_DIR/shared/.env.repair.XXXXXX")"
+          trap 'rm -f "$TEMP_FILE"' EXIT
+          awk -v release_sha="$CURRENT_RELEASE_SHA" '
+            BEGIN { sha_seen = 0; maintenance_seen = 0 }
+            /^RELEASE_COMMIT_SHA=/ { print "RELEASE_COMMIT_SHA=" release_sha; sha_seen = 1; next }
+            /^MAINTENANCE_NO_WRITE=/ { print "MAINTENANCE_NO_WRITE=true"; maintenance_seen = 1; next }
+            { print }
+            END {
+              if (!sha_seen || !maintenance_seen) exit 11
+            }
+          ' "$ENV_FILE" > "$TEMP_FILE"
+          chmod 640 "$TEMP_FILE"
+          chgrp nxttrack-deploy "$TEMP_FILE"
+          mv -f "$TEMP_FILE" "$ENV_FILE"
+          trap - EXIT
+          echo "[deploy] repaired shared release metadata from the active release artifact before migration snapshot."
+
       - name: Snapshot and validate migration rollback target
         if: env.RUN_DB_MIGRATIONS == 'true'
         run: |
