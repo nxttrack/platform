@@ -69,8 +69,11 @@ export function ConfirmActionForm({
               <button
                 className={cn(buttonVariants({ variant: "destructive" }))}
                 form={formId}
-                onClick={() => formRef.current?.requestSubmit()}
-                type="button"
+                onClick={(event) => {
+                  event.preventDefault();
+                  formRef.current?.requestSubmit();
+                }}
+                type="submit"
               >
                 {confirmLabel}
               </button>
