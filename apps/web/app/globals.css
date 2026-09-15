@@ -544,7 +544,7 @@ html[data-portal-session-transition="true"] body { visibility: hidden; }
     .child-today__info { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: none; gap: 14px; }
     .child-quick-grid { grid-template-columns: 1fr; }
     /* Keep the shared rich Journey scene clear of the fixed mobile navigation. */
-    .child-today [data-rich-journey] { height: calc(100dvh - 11rem); min-height: 0; }
+    .child-today [data-rich-journey] { height: calc(100dvh - 12.25rem); min-height: 0; }
     .child-profile-exit { display: block; }
     .child-profile-exit button { min-height: 48px; width: 100%; border: 1px solid color-mix(in srgb, var(--portal-attention) 22%, transparent); border-radius: 14px; color: var(--portal-attention); background: color-mix(in srgb, var(--portal-attention) 7%, white); font-size: 12px; font-weight: 850; }
   }
