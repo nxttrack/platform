@@ -12,6 +12,10 @@ test("maintenance preview is readable, healthy and rejects unsafe requests", asy
   await expect(page.locator("body")).not.toBeEmpty();
 
   const denied = await request.post("/api/internal/email-outbox/process", { data: {} });
-  expect(denied.status()).toBe(503);
-  expect((await denied.json()).error).toBe("maintenance_no_write");
+  if (process.env.MAINTENANCE_NO_WRITE === "true") {
+    expect(denied.status()).toBe(503);
+    expect((await denied.json()).error).toBe("maintenance_no_write");
+  } else {
+    expect(denied.status()).toBe(401);
+  }
 });

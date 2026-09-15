@@ -728,6 +728,9 @@ jobs:
 
       - name: Phase 15 staging truth and security validation
         if: env.MAINTENANCE_NO_WRITE != 'true'
+        env:
+          SPRINT4_ISOLATION_ENABLED: "true"
+          PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run phase15:staging
 
       - name: Write release evidence
