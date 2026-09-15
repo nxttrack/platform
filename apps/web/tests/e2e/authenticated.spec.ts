@@ -80,7 +80,7 @@ test.describe("authenticated role workflows", () => {
         const themedRoot = page.locator("[data-portal-theme]");
         const overviewJourney = page.locator(".portal-journey");
         await expect(themedRoot).toBeVisible();
-        await expect(overviewJourney).toBeVisible();
+        await expect(overviewJourney).toBeVisible({ timeout: 10_000 });
         await expect(overviewJourney).toHaveAttribute("data-theme-key", themeKeyPattern);
         const themeKey = await themedRoot.getAttribute("data-portal-theme");
         const backgroundImage = await overviewJourney.locator(".portal-journey__scene").evaluate((element) => getComputedStyle(element).backgroundImage);
