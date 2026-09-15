@@ -299,7 +299,7 @@ async function captureChildDashboardsAndStates(
   }
   await page.emulateMedia({ reducedMotion: "reduce" });
   await gotoStable(page, "/kind");
-  await expect(page.locator(".child-journey-map")).toBeVisible();
+  await expect(page.locator("[data-rich-journey]")).toBeVisible();
   await context.close();
   return { canonicalRenders: highResolutionViewports.length, dashboardViewportCases, evidence };
 }
