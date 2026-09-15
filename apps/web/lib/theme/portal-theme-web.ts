@@ -27,7 +27,11 @@ export function portalThemeCssVariables(manifest: PortalThemeManifestV2): Portal
     "--portal-surface": color.surface,
     "--portal-surface-alt": color.surfaceAlt,
     "--portal-text": color.text,
-    "--portal-text-muted": color.textMuted,
+    // Keep supporting copy readable on the light portal surfaces even when a
+    // published theme's historical muted token is below WCAG AA on white.
+    // Mixing toward the theme's primary text preserves the theme while giving
+    // every existing consumer of --portal-text-muted a contrast-safe value.
+    "--portal-text-muted": `color-mix(in srgb, ${color.textMuted} 78%, ${color.text})`,
     "--portal-primary": color.primary,
     "--portal-primary-strong": color.primaryStrong,
     "--portal-secondary": color.secondary,

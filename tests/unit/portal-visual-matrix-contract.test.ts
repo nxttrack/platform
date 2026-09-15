@@ -81,6 +81,14 @@ test("microcopy en notificatiebadges houden op het ouderdashboard WCAG AA-contra
   assert.doesNotMatch(shell, /bg-danger[^"\n]*(?:text-foreground|text-white)/);
 });
 
+test("authenticated parent smoke volgt de actuele rich Journey renderer", async () => {
+  const { readFile } = await import("node:fs/promises");
+  const source = await readFile(new URL("../../apps/web/tests/e2e/authenticated.spec.ts", import.meta.url), "utf8");
+  assert.match(source, /page\.locator\("\[data-rich-journey\]"\)/);
+  assert.match(source, /data-world-id/);
+  assert.doesNotMatch(source, /\.portal-journey(?:__|["'])/);
+});
+
 test("de merklink in de kindheader is een volwaardig touch target met leesbare microcopy", async () => {
   const { readFile } = await import("node:fs/promises");
   const styles = await readFile(new URL("../../apps/web/app/globals.css", import.meta.url), "utf8");

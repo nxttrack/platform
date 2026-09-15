@@ -78,12 +78,14 @@ test.describe("authenticated role workflows", () => {
 
       if (authCase.label === "parent") {
         const themedRoot = page.locator("[data-portal-theme]");
-        const overviewJourney = page.locator(".portal-journey");
+        const overviewJourney = page.locator("[data-rich-journey]");
         await expect(themedRoot).toBeVisible();
         await expect(overviewJourney).toBeVisible({ timeout: 10_000 });
-        await expect(overviewJourney).toHaveAttribute("data-theme-key", themeKeyPattern);
         const themeKey = await themedRoot.getAttribute("data-portal-theme");
-        const backgroundImage = await overviewJourney.locator(".portal-journey__scene").evaluate((element) => getComputedStyle(element).backgroundImage);
+        expect(themeKey).toMatch(themeKeyPattern);
+        await expect(overviewJourney).toHaveAttribute("data-world-id", /.+/);
+        await expect(overviewJourney.locator('[data-rich-layer="back"]')).toBeVisible();
+        const backgroundImage = await overviewJourney.locator('[data-rich-layer="back"]').getAttribute("src");
         expect(backgroundImage).toContain("/portal-themes/");
 
         if (themeKey === "nationaal-zwem-abc") {
