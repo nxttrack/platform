@@ -37,16 +37,8 @@ test.describe("Sprint 4 instructor mutations", () => {
     await expect(rosterEntry.locator("span").filter({ hasText: /^Laat$/ })).toBeVisible();
 
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
-    let assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment).toHaveCount(1);
-    await expect(assessment.getByRole("radio")).toHaveCount(5);
-    await chooseAssessmentRating(assessment, 5);
-    await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
-    await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
-    await submitAssessment(page, assessment, `${marker}: gecontroleerde correctie naar 5.`);
-    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
-    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment.getByText("Superster", { exact: true })).toBeVisible();
+    let assessment = await getAssessmentCard(page);
+    await submitAssessment(page, assessment, 5, "internal", `${marker}: gecontroleerde correctie naar 5.`);
 
     await page.getByRole("tab", { name: "Notities" }).click();
     await page.getByLabel("Notitie", { exact: true }).fill(`${marker}: interne lesnotitie.`);
@@ -66,14 +58,8 @@ test.describe("Sprint 4 instructor mutations", () => {
     // Restore the shared participant before completing the session. A retry
     // must never inherit a private assessment from a partially completed run.
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
-    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment.getByRole("radio")).toHaveCount(5);
-    await chooseAssessmentRating(assessment, 4);
-    await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
-    await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
-    await submitAssessment(page, assessment, `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
-    await expect(page.getByText("Beoordeling canoniek vastgelegd.")).toBeVisible();
-    await expect(assessment.getByText("Heel knap", { exact: true })).toBeVisible();
+    assessment = await getAssessmentCard(page);
+    await submitAssessment(page, assessment, 4, "parent_visible", `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
@@ -98,17 +84,41 @@ async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string)
   await confirmedRedirect;
 }
 
-async function submitAssessment(page: Page, assessment: Locator, correctionReason: string) {
-  const reason = assessment.getByLabel("Reden voor wijziging");
+async function getAssessmentCard(page: Page) {
+  const assessment = page.locator('[data-assessment-card]').filter({ hasText: "Zelfstandig drijven" });
+  await expect(assessment).toHaveCount(1);
+  await expect(assessment.getByRole("radio")).toHaveCount(5);
+  return assessment;
+}
+
+async function submitAssessment(
+  page: Page,
+  assessment: Locator,
+  value: 1 | 2 | 3 | 4 | 5,
+  visibility: "parent_visible" | "internal",
+  correctionReason: string
+) {
+  const discard = assessment.getByRole("button", { name: "Concept verwijderen", exact: true });
+  if (await discard.isEnabled()) {
+    await discard.click();
+    await expect(assessment.getByRole("status").first()).toHaveText("Geen gewijzigd concept");
+  }
+
+  await chooseAssessmentRating(assessment, value);
+  await assessment.getByLabel("Zichtbaarheid van de beoordeling", { exact: true }).selectOption(visibility);
+  const reason = assessment.getByLabel("Reden voor correctie", { exact: true });
   if (await reason.count()) {
     await reason.fill(correctionReason);
   }
 
-  await submitAndWaitForSaved(
-    page,
-    assessment.getByRole("button", { name: /Beoordeling vastleggen|Correctie vastleggen/ }),
-    "progress"
-  );
+  await expect(assessment.getByRole("status").first()).toHaveText("Privéconcept opgeslagen", { timeout: 15_000 });
+  await assessment.getByRole("button", { name: "Controleren en bewaren", exact: true }).click();
+  const review = page.getByRole("dialog", { name: "Beoordeling controleren", exact: true });
+  await expect(review).toBeVisible();
+  await review.getByRole("checkbox").check();
+  await review.getByRole("button", { name: "Beoordeling bewaren", exact: true }).click();
+  await expect(review).not.toBeVisible({ timeout: 15_000 });
+  await expect(assessment).toContainText(`Opgeslagen: ${value} / 5`);
 }
 
 async function chooseAssessmentRating(assessment: Locator, value: 1 | 2 | 3 | 4 | 5) {
