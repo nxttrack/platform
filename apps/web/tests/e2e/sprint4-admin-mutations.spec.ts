@@ -43,7 +43,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     const today = dateValue(0);
     const scheduleDate = nextIsoWeekdayDate(7, Number(runId) % 90);
     const scheduleHour = 20 + testInfo.retry;
-    const sessionDays = 1 + (numericRunId % 13);
+    const sessionDays = 1 + (numericRunId % 12);
     const sessionHour = 2 + (Math.floor(numericRunId / 13) % 3);
     const sessionMinute = (Math.floor(numericRunId / 39) % 50) + testInfo.retry * 5;
 
