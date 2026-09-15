@@ -40,6 +40,11 @@ test("canonical deploy enters verified maintenance containment before any migrat
   assert.ok(containment < migration);
   assert.match(deploy.slice(containment, migration), /systemctl restart/);
   assert.match(deploy.slice(containment, migration), /maintenance_no_write|503/);
+  const metadataRepair = deploy.indexOf("Repair stale shared release metadata before migration snapshot");
+  assert.notEqual(metadataRepair, -1);
+  assert.ok(metadataRepair < deploy.indexOf("Snapshot and validate migration rollback target"));
+  assert.match(deploy.slice(metadataRepair, deploy.indexOf("Snapshot and validate migration rollback target")), /exact-source-sha\.json/);
+  assert.match(deploy.slice(metadataRepair, deploy.indexOf("Snapshot and validate migration rollback target")), /MAINTENANCE_NO_WRITE=true/);
   assert.match(deploy, /Snapshot and validate migration rollback target/);
   assert.ok(deploy.indexOf("Snapshot and validate migration rollback target") < migration);
 });
