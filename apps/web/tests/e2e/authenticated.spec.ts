@@ -36,7 +36,7 @@ const authCases: AuthCase[] = [
 
 const configuredCases = authCases.filter((authCase) => authCase.username && authCase.password);
 const requireAuthenticatedWorkflows = process.env.E2E_REQUIRE_AUTHENTICATED_WORKFLOWS === "true";
-const themeKeyPattern = /^(nxttrack-default|dolphin-bay|turtle-trails|polar-splash|coastal-explorer|nationaal-zwem-abc)$/;
+const themeKeyPattern = /^(nxttrack-default|dolphin-bay|turtle-trails|polar-splash|coastal-explorer|ocean-quest|nationaal-zwem-abc)$/;
 
 test.describe("authenticated role workflows", () => {
   test.beforeAll(() => {
