@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useId, useRef, type ReactNode } from "react";
 
 import {
   AlertDialog,
@@ -40,9 +40,10 @@ export function ConfirmActionForm({
   triggerVariant = "default"
 }: ConfirmActionFormProps) {
   const formId = useId();
+  const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form action={action} className={className} id={formId}>
+    <form action={action} className={className} id={formId} ref={formRef}>
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} name={name} type="hidden" value={value} />
       ))}
@@ -65,7 +66,12 @@ export function ConfirmActionForm({
               </button>
             </AlertDialogCancel>
             <AlertDialogAction asChild>
-              <button className={cn(buttonVariants({ variant: "destructive" }))} form={formId} type="submit">
+              <button
+                className={cn(buttonVariants({ variant: "destructive" }))}
+                form={formId}
+                onClick={() => formRef.current?.requestSubmit()}
+                type="button"
+              >
                 {confirmLabel}
               </button>
             </AlertDialogAction>
