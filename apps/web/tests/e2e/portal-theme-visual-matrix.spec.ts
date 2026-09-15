@@ -355,7 +355,8 @@ async function enterChildPortal(page: Page) {
 
 async function resolveChildRoutes(page: Page) {
   await gotoStable(page, "/kind/reis");
-  const goalHref = await page.locator(".child-goal-list a").first().getAttribute("href");
+  const goalId = await page.locator("[data-rich-node]").first().getAttribute("data-rich-node");
+  const goalHref = goalId ? `/kind/reis?onderdeel=${encodeURIComponent(goalId)}` : null;
   expect(goalHref, "Een canoniek curriculumdoel is verplicht voor Doeldetail.").toBeTruthy();
   await gotoStable(page, "/kind/agenda");
   const lessonHref = await page.locator('.child-lesson-list a[href^="/kind/agenda/lessen/"]').first().getAttribute("href");
