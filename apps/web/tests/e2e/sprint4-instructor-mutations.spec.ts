@@ -105,8 +105,8 @@ async function submitAssessment(
   }
 
   await chooseAssessmentRating(assessment, value);
-  await assessment.getByLabel("Zichtbaarheid van de beoordeling", { exact: true }).selectOption(visibility);
-  const reason = assessment.getByLabel("Reden voor correctie", { exact: true });
+  await assessment.locator("select").selectOption(visibility);
+  const reason = assessment.locator("textarea").first();
   if (await reason.count()) {
     await reason.fill(correctionReason);
   }
