@@ -1,3 +1,4 @@
+import { signInAdmin } from "./helpers/admin-sign-in";
 import { toAmsterdamDate } from "../../lib/date/business-date";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
@@ -20,7 +21,7 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     expect(phase, "PHASE16_STATE_PATH must resolve to a readable state file when admin mutations are enabled.").not.toBeNull();
   });
 
-  test("admin creates the core, planning, billing, document and communication chain", async ({ page }, testInfo) => {
+  test("admin creates the core, planning, billing, document and communication chain", async ({ page, baseURL }, testInfo) => {
     test.setTimeout(180_000);
     const state = requireState();
     const failures = collectRuntimeFailures(page);
@@ -47,7 +48,10 @@ test.describe("Sprint 4 tenant-admin mutations", () => {
     const sessionHour = 2 + (Math.floor(numericRunId / 13) % 3);
     const sessionMinute = (Math.floor(numericRunId / 39) % 50) + testInfo.retry * 5;
 
-    await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma");
+    await signInAdmin(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/programma", {
+      baseURL: baseURL!,
+      diagnostic: (event) => console.info("[admin-login]", JSON.stringify(event))
+    });
 
     await openAction(page, "Programma toevoegen");
     let form = formWithButton(page, "Programma opslaan");
@@ -251,15 +255,6 @@ async function selectOptionByText(select: Locator, text: string) {
   const value = await option.getAttribute("value");
   if (!value) throw new Error(`No selectable option found for ${text}.`);
   await select.selectOption(value);
-}
-
-async function signIn(page: Page, email: string, password: string, nextPath: string) {
-  await page.goto(`/login?next=${encodeURIComponent(nextPath)}`, { waitUntil: "domcontentloaded" });
-  await page.locator("input[name='email']").fill(email);
-  await page.locator("input[name='password']").fill(password);
-  await page.getByRole("button", { name: /inloggen/i }).click();
-  await page.waitForLoadState("domcontentloaded");
-  await expect(page).toHaveURL(new RegExp(`${nextPath.replaceAll("/", "\\/")}(?:\\?|$)`));
 }
 
 function collectRuntimeFailures(page: Page) {
