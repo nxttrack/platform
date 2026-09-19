@@ -106,6 +106,7 @@ De patch voegt geen migraties toe. De daadwerkelijke remote migration ledger is 
 Onderstaande commando's zijn uitsluitend voor **na goedkeuring**, niet uitgevoerd. Bepaal de PR en HEAD van de taakbranch en controleer dat die HEAD overeenkomt met de expliciet goedgekeurde reviewversie. Voorkom nieuwe main-merges tussen het vaststellen van de release-SHA en dispatch; de workflow accepteert alleen ref `main` en heeft geen afzonderlijke staging-SHA-input.
 
 ```bash
+set -euo pipefail
 REPO=nxttrack/platform
 PR_NUMBER=$(gh pr list --repo "$REPO" --head codex/fix-sprint4-staging-auth-bounce --state open --json number --jq '.[0].number')
 FIX_SHA=$(gh pr view "$PR_NUMBER" --repo "$REPO" --json headRefOid --jq .headRefOid)
@@ -126,7 +127,7 @@ test "$(gh api "repos/$REPO/commits/main" --jq .sha)" = "$RELEASE_SHA"
 gh workflow run deploy.yml --repo "$REPO" --ref main -f target=staging -f bootstrap_platform_owner=false
 gh run list --repo "$REPO" --workflow deploy.yml --event workflow_dispatch --limit 5 \
   --json databaseId,headSha,createdAt,status,url
-DEPLOY_RUN_ID=<nieuwe-run-van-deze-dispatch>
+read -r -p 'Run-ID van deze nieuwe dispatch: ' DEPLOY_RUN_ID
 test "$(gh run view "$DEPLOY_RUN_ID" --repo "$REPO" --json headSha --jq .headSha)" = "$RELEASE_SHA"
 gh run watch "$DEPLOY_RUN_ID" --repo "$REPO" --exit-status
 gh run view "$DEPLOY_RUN_ID" --repo "$REPO" --json headSha,conclusion,jobs
