@@ -37,6 +37,170 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  backup-legacy:
+    name: retain encrypted database before legacy V4 upgrade
+    if: inputs.confirmation == 'UPGRADE_EMPTY_PRODUCTION_TO_V4'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Export database with PostgreSQL 17
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const url = new URL(process.env.DATABASE_URL);
+          for (const [key,value] of Object.entries({PGHOST:url.hostname,PGPORT:url.port || '5432',PGUSER:decodeURIComponent(url.username),PGPASSWORD:decodeURIComponent(url.password),PGDATABASE:url.pathname.slice(1),PGSSLMODE:'require'})) {
+            if (/[\r\n]/.test(value)) throw new Error('Invalid database parameter');
+            appendFileSync(process.env.GITHUB_ENV, `${key}=${value}\n`);
+            if (key === 'PGPASSWORD') console.log(`::add-mask::${value}`);
+          }
+          NODE
+      - name: Export and encrypt snapshot
+        env:
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          docker run --rm -e PGHOST -e PGPORT -e PGUSER -e PGPASSWORD -e PGDATABASE -e PGSSLMODE postgres:17 \
+            pg_dump --format=custom --no-owner --no-acl --schema=public --schema=app_private --schema=auth --schema=storage --schema=supabase_migrations --schema=extensions > "$RUNNER_TEMP/production-before-v4.dump"
+          test -s "$RUNNER_TEMP/production-before-v4.dump"
+          docker run --rm -i postgres:17 pg_restore --list < "$RUNNER_TEMP/production-before-v4.dump" > "$RUNNER_TEMP/production-before-v4.contents"
+          test -s "$RUNNER_TEMP/production-before-v4.contents"
+          test -n "$STORAGE_BACKUP_PASSPHRASE"
+          printf '%s' "$STORAGE_BACKUP_PASSPHRASE" > "$RUNNER_TEMP/v4-backup-passphrase"
+          gpg --batch --yes --pinentry-mode loopback --passphrase-file "$RUNNER_TEMP/v4-backup-passphrase" \
+            --symmetric --cipher-algo AES256 --output "$RUNNER_TEMP/production-before-v4.dump.gpg" "$RUNNER_TEMP/production-before-v4.dump"
+          gpg --batch --quiet --pinentry-mode loopback --passphrase-file "$RUNNER_TEMP/v4-backup-passphrase" \
+            --decrypt "$RUNNER_TEMP/production-before-v4.dump.gpg" | cmp - "$RUNNER_TEMP/production-before-v4.dump"
+          sha256sum "$RUNNER_TEMP/production-before-v4.dump.gpg"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: production-database-before-v4-${{ github.run_id }}
+          path: ${{ runner.temp }}/production-before-v4.dump.gpg
+          retention-days: 90
+          if-no-files-found: error
+      - name: Remove unencrypted temporary material
+        if: always()
+        run: rm -f "$RUNNER_TEMP/production-before-v4.dump" "$RUNNER_TEMP/production-before-v4.contents" "$RUNNER_TEMP/v4-backup-passphrase"
+
+  upgrade-empty-legacy:
+    name: upgrade empty legacy production using official migrations
+    needs: backup-legacy
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: production
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      RELEASE_TARGET: production
+      TARGET: production
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
+      PRODUCTION_MIGRATION_REHEARSAL_RUN_ID: ${{ inputs.production_migration_rehearsal_run_id }}
+      BASE_DIR: /var/www/nxttrack/production
+      SERVICE_NAME: nxttrack-production
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+      - name: Bind upgrade to current main and successful staging validation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_SHA: ${{ inputs.staging_release_sha }}
+          APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
+        run: |
+          set -euo pipefail
+          test "$RELEASE_SHA" = "$STAGING_SHA"
+          test "${#APPROVAL_REFERENCE}" -ge 8
+          git fetch --no-tags origin main
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_SHA"
+          node --input-type=module <<'NODE'
+          const response = await fetch('https://api.github.com/repos/nxttrack/platform/actions/runs/35474984786', {headers:{authorization:`Bearer ${process.env.GITHUB_TOKEN}`}});
+          const run = await response.json();
+          if (!response.ok || run.conclusion !== 'success' || run.head_sha !== process.env.RELEASE_SHA || run.path !== '.github/workflows/deploy.yml' || run.head_branch !== 'main') throw new Error('Successful exact-source staging evidence required');
+          const health = await (await fetch('https://staging.nxttrack.nl/api/health')).json();
+          if (!health.ok || health.commitSha !== process.env.RELEASE_SHA) throw new Error('Live staging source mismatch');
+          NODE
+          GITHUB_SHA="$RELEASE_SHA" node scripts/release/verify-production-evidence.mjs
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install certified migration tooling
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm exec supabase db push --help > /dev/null
+      - name: Verify empty business data before selecting legacy upgrade path
+        run: |
+          node --input-type=module <<'NODE'
+          import pg from 'pg';
+          const client = new pg.Client({connectionString:process.env.DATABASE_URL});
+          await client.connect();
+          try {
+            await client.query('begin read only');
+            for (const table of ['public.tenants','public.participants','public.enrollments','storage.objects']) {
+              const {rows} = await client.query(`select count(*)::int n from ${table}`);
+              if (rows[0].n !== 0) throw new Error(`Empty legacy upgrade requires no rows in ${table}`);
+            }
+            const {rows} = await client.query('select count(*)::int n from supabase_migrations.schema_migrations');
+            if (rows[0].n !== 65) throw new Error('Expected audited 65-migration legacy baseline');
+            await client.query('rollback');
+            console.log('[v4-upgrade] PASS empty production baseline; existing platform owner is preserved.');
+          } finally { await client.end(); }
+          NODE
+      - name: Atomically activate database-independent maintenance responder
+        run: |
+          set -euo pipefail
+          MAINTENANCE_RELEASE="$BASE_DIR/releases/v4-maintenance-$GITHUB_RUN_ID"
+          test ! -e "$MAINTENANCE_RELEASE"
+          mkdir "$MAINTENANCE_RELEASE"
+          readlink -f "$BASE_DIR/current" > "$BASE_DIR/shared/v4-$GITHUB_RUN_ID.previous-release"
+          cp --dereference --preserve=mode "$BASE_DIR/shared/.env" "$BASE_DIR/shared/v4-$GITHUB_RUN_ID.previous.env"
+          chgrp nxttrack-deploy "$BASE_DIR/shared/v4-$GITHUB_RUN_ID.previous.env"
+          cat > "$MAINTENANCE_RELEASE/package.json" <<'JSON'
+          {"private":true,"scripts":{"start":"node maintenance.cjs"}}
+          JSON
+          cat > "$MAINTENANCE_RELEASE/maintenance.cjs" <<'NODE'
+          require('node:http').createServer((request,response) => {
+            response.writeHead(503, {'Content-Type':'application/json','Cache-Control':'no-store','Retry-After':'120'});
+            response.end(JSON.stringify({error:'maintenance_no_write',message:'NXTTRACK wordt bijgewerkt. Probeer het zo opnieuw.'}));
+          }).listen(Number(process.env.PORT || 3800),'0.0.0.0');
+          NODE
+          chgrp -R nxttrack-deploy "$MAINTENANCE_RELEASE"
+          chmod -R u+rwX,g+rX,o-rwx "$MAINTENANCE_RELEASE"
+          ln -sfn "$MAINTENANCE_RELEASE" "$BASE_DIR/current.new"
+          mv -Tf "$BASE_DIR/current.new" "$BASE_DIR/current"
+          sudo systemctl restart "$SERVICE_NAME"
+          for attempt in {1..20}; do
+            code="$(curl --silent --output "$RUNNER_TEMP/v4-maintenance-response" --write-out '%{http_code}' --max-time 5 https://nxttrack.nl/api/health || true)"
+            if [[ "$code" == '503' ]] && grep -q maintenance_no_write "$RUNNER_TEMP/v4-maintenance-response"; then break; fi
+            if [[ "$attempt" == 20 ]]; then exit 1; fi
+            sleep 2
+          done
+          echo '[v4-upgrade] PASS old application disconnected from all HTTP traffic.'
+      - name: Apply the reviewed official migration chain
+        env:
+          APP_ENV: production
+          RUN_DB_MIGRATIONS: "true"
+          DB_MIGRATE_DRY_RUN: "false"
+          DB_MIGRATE_INCLUDE_ALL: "false"
+          DB_MIGRATION_REPAIR_EXISTING_SCHEMA: "false"
+        run: pnpm run db:migrate
+      - name: Verify upgraded data, complete schema and preserved owner
+        env:
+          DEPLOYED_SOURCE_SHA: ${{ inputs.release_sha }}
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pnpm run db:preflight-production-readiness-upgrade
+          pnpm run release:assert-schema-compatibility
+          pnpm run db:inventory-production-read-only
+          pnpm run db:advisors
+
   inspect-legacy:
     name: inspect V4 environment compatibility
     if: inputs.confirmation == 'INSPECT_V4_ENVIRONMENTS'
