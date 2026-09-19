@@ -40,3 +40,47 @@ oorzaak te veronderstellen. Ook `error=write` op zichzelf bewijst geen conflict.
 Read-only-transacties volgen het
 [PostgreSQL-transactiecontract](https://www.postgresql.org/docs/current/sql-set-transaction.html).
 Productie, rollback en dataherstel zijn niet uitgevoerd.
+
+## Bevinding en fixturecorrectie (20 september, Amsterdam)
+
+[Diagnose 35473143761](https://github.com/nxttrack/platform/actions/runs/35473143761)
+is geslaagd zonder remote writes. Voor beide mislukte lespogingen is één bestaande
+resource-overlap gevonden bij respectievelijk `2026-09-21T03:40` en `03:45` in UTC.
+De alternatieve Amsterdam-interpretatie heeft geen overlap. Sluitings- en
+instructeursconflicten waren nul. De hashes van beide actieve booking-/reservation-
+triggerfuncties zijn gelijk aan de repository. De exacte afwijzing is niet gelogd
+door de bestaande applicatie; de aangetroffen UTC-overlap wordt door die ongewijzigde
+trigger geweigerd. Een lokale uitvoering van dezelfde triggers accepteerde juist
+een conflictvrije handmatige les met de geërfde groepsresource.
+
+De eerdere run-ID-moduloberekening garandeerde geen vrij tijdvak in gedeelde,
+bewaarde fixturehistorie. `prepare-sprint4-admin.mjs` selecteert nu uitsluitend met
+read-only SQL twee vrije dagen uit de komende twaalf Amsterdamse kalenderdagen.
+Voor groepspublicatie selecteert dezelfde conflictcontrole twee vrije zondagen
+buiten het agendavenster en binnen de 700-daagse instructeurskwalificatie.
+De selectie controleert resourcehiërarchie, instructeur en gepubliceerde sluitingen
+voor zowel UTC als Amsterdam. De browser gebruikt exact die resource en één venster
+per handeling per volledige testpoging. Bij onvoldoende ruimte stopt voorbereiding; bestaande
+boekingen worden niet verwijderd, verplaatst of vrijgegeven. De live transactie-
+beveiliging blijft beslissend als een andere gebruiker intussen hetzelfde moment boekt.
+
+Tijdens de analyse bleek ook een reproduceerbare kalenderfout: na `22:00Z` in de
+zomertijd kon de oude helper een maandag opleveren voor een gevraagde zondag,
+doordat hij UTC-weekdagen met Amsterdamse datums combineerde. Die berekening is
+verwijderd. De SQL-selectie rekent vanaf de Amsterdamse kalenderdatum; de regressies
+controleren zondagen, venstergrenzen, beide zomertijdgrenzen en een jaarwisseling.
+
+De definitieve lokale validatie en de bijbehorende CI staan in de PR-beschrijving.
+De database-regressies gebruiken uitsluitend tijdelijke tabellen in een geïsoleerde
+lokale Postgres 17 en voeren dezelfde query uit met alleen een tijdelijke schemanaam.
+Uitvoerbaar met:
+
+```bash
+ADMIN_PLANNING_TEST_DATABASE_URL='postgresql://postgres@127.0.0.1:<testpoort>/postgres' \
+  node --test tests/integration/admin-session-windows.test.mjs
+```
+
+De diagnose kan na merge dezelfde nieuwe vensterselectie read-only op staging
+controleren. Volledige validatie vereist vervolgens een verse canonical deployment
+en alle bestaande gates. PR #92-CI had eerst een failure in de ongewijzigde WebKit-
+Journey-zoekfiltertest; een eenmalige herhaling zonder code- of retrywijziging slaagde.

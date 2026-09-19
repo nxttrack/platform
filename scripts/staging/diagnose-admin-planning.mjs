@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import pg from "pg";
+import { adminPublicationWindowsSql, adminSessionWindowsSql, requireAdminSessionWindows } from "./admin-session-windows.mjs";
 
 // No Auth requests, fixture preparation, writes, stored procedures, or session export.
 const { APP_ENV, APP_URL, DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SOURCE_RUN_ID, GITHUB_TOKEN } = process.env;
@@ -52,8 +53,12 @@ try {
   if (tenant.rowCount !== 1) throw new Error("Expected staging tenant identity was not found.");
   const tenantId = tenant.rows[0].id;
   const groups = await client.query(`
-    select id, code, created_at, default_resource_id
-    from public.groups where tenant_id=$1 and code = any($2::text[])
+    select lesson_group.id, code, created_at, default_resource_id,
+      (now() at time zone 'Europe/Amsterdam')::date::text as today,
+      (select instructor_user_id from public.group_instructor_assignments assignment
+        where assignment.tenant_id=$1 and assignment.group_id=lesson_group.id
+          and assignment.status='active' order by instructor_user_id limit 1) as instructor_id
+    from public.groups lesson_group where tenant_id=$1 and code = any($2::text[])
     order by code
   `, [tenantId, [0, 1].map((retry) => `sprint4-admin-group-${SOURCE_RUN_ID}-${run.run_attempt}-${retry}`)]);
   if (groups.rowCount === 0) throw new Error("No groups from the failed admin journey were found.");
@@ -103,6 +108,12 @@ try {
       `, [tenantId, group.id, group.default_resource_id, start.toISOString().slice(0, 19), end.toISOString().slice(0, 19), zone]);
       console.log("[admin-planning]", JSON.stringify({ retry, zone, start: start.toISOString().slice(0, 16), resourcePresent: Boolean(group.default_resource_id), ...conflicts.rows[0] }));
     }
+    if (!group.instructor_id) throw new Error("Diagnostic group has no active instructor assignment.");
+    const available = await client.query(adminSessionWindowsSql, [tenantId, group.default_resource_id, group.instructor_id, group.today]);
+    const windows = requireAdminSessionWindows(available.rows);
+    const publications = await client.query(adminPublicationWindowsSql, [tenantId, group.default_resource_id, group.instructor_id, group.today]);
+    const publicationWindows = requireAdminSessionWindows(publications.rows);
+    console.log("[admin-planning-available]", JSON.stringify({ retry, windows, publicationWindows }));
   }
   const constraints = await client.query(`
     select conname, pg_get_constraintdef(oid) as definition from pg_catalog.pg_constraint
