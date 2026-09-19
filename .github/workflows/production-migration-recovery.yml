@@ -37,6 +37,47 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  inspect-legacy:
+    name: inspect V4 environment compatibility
+    if: inputs.confirmation == 'INSPECT_V4_ENVIRONMENTS'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    strategy:
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install locked tooling
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Inspect runtime capabilities without changing service state
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          sudo -n -l
+          systemctl show "nxttrack-$TARGET" --property=User,Group,WorkingDirectory,ExecStart,FragmentPath,ActiveState
+          readlink -f "/var/www/nxttrack/$TARGET/current"
+          df -h /var/www/nxttrack
+          command -v pg_dump pg_restore gpg clamdscan || true
+          pg_dump --version || true
+          stat /run/clamav/clamd.ctl || true
+          ls -ld "/var/www/nxttrack/$TARGET/current/artifacts" || true
+      - name: Inspect database and feature configuration read-only
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          TARGET: ${{ matrix.target }}
+        run: node scripts/release/v4-inspect.mjs
+
   recover:
     name: apply production migrations without application activation
     if: github.ref_name == 'main'
