@@ -31,7 +31,7 @@ concurrency:
 jobs:
   backup:
     name: export and encrypt private Storage objects
-    if: github.ref_name == 'main'
+    if: github.ref_name == 'main' || github.ref_name == 'codex/v4-deployment-20260920'
     runs-on: ubuntu-latest
     environment: ${{ inputs.target }}
     env:

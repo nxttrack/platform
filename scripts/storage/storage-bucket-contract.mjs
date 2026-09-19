@@ -5,7 +5,9 @@ export const requiredStorageBuckets = Object.freeze([
   Object.freeze({ name: "diploma-vault", rehearsalContentType: "application/pdf", rehearsalExtension: "pdf" }),
   Object.freeze({ name: "participant-media", rehearsalContentType: "image/png", rehearsalExtension: "png" }),
   Object.freeze({ name: "badge-studio-assets", rehearsalContentType: "image/png", rehearsalExtension: "png" }),
-  Object.freeze({ name: "tenant-media-assets", rehearsalContentType: "image/png", rehearsalExtension: "png" })
+  Object.freeze({ name: "tenant-media-assets", rehearsalContentType: "image/png", rehearsalExtension: "png" }),
+  Object.freeze({ name: "portal-theme-assets", rehearsalContentType: "image/png", rehearsalExtension: "png" }),
+  Object.freeze({ name: "portal-theme-imports", rehearsalContentType: "application/octet-stream", rehearsalExtension: "bin" })
 ]);
 
 export const requiredStorageBucketNames = Object.freeze(requiredStorageBuckets.map((bucket) => bucket.name));
