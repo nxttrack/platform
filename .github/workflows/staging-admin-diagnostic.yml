@@ -1,0 +1,45 @@
+name: Staging admin planning diagnosis
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Failed staging deployment run to inspect
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: nxttrack-staging
+  cancel-in-progress: false
+
+jobs:
+  diagnose:
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: staging
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install locked dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Read failed admin planning state without modifying it
+        env:
+          APP_ENV: ${{ vars.APP_ENV }}
+          APP_URL: ${{ vars.APP_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/staging/diagnose-admin-planning.mjs
