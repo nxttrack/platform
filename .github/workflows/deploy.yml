@@ -616,10 +616,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      - name: Restore parent and child test rollout
-        if: always() && env.MAINTENANCE_NO_WRITE != 'true'
-        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
-
       - name: Prepare Sprint 4 browser-mutation fixture
         if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-mutations
@@ -714,6 +710,10 @@ jobs:
           SPRINT4_ISOLATION_ENABLED: "true"
           PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run phase15:staging
+
+      - name: Restore parent and child test rollout
+        if: always() && env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
 
       - name: Write release evidence
         if: env.MAINTENANCE_NO_WRITE != 'true'

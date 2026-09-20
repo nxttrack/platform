@@ -110,6 +110,13 @@ test("a new prepare cannot replace an unfinished run baseline and the workflow s
   const workflow = readFileSync(new URL("../../.github/workflows/deploy.yml", import.meta.url), "utf8");
   assert.match(workflow, /^concurrency:\n  group: nxttrack-\$\{\{ inputs\.target \}\}\n  cancel-in-progress: false/m);
   assert.match(workflow, /Restore parent and child test rollout\n\s+if: always\(\)/);
+  const browserJob = workflow.split("  staging-browser-validation:")[1];
+  const restore = browserJob.indexOf("- name: Restore parent and child test rollout");
+  // Phase 15 runs the broad E2E suite, which includes the mutating theme matrix.
+  // Its original baseline must still exist until that final suite has finished.
+  assert.ok(restore > browserJob.indexOf("- name: Phase 15 staging truth and security validation"));
+  assert.ok(restore < browserJob.indexOf("- name: Write release evidence"));
+  assert.equal(browserJob.match(/- name: Restore parent and child test rollout/g)?.length, 1);
 });
 
 test("the disabled recovery marker satisfies the deployed feature-key contract and is outside runtime portal capabilities", () => {
