@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import pg from 'pg';
-import { assertReleaseHealth, verificationConfig, waitForAnonymousLogin } from './v4-browser-contract.mjs';
+import { assertReleaseHealth, verificationConfig, waitForAnonymousLogin, verifyTenantAssignmentReachability } from './v4-browser-contract.mjs';
 const requireWeb=createRequire(new URL('../../apps/web/package.json',import.meta.url));
 const {chromium}=requireWeb('@playwright/test');
 const {createClient}=requireWeb('@supabase/supabase-js');
@@ -59,6 +59,8 @@ try {
     await page.getByRole('heading',{level:1,name:'Themabibliotheek'}).waitFor({state:'visible'});
     await page.getByRole('link',{name:'Werelden aan een curriculum koppelen'}).waitFor({state:'visible'});
     await capturePublicEvidence(page,'platform-themes.png',owner.email);
+    if (target==='staging') result.checks.push(await verifyTenantAssignmentReachability(page,
+      ['aquaswim-demo','sprint4-isolation','waterlijn-demo']));
   });
   if (target==='staging') {
     const roleChecks=[
