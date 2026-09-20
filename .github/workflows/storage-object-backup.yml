@@ -120,7 +120,7 @@ jobs:
       - name: Record failed or cancelled backup
         if: ${{ always() && (failure() || cancelled()) && steps.export.outcome != 'skipped' && steps.export.outcome != '' }}
         env:
-          STORAGE_BACKUP_FAILED_STAGE: ${{ cancelled() && 'cancelled' || steps.export.outcome == 'failure' && 'export' || steps.encrypt.outcome == 'failure' && 'encrypt' || steps.retain.outcome == 'failure' && 'upload' || 'heartbeat' }}
+          STORAGE_BACKUP_FAILED_STAGE: ${{ job.status == 'cancelled' && 'cancelled' || steps.export.outcome == 'failure' && 'export' || steps.encrypt.outcome == 'failure' && 'encrypt' || steps.retain.outcome == 'failure' && 'upload' || 'heartbeat' }}
         run: node scripts/storage/retained-backup.mjs fail
 
       - name: Remove all temporary backup material
