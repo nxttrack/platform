@@ -235,8 +235,8 @@ jobs:
           retention-days: 14
 
   verify-staging-rls-fixtures:
-    name: verify proposed staging fixtures and instructor flow without deployment
-    if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
+    name: verify focused staging fixtures and browser flows without deployment
+    if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES' || inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
@@ -246,6 +246,8 @@ jobs:
     env:
       RELEASE_SHA: ${{ inputs.release_sha }}
       STAGED_SHA: ${{ inputs.staging_release_sha }}
+      FOCUSED_OPERATION: ${{ inputs.confirmation }}
+      INSTRUMENTATION_SHA: ${{ github.sha }}
       APP_ENV: staging
       TARGET: staging
       APP_URL: https://staging.nxttrack.nl
@@ -275,6 +277,24 @@ jobs:
       E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
       E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
     steps:
+      - name: Checkout the immutable operation instrumentation
+        if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - name: Preserve only the diagnostic helpers before canonical checkout
+        if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$(git rev-parse HEAD)" = "$INSTRUMENTATION_SHA"
+          instrumentation="$RUNNER_TEMP/communication-instrumentation-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          mkdir "$instrumentation"
+          cp scripts/release/prepare-communication-login-diagnostic.mjs scripts/release/communication-login-diagnostic.ts "$instrumentation/"
+          {
+            echo "COMMUNICATION_INSTRUMENTATION=$instrumentation"
+            echo "DIAGNOSTIC_OUTPUT_DIR=$RUNNER_TEMP/staging-communication-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          } >> "$GITHUB_ENV"
       - name: Checkout exact proposed validation source
         uses: actions/checkout@v6
         with:
@@ -287,7 +307,12 @@ jobs:
           [[ "$STAGED_SHA" =~ ^[a-f0-9]{40}$ ]]
           test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
           git fetch --no-tags origin main
-          git merge-base --is-ancestor FETCH_HEAD HEAD
+          if [[ "$FOCUSED_OPERATION" == "VERIFY_STAGING_COMMUNICATION" ]]; then
+            test "$RELEASE_SHA" = "$STAGED_SHA"
+            git merge-base --is-ancestor HEAD FETCH_HEAD
+          else
+            git merge-base --is-ancestor FETCH_HEAD HEAD
+          fi
           git diff --exit-code "$STAGED_SHA" "$RELEASE_SHA" -- apps packages supabase/migrations package.json pnpm-lock.yaml ':!apps/web/tests'
           echo "PHASE16_STATE_PATH=$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-phase16.json" >> "$GITHUB_ENV"
           echo "SPRINT4_ISOLATION_STATE_PATH=$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-isolation.json" >> "$GITHUB_ENV"
@@ -307,23 +332,68 @@ jobs:
       - name: Prepare the existing operational staging fixture
         run: pnpm run phase16:flow
       - name: Prepare explicit staging isolation records
+        if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
         run: node scripts/staging/prepare-sprint4-isolation.mjs
       - name: Verify all four roles using their own authenticated tokens
+        if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
         run: pnpm run db:rls-role-smoke
-      - name: Install Chromium for the focused live instructor check
+      - name: Install Chromium for the focused staging browser check
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
       - name: Verify instructor mutations with the proposed exact participant selection
+        if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
         env:
           PLAYWRIGHT_BASE_URL: https://staging.nxttrack.nl
           SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
         run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/sprint4-instructor-mutations.spec.ts --project=chromium-desktop --retries=0 --trace=off
       - name: Retain focused instructor failure screenshots without private fixture state
-        if: failure()
+        if: failure() && inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
         uses: actions/upload-artifact@v6
         with:
           name: staging-instructor-precheck-${{ github.run_id }}
           path: apps/web/test-results/**/test-failed-*.png
           if-no-files-found: ignore
+          retention-days: 14
+      - name: Prepare a source-bound diagnostic copy of the unchanged communication tests
+        if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
+        id: prepare-communication-diagnostic
+        run: node "$COMMUNICATION_INSTRUMENTATION/prepare-communication-login-diagnostic.mjs"
+      - name: Diagnose canonical communication tests without retries or a second login
+        if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
+        id: communication-diagnostic
+        env:
+          PLAYWRIGHT_BASE_URL: https://staging.nxttrack.nl
+          BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
+        run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/communication-badges-diagnostic.spec.ts --config=playwright.communication-diagnostic.config.ts --project=chromium-desktop --retries=0 --trace=off
+      - name: Retain only allowlisted communication timing and provenance JSON
+        if: always() && inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION' && steps.prepare-communication-diagnostic.outcome == 'success'
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-communication-diagnostic-${{ inputs.release_sha }}-${{ github.run_id }}
+          path: |
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/provenance.json
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/suite-summary.json
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/login-owner.json
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/login-tenant-admin.json
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/login-instructor.json
+            ${{ env.DIAGNOSTIC_OUTPUT_DIR }}/login-parent.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Capture canonical Priority A visuals after the focused communication check
+        if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION' && steps.communication-diagnostic.outcome == 'success'
+        id: focused-priority-a
+        env:
+          RELEASE_COMMIT_SHA: ${{ inputs.release_sha }}
+          PRODUCTION_BASE_URL: https://staging.nxttrack.nl
+        run: pnpm run design:capture-production
+      - name: Retain focused Priority A captures without fixture state
+        if: always() && inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION' && steps.focused-priority-a.outcome != 'skipped'
+        uses: actions/upload-artifact@v6
+        with:
+          name: staging-communication-priority-a-${{ inputs.release_sha }}-${{ github.run_id }}
+          path: |
+            artifacts/production-baseline/${{ inputs.release_sha }}/capture.json
+            artifacts/production-baseline/${{ inputs.release_sha }}/**/*.png
+          if-no-files-found: error
           retention-days: 14
       - name: Confirm the application release remains healthy and unchanged
         if: always()
@@ -335,6 +405,11 @@ jobs:
         if: always()
         run: |
           rm -f -- "$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-phase16.json" "$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-isolation.json"
+          if [[ "$FOCUSED_OPERATION" == "VERIFY_STAGING_COMMUNICATION" ]]; then
+            rm -f -- apps/web/tests/e2e/communication-badges-diagnostic.spec.ts \
+              apps/web/tests/e2e/helpers/communication-login-diagnostic.ts apps/web/playwright.communication-diagnostic.config.ts
+            rm -rf -- apps/web/test-results apps/web/playwright-report
+          fi
 
   restore-staging-release-evidence:
     name: restore and pin historical staging rollback without activation
