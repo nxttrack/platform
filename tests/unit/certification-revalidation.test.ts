@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { readReleaseCommitSha } from "../../scripts/release/assert-rollback-release.mjs";
+import { requiredStorageBucketNames, legacyStorageBucketNames, storageBucketContractVersion } from "../../scripts/storage/storage-bucket-contract.mjs";
 import {
   assertStorageRestoreBinding,
   storageProjectFingerprint,
@@ -117,11 +118,11 @@ test("Storage restore is explicitly bound and keeps historical manifest validati
   assert.match(contract, /manifest\.version === 3/);
   assert.match(contract, /historical/i);
 
-  const required = ["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets", "tenant-media-assets"];
+  const required = requiredStorageBucketNames;
   const allowed = new Set(required);
   assert.doesNotThrow(() => validateStorageManifestBucketContract({ version: 1, buckets: required.slice(0, 2) }, required, allowed));
   assert.throws(
-    () => validateStorageManifestBucketContract({ version: 3, buckets: required.slice(0, 2) }, required, allowed),
+    () => validateStorageManifestBucketContract({ version: 3, bucketContractVersion: storageBucketContractVersion, buckets: required.slice(0, 2) }, required, allowed),
     /complete required bucket contract/
   );
 
@@ -152,6 +153,20 @@ test("Storage restore is explicitly bound and keeps historical manifest validati
     }),
     /target fingerprint/
   );
+});
+
+test("V4 backup validation retains complete historical backups and rejects incomplete current exports", () => {
+  const allowed = new Set(requiredStorageBucketNames);
+  const validate = (bucketContractVersion: number, buckets: readonly string[]) =>
+    validateStorageManifestBucketContract({ version: 3, bucketContractVersion, buckets }, requiredStorageBucketNames, allowed);
+
+  assert.doesNotThrow(() => validate(storageBucketContractVersion, requiredStorageBucketNames));
+  assert.doesNotThrow(() => validate(1, legacyStorageBucketNames));
+  assert.doesNotThrow(() => validate(1, requiredStorageBucketNames));
+  assert.throws(() => validate(storageBucketContractVersion, legacyStorageBucketNames), /complete required bucket contract/);
+  assert.throws(() => validate(1, requiredStorageBucketNames.slice(0, 6)), /complete required bucket contract/);
+  assert.throws(() => validate(storageBucketContractVersion, [...legacyStorageBucketNames, "portal-theme-assets", "portal-theme-assets"]), /complete required bucket contract/);
+  assert.throws(() => validate(99, requiredStorageBucketNames), /unsupported bucket contract version/);
 });
 
 test("import-created Auth identities have additive corrective database controls", () => {

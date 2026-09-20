@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { legacyStorageBucketNames, storageBucketContractVersion } from "./storage-bucket-contract.mjs";
 
 export function storageProjectFingerprint(url) {
   return createHash("sha256").update(new URL(url).hostname).digest("hex").slice(0, 16);
@@ -6,8 +7,15 @@ export function storageProjectFingerprint(url) {
 
 export function validateStorageManifestBucketContract(manifest, requiredBuckets, allowedBuckets) {
   if (manifest.version === 3) {
-    if (manifest.buckets.length !== requiredBuckets.length
-      || requiredBuckets.some((bucket) => !manifest.buckets.includes(bucket))) {
+    if (![1, storageBucketContractVersion].includes(manifest.bucketContractVersion)) {
+      throw new Error("Storage backup manifest uses an unsupported bucket contract version.");
+    }
+    const covers = (expected) => manifest.buckets.length === expected.length
+      && expected.every((bucket) => manifest.buckets.includes(bucket));
+    // Contract 1 existed before the two V4 theme buckets were required. Also
+    // accept the complete seven-bucket backups made during the V4 rollout.
+    if (!covers(requiredBuckets)
+      && !(manifest.bucketContractVersion === 1 && covers(legacyStorageBucketNames))) {
       throw new Error("Storage backup manifest does not cover the complete required bucket contract.");
     }
     return;
@@ -15,7 +23,7 @@ export function validateStorageManifestBucketContract(manifest, requiredBuckets,
 
   // Historical v1/v2 manifests intentionally supported a selected non-empty
   // subset. Preserve their recoverability without weakening the complete v3
-  // five-bucket evidence contract used for every new export.
+  // required-bucket evidence contract used for every new export.
   if (manifest.buckets.length === 0 || manifest.buckets.some((bucket) => !allowedBuckets.has(bucket))) {
     throw new Error("Historical Storage backup manifest has an invalid bucket inventory.");
   }
