@@ -369,7 +369,9 @@ jobs:
         working-directory: ${{ env.RELEASE }}
         env:
           STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
-        run: node scripts/operations/install-runtime-operations.mjs "$TARGET" --check "$RELEASE/.env.candidate"
+        run: |
+          python3 --version
+          node scripts/operations/install-runtime-operations.mjs "$TARGET" --check "$RELEASE/.env.candidate"
 
       - name: Persist immutable release identity
         working-directory: ${{ env.RELEASE }}
@@ -485,6 +487,8 @@ jobs:
 
   staging-browser-validation:
     name: staging browser validation
+    outputs:
+      evidence_ready: ${{ steps.write-staging-release-evidence.outcome == 'success' }}
     if: inputs.target == 'staging'
     needs: deploy
     runs-on: ubuntu-latest
@@ -712,13 +716,13 @@ jobs:
         run: pnpm run phase15:staging
 
       - name: Write release evidence
+        id: write-staging-release-evidence
         if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
         if: env.MAINTENANCE_NO_WRITE != 'true'
         id: upload-release-evidence
-        continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
           name: nxttrack-staging-${{ github.sha }}-release-evidence
@@ -728,8 +732,24 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Confirm release evidence fallback
-        if: steps.upload-release-evidence.outcome == 'failure' && env.MAINTENANCE_NO_WRITE != 'true'
-        run: |
-          test -s artifacts/release-evidence.json
-          echo "Artifact upload unavailable; release evidence is preserved in this job summary."
+  staging-evidence-persistence:
+    name: preserve staging evidence on its deployed release
+    if: inputs.target == 'staging' && needs.staging-browser-validation.outputs.evidence_ready == 'true'
+    needs: [deploy, staging-browser-validation]
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+    steps:
+      - name: Checkout exact canonical source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Verify and preserve the existing staging release artifact
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_EVIDENCE_SOURCE_SHA: ${{ github.sha }}
+          STAGING_EVIDENCE_RUN_ID: ${{ github.run_id }}
+        run: node scripts/release/preserve-staging-release-evidence.mjs
