@@ -227,13 +227,16 @@ jobs:
         env:
           TARGET: ${{ matrix.target }}
           RELEASE_SHA: ${{ inputs.release_sha }}
+          VERIFIER_SOURCE_SHA: ${{ github.sha }}
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          E2E_TENANT_ADMIN_EMAIL: ${{ vars.E2E_TENANT_ADMIN_EMAIL }}
-          E2E_INSTRUCTOR_EMAIL: ${{ vars.E2E_INSTRUCTOR_EMAIL }}
-          E2E_PARENT_EMAIL: ${{ vars.E2E_PARENT_EMAIL }}
+          E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+          E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL || vars.E2E_INSTRUCTOR_EMAIL }}
+          E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
         run: node scripts/release/v4-browser-verify.mjs
       - uses: actions/upload-artifact@v6
         if: always()
