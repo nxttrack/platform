@@ -23,3 +23,20 @@ export function assertReleaseHealth(status, health, config) {
   assert.equal(health?.checks?.database?.status, 'pass', 'Database health must pass');
   assert.equal(health?.checks?.schemaCompatibility?.status, 'pass', 'Schema compatibility must pass');
 }
+
+export async function waitForAnonymousLogin(page, adminOrigin, timeoutMs = 30000) {
+  assert.ok(Number.isInteger(timeoutMs) && timeoutMs > 0 && timeoutMs <= 30000, 'Login redirect budget must be bounded');
+  const origin = new URL(adminOrigin).origin;
+  const deadline = performance.now() + timeoutMs;
+  const remaining = () => {
+    const value = Math.ceil(deadline - performance.now());
+    assert.ok(value > 0, 'Anonymous login redirect exceeded its budget');
+    return value;
+  };
+  // A streamed Next.js redirect can arrive after the source document's DOMContentLoaded.
+  await page.waitForURL(url => url.origin === origin && url.pathname === '/login', {
+    timeout: remaining(), waitUntil: 'domcontentloaded'
+  });
+  await page.getByLabel('E-mail', {exact:true}).waitFor({state:'visible', timeout:remaining()});
+  await page.getByLabel('Wachtwoord', {exact:true}).waitFor({state:'visible', timeout:remaining()});
+}

@@ -883,6 +883,7 @@ jobs:
     if: inputs.confirmation == 'VERIFY_V4_ENVIRONMENTS' || inputs.confirmation == 'VERIFY_V4_STAGING'
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         target: ${{ inputs.confirmation == 'VERIFY_V4_STAGING' && fromJSON('["staging"]') || fromJSON('["staging","production"]') }}
     environment: ${{ matrix.target }}

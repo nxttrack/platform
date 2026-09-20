@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync,writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import pg from 'pg';
-import { assertReleaseHealth, verificationConfig } from './v4-browser-contract.mjs';
+import { assertReleaseHealth, verificationConfig, waitForAnonymousLogin } from './v4-browser-contract.mjs';
 const requireWeb=createRequire(new URL('../../apps/web/package.json',import.meta.url));
 const {chromium}=requireWeb('@playwright/test');
 const {createClient}=requireWeb('@supabase/supabase-js');
@@ -34,6 +34,7 @@ try {
   await publicPage.getByLabel('Wachtwoord',{exact:true}).waitFor({state:'visible'});
   assert.ok(await publicPage.getByRole('button',{name:'Inloggen',exact:true}).isEnabled(),'Login form must be available');
   await publicPage.goto(`${adminOrigin}/platform`,{waitUntil:'domcontentloaded'});
+  await waitForAnonymousLogin(publicPage,adminOrigin);
   assert.equal(new URL(publicPage.url()).pathname,'/login','Anonymous platform access must require login');
   result.checks.push({check:'login form and anonymous platform protection',status:'pass'});
   await publicContext.close();
