@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "application": "nxttrack-platform",
+  "target": "staging",
+  "source": {
+    "canonicalBranch": "main",
+    "refName": "main",
+    "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+    "stagedCommitSha": null
+  },
+  "workflow": {
+    "repository": "nxttrack/platform",
+    "runId": "35474984786",
+    "runAttempt": "1",
+    "actor": "TIXOCEO"
+  },
+  "approval": {
+    "reference": null
+  },
+  "productionEvidence": {
+    "foundationRunId": null,
+    "migrationRehearsalRunId": null
+  },
+  "gates": {
+    "repositoryTruth": "passed",
+    "lovableBaselineContract": "passed",
+    "authAudit": "passed",
+    "migrationAudit": "passed",
+    "rlsCoverageAudit": "passed",
+    "build": "passed",
+    "standaloneAssets": "passed",
+    "databaseMigration": "passed",
+    "healthSmoke": "passed",
+    "runtimeSmoke": "passed",
+    "phase15Staging": "passed",
+    "phase16Staging": "passed"
+  },
+  "createdAt": "2026-09-19T23:40:53.659Z"
+}

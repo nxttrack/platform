@@ -1,0 +1,61 @@
+{
+  "target": "production",
+  "releaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "checks": [
+    {
+      "check": "exact-source database-aware health",
+      "status": "pass"
+    },
+    {
+      "check": "public /",
+      "status": "pass"
+    },
+    {
+      "check": "public /login",
+      "status": "pass"
+    },
+    {
+      "check": "public /wachtwoord-vergeten",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/onboarding",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes/import",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes/bindings",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/instellingen",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/packages",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/audit",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/support",
+      "status": "pass"
+    }
+  ],
+  "startedAt": "2026-09-20T00:10:50.402Z",
+  "finishedAt": "2026-09-20T00:11:04.087Z",
+  "status": "passed"
+}

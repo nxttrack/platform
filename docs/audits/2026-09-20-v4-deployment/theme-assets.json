@@ -1,0 +1,212 @@
+[
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-completed.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/nxttrack-default/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/nxttrack-default/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/dolphin-bay/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/dolphin-bay/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/coastal-explorer/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/coastal-explorer/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/turtle-trails/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/turtle-trails/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/polar-splash/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "staging.nxttrack.nl",
+    "route": "/portal-themes/polar-splash/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/ocean-quest/journey-completed.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/nxttrack-default/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/nxttrack-default/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/dolphin-bay/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/dolphin-bay/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/coastal-explorer/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/coastal-explorer/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/turtle-trails/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/turtle-trails/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/polar-splash/journey-mobile.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  },
+  {
+    "host": "nxttrack.nl",
+    "route": "/portal-themes/polar-splash/journey-desktop.png",
+    "status": 200,
+    "type": "image/png",
+    "matchesRepository": true
+  }
+]

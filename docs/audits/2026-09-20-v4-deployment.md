@@ -115,6 +115,18 @@ Relevante serverpaden, met `<omgeving>` gelijk aan `staging` of `production`:
 | Zeven synthetische Storage-objecten versleutelen, verwijderen, herstellen en vergelijken | [Geslaagd, 35477709872](https://github.com/nxttrack/platform/actions/runs/35477709872) |
 | Dagelijkse back-ups, encryptierondgang en bewijs van werkelijk lopende cronjobs | [Geslaagd, 35477811868](https://github.com/nxttrack/platform/actions/runs/35477811868) |
 | Productie operationele monitor na deployment | [Geslaagd, 35477645111](https://github.com/nxttrack/platform/actions/runs/35477645111) |
+| Definitieve browserverificatie en gerenderde platformbeelden, beide omgevingen | [Geslaagd, 35478018042](https://github.com/nxttrack/platform/actions/runs/35478018042) |
+| Kindreis met volledig geladen afbeeldingen en stabiele camera, 28 stagingchecks | [Geslaagd, 35478178985](https://github.com/nxttrack/platform/actions/runs/35478178985) |
+
+Daarnaast zijn 30 live thema-afbeeldingen op beide omgevingen via HTTPS
+opgehaald. Content-type en SHA-256 komen overal overeen met de repository.
+De HTTP-hostnames verwijzen naar HTTPS; apex, www, admin, staging en de
+AquaSwim-demohost antwoorden zoals verwacht.
+
+De niet-gevoelige JSON-bewijzen en twee werkelijk gerenderde screenshots zijn
+blijvend opgenomen in [de bewijsmap](2026-09-20-v4-deployment/manifest.json):
+[productieplatform](2026-09-20-v4-deployment/production-platform.png) en
+[stagingkindreis](2026-09-20-v4-deployment/staging-child-journey.png).
 
 De aanvullende browserverificatie gebruikt tijdelijke sessies voor bestaande
 bevoegde gebruikers. Er zijn geen wachtwoorden gewijzigd of inlogmails verstuurd;

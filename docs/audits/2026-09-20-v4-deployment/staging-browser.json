@@ -1,0 +1,121 @@
+{
+  "target": "staging",
+  "releaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "checks": [
+    {
+      "check": "exact-source database-aware health",
+      "status": "pass"
+    },
+    {
+      "check": "public /",
+      "status": "pass"
+    },
+    {
+      "check": "public /login",
+      "status": "pass"
+    },
+    {
+      "check": "public /wachtwoord-vergeten",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/onboarding",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes/import",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/themes/bindings",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/instellingen",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/packages",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/audit",
+      "status": "pass"
+    },
+    {
+      "check": "platform /platform/support",
+      "status": "pass"
+    },
+    {
+      "check": "admin /admin",
+      "status": "pass"
+    },
+    {
+      "check": "admin /admin/leerlingen",
+      "status": "pass"
+    },
+    {
+      "check": "admin /admin/agenda",
+      "status": "pass"
+    },
+    {
+      "check": "admin /admin/wachtlijst",
+      "status": "pass"
+    },
+    {
+      "check": "instructor /instructor",
+      "status": "pass"
+    },
+    {
+      "check": "instructor /instructor/groepen",
+      "status": "pass"
+    },
+    {
+      "check": "parent /portaal",
+      "status": "pass"
+    },
+    {
+      "check": "parent /portaal/ontwikkeling",
+      "status": "pass"
+    },
+    {
+      "check": "parent /portaal/planning",
+      "status": "pass"
+    },
+    {
+      "check": "parent /portaal/inbox",
+      "status": "pass"
+    },
+    {
+      "check": "parent /portaal/kinderen",
+      "status": "pass"
+    },
+    {
+      "check": "child /kind",
+      "status": "pass"
+    },
+    {
+      "check": "child /kind/reis",
+      "status": "pass"
+    },
+    {
+      "check": "child journey artwork fully loaded",
+      "status": "pass"
+    },
+    {
+      "check": "child-to-admin isolation",
+      "status": "pass"
+    }
+  ],
+  "startedAt": "2026-09-20T00:13:58.439Z",
+  "finishedAt": "2026-09-20T00:14:32.759Z",
+  "status": "passed"
+}
