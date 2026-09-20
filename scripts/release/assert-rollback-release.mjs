@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { assertCompatibleApplicationAncestry } from "./compatible-application-ancestry.mjs";
 
 export const minimumRollbackAppSha = "541fe5fd6cee083cb809eef236382cfd2d519ed3";
 
-export function readReleaseCommitSha(releaseDirectory) {
+export function readReleaseCommitSha(releaseDirectory, { sharedEnvironmentPath } = {}) {
   const artifactPath = join(releaseDirectory, "artifacts", "exact-source-sha.json");
   let artifactSha = null;
   if (existsSync(artifactPath)) {
@@ -29,13 +29,22 @@ export function readReleaseCommitSha(releaseDirectory) {
   if (!/^[a-f0-9]{40}$/.test(commitSha ?? "")) {
     throw new Error("Rollback release does not identify an immutable commit SHA.");
   }
-  if (artifactSha && environmentSha && artifactSha !== environmentSha) {
+  // Normal validation remains strict. A rehearsal may explicitly validate an
+  // inactive release whose .env is the shared runtime file: that file identifies
+  // the current process, whereas the immutable artifact identifies the candidate.
+  const usesSharedEnvironment = sharedEnvironmentPath
+    && lstatSync(environmentPath).isSymbolicLink()
+    && realpathSync(environmentPath) === realpathSync(sharedEnvironmentPath);
+  if (sharedEnvironmentPath && (!usesSharedEnvironment || !artifactSha)) {
+    throw new Error("Shared-environment rollback requires an immutable artifact and the expected environment symlink.");
+  }
+  if (artifactSha && environmentSha && artifactSha !== environmentSha && !usesSharedEnvironment) {
     throw new Error("Rollback release artifact and environment identify different commits.");
   }
   return commitSha;
 }
 
-export function assertRollbackRelease({ baseDirectory, releaseDirectory, sourceCheckout }) {
+export function assertRollbackRelease({ baseDirectory, releaseDirectory, sourceCheckout, sharedEnvironmentPath }) {
   const releaseRoot = realpathSync(join(baseDirectory, "releases"));
   const resolvedRelease = realpathSync(releaseDirectory);
   const relativeRelease = relative(releaseRoot, resolvedRelease);
@@ -45,7 +54,11 @@ export function assertRollbackRelease({ baseDirectory, releaseDirectory, sourceC
   if (!existsSync(join(resolvedRelease, "apps", "web", ".next", "standalone", "apps", "web", "server.js"))) {
     throw new Error("Rollback release has no packaged application server.");
   }
-  const commitSha = readReleaseCommitSha(resolvedRelease);
+  if (sharedEnvironmentPath
+    && realpathSync(sharedEnvironmentPath) !== realpathSync(join(baseDirectory, "shared", ".env"))) {
+    throw new Error("Rollback shared environment is outside the configured deployment.");
+  }
+  const commitSha = readReleaseCommitSha(resolvedRelease, { sharedEnvironmentPath });
   execFileSync("git", ["cat-file", "-e", `${commitSha}^{commit}`], { cwd: sourceCheckout, stdio: "ignore" });
   assertCompatibleApplicationAncestry({
     sourceCheckout,

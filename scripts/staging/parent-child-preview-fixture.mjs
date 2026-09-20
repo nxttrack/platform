@@ -3,6 +3,7 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { capturePreviewRollout, restorePreviewRollout } from "./parent-child-preview-rollout.mjs";
 
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
@@ -39,30 +40,11 @@ const admin = createClient(supabaseUrl, serviceKey, {
 const state = existsSync(statePath) ? JSON.parse(readFileSync(statePath, "utf8")) : null;
 
 if (mode === "cleanup") {
-  const { tenantId, tenantAdminUserId } = await resolveCleanupContext();
-  const rollout = await admin.rpc("configure_child_portal_rollout_for_service", {
-    p_absolute_ttl_minutes: 240,
-    p_actor_user_id: tenantAdminUserId,
-    p_security_reviewed: true,
-    p_status: "disabled",
-    p_tenant_id: tenantId,
-    p_visual_matrix_reviewed: true
-  });
-  if (rollout.error) throw new Error(`Could not disable child portal rollout: ${rollout.error.message}`);
-  const disabled = await admin
-    .from("tenant_swim_rollouts")
-    .select("feature_key, status")
-    .eq("tenant_id", tenantId)
-    .in("feature_key", [
-      "swim.portal.child_mode",
-      "swim.portal.direct_child_login",
-      "swim.portal.parent_child_split",
-      "swim.portal.parent_requests"
-    ]);
-  if (disabled.error || disabled.data?.length !== 4 || disabled.data.some((entry) => entry.status !== "disabled")) {
-    throw new Error(`Child portal rollout did not return to its disabled state: ${disabled.error?.message ?? JSON.stringify(disabled.data ?? [])}`);
-  }
-  console.log("[parent-child-preview] PASS rollout disabled and active child sessions revoked.");
+  const { tenantId } = await resolveCleanupContext();
+  const restored = await restorePreviewRollout(admin, tenantId, supabaseUrl);
+  console.log(restored
+    ? "[parent-child-preview] PASS previous rollout flags and settings restored; existing sessions preserved."
+    : "[parent-child-preview] PASS no interrupted preview snapshot; current rollout and sessions preserved.");
   process.exit(0);
 }
 
@@ -70,6 +52,11 @@ if (!state) throw new Error(`Phase 16 fixture state is missing at ${statePath}.`
 const tenantId = requiredUuid(state?.tenant?.id, "tenant.id");
 const participantId = requiredUuid(state?.expected?.participantId, "expected.participantId");
 const parentUserId = requiredUuid(state?.users?.parent?.id, "users.parent.id");
+await resolveCleanupContext();
+// Persist before any preview mutations. The workflow's always() cleanup also
+// restores this baseline after a failed prepare or browser test.
+await capturePreviewRollout(admin, tenantId, supabaseUrl,
+  process.env.GITHUB_RUN_ID ? `github:${process.env.GITHUB_RUN_ID}:${process.env.GITHUB_RUN_ATTEMPT ?? "1"}` : `process:${process.pid}`);
 const platformThemeActor = await admin
   .from("platform_memberships")
   .select("user_id")
@@ -200,36 +187,9 @@ function requiredUuid(value, label) {
 }
 
 async function resolveCleanupContext() {
-  let tenantId = optionalUuid(state?.tenant?.id);
-  let tenantAdminUserId = optionalUuid(state?.users?.tenantAdmin?.id);
-
-  if (!tenantId) {
-    const tenant = await admin.from("tenants").select("id").eq("slug", "aquaswim-demo").maybeSingle();
-    if (tenant.error || !tenant.data) throw new Error(`Could not resolve AquaSwim Demo: ${tenant.error?.message ?? "tenant missing"}`);
-    tenantId = requiredUuid(tenant.data.id, "tenant.id");
-  }
-
-  if (!tenantAdminUserId) {
-    const membership = await admin
-      .from("tenant_memberships")
-      .select("user_id")
-      .eq("tenant_id", tenantId)
-      .eq("status", "active")
-      .in("role", ["tenant_owner", "tenant_admin"])
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
-    if (membership.error || !membership.data) {
-      throw new Error(`Could not resolve the preserved AquaSwim administrator: ${membership.error?.message ?? "membership missing"}`);
-    }
-    tenantAdminUserId = requiredUuid(membership.data.user_id, "tenantAdmin.user_id");
-  }
-
-  return { tenantId, tenantAdminUserId };
-}
-
-function optionalUuid(value) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
-    ? value
-    : null;
+  const tenant = await admin.from("tenants").select("id").eq("slug", "aquaswim-demo").maybeSingle();
+  if (tenant.error || !tenant.data) throw new Error(`Could not resolve AquaSwim Demo: ${tenant.error?.message ?? "tenant missing"}`);
+  const tenantId = requiredUuid(tenant.data.id, "tenant.id");
+  if (state?.tenant?.id && state.tenant.id !== tenantId) throw new Error("Phase 16 state does not belong to AquaSwim Demo.");
+  return { tenantId };
 }

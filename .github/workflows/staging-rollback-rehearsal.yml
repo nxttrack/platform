@@ -2,6 +2,16 @@ name: Staging rollback rehearsal
 
 on:
   workflow_dispatch:
+    inputs:
+      release_directory:
+        description: Absolute path of the previously validated staging release
+        required: true
+        type: string
+      check_only:
+        description: Validate the target without switching the live runtime
+        required: true
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -24,6 +34,21 @@ jobs:
     steps:
       - name: Checkout canonical main
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.18.0
 
       - name: Rehearse previous release and restore current release
-        run: scripts/release/rehearse-runtime-rollback.sh
+        env:
+          ROLLBACK_CANDIDATE: ${{ inputs.release_directory }}
+          ROLLBACK_CHECK_ONLY: ${{ inputs.check_only }}
+        run: |
+          if [[ "$ROLLBACK_CHECK_ONLY" == true ]]; then
+            scripts/release/rehearse-runtime-rollback.sh staging "$ROLLBACK_CANDIDATE" --check-only
+          else
+            scripts/release/rehearse-runtime-rollback.sh staging "$ROLLBACK_CANDIDATE"
+          fi

@@ -146,9 +146,9 @@ test("canonieke releases blijven main-only en fixtures behouden beheeridentiteit
   assert.match(fixture, /set_tenant_portal_theme_availability/);
   assert.match(fixture, /set_tenant_portal_theme_license/);
   assert.match(fixture, /resolveCleanupContext/);
-  assert.match(fixture, /configure_child_portal_rollout_for_service/);
-  assert.match(fixture, /swim\.portal\.direct_child_login/);
-  assert.match(fixture, /status !== "disabled"/);
+  assert.match(fixture, /capturePreviewRollout/);
+  assert.match(fixture, /restorePreviewRollout/);
+  assert.doesNotMatch(fixture, /p_status: "disabled"/);
 });
 
 test("stagingmatrix opent de eigen platformpreview en activeert releases via de tenant-admin-UI", async () => {

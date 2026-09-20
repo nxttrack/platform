@@ -27,6 +27,7 @@ const evidence = {
     reference: target === "production" ? process.env.PRODUCTION_APPROVAL_REFERENCE || null : null
   },
   productionEvidence: {
+    stagingRunId: target === "production" ? process.env.STAGING_RELEASE_RUN_ID || null : process.env.GITHUB_RUN_ID || null,
     foundationRunId: target === "production" ? process.env.PRODUCTION_FOUNDATION_RUN_ID || null : null,
     migrationRehearsalRunId: target === "production" ? process.env.PRODUCTION_MIGRATION_REHEARSAL_RUN_ID || null : null
   },
