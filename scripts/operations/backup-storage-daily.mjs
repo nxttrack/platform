@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, realpathSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { readRuntimeEnvironment } from "./runtime-operations-contract.mjs";
@@ -72,7 +72,7 @@ async function publishHeartbeat(environment, status, metadata) {
   if (!response.ok || (await response.json()).accepted !== true) throw new Error("Backup heartbeat was not accepted.");
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const target = process.argv[2];
   const { shared, environment } = readRuntimeEnvironment(target);
   const sourceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
