@@ -37,6 +37,63 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  rotate-backup-key:
+    name: preserve historical keys and verify a strong encrypted backup
+    if: inputs.confirmation == 'ROTATE_V4_BACKUP_KEYS'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    concurrency:
+      group: nxttrack-${{ matrix.target }}
+      cancel-in-progress: false
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install locked backup dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Preserve old recovery keys and rotate the active backup key
+        id: rotate
+        env:
+          TARGET: ${{ matrix.target }}
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: node scripts/operations/rotate-storage-backup-key.mjs "$TARGET"
+      - name: Retain encrypted historical recovery keys outside the VPS
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ matrix.target }}-historical-backup-key-recovery-${{ github.run_id }}
+          path: ${{ steps.rotate.outputs.recovery_bundle_path }}
+          if-no-files-found: error
+          retention-days: 90
+      - name: Create and decrypt-verify a complete backup with the new key
+        env:
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          flock --exclusive --timeout 120 "/var/www/nxttrack/$TARGET/shared/v4-storage-backup.lock" \
+            node scripts/operations/backup-storage-daily.mjs "$TARGET"
+      - name: Check current operation and recovery evidence
+        env:
+          TARGET: ${{ matrix.target }}
+          OPERATIONS_AUDIT_OUTPUT: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+        run: node scripts/operations/check-runtime-operations.mjs "$TARGET"
+      - name: Retain non-sensitive operation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: runtime-readiness-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
   verify-development-browser:
     name: repeat development filter browser regression
     if: inputs.confirmation == 'VERIFY_V4_BROWSER_TEST'
