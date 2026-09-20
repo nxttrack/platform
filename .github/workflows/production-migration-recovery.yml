@@ -37,6 +37,134 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  backup-current-v4-database:
+    name: retain verified encrypted current V4 production database
+    if: inputs.confirmation == 'BACKUP_CURRENT_V4_DATABASE'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    concurrency:
+      group: nxttrack-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Export the current production schema and data without database writes
+        env:
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          OPERATION_SOURCE_SHA: ${{ github.sha }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+          BACKUP_OUTPUT: ${{ runner.temp }}/current-v4-db-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          private_dir=$(mktemp -d "$RUNNER_TEMP/current-v4-db-private.XXXXXX")
+          export BACKUP_PRIVATE="$private_dir"
+          export DUMP_CONTAINER="nxttrack-v4-dump-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          export LIST_CONTAINER="nxttrack-v4-list-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          cleanup() {
+            docker rm --force "$DUMP_CONTAINER" "$LIST_CONTAINER" >/dev/null 2>&1 || true
+            rm -rf -- "$private_dir"
+          }
+          trap cleanup EXIT
+          trap 'exit 130' INT
+          trap 'exit 143' TERM
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {spawnSync} from 'node:child_process';
+          import {createHash} from 'node:crypto';
+          import {closeSync,createReadStream,mkdirSync,openSync,renameSync,rmSync,statSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const privateDir=process.env.BACKUP_PRIVATE, output=process.env.BACKUP_OUTPUT;
+          const schemas=['public','app_private','auth','storage','supabase_migrations','extensions'];
+          let stage='configuration';
+          function execute(command,args,{timeout=60000,env=process.env,stdio=['ignore','pipe','pipe'],rejectStderr=false}={}) {
+            const result=spawnSync(command,args,{env,stdio,timeout,killSignal:'SIGTERM',maxBuffer:16*1024*1024});
+            assert.ok(!result.error && result.status===0 && (!rejectStderr || !result.stderr?.length),'Backup command failed.');
+            return result.stdout;
+          }
+          async function fileHash(path) {
+            const hash=createHash('sha256');
+            for await (const chunk of createReadStream(path)) hash.update(chunk);
+            return hash.digest('hex');
+          }
+          async function health() {
+            const response=await fetch('https://nxttrack.nl/api/health',{redirect:'error',signal:AbortSignal.timeout(15000)});
+            assert.ok(response.status===200 && response.body,'Production health is unavailable.');
+            const chunks=[];let size=0;
+            for await (const chunk of response.body) { size+=chunk.length; assert.ok(size<=65536,'Health response is too large.'); chunks.push(chunk); }
+            const value=JSON.parse(Buffer.concat(chunks).toString('utf8'));
+            assert.ok(value.ok && value.app==='nxttrack-platform' && value.env==='production'
+              && value.commitSha===process.env.RELEASE_SHA && value.checks?.database?.status==='pass'
+              && value.checks?.schemaCompatibility?.status==='pass','Production health does not match the required release.');
+            return {commitSha:value.commitSha,database:'pass',schemaCompatibility:'pass'};
+          }
+          try {
+            assert.match(process.env.RELEASE_SHA || '',/^[a-f0-9]{40}$/);
+            assert.match(process.env.OPERATION_SOURCE_SHA || '',/^[a-f0-9]{40}$/);
+            const passphrase=process.env.STORAGE_BACKUP_PASSPHRASE || '';
+            assert.ok(Buffer.byteLength(passphrase)>=32 && !/[\r\n\0]/.test(passphrase),'Invalid backup key.');
+            const url=new URL(process.env.DATABASE_URL);
+            assert.ok(['postgres:','postgresql:'].includes(url.protocol));
+            const pg={PGHOST:url.hostname,PGPORT:url.port || '5432',PGUSER:decodeURIComponent(url.username),
+              PGPASSWORD:decodeURIComponent(url.password),PGDATABASE:decodeURIComponent(url.pathname.slice(1)),
+              PGSSLMODE:'require',PGCONNECT_TIMEOUT:'15',PGOPTIONS:'-c default_transaction_read_only=on -c statement_timeout=240000'};
+            assert.ok(Object.values(pg).every(value=>value && !/[\r\n\0]/.test(value)));
+            stage='initial-health';const before=await health(), startedAt=new Date().toISOString();
+            stage='postgres-tooling';execute('docker',['pull','postgres:17'],{timeout:120000});
+            const dump=join(privateDir,'production-current-v4.dump'), decrypted=join(privateDir,'verified.dump');
+            const key=join(privateDir,'passphrase'), encrypted=join(privateDir,'production-current-v4.dump.gpg');
+            const gpgHome=join(privateDir,'gnupg');mkdirSync(gpgHome,{mode:0o700});
+            writeFileSync(key,passphrase,{mode:0o600,flag:'wx'});
+            stage='read-only-export';const dumpFd=openSync(dump,'wx',0o600);
+            try {
+              execute('docker',['run','--rm','--name',process.env.DUMP_CONTAINER,...Object.keys(pg).flatMap(name=>['-e',name]),
+                'postgres:17','pg_dump','--format=custom','--no-owner','--no-acl','--lock-wait-timeout=15000',
+                ...schemas.map(name=>`--schema=${name}`)],{timeout:300000,env:{...process.env,...pg},stdio:['ignore',dumpFd,'pipe'],rejectStderr:true});
+            } finally { closeSync(dumpFd); }
+            assert.ok(statSync(dump).size>0,'Database export is empty.');
+            stage='archive-inspection';const dumpInput=openSync(dump,'r');let contents;
+            try {
+              contents=execute('docker',['run','--rm','-i','--name',process.env.LIST_CONTAINER,'postgres:17','pg_restore','--list'],
+                {stdio:[dumpInput,'pipe','pipe']}).toString('utf8');
+            } finally { closeSync(dumpInput); }
+            assert.ok(contents.includes('Format: CUSTOM') && /\bTABLE DATA auth users\b/.test(contents)
+              && /\bTABLE DATA supabase_migrations schema_migrations\b/.test(contents),'Archive lacks required recovery data.');
+            for (const schema of schemas) assert.ok(new RegExp(`\\bSCHEMA - ${schema}\\b`).test(contents),'Archive lacks a required schema.');
+            stage='encryption';const gpg=['--homedir',gpgHome,'--batch','--yes','--pinentry-mode','loopback','--passphrase-file',key];
+            execute('gpg',[...gpg,'--symmetric','--cipher-algo','AES256','--output',encrypted,dump],{timeout:120000});
+            stage='decryption-verification';execute('gpg',[...gpg,'--output',decrypted,'--decrypt',encrypted],{timeout:120000});
+            execute('cmp',['--',dump,decrypted]);
+            const dumpSha256=await fileHash(dump),encryptedSha256=await fileHash(encrypted);
+            stage='final-health';const after=await health();
+            assert.equal(after.commitSha,before.commitSha);
+            const report={schemaVersion:1,purpose:'current-v4-production-database-backup',target:'production',
+              sourceSha:process.env.OPERATION_SOURCE_SHA,requestedReleaseSha:process.env.RELEASE_SHA,
+              activeRuntimeSha:after.commitSha,workflowRunId:process.env.GITHUB_RUN_ID,startedAt,completedAt:new Date().toISOString(),
+              schemas,postgresMajor:17,format:'custom',databaseReadOnly:true,archiveInspection:'passed',
+              decryptedBytesEqual:true,healthBefore:before,healthAfter:after,dumpSha256,encryptedSha256,
+              restoreExecuted:false,scope:'Selected schema definitions and data, including auth users; excludes global database roles and Storage object bytes.'};
+            rmSync(dump);rmSync(decrypted);rmSync(key);rmSync(gpgHome,{recursive:true,force:true});
+            mkdirSync(output,{mode:0o700});
+            renameSync(encrypted,join(output,'production-current-v4.dump.gpg'));
+            writeFileSync(join(output,'summary.json'),JSON.stringify(report,null,2)+'\n',{mode:0o600,flag:'wx'});
+            console.log('[production:current-v4-backup] PASS encrypted archive and byte verification; runtime unchanged.');
+          } catch {
+            rmSync(output,{recursive:true,force:true});
+            console.error(`[production:current-v4-backup] FAIL during ${stage}; private material will be removed.`);
+            process.exitCode=1;
+          }
+          NODE
+      - name: Retain only verified ciphertext and the non-sensitive summary
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-current-v4-database-${{ github.run_id }}
+          path: ${{ runner.temp }}/current-v4-db-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 90
+          if-no-files-found: error
+
   inspect-v4-host-stability:
     name: inspect V4 host stability without changing services
     if: inputs.confirmation == 'INSPECT_V4_HOST_STABILITY'
