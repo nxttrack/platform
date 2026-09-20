@@ -78,13 +78,32 @@ jobs:
             tar -xzf - -C "${RUNNER_TEMP}/storage-restored"
           STORAGE_BACKUP_DIR="${RUNNER_TEMP}/storage-restored" pnpm run storage:verify-local
 
+      - name: Bind restore to this exact staging project and backup
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { appendFileSync, readFileSync } from 'node:fs';
+          import { storageProjectFingerprint } from './scripts/storage/storage-restore-contract.mjs';
+          const manifest = JSON.parse(readFileSync(`${process.env.RUNNER_TEMP}/storage-restored/manifest.json`, 'utf8'));
+          const fingerprint = storageProjectFingerprint(process.env.NEXT_PUBLIC_SUPABASE_URL);
+          assert.equal(manifest.environment, 'staging');
+          assert.equal(manifest.sourceProjectFingerprint, fingerprint);
+          const values = {
+            STORAGE_RESTORE_SOURCE_PROJECT_FINGERPRINT: fingerprint,
+            STORAGE_RESTORE_TARGET_PROJECT_FINGERPRINT: fingerprint,
+            STORAGE_RESTORE_SOURCE_ENVIRONMENT: 'staging',
+            STORAGE_RESTORE_TARGET_ENVIRONMENT: 'staging',
+            STORAGE_RESTORE_CONFIRMATION: `RESTORE_STORAGE_OBJECTS_${fingerprint}_TO_${fingerprint}`
+          };
+          for (const [key,value] of Object.entries(values)) appendFileSync(process.env.GITHUB_ENV, `${key}=${value}\n`);
+          NODE
+
       - name: Delete only the controlled source objects
         run: node scripts/storage/object-backup.mjs delete-rehearsal
 
       - name: Restore without overwrite and verify remotely
         env:
           STORAGE_BACKUP_DIR: ${{ runner.temp }}/storage-restored
-          STORAGE_RESTORE_CONFIRMATION: RESTORE_STORAGE_OBJECTS
         run: |
           pnpm run storage:restore
           pnpm run storage:verify-remote

@@ -3,6 +3,10 @@ import { expect, test } from "@playwright/test";
 test("development searches and restores filters, opens a focused dialog and keeps historical values distinct", async ({ page }) => {
   await page.goto("/test-harness/journey-development");
   const rows = page.locator("[data-development-skill]"); await expect(rows).toHaveCount(2);
+  // The server-rendered rows can appear before React restores the filters.
+  // The initial preference write proves that client initialization finished;
+  // otherwise WebKit can fill an input that hydration immediately replaces.
+  await page.waitForFunction(() => sessionStorage.getItem("nxttrack:development:fixture-development") !== null);
   await page.getByRole("searchbox", { name: "Zoek onderdelen" }).fill("Ademen"); await expect(rows).toHaveCount(1);
   // A commit-level full document navigation avoids a Firefox protocol binding
   // race around the streamed page's late RSC/prefetch responses. Session storage
