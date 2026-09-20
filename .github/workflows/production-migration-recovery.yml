@@ -37,6 +37,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-v4-installed-backups:
+    name: verify installed V4 encrypted backup (${{ matrix.target }})
+    if: inputs.confirmation == 'VERIFY_V4_INSTALLED_BACKUPS' || inputs.confirmation == 'VERIFY_V4_INSTALLED_STAGING_BACKUP'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target: ${{ inputs.confirmation == 'VERIFY_V4_INSTALLED_STAGING_BACKUP' && fromJSON('["staging"]') || fromJSON('["staging","production"]') }}
+    concurrency:
+      group: nxttrack-${{ matrix.target }}
+      cancel-in-progress: false
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Execute the installed backup CLI and verify fresh encrypted evidence
+        env:
+          TARGET: ${{ matrix.target }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          STAGED_SHA: ${{ inputs.staging_release_sha }}
+          INSTALLED_BACKUP_OUTPUT: ${{ runner.temp }}/installed-backup-${{ matrix.target }}-${{ github.run_id }}.json
+        run: |
+          set -euo pipefail
+          umask 077
+          test "$RELEASE_SHA" = "$STAGED_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node scripts/operations/verify-installed-storage-backup.mjs "$TARGET"
+      - name: Retain only sanitized installed backup evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: installed-v4-backup-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/installed-backup-${{ matrix.target }}-${{ github.run_id }}.json
+          if-no-files-found: error
+          retention-days: 90
+
   repair-v4-worker-cron-paths:
     name: repair immutable V4 cron paths (${{ matrix.target }})
     if: inputs.confirmation == 'REPAIR_V4_WORKER_CRON_PATHS'
