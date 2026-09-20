@@ -15,7 +15,7 @@ export function validateStorageManifestBucketContract(manifest, requiredBuckets,
 
   // Historical v1/v2 manifests intentionally supported a selected non-empty
   // subset. Preserve their recoverability without weakening the complete v3
-  // five-bucket evidence contract used for every new export.
+  // required-bucket evidence contract used for every new export.
   if (manifest.buckets.length === 0 || manifest.buckets.some((bucket) => !allowedBuckets.has(bucket))) {
     throw new Error("Historical Storage backup manifest has an invalid bucket inventory.");
   }
