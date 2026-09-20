@@ -50,14 +50,14 @@ jobs:
       STAGED_SHA: ${{ inputs.staging_release_sha }}
       HISTORICAL_SHA: 6b3c9abb686be198830f417e663ac94124d7066f
       HISTORICAL_RELEASE: /var/www/nxttrack/staging/releases/20260919230221-6b3c9ab
-      EVIDENCE_OUTPUT: ${{ runner.temp }}/staging-evidence-recovery-${{ github.run_id }}
-      EVIDENCE_STATE: ${{ runner.temp }}/staging-evidence-state-${{ github.run_id }}.json
     steps:
       - name: Confirm the exact new staging candidate
         run: |
           set -euo pipefail
           [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
           test "$RELEASE_SHA" = "$STAGED_SHA"
+          echo "EVIDENCE_OUTPUT=$RUNNER_TEMP/staging-evidence-recovery-$GITHUB_RUN_ID" >> "$GITHUB_ENV"
+          echo "EVIDENCE_STATE=$RUNNER_TEMP/staging-evidence-state-$GITHUB_RUN_ID.json" >> "$GITHUB_ENV"
       - name: Checkout the candidate's canonical evidence and rollback tools
         uses: actions/checkout@v6
         with:
