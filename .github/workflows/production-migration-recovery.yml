@@ -37,6 +37,40 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  inspect-v4-host-stability:
+    name: inspect V4 host stability without changing services
+    if: inputs.confirmation == 'INSPECT_V4_HOST_STABILITY'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 5
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    concurrency:
+      group: nxttrack-${{ matrix.target }}
+      cancel-in-progress: false
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Check exact active release and record application and Caddy service state
+        env:
+          TARGET: ${{ matrix.target }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          HOST_STABILITY_OUTPUT: ${{ runner.temp }}/v4-host-stability-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}.json
+        run: node scripts/release/inspect-v4-host-stability.mjs
+      - name: Retain non-sensitive host stability snapshot
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: v4-host-stability-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/v4-host-stability-${{ matrix.target }}-${{ github.run_id }}-${{ github.run_attempt }}.json
+          if-no-files-found: error
+          retention-days: 90
+
   inspect-parent-rls-timeout:
     name: inspect parent score RLS plans without writes
     if: inputs.confirmation == 'INSPECT_PARENT_RLS_TIMEOUT'
