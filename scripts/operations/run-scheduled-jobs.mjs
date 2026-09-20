@@ -1,3 +1,4 @@
+import { realpathSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { readRuntimeEnvironment, scheduledJobs, validateRuntimeEnvironment } from "./runtime-operations-contract.mjs";
 
@@ -22,7 +23,7 @@ export async function runScheduledJobs(target, environment, { fetchImpl = fetch,
   if (failures.length) throw new Error(`${failures.length} scheduled job(s) failed.`);
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href) {
   const target = process.argv[2];
   const { environment } = readRuntimeEnvironment(target);
   await runScheduledJobs(target, environment);
