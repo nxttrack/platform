@@ -37,6 +37,41 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  inspect-parent-rls-timeout:
+    name: inspect parent score RLS plans without writes
+    if: inputs.confirmation == 'INSPECT_PARENT_RLS_TIMEOUT'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 5
+    concurrency:
+      group: nxttrack-staging
+      cancel-in-progress: false
+    environment: staging
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install locked diagnostic dependency
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Diagnose the existing staging parent session with RLS enforced
+        env:
+          TARGET: staging
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          PARENT_RLS_DIAGNOSTIC_OUTPUT: ${{ runner.temp }}/parent-rls-diagnostic-${{ github.run_id }}.json
+        run: node scripts/release/inspect-parent-rls-timeout.mjs
+      - name: Retain bounded redacted diagnostic evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: parent-rls-diagnostic-${{ github.run_id }}
+          path: ${{ runner.temp }}/parent-rls-diagnostic-${{ github.run_id }}.json
+          if-no-files-found: error
+          retention-days: 14
+
   verify-staging-rls-fixtures:
     name: verify proposed staging RLS fixtures without deploying application code
     if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
