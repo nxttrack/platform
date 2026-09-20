@@ -37,6 +37,93 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-staging-rls-fixtures:
+    name: verify proposed staging RLS fixtures without deploying application code
+    if: inputs.confirmation == 'VERIFY_STAGING_RLS_FIXTURES'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 15
+    concurrency:
+      group: nxttrack-staging
+      cancel-in-progress: false
+    environment: staging
+    env:
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      STAGED_SHA: ${{ inputs.staging_release_sha }}
+      APP_ENV: staging
+      TARGET: staging
+      APP_URL: https://staging.nxttrack.nl
+      NEXT_PUBLIC_APP_URL: https://staging.nxttrack.nl
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      AUTH_CODE_PEPPER: ${{ secrets.AUTH_CODE_PEPPER }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
+      PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
+      PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
+      PHASE16_RESET_E2E_PASSWORDS: "false"
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: "true"
+      PHASE16_SKIP_PLAYWRIGHT: "true"
+      RLS_ROLE_SMOKE_REQUIRED: "true"
+      RLS_PLATFORM_OWNER_EMAIL: admin@nxttrack.nl
+      E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
+      E2E_PLATFORM_OWNER_PASSWORD: ${{ secrets.E2E_PLATFORM_OWNER_PASSWORD }}
+      E2E_TENANT_ADMIN_EMAIL: ${{ secrets.E2E_TENANT_ADMIN_EMAIL || vars.E2E_TENANT_ADMIN_EMAIL }}
+      E2E_TENANT_ADMIN_PASSWORD: ${{ secrets.E2E_TENANT_ADMIN_PASSWORD }}
+      E2E_INSTRUCTOR_EMAIL: ${{ secrets.E2E_INSTRUCTOR_EMAIL || vars.E2E_INSTRUCTOR_EMAIL }}
+      E2E_INSTRUCTOR_PASSWORD: ${{ secrets.E2E_INSTRUCTOR_PASSWORD }}
+      E2E_PARENT_EMAIL: ${{ secrets.E2E_PARENT_EMAIL || vars.E2E_PARENT_EMAIL }}
+      E2E_PARENT_PASSWORD: ${{ secrets.E2E_PARENT_PASSWORD }}
+    steps:
+      - name: Checkout exact proposed validation source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+      - name: Require unchanged application and schema
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$STAGED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor FETCH_HEAD HEAD
+          git diff --exit-code "$STAGED_SHA" "$RELEASE_SHA" -- apps packages supabase/migrations package.json pnpm-lock.yaml
+          echo "PHASE16_STATE_PATH=$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-phase16.json" >> "$GITHUB_ENV"
+          echo "SPRINT4_ISOLATION_STATE_PATH=$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-isolation.json" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Verify active staging identity before preparing fictional fixtures
+        env:
+          EXPECTED_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+          EXPECTED_APP_ENV: staging
+        run: node scripts/staging/health-smoke.mjs
+      - name: Install certified fixture tooling
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+      - name: Prepare the existing operational staging fixture
+        run: pnpm run phase16:flow
+      - name: Prepare explicit staging isolation records
+        run: node scripts/staging/prepare-sprint4-isolation.mjs
+      - name: Verify all four roles using their own authenticated tokens
+        run: pnpm run db:rls-role-smoke
+      - name: Confirm the application release remains healthy and unchanged
+        if: always()
+        env:
+          EXPECTED_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+          EXPECTED_APP_ENV: staging
+        run: node scripts/staging/health-smoke.mjs
+      - name: Remove private fixture state
+        if: always()
+        run: |
+          rm -f -- "$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-phase16.json" "$RUNNER_TEMP/rls-fixture-$GITHUB_RUN_ID-isolation.json"
+
   restore-staging-release-evidence:
     name: restore historical staging evidence and check rollback without activation
     if: inputs.confirmation == 'RESTORE_STAGING_RELEASE_EVIDENCE'
