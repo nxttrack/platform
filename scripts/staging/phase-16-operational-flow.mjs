@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { initializeParentRoleSession } from "../auth/parent-role-session.mjs";
 
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
@@ -1505,7 +1506,10 @@ async function validateDatabaseState(input) {
 async function validateRoleVisibility(input) {
   const tenantAdmin = await roleClient(roleAccounts.tenantAdmin.email, roleAccounts.tenantAdmin.password);
   const instructor = await roleClient(roleAccounts.instructor.email, roleAccounts.instructor.password);
-  const parent = await roleClient(roleAccounts.parent.email, roleAccounts.parent.password);
+  const parent = await roleClient(roleAccounts.parent.email, roleAccounts.parent.password, {
+    tenantId: input.tenant.id,
+    expectedUserId: input.users.parent.id
+  });
 
   await expectRows(
     tenantAdmin.from("waitlist_entries").select("id, participant_name, status").eq("tenant_id", input.tenant.id).eq("id", input.intake.acceptedEntry.id),
@@ -1653,17 +1657,26 @@ async function assertCanSignIn(email, password) {
   }
 }
 
-async function roleClient(email, password) {
+async function roleClient(email, password, parentContext) {
   const client = createClient(supabaseUrl, supabasePublicKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   });
-  const { error } = await client.auth.signInWithPassword({ email: normalizeEmail(email), password });
+  const { data, error } = await client.auth.signInWithPassword({ email: normalizeEmail(email), password });
 
   if (error) {
     throw new Error(`[phase16] Role sign-in failed for ${email}: ${error.message}`);
+  }
+
+  if (parentContext) {
+    await initializeParentRoleSession({
+      ...parentContext,
+      accessToken: data.session?.access_token,
+      verifyUser: (accessToken) => client.auth.getUser(accessToken),
+      initialize: (name, parameters) => admin.rpc(name, parameters)
+    });
   }
 
   return client;
