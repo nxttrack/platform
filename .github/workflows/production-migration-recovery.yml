@@ -126,11 +126,11 @@ jobs:
 
   verify-v4:
     name: verify live V4 through authenticated browsers
-    if: inputs.confirmation == 'VERIFY_V4_ENVIRONMENTS'
+    if: inputs.confirmation == 'VERIFY_V4_ENVIRONMENTS' || inputs.confirmation == 'VERIFY_V4_STAGING'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        target: [staging, production]
+        target: ${{ inputs.confirmation == 'VERIFY_V4_STAGING' && fromJSON('["staging"]') || fromJSON('["staging","production"]') }}
     environment: ${{ matrix.target }}
     steps:
       - uses: actions/checkout@v6

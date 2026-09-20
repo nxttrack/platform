@@ -40,7 +40,7 @@ try {
   });
   if (target==='staging') {
     const roleChecks=[
-      ['admin','E2E_TENANT_ADMIN_EMAIL',['/admin','/admin/deelnemers','/admin/planning','/admin/wachtlijst']],
+      ['admin','E2E_TENANT_ADMIN_EMAIL',['/admin','/admin/leerlingen','/admin/agenda','/admin/wachtlijst']],
       ['instructor','E2E_INSTRUCTOR_EMAIL',['/instructor','/instructor/groepen']],
       ['parent','E2E_PARENT_EMAIL',['/portaal','/portaal/ontwikkeling','/portaal/planning','/portaal/inbox','/portaal/kinderen']]
     ];
