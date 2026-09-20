@@ -46,6 +46,9 @@ export async function inspectParentRls(env = process.env) {
     client = new pg.Client({ connectionString: env.DATABASE_URL, application_name: 'nxttrack-parent-rls-read-only-diagnostic', connectionTimeoutMillis: 5000, statement_timeout: 2000, query_timeout: 5000 });
     await client.connect();
     await client.query('begin read only');
+    // Transaction poolers need an explicit transaction-local server limit;
+    // client startup parameters alone do not prove the server applied it.
+    await client.query("set local statement_timeout = '2s'");
     await client.query("set local lock_timeout = '500ms'");
     await client.query("set local idle_in_transaction_session_timeout = '15s'");
     stage = 'existing-parent-session';
@@ -102,6 +105,7 @@ export async function inspectParentRls(env = process.env) {
     await client.query('set local row_security = on');
     const context = (await client.query(`select current_user='authenticated' as authenticated,
       current_setting('transaction_read_only')='on' as read_only,
+      current_setting('statement_timeout')='2s' as timeout_bound,
       row_security_active('public.participant_progress_scores') as rls_active,
       auth.uid()=$1::uuid as user_bound, app_private.jwt_session_id()=$2::uuid as session_bound`, [identity.auth_user_id, identity.session_id])).rows[0];
     assert.ok(Object.values(context).every((value) => value === true), 'Authenticated read-only RLS context did not verify.');
