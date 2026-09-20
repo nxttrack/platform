@@ -1,0 +1,63 @@
+{
+  "checkedAt": "2026-09-20T17:00:58.790391+00:00",
+  "source": "Paginated GitHub environment variables; only allowlisted non-secret flags retained",
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "targets": {
+    "staging": {
+      "configured": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "canonicalWorkflowDefaults": {
+        "NEWSLETTER_DELIVERY_ENABLED": "false"
+      },
+      "effective": {
+        "NEWSLETTER_DELIVERY_ENABLED": "false",
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "pagesRead": 2
+    },
+    "production": {
+      "configured": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "NEWSLETTER_DELIVERY_ENABLED": "false",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "canonicalWorkflowDefaults": {},
+      "effective": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "NEWSLETTER_DELIVERY_ENABLED": "false",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "pagesRead": 2
+    }
+  },
+  "status": "passed",
+  "canonicalMainSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "defaultEvidence": "Canonical deploy.yml resolves unset staging NEWSLETTER_DELIVERY_ENABLED to false, asserts false, and writes it to runtime .env."
+}

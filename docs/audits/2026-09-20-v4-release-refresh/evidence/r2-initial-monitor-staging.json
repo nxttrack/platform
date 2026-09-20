@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-09-20T16:31:36.989273+00:00",
+  "runId": "35522894697",
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35522894697",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "target": "staging",
+  "result": "passed",
+  "mode": "probe",
+  "externalAlertsEnabled": false,
+  "actualOperationalChecksPassed": 21,
+  "actualHeartbeatHttpStatus": 202,
+  "heartbeatResult": "passed",
+  "artifactsCreated": false
+}

@@ -1,0 +1,56 @@
+{
+  "verifiedAt": "2026-09-20T17:02:38.062306+00:00",
+  "status": "passed",
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "startedAt": "2026-09-20T16:29:38.200Z",
+  "finishedAt": "2026-09-20T16:59:38.560Z",
+  "elapsedMs": 1800360,
+  "requiredDurationMs": 1800000,
+  "intervalMs": 60000,
+  "completedScheduledSamples": 31,
+  "successfulEndpointObservations": 62,
+  "successfulIndividualHealthAssertions": 310,
+  "failedSamples": 0,
+  "failedEndpointObservations": 0,
+  "maximumSampleLatenessMs": 6,
+  "samplesLaterThan30Seconds": 0,
+  "maximumStartIntervalMs": 60006,
+  "summaryMatchesFinalJsonlRecord": true,
+  "sequentialIndicesComplete": true,
+  "interrupted": false,
+  "fatalError": null,
+  "perEnvironment": {
+    "staging": {
+      "successfulSamples": 31,
+      "firstAt": "2026-09-20T16:29:38.201Z",
+      "lastAt": "2026-09-20T16:59:38.200Z",
+      "maxResponseDurationMs": 1323,
+      "minResponseDurationMs": 248,
+      "exactReleaseMatches": 31,
+      "databasePasses": 31,
+      "schemaCompatibilityPasses": 31
+    },
+    "production": {
+      "successfulSamples": 31,
+      "firstAt": "2026-09-20T16:29:38.232Z",
+      "lastAt": "2026-09-20T16:59:38.201Z",
+      "maxResponseDurationMs": 1013,
+      "minResponseDurationMs": 296,
+      "exactReleaseMatches": 31,
+      "databasePasses": 31,
+      "schemaCompatibilityPasses": 31
+    }
+  },
+  "fileHashes": {
+    "summary.json": "19335934f1cf1c93031601ab935a2e9d1752b5a9d28715581ae1571268306c93",
+    "health-samples.jsonl": "953184ab7d3f250349140d04a88905126ec335083584d47d0db19593b7a52a4e"
+  },
+  "processExit": {
+    "code": 0,
+    "evidence": "Root reported observing process exit 0. This independent review validates the retained files; process exit is an explicit root attestation, not encoded in these two files."
+  },
+  "limits": [
+    "The observer polls both public health endpoints once per minute over the complete 30-minute window; this does not prove absence of transient failures between requests.",
+    "Each of 62 endpoint observations checks HTTP200, ok, expected environment, exact release SHA, database and schema compatibility. Worker recency and billing/mail diagnostics are covered by separate readiness and monitor probes."
+  ]
+}

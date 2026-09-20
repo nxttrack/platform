@@ -1,0 +1,49 @@
+{
+  "verifiedAt": "2026-09-20T16:35:09.419443+00:00",
+  "result": "passed",
+  "runId": "35523097340",
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35523097340",
+  "operationsSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+  "canonicalToolsAndRuntimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "artifact": {
+    "id": 10608377675,
+    "digest": "sha256:0977a8552b629a8341f09ee86b0da72d2fe712ea031f7a127e771605de8eee39",
+    "originalZipDigestVerified": true
+  },
+  "historicalCandidate": {
+    "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+    "historicalSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "historicalRelease": "/var/www/nxttrack/production/releases/20260920151433-1a72606",
+    "historicalDeploymentRunId": "35518945668",
+    "target": "production",
+    "health": "pass",
+    "operation": "rollback-check-only"
+  },
+  "historicalOriginalArtifact": {
+    "id": 10608091264,
+    "digest": "sha256:cdd7354ad5c93e9fd4f147280179458a954e77c7dd6b735c3834ee911026966d",
+    "sourceAndRunVerified": true,
+    "originalZipDigestVerified": true
+  },
+  "checkOnlyCompatibility": "passed",
+  "identicalMigrationTreeAndSchemaContract": true,
+  "activationOrRestoreExecuted": false,
+  "after": {
+    "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+    "historicalSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "target": "production",
+    "rollbackCheckPassed": true,
+    "runtimeUnchanged": true,
+    "configurationUnchanged": true,
+    "immutableIdentitiesUnchanged": true,
+    "releaseEvidenceUnchanged": true,
+    "serviceProcessUnchanged": true,
+    "healthyPromotedRelease": true
+  },
+  "separateOperationsPreservation": {
+    "evidenceType": "canonical rollback source inspection",
+    "installedOperationsDigestExpected": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+    "rollbackScriptDoesNotWriteOperationsDirectoryOrCrontab": true,
+    "actualRuntimeRollbackExecuted": false
+  }
+}

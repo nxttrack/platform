@@ -1,0 +1,69 @@
+{
+  "checkedAt": "2026-09-20T16:29:41.828152+00:00",
+  "result": "passed",
+  "runId": "35522722633",
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35522722633",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "releaseDirectory": "/var/www/nxttrack/production/releases/20260920162646-86132b2",
+  "requiredSteps": [
+    "Assert canonical release source",
+    "Audit deployment environment contract",
+    "Verify production foundation evidence",
+    "Snapshot and validate active release before candidate preparation",
+    "Write private candidate environment file",
+    "Run hardening audits",
+    "Build",
+    "Verify scheduled operations prerequisites before activation",
+    "Persist immutable release identity",
+    "Run database migrations",
+    "Assert runtime schema compatibility before activation",
+    "Activate release",
+    "Health endpoint smoke",
+    "Runtime smoke",
+    "Install versioned scheduled operations after runtime verification",
+    "Write release evidence",
+    "Upload release evidence",
+    "Cleanup old releases"
+  ],
+  "snapshotCompletedBeforeCandidatePreparation": true,
+  "snapshotPreviousSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "databaseMigrationsRequested": false,
+  "migrationCommandResult": "success; migration execution internally disabled by RUN_DB_MIGRATIONS=false",
+  "ownerBootstrapRequested": false,
+  "artifact": {
+    "id": 10608872625,
+    "digest": "sha256:8eea904130a95997af299e23b983b878a3349ec0c0e316c14d54c2c0f0b09676",
+    "originalZipDigestVerified": true,
+    "twoFileContractVerified": true,
+    "sourceRunStagingApprovalAndTimestampBindingVerified": true,
+    "expiresAt": "2026-12-19T16:26:36Z"
+  },
+  "approvalReference": "https://github.com/nxttrack/platform/blob/6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5/docs/audits/2026-09-20-v4-production-go-no-go-r2.md",
+  "productionEvidence": {
+    "stagingRunId": "35520266317",
+    "foundationRunId": "35520268195",
+    "migrationRehearsalRunId": "35520269819"
+  },
+  "operations": [
+    {
+      "target": "production",
+      "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "installationPrerequisites": "pass"
+    },
+    {
+      "target": "production",
+      "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "cronEntries": 2,
+      "installed": true
+    }
+  ],
+  "health": {
+    "evidence": [
+      "2026-09-20T16:28:10.3363708Z [staging:health] WAIT https://nxttrack.nl/api/health: Expected HTTP 2xx from https://nxttrack.nl/api/health, got 502. Retrying in 3000ms.",
+      "2026-09-20T16:28:13.6931247Z [staging:health] PASS https://nxttrack.nl/api/health -> env=production commit=86132b20455c083cf52a2a0de0713b3c363c7831 build=2026-09-20T16:26:47Z database=pass attempts=2"
+    ],
+    "transientFailedPolls": 1,
+    "zeroDeploymentInterruptionClaimed": false
+  },
+  "postDeploymentObservationComplete": false
+}

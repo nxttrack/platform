@@ -1,0 +1,125 @@
+{
+  "status": "passed",
+  "verifiedAt": "2026-09-20T16:32:44.207329+00:00",
+  "runId": 35522899016,
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "verifierSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+  "runConclusion": "success",
+  "sourceSha256": {
+    "scripts/release/v4-browser-verify.mjs": "743e89fd77017ecf1fdd8088261e44eacfbe16768e1adde9bf3d188de87c4dca",
+    "scripts/release/v4-browser-contract.mjs": "a5ce9de1b2f23ad8318a9f3035be86c9b0375bae9c6a8061710c8188118b8c85",
+    ".github/workflows/production-migration-recovery.yml": "a7a842b9ac494f8ee36bc76a612a52f1d8c84e575699c01a04d71f942178b3c4"
+  },
+  "verifierAndWorkflowUnchangedSinceA54": true,
+  "results": [
+    {
+      "target": "staging",
+      "status": "passed",
+      "jobId": 106109959010,
+      "checksPassed": 41,
+      "tenantCountUnchanged": 3,
+      "passwordsUnchangedAndOwnSessionsRevoked": true,
+      "artifact": {
+        "id": 10609122662,
+        "name": "v4-staging-browser-verification-35522899016",
+        "digest": "sha256:e7f81e37d59d6d588c96a8c4be81b7400c871fc9b863f39d06503a5f85a9d8c5",
+        "sizeInBytes": 2674367,
+        "expiresAt": "2026-12-19T16:30:00Z",
+        "originVerified": true,
+        "originalZipDigestVerified": true,
+        "members": [
+          {
+            "name": "platform-onboarding.png",
+            "sizeInBytes": 335251,
+            "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1"
+          },
+          {
+            "name": "platform-themes.png",
+            "sizeInBytes": 1330834,
+            "sha256": "b7313b202c677e3316db46042c157925527381d5bd5f1e07ee27c5647d486479"
+          },
+          {
+            "name": "child-journey.png",
+            "sizeInBytes": 1130107,
+            "sha256": "f25aad29e0db757b79e58f007c0b38410132e69cce5b02d1044c8102e882f64e"
+          },
+          {
+            "name": "verification.json",
+            "sizeInBytes": 3972,
+            "sha256": "607300b21db9dccb0cd1ca8d1e649467b72f269918f759a715f9cc0e49002646"
+          }
+        ]
+      },
+      "startedAt": "2026-09-20T16:30:53.885Z",
+      "finishedAt": "2026-09-20T16:31:32.979Z",
+      "publicJsonAllowlist": "passed",
+      "screenshotVisualReview": "reviewed-with-limitations; all original images actually inspected in visual-review.json"
+    },
+    {
+      "target": "production",
+      "status": "passed",
+      "jobId": 106109959096,
+      "checksPassed": 23,
+      "tenantCountUnchanged": 0,
+      "passwordsUnchangedAndOwnSessionsRevoked": true,
+      "artifact": {
+        "id": 10609177480,
+        "name": "v4-production-browser-verification-35522899016",
+        "digest": "sha256:68198d0dc0c40250a40c292cd229b54cd3571fae279cb8d2b437930ae6c638cd",
+        "sizeInBytes": 628392,
+        "expiresAt": "2026-12-19T16:30:00Z",
+        "originVerified": true,
+        "originalZipDigestVerified": true,
+        "members": [
+          {
+            "name": "platform-onboarding.png",
+            "sizeInBytes": 335251,
+            "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1"
+          },
+          {
+            "name": "platform-themes.png",
+            "sizeInBytes": 301257,
+            "sha256": "89ee9426c7e9bb4722c0d7ac2aaa5231c24cc1c975e52f6587d7e40c9e774ec4"
+          },
+          {
+            "name": "verification.json",
+            "sizeInBytes": 2479,
+            "sha256": "5f3c447a790c1873d950e000a6dd52c68a29b2667caefab240a36c1042612494"
+          }
+        ]
+      },
+      "startedAt": "2026-09-20T16:30:47.079Z",
+      "finishedAt": "2026-09-20T16:31:03.993Z",
+      "publicJsonAllowlist": "passed",
+      "screenshotVisualReview": "reviewed-with-limitations; all original images actually inspected in visual-review.json"
+    }
+  ],
+  "sourceBoundBehavior": {
+    "noNewTenantOrInvitation": "wizard navigation only; tenant count unchanged",
+    "noMailSentByVerifier": "admin.generateLink followed by verifyOtp, no email dispatch",
+    "passwordPreservation": "in-memory before/after hash comparison, generic boolean assertion",
+    "ownTemporarySessionCleanup": "scope local sign-out for each successfully authenticated verifier session",
+    "unrelatedSessions": "verifier performs no global sign-out"
+  },
+  "limitations": [
+    "Production existing-owner authentication uses a generated token without delivery; it does not enter the existing password.",
+    "Password hashes remain in memory; only equality success is recorded.",
+    "Local sign-out revokes the verifier own session; already-issued access tokens may remain valid until expiry.",
+    "No tenant provisioning or outbound-message action is performed; onboarding navigation and tenant-count preservation are checked.",
+    "Desktop main-region captures do not constitute a new full-shell or responsive visual audit.",
+    "Exact health checks bind HTTP200, ok, environment, release SHA, database and schema; this verifier does not assert the health app-name field."
+  ],
+  "visualReview": {
+    "file": "visual-review.json",
+    "allFiveOriginalImageHashesMatched": true,
+    "allFiveImagesActuallyViewed": true,
+    "visibleCredentialsOrAccountEmailsObserved": false,
+    "newBlockingVisualDefectEstablished": false,
+    "limitations": [
+      "The fixed platform header visibly overlaps the upper title area in the platform captures. This review makes no claim that the full application shell is covered or excluded.",
+      "The staging assignment controls extend beyond the right edge of the captured region. This single capture does not establish whether those controls are reachable through scrolling. The known expanded catalogue-preview clipping remains unchanged and was not reopened.",
+      "The child capture includes a large blank lower area beneath the visible progress totals. The screenshot alone does not establish its cause or full scrolling behavior.",
+      "This is a bounded desktop screenshot review, not a new responsive or platform-wide visual audit. The separate fresh full-staging Priority A and seven-theme evidence carries that broader tested scope."
+    ]
+  }
+}

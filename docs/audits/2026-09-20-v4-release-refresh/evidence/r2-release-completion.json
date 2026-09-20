@@ -1,0 +1,93 @@
+{
+  "status": "passed",
+  "recordedAt": "2026-09-20T17:06:56.490918+00:00",
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "productionDeploymentRun": 35522722633,
+  "stagingDeploymentRun": 35520266317,
+  "goReference": "https://github.com/nxttrack/platform/blob/6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5/docs/audits/2026-09-20-v4-production-go-no-go-r2.md",
+  "urls": {
+    "production": "https://nxttrack.nl",
+    "platform": "https://admin.nxttrack.nl/platform",
+    "staging": "https://staging.nxttrack.nl"
+  },
+  "definitionOfDone": "Both environments deployed and usable within documented V4 product scope; all required release and completion gates passed.",
+  "observation": {
+    "completed": true,
+    "processExitCode": 0,
+    "samplesPerEnvironment": 31,
+    "successfulEndpointObservations": 62,
+    "failedSamples": 0,
+    "elapsedMs": 1800360,
+    "startedAt": "2026-09-20T16:29:38.200Z",
+    "finishedAt": "2026-09-20T16:59:38.560Z"
+  },
+  "finalReadinessRun": 35524525541,
+  "finalHostRun": 35524445725,
+  "proofs": {
+    "ci": {
+      "file": "r2-verified-ci-summary.json",
+      "sha256": "cc6d6d0d44793d8e19361b89bf48dfb4228fb24a58eeba2acfb342cb0349dfd3"
+    },
+    "staging": {
+      "file": "r2-verified-staging-summary.json",
+      "sha256": "651392139a3621028bf053ffa50d82565ce81d3abdb5d5dc15f4b2782414c1ad"
+    },
+    "visual": {
+      "file": "r2-visual-review.json",
+      "sha256": "cdc812243fd5891a2e01e1b9e125b959c40f0df3aa9a57ccd33fe59e00de0fc6"
+    },
+    "productionPreflights": {
+      "file": "r2-verified-production-preflight.json",
+      "sha256": "abf6a77741c627772d613dcea490c6b82b6dbaadc5a4ae8599d460f3cfed9215"
+    },
+    "productionDeployment": {
+      "file": "r2-production-deployment.json",
+      "sha256": "4fec6ab0fa0e77eac311b11d67a3de76fb8e4b119e3a9fbb69495532211827a3"
+    },
+    "publicRoutes": {
+      "file": "r2-final-public-routes.json",
+      "sha256": "f6a03e1d6d719cb4830e9b35b26bbabcf9af56cdfc9901ccc2d52ec30cbbe9ac"
+    },
+    "browsers": {
+      "file": "r2-browser-artifact-review.json",
+      "sha256": "c077f988f9850a0ef20bffae32997f9f569b4bcb3e91a16c97546614ab7eaaf4"
+    },
+    "assignmentReachability": {
+      "file": "r2-assignment-reachability-browser.json",
+      "sha256": "bb8821cc5750af942270f2c4466b281b14a61825e699656fd47cdb3ca8bcd8e6"
+    },
+    "installedBackups": {
+      "file": "r2-installed-backups-both.json",
+      "sha256": "8c05d591c56d51a58f028c23136ead4cd556e34fe1b7dacad938ab4450dcb379"
+    },
+    "runtimeRollback": {
+      "file": "r2-production-rollback.json",
+      "sha256": "b0d64d797f165b3b29d97625ca27cba682a0eca6a7f9d358118b37d614836bf6"
+    },
+    "observation": {
+      "file": "r2-observation-independent-verification.json",
+      "sha256": "24405ca8fb1f294834d932eeb23aa71a67eb3b91f837939367251dd5be692d44"
+    },
+    "hosts": {
+      "file": "r2-host-stability-comparison.json",
+      "sha256": "3536f16106ad60ae20e8b8243943047b81d6910475a9d8ce4de1ba736bd51ede"
+    },
+    "stagingFinalMonitor": {
+      "file": "r2-final-monitor-staging.json",
+      "sha256": "2b52fb4a721a38bbf18b12036c9fcf6e328e7233bca85baba4dfba5dde5e0c62"
+    },
+    "productionFinalMonitor": {
+      "file": "r2-final-monitor-production.json",
+      "sha256": "fdd92b54907f9a004e7e8d6669d867282c2821fbbb756f3f057206685f3fe7e7"
+    },
+    "finalReadiness": {
+      "file": "r2-final-readiness.json",
+      "sha256": "17c4a17a791d8e6391ec72c6e1624dd906ca6a53151b3c29b3f55063416a171f"
+    },
+    "finalFlags": {
+      "file": "r2-final-operational-flags.json",
+      "sha256": "87a839b15926ccf435c57980a6b9dc07814af085fc1ddd27f697480834cf8864"
+    }
+  },
+  "limits": "See the execution report for the disclosed retry, conditional skips, periodic-observation scope, backup/rollback bounds and remaining presentation/product exclusions. No restore or theme activation was performed by the supplemental verification."
+}

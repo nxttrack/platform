@@ -1,0 +1,131 @@
+{
+  "status": "passed",
+  "verifiedAt": "2026-09-20T16:34:22.415116+00:00",
+  "repository": "nxttrack/platform",
+  "runId": 35523032571,
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "operationSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+  "runConclusion": "success",
+  "sourceSha256": {
+    "scripts/operations/runtime-operations-contract.mjs": "7bc8cee2c136730e738231a66ed618afdd9e4c9e9e23c56457faae6c69d3c3ef",
+    "scripts/operations/run-scheduled-jobs.mjs": "f21ddcb89ed464047d7aaefcd5fb1df7f15d40ebdaf8d64c8b8707b7ed1b015b",
+    "scripts/operations/backup-storage-daily.mjs": "fc5a50b8e1714cbafd3759904622186d06db49cd0e386dd6d5eb7614a6160c55",
+    "scripts/storage/object-backup.mjs": "d70bd07730dfe6e5fcc60c1a495ec40294d035ddb85adaeeee03506f7b779565",
+    "scripts/storage/storage-bucket-contract.mjs": "870282403e06f1b65ad747b2b37a273aa8ed56cd3bf56f6286fd9edbc58ef834",
+    "scripts/storage/storage-restore-contract.mjs": "8cda05b1bd5a90b610f9a2c6e0140e09b6cf818aca6cb67da63d750a4dca3b2f",
+    "scripts/operations/verify-installed-storage-backup.mjs": "b06f11f1243115589d93861b08efeb09739a9b5b66a805aad62243d9a54a1a0b",
+    ".github/workflows/production-migration-recovery.yml": "a7a842b9ac494f8ee36bc76a612a52f1d8c84e575699c01a04d71f942178b3c4"
+  },
+  "installedDigestMatchesCanonicalSource": true,
+  "helperAndWorkflowUnchangedSinceA54": true,
+  "bothTargetsActuallyExecutedSerially": true,
+  "results": [
+    {
+      "target": "staging",
+      "status": "passed",
+      "jobId": 106110306367,
+      "artifact": {
+        "id": 10608173164,
+        "name": "installed-v4-backup-staging-35523032571",
+        "sizeInBytes": 679,
+        "digest": "sha256:b2103d0d233da8a15838e82da92a251437a6edc986e7b671e0bef072e2719fe1",
+        "expiresAt": "2026-12-19T16:32:22Z",
+        "originalZipDigestVerified": true,
+        "sameRepositoryRunAndHeadVerified": true,
+        "entries": [
+          "installed-backup-staging-35523032571.json"
+        ]
+      },
+      "publicArtifactAllowlistPassed": true,
+      "result": {
+        "target": "staging",
+        "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+        "operationSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+        "startedAt": "2026-09-20T16:32:30.250Z",
+        "status": "passed",
+        "installedCli": {
+          "at": "2026-09-20T16:32:36.687Z",
+          "target": "staging",
+          "status": "pass",
+          "encrypted": true,
+          "retentionDays": 14
+        },
+        "backup": {
+          "createdAt": "2026-09-20T16:32:35.783Z",
+          "bucketCount": 7,
+          "objectCount": 48,
+          "totalBytes": 2933428,
+          "encryptedArchiveBytes": 2851798,
+          "retentionDays": 14
+        },
+        "plaintextAndPartialCleanup": "passed",
+        "healthBeforeAndAfter": "passed",
+        "keyEnvironmentIdentityOperationsAndPidUnchanged": true,
+        "installedVersionDigest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "invokedThroughInstalledCurrentSymlink": true,
+        "privateCommandOutputRemoved": true,
+        "finishedAt": "2026-09-20T16:32:37.053Z"
+      }
+    },
+    {
+      "target": "production",
+      "status": "passed",
+      "jobId": 106110350638,
+      "artifact": {
+        "id": 10609187480,
+        "name": "installed-v4-backup-production-35523032571",
+        "sizeInBytes": 680,
+        "digest": "sha256:48deec58aff8548c54366e7cbdaffecb5165cdf1ec7609927d3d318b1c01997a",
+        "expiresAt": "2026-12-19T16:32:22Z",
+        "originalZipDigestVerified": true,
+        "sameRepositoryRunAndHeadVerified": true,
+        "entries": [
+          "installed-backup-production-35523032571.json"
+        ]
+      },
+      "publicArtifactAllowlistPassed": true,
+      "result": {
+        "target": "production",
+        "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+        "operationSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+        "startedAt": "2026-09-20T16:32:48.738Z",
+        "status": "passed",
+        "installedCli": {
+          "at": "2026-09-20T16:32:51.386Z",
+          "target": "production",
+          "status": "pass",
+          "encrypted": true,
+          "retentionDays": 14
+        },
+        "backup": {
+          "createdAt": "2026-09-20T16:32:50.799Z",
+          "bucketCount": 7,
+          "objectCount": 0,
+          "totalBytes": 0,
+          "encryptedArchiveBytes": 596,
+          "retentionDays": 14
+        },
+        "plaintextAndPartialCleanup": "passed",
+        "healthBeforeAndAfter": "passed",
+        "keyEnvironmentIdentityOperationsAndPidUnchanged": true,
+        "installedVersionDigest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "invokedThroughInstalledCurrentSymlink": true,
+        "privateCommandOutputRemoved": true,
+        "finishedAt": "2026-09-20T16:32:51.642Z"
+      }
+    }
+  ],
+  "completionContract": {
+    "actualInstalledCurrentSymlinkCli": "passed both environments",
+    "completeSevenBucketExport": "passed both environments",
+    "encryptedArchiveAndDecryptByteEquality": "passed via exact canonical CLI success contract",
+    "internalSuccessHeartbeat": "accepted via exact canonical CLI success contract",
+    "unchangedKeyEnvironmentCurrentIdentityOperationsAndPid": "passed both environments",
+    "plaintextPartialAndPrivateOutputCleanup": "passed both environments"
+  },
+  "limitations": [
+    "Original public artifacts contain sanitized execution evidence, not storage object contents or encrypted host archives.",
+    "Decrypt/cmp and accepted internal heartbeat are established by the source-bound CLI returning PASS after these mandatory steps; this review does not independently decrypt host archives or query heartbeat storage.",
+    "Host archives use 14-day retention; the sanitized GitHub evidence uses 90 days."
+  ]
+}

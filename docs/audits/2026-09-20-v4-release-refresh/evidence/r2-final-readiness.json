@@ -1,0 +1,122 @@
+{
+  "status": "passed",
+  "verifiedAt": "2026-09-20T17:03:43.632291+00:00",
+  "runId": 35524525541,
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "runConclusion": "success",
+  "sourceSha256": {
+    ".github/workflows/deployment-readiness.yml": "4798fabe661915fe34956c70d3ae0318530092a76fb731436c0e604f8f60b117",
+    "scripts/operations/check-runtime-operations.mjs": "74934a3c1686c673fe1d11b338abd95998b48ae6a9d8e495cca5c05b774a17a0",
+    "scripts/operations/runtime-operations-contract.mjs": "7bc8cee2c136730e738231a66ed618afdd9e4c9e9e23c56457faae6c69d3c3ef",
+    "scripts/operations/install-runtime-operations.mjs": "c5d4904751d0e02d168755a7d68162e683988ae2e145a59fdfd05786d874ec4f"
+  },
+  "results": [
+    {
+      "target": "staging",
+      "status": "passed",
+      "jobId": 106114268835,
+      "checksPassed": 12,
+      "ready": true,
+      "checkedAt": "2026-09-20T17:01:30.022Z",
+      "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "operationsMode": "versioned",
+      "prerequisites": {
+        "target": "staging",
+        "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "installationPrerequisites": "pass"
+      },
+      "installedDigestPriorByteProof": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "configuredWorkerRoutes": [
+        "/api/internal/portal-themes/activate-scheduled",
+        "/api/internal/offerings/expire",
+        "/api/internal/email-outbox/process"
+      ],
+      "latestConfiguredWorkerEventsPassedWithinFiveMinutes": true,
+      "keyMetadata": {
+        "bytes": 64,
+        "mode": "600"
+      },
+      "latestBackup": {
+        "createdAt": "2026-09-20T16:32:35.783Z",
+        "buckets": 7,
+        "objects": 48,
+        "encryptedArchivePresent": true
+      },
+      "backupMatchesActuallyExecutedInstalledCliRun": 35523032571,
+      "publicJsonAllowlistPassed": true,
+      "artifact": {
+        "id": 10608164659,
+        "digest": "sha256:1e00195a9690fafc74c38d24e95f878b23014b6f79d9d020e45e303ce29634a6",
+        "name": "runtime-readiness-staging-35524525541",
+        "sizeInBytes": 617,
+        "expiresAt": "2026-10-20T17:01:30Z",
+        "originalZipDigestVerified": true,
+        "repositoryRunAndSourceVerified": true
+      }
+    },
+    {
+      "target": "production",
+      "status": "passed",
+      "jobId": 106114301709,
+      "checksPassed": 12,
+      "ready": true,
+      "checkedAt": "2026-09-20T17:01:43.647Z",
+      "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "operationsMode": "versioned",
+      "prerequisites": {
+        "target": "production",
+        "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "installationPrerequisites": "pass"
+      },
+      "installedDigestPriorByteProof": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "configuredWorkerRoutes": [
+        "/api/internal/portal-themes/activate-scheduled",
+        "/api/internal/offerings/expire",
+        "/api/internal/email-outbox/process"
+      ],
+      "latestConfiguredWorkerEventsPassedWithinFiveMinutes": true,
+      "keyMetadata": {
+        "bytes": 64,
+        "mode": "600"
+      },
+      "latestBackup": {
+        "createdAt": "2026-09-20T16:32:50.799Z",
+        "buckets": 7,
+        "objects": 0,
+        "encryptedArchivePresent": true
+      },
+      "backupMatchesActuallyExecutedInstalledCliRun": 35523032571,
+      "publicJsonAllowlistPassed": true,
+      "artifact": {
+        "id": 10608314324,
+        "digest": "sha256:4bf75ed12d23b999e65708bd7490b5f89d8b3db87b564b310f0c9d26fcafa373",
+        "name": "runtime-readiness-production-35524525541",
+        "sizeInBytes": 625,
+        "expiresAt": "2026-10-20T17:01:43Z",
+        "originalZipDigestVerified": true,
+        "repositoryRunAndSourceVerified": true
+      }
+    }
+  ],
+  "allChecksPassed": 24,
+  "afterFullObservation": true,
+  "workerFreshnessContract": {
+    "usesLatestEventPerConfiguredRoute": true,
+    "requiresStatus": "pass",
+    "maximumAgeExclusiveMs": 300000,
+    "maximumFutureSkewMs": 60000,
+    "clock": "VPS Date.now at assessment; checkedAt recorded after backup assessment"
+  },
+  "finalFlagEvidence": {
+    "path": "/tmp/nxttrack-v4-release-evidence/r2-final-operational-flags.json",
+    "checkedAt": "2026-09-20T17:00:58.790391+00:00",
+    "status": "passed",
+    "sha256": "87a839b15926ccf435c57980a6b9dc07814af085fc1ddd27f697480834cf8864"
+  },
+  "limitations": [
+    "The readiness artifact records the source-bound worker freshness predicate, not individual worker timestamps or private worker log lines. No raw job or host logs were retained.",
+    "Versioned mode in readiness means the manifest is present; the exact installed digest and actual symlink CLI bytes were separately proven in installed-backup run35523032571. Prerequisite source digest here matches that exact version.",
+    "GitHub flags are deployment configuration evidence; private runtime environment values are not published.",
+    "This read-only audit does not invoke workers, send alerts or messages, run a new backup, or restore data."
+  ]
+}

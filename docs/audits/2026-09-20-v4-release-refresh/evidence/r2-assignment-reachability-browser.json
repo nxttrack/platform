@@ -1,0 +1,211 @@
+{
+  "status": "passed",
+  "verifiedAt": "2026-09-20T16:48:25.489697+00:00",
+  "runId": 35523743299,
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "verifierSourceSha": "7c880dc23feca46f921b561529580c51db53026a",
+  "runConclusion": "success",
+  "sourceSha256": {
+    "scripts/release/v4-browser-verify.mjs": "388e245d5df5fbaaf8dc1c9080d5e1d0443b3ce50cac76aa976d79d0a37d8c3a",
+    "scripts/release/v4-browser-contract.mjs": "45fa7e42ee9aeb0dac71be2ba371534fc44b0d67715397439998992b914cf8e0",
+    ".github/workflows/production-migration-recovery.yml": "a7a842b9ac494f8ee36bc76a612a52f1d8c84e575699c01a04d71f942178b3c4"
+  },
+  "sourceMatchesReviewedReachabilityCommit2d65a809": true,
+  "results": [
+    {
+      "target": "staging",
+      "status": "passed",
+      "jobId": 106112191102,
+      "checksPassed": 42,
+      "tenantCountUnchanged": 3,
+      "passwordsUnchangedAndOwnSessionsRevoked": true,
+      "artifact": {
+        "id": 10608178913,
+        "name": "v4-staging-browser-verification-35523743299",
+        "digest": "sha256:5eb941dde6c050849ffe4aea0eb340a7a4920f7116955e8739f846e1bc563d81",
+        "sizeInBytes": 2702883,
+        "expiresAt": "2026-12-19T16:46:10Z",
+        "originVerified": true,
+        "originalZipDigestVerified": true,
+        "members": [
+          {
+            "name": "child-journey.png",
+            "sizeInBytes": 1130107,
+            "sha256": "f25aad29e0db757b79e58f007c0b38410132e69cce5b02d1044c8102e882f64e"
+          },
+          {
+            "name": "platform-onboarding.png",
+            "sizeInBytes": 335251,
+            "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1"
+          },
+          {
+            "name": "platform-themes.png",
+            "sizeInBytes": 1356361,
+            "sha256": "91badb070b441a19a1ab75ec730795ce1fa13fe38d92e7a0ae2a0196bf360385"
+          },
+          {
+            "name": "verification.json",
+            "sizeInBytes": 6911,
+            "sha256": "88d3f1bfd42517e5b8fe128e35653981b37917f4fded2209f4146117a3c91e90"
+          }
+        ]
+      },
+      "startedAt": "2026-09-20T16:47:04.765Z",
+      "finishedAt": "2026-09-20T16:47:46.168Z",
+      "publicJsonAllowlist": "passed",
+      "screenshotVisualReview": "reviewed-with-limitations; all three original images actually inspected in visual-review.json"
+    }
+  ],
+  "sourceBoundBehavior": {
+    "noNewTenantOrInvitation": "wizard navigation only; tenant count unchanged",
+    "noMailSentByVerifier": "admin.generateLink followed by verifyOtp, no email dispatch",
+    "passwordPreservation": "in-memory before/after hash comparison, generic boolean assertion",
+    "ownTemporarySessionCleanup": "scope local sign-out for each successfully authenticated verifier session",
+    "assignmentReachability": "three exact fixture articles, nine trial clicks with normal scrolling and center hit-tests; form values compared only in memory and unchanged; no actual activation or submission",
+    "unrelatedSessions": "verifier performs no global sign-out"
+  },
+  "limitations": [
+    "Production existing-owner authentication uses a generated token without delivery; it does not enter the existing password.",
+    "Password hashes remain in memory; only equality success is recorded.",
+    "Local sign-out revokes the verifier own session; already-issued access tokens may remain valid until expiry.",
+    "No tenant provisioning or outbound-message action is performed; onboarding navigation and tenant-count preservation are checked.",
+    "Desktop main-region captures do not constitute a new full-shell or responsive visual audit.",
+    "Exact health checks bind HTTP200, ok, environment, release SHA, database and schema; this verifier does not assert the health app-name field.",
+    "This supplemental run covers staging only; existing final production and both-environment browser evidence remains in run35522899016. Trial clicks prove actionability, not that an activation or submitted action succeeds."
+  ],
+  "reachability": {
+    "check": "staging theme assignment actions reachable without activation",
+    "status": "pass",
+    "articles": 3,
+    "trialActions": 9,
+    "bounds": [
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 35,
+        "scrollY": 1607,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1327,
+        "top": 480.34375,
+        "width": 113,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 35,
+        "scrollY": 1607,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1352,
+        "top": 536.34375,
+        "width": 88,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 35,
+        "scrollY": 1607,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1253,
+        "top": 661.34375,
+        "width": 187,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 40,
+        "scrollY": 2146,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1327,
+        "top": 480.34375,
+        "width": 113,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 40,
+        "scrollY": 2146,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1352,
+        "top": 536.34375,
+        "width": 88,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 40,
+        "scrollY": 2146,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1253,
+        "top": 605.34375,
+        "width": 187,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 70,
+        "scrollY": 2149,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1327,
+        "top": 960.34375,
+        "width": 113,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 70,
+        "scrollY": 2685,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1352,
+        "top": 480.34375,
+        "width": 88,
+        "height": 40
+      },
+      {
+        "viewportWidth": 1440,
+        "viewportHeight": 1000,
+        "scrollX": 70,
+        "scrollY": 2685,
+        "documentWidth": 1510,
+        "documentHeight": 8138,
+        "left": 1253,
+        "top": 605.34375,
+        "width": 187,
+        "height": 40
+      }
+    ]
+  },
+  "observedScrolling": {
+    "horizontalSamples": 9,
+    "verticalSamples": 9
+  },
+  "visualReview": {
+    "file": "visual-review.json",
+    "allThreeOriginalImageHashesMatched": true,
+    "allThreeImagesActuallyViewed": true,
+    "visibleCredentialsOrAccountEmailsObserved": false,
+    "recommendation": "No additional blocker found within the three-image visual/privacy sample and separately recorded nine-control reachability evidence. Preserve the layout and capture limitations; this is supplemental staging evidence only.",
+    "limitations": [
+      "These main-region captures are not a full-shell, responsive or general platform visual approval.",
+      "A fixed header is visible over the upper platform title; main-region framing does not mean all global header pixels are excluded.",
+      "The screenshot still clips assignment controls at its right edge; actual scrolling reachability is established by the separate same-run browser check, not by the screenshot.",
+      "Known expanded platform catalogue preview clipping remains documented and was not opened or repaired here.",
+      "Final production screenshots and both-environment browser checks remain in ../browser-35522899016; no production image is part of this staging-only supplement.",
+      "Fresh full staging 56-image width checks and 13 mandatory release gates belong to run35520266317; this supplemental sample does not replace them."
+    ]
+  }
+}

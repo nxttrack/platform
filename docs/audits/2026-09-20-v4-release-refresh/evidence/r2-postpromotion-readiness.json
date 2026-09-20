@@ -1,0 +1,130 @@
+{
+  "runId": "35523136612",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "sourceRef": "main",
+  "verifiedAt": "2026-09-20T16:39:23.053226+00:00",
+  "workflowConclusion": "success",
+  "result": "passed",
+  "matrixJobs": [
+    {
+      "id": 106110582072,
+      "name": "inspect staging runtime operations",
+      "conclusion": "success"
+    },
+    {
+      "id": 106110610352,
+      "name": "inspect production runtime operations",
+      "conclusion": "success"
+    }
+  ],
+  "reports": [
+    {
+      "target": "staging",
+      "runtimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "checkedAt": "2026-09-20T16:34:31.472Z",
+      "ready": true,
+      "passed": 12,
+      "total": 12,
+      "checkIds": [
+        "maintenance-disabled",
+        "internal-jobs-enabled",
+        "service-active",
+        "service-enabled",
+        "cron-active",
+        "immutable-release-matches-env",
+        "public-runtime-health",
+        "workers-single-schedule",
+        "backup-single-schedule",
+        "recent-successful-worker-ticks",
+        "backup-key-private",
+        "fresh-complete-encrypted-backup"
+      ],
+      "operationsMode": "versioned",
+      "allConfiguredWorkerRoutesRecentAndSuccessful": true,
+      "workerRecencyContractSeconds": 300,
+      "workerRouteNamesNotEmbeddedInThisArtifact": true,
+      "backup": {
+        "createdAt": "2026-09-20T16:32:35.783Z",
+        "buckets": 7,
+        "objects": 48,
+        "encryptedArchivePresent": true,
+        "ageSecondsAtCheck": 115.689,
+        "completeEnvironmentProjectAndNoPrefixContractPassed": true,
+        "backupKeyPrivateContractPassed": true,
+        "matchesInstalledBackupProbeRun": "35523032571",
+        "installedCliCompletedAt": "2026-09-20T16:32:36.687Z",
+        "installedVersionDigest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "encryptedArchiveBytesFromProbe": 2851798,
+        "plaintextAndPartialCleanupFromProbe": "passed"
+      },
+      "artifactId": 10609137794,
+      "artifactDigest": "sha256:fcd04eb13b2bc48a4cfdef565b0ba62c4bd25e5e9aa650f7055e3577cd1cb97c",
+      "originalZipDigestVerified": true,
+      "retainedOriginalZip": "staging.zip",
+      "retainedReport": "staging.json"
+    },
+    {
+      "target": "production",
+      "runtimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "checkedAt": "2026-09-20T16:34:43.693Z",
+      "ready": true,
+      "passed": 12,
+      "total": 12,
+      "checkIds": [
+        "maintenance-disabled",
+        "internal-jobs-enabled",
+        "service-active",
+        "service-enabled",
+        "cron-active",
+        "immutable-release-matches-env",
+        "public-runtime-health",
+        "workers-single-schedule",
+        "backup-single-schedule",
+        "recent-successful-worker-ticks",
+        "backup-key-private",
+        "fresh-complete-encrypted-backup"
+      ],
+      "operationsMode": "versioned",
+      "allConfiguredWorkerRoutesRecentAndSuccessful": true,
+      "workerRecencyContractSeconds": 300,
+      "workerRouteNamesNotEmbeddedInThisArtifact": true,
+      "backup": {
+        "createdAt": "2026-09-20T16:32:50.799Z",
+        "buckets": 7,
+        "objects": 0,
+        "encryptedArchivePresent": true,
+        "ageSecondsAtCheck": 112.894,
+        "completeEnvironmentProjectAndNoPrefixContractPassed": true,
+        "backupKeyPrivateContractPassed": true,
+        "matchesInstalledBackupProbeRun": "35523032571",
+        "installedCliCompletedAt": "2026-09-20T16:32:51.386Z",
+        "installedVersionDigest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+        "encryptedArchiveBytesFromProbe": 596,
+        "plaintextAndPartialCleanupFromProbe": "passed"
+      },
+      "artifactId": 10609252536,
+      "artifactDigest": "sha256:b4b82a3f232f60ef8372391198ee9d407c23ddce24898a54f73f0404e155d75e",
+      "originalZipDigestVerified": true,
+      "retainedOriginalZip": "production.zip",
+      "retainedReport": "production.json"
+    }
+  ],
+  "workerEvidenceQualification": "Every configured worker route has a latest PASS event younger than five minutes. Route names/count are not embedded in readiness artifacts; separate allowlisted configuration and canonical contract select three routes. Readiness is a point-in-time check, not the thirty-minute observation.",
+  "backupCrossCheck": "Both latest-backup timestamps, seven-bucket counts and object counts exactly match the separately source/digest-verified installed current-symlink backup run35523032571 on R2. Its actual CLI execution completed before this readiness audit.",
+  "corroboration": [
+    {
+      "path": "../installed-backup-35523032571/verification.json",
+      "purpose": "Actual installed symlink backup execution on exactR2/digest8e..., complete seven-bucket export, encrypted archive, mandatory decrypt/cmp and heartbeat contract, cleanup."
+    },
+    {
+      "path": "../r2-prepromotion-operational-flags.json",
+      "purpose": "Only allowlisted non-secret configuration, including email and internal jobs enabled."
+    }
+  ],
+  "limits": [
+    "This readiness review performs no new job invocation, backup, decryption, restore or environment mutation.",
+    "The readiness archive-presence/summary check does not itself decrypt host archives. Actual CLI backup execution and its mandatory decrypt/cmp contract are separately source-verified in the referenced backup proof.",
+    "Installed version digest comes from backup/deploy evidence; the readiness JSON independently reports the versioned marker.",
+    "Fresh checks near the end of the thirty-minute observation remain root-owned."
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "initialRunId": "35522832645",
+  "finalRunId": "35524445725",
+  "runtimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "result": "passed",
+  "minimumRequiredElapsedSeconds": 1800,
+  "hostHelperAndWorkflowByteIdentical": true,
+  "environments": [
+    {
+      "target": "production",
+      "result": "passed",
+      "services": {
+        "nxttrack-production": {
+          "initialObservedAt": "2026-09-20T16:29:02.815Z",
+          "finalObservedAt": "2026-09-20T17:00:45.623Z",
+          "elapsedSeconds": 1902.808,
+          "MainPID": 206335,
+          "NRestarts": 0,
+          "ActiveEnterTimestamp": "Sun 2026-09-20 16:28:09 UTC",
+          "allRequiredFieldsUnchanged": true,
+          "activeAndRunning": true
+        },
+        "caddy": {
+          "initialObservedAt": "2026-09-20T16:29:02.830Z",
+          "finalObservedAt": "2026-09-20T17:00:45.634Z",
+          "elapsedSeconds": 1902.804,
+          "MainPID": 1622,
+          "NRestarts": 0,
+          "ActiveEnterTimestamp": "Sun 2026-09-13 20:49:35 UTC",
+          "allRequiredFieldsUnchanged": true,
+          "activeAndRunning": true
+        }
+      }
+    },
+    {
+      "target": "staging",
+      "result": "passed",
+      "services": {
+        "nxttrack-staging": {
+          "initialObservedAt": "2026-09-20T16:28:50.646Z",
+          "finalObservedAt": "2026-09-20T17:00:32.640Z",
+          "elapsedSeconds": 1901.994,
+          "MainPID": 199819,
+          "NRestarts": 0,
+          "ActiveEnterTimestamp": "Sun 2026-09-20 15:40:58 UTC",
+          "allRequiredFieldsUnchanged": true,
+          "activeAndRunning": true
+        },
+        "caddy": {
+          "initialObservedAt": "2026-09-20T16:28:50.655Z",
+          "finalObservedAt": "2026-09-20T17:00:32.657Z",
+          "elapsedSeconds": 1902.002,
+          "MainPID": 1622,
+          "NRestarts": 0,
+          "ActiveEnterTimestamp": "Sun 2026-09-13 20:49:35 UTC",
+          "allRequiredFieldsUnchanged": true,
+          "activeAndRunning": true
+        }
+      }
+    }
+  ]
+}

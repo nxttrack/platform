@@ -1,0 +1,89 @@
+{
+  "runId": 35522899016,
+  "reviewedAt": "2026-09-20T16:34:45.105942+00:00",
+  "runtimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "verifierSourceSha": "6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5",
+  "sourceAndOriginalImageHashesVerified": true,
+  "method": "Direct inspection of all five original PNGs using view_image, including original-detail inspection of the long staging catalogue. Compared every PNG to its ZIP member and manifest SHA256. No authenticated browser actions or source edits by this reviewer.",
+  "images": [
+    {
+      "path": "staging/platform-onboarding.png",
+      "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+      "bytes": 335251,
+      "width": 1192,
+      "height": 1149,
+      "originalZipMemberVerified": true,
+      "actuallyViewed": true
+    },
+    {
+      "path": "staging/platform-themes.png",
+      "sha256": "b7313b202c677e3316db46042c157925527381d5bd5f1e07ee27c5647d486479",
+      "bytes": 1330834,
+      "width": 1192,
+      "height": 8083,
+      "originalZipMemberVerified": true,
+      "actuallyViewed": true
+    },
+    {
+      "path": "staging/child-journey.png",
+      "sha256": "f25aad29e0db757b79e58f007c0b38410132e69cce5b02d1044c8102e882f64e",
+      "bytes": 1130107,
+      "width": 1140,
+      "height": 1909,
+      "originalZipMemberVerified": true,
+      "actuallyViewed": true
+    },
+    {
+      "path": "production/platform-onboarding.png",
+      "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+      "bytes": 335251,
+      "width": 1192,
+      "height": 1149,
+      "originalZipMemberVerified": true,
+      "actuallyViewed": true
+    },
+    {
+      "path": "production/platform-themes.png",
+      "sha256": "89ee9426c7e9bb4722c0d7ac2aaa5231c24cc1c975e52f6587d7e40c9e774ec4",
+      "bytes": 301257,
+      "width": 1192,
+      "height": 1926,
+      "originalZipMemberVerified": true,
+      "actuallyViewed": true
+    }
+  ],
+  "privacy": {
+    "visibleAccountEmailsObserved": false,
+    "visibleFilledEmailOrPasswordFieldsObserved": false,
+    "scope": "Visible contents of these five images only; input-type and capture-guard behavior is reviewed separately in artifact-review.json."
+  },
+  "observations": [
+    "Both onboarding captures show nine-step navigation, the organization form and Next control, with no onboarding runs.",
+    "Both theme captures show all seven built-in version3.0.0 theme cards, search/import controls and collapsed preview toggles. Production shows the empty tenant-assignment state; staging shows fixture assignments and historical theme audit entries.",
+    "The child capture shows the Ocean Quest background, complete manta mascot in this frame, progress path, badge, map controls and three progress totals. No error page appears."
+  ],
+  "limitations": [
+    "The fixed platform header visibly overlaps the upper title area in the platform captures. This review makes no claim that the full application shell is covered or excluded.",
+    "The staging assignment controls extend beyond the right edge of the captured region. This single capture does not establish whether those controls are reachable through scrolling. The known expanded catalogue-preview clipping remains unchanged and was not reopened.",
+    "The child capture includes a large blank lower area beneath the visible progress totals. The screenshot alone does not establish its cause or full scrolling behavior.",
+    "This is a bounded desktop screenshot review, not a new responsive or platform-wide visual audit. The separate fresh full-staging Priority A and seven-theme evidence carries that broader tested scope."
+  ],
+  "newBlockingVisualDefectEstablished": false,
+  "recommendation": "No additional blocker established in the reviewed visible regions, and no account email or filled credential field observed. Post-deploy visual evidence is complete for these five screenshots on exact R2 source; final operational observation remains separate.",
+  "assignmentReachabilitySourceQualification": {
+    "checkedReadOnly": true,
+    "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+    "finding": "Assignment forms have no dedicated overflow-x scroll container, and no hidden/clip ancestor through page/main/AppShell/body. Their intrinsic-width 3-5-column grids may overflow the main box; the main-locator screenshot clips at that box. Source therefore supports document-level horizontal overflow rather than an ancestor concealing the actions. Scrolling reachability was not interactively exercised.",
+    "references": [
+      "apps/web/app/(platform-admin)/platform/themes/page.tsx:85",
+      "apps/web/app/(platform-admin)/platform/themes/page.tsx:120",
+      "apps/web/app/(platform-admin)/platform/themes/page.tsx:127",
+      "apps/web/app/(platform-admin)/platform/themes/page.tsx:143",
+      "apps/web/components/shell/app-shell-client.tsx:271",
+      "apps/web/components/shell/app-shell-client.tsx:348",
+      "apps/web/app/globals.css:2539",
+      "scripts/release/v4-browser-verify.mjs:155"
+    ],
+    "newFunctionalBlockerEstablished": false
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "status": "reviewed-with-limitations",
+  "reviewedAt": "2026-09-20T16:52:56.983214+00:00",
+  "runId": 35523743299,
+  "target": "staging",
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "verifierSourceSha": "7c880dc23feca46f921b561529580c51db53026a",
+  "sourceAndArtifactReview": "artifact-review.json",
+  "checksPassed": 42,
+  "artifact": {
+    "id": 10608178913,
+    "digest": "sha256:5eb941dde6c050849ffe4aea0eb340a7a4920f7116955e8739f846e1bc563d81",
+    "originalZipDigestIndependentlyMatched": true
+  },
+  "actuallyViewedImages": 3,
+  "images": [
+    {
+      "path": "staging/platform-onboarding.png",
+      "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+      "sizeInBytes": 335251,
+      "width": 1192,
+      "height": 1149,
+      "originalZipMemberMatches": true,
+      "actuallyViewed": true,
+      "viewMethod": "view_image",
+      "privacyObservation": "No account email or filled email/password credential field was visible.",
+      "observations": [
+        "The onboarding form, step navigation and next control are rendered.",
+        "A fixed header overlaps the top of the main-region capture; the title is partly clipped."
+      ]
+    },
+    {
+      "path": "staging/platform-themes.png",
+      "sha256": "91badb070b441a19a1ab75ec730795ce1fa13fe38d92e7a0ae2a0196bf360385",
+      "sizeInBytes": 1356361,
+      "width": 1192,
+      "height": 8083,
+      "originalZipMemberMatches": true,
+      "actuallyViewed": true,
+      "viewMethod": "view_image; themes also inspected at original detail",
+      "privacyObservation": "No account email or filled email/password credential field was visible.",
+      "observations": [
+        "All seven built-in 3.0.0 theme cards, three fixture tenant assignments and the audit list are rendered.",
+        "The assignment forms extend beyond the capture right edge; this is an unchanged wide layout. The separate trial-action evidence shows the controls are reachable after scrolling.",
+        "The fixed header overlaps the title. Expanded catalogue previews are not opened in this capture, so the known expanded-preview clipping is neither fixed nor newly evaluated."
+      ]
+    },
+    {
+      "path": "staging/child-journey.png",
+      "sha256": "f25aad29e0db757b79e58f007c0b38410132e69cce5b02d1044c8102e882f64e",
+      "sizeInBytes": 1130107,
+      "width": 1140,
+      "height": 1909,
+      "originalZipMemberMatches": true,
+      "actuallyViewed": true,
+      "viewMethod": "view_image",
+      "privacyObservation": "No account email or filled email/password credential field was visible.",
+      "observations": [
+        "Ocean Quest artwork, complete manta mascot, completed milestone badge and progress/score controls are rendered.",
+        "A large blank lower area remains in the captured main region. This image alone does not establish scrolling or all journey interactions."
+      ]
+    }
+  ],
+  "privacyReview": {
+    "status": "passed-within-visible-images",
+    "accountEmailsVisible": false,
+    "filledEmailOrPasswordInputsVisible": false,
+    "scope": "The three supplied main-region PNGs; not a claim about uncaptured shell or other pages."
+  },
+  "assignmentReachability": {
+    "source": "staging/verification.json",
+    "status": "pass",
+    "articles": 3,
+    "trialActions": 9,
+    "allTrialsUsedHorizontalAndVerticalScrolling": true,
+    "allRecordedButtonBoundsFitViewport": true,
+    "documentWidth": 1510,
+    "viewportWidth": 1440,
+    "qualification": "Read-only browser trial clicks and center hit-tests prove these nine controls actionable after ordinary scrolling. No real activation, scheduling, licence mutation or form submission is performed. The wide document layout remains."
+  },
+  "recommendation": "No additional blocker found within the three-image visual/privacy sample and separately recorded nine-control reachability evidence. Preserve the layout and capture limitations; this is supplemental staging evidence only.",
+  "limitations": [
+    "These main-region captures are not a full-shell, responsive or general platform visual approval.",
+    "A fixed header is visible over the upper platform title; main-region framing does not mean all global header pixels are excluded.",
+    "The screenshot still clips assignment controls at its right edge; actual scrolling reachability is established by the separate same-run browser check, not by the screenshot.",
+    "Known expanded platform catalogue preview clipping remains documented and was not opened or repaired here.",
+    "Final production screenshots and both-environment browser checks remain in ../browser-35522899016; no production image is part of this staging-only supplement.",
+    "Fresh full staging 56-image width checks and 13 mandatory release gates belong to run35520266317; this supplemental sample does not replace them."
+  ]
+}

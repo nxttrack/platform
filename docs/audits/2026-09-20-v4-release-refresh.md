@@ -1,21 +1,23 @@
 # V4 release refresh: uitvoeringsrapport
 
-**NIEUWE RELEASEVALIDATIE LOOPT; AFRONDING NOG OPEN.**
-Momentopname: 20 september 2026, 16:22 UTC. Staging draait de gecorrigeerde release
-`86132b20455c083cf52a2a0de0713b3c363c7831`; productie draait voorlopig
-`1a72606d5fd7bf72c382fcc5215c3419dfb689e1` met herstelde automatische taken.
-De eerste productieovergang was technisch geslaagd, maar de operationele eindcontrole vond
-stil stoppende worker- en backupopstartscripts. PR #100 repareert de echte oorzaak. Een nieuwe
-volledige stagingcontrole, echte geïnstalleerde backup, productiepromotie en dertig minuten
-observatie zijn vereist. De eerste onderbroken observatie telt niet als afronding.
+**AFGEROND — V4 GEDEPLOYED EN BRUIKBAAR OP STAGING EN PRODUCTIE.**
+Beide omgevingen draaien exact `86132b20455c083cf52a2a0de0713b3c363c7831`:
+[productie](https://nxttrack.nl), [platformbeheer](https://admin.nxttrack.nl/platform) en
+[staging](https://staging.nxttrack.nl). De [productiepromotie 35522722633](https://github.com/nxttrack/platform/actions/runs/35522722633)
+is geslaagd na volledige stagingvalidatie en de
+[onveranderlijke R2-GO](https://github.com/nxttrack/platform/blob/6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5/docs/audits/2026-09-20-v4-production-go-no-go-r2.md).
+Publieke routes, ingelogde rollen, automatische taken, echte versleutelde backups en herstelcontroles
+slagen. Het volledige observatievenster van 16:29:38.200 tot 16:59:38.560 UTC is afgerond:
+31 metingen per omgeving, 62 geslaagde healthcontroles, nul fouten. Eindmetingen bevestigen dezelfde
+serviceprocessen en recente succesvolle workers. Bekende begrensde weergavepunten en niet-geclaimde
+functies/testdekking staan verderop expliciet vermeld.
 
 De gebruiker heeft daadwerkelijke staging-/productiedeployment en autonome technische/visuele
-beslissingen geautoriseerd. Afronding vereist dat beide omgevingen deze gecontroleerde release
-draaien en binnen de beschreven productscope bruikbaar zijn. De oorspronkelijke lokale werkruimte
+beslissingen geautoriseerd. De definitie van gereed is bereikt: beide omgevingen draaien deze gecontroleerde release en zijn binnen de beschreven V4-productscope bruikbaar. De oorspronkelijke lokale werkruimte
 en gebruikerswijzigingen blijven behouden. De [volledige readinessanalyse](https://github.com/nxttrack/platform/blob/b5511f16ad8367aca342aac9b5c0e83c4ee4d362/docs/audits/2026-09-20-deploy-readiness.md)
 bevat de onderliggende analyse. Het [nieuwe go/no-go-record](2026-09-20-v4-production-go-no-go-r2.md)
-bindt de concrete promotievoorwaarden en herstelpunten aan `86132b2`; het wordt vóór dispatch
-onveranderlijk vastgelegd. De [eerste GO voor 1a](https://github.com/nxttrack/platform/blob/1e106340837236abe848010ff6c74f0d8a06b67c/docs/audits/2026-09-20-v4-production-go-no-go.md)
+bindt de concrete promotievoorwaarden en herstelpunten aan `86132b2`; het is vóór dispatch
+onveranderlijk vastgelegd op commit `6d7777d317bda1b5ffdc61ee5bd1740dbcf161f5`. De [eerste GO voor 1a](https://github.com/nxttrack/platform/blob/1e106340837236abe848010ff6c74f0d8a06b67c/docs/audits/2026-09-20-v4-production-go-no-go.md)
 blijft uitsluitend historisch bewijs.
 
 ## Actueel bewijs voor 86132b2
@@ -29,9 +31,13 @@ blijft uitsluitend historisch bewijs.
 | Nieuwe visuele controle | Nieuwe stagingartifacts | **PASS binnen beschreven scope**, 56/56 breedtes en hashes, nul capture-runtimefouten; specialist bekeek 12 Priority A- en 14 themabeelden, coördinator de vier gerepareerde layouts |
 | Werkende tijdelijke cronreparatie op 1a | [35519938480](https://github.com/nxttrack/platform/actions/runs/35519938480), [readiness 35520121372](https://github.com/nxttrack/platform/actions/runs/35520121372) | **PASS**, drie natuurlijke workerroutes per omgeving, daarna 12/12 readiness; geen config-/sleutel-/PID-wijziging |
 | Geïnstalleerde stagingbackup en readiness vóór promotie | [35522360626](https://github.com/nxttrack/platform/actions/runs/35522360626), [35522322521](https://github.com/nxttrack/platform/actions/runs/35522322521) | **PASS**, werkelijke backup via installed current-symlink, 7 buckets/48 objecten, nieuwe operationsversie; runtimecontrole beide omgevingen geslaagd |
-| Nieuwe GO en productiepromotie | Exact 86132b2 | **OPEN** |
-| Aanvullende browsers, publieke routes, rollback en complete backups | Beide omgevingen exact 86132b2 | **OPEN** |
-| Volledige observatie en hoststabiliteit | 31 samples per omgeving, minstens 1.800 seconden, twee hostsnapshots | **OPEN** |
+| Nieuwe GO en productiepromotie | [35522722633](https://github.com/nxttrack/platform/actions/runs/35522722633), immutable GO6d7777d | **PASS**, exact 861, vorige1a gesnapshot, geen SQL/ownerbootstrap, geïnstalleerde operations8e en twee cronregels |
+| Aanvullende browsers en publieke routes | [35522899016](https://github.com/nxttrack/platform/actions/runs/35522899016) plus publieke GET-controle | **PASS**, 41 staging-/23 productiechecks en twaalf publieke route-/healthchecks; account- en tenantbehoud |
+| Echte installed backups en productierollback | [35523032571](https://github.com/nxttrack/platform/actions/runs/35523032571), [35523097340](https://github.com/nxttrack/platform/actions/runs/35523097340) | **PASS**, beide zevenbucketexports via gerepareerde CLI; check-only terugkeer naar1a compatibel, geen switch |
+| Runtime-readiness na volledig observatievenster | [35524525541](https://github.com/nxttrack/platform/actions/runs/35524525541) | **PASS**, beide omgevingen exact 861/versioned, ready=true en 12/12; recente workers, private sleutel en volledige versleutelde backups |
+| Volledige observatie | [Samenvatting](2026-09-20-v4-release-refresh/evidence/r2-observation-summary.json), [onafhankelijke verificatie](2026-09-20-v4-release-refresh/evidence/r2-observation-independent-verification.json) | **PASS**, 1.800.360ms,31 samples/62 endpointcontroles,0 fouten, maximale meetvertraging 6 ms |
+| Hoststabiliteit | [35522832645](https://github.com/nxttrack/platform/actions/runs/35522832645), [35524445725](https://github.com/nxttrack/platform/actions/runs/35524445725) | **PASS**, app+Caddy ruim 31 min dezelfde PID, NRestarts en ActiveEnterTimestamp |
+| Monitoring begin/midden/einde | Zes runs in onderstaande controletabel | **PASS**, iedere run 21 checks en heartbeat HTTP202; externe alerts uit |
 
 De nieuwe [CI-controle](2026-09-20-v4-release-refresh/evidence/r2-verified-ci-summary.json) en
 [productiepreflights](2026-09-20-v4-release-refresh/evidence/r2-verified-production-preflight.json)
@@ -191,7 +197,7 @@ gecontroleerde hashes en bytegroottes. De coördinerende agent bekeek de vier ee
 zelf: intake mobiel/tablet, beheeragenda mobiel en instructeurgroep tablet. Essentiële bediening valt
 binnen de viewport. Kleinere instructeurstatistieklabels blijven krap; de bestaande cataloguspreview-
 clipping blijft afzonderlijk beschreven. De volledige herhaling [35516843435](https://github.com/nxttrack/platform/actions/runs/35516843435)
-voert opnieuw de oorspronkelijke suite zonder deze instrumentatie uit en moet volledig slagen.
+voerde vervolgens de oorspronkelijke suite zonder deze instrumentatie uit en slaagde volledig; dit is het historische bewijs voor 1a.
 
 ## Historische zesde stagingpoging: 1a geslaagd
 
@@ -211,7 +217,7 @@ over alle zeven thema's; de coördinerende agent bekeek de vier oorspronkelijk m
 De gedelegeerde visuele beslissing is GO binnen de beschreven runtimescope; de bestaande catalogus-
 previewclipping en krappe instructeursamenvatting blijven begrensde niet-blokkerende punten.
 Vier originele fictieve stagingbeelden zijn [duurzaam behouden](2026-09-20-v4-release-refresh/reviewed-visuals/manifest.json).
-De 52 individuele skips zijn geclassificeerd: 24 herhaalde suites die eerder als aparte verplichte gates slaagden; 2 mobiele matrixduplicaten; 1 desktopvariant van een mobiele actie; 8 uitgezette Mollie-sandboxcases; 8 themabibliotheekcases waarvoor geïsoleerde lokale fixturecredentials nodig zijn; 2 analyticscases zonder measurement-ID. Daarnaast bleven 7 DOM-afhankelijke interactiechecks ongedekt: vier organisatietabelchecks, twee keyboardchecks en één mobiele bulkcheckboxcheck. Deze zeven gelden niet als geverifieerde functionaliteit; er is geen verplichte workflowgate overgeslagen.
+De 52 individuele skips zijn geclassificeerd: 24 conditioneel uitgeschakelde gevallen van suites die afzonderlijk op chromium-desktop slaagden; de mobiele projectvarianten zijn daarmee niet afzonderlijk bewezen; 2 mobiele matrixduplicaten; 1 desktopvariant van een mobiele actie; 8 uitgezette Mollie-sandboxcases; 8 themabibliotheekcases waarvoor geïsoleerde lokale fixturecredentials nodig zijn; 2 analyticscases zonder measurement-ID. Daarnaast bleven 7 DOM-afhankelijke interactiechecks ongedekt: vier organisatietabelchecks, twee keyboardchecks en één mobiele bulkcheckboxcheck. Deze zeven gelden niet als geverifieerde functionaliteit; er is geen verplichte workflowgate overgeslagen.
 
 De oorspronkelijke communicatiegate rapporteert 4/4 PASS, nul retries/skips, ongewijzigde specbytehash;
 [onafhankelijke controle](2026-09-20-v4-release-refresh/evidence/final-communication-original-review.json).
@@ -245,7 +251,7 @@ De vijf werkelijk bekeken main-regiobeelden hebben begrensde capturebeperkingen 
 1a; zij zijn geen volledige platformbrede visuele goedkeuring.
 
 Beginhostrun `35519073616` bevestigde app-PIDs staging188885/production193372 en Caddy1622, actief,
-NRestarts0 en juiste identiteit. Eerste probes `35519137480`/`35519139377` slaagden elk voor 21 checks,
+NRestarts 0 en juiste identiteit. Eerste probes `35519137480`/`35519139377` slaagden elk voor 21 checks,
 inclusief daadwerkelijke heartbeat HTTP202, met `alerts=false`. Rollback check-only `35519188853`
 slaagde voor 1a→historische6b en behield runtime/configuratie/PID. Deze deelresultaten vervangen
 geen volledige operationele gereedheid.
@@ -263,46 +269,147 @@ PR100 normaliseert `argv[1]` met `realpathSync` in `run-scheduled-jobs.mjs` én
 wijzigen; applicatie, migraties en dependencies blijven bytegelijk aan 1a. De twee symlinktests
 faalden op de oorspronkelijke code en alle 23 gerichte operations-/backuptests slagen op de reparatie.
 De tests injecteren een ontbrekende runtime-env en verbieden netwerk. Bronreview is onafhankelijk
-bevestigd; canonical CI en volledige nieuwe releasevalidatie volgen.
+bevestigd. Daarna slaagden de nieuwe canonical CI 35520248010 en volledige stagingrun 35520266317 op 86132b2.
 
 Observatie `15:17:20.033Z`–`15:25:13.365Z` is bewust onderbroken: acht samples, nul healthfailures,
 `complete=false`, `interruptedBy=SIGINT`, status failed. Er wordt geen dertigminutenresultaat geclaimd.
-De definitieve gereedheid blijft open tot natuurlijke workerticks en het werkelijk uitvoeren van
-de gerepareerde geïnstalleerde backup aantoonbaar slagen, naast de nieuwe volledige releasegates.
+Die observatie bewees toen geen gereedheid. De latere R2-run bewijst de natuurlijke workerticks en het werkelijk uitvoeren van de gerepareerde geïnstalleerde backup; het nieuwe volledige observatievenster is hieronder afzonderlijk als voltooid vastgelegd.
 
-## Eisen voor de nieuwe promotie en bruikbaarheid
+## Tweede productieovergang: gecorrigeerde operations
 
-De nieuwe GO bindt `86132b20455c083cf52a2a0de0713b3c363c7831` aan succesvolle canonical CI, volledige staginggate,
-56 Priority A-screenshots met gedelegeerde visuele review, foundation en ongewijzigde dry-run.
-Het ingevulde GO-record moet duurzaam op de opsbranch staan vóór productiepromotie. De deploy
-behoudt het releaseartifact; health moet HTTP 200, `ok=true`, juiste omgeving, exacte `commitSha`
-en geslaagde DB-/schemacontroles tonen. Publieke apex/`www`/`admin`/wildcard-healthroutes worden
-na activatie afzonderlijk vastgelegd. Er is geen nieuwe databasemigratie.
+De [nieuwe productiepromotie](https://github.com/nxttrack/platform/actions/runs/35522722633) activeerde
+`86132b2` in `/var/www/nxttrack/production/releases/20260920162646-86132b2`. De bestaande 1a-release
+werd vóór kandidaatvoorbereiding gesnapshot. Databasemigraties en eigenaarbootstrap bleven uit.
+Origineel releaseartifact `10608872625`, ZIP-SHA256
+`8eea904130a95997af299e23b983b878a3349ec0c0e316c14d54c2c0f0b09676`, is onafhankelijk gebonden aan
+exacte bron, stagingrun 35520266317, beide productiepreflights en de immutable R2-GO.
+De preflight en installatie bevestigen operationsversie
+`8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490` en twee cronregels.
+[Productiebewijs](2026-09-20-v4-release-refresh/evidence/r2-production-deployment.json).
 
-De aanvullende browsers verifiëren bestaande platformownerrechten, het eventueel lege tenantportfolio,
-onboardingnavigatie zonder aanmaken/uitnodigen, loginpagina en anonieme beheerafscherming; op staging
-ook beheerder/instructeur/ouder/kindreis en kindisolatie. Verificatiebron-SHA en app-SHA worden apart
-vastgelegd. De eigenaar gebruikt een tijdelijke magiclink-sessie zonder e-mail, geen nieuwe
-wachtwoordformulierlogin. Hashes worden alleen in geheugen vergeleken, met een generieke uitslag.
-Alleen eigen tijdelijke sessies worden ingetrokken; owner, wachtwoord, overige sessies en
-tenantaantal blijven behouden. Bootstrap/reset blijven uit; geen productietenants of uitnodigingen.
+Tijdens de eerste healthpoll direct na restart verscheen HTTP502 op 16:28:10.336 UTC;
+de tweede poll slaagde op 16:28:13.693. Dit ligt vóór het observatievenster en wordt niet
+voorgesteld als onderbrekingsvrije deployment. De [twaalf publieke controles](2026-09-20-v4-release-refresh/evidence/r2-final-public-routes.json)
+slaagden om 16:28:25–28: productieapex, www, admin en wildcard, staging en tenanthealth,
+plus afgeschermde testharness op beide omgevingen. Alle healths meldden exact 861 en DB/schema PASS.
 
-Omdat de repository openbaar is, beperkt opscommit `c10fce8d28851b10b36f49837d550e58eac68cbc`
-de screenshots van deze aanvullende verifier tot de **main-regio**. De eerdere beelden bevatten toch deels een door de browser meegetekende vaste header; de opnamegrens is dus geen garantie dat de gehele shell ontbreekt.
-Zichtbare accountmail of ingevulde e-mail-/wachtwoordvelden blokkeren vóór capture; het JSON-rapport
-neemt geen ruwe assertion-, navigatie- of databasefouten over. De [privacywijziging](2026-09-20-v4-release-refresh/evidence/browser-public-evidence-amendment.json)
-verandert uitsluitend de opsverifier, niet de canonical app-SHA, authenticatie of lokale sessiecleanup.
-De kindcapture blijft beperkt tot stagingfixtures. Main-regiobeelden vormen geen volledige shell- of
-platformbrede visuele goedkeuring. Uitvoering en eindbewijs van de aangepaste verifier blijven **OPEN**.
+De [eerste hostsnapshots](2026-09-20-v4-release-refresh/evidence/r2-initial-host-stability.json)
+bevestigen actieve services en NRestarts 0: staging-app-PID 199819, productie-app-PID 206335 en
+Caddy PID 1622. De observatie begon pas na beide snapshots op 16:29:38.200 UTC. De definitieve resultaten en vergelijking met de eindmeting zijn hieronder opgenomen.
 
-De observatie vereist **31 samples per omgeving van T0 tot T30, minstens 1.800 seconden, nul fouten**,
-met UTC en monotone verstreken tijd. Elke eerdere fout blijft meetellen. Twee geslaagde read-only
-hostsnapshots minstens dertig minuten uiteen moeten voor app én Caddy dezelfde MainPID, NRestarts
-en ActiveEnterTimestamp tonen. Probes gebruiken `mode=probe` zonder externe alerts; hun interne
-heartbeat moet daadwerkelijk PASS zijn, ook wanneer de workflow een waarschuwing tolereert.
-Readiness vereist per omgeving `ready=true`, expliciet deze SHA, `operationsMode=versioned`, recente
-succesvolle minuutjobs en verse volledige versleutelde backups. Alleen `ready` bewijst de expliciete
-SHA-/versioned-voorwaarden niet.
+## Voltooide observatie en operationele eindcontrole
+
+De observer draaide onafgebroken van **2026-09-20T16:29:38.200Z tot 16:59:38.560Z**:
+**1.800.360 milliseconden**, alle indices 0–30 en **31 samples per omgeving**. Alle 62 endpointobservaties
+hadden HTTP200, ok, de juiste omgeving en exacte release 861, plus database/schema PASS. Er waren nul
+mislukte samples, nul onderbrekingen en nul meetvertragingen boven 30 seconden; de grootste vertraging
+was 6 ms. Het proces eindigde met exitcode 0. De onafhankelijke review controleerde iedere JSONL-regel,
+controleerde de eindsummary en legde bronhashes vast. Dit is periodieke observatie en geen bewijs
+dat er tussen de requests geen enkele korte onderbreking kon optreden.
+[Samenvatting](2026-09-20-v4-release-refresh/evidence/r2-observation-summary.json),
+[alle metingen](2026-09-20-v4-release-refresh/evidence/r2-observation-health-samples.jsonl) en
+[onafhankelijke verificatie](2026-09-20-v4-release-refresh/evidence/r2-observation-independent-verification.json).
+
+Begin- en eindhostmeting tonen voor alle vier omgeving/servicecombinaties minstens 1.901,994 seconden
+verschil. Staging-app-PID 199819, productie-app-PID 206335 en Caddy PID 1622 bleven gelijk; NRestarts bleef 0
+en ActiveEnterTimestamp ongewijzigd. Alle services bleven active/running. De hosthelper en workflow
+zijn tussen de twee opscommits bytegelijk; alleen de afzonderlijke browserverifier is tussentijds
+uitgebreid. Geen applicatiedeployment of servicewijziging vond tijdens het venster plaats.
+[Definitieve hosts](2026-09-20-v4-release-refresh/evidence/r2-final-host-stability.json) en
+[exacte vergelijking](2026-09-20-v4-release-refresh/evidence/r2-host-stability-comparison.json).
+
+| Meetpunt | Stagingrun | Productierun | Werkelijk resultaat |
+|---|---|---|---|
+| Begin | [35522894697](https://github.com/nxttrack/platform/actions/runs/35522894697) | [35522896787](https://github.com/nxttrack/platform/actions/runs/35522896787) | Beide 21/21checks, heartbeat HTTP202, alerts=false |
+| Kwartier | [35523680966](https://github.com/nxttrack/platform/actions/runs/35523680966) | [35523682901](https://github.com/nxttrack/platform/actions/runs/35523682901) | Beide 21/21checks, heartbeat HTTP202, alerts=false |
+| Einde | [35524442971](https://github.com/nxttrack/platform/actions/runs/35524442971) | [35524444201](https://github.com/nxttrack/platform/actions/runs/35524444201) | Beide 21/21checks, heartbeat HTTP202, alerts=false |
+
+Alle zes handmatige probes zijn op oorspronkelijke runbron en daadwerkelijke output gecontroleerd,
+zonder WARN/FAIL. De monitor controleert publieke routes/assets en mail-/billingdiagnostiek; de
+exacte liveSHA en workerrecency zijn daarnaast apart bewezen. De bestaande monitoringconfiguratie
+bleef behouden; deze zes probes bewijzen geen nieuw waargenomen vaste cadans van GitHub-schedules.
+[Slotprobe staging](2026-09-20-v4-release-refresh/evidence/r2-final-monitor-staging.json) en
+[slotprobe productie](2026-09-20-v4-release-refresh/evidence/r2-final-monitor-production.json).
+
+De read-only [eindreadiness 35524525541](https://github.com/nxttrack/platform/actions/runs/35524525541)
+na het volledige venster bevestigt **beide omgevingen ready=true en 12/12 PASS**, expliciet 861 en
+`operationsMode=versioned`. Alle geconfigureerde automatische routes hebben een succesvolle laatste
+uitvoering jonger dan 5 minuten. De backupchecks bevestigen de volledige projectgebonden zevenbucket-
+exports zonder prefix van 16:32:35.783UTC (staging 48 objecten) en16:32:50.799UTC (productie 0 objecten),
+een bestaande versleutelde archive en de private sleutel. Geïnstalleerde digest 8e en werkelijke
+uitvoering/decryptie zijn afzonderlijk bewezen door de eerdere brongebonden backupchecks;
+readiness zelf ontsleutelt de archive niet.
+[Eindreadiness](2026-09-20-v4-release-refresh/evidence/r2-final-readiness.json).
+
+De [laatste configuratiecontrole](2026-09-20-v4-release-refresh/evidence/r2-final-operational-flags.json)
+op 17:00:58UTC las beide GitHub-variabelenpagina's per omgeving en bevestigde behoud van alle
+verwachte operationele vlaggen; main bleef exact 861. De oorspronkelijke gebruikerswerkmap bleef
+op `e34544c6d7ddfea572d4b1c68a3e201ee3381872` met dezelfde eerder aanwezige gewijzigde instructeurpagina,
+Android-map en twee documentbestanden; releasewerk vond in aparte worktrees plaats.
+
+## Gecontroleerde bruikbaarheid, behoud en backups
+
+De aanvullende [browserrun 35522899016](https://github.com/nxttrack/platform/actions/runs/35522899016)
+slaagde op exact 861: **41/41 checks op staging en 23/23 op productie**. Het bewijs omvat publieke
+login-/wachtwoordpagina's, anonieme beheerafscherming, bestaande platformownerrechten, negen
+platformroutes, het lege productieportfolio en onboardingnavigatie zonder tenant of uitnodiging aan
+te maken. Staging controleert ook beheerder-, instructeur-, ouder- en kindroutes en kindisolatie.
+De tenantinventaris bleef 3 op staging en 0 op productie. Beide oorspronkelijke artifactdigests en
+alle toegestane JSON-/PNG-bestanden zijn onafhankelijk gecontroleerd.
+[Browserbewijs](2026-09-20-v4-release-refresh/evidence/r2-browser-artifact-review.json).
+
+De bestaande eigenaar gebruikt hiervoor een tijdelijke magiclink-sessie zonder berichtbezorging;
+het echte wachtwoord is niet in een nieuw loginformulier getest. Passwordhashes zijn uitsluitend
+in geheugen vóór/na vergeleken en niet opgeslagen. Alleen de eigen tijdelijke sessies zijn lokaal
+afgemeld; er is geen globale logout uitgevoerd. Reeds uitgegeven toegangstokens kunnen tot hun
+verval geldig blijven. De geteste bestaande accounts behielden hun wachtwoord; tenant-aantallen bleven gelijk en de verifier voerde geen globale logout uit.
+Er is geen eigenaarbootstrap, wachtwoordreset of productie-uitnodiging uitgevoerd.
+
+Omdat de repository openbaar is, bevat het aanvullende browserbewijs alleen toegestane JSON en
+bewaakte main-regiobeelden. Alle vijf nieuwe screenshots zijn daadwerkelijk bekeken en aan de
+originele ZIP-leden gebonden; er waren geen zichtbare account-e-mailadressen of ingevulde credentials.
+De [begrensde beeldreview](2026-09-20-v4-release-refresh/evidence/r2-browser-visual-review.json)
+beschrijft fixed-headeroverlap in de opname, afsnijding van stagingtoewijzingsbediening aan de
+rechterbeeldrand en blanco ruimte onder de kindcapture. Deze beelden bewijzen geen volledige shell-
+of pixelperfecte layout en zijn geen zelfstandige test van de scrollbereikbaarheid van die bediening.
+De aparte volledige staginggate draagt de responsive- en zeven-themavalidatie.
+
+De afsnijding van de toewijzingsknoppen is daarna afzonderlijk onderzocht. Opsverifiercommit
+`7c880dc23feca46f921b561529580c51db53026a` voegt uitsluitend op staging negen proefklikken toe:
+Activeer, Plan en Naamgate opslaan voor de drie bestaande fixtures. Playwright controleert normale
+bereikbaarheid en scrolt, maar verstuurt geen klik of formulier. De helper controleert daarna het
+zichtbare middelpunt en dat formulierwaarden in geheugen gelijk bleven. Negen lokale browsertests
+(de bestaande redirecttests plus vier gerichte cases), drie unitcontracts en onafhankelijke review
+slaagden; echte clipping en ontbrekende/dubbele fixtures falen in de regressies.
+
+De echte [stagingcontrole 35523743299](https://github.com/nxttrack/platform/actions/runs/35523743299)
+slaagde voor **42/42 checks**, inclusief alle negen proefacties. Bij 1440×1000 was de documentbreedte 1510;
+werkelijke horizontale scrollposities 35/40/70 en verticale posities 1607–2685 brachten alle negen
+knoppen zichtbaar en aanklikbaar in beeld. Dit bewijst bereikbaarheid op die desktopviewport,
+zonder themaactivering of formulierwijziging. De brede layout zelf is niet gerepareerd en er wordt
+geen nieuwe mobiele themabeheerreview geclaimd. Wachtwoorden, eigen sessiecleanup en tenant-aantal 3
+zijn opnieuw gecontroleerd. Canonical applicatie 861, serverprocessen en observatievenster bleven
+ongewijzigd. [Gericht bewijs](2026-09-20-v4-release-refresh/evidence/r2-assignment-reachability-browser.json). De drie nieuwe opnames zijn eveneens daadwerkelijk bekeken, op oorspronkelijke hashes gecontroleerd en vrij van zichtbare accountmail of ingevulde credentials; [aanvullende beeldreview](2026-09-20-v4-release-refresh/evidence/r2-assignment-reachability-visual.json).
+
+De echte [geïnstalleerde backups 35523032571](https://github.com/nxttrack/platform/actions/runs/35523032571)
+slaagden op beide finale runtimes via `operations-v4/current`, met de gerepareerde operationsversie 8e.
+Staging exporteerde alle 7 buckets en 48 objecten op 16:32:35.783 UTC; productie alle 7 buckets en 0 objecten
+op 16:32:50.799 UTC. Ook de lege productiearchive is daadwerkelijk aangemaakt en versleuteld.
+De brongebonden CLI meldt pas PASS na export, encryptie, decrypt-/bytevergelijking en geaccepteerde
+interne heartbeat. Configuratie, sleutels, release-identiteit, operations en app-PID bleven gelijk;
+plaintext, gedeeltelijke bestanden en private commandoutput zijn opgeruimd.
+[Onafhankelijk backupbewijs](2026-09-20-v4-release-refresh/evidence/r2-installed-backups-both.json).
+De reviewer heeft de hostarchive niet nogmaals zelf ontsleuteld; de originele veilige bewijs-ZIP's
+zijn wel op herkomst en digest gecontroleerd. De versleutelde hostarchives blijven 14 dagen bewaard;
+het gesanitiseerde uitvoeringsbewijs 90 dagen. Er is geen restore uitgevoerd.
+
+[Productierollbackcontrole 35523097340](https://github.com/nxttrack/platform/actions/runs/35523097340)
+accepteert de vorige werkende 1a-release in `/var/www/nxttrack/production/releases/20260920151433-1a72606`.
+Het oorspronkelijke 1a-releaseartifact uit 35518945668 is opnieuw onafhankelijk geverifieerd.
+Migratietree en schemacontract zijn compatibel; alle zeven behoudschecks slagen. Er is uitsluitend
+check-only uitgevoerd, zonder releaseswitch of databaserestore. De canonical rollbackcode raakt de
+afzonderlijk geïnstalleerde gerepareerde operations/cron niet.
+[Rollbackbewijs](2026-09-20-v4-release-refresh/evidence/r2-production-rollback.json).
 
 ## Bestaande configuratie, herstel en productgrenzen
 
@@ -316,9 +423,8 @@ niet meer bytegelijk. Backendauthenticatie, mail, upload, datalaag, schema/RLS e
 ongewijzigd. Operationele scripts, workflows en presentatie vereisen de nieuwe deployment-/eindcontroles. Bestaande mail-/job-/
 monitoringconfiguratie en incident-/supporteigenaars blijven behouden. Foundation controleert de
 fallback-mailconfiguratie; historische run `35477574832` las de gezaghebbende DB-mailsettings en de
-toen lege outbox. Dit is geen nieuwe DB-inspectie of inboxbewijs. Bestaande ClamD-configuratie en eerdere
-clean-PDF-stagingjourneys op dezelfde host zijn historische scannerbewijzen; de finale documentjourney
-blijft vereist. Geen aparte productie-upload of nieuwe EICAR-test wordt geclaimd. Het go/no-go-record
+toen lege outbox. Dit is geen nieuwe DB-inspectie of inboxbewijs. Geen nieuwe gecontroleerde testmail is verzonden; herstelde bestaande outboxjobs kunnen reeds aanwezige berichten verwerken. Bestaande ClamD-configuratie en eerdere
+clean-PDF-stagingjourneys op dezelfde host zijn historische scannerbewijzen. De finale documentbevattende adminjourney is uitgevoerd en slaagde op retry #1; expliciete scannerwerking blijft onderbouwd door het historische bewijs. Geen aparte productie-upload of nieuwe EICAR-test wordt geclaimd. Het go/no-go-record
 bevat de volledige kwalificaties en herstelpunten.
 
 Sleutelrotatie [35505059974](https://github.com/nxttrack/platform/actions/runs/35505059974) slaagde voor beide
@@ -366,7 +472,8 @@ De uitgebreide preview in de platformthemacatalogus blijft deels afgeknipt: een 
 valt binnen een smallere kaart met verborgen overflow. Dit bestaande, begrensde beheerpreviewprobleem
 is niet opgelost en is **geen algemene platformbrede visuele GO**. De echte ouder-/kindportalen voor
 alle zeven thema's en de tenantselecties slaagden ook in de matrix op `1a72606d…`; activering staat in
-een afzonderlijk bereikbaar beheerpaneel. De vereiste volledige finale stagingrun 35516843435 is geslaagd.
+een afzonderlijk bereikbaar beheerpaneel. De finale stagingrun 35520266317 op 86132b2 slaagde; 35516843435 op 1a blijft historisch bewijs.
 
-**Afsluiting OPEN:** vul productierun/artifact, exacte eind-SHA's, bruikbaarheidsbewijs,
-observatievenster en beide hostvergelijkingen pas na werkelijke uitvoering in.
+[Machineleesbaar eindrecord en bewijshashes](2026-09-20-v4-release-refresh/evidence/r2-release-completion.json).
+
+**Afsluiting PASS:** staging en productie zijn gedeployed en bruikbaar binnen de hierboven vastgelegde V4-scope. Exacte eindbron, operationele werking, herstelbaarheid en het volledige observatievenster zijn met uitgevoerde controles onderbouwd. Er staan geen vereiste deployment- of oplevercontroles meer open.
