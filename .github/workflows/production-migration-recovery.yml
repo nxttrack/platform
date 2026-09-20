@@ -356,6 +356,8 @@ jobs:
       - name: Prepare a source-bound diagnostic copy of the unchanged communication tests
         if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
         id: prepare-communication-diagnostic
+        env:
+          PLAYWRIGHT_BASE_URL: https://staging.nxttrack.nl
         run: node "$COMMUNICATION_INSTRUMENTATION/prepare-communication-login-diagnostic.mjs"
       - name: Diagnose canonical communication tests without retries or a second login
         if: inputs.confirmation == 'VERIFY_STAGING_COMMUNICATION'
