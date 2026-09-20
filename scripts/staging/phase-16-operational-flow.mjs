@@ -114,6 +114,7 @@ const state = {
     sessionId: core.session.id,
     groupId: core.group.id,
     participantId: intake.participant.id,
+    progressScoreId: learning.progressScore.id,
     badgeTitle: learning.badgeAward.title,
     progressLabel: learning.curriculum.progressLabel,
     certificateTitle: graduation.certificate.title,

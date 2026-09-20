@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { prepareParentProgressFixture } from "./parent-progress-fixture.mjs";
 
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
@@ -15,6 +16,7 @@ const tenantHostname = `${tenantSlug}.staging.nxttrack.nl`;
 const tenantName = "Sprint 4 Isolatie Tenant";
 const programCode = "sprint4-isolation-program";
 const programName = "Sprint 4 Isolatieprogramma";
+const phasePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 
 if (process.env.APP_ENV !== "staging" || hostname(appUrl) !== "staging.nxttrack.nl") {
   throw new Error("Sprint 4 isolation preparation is restricted to staging.nxttrack.nl.");
@@ -24,6 +26,7 @@ if (!supabaseUrl || !supabaseSecret) {
   throw new Error("Staging Supabase credentials are required.");
 }
 
+const phase = JSON.parse(readFileSync(phasePath, "utf8"));
 const admin = createClient(supabaseUrl, supabaseSecret, {
   auth: { autoRefreshToken: false, persistSession: false }
 });
@@ -89,7 +92,8 @@ const state = {
   tenantSlug,
   tenantName,
   tenantUrl: `https://${tenantHostname}`,
-  programName
+  programName,
+  progressScoreIsolation: await prepareParentProgressFixture(admin, phase, tenant.id)
 };
 
 mkdirSync(path.dirname(statePath), { recursive: true });
