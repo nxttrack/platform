@@ -11,6 +11,10 @@ on:
         description: Full SHA already validated on staging and equal to release_sha
         required: true
         type: string
+      staging_release_run_id:
+        description: Successful exact-SHA staging deploy including full browser validation
+        required: true
+        type: string
       confirmation:
         description: Type APPLY_PRODUCTION_MIGRATIONS to run the migration-only recovery
         required: true
@@ -52,6 +56,7 @@ jobs:
       RELEASE_CANONICAL_BRANCH: main
       RELEASE_SHA: ${{ inputs.release_sha }}
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+      STAGING_RELEASE_RUN_ID: ${{ inputs.staging_release_run_id }}
       PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
       PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
       PRODUCTION_MIGRATION_REHEARSAL_RUN_ID: ${{ inputs.production_migration_rehearsal_run_id }}

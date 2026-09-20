@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+import { healthExpectations, validateHealthPayload } from "../release/health-payload.mjs";
+
+// Expectations are explicit: a read-only audit may run from newer repository
+// code than the application it inspects, so GITHUB_SHA is never an implicit target.
+const expectations = healthExpectations(process.env);
 const baseUrl = process.env.HEALTH_URL ?? healthUrlFromAppUrl(process.env.APP_URL ?? process.env.NEXT_PUBLIC_APP_URL) ?? "http://127.0.0.1:3000/api/health";
 const attemptTimeoutMs = Number.parseInt(process.env.HEALTH_TIMEOUT_MS ?? "10000", 10);
 const retryTimeoutMs = Number.parseInt(process.env.HEALTH_RETRY_TIMEOUT_MS ?? "60000", 10);
@@ -13,7 +18,7 @@ while (Date.now() - startedAt <= retryTimeoutMs) {
 
   try {
     const body = await fetchHealthPayload();
-    validateHealthPayload(body);
+    validateHealthPayload(body, expectations);
 
     const database = body.checks?.database;
 
@@ -55,22 +60,6 @@ async function fetchHealthPayload() {
     return await response.json();
   } finally {
     clearTimeout(timer);
-  }
-}
-
-function validateHealthPayload(body) {
-  if (body.ok !== true || body.app !== "nxttrack-platform") {
-    throw new Error(`Unexpected health payload from ${baseUrl}: ${JSON.stringify(body)}`);
-  }
-
-  if (process.env.REQUIRE_HEALTH_COMMIT === "true" && !body.commitSha) {
-    throw new Error("Health payload is missing commitSha while REQUIRE_HEALTH_COMMIT=true.");
-  }
-
-  const database = body.checks?.database;
-
-  if (process.env.REQUIRE_HEALTH_DATABASE === "true" && database?.status !== "pass") {
-    throw new Error(`Database health check is required but returned ${database?.status ?? "missing"}.`);
   }
 }
 

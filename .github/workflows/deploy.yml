@@ -14,6 +14,10 @@ on:
         description: Full commit SHA already validated on staging (required for production)
         required: false
         type: string
+      staging_release_run_id:
+        description: Successful exact-SHA staging deploy including full browser validation (required for production)
+        required: false
+        type: string
       production_confirmation:
         description: Type PROMOTE_PRODUCTION for a production release
         required: false
@@ -61,6 +65,7 @@ jobs:
       RELEASE_CANONICAL_BRANCH: main
       DEPLOYED_SOURCE_SHA: ${{ github.sha }}
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+      STAGING_RELEASE_RUN_ID: ${{ inputs.staging_release_run_id }}
       PRODUCTION_RELEASE_CONFIRMATION: ${{ inputs.production_confirmation }}
       PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
       PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
@@ -238,73 +243,24 @@ jobs:
           test "$INTERNAL_JOBS_ENABLED" = "false"
           test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
 
-      - name: Repair stale shared release metadata before migration snapshot
-        if: env.RUN_DB_MIGRATIONS == 'true'
-        run: |
-          set -euo pipefail
-
-          CURRENT_RELEASE="$(readlink -f "$BASE_DIR/current")"
-          ENV_FILE="$BASE_DIR/shared/.env"
-          test -d "$CURRENT_RELEASE"
-          test -s "$ENV_FILE"
-          test -s "$CURRENT_RELEASE/artifacts/exact-source-sha.json"
-
-          CURRENT_RELEASE_SHA="$(CURRENT_RELEASE="$CURRENT_RELEASE" node --input-type=module <<'NODE'
-          import { readFileSync } from "node:fs";
-          import { join } from "node:path";
-
-          const artifact = JSON.parse(readFileSync(join(process.env.CURRENT_RELEASE, "artifacts/exact-source-sha.json"), "utf8"));
-          if (artifact?.purpose !== "nxttrack-exact-source-sha" || !/^[a-f0-9]{40}$/.test(artifact.commitSha ?? "")) {
-            throw new Error("Current release exact-source artifact is invalid.");
-          }
-          process.stdout.write(artifact.commitSha);
-          NODE
-          )"
-          CURRENT_ENV_SHA="$(awk -F= '/^RELEASE_COMMIT_SHA=/{print $2; exit}' "$ENV_FILE")"
-          CURRENT_MAINTENANCE="$(awk -F= '/^MAINTENANCE_NO_WRITE=/{print $2; exit}' "$ENV_FILE")"
-
-          if [[ "$CURRENT_ENV_SHA" == "$CURRENT_RELEASE_SHA" && "$CURRENT_MAINTENANCE" == "true" ]]; then
-            echo "[deploy] shared release metadata already matches the current release and migration containment."
-            exit 0
-          fi
-
-          BACKUP_FILE="$BASE_DIR/shared/.env.before-migration-${GITHUB_RUN_ID}"
-          cp --dereference --preserve=mode "$ENV_FILE" "$BACKUP_FILE"
-          chgrp nxttrack-deploy "$BACKUP_FILE"
-
-          TEMP_FILE="$(mktemp "$BASE_DIR/shared/.env.repair.XXXXXX")"
-          trap 'rm -f "$TEMP_FILE"' EXIT
-          awk -v release_sha="$CURRENT_RELEASE_SHA" '
-            BEGIN { sha_seen = 0; maintenance_seen = 0 }
-            /^RELEASE_COMMIT_SHA=/ { print "RELEASE_COMMIT_SHA=" release_sha; sha_seen = 1; next }
-            /^MAINTENANCE_NO_WRITE=/ { print "MAINTENANCE_NO_WRITE=true"; maintenance_seen = 1; next }
-            { print }
-            END {
-              if (!sha_seen || !maintenance_seen) exit 11
-            }
-          ' "$ENV_FILE" > "$TEMP_FILE"
-          chmod 640 "$TEMP_FILE"
-          chgrp nxttrack-deploy "$TEMP_FILE"
-          mv -f "$TEMP_FILE" "$ENV_FILE"
-          trap - EXIT
-          echo "[deploy] repaired shared release metadata from the active release artifact before migration snapshot."
-
-      - name: Snapshot and validate migration rollback target
-        if: env.RUN_DB_MIGRATIONS == 'true'
+      - name: Snapshot and validate active release before candidate preparation
         run: |
           set -euo pipefail
           PREVIOUS_RELEASE="$(readlink -f "$BASE_DIR/current")"
-          STATE_FILE="$BASE_DIR/shared/main-reconciliation-${GITHUB_RUN_ID}.previous.json"
-          ENV_STATE_FILE="$BASE_DIR/shared/main-reconciliation-${GITHUB_RUN_ID}.previous.env"
+          STATE_FILE="$BASE_DIR/shared/deployment-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.previous.json"
+          ENV_STATE_FILE="$BASE_DIR/shared/deployment-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.previous.env"
           test -s "$BASE_DIR/shared/.env"
-          cp --dereference --preserve=mode "$BASE_DIR/shared/.env" "$ENV_STATE_FILE"
-          chgrp nxttrack-deploy "$ENV_STATE_FILE"
           ROLLBACK_RELEASE="$PREVIOUS_RELEASE" ROLLBACK_STATE_FILE="$STATE_FILE" \
             pnpm run release:assert-rollback-target
+          cp --dereference "$BASE_DIR/shared/.env" "$ENV_STATE_FILE"
+          chmod 600 "$ENV_STATE_FILE"
+          echo "DEPLOYMENT_STATE_FILE=$STATE_FILE" >> "$GITHUB_ENV"
+          echo "DEPLOYMENT_ENV_SNAPSHOT=$ENV_STATE_FILE" >> "$GITHUB_ENV"
 
-      - name: Write environment file
+      - name: Write private candidate environment file
         run: |
           set -euo pipefail
+          umask 077
 
           SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
           SUPABASE_SERVER_SECRET="${SUPABASE_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
@@ -372,13 +328,12 @@ jobs:
             printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
             printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
             printf 'EMAIL_DELIVERY_TIMEOUT_MS=%s\n' "$EMAIL_DELIVERY_TIMEOUT_MS"
-          } > "$BASE_DIR/shared/.env"
+          } > "$RELEASE/.env.candidate"
 
-          chmod 640 "$BASE_DIR/shared/.env"
-          chgrp nxttrack-deploy "$BASE_DIR/shared/.env"
-
-          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env"
-          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env.production"
+          chmod 640 "$RELEASE/.env.candidate"
+          chgrp nxttrack-deploy "$RELEASE/.env.candidate"
+          ln -sfn .env.candidate "$RELEASE/.env"
+          ln -sfn .env.candidate "$RELEASE/.env.production"
 
       - name: Install dependencies
         working-directory: ${{ env.RELEASE }}
@@ -409,6 +364,13 @@ jobs:
           pnpm build
           pnpm run deploy:package-standalone-assets
 
+      - name: Verify scheduled operations prerequisites before activation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: node scripts/operations/install-runtime-operations.mjs "$TARGET" --check "$RELEASE/.env.candidate"
+
       - name: Persist immutable release identity
         working-directory: ${{ env.RELEASE }}
         run: pnpm run release:write-exact-source
@@ -417,6 +379,7 @@ jobs:
         if: env.RUN_DB_MIGRATIONS == 'true'
         run: |
           set -euo pipefail
+          node scripts/release/deployment-environment.mjs maintenance
           sudo systemctl restart "$SERVICE_NAME"
           for attempt in {1..20}; do
             status="$(curl --silent --show-error --output /tmp/nxttrack-maintenance-response --write-out '%{http_code}' \
@@ -469,6 +432,9 @@ jobs:
           chown -R github-runner:nxttrack-deploy "$RELEASE"
           chmod -R u+rwX,g+rX,o-rwx "$RELEASE"
 
+          node scripts/release/deployment-environment.mjs activate
+          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env"
+          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env.production"
           ln -sfn "$RELEASE" "$BASE_DIR/current.new"
           mv -Tf "$BASE_DIR/current.new" "$BASE_DIR/current"
 
@@ -477,6 +443,9 @@ jobs:
 
       - name: Health endpoint smoke
         working-directory: ${{ env.RELEASE }}
+        env:
+          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+          EXPECTED_APP_ENV: ${{ inputs.target }}
         run: |
           set -euo pipefail
           pnpm run staging:health
@@ -486,6 +455,13 @@ jobs:
         run: |
           set -euo pipefail
           pnpm run staging:runtime-smoke
+
+      - name: Install versioned scheduled operations after runtime verification
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: node scripts/operations/install-runtime-operations.mjs "$TARGET"
 
       - name: Write release evidence
         if: env.TARGET == 'production' && env.MAINTENANCE_NO_WRITE != 'true'
@@ -505,9 +481,7 @@ jobs:
 
       - name: Cleanup old releases
         if: env.MAINTENANCE_NO_WRITE != 'true'
-        run: |
-          set -euo pipefail
-          ls -1dt "$BASE_DIR/releases"/* 2>/dev/null | tail -n +6 | xargs -r rm -rf
+        run: node scripts/release/prune-releases.mjs
 
   staging-browser-validation:
     name: staging browser validation

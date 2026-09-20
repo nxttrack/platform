@@ -135,11 +135,13 @@ async function exportObjects() {
   await writeFile(join(backupDirectory, "manifest.sha256"), `${sha256(await readFile(manifestPath))}  manifest.json\n`, {
     mode: 0o600
   });
-  await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
-    objectCount: manifest.objectCount,
-    totalBytes: manifest.totalBytes,
-    sourceProjectFingerprint: manifest.sourceProjectFingerprint
-  });
+  if (process.env.STORAGE_BACKUP_DEFER_SUCCESS_HEARTBEAT !== "true") {
+    await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
+      objectCount: manifest.objectCount,
+      totalBytes: manifest.totalBytes,
+      sourceProjectFingerprint: manifest.sourceProjectFingerprint
+    });
+  }
   return summarizeManifest(manifest);
 }
 

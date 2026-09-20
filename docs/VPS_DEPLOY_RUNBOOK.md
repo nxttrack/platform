@@ -1,141 +1,113 @@
 # VPS Deployment Runbook
 
-Last updated: 2026-07-21
+Last updated: 2026-09-20
 
-Status: staging-operational runbook with a read-only production-foundation audit. Do not execute production infrastructure changes without explicit approval.
+Status: preparation for the next V4 deployment to staging and production. The flow below describes the repository implementation prepared on this date. Deployment evidence must come from the actual selected release run; this document does not record a new application deployment.
 
-## Purpose
+## Purpose and targets
 
-This runbook describes how the staging deployment is intended to work for `nxttrack/platform` using the existing GitHub Actions workflow, a self-hosted GitHub runner, Caddy, systemd, and release directories.
+The canonical deployment uses `nxttrack/platform`, `.github/workflows/deploy.yml`, a self-hosted GitHub runner with labels `self-hosted, linux, x64, nxttrack`, Caddy, systemd and immutable release directories. Dispatch manually from `main`, first to staging and then to production with the same complete 40-character commit SHA.
 
-## Current Workflow
+| Target | Base directory | Service | Public URL | Port |
+| --- | --- | --- | --- | --- |
+| staging | `/var/www/nxttrack/staging` | `nxttrack-staging` | `https://staging.nxttrack.nl` | `3801` |
+| production | `/var/www/nxttrack/production` | `nxttrack-production` | `https://nxttrack.nl` | `3800` |
 
-Existing file:
+Production promotion requires the successful staging run ID for that exact SHA, including its complete browser-validation job, plus successful production foundation-audit and migration dry-run IDs for the same SHA. A successful deploy step with skipped or failed browser checks is insufficient. The required inputs and evidence procedure are in [Production release runbook](PRODUCTION_RELEASE_RUNBOOK.md).
 
-```txt
-.github/workflows/deploy.yml
-```
+## Release and operations layout
 
-Current trigger:
-
-```txt
-manual workflow_dispatch from main
-```
-
-Current runner labels:
+The same layout applies to both targets:
 
 ```txt
-self-hosted
-linux
-x64
-nxttrack
-```
-
-Current release root:
-
-```txt
-/var/www/nxttrack/staging
-/var/www/nxttrack/production
-```
-
-Production is not the first target. Staging is the first target.
-
-## Staging Directory Layout
-
-Target layout:
-
-```txt
-/var/www/nxttrack/staging/
-  current -> /var/www/nxttrack/staging/releases/<timestamp>-<sha>
+/var/www/nxttrack/<target>/
+  current -> releases/<timestamp>-<sha>
   releases/
     <timestamp>-<sha>/
+      .env.candidate
+      .env -> ../../shared/.env         # after activation
+      .env.production -> ../../shared/.env
+      artifacts/exact-source-sha.json
   shared/
     .env
+    deployment-<run>-<attempt>.previous.json
+    deployment-<run>-<attempt>.previous.env
+    operations-v4/
+      backup-passphrase
+      versions/<content-digest>/
+      current -> versions/<content-digest>
+    storage-backups-v4/
 ```
 
-Rules:
+Before activation, a candidate's `.env` and `.env.production` point to its own private `.env.candidate`. Builds and their checks therefore do not replace the running application's shared configuration. Every deployment snapshots and validates the existing active release identity and environment, including when no migrations are requested. Secret-bearing files stay permission-restricted and must not be copied into logs or public evidence.
 
-- `current` always points to the active release.
-- `shared/.env` is reused by releases through symlinks.
-- Old releases are kept for rollback.
-- The workflow currently keeps the five newest releases.
+Release cleanup retains the five newest directories **and** protects the active release and the snapshotted previous known-good release, even when either falls outside the five newest. A directory's age alone does not establish that it is a usable rollback candidate.
 
-## Deployment Flow
+The versioned operations layout is installed by the next successful normal deployment. Existing operational scripts and cron entries from the earlier V4 rollout remain in use until that installer runs; preparation alone does not replace live workers.
 
-Target flow from the existing workflow:
+## Deployment flow
 
-1. Push the approved implementation to canonical branch `main`.
-2. Manually dispatch the workflow from `main` and select environment `staging`.
-3. Self-hosted runner checks out repo.
-4. Workflow prints runtime versions.
-5. Workflow creates timestamped release directory.
-6. Workflow copies repo into release directory with `rsync`.
-7. Workflow writes shared `.env` from GitHub variables/secrets.
-8. Workflow symlinks `.env` and `.env.production` into release.
-9. Workflow runs `pnpm install --frozen-lockfile`.
-10. Workflow runs hardening audits: typecheck, auth audit, migration audit, RLS coverage audit and staging launch gate.
-11. Workflow runs `pnpm build`.
-12. Workflow runs `pnpm run db:migrate`.
-13. Workflow updates `current` symlink atomically.
-14. Workflow restarts `SERVICE_NAME`.
-15. Workflow reloads Caddy.
-16. Workflow runs `pnpm run staging:health` against `APP_URL`.
-17. The staging validation job runs the operational flow, visual capture/fallback, Supabase advisors, four-role RLS smoke and authenticated Playwright checks.
-18. Workflow removes old releases beyond retention.
+1. Select the approved full SHA on canonical `main`. Production additionally binds the three successful same-SHA evidence runs: complete staging validation, production foundation audit and migration rehearsal.
+2. The self-hosted runner checks out that immutable SHA with full Git history and uses Node `24.18.0` and pnpm `10.24.0`.
+3. Check repository/source truth, the environment contract and production evidence before preparing the release.
+4. Copy repository files into a new timestamped directory. Validate the active release's immutable identity and save its exact environment and release path as the rollback snapshot. Inconsistent metadata stops the deployment.
+5. Write the private candidate environment and link the candidate's environment files to it. Install dependencies with the frozen lockfile and run the required code, dependency, authentication, migration, RLS and product-contract checks.
+6. Build and package the standalone application. Persist its immutable source artifact. For a normal release, run the read-only operations installation preflight against both the active environment and candidate configuration before activation.
+7. If migrations are requested, only now place the existing runtime into verified maintenance containment: preserve its SHA, disable mail/newsletter/internal workers, restart and prove that unsafe requests are blocked. Run read-only database preflight, the authorized migrations and post-migration checks. Without requested migrations, the existing runtime stays available during candidate preparation.
+8. Assert the candidate's complete database/schema compatibility before activation. Bootstrap remains an explicit one-run operation where applicable; routine deployments preserve the existing owner account.
+9. Publish the candidate environment atomically, relink its environment files to the shared runtime file, switch `current` atomically, restart the selected service and reload Caddy. A shared environment changed concurrently by an operator is rejected instead of overwritten silently.
+10. Verify health against the **expected SHA and expected environment**, with database and schema compatibility both passing. Run public and private route smoke checks.
+11. For a normal release, install the content-versioned scheduled-operation scripts and reconcile the two target-specific cron entries under the shared installer lock. Other environment schedules and unrelated operator entries are preserved. The installer validates installed content and readback and restores its previous pointer/schedule on failure.
+12. Finish the deployment job by retaining its applicable release evidence and pruning old release directories while protecting the active and previous known-good releases. Staging's complete validation evidence still depends on the following browser job.
+13. For staging, finish the full browser and operational validation job. That includes real flow, themes, parent/child/instructor/admin scenarios, isolation, accessibility/performance, communications and database checks. Retain its evidence; production is eligible only after that entire same-SHA gate succeeds. Failed gates require investigation; do not bypass them.
 
-Before any production deployment, run the separate `Production foundation audit`. It only reads GitHub environment configuration and host state; it does not migrate, restart, reload or deploy anything.
+The operations preflight requires an active cron service, the supported host utilities, valid scheduled-job authentication, the candidate's heartbeat authentication, and an independently retained encryption key compatible with the installed key. Key rotation is a separate recovery operation that preserves access to older encrypted backups.
 
-## Pre-Deploy Checks
+## Pre-deploy checks
 
-Before first staging deploy:
+Before the next release:
 
-- [ ] App scaffold exists.
-- [ ] `pnpm-lock.yaml` exists and is committed.
-- [ ] `pnpm build` exists and succeeds locally/CI.
-- [ ] `pnpm run db:migrate` exists.
-- [ ] `pnpm run db:rls-audit` exists and succeeds.
-- [ ] `pnpm run staging:gate` exists and records non-strict launch warnings.
-- [ ] `pnpm run staging:health` exists and can reach the active health endpoint.
-- [ ] Playwright browsers are installed or optional `RUN_PLAYWRIGHT_SMOKE` remains disabled.
-- [ ] Health endpoint exists.
-- [ ] GitHub Environment `staging` variables/secrets are complete.
-- [ ] Runner labels match workflow.
-- [ ] systemd service exists.
-- [ ] Caddy route exists.
-- [ ] Supabase staging project is confirmed.
+- [ ] The selected source is on `main`; the lockfile and required checks pass for that exact SHA.
+- [ ] GitHub environment variables/secrets select the intended service, URL, port and Supabase project. Staging and production remain separate.
+- [ ] The current service, Caddy routing/TLS and exact-SHA database/schema health are healthy.
+- [ ] The immutable active release artifact and shared environment identify the same SHA; the protected rollback snapshot is available.
+- [ ] The candidate can build using its own environment without changing active configuration.
+- [ ] Operations preflight passes, including private encryption-key retention and cron/authentication requirements.
+- [ ] A fresh encrypted backup covers all seven required Storage buckets: `tenant-documents`, `diploma-vault`, `participant-media`, `badge-studio-assets`, `tenant-media-assets`, `portal-theme-assets`, `portal-theme-imports`.
+- [ ] Upload scanning remains enforced and reachable; relevant database migration/RLS checks pass.
+- [ ] Migrations, when requested, have the maintenance/no-write and transport/job containment settings. Routine releases keep `RUN_DB_MIGRATIONS=false`.
+- [ ] Newsletter delivery remains disabled for the current concept-only feature. Persistent owner bootstrap/reset flags remain disabled.
+- [ ] For production, the complete successful staging run, foundation audit and migration dry run bind to the selected SHA, with the deployment approval reference recorded.
 
-## Health Check
+`Deployment readiness` provides read-only checks of both currently running environments, services, worker ticks and retained backups. It records the active runtime SHA independently of the newer source checkout. It does not replace the future candidate's build, staging browser gate or production evidence requirements.
 
-Phase 2 should add a health endpoint. Target:
+## Health check
 
-```txt
-GET /api/health
-```
-
-Minimum response:
+`GET /api/health` must return an HTTP success response with all of these properties for deployment verification:
 
 ```json
-{ "ok": true, "env": "staging" }
+{
+  "ok": true,
+  "app": "nxttrack-platform",
+  "env": "staging",
+  "commitSha": "<expected full 40-character release SHA>",
+  "checks": {
+    "database": { "status": "pass" },
+    "schemaCompatibility": { "status": "pass" }
+  }
+}
 ```
 
-Later response may include non-sensitive checks:
-
-- app version/sha.
-- database connectivity.
-- storage connectivity.
-- background queue state if used.
-
-Run after deployment:
+Use explicit expectations. For a newly activated staging candidate:
 
 ```bash
-APP_URL=https://staging.nxttrack.nl pnpm run staging:health
+APP_URL=https://staging.nxttrack.nl \
+EXPECTED_APP_ENV=staging \
+EXPECTED_RELEASE_SHA="$RELEASE_SHA" \
+pnpm run staging:health
 ```
 
-Expected:
-
-```txt
-[staging:health] PASS https://staging.nxttrack.nl/api/health -> env=staging
-```
+For production, use `APP_URL=https://nxttrack.nl` and `EXPECTED_APP_ENV=production`. For a read-only inspection of an existing runtime, supply that runtime's independently established SHA. A newer checkout's `GITHUB_SHA` is not evidence that the live application runs that version. A missing, skipped or failing database/schema check does not satisfy exact deployment health.
 
 ## Useful Commands
 
@@ -190,11 +162,11 @@ ls -1dt /var/www/nxttrack/staging/releases/*
 
 ## Manual Rollback
 
-Use only after confirming the target previous release. For Phase 13, rehearse this once on staging and then switch back to the current release.
+Use an exact known-good release, retaining its immutable source artifact and release evidence. The newest directory may be an incomplete build or an incompatible older application.
 
-The canonical rehearsal is the manually dispatched `Staging rollback rehearsal` GitHub Action on `main`. It serializes with staging deploys, selects the newest release other than `current`, verifies database-aware health on that release, and always restores and verifies the original release. Its implementation is `scripts/release/rehearse-runtime-rollback.sh`.
+The canonical `Staging rollback rehearsal` Action on `main` requires `release_directory` and defaults `check_only=true`. It fetches full Git history and serializes with staging deploys. It validates environment, immutable identity, certified ancestry, packaged schema contract, identical migration trees and current database/schema health before changing the runtime. Set `check_only=false` only when a temporary live rehearsal is intended. The candidate runs with maintenance mode enabled and mail/internal jobs disabled; the original release and exact shared environment are restored afterwards, including after a failure.
 
-The steps below remain the break-glass manual procedure.
+For a VPS invocation, use a complete trusted checkout and the certified Node version. Stop conflicting manual deployment work first.
 
 1. List releases:
 
@@ -202,41 +174,34 @@ The steps below remain the break-glass manual procedure.
 ls -1dt /var/www/nxttrack/staging/releases/*
 ```
 
-2. Choose previous known-good release.
-
-3. Update symlink:
+2. Validate the exact candidate without changing the runtime:
 
 ```bash
-sudo ln -sfn /var/www/nxttrack/staging/releases/<previous-release> /var/www/nxttrack/staging/current.new
-sudo mv -Tf /var/www/nxttrack/staging/current.new /var/www/nxttrack/staging/current
+scripts/release/rehearse-runtime-rollback.sh staging \
+  /var/www/nxttrack/staging/releases/<known-good-release> --check-only
 ```
 
-4. Restart service:
+3. Run the authorized rehearsal and restore the current release automatically:
 
 ```bash
-sudo systemctl restart nxttrack-staging
+scripts/release/rehearse-runtime-rollback.sh staging \
+  /var/www/nxttrack/staging/releases/<known-good-release>
 ```
 
-5. Verify health:
+4. Verify the restored original SHA and environment, with database and schema checks both passing:
 
 ```bash
-curl -fsS https://staging.nxttrack.nl/api/health
-```
-
-6. Switch back to the current release after rehearsal:
-
-```bash
-sudo ln -sfn /var/www/nxttrack/staging/releases/<current-release> /var/www/nxttrack/staging/current.new
-sudo mv -Tf /var/www/nxttrack/staging/current.new /var/www/nxttrack/staging/current
-sudo systemctl restart nxttrack-staging
 curl -fsS https://staging.nxttrack.nl/api/health
 ```
 
 Rollback limitation:
 
-- This only rolls back files and runtime code.
+- This is a temporary runtime rehearsal and restores the original artifact; an incident rollback that leaves a different artifact active is a separate operation.
+- Both environment and release directory are mandatory. Production uses `production` and a production release path; no argument silently defaults to staging.
+- Canonical releases share `.env`; switching only `current` does not establish a truthful release SHA. The script snapshots the environment, takes the candidate SHA from its immutable artifact and restores the original bytes afterwards. If restoration fails, it keeps the private snapshot for recovery.
+- Missing/mismatched artifacts, the wrong environment, unrelated ancestry, a different migration tree or schema contract, and failed exact-SHA health stop the operation.
 - Database migrations are not automatically rolled back.
-- Use forward fixes or explicit rollback migrations for database issues.
+- Use forward fixes or separately verified schema/data recovery for database issues. Pre-V4 July releases are not suitable rollback targets for the migrated V4 database.
 
 ## Troubleshooting
 
@@ -244,7 +209,7 @@ Rollback limitation:
 
 Check:
 
-- Branch is `staging` or `production`.
+- Workflow source is canonical `main`; the dispatch target selects `staging` or `production`.
 - Runner is online.
 - Runner labels match workflow.
 - Repository has access to the runner.
@@ -265,7 +230,7 @@ Check:
 Check:
 
 - Migration command exists.
-- Supabase staging URL/database URL is correct.
+- The selected environment's Supabase URL/database URL is correct and matches the preflight evidence.
 - Migration has not already been partially applied.
 - RLS/function/view changes follow security guidelines.
 - Do not retry blindly after repeated failures; inspect state first.
@@ -278,7 +243,7 @@ Check:
 - `pnpm run db:audit` output for forbidden Supabase patterns.
 - `pnpm run db:rls-audit` output for public tables without RLS, policies or grants.
 - `pnpm run staging:gate` warnings for missing manual confirmations.
-- Supabase CLI version; the runner should be upgraded regularly.
+- The pinned Supabase CLI version and the same toolchain used by the validated source.
 
 ### Caddy returns 502
 
@@ -299,13 +264,11 @@ Check:
 - App host resolver maps domain to tenant.
 - Wildcard domain/certificate setup is complete.
 
-## Acceptance Criteria
+## Acceptance criteria for the next deployment
 
-This runbook is ready when:
-
-- Staging deploy can be followed step-by-step.
-- Rollback is documented.
-- Common failure modes are documented.
-- Production remains explicitly out of scope until approved.
-- Phase 13 hardening gates can be run without changing production.
-- Rollback rehearsal has been performed on staging and recorded.
+- The exact candidate SHA passes its build and repository checks, then the complete staging validation job.
+- Production promotion has the same-SHA staging, foundation and migration-rehearsal evidence and an applicable approval reference.
+- Candidate preparation preserves the running environment; snapshots, explicit rollback selection and protected release retention are available.
+- Activated health proves the expected SHA, environment, database and schema compatibility; route checks pass.
+- Versioned operations installation and its schedule readback pass when the normal deployment runs, with subsequent successful worker/backup evidence.
+- The actual release run and any separately performed live rehearsal are recorded as evidence. Prepared scripts and local tests alone are not recorded as completed live deployments or rehearsals.

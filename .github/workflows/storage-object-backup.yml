@@ -36,10 +36,13 @@ jobs:
     environment: ${{ inputs.target }}
     env:
       APP_ENV: ${{ inputs.target }}
+      APP_URL: ${{ vars.APP_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY || secrets.SUPABASE_SERVICE_ROLE_KEY }}
       STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
       STORAGE_BACKUP_ALLOW_EMPTY_FIRST_INSTALL: ${{ inputs.first_install_empty_project && 'true' || 'false' }}
+      STORAGE_BACKUP_DEFER_SUCCESS_HEARTBEAT: "true"
     steps:
       - name: Authorize scoped export
         env:
@@ -55,13 +58,20 @@ jobs:
           fi
 
       - name: Require independently retained encryption secret
-        run: test -n "$STORAGE_BACKUP_PASSPHRASE"
+        run: |
+          test -n "$STORAGE_BACKUP_PASSPHRASE"
+          test "${#CRON_SECRET}" -ge 32
+          test -n "$APP_URL"
 
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Prepare isolated backup directory
-        run: echo "STORAGE_BACKUP_DIR=${RUNNER_TEMP}/storage-backup" >> "$GITHUB_ENV"
+        run: |
+          umask 077
+          backup_work_dir=$(mktemp -d "${RUNNER_TEMP}/storage-backup-XXXXXXXX")
+          echo "STORAGE_BACKUP_WORK_DIR=$backup_work_dir" >> "$GITHUB_ENV"
+          echo "STORAGE_BACKUP_DIR=$backup_work_dir/objects" >> "$GITHUB_ENV"
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -77,29 +87,48 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Export and verify all private buckets
+        id: export
         run: |
           pnpm run storage:backup
           pnpm run storage:verify-local
-          node scripts/storage/object-backup.mjs summary > "${RUNNER_TEMP}/storage-backup-summary.json"
+          node scripts/storage/object-backup.mjs summary > "$STORAGE_BACKUP_WORK_DIR/storage-backup-summary.json"
 
-      - name: Encrypt backup before retention
-        run: |
-          umask 077
-          printf '%s' "$STORAGE_BACKUP_PASSPHRASE" > "${RUNNER_TEMP}/storage-backup-passphrase"
-          tar -C "$STORAGE_BACKUP_DIR" -czf "${RUNNER_TEMP}/storage-backup.tar.gz" .
-          gpg --batch --yes --pinentry-mode loopback \
-            --passphrase-file "${RUNNER_TEMP}/storage-backup-passphrase" \
-            --symmetric --cipher-algo AES256 \
-            --output "${RUNNER_TEMP}/storage-backup.tar.gz.gpg" \
-            "${RUNNER_TEMP}/storage-backup.tar.gz"
+      - name: Encrypt and byte-verify backup before retention
+        id: encrypt
+        run: node scripts/storage/retained-backup.mjs encrypt
 
       - name: Retain encrypted backup
+        id: retain
         uses: actions/upload-artifact@v6
         with:
           name: ${{ inputs.target }}-storage-object-backup-${{ github.run_id }}
           path: |
-            ${{ runner.temp }}/storage-backup.tar.gz.gpg
-            ${{ runner.temp }}/storage-backup-summary.json
+            ${{ env.STORAGE_BACKUP_WORK_DIR }}/storage-backup.tar.gz.gpg
+            ${{ env.STORAGE_BACKUP_WORK_DIR }}/storage-backup-summary.json
+            ${{ env.STORAGE_BACKUP_WORK_DIR }}/encryption-proof.json
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
+
+      - name: Record successful retention after artifact upload
+        id: heartbeat
+        env:
+          STORAGE_BACKUP_ARTIFACT_ID: ${{ steps.retain.outputs.artifact-id }}
+          STORAGE_BACKUP_ARTIFACT_DIGEST: ${{ steps.retain.outputs.artifact-digest }}
+        run: node scripts/storage/retained-backup.mjs pass
+
+      - name: Record failed or cancelled backup
+        if: ${{ always() && (failure() || cancelled()) && steps.export.outcome != 'skipped' && steps.export.outcome != '' }}
+        env:
+          STORAGE_BACKUP_FAILED_STAGE: ${{ cancelled() && 'cancelled' || steps.export.outcome == 'failure' && 'export' || steps.encrypt.outcome == 'failure' && 'encrypt' || steps.retain.outcome == 'failure' && 'upload' || 'heartbeat' }}
+        run: node scripts/storage/retained-backup.mjs fail
+
+      - name: Remove all temporary backup material
+        if: always()
+        run: |
+          if [[ -n "${STORAGE_BACKUP_WORK_DIR:-}" ]]; then
+            case "$STORAGE_BACKUP_WORK_DIR" in
+              "$RUNNER_TEMP"/storage-backup-*) rm -rf -- "$STORAGE_BACKUP_WORK_DIR" ;;
+              *) echo "Refusing cleanup outside the isolated backup directory." >&2; exit 1 ;;
+            esac
+          fi

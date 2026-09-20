@@ -26,6 +26,7 @@ if (target === "production") {
   const stagedSha = (process.env.STAGING_RELEASE_SHA || "").trim().toLowerCase();
   const confirmation = process.env.PRODUCTION_RELEASE_CONFIRMATION || "";
   const approvalReference = (process.env.PRODUCTION_APPROVAL_REFERENCE || "").trim();
+  const stagingRunId = (process.env.STAGING_RELEASE_RUN_ID || "").trim();
   const foundationRunId = (process.env.PRODUCTION_FOUNDATION_RUN_ID || "").trim();
   const migrationRehearsalRunId = (process.env.PRODUCTION_MIGRATION_REHEARSAL_RUN_ID || "").trim();
 
@@ -35,6 +36,10 @@ if (target === "production") {
 
   if (approvalReference.length < 8) {
     failures.push("Production requires a recorded PRODUCTION_APPROVAL_REFERENCE.");
+  }
+
+  if (!/^\d+$/.test(stagingRunId)) {
+    failures.push("Production requires a successful STAGING_RELEASE_RUN_ID including full browser validation.");
   }
 
   if (!/^\d+$/.test(foundationRunId)) {
