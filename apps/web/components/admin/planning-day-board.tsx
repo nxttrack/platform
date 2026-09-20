@@ -29,22 +29,22 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
 
   return (
     <>
-      <div className="grid gap-3 xl:grid-cols-2 2xl:grid-cols-3">
+      <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2 2xl:grid-cols-3">
         {days.map((day) => (
-          <section className="flex h-64 flex-col rounded-xl border border-border bg-card p-3 shadow-soft" key={day.key}>
+          <section className="flex h-64 min-w-0 flex-col rounded-xl border border-border bg-card p-3 shadow-soft" key={day.key}>
             <div className="mb-2 flex shrink-0 items-center justify-between gap-2 px-1">
               <h3 className="text-sm font-bold text-foreground">{day.label}</h3>
               <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>
             </div>
             <div
               aria-label={day.sessions.length > 3 ? `Lessen op ${day.label}` : undefined}
-              className="grid min-h-0 flex-1 content-start gap-1.5 overflow-y-auto overscroll-contain pr-1"
+              className="grid min-h-0 min-w-0 flex-1 grid-cols-1 content-start gap-1.5 overflow-y-auto overscroll-contain pr-1"
               role={day.sessions.length > 3 ? "region" : undefined}
               tabIndex={day.sessions.length > 3 ? 0 : undefined}
             >
               {day.sessions.map((session) => (
                 <button
-                  className="flex min-h-16 w-full items-center gap-3 rounded-lg border border-transparent bg-muted/45 px-3 py-2 text-left transition hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-16 min-w-0 w-full items-center gap-3 rounded-lg border border-transparent bg-muted/45 px-3 py-2 text-left transition hover:border-primary/20 hover:bg-primary/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   key={session.id}
                   onClick={() => setDetail(session)}
                   type="button"
