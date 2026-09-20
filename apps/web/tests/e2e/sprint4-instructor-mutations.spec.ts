@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { instructorRosterEntry } from "./helpers/instructor-roster";
 
 type Phase16State = {
   users: { instructor: { email: string } };
@@ -29,11 +30,13 @@ test.describe("Sprint 4 instructor mutations", () => {
     const groupPath = `/instructor/group/${phase.expected.groupId}?session=${phase.expected.sessionId}`;
 
     await signIn(page, phase.users.instructor.email, requiredEnv("E2E_INSTRUCTOR_PASSWORD"), groupPath);
-    let rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
+    let rosterEntry = instructorRosterEntry(page, phase.expected.participantId);
     await expect(rosterEntry).toHaveCount(1);
+    await expect(rosterEntry.getByRole("heading", { level: 3, name: phase.expected.participantName, exact: true })).toBeVisible();
     await submitAndWaitForSaved(page, rosterEntry.getByRole("button", { name: "Laat", exact: true }), "attendance");
     await expect(page.getByText("Attendance opgeslagen.")).toBeVisible();
-    rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
+    rosterEntry = instructorRosterEntry(page, phase.expected.participantId);
+    await expect(rosterEntry).toHaveCount(1);
     await expect(rosterEntry.locator("span").filter({ hasText: /^Laat$/ })).toBeVisible();
 
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
