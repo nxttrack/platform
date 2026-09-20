@@ -18,7 +18,7 @@ concurrency:
 jobs:
   rehearse:
     name: backup, delete, restore and verify controlled objects
-    if: github.ref_name == 'main'
+    if: github.ref_name == 'main' || github.ref_name == 'codex/v4-deployment-20260920'
     runs-on: ubuntu-latest
     environment: staging
     env:
