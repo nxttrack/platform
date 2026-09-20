@@ -1,4 +1,4 @@
-export const storageBucketContractVersion = 1;
+export const storageBucketContractVersion = 2;
 
 export const requiredStorageBuckets = Object.freeze([
   Object.freeze({ name: "tenant-documents", rehearsalContentType: "application/pdf", rehearsalExtension: "pdf" }),
@@ -11,6 +11,8 @@ export const requiredStorageBuckets = Object.freeze([
 ]);
 
 export const requiredStorageBucketNames = Object.freeze(requiredStorageBuckets.map((bucket) => bucket.name));
+
+export const legacyStorageBucketNames = Object.freeze(requiredStorageBucketNames.slice(0, 5));
 
 export function storageBucketDefinition(name) {
   return requiredStorageBuckets.find((bucket) => bucket.name === name) ?? null;

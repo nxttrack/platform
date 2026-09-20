@@ -21,22 +21,25 @@ test("logical restore derives its table inventory from source and restored dumps
   assert.doesNotMatch(forceRls, /< 63|at least 63/);
 });
 
-test("Storage evidence covers the complete current five-bucket contract", () => {
+test("Storage evidence covers all seven private buckets including V4 themes", () => {
   assert.deepEqual(requiredStorageBucketNames, [
     "tenant-documents",
     "diploma-vault",
     "participant-media",
     "badge-studio-assets",
-    "tenant-media-assets"
+    "tenant-media-assets",
+    "portal-theme-assets",
+    "portal-theme-imports"
   ]);
   const privateFiles = repositoryFile("apps/web/lib/storage/private-files.ts");
+  const themeFiles = repositoryFile("apps/web/lib/theme/theme-release-repository.ts");
   const migrationsDirectory = new URL("../../supabase/migrations/", import.meta.url);
   const migrations = readdirSync(migrationsDirectory)
     .filter((file) => file.endsWith(".sql"))
     .map((file) => readFileSync(new URL(file, migrationsDirectory), "utf8"))
     .join("\n");
   for (const bucket of requiredStorageBucketNames) {
-    assert.match(privateFiles, new RegExp(`= "${bucket}"`));
+    assert.match(privateFiles + themeFiles, new RegExp(`"${bucket}"`));
     assert.match(migrations, new RegExp(`storage\\.buckets[\\s\\S]{0,800}'${bucket}'`));
   }
   const backup = repositoryFile("scripts/storage/object-backup.mjs");

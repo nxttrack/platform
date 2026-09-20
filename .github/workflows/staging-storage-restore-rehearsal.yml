@@ -78,9 +78,6 @@ jobs:
             tar -xzf - -C "${RUNNER_TEMP}/storage-restored"
           STORAGE_BACKUP_DIR="${RUNNER_TEMP}/storage-restored" pnpm run storage:verify-local
 
-      - name: Delete only the controlled source objects
-        run: node scripts/storage/object-backup.mjs delete-rehearsal
-
       - name: Bind restore to this exact staging project and backup
         run: |
           node --input-type=module <<'NODE'
@@ -100,6 +97,9 @@ jobs:
           };
           for (const [key,value] of Object.entries(values)) appendFileSync(process.env.GITHUB_ENV, `${key}=${value}\n`);
           NODE
+
+      - name: Delete only the controlled source objects
+        run: node scripts/storage/object-backup.mjs delete-rehearsal
 
       - name: Restore without overwrite and verify remotely
         env:

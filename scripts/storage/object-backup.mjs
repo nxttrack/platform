@@ -416,10 +416,6 @@ async function readManifest() {
 
   validateStorageManifestBucketContract(manifest, requiredStorageBucketNames, allowedBuckets);
 
-  if (manifest.version === 3 && manifest.bucketContractVersion !== storageBucketContractVersion) {
-    throw new Error("Storage backup manifest uses an unsupported bucket contract version.");
-  }
-
   if (manifest.version >= 2) {
     if (!Array.isArray(manifest.missingBuckets)) {
       throw new Error("Storage backup manifest has no missing-bucket inventory.");
