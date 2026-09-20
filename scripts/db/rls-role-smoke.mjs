@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import { initializeParentRoleSession } from "../auth/parent-role-session.mjs";
+import { verifyParentProgressIsolation } from "./parent-progress-probes.mjs";
 
 const supabaseUrl = normalizeUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -232,6 +233,22 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
   }
 
   for (const table of tenantScopedTables) {
+    if (check.key === "parent" && table === "participant_progress_scores") {
+      try {
+        const fixturePath = process.env.SPRINT4_ISOLATION_STATE_PATH;
+        if (!fixturePath) throw new Error("SPRINT4_ISOLATION_STATE_PATH is required for parent progress isolation.");
+        const fixture = JSON.parse(readFileSync(fixturePath, "utf8")).progressScoreIsolation;
+        const count = await verifyParentProgressIsolation({
+          fixture, userId: auth.userId, ownTenantIds,
+          serviceRead: readProgressFixture,
+          parentRead: (path) => fetchRest(auth.accessToken, path)
+        });
+        console.log(`[db:rls-role-smoke] parent progress: ${count} existing-row visibility/isolation probes passed.`);
+      } catch (error) {
+        failures.push(error.message);
+      }
+      continue;
+    }
     const rows = await optionalRest(auth.accessToken, `/${table}?select=tenant_id&limit=50`, table);
     const leakedRow = rows.find((row) => row.tenant_id && !ownTenantIds.has(row.tenant_id));
 
@@ -239,6 +256,16 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
       failures.push(`${check.key} can see a ${table} row for another tenant.`);
     }
   }
+}
+
+async function readProgressFixture(path) {
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) throw new Error("Parent progress fixture verification requires server credentials.");
+  const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
+    headers: { "content-type": "application/json", apikey: serviceKey, authorization: `Bearer ${serviceKey}` }
+  });
+  if (!response.ok) throw new Error(`Parent progress fixture verification failed: HTTP ${response.status}.`);
+  return response.json();
 }
 
 async function signIn(email, password) {
