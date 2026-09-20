@@ -60,6 +60,12 @@ try {
           await page.waitForURL(/\/kind(?:\?|$|\/)/,{timeout:30000});
           await checkPage(page,tenantOrigin,'/kind','child');
           await checkPage(page,tenantOrigin,'/kind/reis','child');
+          await page.waitForFunction(()=>{
+            const images=[...document.querySelectorAll('[data-rich-layer]')];
+            return images.length>0 && images.every(image=>image.complete && image.naturalWidth>0);
+          },undefined,{timeout:30000});
+          await page.locator('[data-rich-journey][data-camera-moving="false"]').waitFor({state:'visible'});
+          result.checks.push({check:'child journey artwork fully loaded',status:'pass'});
           await page.screenshot({path:new URL('child-journey.png',out).pathname,fullPage:true});
           await page.goto(`${tenantOrigin}/admin`,{waitUntil:'domcontentloaded'});
           assert.ok(new URL(page.url()).pathname.startsWith('/kind'),'Child session must remain outside administration');
