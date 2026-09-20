@@ -383,6 +383,19 @@ jobs:
           pg_dump --version || true
           stat /run/clamav/clamd.ctl || true
           ls -ld "/var/www/nxttrack/$TARGET/current/artifacts" || true
+      - name: Check current workers and encrypted backup freshness read-only
+        env:
+          TARGET: ${{ matrix.target }}
+          OPERATIONS_AUDIT_OUTPUT: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+        run: node scripts/operations/check-runtime-operations.mjs "$TARGET"
+      - name: Retain current operation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: runtime-readiness-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+          retention-days: 30
+          if-no-files-found: error
       - name: Inspect database and feature configuration read-only
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
