@@ -716,8 +716,8 @@ jobs:
         run: pnpm run phase15:staging
 
       - name: Write release evidence
-        id: write-staging-release-evidence
         if: env.MAINTENANCE_NO_WRITE != 'true'
+        id: write-staging-release-evidence
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
