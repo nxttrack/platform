@@ -1,0 +1,109 @@
+{
+  "checkedAt": "2026-09-20T15:10:17.243Z",
+  "runId": "35516843435",
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35516843435",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "status": "completed",
+  "conclusion": "success",
+  "runOriginVerified": true,
+  "requiredGates": [
+    {
+      "name": "Phase 16 operational flow validation",
+      "status": "success"
+    },
+    {
+      "name": "Validate required seven-theme parent and child portal matrix",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 intake-to-placement browser mutation",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 instructor browser mutations",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 parent self-service browser mutations",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 tenant-admin browser mutations",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 role and tenant isolation",
+      "status": "success"
+    },
+    {
+      "name": "Sprint 4 accessibility and performance budgets",
+      "status": "success"
+    },
+    {
+      "name": "Communicationhub and Badge Studio browser validation",
+      "status": "success"
+    },
+    {
+      "name": "Premium release browser validation",
+      "status": "success"
+    },
+    {
+      "name": "Capture Priority A staging visual evidence",
+      "status": "success"
+    },
+    {
+      "name": "Phase 15 staging truth and security validation",
+      "status": "success"
+    },
+    {
+      "name": "Write release evidence",
+      "status": "success"
+    }
+  ],
+  "requiredGateCount": 13,
+  "cleanup": {
+    "name": "Restore parent and child test rollout",
+    "status": "success"
+  },
+  "artifact": {
+    "id": 10608016380,
+    "digest": "sha256:8642ab7160e3193bf9dea6110e42303f1415552a173ccee75dc8602cb3d5c275",
+    "originalZipDigestVerified": true,
+    "exactTwoFileContractVerified": true,
+    "sourceTargetRunAndTimestampsVerified": true
+  },
+  "persistence": {
+    "preserved": true,
+    "alreadyPresent": false,
+    "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "runId": "35516843435",
+    "destination": "/var/www/nxttrack/staging/releases/20260920143333-1a72606/artifacts/release-evidence.json",
+    "artifactId": 10608016380,
+    "artifactDigest": "sha256:8642ab7160e3193bf9dea6110e42303f1415552a173ccee75dc8602cb3d5c275"
+  },
+  "canonicalProductionEvidenceValidator": {
+    "passed": true,
+    "evidence": [
+      {
+        "id": "35514774707",
+        "label": "foundation audit",
+        "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1"
+      },
+      {
+        "id": "35514776517",
+        "label": "migration rehearsal",
+        "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1"
+      },
+      {
+        "id": "35516843435",
+        "label": "staging release",
+        "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1"
+      }
+    ]
+  },
+  "claims": {
+    "fullCanonicalStagingGate": true,
+    "independentVisualApproval": false,
+    "productionPromoted": false
+  }
+}

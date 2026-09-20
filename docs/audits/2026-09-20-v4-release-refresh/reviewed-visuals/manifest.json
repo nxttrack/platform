@@ -1,0 +1,32 @@
+{
+  "runId": 35516843435,
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "retainedAt": "2026-09-20T15:05:12.355250+00:00",
+  "images": [
+    {
+      "source": "tenant-intake/mobile.png",
+      "retainedFile": "tenant-intake-mobile.png",
+      "bytes": 133071,
+      "sha256": "9d4a3496a94977a2b91ce9a5ad4c540aba893dc054167bb16099e9b902d10a71"
+    },
+    {
+      "source": "tenant-intake/tablet.png",
+      "retainedFile": "tenant-intake-tablet.png",
+      "bytes": 164853,
+      "sha256": "a31462e21ff600109c3d91d64cfc9d1e2415fe7974ff3196d305532481019997"
+    },
+    {
+      "source": "admin-agenda/mobile.png",
+      "retainedFile": "admin-agenda-mobile.png",
+      "bytes": 237192,
+      "sha256": "4f1852a8b2a017d487bad68ea37fd5e5cc07fc6d37b87f83f9d5b7d26a1253a5"
+    },
+    {
+      "source": "instructor-group/tablet.png",
+      "retainedFile": "instructor-group-tablet.png",
+      "bytes": 219222,
+      "sha256": "247e359637adc188696366c7a3c68041acefc56355d9b8cc7271f8efceb84b4d"
+    }
+  ],
+  "privacy": "Four already-reviewed fictional staging-fixture views, no real account email or filled credentials; original bytes without editing"
+}

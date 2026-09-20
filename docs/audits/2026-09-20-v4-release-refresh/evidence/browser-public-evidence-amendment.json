@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-09-20T14:21:56.825362+00:00",
+  "operationsSourceSha": "c10fce8d28851b10b36f49837d550e58eac68cbc",
+  "reason": "GitHub repository is public; no assumption of private browser artifacts.",
+  "changes": [
+    "Only main-region screenshots, excluding global account header/sidebar",
+    "Reject visible current-account email and nonempty email/password inputs before capture",
+    "Generic failure marker; no raw assertion, database or navigation error in retained JSON"
+  ],
+  "validation": {
+    "nodeSyntax": "passed",
+    "existingContractTests": 3,
+    "independentShellSourceReview": "passed",
+    "sourceReviewer": "theme_v4_readiness"
+  },
+  "unchanged": [
+    "canonical application source",
+    "existing-user authentication",
+    "local temporary-session revocation",
+    "password-preservation comparison"
+  ],
+  "limitations": [
+    "Screenshots prove main-region contents only, not a full-shell visual acceptance.",
+    "Staging child journey contains fictional child identity.",
+    "Final authenticated execution remains pending."
+  ]
+}

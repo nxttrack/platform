@@ -1,0 +1,35 @@
+{
+  "checkedAt": "2026-09-20T13:57:18.304212+00:00",
+  "fromProductionSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "toReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "scope": [
+    "apps/web/app",
+    "apps/web/components",
+    "apps/web/lib",
+    "packages",
+    "supabase",
+    "pnpm-lock.yaml",
+    "package.json",
+    "apps/web/package.json"
+  ],
+  "changedApplicationFiles": [
+    "apps/web/app/(instructor)/instructor/group/[id]/page.tsx",
+    "apps/web/app/(tenant-public)/intake/page.tsx",
+    "apps/web/app/test-harness/intake-responsive/page.tsx",
+    "apps/web/components/admin/planning-day-board.tsx",
+    "apps/web/components/instructor/roster-form-fields.tsx",
+    "apps/web/components/public/intake-program-layout.tsx"
+  ],
+  "byteUnchangedPaths": [
+    "apps/web/lib",
+    "packages",
+    "supabase",
+    "apps/web/app/api",
+    "apps/web/app/auth",
+    "pnpm-lock.yaml",
+    "package.json",
+    "apps/web/package.json"
+  ],
+  "status": "passed",
+  "qualification": "Presentation and guarded test harness changed; complete application runtime is NOT byte-identical. Backend libraries, packages, migrations, API/auth routes and dependency manifests in the named scope are unchanged. Fresh full deployment gates still required."
+}

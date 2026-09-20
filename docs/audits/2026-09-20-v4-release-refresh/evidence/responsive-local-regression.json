@@ -1,0 +1,53 @@
+{
+  "baseSha": "b5511f16ad8367aca342aac9b5c0e83c4ee4d362",
+  "worktree": "/home/codex/repos/nxttrack-v4-responsive-intake",
+  "engine": "chromium",
+  "cases": 4,
+  "passed": 4,
+  "scope": "Real extracted intake/roster fields and PlanningDayBoard; no DB/auth calls, readonly test fixture, exact 40 programs; first wizard step completed and planning dialog opened.",
+  "screenshots": [
+    {
+      "name": "intake-40-programs-390",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/intake-40-programs-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "222524fef451c64dee13088ffdf8f47e848915e033f40a7be040779e4c051b5e"
+    },
+    {
+      "name": "planning-390",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/planning-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "a503f14e4b31be9f642edbed526e35e5d321cfe92fe5f32147d545cbf9831e60"
+    },
+    {
+      "name": "instructor-390",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/instructor-390.png",
+      "width": 390,
+      "height": 844,
+      "sha256": "8e7a56b18f8f3d84c75f2d657db28881a7fbc9d9470abf920e8ac2c0f6ada0d6"
+    },
+    {
+      "name": "intake-40-programs-768",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/intake-40-programs-768.png",
+      "width": 768,
+      "height": 844,
+      "sha256": "1678da617c70c94c75e96ad05be86c6c48f1a281a8b816b93ad86493a0398287"
+    },
+    {
+      "name": "planning-768",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/planning-768.png",
+      "width": 768,
+      "height": 844,
+      "sha256": "3fde39dfa4baedfe6d6b6cb596b1b85aea724fc899afddc36ff8faf363064990"
+    },
+    {
+      "name": "instructor-768",
+      "path": "/tmp/nxttrack-v4-release-evidence/responsive-local/screenshots/instructor-768.png",
+      "width": 768,
+      "height": 844,
+      "sha256": "00110e03fbca61125cf77ee485956f7dff5d703fc8573948253c951a48bc0902"
+    }
+  ],
+  "otherEngines": "Local Firefox/WebKit could not launch: missing host system libraries. Existing Journey CI installs dependencies and discovers all 12 cases."
+}

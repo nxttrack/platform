@@ -1,0 +1,101 @@
+{
+  "checkedAt": "2026-09-20T14:01:50.206599+00:00",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "ci": {
+    "checkedAt": "2026-09-20T14:01:50.206380+00:00",
+    "runId": 35514764794,
+    "runUrl": "https://github.com/nxttrack/platform/actions/runs/35514764794",
+    "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "result": "pass",
+    "stepsPassed": 26,
+    "counts": {
+      "unit": {
+        "tests": 590,
+        "suites": 9,
+        "pass": 590,
+        "fail": 0,
+        "cancelled": 0,
+        "skipped": 0,
+        "todo": 0
+      },
+      "Run local browser smoke tests": {
+        "passed": 102
+      },
+      "Validate Journey timeline in Chromium Firefox and WebKit": {
+        "skipped": 35,
+        "passed": 82
+      }
+    },
+    "responsiveRegressionPassedLines": [
+      "\u2713   10 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (1.8s)",
+      "\u2713   17 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (919ms)",
+      "\u2713   18 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (1.6s)",
+      "\u2713   19 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (1.1s)",
+      "\u2713   48 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (2.7s)",
+      "\u2713   49 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (1.1s)",
+      "\u2713   50 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (1.8s)",
+      "\u2713   51 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (1.2s)",
+      "\u2713   87 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (5.5s)",
+      "\u2713   94 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (2.1s)",
+      "\u2713   96 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (4.5s)",
+      "\u2713   97 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (2.5s)"
+    ],
+    "exactSourceArtifact": {
+      "runId": 35514764794,
+      "artifactId": 10605809497,
+      "artifactName": "nxttrack-1a72606d5fd7bf72c382fcc5215c3419dfb689e1-exact-source",
+      "digest": "sha256:9999e1c5c3e7e2f6e2d336354bfaaf649618f85f59396bc8b02c88eefc30e682",
+      "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "originVerified": true,
+      "digestVerified": true,
+      "contentVerified": true
+    }
+  },
+  "productionPreflight": {
+    "checkedAt": "2026-09-20T13:56:27.345493+00:00",
+    "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "foundation": {
+      "runId": 35514774707,
+      "runUrl": "https://github.com/nxttrack/platform/actions/runs/35514774707",
+      "jobsPassed": 6,
+      "sourceAndRunOriginVerified": true,
+      "result": "pass",
+      "fingerprints": {},
+      "artifactCount": 0
+    },
+    "migration-rehearsal": {
+      "runId": 35514776517,
+      "runUrl": "https://github.com/nxttrack/platform/actions/runs/35514776517",
+      "jobsPassed": 2,
+      "sourceAndRunOriginVerified": true,
+      "result": "pass",
+      "fingerprints": {
+        "BEFORE_FINGERPRINT": "fb77b0058661408e297e07fe0a8e2834a684b2f2d0654399e719a34987d48f27",
+        "AFTER_FINGERPRINT": "fb77b0058661408e297e07fe0a8e2834a684b2f2d0654399e719a34987d48f27"
+      },
+      "artifactCount": 0
+    },
+    "database": {
+      "localMigrations": 158,
+      "remoteMigrations": 158,
+      "missingRemoteMigrations": 0,
+      "unexpectedRemoteMigrations": 0,
+      "publicTables": 256,
+      "rlsEnabled": 256,
+      "forceRlsEnabled": 256,
+      "authUsers": 1,
+      "storageObjects": 0
+    },
+    "productionStagingProjectIsolation": "passed",
+    "dryRun": true,
+    "includeAll": false,
+    "remoteUpToDate": true,
+    "inventoryFingerprintUnchanged": true,
+    "inventoryFingerprintSameAsPreviousPreflight": true,
+    "fingerprintScope": "Migration versions, schema/RLS counts, auth-user count and storage-object count; not all row contents."
+  },
+  "applicationScopeComparison": "application-scope-comparison.json",
+  "preflights": "passed",
+  "stagingEvidence": "pending",
+  "readyForProductionPromotion": false
+}

@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-09-20T14:09:40.794344+00:00",
+  "source": "Paginated GitHub environment variables; allowlisted non-secret flags only",
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "targets": {
+    "staging": {
+      "configured": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "canonicalWorkflowDefaults": {
+        "NEWSLETTER_DELIVERY_ENABLED": "false"
+      },
+      "effective": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "RUN_DB_MIGRATIONS": "false",
+        "NEWSLETTER_DELIVERY_ENABLED": "false"
+      }
+    },
+    "production": {
+      "configured": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "NEWSLETTER_DELIVERY_ENABLED": "false",
+        "RUN_DB_MIGRATIONS": "false"
+      },
+      "canonicalWorkflowDefaults": {},
+      "effective": {
+        "BOOTSTRAP_PLATFORM_OWNER": "false",
+        "BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD": "false",
+        "DB_MIGRATE_DRY_RUN": "false",
+        "EMAIL_SENDING_ENABLED": "true",
+        "INTERNAL_JOBS_ENABLED": "true",
+        "MAINTENANCE_NO_WRITE": "false",
+        "MONITORING_ENABLED": "true",
+        "NEWSLETTER_DELIVERY_ENABLED": "false",
+        "RUN_DB_MIGRATIONS": "false"
+      }
+    }
+  },
+  "status": "passed",
+  "defaultEvidence": "Canonical .github/workflows/deploy.yml line149 resolves unset staging newsletter to false, line242 asserts false, line311 writes it to runtime .env."
+}

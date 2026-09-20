@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-09-20T14:34:08.096930+00:00",
+  "runId": 35516511778,
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35516511778",
+  "result": "passed",
+  "operationSourceSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "canonicalApplicationSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "selectedJobCount": 1,
+  "otherJobsSkipped": 14,
+  "selectedEnvironment": "staging",
+  "fixturePasswordReset": false,
+  "existingAdminIdentitiesPreserved": true,
+  "initialAndFinalHealthIdentical": true,
+  "privateFixtureAndRawContextCleanup": "passed",
+  "diagnosticArtifact": {
+    "runId": 35516511778,
+    "artifactId": 10606842306,
+    "artifactName": "staging-communication-diagnostic-1a72606d5fd7bf72c382fcc5215c3419dfb689e1-35516511778",
+    "artifactDigest": "sha256:9ad5d7bb37068a10739c43939cee9bf7ef90b1df0faad9bb8cc039bea31a597f",
+    "operationSourceSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+    "canonicalApplicationSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "originVerified": true,
+    "digestVerified": true,
+    "expectedSixJsonFilesOnly": true,
+    "canonicalAndInstrumentationSourceHashesVerified": true,
+    "originalAssertionTimeoutMs": 5000,
+    "suiteCounts": {
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0,
+      "timedOut": 0,
+      "interrupted": 0
+    },
+    "roles": [
+      {
+        "role": "owner",
+        "assertionStatus": "passed",
+        "finalDestination": "expected"
+      },
+      {
+        "role": "tenant-admin",
+        "assertionStatus": "passed",
+        "finalDestination": "expected"
+      },
+      {
+        "role": "instructor",
+        "assertionStatus": "passed",
+        "finalDestination": "expected"
+      },
+      {
+        "role": "parent",
+        "assertionStatus": "passed",
+        "finalDestination": "expected"
+      }
+    ],
+    "fullReleaseGate": false,
+    "noUrlsOrEmailAddressesInDiagnosticJson": true
+  },
+  "visualArtifact": {
+    "runId": 35516511778,
+    "operationSourceSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+    "canonicalApplicationSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "artifactId": 10607166619,
+    "artifactName": "staging-communication-priority-a-1a72606d5fd7bf72c382fcc5215c3419dfb689e1-35516511778",
+    "artifactDigest": "sha256:3101136e467530bb641c5c427e449f048cc81ebfde90453102e0b658bdadf5c6",
+    "originVerified": true,
+    "digestVerified": true,
+    "archiveMembers": 57,
+    "imagesVerified": 56,
+    "everyImageMatchesManifestHashAndSize": true,
+    "captureFailureCount": 0,
+    "visualReview": "delegated to theme agent; not asserted by this hash verification",
+    "fullReleaseGate": false
+  },
+  "fullReleaseGate": false,
+  "productionPromotionApprovedByThisRun": false
+}

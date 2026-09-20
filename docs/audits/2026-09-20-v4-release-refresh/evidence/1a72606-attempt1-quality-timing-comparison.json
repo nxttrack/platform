@@ -1,0 +1,146 @@
+{
+  "comparedAt": "2026-09-20T14:17:49.308983+00:00",
+  "runs": {
+    "b551": "35512095754",
+    "1a726": "35514772810"
+  },
+  "timings": [
+    {
+      "case": "quality public login mobile 390x844",
+      "path": "/login",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 3.9
+      },
+      "1a726": {
+        "status": "passed",
+        "testDurationSeconds": 3.7
+      }
+    },
+    {
+      "case": "quality instructor roster tablet 1024x768",
+      "path": "/instructor/group/[group-id]?session=[session-id]",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 5.8
+      },
+      "1a726": {
+        "status": "failed-first-attempt-passed-retry",
+        "testDurationSeconds": 13.3,
+        "failedMetric": "domContentLoadedMs",
+        "measured": 11307,
+        "budget": 6000,
+        "priorTtfbAssertionPassed": true,
+        "ttfbUpperBoundMs": 3000,
+        "retryDurationSeconds": 6.4
+      }
+    },
+    {
+      "case": "quality parent dashboard mobile 390x844",
+      "path": "/portaal",
+      "b551": {
+        "status": "failed-first-attempt-passed-retry",
+        "testDurationSeconds": 10.7,
+        "failedMetric": "largestContentfulPaintMs",
+        "measured": 6724,
+        "budget": 4000,
+        "retryDurationSeconds": 7.0
+      },
+      "1a726": {
+        "status": "passed",
+        "testDurationSeconds": 9.7
+      }
+    },
+    {
+      "case": "quality tenant-admin dashboard desktop 1440x900",
+      "path": "/admin",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 10.3
+      },
+      "1a726": {
+        "status": "passed",
+        "testDurationSeconds": 8.0
+      }
+    },
+    {
+      "case": "communication platform owner",
+      "path": "/platform/badges",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 8.4
+      },
+      "1a726": {
+        "status": "failed-login-url-assertion",
+        "testDurationSeconds": 6.8,
+        "urlAssertionTimeoutMs": 5000
+      }
+    },
+    {
+      "case": "communication instructor",
+      "path": "/instructor/student/[participant-id]?tab=badges",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 3.4
+      },
+      "1a726": {
+        "status": "failed-login-url-assertion",
+        "testDurationSeconds": 9.6,
+        "urlAssertionTimeoutMs": 5000
+      }
+    },
+    {
+      "case": "communication parent",
+      "path": "/portaal/ontwikkeling/badges then /portaal/berichten",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 7.0
+      },
+      "1a726": {
+        "status": "passed",
+        "testDurationSeconds": 11.6
+      }
+    },
+    {
+      "case": "communication tenant admin",
+      "path": "/admin badges and communication surfaces",
+      "b551": {
+        "status": "passed",
+        "testDurationSeconds": 9.6
+      },
+      "1a726": {
+        "status": "passed",
+        "testDurationSeconds": 16.6
+      }
+    }
+  ],
+  "metricCaveats": [
+    "Playwright durations cover the complete test, including login, interactions, accessibility checks and waits; they are not endpoint response times.",
+    "collectPerformance reads performance navigation[0], DOMContentLoaded event end and LCP. It does not retain the navigation entry URL, request waterfall or redirect timing, so the logged metric cannot by itself distinguish initial login navigation from a subsequent protected navigation.",
+    "The instructor case failed only after TTFB<=3000 passed, at DOMContentLoaded=11307; later load/LCP assertions were not reached on that first attempt.",
+    "Both runs had one quality budget failure recovered by the existing CI retry. Playwright labels this flaky, but that label is not a root-cause explanation."
+  ],
+  "independentObservations": [
+    "The instructor group+session path was already exercised successfully by the mutation suite at 14:08:48Z-14:09:12Z, before the quality suite at 14:10:30Z; this is not evidence of a first-ever server render of that path.",
+    "The public login quality test stayed similar (3.9s vs3.7s); admin quality improved (10.3s vs8.0s). These do not support uniform slowdown of every request.",
+    "The two successful communication role tests were slower in the new run (parent7.0s->11.6s, admin9.6s->16.6s), while owner/instructor URL transitions exceeded their 5s assertion. This is consistent with delay affecting multiple protected flows during that step, but does not identify server, database, network or browser cause."
+  ],
+  "httpConsoleEvidence": {
+    "explicit5xxOrConsoleErrorsInRelevantLogs": false,
+    "noErrorProof": false,
+    "reason": "Quality suite does not collect response/console failure events. Communication collects them but asserts only after navigation/page checks; owner/instructor aborted before this assertion. No retained quality/communication artifact contains a request waterfall."
+  },
+  "retainedArtifactLimitation": "35514772810 exposes only the exact-source and earlier seven-theme matrix artifacts. 35512095754 also retains Priority A and release evidence. Neither exposes the quality-performance JSONs or communication failure reports; theme upload preceded those suites.",
+  "sourceReferences": [
+    "apps/web/tests/e2e/sprint4-quality-budgets.spec.ts:23",
+    "apps/web/tests/e2e/sprint4-quality-budgets.spec.ts:33",
+    "apps/web/tests/e2e/sprint4-quality-budgets.spec.ts:93",
+    "apps/web/tests/e2e/sprint4-quality-budgets.spec.ts:125",
+    "apps/web/tests/e2e/sprint4-quality-budgets.spec.ts:145",
+    "apps/web/tests/e2e/communication-badges.spec.ts:141",
+    "apps/web/tests/e2e/communication-badges.spec.ts:150",
+    "apps/web/tests/e2e/sprint4-instructor-mutations.spec.ts:30",
+    "apps/web/playwright.config.ts:16"
+  ],
+  "conclusion": "A real second-case quality budget miss and two real communication login transition timeouts occurred. Prior b551 also exceeded a different quality metric. Available evidence cannot establish cold rendering or general infrastructure latency as the cause; protected-navigation request timing and error observations are needed from the focused precheck."
+}

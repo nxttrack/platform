@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "role": "owner",
+  "capturedAt": "2026-09-20T14:28:23.642Z",
+  "canonicalReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "instrumentationSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "elapsedMs": 2154,
+  "assertionStatus": "passed",
+  "originalFailed": false,
+  "observationLimitMs": 15000,
+  "observationElapsedMs": 0,
+  "lateExpectedNavigation": false,
+  "authCookiePresentHeuristic": true,
+  "loginFieldsPresent": false,
+  "finalLocation": {
+    "destination": "expected",
+    "explicitError": false
+  },
+  "eventsDropped": 0,
+  "events": [
+    {
+      "event": "request",
+      "elapsedMs": 17,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET"
+    },
+    {
+      "event": "response",
+      "elapsedMs": 471,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET",
+      "status": 200,
+      "requestElapsedMs": 454
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 496,
+      "destination": "login",
+      "explicitError": false
+    },
+    {
+      "event": "request-finished",
+      "elapsedMs": 585,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET"
+    },
+    {
+      "event": "before-click",
+      "elapsedMs": 890,
+      "fieldsPresent": true,
+      "destination": "login",
+      "explicitError": false
+    },
+    {
+      "event": "request",
+      "elapsedMs": 949,
+      "destination": "login",
+      "explicitError": false,
+      "method": "POST"
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 1178,
+      "destination": "login",
+      "explicitError": false
+    },
+    {
+      "event": "original-assertion-start",
+      "elapsedMs": 1188,
+      "destination": "login",
+      "explicitError": false
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 1202,
+      "destination": "login",
+      "explicitError": false
+    },
+    {
+      "event": "request",
+      "elapsedMs": 1546,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET"
+    },
+    {
+      "event": "response",
+      "elapsedMs": 1695,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET",
+      "status": 200,
+      "requestElapsedMs": 150
+    },
+    {
+      "event": "request-failed",
+      "elapsedMs": 1700,
+      "destination": "login",
+      "explicitError": false,
+      "method": "GET"
+    },
+    {
+      "event": "response",
+      "elapsedMs": 1852,
+      "destination": "login",
+      "explicitError": false,
+      "method": "POST",
+      "status": 303,
+      "requestElapsedMs": 903
+    },
+    {
+      "event": "request-finished",
+      "elapsedMs": 1852,
+      "destination": "login",
+      "explicitError": false,
+      "method": "POST"
+    },
+    {
+      "event": "request",
+      "elapsedMs": 1853,
+      "destination": "expected",
+      "explicitError": false,
+      "method": "GET"
+    },
+    {
+      "event": "response",
+      "elapsedMs": 2091,
+      "destination": "expected",
+      "explicitError": false,
+      "method": "GET",
+      "status": 200,
+      "requestElapsedMs": 238
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 2094,
+      "destination": "expected",
+      "explicitError": false
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 2144,
+      "destination": "expected",
+      "explicitError": false
+    },
+    {
+      "event": "original-assertion-passed",
+      "elapsedMs": 2145,
+      "destination": "expected",
+      "explicitError": false
+    },
+    {
+      "event": "navigation",
+      "elapsedMs": 2148,
+      "destination": "expected",
+      "explicitError": false
+    },
+    {
+      "event": "final-location",
+      "elapsedMs": 2153,
+      "destination": "expected",
+      "explicitError": false
+    }
+  ]
+}

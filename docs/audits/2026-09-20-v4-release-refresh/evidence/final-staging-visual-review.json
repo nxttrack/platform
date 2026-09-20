@@ -1,0 +1,76 @@
+{
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "runId": "35516843435",
+  "reviewedAt": "2026-09-20T15:11:41.518417+00:00",
+  "method": "Direct visual inspection of original PNGs with view_image; metadata validation is recorded separately.",
+  "actuallyViewedThemeImages": [
+    "nxttrack-default-parent-dashboard-desktop-1440.png",
+    "nxttrack-default-child-dashboard-mobile-390.png",
+    "dolphin-bay-parent-dashboard-desktop-1440.png",
+    "dolphin-bay-child-dashboard-mobile-390.png",
+    "turtle-trails-parent-dashboard-desktop-1440.png",
+    "turtle-trails-child-dashboard-mobile-390.png",
+    "polar-splash-parent-dashboard-desktop-1440.png",
+    "polar-splash-child-dashboard-mobile-390.png",
+    "coastal-explorer-parent-dashboard-desktop-1440.png",
+    "coastal-explorer-child-dashboard-mobile-390.png",
+    "nationaal-zwem-abc-parent-dashboard-desktop-1440.png",
+    "nationaal-zwem-abc-child-dashboard-mobile-390.png",
+    "ocean-quest-parent-dashboard-desktop-1440.png",
+    "ocean-quest-child-dashboard-mobile-390.png"
+  ],
+  "actuallyViewedPriorityAImages": [
+    "tenant-intake/mobile.png",
+    "tenant-intake/tablet.png",
+    "admin-agenda/mobile.png",
+    "instructor-group/tablet.png",
+    "parent-home/desktop.png",
+    "parent-lessons/mobile.png",
+    "parent-progress/mobile.png",
+    "instructor-home/desktop.png",
+    "instructor-student/desktop.png",
+    "admin-home/desktop.png",
+    "admin-waitlist/mobile.png",
+    "tenant-home/desktop.png"
+  ],
+  "themeObservations": [
+    "All seven backgrounds/colors/applicable mascots render in the parent-desktop and child-mobile sample.",
+    "Parent navigation, child bottom navigation and journey controls are present; no new blocking render defect in these fourteen views.",
+    "Journey maps intentionally pan within their region; some edge labels are clipped and mobile controls overlay part of the map. This is unchanged and separate from document overflow."
+  ],
+  "knownNonblockingLimitations": [
+    "Expanded platform theme catalogue preview clipping remains unchanged and documented. It is not part of a general platform-wide visual GO.",
+    "The instructor tablet summary label GEREGISTREERD is tightly spaced against the next summary card; it does not prevent controls or scores from being read. This is a bounded cosmetic limitation, not a claim of visual perfection."
+  ],
+  "metadataValidation": {
+    "themeArtifactDigestVerified": true,
+    "themeCanonicalRenders": 322,
+    "themeDashboardViewportCases": 196,
+    "themeManifestEntries": 518,
+    "selectedThemePngsRetained": 42,
+    "representedThemes": 7,
+    "priorityAComplete": true,
+    "priorityAArtifactDigestVerified": true,
+    "priorityAManifestMatches": true,
+    "priorityAPngsRetained": 56,
+    "priorityAHashesVerified": 56,
+    "priorityAWidthsPassed": 56,
+    "priorityAWidthsFailed": 0,
+    "priorityAMissingFiles": 0,
+    "priorityAExtraFiles": 0,
+    "priorityARuntimeFailures": 0
+  },
+  "blockingVisualDefectsObserved": [],
+  "fullVisualReleaseGo": true,
+  "remaining": "Staging release qualification is complete. Production activation and its own post-deploy browser/health verification remain separate root-owned steps.",
+  "priorityAObservations": [
+    "The four formerly overflowing captures now fit their exact viewport widths: intake 390/768, admin agenda 390, instructor group 768. The intake child-name field and Next action remain visible; programme choices scroll within their region.",
+    "Agenda lesson cards and controls fit the mobile page; instructor focus, note, attendance and Save controls fit the tablet page.",
+    "Parent planning/progress, instructor home/student, admin home/waitlist and public tenant home are readable and their primary controls are present in the twelve-image sample.",
+    "Full-page mobile screenshots include fixed/sticky navigation at the captured scroll position; these overlays are not document-width overflow."
+  ],
+  "delegatedVisualRecommendation": "GO within bounded reviewed runtime scope; known catalogue-preview clipping remains a nonblocking limitation, no platform-wide visual approval.",
+  "mandatoryGatesPassed": 13,
+  "cleanupRestoresPriorSettingsAndPreservesSessions": true,
+  "evidencePersistencePassed": true
+}

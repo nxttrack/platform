@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "purpose": "current-v4-production-database-backup",
+  "target": "production",
+  "sourceSha": "87ea0b81d5ed1123dc3b8d4efe553f7287b97593",
+  "requestedReleaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "activeRuntimeSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "workflowRunId": "35514311700",
+  "startedAt": "2026-09-20T13:43:06.552Z",
+  "completedAt": "2026-09-20T13:45:08.109Z",
+  "schemas": [
+    "public",
+    "app_private",
+    "auth",
+    "storage",
+    "supabase_migrations",
+    "extensions"
+  ],
+  "postgresMajor": 17,
+  "format": "custom",
+  "databaseReadOnly": true,
+  "archiveInspection": "passed",
+  "decryptedBytesEqual": true,
+  "healthBefore": {
+    "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+    "database": "pass",
+    "schemaCompatibility": "pass"
+  },
+  "healthAfter": {
+    "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+    "database": "pass",
+    "schemaCompatibility": "pass"
+  },
+  "dumpSha256": "30afa301f47d894953c5b9429bc81528456fd766ceab8f609ecc27e4e2ae6d16",
+  "encryptedSha256": "670d681225d1732b14ca75a1d29016b501e511c705fdf586ba80b0a1c1f315de",
+  "restoreExecuted": false,
+  "scope": "Selected schema definitions and data, including auth users; excludes global database roles and Storage object bytes."
+}

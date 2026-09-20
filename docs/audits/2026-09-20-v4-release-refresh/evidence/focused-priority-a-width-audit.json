@@ -1,0 +1,575 @@
+{
+  "checkedAt": "2026-09-20T14:33:27.234766+00:00",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "verifierSourceSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "runId": "35516511778",
+  "scope": "Focused precheck; not a full staging release gate.",
+  "artifactId": 10607166619,
+  "artifactDigest": "sha256:3101136e467530bb641c5c427e449f048cc81ebfde90453102e0b658bdadf5c6",
+  "artifactDigestVerified": true,
+  "captures": 56,
+  "passed": 56,
+  "failed": 0,
+  "results": [
+    {
+      "path": "tenant-home/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 2945,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-programs/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 15429,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-intake/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 1559,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-home/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 844,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-lessons/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 3054,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-progress/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 2634,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-home/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 1260,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-group/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 1897,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-student/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 5330,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-home/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 7456,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-agenda/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 3089,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-waitlist/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 1816,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-home/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 15904,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-swim-schools/mobile.png",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "imageWidth": 390,
+      "imageHeight": 6319,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-home/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1915,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-programs/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 14773,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-intake/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1416,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-home/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1064,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-lessons/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 2037,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-progress/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1783,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-home/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1024,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-group/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 1366,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-student/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 4421,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-home/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 6654,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-agenda/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 2972,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-waitlist/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 2589,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-home/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 13460,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-swim-schools/tablet.png",
+      "viewportWidth": 768,
+      "documentWidth": 768,
+      "imageWidth": 768,
+      "imageHeight": 6143,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-home/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1445,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-programs/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 5545,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-intake/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 6010,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-home/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1000,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-lessons/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1000,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-progress/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1000,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-home/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1000,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-group/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 1194,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-student/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 3529,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-home/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 3585,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-agenda/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 2589,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-waitlist/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 2589,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-home/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 10703,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-swim-schools/desktop.png",
+      "viewportWidth": 1440,
+      "documentWidth": 1440,
+      "imageWidth": 1440,
+      "imageHeight": 4347,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-home/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1445,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-programs/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 5545,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "tenant-intake/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 6010,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-home/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1117,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-lessons/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1117,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "parent-progress/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1117,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-home/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1117,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-group/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 1210,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "instructor-student/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 3545,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-home/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 3457,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-agenda/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 2589,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "admin-waitlist/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 2589,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-home/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 10703,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    },
+    {
+      "path": "marketing-swim-schools/wide.png",
+      "viewportWidth": 1728,
+      "documentWidth": 1728,
+      "imageWidth": 1728,
+      "imageHeight": 4347,
+      "withinViewport": true,
+      "runtimeFailures": [],
+      "hashMatches": true
+    }
+  ]
+}

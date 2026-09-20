@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-09-20T14:30:41.824Z",
+  "runId": 35516511778,
+  "canonicalReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "instrumentationSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "artifact": {
+    "id": 10606842306,
+    "name": "staging-communication-diagnostic-1a72606d5fd7bf72c382fcc5215c3419dfb689e1-35516511778",
+    "digest": "sha256:9ad5d7bb37068a10739c43939cee9bf7ef90b1df0faad9bb8cc039bea31a597f",
+    "sizeBytes": 4218
+  },
+  "provenanceByteChecks": "passed",
+  "fileDigests": {
+    "login-instructor.json": "4c53c62a5fee5e2fb271651dbf3cdfb14fbe9e33bf31b5b6b7e81bcbb0fdfe02",
+    "login-owner.json": "6c94b04f9c4e73fac7defce83e6bf35ff29e7fcc4983515424ec847b441eaf56",
+    "login-parent.json": "3ffb1df3b1b2300c2ee1ee217778a2aa7f85d661ee41ffb7f6bd10c7a6d09bdc",
+    "login-tenant-admin.json": "c2deca0a42a230532b8a2b2db9034560c11a8068eb74e004f0e791c3ad2c7c4b",
+    "provenance.json": "b7e8854f645adbb386de0758b58382ad6ebf7ec84b9ca288cd064842b3bbafb6",
+    "suite-summary.json": "0ba3ecc70958c1b707591a4129c91ac4390c248e97eb2062062f81d9ee20ea06"
+  },
+  "diagnosticOnly": true,
+  "communicationStatus": "passed",
+  "counts": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "timedOut": 0,
+    "interrupted": 0
+  },
+  "globalErrors": 0,
+  "roles": [
+    {
+      "role": "owner",
+      "originalAssertion": "passed",
+      "originalFailure": false,
+      "helperElapsedMs": 2154,
+      "assertionElapsedMs": 957,
+      "loginPostCount": 1,
+      "loginPostResponses": [
+        {
+          "status": 303,
+          "requestElapsedMs": 903
+        }
+      ],
+      "fieldsPresent": true,
+      "authCookiePresentHeuristic": true,
+      "loginFieldsPresent": false,
+      "finalLocation": {
+        "destination": "expected",
+        "explicitError": false
+      },
+      "passiveObservationMs": 0,
+      "lateExpectedNavigation": false,
+      "failedRequestMethods": [
+        "GET"
+      ]
+    },
+    {
+      "role": "tenant-admin",
+      "originalAssertion": "passed",
+      "originalFailure": false,
+      "helperElapsedMs": 1512,
+      "assertionElapsedMs": 414,
+      "loginPostCount": 1,
+      "loginPostResponses": [
+        {
+          "status": 303,
+          "requestElapsedMs": 344
+        }
+      ],
+      "fieldsPresent": true,
+      "authCookiePresentHeuristic": true,
+      "loginFieldsPresent": false,
+      "finalLocation": {
+        "destination": "expected",
+        "explicitError": false
+      },
+      "passiveObservationMs": 0,
+      "lateExpectedNavigation": false,
+      "failedRequestMethods": []
+    },
+    {
+      "role": "instructor",
+      "originalAssertion": "passed",
+      "originalFailure": false,
+      "helperElapsedMs": 2190,
+      "assertionElapsedMs": 813,
+      "loginPostCount": 1,
+      "loginPostResponses": [
+        {
+          "status": 200,
+          "requestElapsedMs": 621
+        }
+      ],
+      "fieldsPresent": true,
+      "authCookiePresentHeuristic": true,
+      "loginFieldsPresent": false,
+      "finalLocation": {
+        "destination": "expected",
+        "explicitError": false
+      },
+      "passiveObservationMs": 0,
+      "lateExpectedNavigation": false,
+      "failedRequestMethods": [
+        "GET"
+      ]
+    },
+    {
+      "role": "parent",
+      "originalAssertion": "passed",
+      "originalFailure": false,
+      "helperElapsedMs": 1941,
+      "assertionElapsedMs": 807,
+      "loginPostCount": 1,
+      "loginPostResponses": [
+        {
+          "status": 200,
+          "requestElapsedMs": 576
+        }
+      ],
+      "fieldsPresent": true,
+      "authCookiePresentHeuristic": true,
+      "loginFieldsPresent": false,
+      "finalLocation": {
+        "destination": "expected",
+        "explicitError": false
+      },
+      "passiveObservationMs": 0,
+      "lateExpectedNavigation": false,
+      "failedRequestMethods": []
+    }
+  ],
+  "assessment": {
+    "currentAttempt": "All four original 5-second login assertions and complete communication tests passed; one successful POST per role.",
+    "priorFailure": "Run35514772810 remains failed. No original POST/network/DOM artifact survived; its cause is not established.",
+    "postAbortInterpretation": "Observed failed requests in this attempt were GETs only; every login POST received a successful action/redirect response.",
+    "recommendation": "Do not alter application authentication or increase test timeouts based solely on this non-reproduction. Require a new unchanged complete same-SHA staging gate before promotion.",
+    "structuralTestLimitation": "Original helper does not observe action completion explicitly; DOMContentLoaded can refer to the already loaded login page. This is an observability limitation, not evidence identifying the prior failure cause.",
+    "instrumentationLimitation": "Before-click field inspection adds a browser round-trip and may slightly affect hydration timing. Cookie presence is a heuristic; complete role page assertions supply the usable-UI evidence. No protected-page reload/session-persistence assertion was added.",
+    "remaining": "Priority A capture and final health/cleanup status were still running when this review was written; full exact-SHA release gate remains required."
+  }
+}

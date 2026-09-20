@@ -1,0 +1,52 @@
+{
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "runId": "35514772810",
+  "reviewedAt": "2026-09-20T14:13:53.127674+00:00",
+  "method": "Direct visual inspection of original PNGs using view_image, without transformations; metadata checks reported separately.",
+  "actuallyViewedThemeImages": [
+    "nxttrack-default-parent-dashboard-desktop-1440.png",
+    "nxttrack-default-child-dashboard-mobile-390.png",
+    "dolphin-bay-parent-dashboard-desktop-1440.png",
+    "dolphin-bay-child-dashboard-mobile-390.png",
+    "turtle-trails-parent-dashboard-desktop-1440.png",
+    "turtle-trails-child-dashboard-mobile-390.png",
+    "polar-splash-parent-dashboard-desktop-1440.png",
+    "polar-splash-child-dashboard-mobile-390.png",
+    "coastal-explorer-parent-dashboard-desktop-1440.png",
+    "coastal-explorer-child-dashboard-mobile-390.png",
+    "nationaal-zwem-abc-parent-dashboard-desktop-1440.png",
+    "nationaal-zwem-abc-child-dashboard-mobile-390.png",
+    "ocean-quest-parent-dashboard-desktop-1440.png",
+    "ocean-quest-child-dashboard-mobile-390.png"
+  ],
+  "actuallyViewedPriorityAImages": [],
+  "actuallyViewedPlatformPreviewImages": [
+    "nxttrack-default-overview.png"
+  ],
+  "themeObservations": [
+    "All seven rendered backgrounds, colors and applicable mascots are present in the sampled parent desktop and child mobile views.",
+    "Main parent navigation, child bottom navigation and map controls render without a new blocking visual defect in this sample.",
+    "Panning boundaries clip some map labels and mobile controls overlay part of the map; these unchanged map-local properties are not a new document overflow."
+  ],
+  "knownNonblockingLimitations": [
+    {
+      "surface": "Expanded platform theme catalogue preview only",
+      "observation": "Existing wide preview is clipped inside the narrow catalogue card; clipping remains visible. Actual tenant portal and activation panel are separate. This is not a general platform visual GO.",
+      "fixed": false
+    }
+  ],
+  "metadataValidation": {
+    "themeArtifactDigestVerified": true,
+    "themeCanonicalRenders": 322,
+    "themeDashboardViewportCases": 196,
+    "themeManifestEntries": 518,
+    "selectedThemePngsRetained": 42,
+    "representedThemes": 7,
+    "priorityAComplete": false,
+    "priorityACapturesRetained": 0,
+    "priorityAWidthAudit": "NOT RUN: the required capture step was skipped after communication/browser failure."
+  },
+  "blockingVisualDefectsObservedInReviewedThemeSample": [],
+  "fullVisualReleaseGo": false,
+  "remaining": "Communicationhub/Badge Studio gate failed; required Priority A capture, all56 document-width checks, Phase15 and release-evidence persistence did not run. A fresh full run and actual intake390/768, agenda390 and instructor768 visual review are required."
+}

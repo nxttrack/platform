@@ -1,0 +1,30 @@
+{
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "runId": "35516511778",
+  "reviewedAt": "2026-09-20T14:34:37.801489+00:00",
+  "scope": "Focused precheck; not full staging release approval.",
+  "method": "Direct inspection of four original screenshots through view_image, separate from checks of all56 PNG widths, hashes and DOM metrics.",
+  "actuallyViewedPriorityAImages": [
+    "tenant-intake/mobile.png",
+    "tenant-intake/tablet.png",
+    "admin-agenda/mobile.png",
+    "instructor-group/tablet.png"
+  ],
+  "observations": [
+    "Intake mobile390/tablet768: program selector remains contained in its horizontal navigation area; name field and Next button fit inside the form and viewport.",
+    "Admin agenda390: day cards, lesson rows and lesson/action buttons remain within the page width.",
+    "Instructor group768: focus and attendance controls, note input and Save button fit within the content panel. Small summary labels remain tightly spaced; this is separate from the resolved page overflow.",
+    "Mobile intake screenshot includes the sticky site header at the focus/scroll position; this is a full-page capture composition, not new horizontal overflow."
+  ],
+  "blockingVisualDefectsObservedInSample": [],
+  "metadataValidation": {
+    "captureCount": 56,
+    "artifactAndCaptureHashesVerified": true,
+    "documentWidthsWithinViewport": 56,
+    "pngWidthsWithinViewport": 56,
+    "failures": 0,
+    "sourceAndExpectedShaMatched": true
+  },
+  "fullVisualReleaseGo": false,
+  "remaining": "Fresh full unchanged-source staging run35516843435 must pass all13 gates, all56 captures/review, cleanup and release-evidence persistence. Existing platform catalogue expanded-preview clipping remains the documented nonblocking limitation."
+}

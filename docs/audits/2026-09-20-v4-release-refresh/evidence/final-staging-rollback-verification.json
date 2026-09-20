@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-09-20T15:11:22.962182+00:00",
+  "runId": 35518703256,
+  "operationSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "result": "passed",
+  "exclusiveJob": "restore and pin historical staging rollback without activation",
+  "artifactId": 10608061343,
+  "digest": "sha256:11d5aa5214d6bf5a91977f5eae51953024b1245d9ae6744585a65de18409cd2f",
+  "originalZipDigestVerified": true,
+  "fullGateCurrentEvidenceComparedToTrustedArtifact": true,
+  "originalHistoricalEvidenceIdempotent": true,
+  "runtimeConfigurationIdentitiesAndPidUnchanged": true,
+  "actualRollbackPerformed": false
+}

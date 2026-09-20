@@ -1,0 +1,25 @@
+{
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "workflowRunId": 35516511778,
+  "reviewedAt": "2026-09-20T14:35:19.081947+00:00",
+  "reviewer": "coordinating Codex agent",
+  "method": "Direct view_image of original PNGs without edits",
+  "actuallyViewed": [
+    "tenant-intake/mobile.png",
+    "tenant-intake/tablet.png",
+    "admin-agenda/mobile.png",
+    "instructor-group/tablet.png"
+  ],
+  "observations": [
+    "Intake program strip scrolls internally; child-name field and Next control remain inside390/768px page",
+    "Planning cards and controls fit390px document",
+    "Instructor attendance status, note and Save fit768px document"
+  ],
+  "boundedObservations": [
+    "Full-page screenshots include fixed header/action-bar at captured scroll position; not proof of misplaced viewport controls",
+    "Instructor statistic labels remain cramped but counts and operational controls remain usable",
+    "Existing platform catalogue expanded-preview clipping remains a separately documented nonblocking limitation"
+  ],
+  "result": "Corrected layouts accepted in this focused exact-SHA sample",
+  "qualification": "Full canonical staging run35516843435 and its13gates/evidence are still required for promotion"
+}

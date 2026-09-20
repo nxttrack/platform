@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-09-20T13:03:31.351054+00:00",
+  "existingProductionSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "candidateSha": "b5511f16ad8367aca342aac9b5c0e83c4ee4d362",
+  "comparison": "git diff --exit-code",
+  "unchangedPaths": [
+    "apps",
+    "packages",
+    "supabase/migrations",
+    "package.json",
+    "pnpm-lock.yaml"
+  ],
+  "excludedTestPath": "apps/web/tests",
+  "applicationRuntimeSchemaAndDependenciesUnchanged": true,
+  "limitation": "Operational scripts, deployment workflows, documentation and tests have changed; this is not a claim of unchanged deployment operations."
+}

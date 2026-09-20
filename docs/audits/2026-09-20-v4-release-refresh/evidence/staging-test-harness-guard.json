@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "purpose": "staging-test-harness-rendered-guard",
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "startedAt": "2026-09-20T14:03:36.289Z",
+  "method": "Unauthenticated Chromium navigation; only GET and HEAD allowed; no actions or credentials.",
+  "checks": [
+    {
+      "variant": "intake",
+      "path": "/test-harness/intake-responsive",
+      "httpStatus": 200,
+      "rendered404": true,
+      "renderedNotFoundMessage": true,
+      "forms": 0,
+      "intakeWizards": 0,
+      "programNavigations": 0,
+      "fixtureProgramLinks": 0,
+      "fixtureFields": 0,
+      "fictitiousFixtureText": false,
+      "noindex": true,
+      "blockedNonReadRequests": 0,
+      "screenshot": "intake-not-found.png",
+      "screenshotSha256": "2557249fcd63306b697efa219dea73ea5171f4c91f441d48f0b2ebe532e4f1e5",
+      "status": "passed"
+    },
+    {
+      "variant": "planning",
+      "path": "/test-harness/intake-responsive?surface=planning",
+      "httpStatus": 200,
+      "rendered404": true,
+      "renderedNotFoundMessage": true,
+      "forms": 0,
+      "intakeWizards": 0,
+      "programNavigations": 0,
+      "fixtureProgramLinks": 0,
+      "fixtureFields": 0,
+      "fictitiousFixtureText": false,
+      "noindex": true,
+      "blockedNonReadRequests": 0,
+      "screenshot": "planning-not-found.png",
+      "screenshotSha256": "2557249fcd63306b697efa219dea73ea5171f4c91f441d48f0b2ebe532e4f1e5",
+      "status": "passed"
+    },
+    {
+      "variant": "instructor",
+      "path": "/test-harness/intake-responsive?surface=instructor",
+      "httpStatus": 200,
+      "rendered404": true,
+      "renderedNotFoundMessage": true,
+      "forms": 0,
+      "intakeWizards": 0,
+      "programNavigations": 0,
+      "fixtureProgramLinks": 0,
+      "fixtureFields": 0,
+      "fictitiousFixtureText": false,
+      "noindex": true,
+      "blockedNonReadRequests": 0,
+      "screenshot": "instructor-not-found.png",
+      "screenshotSha256": "2557249fcd63306b697efa219dea73ea5171f4c91f441d48f0b2ebe532e4f1e5",
+      "status": "passed"
+    }
+  ],
+  "status": "passed",
+  "initialHealth": {
+    "httpStatus": 200,
+    "environment": "staging",
+    "commitSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1"
+  },
+  "finalHealth": {
+    "httpStatus": 200,
+    "environment": "staging",
+    "commitSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1"
+  },
+  "finishedAt": "2026-09-20T14:03:38.486Z"
+}

@@ -1,0 +1,24 @@
+{
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "workflowRunId": 35516843435,
+  "reviewedAt": "2026-09-20T15:01:26.408419+00:00",
+  "reviewer": "coordinating Codex agent under user delegation",
+  "method": "Direct view_image of original final canonical Priority A PNGs; no image editing",
+  "actuallyViewed": [
+    "tenant-intake/mobile.png",
+    "tenant-intake/tablet.png",
+    "admin-agenda/mobile.png",
+    "instructor-group/tablet.png"
+  ],
+  "observations": [
+    "Intake program strip scrolls internally while child-name and Next remain within viewport",
+    "Agenda cards and planning controls fit the mobile document",
+    "Instructor attendance controls, lesson note and save button fit the tablet document"
+  ],
+  "acceptedBoundedLimitations": [
+    "Instructor registered statistic label remains cramped",
+    "Full-page screenshots include fixed header at captured scroll position",
+    "Separately documented existing platform catalogue expanded-preview clipping remains"
+  ],
+  "decision": "Visual acceptance of inspected corrected layouts; full staging gates, cleanup and persistence still required before promotion"
+}

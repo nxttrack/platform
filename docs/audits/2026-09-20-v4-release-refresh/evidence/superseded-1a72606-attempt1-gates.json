@@ -1,0 +1,138 @@
+{
+  "runId": "35514772810",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "workflowConclusion": "failure",
+  "mandatoryPassed": 8,
+  "mandatoryFailed": 1,
+  "mandatorySkipped": 4,
+  "mandatoryTotal": 13,
+  "mandatoryGates": [
+    {
+      "completedAt": "2026-09-20T13:55:58Z",
+      "conclusion": "success",
+      "name": "Phase 16 operational flow validation",
+      "number": 11,
+      "startedAt": "2026-09-20T13:54:52Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:07:56Z",
+      "conclusion": "success",
+      "name": "Validate required seven-theme parent and child portal matrix",
+      "number": 13,
+      "startedAt": "2026-09-20T13:56:02Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:08:48Z",
+      "conclusion": "success",
+      "name": "Sprint 4 intake-to-placement browser mutation",
+      "number": 20,
+      "startedAt": "2026-09-20T14:08:26Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:09:12Z",
+      "conclusion": "success",
+      "name": "Sprint 4 instructor browser mutations",
+      "number": 21,
+      "startedAt": "2026-09-20T14:08:48Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:09:38Z",
+      "conclusion": "success",
+      "name": "Sprint 4 parent self-service browser mutations",
+      "number": 22,
+      "startedAt": "2026-09-20T14:09:12Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:10:17Z",
+      "conclusion": "success",
+      "name": "Sprint 4 tenant-admin browser mutations",
+      "number": 23,
+      "startedAt": "2026-09-20T14:09:38Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:10:30Z",
+      "conclusion": "success",
+      "name": "Sprint 4 role and tenant isolation",
+      "number": 24,
+      "startedAt": "2026-09-20T14:10:17Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:01Z",
+      "conclusion": "success",
+      "name": "Sprint 4 accessibility and performance budgets",
+      "number": 25,
+      "startedAt": "2026-09-20T14:10:30Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:27Z",
+      "conclusion": "failure",
+      "name": "Communicationhub and Badge Studio browser validation",
+      "number": 26,
+      "startedAt": "2026-09-20T14:11:01Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:27Z",
+      "conclusion": "skipped",
+      "name": "Premium release browser validation",
+      "number": 27,
+      "startedAt": "2026-09-20T14:11:27Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:27Z",
+      "conclusion": "skipped",
+      "name": "Capture Priority A staging visual evidence",
+      "number": 28,
+      "startedAt": "2026-09-20T14:11:27Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:27Z",
+      "conclusion": "skipped",
+      "name": "Phase 15 staging truth and security validation",
+      "number": 31,
+      "startedAt": "2026-09-20T14:11:27Z",
+      "status": "completed"
+    },
+    {
+      "completedAt": "2026-09-20T14:11:29Z",
+      "conclusion": "skipped",
+      "name": "Write release evidence",
+      "number": 33,
+      "startedAt": "2026-09-20T14:11:29Z",
+      "status": "completed"
+    }
+  ],
+  "cleanup": {
+    "completedAt": "2026-09-20T14:11:29Z",
+    "conclusion": "success",
+    "name": "Restore parent and child test rollout",
+    "number": 32,
+    "startedAt": "2026-09-20T14:11:27Z",
+    "status": "completed"
+  },
+  "cleanupLogConfirmsPreviousSettingsAndExistingSessionsPreserved": true,
+  "evidencePersistence": {
+    "completedAt": "2026-09-20T14:11:31Z",
+    "conclusion": "skipped",
+    "databaseId": 106091208712,
+    "name": "preserve staging evidence on its deployed release",
+    "startedAt": "2026-09-20T14:11:31Z",
+    "status": "completed",
+    "steps": [],
+    "url": "https://github.com/nxttrack/platform/actions/runs/35514772810/job/106091208712"
+  },
+  "priorityACapturesRetained": 0,
+  "releaseEvidenceRetained": false,
+  "productionPromotionReady": false,
+  "visualDecision": "PENDING/NO-GO: full workflow failed before Priority A capture and Phase15. Seven-theme evidence alone cannot approve the release."
+}

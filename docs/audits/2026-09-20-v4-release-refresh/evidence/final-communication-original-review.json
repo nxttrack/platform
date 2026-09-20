@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "runId": 35516843435,
+  "jobId": 106094348874,
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "reviewedAt": "2026-09-20T15:10:30.813Z",
+  "fullWorkflow": "success",
+  "originalCommunicationStep": {
+    "status": "completed",
+    "conclusion": "success",
+    "startedAt": "2026-09-20T14:50:22Z",
+    "completedAt": "2026-09-20T14:50:42Z"
+  },
+  "actualOriginalTestCounts": {
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "retries": 0
+  },
+  "originalSpecPath": "apps/web/tests/e2e/communication-badges.spec.ts",
+  "originalSpecSha256": "03491084c7351e220b8fef1ba8b542baf6075f6eeb7fa8a9cfa21d118b0051e0",
+  "commandVerified": true,
+  "allFourOriginalTestsPassed": true,
+  "instrumentedCloneUsed": false,
+  "logSummarySha256": "014a66c98f40f20c02196596cf5289f2942b62521c28d26f311ca27d2e94f00d",
+  "priorFailedRun35514772810": "retained as failure; original cause remains unestablished; new same-SHA complete run passes without application or test changes"
+}

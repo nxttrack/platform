@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "checks": [
+    {
+      "target": "staging",
+      "observedAt": "2026-09-20T15:11:16.135301+00:00",
+      "commitSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "status": "passed",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "target": "production",
+      "observedAt": "2026-09-20T15:11:16.507876+00:00",
+      "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+      "status": "passed",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    }
+  ]
+}

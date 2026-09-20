@@ -1,0 +1,17 @@
+{
+  "id": 10606686080,
+  "name": "production-current-v4-database-35514311700",
+  "size_in_bytes": 735935,
+  "digest": "sha256:4f26c54160815d9d60b5256fdc00c39542cbc4680cafac0c1740593741116a92",
+  "expired": false,
+  "expires_at": "2026-12-19T13:42:55Z",
+  "workflow_run": {
+    "id": 35514311700,
+    "repository_id": 1277456561,
+    "head_repository_id": 1277456561,
+    "head_branch": "codex/v4-deployment-20260920",
+    "head_sha": "87ea0b81d5ed1123dc3b8d4efe553f7287b97593"
+  },
+  "artifactDigestVerified": true,
+  "ciphertextMatchesSummary": true
+}

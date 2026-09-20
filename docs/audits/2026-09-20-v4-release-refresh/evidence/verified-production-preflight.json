@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-09-20T13:56:27.345493+00:00",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "foundation": {
+    "runId": 35514774707,
+    "runUrl": "https://github.com/nxttrack/platform/actions/runs/35514774707",
+    "jobsPassed": 6,
+    "sourceAndRunOriginVerified": true,
+    "result": "pass",
+    "fingerprints": {},
+    "artifactCount": 0
+  },
+  "migration-rehearsal": {
+    "runId": 35514776517,
+    "runUrl": "https://github.com/nxttrack/platform/actions/runs/35514776517",
+    "jobsPassed": 2,
+    "sourceAndRunOriginVerified": true,
+    "result": "pass",
+    "fingerprints": {
+      "BEFORE_FINGERPRINT": "fb77b0058661408e297e07fe0a8e2834a684b2f2d0654399e719a34987d48f27",
+      "AFTER_FINGERPRINT": "fb77b0058661408e297e07fe0a8e2834a684b2f2d0654399e719a34987d48f27"
+    },
+    "artifactCount": 0
+  },
+  "database": {
+    "localMigrations": 158,
+    "remoteMigrations": 158,
+    "missingRemoteMigrations": 0,
+    "unexpectedRemoteMigrations": 0,
+    "publicTables": 256,
+    "rlsEnabled": 256,
+    "forceRlsEnabled": 256,
+    "authUsers": 1,
+    "storageObjects": 0
+  },
+  "productionStagingProjectIsolation": "passed",
+  "dryRun": true,
+  "includeAll": false,
+  "remoteUpToDate": true,
+  "inventoryFingerprintUnchanged": true,
+  "inventoryFingerprintSameAsPreviousPreflight": true,
+  "fingerprintScope": "Migration versions, schema/RLS counts, auth-user count and storage-object count; not all row contents."
+}

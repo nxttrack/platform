@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "diagnosticOnly": true,
+  "canonicalReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "instrumentationSha": "6dcae5964f421b6f5d9ad144bc56ef36d90b3cdf",
+  "capturedAt": "2026-09-20T14:28:19.414Z",
+  "originalTestSha256": "03491084c7351e220b8fef1ba8b542baf6075f6eeb7fa8a9cfa21d118b0051e0",
+  "originalConfigSha256": "7ec99e6d95eb50507fd117c05e3d9fd8b167616ce840277629ab6d6681e0a9a2",
+  "instrumentationHelperSha256": "036c0c30e56d323ec326b10cf4ab1a4e202e13de11f8a50360df5332733d4482",
+  "instrumentationDriverSha256": "63db37dfa9356a0c230b71ddb9305b758fb83c11b5d1f9c994676c7770c459dd",
+  "generatedTestSha256": "d2325c46b049ba4c17785802e23365f99c159e009014cda6121686e03198e81b",
+  "generatedConfigSha256": "c2b046906312cb283f6b82d39c21690b4dfb75b8c7166b69f0c60e7ee82fef3f",
+  "originalAssertionTimeoutMs": 5000,
+  "passiveFailureObservationLimitMs": 15000,
+  "originalTestsPreserved": 4,
+  "originalFailureRethrown": true,
+  "screenshots": false,
+  "video": false,
+  "trace": false
+}

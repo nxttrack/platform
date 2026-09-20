@@ -1,0 +1,97 @@
+{
+  "sourceSha": "b5511f16ad8367aca342aac9b5c0e83c4ee4d362",
+  "runId": 35512095754,
+  "reviewedAt": "2026-09-20T13:34:14.448526+00:00",
+  "method": "Direct visual inspection of original PNGs with view_image; no transformations. Image inspection recorded separately from automated manifest checks.",
+  "actuallyViewedThemeImages": [
+    "nxttrack-default-parent-dashboard-desktop-1440.png",
+    "nxttrack-default-child-dashboard-mobile-390.png",
+    "dolphin-bay-parent-dashboard-desktop-1440.png",
+    "dolphin-bay-child-dashboard-mobile-390.png",
+    "turtle-trails-parent-dashboard-desktop-1440.png",
+    "turtle-trails-child-dashboard-mobile-390.png",
+    "polar-splash-parent-dashboard-desktop-1440.png",
+    "polar-splash-child-dashboard-mobile-390.png",
+    "coastal-explorer-parent-dashboard-desktop-1440.png",
+    "coastal-explorer-child-dashboard-mobile-390.png",
+    "nationaal-zwem-abc-parent-dashboard-desktop-1440.png",
+    "nationaal-zwem-abc-child-dashboard-mobile-390.png",
+    "ocean-quest-parent-dashboard-desktop-1440.png",
+    "ocean-quest-child-dashboard-mobile-390.png"
+  ],
+  "actuallyViewedPriorityAImages": [
+    "parent-home/desktop.png",
+    "parent-lessons/desktop.png",
+    "parent-progress/desktop.png",
+    "instructor-home/desktop.png",
+    "instructor-group/desktop.png",
+    "instructor-student/desktop.png",
+    "admin-home/desktop.png",
+    "admin-agenda/desktop.png",
+    "admin-waitlist/desktop.png",
+    "tenant-home/desktop.png",
+    "parent-lessons/mobile.png",
+    "parent-progress/mobile.png",
+    "instructor-group/mobile.png",
+    "instructor-student/mobile.png",
+    "admin-agenda/mobile.png",
+    "admin-waitlist/mobile.png",
+    "tenant-intake/mobile.png"
+  ],
+  "themeObservations": [
+    "All seven backgrounds, theme colors and applicable mascots render correctly.",
+    "Desktop parent navigation and map controls are present; child mobile bottom navigation and map controls are present.",
+    "Map labels at the panning boundary are clipped and mobile controls overlay part of the map; no unusable navigation or blank/broken render observed in this sample."
+  ],
+  "blockingVisualDefectsObserved": [
+    {
+      "route": "/intake",
+      "viewports": [
+        390,
+        768
+      ],
+      "documentScreenshotWidth": 13719,
+      "impact": "Program navigation expands implicit grid; wizard and Next button extend far beyond viewport. Promotion withheld."
+    }
+  ],
+  "metadataValidation": {
+    "themeArtifactDigestVerified": true,
+    "themeCanonicalRenders": 322,
+    "themeDashboardViewportCases": 196,
+    "themeManifestEntries": 518,
+    "selectedThemePngsRetained": 42,
+    "priorityAComplete": true,
+    "priorityACaptures": 56,
+    "priorityAExpected": 56,
+    "priorityAManifestFailures": 0,
+    "priorityAArtifactAndCaptureHashesVerified": true,
+    "priorityAWidthAudit": "priority-a-width-audit.json",
+    "priorityAWithinViewport": 52,
+    "priorityAExceedViewport": 4
+  },
+  "fullVisualReleaseGo": false,
+  "remaining": "Responsive fixes and new exact-SHA validation required; this historical run is not a visual release GO.",
+  "actuallyViewedPlatformPreviewImages": [
+    "nxttrack-default-overview.png",
+    "dolphin-bay-overview.png",
+    "nxttrack-default-core-state-locked.png"
+  ],
+  "otherVisualDefects": [
+    {
+      "route": "/admin/agenda",
+      "viewport": 390,
+      "screenshotWidth": 443,
+      "impact": "Day-board row exceeds the mobile viewport."
+    },
+    {
+      "route": "/instructor/group/[id]",
+      "viewport": 768,
+      "screenshotWidth": 847,
+      "impact": "Roster form intrinsic widths exceed tablet content column."
+    },
+    {
+      "route": "/platform/themes",
+      "impact": "Expanded 896px preview card is clipped by narrow overflow-hidden catalog article. Separate activation panels and all seven real tenant theme selections remain available. Existing nonblocking preview limitation; no general platform visual GO."
+    }
+  ]
+}

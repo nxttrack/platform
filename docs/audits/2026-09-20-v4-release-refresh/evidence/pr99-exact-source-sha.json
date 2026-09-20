@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "purpose": "nxttrack-exact-source-sha",
+  "repository": "nxttrack/platform",
+  "commitSha": "ae5e9f07c4af8116c97cfdddf9252352cd426554",
+  "refName": "99/merge",
+  "workflowRunId": "35514184316",
+  "createdAt": "2026-09-20T13:40:34.496Z"
+}

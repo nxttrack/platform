@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "purpose": "pr99-responsive-independent-review-and-ci",
+  "checkedAt": "2026-09-20T13:51:20.368249+00:00",
+  "repository": "nxttrack/platform",
+  "pullRequest": 99,
+  "sourceSha": "1bc660319a236d0e039c63119063f281a2308cda",
+  "reviewedOriginalSha": "a336080f824712a2ccb60b385ba86e9479d36592",
+  "identicalTree": "1d055e702a449456ec08c23f85bd7860f0a96565",
+  "review": {
+    "status": "passed",
+    "blockingFindings": 0,
+    "scope": [
+      "public intake actual 40-program components",
+      "planning board and instructor form controls",
+      "APP_ENV=test fail-closed fixture guard and rejecting action",
+      "Priority A overflow produces actual gate failure"
+    ],
+    "independentChecks": [
+      "identical source trees",
+      "test discovery: 12 cases, 4 per browser engine",
+      "capture script node syntax",
+      "git diff whitespace"
+    ],
+    "authorLocalChecks": [
+      "Chromium responsive 4/4 passed",
+      "typecheck passed"
+    ],
+    "limitations": [
+      "No independent browser rerun; CI supplies three-engine results.",
+      "No claim of staging or production acceptance."
+    ]
+  },
+  "ci": {
+    "runId": 35514184316,
+    "url": "https://github.com/nxttrack/platform/actions/runs/35514184316",
+    "headSha": "1bc660319a236d0e039c63119063f281a2308cda",
+    "status": "completed",
+    "conclusion": "success",
+    "startedAt": "2026-09-20T13:40:12Z",
+    "updatedAt": "2026-09-20T13:49:42Z",
+    "counts": {
+      "units": {
+        "total": 590,
+        "passed": 590,
+        "failed": 0,
+        "skipped": 0
+      },
+      "browserSmokes": {
+        "passed": 102,
+        "skipped": 0
+      },
+      "journey": {
+        "passed": 82,
+        "skipped": 35
+      },
+      "newResponsive": {
+        "passed": 12,
+        "byEngine": {
+          "chromium": 4,
+          "firefox": 4,
+          "webkit": 4
+        }
+      }
+    },
+    "failedSteps": [],
+    "artifacts": [
+      {
+        "id": 10606471107,
+        "name": "nxttrack-ae5e9f07c4af8116c97cfdddf9252352cd426554-exact-source",
+        "size_in_bytes": 354,
+        "digest": "sha256:62b1e4b2a84012554143fa2c1a761ccbef2658610547c0db7d69edcf92a9be51",
+        "expired": false,
+        "created_at": "2026-09-20T13:40:35Z",
+        "expires_at": "2026-10-04T13:40:34Z"
+      },
+      {
+        "id": 10606446679,
+        "name": "nxttrack-ae5e9f07c4af8116c97cfdddf9252352cd426554-journey-timeline-evidence",
+        "size_in_bytes": 142724451,
+        "digest": "sha256:5b4db04feff9c2c35fc32cbd91317b326a92b753b5c8ab538d86f8332490cdc8",
+        "expired": false,
+        "created_at": "2026-09-20T13:49:40Z",
+        "expires_at": "2026-10-04T13:49:35Z"
+      }
+    ],
+    "testedMergeSha": "ae5e9f07c4af8116c97cfdddf9252352cd426554",
+    "testedMergeTreeSha": "1d055e702a449456ec08c23f85bd7860f0a96565",
+    "testedMergeTreeEqualsReviewedSource": true,
+    "sourceIdentityArtifact": "exact-source/exact-source-sha.json",
+    "artifactVerification": "GitHub metadata recorded; exact-source artifact downloaded and checked against run/repository/merge SHA. Large Journey artifact not downloaded by this monitor."
+  }
+}

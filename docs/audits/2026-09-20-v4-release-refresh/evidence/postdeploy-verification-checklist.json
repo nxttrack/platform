@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "purpose": "postdeploy-verification-operational-checklist",
+  "checkedAt": "2026-09-20T13:56:52.720002+00:00",
+  "applicationReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "reviewedOpsSourceSha": "87ea0b81d5ed1123dc3b8d4efe553f7287b97593",
+  "reviewOnly": true,
+  "remoteDispatches": 0,
+  "testSuitesExecuted": 0,
+  "sourceFiles": {
+    "scripts/release/v4-browser-verify.mjs": "18bd02c6d7b849432301fe66ec94ec00e13be871f1a5374ff26ed7f0127b0a79",
+    "scripts/release/v4-browser-contract.mjs": "108c1404d1f57e95b3dc950da91e4726d87c89343fbf912eb71f823b614fecea",
+    "scripts/release/observe-v4-health.mjs": "a47bb4c1fca00e3e67e8329c1021d1f1bd39681b1c9d7afbc7db08bfa718cdb2",
+    "scripts/release/inspect-v4-host-stability.mjs": "e23c4deaf3b75bec63cbd6c96a84abb76bce57433f0496c72df973f39aba050a",
+    ".github/workflows/production-migration-recovery.yml": "058d95be1fd430e855e4ff4099944c09b58bc71a5c02c4500b5dc68b0b5557c9"
+  },
+  "dispatchContract": {
+    "workflow": "production-migration-recovery.yml",
+    "ref": "Use the retained ops branch/commit containing these reviewed scripts; record actual github.sha separately from application release.",
+    "requiredWorkflowInputs": {
+      "release_sha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "staging_release_sha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "confirmation": "Use one exact selected-job confirmation below.",
+      "production_approval_reference": "Retained final GO reference; required by workflow schema, unused by these selected verification jobs.",
+      "production_foundation_run_id": "Actual final-SHA foundation ID; globally required, unused by these selected verification jobs.",
+      "production_migration_rehearsal_run_id": "Actual final-SHA rehearsal ID; globally required, unused by these selected verification jobs."
+    },
+    "excludedActions": "Do not select CONFIGURE/UPGRADE/BOOTSTRAP/legacy or VERIFY_V4_BROWSER_TEST jobs for final browser proof.",
+    "workflowConcurrency": "All operation dispatches share nxttrack-production-migration-recovery; host snapshots additionally lock each target. Browser job has no per-environment deployment lock: start only after both deployments finish."
+  },
+  "browser": {
+    "confirmation": "VERIFY_V4_ENVIRONMENTS",
+    "job": "verify-v4",
+    "runner": "ubuntu-latest; matrix staging/production; Chromium only; default matrix fail-fast. VERIFY_V4_STAGING selects staging only and is insufficient for final two-target proof.",
+    "env": {
+      "TARGET": "matrix target: staging or production",
+      "RELEASE_SHA": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "VERIFIER_SOURCE_SHA": "github.sha of dispatched ops implementation",
+      "DATABASE_URL": "environment secret",
+      "NEXT_PUBLIC_SUPABASE_URL": "environment secret",
+      "publicKey": "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, falling back to NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "serverKey": "SUPABASE_SECRET_KEY, falling back to SUPABASE_SERVICE_ROLE_KEY",
+      "optionalStagingIdentityFilters": [
+        "E2E_TENANT_ADMIN_EMAIL",
+        "E2E_INSTRUCTOR_EMAIL",
+        "E2E_PARENT_EMAIL"
+      ]
+    },
+    "fixedOrigins": {
+      "production": "https://nxttrack.nl",
+      "productionAdmin": "https://admin.nxttrack.nl",
+      "staging": "https://staging.nxttrack.nl",
+      "stagingTenant": "https://aquaswim-demo.staging.nxttrack.nl"
+    },
+    "outputs": {
+      "directory": "artifacts/v4-browser/ relative to ops repository",
+      "json": "verification.json",
+      "bothTargetsPngs": [
+        "platform-onboarding.png",
+        "platform-themes.png"
+      ],
+      "stagingExtraPng": "child-journey.png",
+      "artifact": "v4-{target}-browser-verification-{run_id}",
+      "retentionDays": 90
+    },
+    "require": [
+      "Both selected matrix jobs completed successfully, neither skipped nor cancelled; each artifact exists.",
+      "Each verification.json has status=passed, target matches artifact, releaseSha equals applicationReleaseSha, verifierSourceSha equals actual ops workflow head SHA, and valid startedAt/finishedAt.",
+      "Every named check has status=pass and no error is present.",
+      "Exact-source database-aware health before AND after browser verification: HTTP200, ok=true, correct env/SHA, database and schemaCompatibility pass.",
+      "Public /, /login, /wachtwoord-vergeten and admin-origin /login render HTTP200 with h1; login email/password fields and enabled Inloggen; anonymous /platform redirects to /login.",
+      "Platform pages /platform, /platform/onboarding, /platform/themes, /platform/themes/import, /platform/themes/bindings, /platform/instellingen, /platform/packages, /platform/audit, /platform/support render with no error surface.",
+      "Tenantportfolio heading/search and, when tenantCount=0, correct empty state; onboarding first-next-back navigation plus loaded themes library.",
+      "platform temporary session revoked and password unchanged AND tenant inventory unchanged checks are mandatory.",
+      "Staging admin 4 routes, instructor 2 routes, parent 5 routes, /kind and /kind/reis; loaded nonempty rich artwork; camera settled; child-to-admin isolation; admin/instructor/parent cleanup/password checks all pass."
+    ],
+    "accountAndDataBehavior": [
+      "Existing active platform_owner is selected from DB, never created; staging roles selected from existing aquaswim-demo memberships and optional exact email filters.",
+      "generateLink(type=magiclink) generates a token; verifyOtp authenticates it directly. No email delivery call, invitation, password-reset, password update or tenant-provisioning action is called.",
+      "Wizard Next/Previous are type=button state navigation; verifier never reaches or clicks final provisioning submit. Tenant count is compared before/after.",
+      "Auth session creation and staging child-mode/session context changes are intentional; this browser verifier is not entirely read-only.",
+      "Each successfully authenticated task has finally cleanup: browser context closes, client.auth.signOut({scope:local}) revokes only its own temporary session, then existing encrypted_password is compared in memory via boolean assert.ok. Other sessions are not globally signed out."
+    ],
+    "limitations": [
+      "Magiclink session proves existing identity/authorization; login form visibility does not prove password-entry authentication.",
+      "Tenant-count equality is inventory-count evidence, not a full database-content equality proof.",
+      "Production checks platform administration only; tenant roles/child flow run only on staging. No production tenant, invitation or upload is created.",
+      "No inbox delivery, payment processing, full CRUD, exhaustive browser console/network audit, responsive capture matrix or mobile engine claim from this script.",
+      "verifyOtp occurs before task cleanup try/finally; authentication failure is not positive cleanup evidence. Cleanup/final-output errors may leave an incomplete/missing artifact: require completed successful jobs and explicit cleanup checks.",
+      "No explicit browser-job timeout; individual navigation waits are bounded, but database connect/query defaults are not independently bounded by this script.",
+      "Local signOut success proves the cleanup API call for that session; it is not a fresh auth.sessions absence query or immediate invalidation proof for already issued access JWTs, which can remain valid until expiry."
+    ],
+    "privacy": [
+      "Password hashes are never put in result/assertion diffs; token/cookies/server key remain in memory; no storageState, HAR or tracing export.",
+      "verification.json currently records raw error.message on failure; inspect failure text before quoting/sharing it. Do not dump raw database/Supabase responses, cookies, links or auth hashes.",
+      "Screenshots can contain existing account or tenant display information. Keep GitHub artifacts private and review images before public sharing."
+    ]
+  },
+  "healthObservation": {
+    "entrypoint": "node scripts/release/observe-v4-health.mjs; local async exec session, not a workflow dispatch",
+    "env": {
+      "RELEASE_SHA": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "OBSERVATION_OUTPUT_DIR": "Choose a fresh dedicated local path and retain it with release evidence; default artifacts/v4-observation/{UTC-with-colons-replaced}-{sha7}-{pid}",
+      "OBSERVATION_TIMEOUT_MS": "Optional, default15000; integer1000..20000; no command-line arguments"
+    },
+    "fixedEndpoints": [
+      "https://staging.nxttrack.nl/api/health",
+      "https://nxttrack.nl/api/health"
+    ],
+    "outputs": [
+      "health-samples.jsonl",
+      "summary.json"
+    ],
+    "require": [
+      "Start only after both targets run the final SHA; 31 combined samples, each containing both targets, from T0 through T30.",
+      "summary releaseSha equals final SHA; status=passed, complete=true, completedSamples=expectedSamples=31, elapsedMs>=1800000, failedSampleCount=0, failedSamples=[], interruptedBy=null, fatalError=null.",
+      "Every sample has status=passed, failures=[], indices0..30 and both distinct targets; each target HTTP200, checks.ok/environment/release-sha/database/schema-compatibility=true.",
+      "UTC timestamps and monotone elapsedMs/dueMs are present; samples more than30000ms late fail and remain counted even if later requests succeed.",
+      "Process exits0 only after complete successful observation; preserve all prior failures in JSONL and summary."
+    ],
+    "privacyAndLimits": [
+      "Only fixed unauthenticated GETs; no cookies/secrets/alerts/mutations. Redirects rejected, response limit64KiB, request timeout bounded.",
+      "Only boolean checks, validated SHA, timestamps and generic request-failure categories are retained; no full health response.",
+      "No continuous uptime claim between minute samples; service-restart stability is separately checked with host snapshots. The observation does not assert health.app; the host check does."
+    ]
+  },
+  "hostStability": {
+    "confirmation": "INSPECT_V4_HOST_STABILITY",
+    "job": "inspect-v4-host-stability",
+    "runner": "self-hosted linux x64 nxttrack, matrix staging/production serialized max-parallel1, fail-fast=false, timeout5min per job",
+    "env": {
+      "TARGET": "matrix target",
+      "RELEASE_SHA": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "HOST_STABILITY_OUTPUT": "{runner.temp}/v4-host-stability-{target}-{run_id}-{run_attempt}.json"
+    },
+    "artifact": "v4-host-stability-{target}-{run_id}-{run_attempt}",
+    "retentionDays": 90,
+    "require": [
+      "Run once after deployment and before observation; again after completed observation. Both target snapshots in both runs must exist and status=passed.",
+      "Each snapshot target/SHA match; health=passed and immutableIdentity=passed-and-unchanged.",
+      "Current realpath is a direct release child; exact-source artifact has schemaVersion1, correct purpose, repository=nxttrack/platform and final SHA; identity bytes/path are unchanged across snapshot.",
+      "Public health is HTTP200, app=nxttrack-platform, ok=true, correct env/SHA, database/schema pass; redirects rejected.",
+      "Fixed services nxttrack-{target} and caddy: ActiveState=active, SubState=running, MainPID>0.",
+      "For each target/service, compare snapshots at least1800000ms apart using observedAt: MainPID, NRestarts and ActiveEnterTimestamp must all remain identical. NRestarts alone does not rule out manual restart."
+    ],
+    "privacyAndLimits": [
+      "Only five allowlisted systemctl properties via execFileSync, command timeout5s and output cap8192 bytes; no shell/journal/environment/config dump.",
+      "Health limit64KiB and15s timeout; generic failures; output flagwx mode0600. No DB credentials or remote writes.",
+      "Script validates one snapshot; the >=30min interval and cross-snapshot equality must be checked externally. Snapshot does not replace continuous minute health evidence."
+    ]
+  },
+  "finalEvidenceBoundaries": [
+    "A successful selected workflow alone does not prove all required final conditions: inspect per-target JSON and screenshots plus full observation and host comparison.",
+    "Manual monitor proof is separately mode=probe + RUN_OPERATIONAL_PROBE; never drill for this task; require actual heartbeat PASS, not only workflow success.",
+    "Canonical runtime-readiness is separate: require both ready=true AND explicit final SHA and operationsMode=versioned, fresh workers and complete backups.",
+    "No source mutation, workflow dispatch, authenticated request or test suite was executed during this review."
+  ],
+  "primaryAuthReferences": [
+    "https://supabase.com/docs/reference/javascript/auth-admin-generatelink",
+    "https://supabase.com/docs/reference/javascript/auth-signout"
+  ],
+  "readyToReviewFinalBrowserArtifacts": true
+}
