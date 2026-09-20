@@ -62,6 +62,7 @@ jobs:
     if: inputs.confirmation == 'SCHEDULE_V4_STORAGE_BACKUPS'
     runs-on: [self-hosted, linux, x64, nxttrack]
     strategy:
+      fail-fast: false
       max-parallel: 1
       matrix:
         target: [staging, production]
@@ -114,6 +115,7 @@ jobs:
     if: inputs.confirmation == 'CONFIGURE_V4_ENVIRONMENTS'
     runs-on: [self-hosted, linux, x64, nxttrack]
     strategy:
+      fail-fast: false
       max-parallel: 1
       matrix:
         target: [staging, production]
@@ -353,6 +355,7 @@ jobs:
     if: inputs.confirmation == 'INSPECT_V4_ENVIRONMENTS'
     runs-on: [self-hosted, linux, x64, nxttrack]
     strategy:
+      fail-fast: false
       max-parallel: 1
       matrix:
         target: [staging, production]

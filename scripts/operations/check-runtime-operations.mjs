@@ -55,6 +55,7 @@ export async function checkRuntimeOperations(target, { execute = execFileSync, f
   const log = execute("tail", ["-n", "80", join(config.shared, "v4-recurring-jobs.log")], { encoding: "utf8" });
   check("recent-successful-worker-ticks", jobs.length > 0 && assessWorkerLog(log, jobs.map((job) => job.route)));
   const keyFile = join(config.shared, "operations-v4/backup-passphrase");
+  if (existsSync(keyFile)) details.backupKey = { bytes: statSync(keyFile).size, mode: (statSync(keyFile).mode & 0o777).toString(8) };
   check("backup-key-private", existsSync(keyFile) && (statSync(keyFile).mode & 0o077) === 0 && statSync(keyFile).size >= 32);
   const backupDirectory = join(config.shared, "storage-backups-v4");
   const summaryName = existsSync(backupDirectory) ? readdirSync(backupDirectory).filter((file) => file.endsWith(".summary.json")).sort().at(-1) : null;
