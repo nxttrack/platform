@@ -1,0 +1,22 @@
+{
+  "firstProductionHealth": "2026-09-19T23:58:23Z",
+  "periodicObservationStartedAt": "2026-09-20T00:10:30.028481+00:00",
+  "periodicObservationCompletedAt": "2026-09-20T00:28:47.443213+00:00",
+  "totalChecks": 50,
+  "failedChecks": 0,
+  "applicationSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "environments": [
+    {
+      "environment": "staging",
+      "checksPassed": 25,
+      "databaseLatencyMedianMs": 121,
+      "databaseLatencyMaxMs": 509
+    },
+    {
+      "environment": "production",
+      "checksPassed": 25,
+      "databaseLatencyMedianMs": 86,
+      "databaseLatencyMaxMs": 325
+    }
+  ]
+}

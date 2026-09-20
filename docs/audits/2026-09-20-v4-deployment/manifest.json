@@ -1,12 +1,16 @@
 {
   "applicationSha": "6b3c9abb686be198830f417e663ac94124d7066f",
   "files": {
+    "health-observation-summary.json": "710e91d39ca0daf5cfe018518440613d115f1220ab217f2c3748a90cd2abba76",
+    "health-observation.jsonl": "3c3eb74de397ff4a4136cafc2671ab001b1cbfa4b1c2e2e9589c99b0175526da",
+    "operational-monitor.json": "99eaaf2c5feeff52f8b4840ca48b972002e7f431ea6e27d625e381171f3dcece",
     "production-browser.json": "cd685e492155316356dced2c017577955a17995674433196c730db3ad0b71b61",
     "production-platform.png": "d5380fa8cdc60d39bad343fc7a1ee0a21138449d62fb061bf1f8b324c46abcc7",
     "production-release.json": "ef90f00223a2495a02b6cd7018e06f0d555acc2643b97481a5d96b8b483fffc7",
     "staging-browser.json": "339d71f568d22dae4c5a254223c6e42056e68c30413bc999ddcba6fe3bd8162a",
     "staging-child-journey.png": "5ebe1403fb3c6bec186e1380344bda3698e44b212789c9d119e075c85513933a",
     "staging-release.json": "644f401b43136cfb85418fb422ebfc0e2f2616bd10af69cc82c55ca7af728779",
+    "storage-restore-v2.json": "c112631afbd2065e7ed01e7f7fd3692f3faad4382ca9ea6fa5ab4ed072fe36fe",
     "theme-assets.json": "2d8e013c7749f33c51def04f71b79cde6fb388ff6cdb17fb5e6576f79166e24e"
   }
 }

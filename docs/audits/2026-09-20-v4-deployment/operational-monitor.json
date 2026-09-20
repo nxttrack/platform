@@ -1,0 +1,18 @@
+{
+  "environments": [
+    {
+      "environment": "production",
+      "workflowRunId": 35478702863,
+      "checksPassed": 21,
+      "dashboardHeartbeatStatus": 202,
+      "alertsEnabled": false
+    },
+    {
+      "environment": "staging",
+      "workflowRunId": 35478704384,
+      "checksPassed": 21,
+      "dashboardHeartbeatStatus": 202,
+      "alertsEnabled": false
+    }
+  ]
+}

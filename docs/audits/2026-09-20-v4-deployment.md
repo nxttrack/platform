@@ -47,6 +47,10 @@ kan zijn kindportaal activeren via de bestaande tenantinstellingen.
 6. Het bestaande Storage-backupcontract dekte vijf locaties; de twee nieuwe
    V4-locaties `portal-theme-assets` en `portal-theme-imports` ontbraken.
    De herstelworkflow gaf ook de inmiddels vereiste projectbinding niet door.
+7. De operationele monitor kon de omgeving controleren, maar publiceerde zijn
+   resultaat niet naar het platformdashboard: het bestaande authenticatiegeheim
+   werd niet doorgegeven aan de workflow. Die koppeling is hersteld en op beide
+   omgevingen gecontroleerd: het heartbeat-endpoint antwoordt met HTTP 202.
 
 ## Uitgevoerde upgrade
 
@@ -89,6 +93,11 @@ versleutelingssleutel staat buiten Git, alleen leesbaar voor de runner.
 Er blijven na een geslaagde of mislukte lokale uitvoering geen tijdelijke
 onversleutelde back-upbestanden staan.
 
+Het Storage-inventariscontract heeft nu versie 2. Nieuwe back-ups bevatten alle
+zeven locaties; bestaande complete vijf-locatieback-ups en de zeven-locatieback-ups
+uit deze deployment blijven leesbaar. De dagelijkse servertools gebruiken deze
+versie en zijn opnieuw uitgevoerd en gecontroleerd.
+
 Relevante serverpaden, met `<omgeving>` gelijk aan `staging` of `production`:
 
 - `/var/www/nxttrack/<omgeving>/current`: actieve applicatie.
@@ -117,6 +126,10 @@ Relevante serverpaden, met `<omgeving>` gelijk aan `staging` of `production`:
 | Productie operationele monitor na deployment | [Geslaagd, 35477645111](https://github.com/nxttrack/platform/actions/runs/35477645111) |
 | Definitieve browserverificatie en gerenderde platformbeelden, beide omgevingen | [Geslaagd, 35478018042](https://github.com/nxttrack/platform/actions/runs/35478018042) |
 | Kindreis met volledig geladen afbeeldingen en stabiele camera, 28 stagingchecks | [Geslaagd, 35478178985](https://github.com/nxttrack/platform/actions/runs/35478178985) |
+| Dagelijkse serverback-ups met versie 2 en behoud van historische herstelbaarheid | [Geslaagd, 35478664767](https://github.com/nxttrack/platform/actions/runs/35478664767) |
+| Productiemonitor: 21 controles en dashboardheartbeat HTTP 202 | [Geslaagd, 35478702863](https://github.com/nxttrack/platform/actions/runs/35478702863) |
+| Stagingmonitor: 21 controles en dashboardheartbeat HTTP 202 | [Geslaagd, 35478704384](https://github.com/nxttrack/platform/actions/runs/35478704384) |
+| Definitieve herstelproef met Storage-contractversie 2 | [Geslaagd, 35478705794](https://github.com/nxttrack/platform/actions/runs/35478705794) |
 
 Daarnaast zijn 30 live thema-afbeeldingen op beide omgevingen via HTTPS
 opgehaald. Content-type en SHA-256 komen overal overeen met de repository.
@@ -138,6 +151,20 @@ de herstelworkflow miste de verplichte bron-/doelfingerprint; de aanvullende
 stagingtest gebruikte aanvankelijk de niet-bestaande routes `/admin/deelnemers`
 en `/admin/planning`. De bestaande productroutes zijn `/admin/leerlingen` en
 `/admin/agenda`. De oorspronkelijke failures blijven in GitHub zichtbaar.
+
+## Observatie na deployment
+
+Production was voor het eerst gezond waargenomen om 23:58:23 UTC op
+19 september, oftewel 01:58:23 lokale tijd op 20 september. De aanvullende
+browser-, worker-, Storage- en monitorcontroles zijn daarna uitgevoerd.
+Van 00:10:30 tot 00:28:47 UTC zijn bovendien 50 periodieke HTTPS-healthcontroles
+vastgelegd: 25 per omgeving, allemaal geslaagd. Elke controle verifieerde de
+applicatie-SHA, omgeving, database en runtime-schemacompatibiliteit. Het einde
+ligt ruim 30 minuten na de eerste gezonde productiewaarneming.
+Dit is geen claim van 30 minuten ononderbroken synthetische bemonstering:
+[de ruwe meetreeks](2026-09-20-v4-deployment/health-observation.jsonl) en
+[de samenvatting](2026-09-20-v4-deployment/health-observation-summary.json)
+leggen het precieze venster vast.
 
 ## Grenzen van deze release
 
