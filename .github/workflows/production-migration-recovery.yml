@@ -37,6 +37,58 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  schedule-storage:
+    name: install and verify daily encrypted V4 storage backups
+    if: inputs.confirmation == 'SCHEDULE_V4_STORAGE_BACKUPS'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    strategy:
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install durable tooling and environment-scoped encryption
+        env:
+          TARGET: ${{ matrix.target }}
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          systemctl is-active cron
+          command -v gpg tar flock crontab
+          umask 077
+          V4_OPERATIONS_DIR="/var/www/nxttrack/$TARGET/shared/operations-v4"
+          mkdir -p "$V4_OPERATIONS_DIR/scripts/storage" "$V4_OPERATIONS_DIR/apps"
+          cp scripts/storage/*.mjs "$V4_OPERATIONS_DIR/scripts/storage/"
+          cp scripts/release/v4-storage-daily.mjs "$V4_OPERATIONS_DIR/v4-storage-daily.mjs"
+          ln -sfn "/var/www/nxttrack/$TARGET/current/apps/web" "$V4_OPERATIONS_DIR/apps/web"
+          test -n "$STORAGE_BACKUP_PASSPHRASE"
+          printf '%s' "$STORAGE_BACKUP_PASSPHRASE" > "$V4_OPERATIONS_DIR/backup-passphrase"
+          chmod 600 "$V4_OPERATIONS_DIR/backup-passphrase"
+          node "$V4_OPERATIONS_DIR/v4-storage-daily.mjs" "$TARGET"
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {spawnSync,execFileSync} from 'node:child_process';
+          const target=process.env.TARGET;
+          const base=`/var/www/nxttrack/${target}/shared`;
+          const existing=spawnSync('crontab',['-l'],{encoding:'utf8'});
+          assert.ok(existing.status===0 || existing.stderr.includes('no crontab'));
+          const tag=`# nxttrack-v4-storage-${target}`;
+          const lines=(existing.stdout || '').split('\n').filter(line=>line && !line.endsWith(tag));
+          const minute=target==='production'?17:37;
+          const entry=`${minute} 2 * * * /usr/bin/flock -n ${base}/v4-storage-backup.lock ${process.execPath} ${base}/operations-v4/v4-storage-daily.mjs ${target} >> ${base}/v4-storage-backup.log 2>&1 ${tag}`;
+          assert.equal(spawnSync('crontab',['-'],{input:[...lines,entry,''].join('\n')}).status,0);
+          assert.ok(execFileSync('crontab',['-l'],{encoding:'utf8'}).includes(entry));
+          console.log(`[v4-storage] PASS daily encrypted backup scheduled for ${target}.`);
+          NODE
+          test -s "/var/www/nxttrack/$TARGET/shared/v4-recurring-jobs.log"
+          tail -n 6 "/var/www/nxttrack/$TARGET/shared/v4-recurring-jobs.log"
+
   configure-v4:
     name: enable and schedule deployed V4 capabilities
     if: inputs.confirmation == 'CONFIGURE_V4_ENVIRONMENTS'
