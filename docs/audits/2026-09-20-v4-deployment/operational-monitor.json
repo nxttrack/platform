@@ -14,5 +14,21 @@
       "dashboardHeartbeatStatus": 202,
       "alertsEnabled": false
     }
+  ],
+  "finalCanonicalMainProbes": [
+    {
+      "environment": "production",
+      "workflowRunId": 35479630091,
+      "checksPassed": 21,
+      "dashboardHeartbeatStatus": 202,
+      "alertsEnabled": false
+    },
+    {
+      "environment": "staging",
+      "workflowRunId": 35479632162,
+      "checksPassed": 21,
+      "dashboardHeartbeatStatus": 202,
+      "alertsEnabled": false
+    }
   ]
 }

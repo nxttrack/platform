@@ -1,0 +1,15 @@
+{
+  "workflowRunId": 35479204617,
+  "status": "success",
+  "unitTestsPassed": 511,
+  "unitTestsSkipped": 0,
+  "browserSmokeTestsPassed": 100,
+  "journeyBrowserTestsPassed": 70,
+  "journeyBrowserTestsSkipped": 35,
+  "journeySkipScope": "Conditional tests that require seeded fictional local database fixtures, or tests intentionally limited to Chromium. These 35 cases are not counted as passes; live staging verification is retained separately.",
+  "pullRequest": 94,
+  "mergedAt": "2026-09-20T00:45:38Z",
+  "operationsMergeSha": "be8edddbdc03d13329d04da067e99110d6df8158",
+  "applicationSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "applicationAndDatabaseSourceDiffEmpty": true
+}

@@ -1,0 +1,10 @@
+{
+  "workflowRunId": 35479301904,
+  "browser": "WebKit",
+  "test": "development searches and restores filters, opens a focused dialog and keeps historical values distinct",
+  "repetitionsPassed": 5,
+  "repetitionsFailed": 0,
+  "applicationCodeChanged": false,
+  "ciFailureAddressed": 35478681636,
+  "readinessCondition": "Initial development filter preferences have been stored by the mounted client component."
+}

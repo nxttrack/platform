@@ -1,0 +1,52 @@
+[
+  {
+    "environment": "staging",
+    "url": "https://staging.nxttrack.nl",
+    "checkedAt": "2026-09-20T00:46:45.408715+00:00",
+    "health": {
+      "ok": true,
+      "app": "nxttrack-platform",
+      "env": "staging",
+      "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+      "buildTimestamp": "2026-09-19T23:02:22Z",
+      "checkedAt": "2026-09-20T00:46:45.387Z",
+      "checks": {
+        "database": {
+          "configured": true,
+          "latencyMs": 100,
+          "message": "Supabase tenants probe succeeded.",
+          "status": "pass"
+        },
+        "schemaCompatibility": {
+          "message": "Runtime and database schema compatibility contract matches.",
+          "status": "pass"
+        }
+      }
+    }
+  },
+  {
+    "environment": "production",
+    "url": "https://nxttrack.nl",
+    "checkedAt": "2026-09-20T00:46:45.900348+00:00",
+    "health": {
+      "ok": true,
+      "app": "nxttrack-platform",
+      "env": "production",
+      "commitSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+      "buildTimestamp": "2026-09-19T23:56:53Z",
+      "checkedAt": "2026-09-20T00:46:45.880Z",
+      "checks": {
+        "database": {
+          "configured": true,
+          "latencyMs": 130,
+          "message": "Supabase tenants probe succeeded.",
+          "status": "pass"
+        },
+        "schemaCompatibility": {
+          "message": "Runtime and database schema compatibility contract matches.",
+          "status": "pass"
+        }
+      }
+    }
+  }
+]

@@ -1,9 +1,14 @@
 {
   "applicationSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+  "operationsMergeSha": "be8edddbdc03d13329d04da067e99110d6df8158",
+  "completedAt": "2026-09-20T00:47:54.623735+00:00",
   "files": {
+    "browser-regression.json": "be3df370419c91bb33fc98614078a77eb4a533bc2de1fd446fc55d34b9583ab6",
+    "final-health.json": "2fcbf1c2d04171b1fda408b84f3724e45cc91e6a235def2c33ddd023a75e3934",
     "health-observation-summary.json": "710e91d39ca0daf5cfe018518440613d115f1220ab217f2c3748a90cd2abba76",
     "health-observation.jsonl": "3c3eb74de397ff4a4136cafc2671ab001b1cbfa4b1c2e2e9589c99b0175526da",
-    "operational-monitor.json": "99eaaf2c5feeff52f8b4840ca48b972002e7f431ea6e27d625e381171f3dcece",
+    "operational-monitor.json": "580322b837488cdedee00b35ff79769a29dc57c0318e0a6721e8903e74c2845c",
+    "operations-ci.json": "65c0141422928dfebc29ab6577833b7974fe4843a2a6f5eabdeabe997f30de41",
     "production-browser.json": "cd685e492155316356dced2c017577955a17995674433196c730db3ad0b71b61",
     "production-platform.png": "d5380fa8cdc60d39bad343fc7a1ee0a21138449d62fb061bf1f8b324c46abcc7",
     "production-release.json": "ef90f00223a2495a02b6cd7018e06f0d555acc2643b97481a5d96b8b483fffc7",

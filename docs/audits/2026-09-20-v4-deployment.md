@@ -3,6 +3,14 @@
 Datum: 20 september 2026, Europe/Amsterdam. Opdracht: autonoom onderzoeken,
 repareren, deployen en controleren totdat beide omgevingen bruikbaar zijn.
 
+## Afgeronde deployment
+
+V4 is gedeployed en bruikbaar op staging en production. De applicatie, database,
+portalen, achtergrondtaken, monitoring, back-ups en gecontroleerd Storage-herstel
+zijn geverifieerd. De laatste live healthchecks en de beide standaard
+monitorworkflows zijn geslaagd. De hieronder benoemde bestaande productgrenzen
+blijven expliciet buiten deze deploymentbevestiging.
+
 ## Release en omgeving
 
 De applicatierelease is `6b3c9abb686be198830f417e663ac94124d7066f`, afkomstig
@@ -10,7 +18,12 @@ van canonical `main`. Deze commit bevat de geïntegreerde V4/V4.2-portalen.
 Staging en production draaien dezelfde applicatiecode, elk met een eigen
 database, credentials, hostname en service. De uitvoerings- en hersteltools van
 deze opdracht staan op `codex/v4-deployment-20260920`; zij veranderen de
-applicatierelease niet. De bestaande lokale checkout en zijn niet vastgelegde
+applicatierelease niet. De blijvende back-up-, herstel- en monitoringfixes en
+de gecorrigeerde browsertest zijn via [PR #94](https://github.com/nxttrack/platform/pull/94)
+samengevoegd op `main` als `be8edddbdc03d13329d04da067e99110d6df8158`.
+De diff van applicatiecode, packages, dependencies en databaseschema tegenover
+de gedeployde release is leeg; alleen beheertools, workflows en tests veranderen.
+De bestaande lokale checkout en zijn niet vastgelegde
 wijzigingen zijn behouden. Er zijn geen accounts of wachtwoorden gereset.
 
 | Omgeving | Toegang | Release |
@@ -130,6 +143,10 @@ Relevante serverpaden, met `<omgeving>` gelijk aan `staging` of `production`:
 | Productiemonitor: 21 controles en dashboardheartbeat HTTP 202 | [Geslaagd, 35478702863](https://github.com/nxttrack/platform/actions/runs/35478702863) |
 | Stagingmonitor: 21 controles en dashboardheartbeat HTTP 202 | [Geslaagd, 35478704384](https://github.com/nxttrack/platform/actions/runs/35478704384) |
 | Definitieve herstelproef met Storage-contractversie 2 | [Geslaagd, 35478705794](https://github.com/nxttrack/platform/actions/runs/35478705794) |
+| Vijf herhalingen van zoek-, reload-, dialoog- en historiecontrole in WebKit | [Geslaagd, 35479301904](https://github.com/nxttrack/platform/actions/runs/35479301904) |
+| Definitieve CI voor PR #94 | [Geslaagd, 35479204617](https://github.com/nxttrack/platform/actions/runs/35479204617) |
+| Definitieve productiemonitor vanuit canonical main | [Geslaagd, 35479630091](https://github.com/nxttrack/platform/actions/runs/35479630091) |
+| Definitieve stagingmonitor vanuit canonical main | [Geslaagd, 35479632162](https://github.com/nxttrack/platform/actions/runs/35479632162) |
 
 Daarnaast zijn 30 live thema-afbeeldingen op beide omgevingen via HTTPS
 opgehaald. Content-type en SHA-256 komen overal overeen met de repository.
@@ -151,6 +168,22 @@ de herstelworkflow miste de verplichte bron-/doelfingerprint; de aanvullende
 stagingtest gebruikte aanvankelijk de niet-bestaande routes `/admin/deelnemers`
 en `/admin/planning`. De bestaande productroutes zijn `/admin/leerlingen` en
 `/admin/agenda`. De oorspronkelijke failures blijven in GitHub zichtbaar.
+
+De aanvullende CI voor de beheerfixes vond ook een bestaande timingfout in de
+WebKit-test op de fictieve development-harness: het servergerenderde zoekveld
+werd ingevuld terwijl de clientinitialisatie het nog kon vervangen. De trace
+toonde een leeg veld direct na `fill`, met de twee oorspronkelijke resultaten.
+De test wacht nu op de bestaande initiële opslag van de filtervoorkeuren voordat
+hij invoert; alle functionele zoek-, reload-, dialoog- en historiecontroles zijn
+behouden. Applicatiecode en databaseschema zijn hierdoor niet gewijzigd.
+De eerste lokale herhaling kon WebKit niet starten door ontbrekende
+systeembibliotheken; de herhaling is daarom naar een volledige CI-runner verplaatst.
+Daar zijn alle vijf herhalingen geslaagd. De volledige CI is daarna geslaagd:
+511 unitcontroles, 100 browsersmokes en 70 Journey-controles. Er waren ook
+35 skips: tests waarvoor fictieve lokale databasefixtures nodig zijn en tests
+die alleen in Chromium horen te draaien. Deze tellen niet mee als geslaagd.
+De geconfigureerde live stagingreleasegate is afzonderlijk bewaard als bewijs
+voor de daar uitgevoerde integratie- en portaalcontroles.
 
 ## Observatie na deployment
 
