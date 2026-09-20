@@ -1,0 +1,117 @@
+{
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "startedAt": "2026-09-20T15:16:35.155Z",
+  "method": "unauthenticated HTTPS GET with default certificate validation; no redirects",
+  "checks": [
+    {
+      "url": "https://nxttrack.nl/",
+      "at": "2026-09-20T15:16:35.155Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:35.366Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "production",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://www.nxttrack.nl/",
+      "at": "2026-09-20T15:16:35.713Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://www.nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:35.970Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "production",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://admin.nxttrack.nl/",
+      "at": "2026-09-20T15:16:36.242Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://admin.nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:36.458Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "production",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://sprint2-routing-probe.nxttrack.nl/",
+      "at": "2026-09-20T15:16:36.813Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200
+    },
+    {
+      "url": "https://sprint2-routing-probe.nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:37.089Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "production",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://staging.nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:37.414Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "staging",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://aquaswim-demo.staging.nxttrack.nl/api/health",
+      "at": "2026-09-20T15:16:38.096Z",
+      "expectedStatus": 200,
+      "status": "passed",
+      "httpStatus": 200,
+      "environment": "staging",
+      "observedReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "url": "https://nxttrack.nl/test-harness/intake-responsive",
+      "at": "2026-09-20T15:16:38.610Z",
+      "status": "passed",
+      "httpStatus": 200,
+      "guard": "not-found-fallback-with-no-fixture-content"
+    },
+    {
+      "url": "https://staging.nxttrack.nl/test-harness/intake-responsive",
+      "at": "2026-09-20T15:16:38.778Z",
+      "status": "passed",
+      "httpStatus": 200,
+      "guard": "not-found-fallback-with-no-fixture-content"
+    }
+  ],
+  "finishedAt": "2026-09-20T15:16:38.831Z",
+  "status": "passed"
+}

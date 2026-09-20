@@ -1,0 +1,23 @@
+{
+  "before": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "reviewedSource": "75a7de8dc16dea68f88dcdb424f81b30d5c692bf",
+  "changedFiles": [
+    "scripts/operations/backup-storage-daily.mjs",
+    "scripts/operations/run-scheduled-jobs.mjs",
+    "tests/unit/runtime-operations-cli.test.mjs"
+  ],
+  "applicationMigrationsDependenciesUnchanged": true,
+  "scope": "OnlytwoinstalledoperationalCLIentrypointguardsandregressiontest",
+  "independentReviewer": "communication_readiness",
+  "newSubprocessTests": 6,
+  "targetedOperationsAndBackupTestsPassed": 23,
+  "canonicalReleaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "canonicalAndReviewedTree": "c78f481bea8db0d78d18da3da927aed8d502b97e",
+  "prCiRun": 35519677348,
+  "prCiCounts": {
+    "unitPassed": 596,
+    "smokePassed": 102,
+    "journeyPassed": 82,
+    "journeyConditionalSkipped": 35
+  }
+}

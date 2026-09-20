@@ -1,0 +1,41 @@
+{
+  "runId": 35519112471,
+  "reviewedAt": "2026-09-20T15:24:18.563Z",
+  "canonicalReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "verifierSourceSha": "1e106340837236abe848010ff6c74f0d8a06b67c",
+  "workflowConclusion": "failure",
+  "productionJobConclusion": "cancelled",
+  "targets": [
+    {
+      "target": "staging",
+      "artifactId": 10607817503,
+      "archiveSha256": "22bec1145de5ebb1b75f2643776c166a248081c7011b3ffc3539b8529c0fe681",
+      "originAndDigest": "passed",
+      "result": "failed",
+      "checkCount": 5,
+      "lastPassedCheck": "platform public /login",
+      "tenantCount": 3,
+      "screenshots": 0,
+      "publicSafeJson": "passed",
+      "sessionCreationReached": false
+    },
+    {
+      "target": "production",
+      "artifactId": 10607323486,
+      "archiveSha256": "f5295f7d8617e44bd1295764b009fe7d3d6f724da46cc2b153edf24eb5125bf2",
+      "originAndDigest": "passed",
+      "result": "failed",
+      "checkCount": 5,
+      "lastPassedCheck": "platform public /login",
+      "tenantCount": 0,
+      "screenshots": 0,
+      "publicSafeJson": "passed",
+      "sessionCreationReached": false
+    }
+  ],
+  "usableEnvironmentProof": "INCOMPLETE - do not treat these five checks as the expected full 23/41",
+  "cause": "Verifier asserted the anonymous /platform pathname immediately after DOMContentLoaded; Next streamed redirect had not completed yet. Root read-only browser diagnosis confirmed working forms and actual /login redirect in both environments.",
+  "diagnosticEvidence": "../anonymous-redirect-diagnosis.json",
+  "reference": "https://nextjs.org/docs/app/api-reference/functions/redirect",
+  "nextStep": "Await the bounded exact-origin/login redirect and visible login form; preserve original assertion, rerun both environment checks with independent cleanup (matrix fail-fast false). No application deployment change is necessary for this demonstrated verifier defect."
+}

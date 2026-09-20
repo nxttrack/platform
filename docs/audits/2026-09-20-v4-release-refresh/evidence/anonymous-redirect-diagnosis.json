@@ -1,0 +1,28 @@
+{
+  "checkedAt": "2026-09-20T15:20:21.601Z",
+  "method": "Unauthenticated read-only browser navigation; pathnames/booleans only",
+  "checks": [
+    {
+      "target": "staging",
+      "emailVisible": true,
+      "passwordVisible": true,
+      "loginEnabled": true,
+      "pathAtDOMContentLoaded": "/platform",
+      "domContentLoadedMs": 81,
+      "pathAfterRedirect": "/login",
+      "redirectMs": 181,
+      "loginFormVisible": true
+    },
+    {
+      "target": "production",
+      "emailVisible": true,
+      "passwordVisible": true,
+      "loginEnabled": true,
+      "pathAtDOMContentLoaded": "/platform",
+      "domContentLoadedMs": 99,
+      "pathAfterRedirect": "/login",
+      "redirectMs": 194,
+      "loginFormVisible": true
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "runId": 35520121372,
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35520121372",
+  "result": "passed",
+  "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "sameCanonicalWorkflowAsFailedRun": 35519287746,
+  "followsTemporaryCronRepairRun": 35519938480,
+  "reports": [
+    {
+      "target": "staging",
+      "artifactId": 10607314466,
+      "artifactDigest": "sha256:5212bde09cb61b3b85d0e1b34f8d01c5b9b6c259edda4f89a575f0b660a4fe22",
+      "originAndOriginalDigestVerified": true,
+      "checkedAt": "2026-09-20T15:36:46.665Z",
+      "checksPassed": 12,
+      "checksTotal": 12,
+      "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "operationsMode": "versioned",
+      "recentSuccessfulWorkerTicks": "pass",
+      "completeEncryptedSevenBucketBackup": "pass"
+    },
+    {
+      "target": "production",
+      "artifactId": 10607194767,
+      "artifactDigest": "sha256:06f736b9d2b0c47db46ba1dd1d4ca33c30e5c13b46b3fbb3089a30b6763f9b2f",
+      "originAndOriginalDigestVerified": true,
+      "checkedAt": "2026-09-20T15:36:59.178Z",
+      "checksPassed": 12,
+      "checksTotal": 12,
+      "sourceSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "operationsMode": "versioned",
+      "recentSuccessfulWorkerTicks": "pass",
+      "completeEncryptedSevenBucketBackup": "pass"
+    }
+  ],
+  "canonicalCodeFixStillRequired": true
+}

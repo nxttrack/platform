@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-20T15:29:18.330Z",
+  "runId": 35519538037,
+  "workflowConclusion": "success",
+  "applicationReleaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "verifierSourceSha": "80c19a40906cdb7d74320d8dfd99e415db4cc013",
+  "sourceSha256": {
+    "scripts/release/v4-browser-verify.mjs": "743e89fd77017ecf1fdd8088261e44eacfbe16768e1adde9bf3d188de87c4dca",
+    "scripts/release/v4-browser-contract.mjs": "a5ce9de1b2f23ad8318a9f3035be86c9b0375bae9c6a8061710c8188118b8c85"
+  },
+  "targets": [
+    {
+      "target": "staging",
+      "jobId": 106101119608,
+      "jobConclusion": "success",
+      "artifact": {
+        "id": 10607748199,
+        "name": "v4-staging-browser-verification-35519538037",
+        "sizeBytes": 2662605,
+        "archiveDigest": "sha256:dc420014558e98dd4c0eea7e7bda23e9f86c4f8112c801a9d82afb7f911d2905",
+        "createdAt": "2026-09-20T15:26:58Z",
+        "expiresAt": "2026-12-19T15:25:38Z"
+      },
+      "originAndDigest": "passed",
+      "exactReleaseAndVerifier": "passed",
+      "requiredChecks": 41,
+      "allRequiredChecks": "passed",
+      "tenantCount": 3,
+      "tenantInventoryUnchanged": true,
+      "passwordsAndOwnSessionCleanup": "passed",
+      "publicSafeJson": "passed",
+      "screenshotsVisualReview": "PENDING independent visual-review.json",
+      "fileSha256": {
+        "child-journey.png": "ec257b8df1b57959358f4579f0378ef7392c77656c182fcc5a97abd491de09a2",
+        "platform-onboarding.png": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+        "platform-themes.png": "d8dde6cc0d7af07719967cf79acd360c1bab43a0460fa13d615252f42ba26ea9",
+        "verification.json": "02ee64535bab17be59cec69a4bf157857481752121777bb0c2b0b3e9f9e6518a"
+      }
+    },
+    {
+      "target": "production",
+      "jobId": 106101119570,
+      "jobConclusion": "success",
+      "artifact": {
+        "id": 10607459027,
+        "name": "v4-production-browser-verification-35519538037",
+        "sizeBytes": 628390,
+        "archiveDigest": "sha256:c1cf8782f64d643dd9f3cbcc53c3c66c63bde177f7795dae10ed81ed89b49296",
+        "createdAt": "2026-09-20T15:26:34Z",
+        "expiresAt": "2026-12-19T15:25:38Z"
+      },
+      "originAndDigest": "passed",
+      "exactReleaseAndVerifier": "passed",
+      "requiredChecks": 23,
+      "allRequiredChecks": "passed",
+      "tenantCount": 0,
+      "tenantInventoryUnchanged": true,
+      "passwordsAndOwnSessionCleanup": "passed",
+      "publicSafeJson": "passed",
+      "screenshotsVisualReview": "PENDING independent visual-review.json",
+      "fileSha256": {
+        "platform-onboarding.png": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+        "platform-themes.png": "89ee9426c7e9bb4722c0d7ac2aaa5231c24cc1c975e52f6587d7e40c9e774ec4",
+        "verification.json": "bab7d901783392eee40d2151d16c18509891bc5882f54ba2dc0a42e3e5618fae"
+      }
+    }
+  ],
+  "scope": "Supplemental browser proof for current1a release; not evidence for the planned canonical worker/backup CLI fix.",
+  "limitations": [
+    "Production existing-owner authentication uses a generated token without delivery; it does not enter the existing password.",
+    "Password hashes remain in memory; only equality success is recorded.",
+    "Local sign-out revokes the verifier own session; already-issued access tokens may remain valid until expiry.",
+    "No tenant provisioning or outbound-message action is performed; onboarding navigation and tenant-count preservation are checked.",
+    "Desktop main-region captures do not constitute a new full-shell or responsive visual audit."
+  ],
+  "priorRun35519112471": "retained as failed; corrected only the proven early anonymous-redirect verifier assertion",
+  "stabilityObservation": "Original 30-minute observation was interrupted after8samples with0healthfailures; it is not PASS and must restart for the final release."
+}

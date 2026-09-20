@@ -1,0 +1,37 @@
+{
+  "runId": "35519677348",
+  "sourceSha": "75a7de8dc16dea68f88dcdb424f81b30d5c692bf",
+  "verifiedAt": "2026-09-20T15:38:39.187639+00:00",
+  "conclusion": "success",
+  "testSummaries": [
+    {
+      "step": "Test every local unit contract",
+      "summary": "2026-09-20T15:29:49.3411806Z \u2139 tests 596"
+    },
+    {
+      "step": "Test every local unit contract",
+      "summary": "2026-09-20T15:29:49.3412389Z \u2139 pass 596"
+    },
+    {
+      "step": "Test every local unit contract",
+      "summary": "2026-09-20T15:29:49.3412648Z \u2139 fail 0"
+    },
+    {
+      "step": "Test every local unit contract",
+      "summary": "2026-09-20T15:29:49.3413212Z \u2139 skipped 0"
+    },
+    {
+      "step": "Run local browser smoke tests",
+      "summary": "2026-09-20T15:32:22.2187944Z   102 passed (44.0s)"
+    },
+    {
+      "step": "Validate Journey timeline in Chromium Firefox and WebKit",
+      "summary": "2026-09-20T15:37:27.7708538Z   35 skipped"
+    },
+    {
+      "step": "Validate Journey timeline in Chromium Firefox and WebKit",
+      "summary": "2026-09-20T15:37:27.7708901Z   82 passed (5.1m)"
+    }
+  ],
+  "everyWorkflowStepSuccessful": true
+}

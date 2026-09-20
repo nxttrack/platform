@@ -1,56 +1,44 @@
 # V4 release refresh: uitvoeringsrapport
 
-**PRODUCTIEPROMOTIE EN EINDVERIFICATIE OPEN; STAGING VOLLEDIG GESLAAGD.**
-Momentopname: 20 september 2026, 15:12 UTC. Definitieve canonical bron:
-**`1a72606d5fd7bf72c382fcc5215c3419dfb689e1`**, [PR #99](https://github.com/nxttrack/platform/pull/99).
-Canonical CI, foundation, migratierehearsal en de volledige stagingrun
-[35516843435](https://github.com/nxttrack/platform/actions/runs/35516843435) zijn geslaagd.
-Alle dertien verplichte gates, herstel van oorspronkelijke instellingen en originele bewijsopslag
-op de VPS zijn bevestigd. Alle 56 definitieve Priority A-opnames passen binnen hun viewport;
-twaalf daarvan en veertien beelden over alle zeven thema's zijn werkelijk visueel beoordeeld.
-De coördinerende agent bekeek bovendien de vier gerepareerde layouts. De volledige oorspronkelijke
-communicatiesuite slaagde zonder herkansing of aangepaste timeout. De oorzaak van de eerdere
-mislukte poging blijft onbekend. Productieactivatie en de controles daarna volgen nog.
+**NIEUWE RELEASEVALIDATIE LOOPT; AFRONDING NOG OPEN.**
+Momentopname: 20 september 2026, 16:22 UTC. Staging draait de gecorrigeerde release
+`86132b20455c083cf52a2a0de0713b3c363c7831`; productie draait voorlopig
+`1a72606d5fd7bf72c382fcc5215c3419dfb689e1` met herstelde automatische taken.
+De eerste productieovergang was technisch geslaagd, maar de operationele eindcontrole vond
+stil stoppende worker- en backupopstartscripts. PR #100 repareert de echte oorzaak. Een nieuwe
+volledige stagingcontrole, echte geïnstalleerde backup, productiepromotie en dertig minuten
+observatie zijn vereist. De eerste onderbroken observatie telt niet als afronding.
 
 De gebruiker heeft daadwerkelijke staging-/productiedeployment en autonome technische/visuele
 beslissingen geautoriseerd. Afronding vereist dat beide omgevingen deze gecontroleerde release
 draaien en binnen de beschreven productscope bruikbaar zijn. De oorspronkelijke lokale werkruimte
 en gebruikerswijzigingen blijven behouden. De [volledige readinessanalyse](https://github.com/nxttrack/platform/blob/b5511f16ad8367aca342aac9b5c0e83c4ee4d362/docs/audits/2026-09-20-deploy-readiness.md)
-bevat de onderliggende analyse; het [go/no-go-record](2026-09-20-v4-production-go-no-go.md)
-bindt de concrete promotievoorwaarden en herstelpunten aan deze SHA; de prepromotiebeslissing wordt vóór dispatch onveranderlijk vastgelegd.
+bevat de onderliggende analyse. Het [nieuwe go/no-go-record](2026-09-20-v4-production-go-no-go-r2.md)
+bindt de concrete promotievoorwaarden en herstelpunten aan `86132b2`; het wordt vóór dispatch
+onveranderlijk vastgelegd. De [eerste GO voor 1a](https://github.com/nxttrack/platform/blob/1e106340837236abe848010ff6c74f0d8a06b67c/docs/audits/2026-09-20-v4-production-go-no-go.md)
+blijft uitsluitend historisch bewijs.
 
-## Actueel bewijs
+## Actueel bewijs voor 86132b2
 
 | Controle | Bron | Werkelijke status |
 |---|---|---|
-| Canonical CI, exact `1a72606d…` | [35514764794](https://github.com/nxttrack/platform/actions/runs/35514764794) | **PASS**, 590 units, 102 browsersmokes, 82 Journey-tests, 35 bestaande voorwaardelijke skips; alle 12 responsivecases in drie browsers PASS; exact-source-origin/digest/inhoud geverifieerd |
-| Vijfde volledige stagingrun, exact `1a72606d…` | [35514772810](https://github.com/nxttrack/platform/actions/runs/35514772810) | **FAILED**, 8/13 gates PASS, communicatiegate FAIL, vier vervolggates SKIPPED; cleanup PASS, geen Priority A-beelden of volledig releaseartifact |
-| Production foundation, exact `1a72606d…` | [35514774707](https://github.com/nxttrack/platform/actions/runs/35514774707) | **PASS**, zes jobs, 49 configuratiechecks, host/TLS/routing, database-inventaris en acht mailconfiguratie-/DNS-checks |
-| Production migratie-dry-run, exact `1a72606d…` | [35514776517](https://github.com/nxttrack/platform/actions/runs/35514776517) | **PASS**, 158/158 migraties, nul ontbrekende/onverwachte versies, 256 tabellen met RLS/FORCE RLS; geen migraties nodig, inventarisfingerprint ongewijzigd |
-| Historische canonical CI, exact `b5511f16…` | [35512094839](https://github.com/nxttrack/platform/actions/runs/35512094839) | **PASS**, 590 units, 102 browsersmokes, 70 Journey-tests; 35 voorwaardelijke Journey-skips, 0 failures |
-| Historische volledige staginggate en lokaal releasebewijs, exact `b5511f16…` | [35512095754](https://github.com/nxttrack/platform/actions/runs/35512095754) | **Workflow PASS**, 13/13 verplichte gates, cleanup na Phase 15 en bewijsopslag PASS; **visuele NO-GO**, vier van 56 screenshots met documentoverflow |
-| Historische production foundation, exact `b5511f16…` | [35512097079](https://github.com/nxttrack/platform/actions/runs/35512097079) | **PASS**, 49 configuratiechecks, host/TLS/DNS, read-only database-inventaris en 8 mailconfiguratie-/DNS-checks |
-| Historische production migratie-dry-run, exact `b5511f16…` | [35512098381](https://github.com/nxttrack/platform/actions/runs/35512098381) | **PASS**, database actueel, geen migraties, fingerprint ongewijzigd |
-| PR #99 responsive reparatie, bron `1bc66031…` | [Lokale browseruitvoer](2026-09-20-v4-release-refresh/evidence/responsive-local-regression.json) | **Lokaal PASS**, 4/4 Chromium-regressies en typecheck; 12/12 responsivecases in drie browsers geslaagd in PR-CI 35514184316 |
-| Definitieve volledige staginggate en 56 finale visuals | [35516843435](https://github.com/nxttrack/platform/actions/runs/35516843435) | **PASS**, 13/13 gates, cleanup en bewijsopslag; 56/56 breedtes/hashcontrole, gedelegeerde visuele GO binnen beschreven scope |
-| Behoud historische stagingrollback `6b3c9abb…` | [35514084302](https://github.com/nxttrack/platform/actions/runs/35514084302) | **PASS**, oorspronkelijke artifact geverifieerd; runtime, configuratie en serviceproces ongewijzigd |
-| Actuele versleutelde V4-productiedatabasebackup | [35514311700](https://github.com/nxttrack/platform/actions/runs/35514311700) | **PASS**, read-only export, archiefinspectie, encryptie/decrypt-bytevergelijking en artifactdigest; geen restore uitgevoerd |
-| PR #98 CI vóór canonical merge | [35511585612](https://github.com/nxttrack/platform/actions/runs/35511585612) | **PASS**, 590 units, 102 browsersmokes, 70 Journey-tests; 35 voorwaardelijke Journey-skips afzonderlijk vermeld |
-| Beperkte live fixture-/instructeurtest vóór merge | [35511598473](https://github.com/nxttrack/platform/actions/runs/35511598473) | **PASS**, vier ouder-recordprobes, vier rollen en instructeurmutaties zonder herkansing; actieve app bleef `433ac957…` |
-| Definitieve GO en productiepromotie | Run-ID, artifact en GO-permalink toevoegen | **OPEN** |
-| Authenticated browsers en publieke productieroutes | Run-ID, JSON en screenshots toevoegen | **OPEN**, beide omgevingen en bestaande eigenaar |
-| Operationele probes en runtime-readiness | Run-ID's en beide JSON-artifacts toevoegen | **OPEN** |
-| Volledige 30-minutenobservatie | JSONL, samenvatting en UTC-begin/einde toevoegen | **OPEN** |
-| Hoststabiliteit | Twee runs en snapshots per omgeving toevoegen | **OPEN**, app en Caddy |
+| Canonical CI | [35520248010](https://github.com/nxttrack/platform/actions/runs/35520248010) | **PASS**, 596 units, 102 browsersmokes, 82 Journey-tests en 35 voorwaardelijke skips; alle 12 responsivecases in drie browsers PASS; exacte bron/artifactdigest geverifieerd |
+| Production foundation | [35520268195](https://github.com/nxttrack/platform/actions/runs/35520268195) | **PASS**, zes jobs, 49 configuratiechecks, host/TLS/routing en acht mailconfiguratie-/DNS-checks |
+| Production migratie-dry-run | [35520269819](https://github.com/nxttrack/platform/actions/runs/35520269819) | **PASS**, 158/158 migraties, nul wijzigingen, 256 tabellen met RLS/FORCE RLS; inventarisfingerprint gelijk |
+| Volledige staginggate | [35520266317](https://github.com/nxttrack/platform/actions/runs/35520266317) | **PASS**, alle dertien gates, cleanup na Phase15 en oorspronkelijke bewijsopslag; Phase15 140 passed / 52 skips afzonderlijk benoemd; tenant-admin één geslaagde retry |
+| Nieuwe visuele controle | Nieuwe stagingartifacts | **PASS binnen beschreven scope**, 56/56 breedtes en hashes, nul capture-runtimefouten; specialist bekeek 12 Priority A- en 14 themabeelden, coördinator de vier gerepareerde layouts |
+| Werkende tijdelijke cronreparatie op 1a | [35519938480](https://github.com/nxttrack/platform/actions/runs/35519938480), [readiness 35520121372](https://github.com/nxttrack/platform/actions/runs/35520121372) | **PASS**, drie natuurlijke workerroutes per omgeving, daarna 12/12 readiness; geen config-/sleutel-/PID-wijziging |
+| Geïnstalleerde stagingbackup en readiness vóór promotie | [35522360626](https://github.com/nxttrack/platform/actions/runs/35522360626), [35522322521](https://github.com/nxttrack/platform/actions/runs/35522322521) | **PASS**, werkelijke backup via installed current-symlink, 7 buckets/48 objecten, nieuwe operationsversie; runtimecontrole beide omgevingen geslaagd |
+| Nieuwe GO en productiepromotie | Exact 86132b2 | **OPEN** |
+| Aanvullende browsers, publieke routes, rollback en complete backups | Beide omgevingen exact 86132b2 | **OPEN** |
+| Volledige observatie en hoststabiliteit | 31 samples per omgeving, minstens 1.800 seconden, twee hostsnapshots | **OPEN** |
 
-De [geverifieerde preflightbundel](2026-09-20-v4-release-refresh/evidence/verified-preflight-summary.json)
-bindt de nieuwe CI en productiepreflights aan `1a72606d…`. De databasefingerprint omvat migratieversies,
-schema-/RLS-aantallen en aantallen Auth-gebruikers/Storage-objecten, niet alle datarijen.
-PR-CI en beperkte live tests vervangen de volledige canonical gate niet. Overgeslagen
-verplichte releasegates tellen niet als PASS. De historische PR #98-CI draaide op GitHub-mergecommit
-`d7c5f02d415d9290d20929309b3b32145352f3bd`; de reparatiebron is
-`94109882c6812d6fa0f6ed698e74ff5c84f919bc`. De live precheck gebruikte opsbron
-`2f2aacd0ab1926eda74e982cd419573b0c3dfaa1` en wijzigde de applicatierelease niet.
+De nieuwe [CI-controle](2026-09-20-v4-release-refresh/evidence/r2-verified-ci-summary.json) en
+[productiepreflights](2026-09-20-v4-release-refresh/evidence/r2-verified-production-preflight.json)
+binden het bewijs aan `86132b2`. De databasefingerprint omvat migratieversies, schema-/RLS-aantallen
+en aantallen Auth-gebruikers/Storage-objecten, niet alle datarijen. Overgeslagen verplichte
+releasegates tellen niet als PASS. De volgende secties beschrijven de eerdere pogingen en zijn
+historisch; uitspraken over een toenmalige finale kandidaat gelden uitsluitend voor de genoemde SHA.
 
 ## Drie mislukte stagingpogingen en hun reparaties
 
@@ -205,7 +193,7 @@ binnen de viewport. Kleinere instructeurstatistieklabels blijven krap; de bestaa
 clipping blijft afzonderlijk beschreven. De volledige herhaling [35516843435](https://github.com/nxttrack/platform/actions/runs/35516843435)
 voert opnieuw de oorspronkelijke suite zonder deze instrumentatie uit en moet volledig slagen.
 
-## Zesde volledige stagingpoging: definitief geslaagd
+## Historische zesde stagingpoging: 1a geslaagd
 
 [35516843435](https://github.com/nxttrack/platform/actions/runs/35516843435) slaagde op de ongewijzigde
 canonical bron `1a72606d5fd7bf72c382fcc5215c3419dfb689e1`: alle dertien verplichte gates zijn daadwerkelijk
@@ -233,9 +221,58 @@ slaagde tegenover deze finale release. Historisch 6b-bewijs en pin bleven bytege
 check-only accepteerde compatibiliteit. Actieve release, configuratie, immutable identities en PID
 bleven behouden. Er is geen rollback uitgevoerd.
 
-## Promotie en bruikbaarheid: nog af te ronden
+## Eerste productieovergang en ontdekte operationele blokkade
 
-De definitieve GO bindt `1a72606d5fd7bf72c382fcc5215c3419dfb689e1` aan succesvolle canonical CI, volledige staginggate,
+Canonical [productierun 35518945668](https://github.com/nxttrack/platform/actions/runs/35518945668)
+activeerde exact `1a72606d…` na succesvolle snapshot van 6b, bron-/bewijsbinding, build en controles.
+Er zijn geen migraties uitgevoerd; ownerbootstrap bleef uit. Releaseartifact `10608091264`, digest
+`sha256:cdd7354ad5c93e9fd4f147280179458a954e77c7dd6b735c3834ee911026966d`, is op oorspronkelijke
+ZIP, SHA, stagingrun, preflights en GO-permalink geverifieerd. Bij de eerste healthpoll direct na
+restart trad één HTTP 502 op; drie seconden later slaagde health. Dit lag vóór de observatie en
+is geen claim van onderbrekingsvrije deployment. De twaalf afzonderlijke publieke route-, health-
+en testharnesschecks slaagden om 15:16:35–38 UTC.
+
+De eerste aanvullende browserrun `35519112471` stopte vóór enige sessieaanmaak op een te vroege
+URL-assertie na een streamed redirect. Lokale read-only diagnose zag `/platform` bij DOMContentLoaded
+na 81/99 ms en de juiste `/login` na 181/194 ms, met zichtbare velden en actieve loginbutton.
+Opscommit `80c19a40906cdb7d74320d8dfd99e415db4cc013` wacht binnen het bestaande budget van 30 seconden
+op exacte origin/login en zichtbare velden; de bestaande assertie blijft staan. Matrix `fail-fast=false`
+laat beide omgevingen hun eigen controle en sessiecleanup afronden. Vijf lokale browserregressies en
+drie bestaande unitcontracts slagen. Herhaling [35519538037](https://github.com/nxttrack/platform/actions/runs/35519538037)
+slaagde: productie 23/23 en staging 41/41 controles, beide artifactdigests geverifieerd. Bestaande
+wachtwoorden, eigen tijdelijke sessieopruiming en ongewijzigde tenantinventaris zijn expliciet bewezen.
+De vijf werkelijk bekeken main-regiobeelden hebben begrensde capturebeperkingen en bewijzen alleen
+1a; zij zijn geen volledige platformbrede visuele goedkeuring.
+
+Beginhostrun `35519073616` bevestigde app-PIDs staging188885/production193372 en Caddy1622, actief,
+NRestarts0 en juiste identiteit. Eerste probes `35519137480`/`35519139377` slaagden elk voor 21 checks,
+inclusief daadwerkelijke heartbeat HTTP202, met `alerts=false`. Rollback check-only `35519188853`
+slaagde voor 1a→historische6b en behield runtime/configuratie/PID. Deze deelresultaten vervangen
+geen volledige operationele gereedheid.
+
+[Readiness 35519287746](https://github.com/nxttrack/platform/actions/runs/35519287746) faalde in beide
+omgevingen uitsluitend op `recent-successful-worker-ticks`; de andere elf controles slaagden,
+inclusief exacte SHA, geïnstalleerde versie, services/cron, private sleutel en volledige recente
+versleutelde backup. Root en onafhankelijke reviewer reproduceerden de oorzaak: Node resolveert
+`import.meta.url` naar de versiedirectory, terwijl `argv[1]` het `current`-symlinkpad houdt; de directe
+vergelijking is daardoor false en beide CLI-bodies worden niet uitgevoerd. Dit is een echte
+operationele fout, geen verzwakte check of ongeduldige healthpoll.
+
+PR100 normaliseert `argv[1]` met `realpathSync` in `run-scheduled-jobs.mjs` én
+`backup-storage-daily.mjs`. Alleen die twee operationele bestanden en zes subprocessregressies
+wijzigen; applicatie, migraties en dependencies blijven bytegelijk aan 1a. De twee symlinktests
+faalden op de oorspronkelijke code en alle 23 gerichte operations-/backuptests slagen op de reparatie.
+De tests injecteren een ontbrekende runtime-env en verbieden netwerk. Bronreview is onafhankelijk
+bevestigd; canonical CI en volledige nieuwe releasevalidatie volgen.
+
+Observatie `15:17:20.033Z`–`15:25:13.365Z` is bewust onderbroken: acht samples, nul healthfailures,
+`complete=false`, `interruptedBy=SIGINT`, status failed. Er wordt geen dertigminutenresultaat geclaimd.
+De definitieve gereedheid blijft open tot natuurlijke workerticks en het werkelijk uitvoeren van
+de gerepareerde geïnstalleerde backup aantoonbaar slagen, naast de nieuwe volledige releasegates.
+
+## Eisen voor de nieuwe promotie en bruikbaarheid
+
+De nieuwe GO bindt `86132b20455c083cf52a2a0de0713b3c363c7831` aan succesvolle canonical CI, volledige staginggate,
 56 Priority A-screenshots met gedelegeerde visuele review, foundation en ongewijzigde dry-run.
 Het ingevulde GO-record moet duurzaam op de opsbranch staan vóór productiepromotie. De deploy
 behoudt het releaseartifact; health moet HTTP 200, `ok=true`, juiste omgeving, exacte `commitSha`
@@ -251,7 +288,7 @@ Alleen eigen tijdelijke sessies worden ingetrokken; owner, wachtwoord, overige s
 tenantaantal blijven behouden. Bootstrap/reset blijven uit; geen productietenants of uitnodigingen.
 
 Omdat de repository openbaar is, beperkt opscommit `c10fce8d28851b10b36f49837d550e58eac68cbc`
-de screenshots van deze aanvullende verifier tot de **main-regio**, zonder globale accountheader/sidebar.
+de screenshots van deze aanvullende verifier tot de **main-regio**. De eerdere beelden bevatten toch deels een door de browser meegetekende vaste header; de opnamegrens is dus geen garantie dat de gehele shell ontbreekt.
 Zichtbare accountmail of ingevulde e-mail-/wachtwoordvelden blokkeren vóór capture; het JSON-rapport
 neemt geen ruwe assertion-, navigatie- of databasefouten over. De [privacywijziging](2026-09-20-v4-release-refresh/evidence/browser-public-evidence-amendment.json)
 verandert uitsluitend de opsverifier, niet de canonical app-SHA, authenticatie of lokale sessiecleanup.
@@ -269,8 +306,8 @@ SHA-/versioned-voorwaarden niet.
 
 ## Bestaande configuratie, herstel en productgrenzen
 
-Dit is een gewone V4-verversing. De [actuele scopevergelijking](2026-09-20-v4-release-refresh/evidence/application-scope-comparison.json)
-legt exact de zes gewijzigde applicatiebestanden tussen productie `6b3c9abb…` en eindbron `1a72606d…`
+Dit is een gewone V4-verversing. De [historische 6b→1a-scopevergelijking](2026-09-20-v4-release-refresh/evidence/application-scope-comparison.json)
+legt exact de zes gewijzigde applicatiebestanden tussen productie `6b3c9abb…` en de toenmalige eindbron `1a72606d…`
 vast. De [historische vergelijking](2026-09-20-v4-release-refresh/evidence/superseded-b551-runtime-equivalence.json)
 bevestigt bytegelijke applicatie-runtime, packages, migraties en dependencybestanden **uitsluitend tussen
 productie `6b3c9abb…` en de historische kandidaat `b5511f16…`**, met `apps/web/tests` uitgesloten.

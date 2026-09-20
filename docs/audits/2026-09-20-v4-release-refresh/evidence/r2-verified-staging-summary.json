@@ -1,0 +1,80 @@
+{
+  "verifiedAt": "2026-09-20T16:21:40.794Z",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "runId": "35520266317",
+  "artifactId": 10609050904,
+  "artifactDigest": "sha256:45b4cbef21f3a13e9698091f821dc380aaa12af6cd235269e5d42e059c78a90c",
+  "requiredGates": [
+    {
+      "name": "Phase 16 operational flow validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate required seven-theme parent and child portal matrix",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 intake-to-placement browser mutation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 instructor browser mutations",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 parent self-service browser mutations",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 tenant-admin browser mutations",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 role and tenant isolation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Sprint 4 accessibility and performance budgets",
+      "conclusion": "success"
+    },
+    {
+      "name": "Communicationhub and Badge Studio browser validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Premium release browser validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Capture Priority A staging visual evidence",
+      "conclusion": "success"
+    },
+    {
+      "name": "Phase 15 staging truth and security validation",
+      "conclusion": "success"
+    },
+    {
+      "name": "Write release evidence",
+      "conclusion": "success"
+    }
+  ],
+  "cleanup": "success",
+  "persistence": "success",
+  "promotionEvidence": [
+    {
+      "id": "35520268195",
+      "label": "foundation audit",
+      "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831"
+    },
+    {
+      "id": "35520269819",
+      "label": "migration rehearsal",
+      "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831"
+    },
+    {
+      "id": "35520266317",
+      "label": "staging release",
+      "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831"
+    }
+  ]
+}

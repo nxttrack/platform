@@ -1,0 +1,25 @@
+{
+  "verifiedAt": "2026-09-20T16:24:47.960931+00:00",
+  "runId": "35522394686",
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35522394686",
+  "operationsSourceSha": "a54d451571bc10ab3534ee9d404aee49c00e1ab7",
+  "canonicalRuntimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "artifactId": 10609106881,
+  "artifactDigest": "sha256:1a30d6a2b387898ad2211165fa63d15e7e4c32f303f79c1cc6eea529d9e0cda1",
+  "originalZipDigestVerified": true,
+  "historicalEvidenceOriginalSourceVerified": true,
+  "historicalOriginalRunId": "35474984786",
+  "historicalOriginalArtifactId": 10594980153,
+  "historicalOriginalArtifactDigest": "sha256:a8213c8d534a1d45c8d290c30241122d88ca11487cec0d7451fe63abb7b1f685",
+  "historicalRelease": "/var/www/nxttrack/staging/releases/rollback-20260919230221-6b3c9ab",
+  "checkOnlyCompatibility": "passed",
+  "activationPerformed": false,
+  "unchanged": {
+    "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+    "historicalSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+    "runtimeUnchanged": true,
+    "configurationUnchanged": true,
+    "immutableIdentitiesUnchanged": true,
+    "serviceProcessUnchanged": true
+  }
+}

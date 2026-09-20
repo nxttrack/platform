@@ -1,0 +1,78 @@
+{
+  "runId": "35520266317",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "test": "admin creates the core, planning, billing, document and communication chain",
+  "project": "chromium-desktop",
+  "attempts": 2,
+  "firstAttempt": "timeout",
+  "timeoutMs": 180000,
+  "timeoutLocation": "apps/web/tests/e2e/helpers/admin-sign-in.ts:67",
+  "pendingOperation": "await response.finished()",
+  "secondAttempt": "passed",
+  "secondAttemptDurationSeconds": 40.5,
+  "playwrightClassification": "flaky",
+  "diagnosticEvents": [
+    {
+      "event": "fields-before-submit",
+      "elapsedMs": 868,
+      "fieldsPresent": true
+    },
+    {
+      "event": "submit-click",
+      "elapsedMs": 876
+    },
+    {
+      "event": "login-request",
+      "elapsedMs": 944
+    },
+    {
+      "event": "login-response",
+      "elapsedMs": 1827,
+      "status": 200
+    },
+    {
+      "event": "login-network-failure",
+      "elapsedMs": 2655
+    },
+    {
+      "event": "login-final-location",
+      "elapsedMs": 188098,
+      "destination": "expected",
+      "explicitError": false
+    },
+    {
+      "event": "fields-before-submit",
+      "elapsedMs": 730,
+      "fieldsPresent": true
+    },
+    {
+      "event": "submit-click",
+      "elapsedMs": 735
+    },
+    {
+      "event": "login-request",
+      "elapsedMs": 891
+    },
+    {
+      "event": "login-response",
+      "elapsedMs": 2401,
+      "status": 200
+    },
+    {
+      "event": "protected-ui",
+      "elapsedMs": 3597
+    },
+    {
+      "event": "protected-follow-up",
+      "elapsedMs": 4480,
+      "status": 200
+    },
+    {
+      "event": "login-final-location",
+      "elapsedMs": 4481,
+      "destination": "expected",
+      "explicitError": false
+    }
+  ],
+  "cause": "Unknown; response.finished remained pending until the test timeout. The first attempt already received HTTP 200 and ended at the expected destination. No evidence establishes root cause."
+}

@@ -1,0 +1,63 @@
+{
+  "runId": "35519538037",
+  "reviewedAt": "2026-09-20T15:29:37.640206+00:00",
+  "runtimeSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "verifierSourceSha": "80c19a40906cdb7d74320d8dfd99e415db4cc013",
+  "method": "Direct view_image inspection of all five original PNGs; no edited images or authenticated browser actions by reviewer. ZIP digest and behavior-contract verification are separately owned by communication reviewer.",
+  "images": [
+    {
+      "path": "production/platform-onboarding.png",
+      "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+      "bytes": 335251,
+      "width": 1192,
+      "height": 1149,
+      "actuallyViewed": true
+    },
+    {
+      "path": "staging/platform-onboarding.png",
+      "sha256": "49c3c85a8c4406fa35d3a84671731b7d79d183fb1debfae804acd2946096ebf1",
+      "bytes": 335251,
+      "width": 1192,
+      "height": 1149,
+      "actuallyViewed": true
+    },
+    {
+      "path": "production/platform-themes.png",
+      "sha256": "89ee9426c7e9bb4722c0d7ac2aaa5231c24cc1c975e52f6587d7e40c9e774ec4",
+      "bytes": 301257,
+      "width": 1192,
+      "height": 1926,
+      "actuallyViewed": true
+    },
+    {
+      "path": "staging/platform-themes.png",
+      "sha256": "d8dde6cc0d7af07719967cf79acd360c1bab43a0460fa13d615252f42ba26ea9",
+      "bytes": 1326387,
+      "width": 1192,
+      "height": 8083,
+      "actuallyViewed": true
+    },
+    {
+      "path": "staging/child-journey.png",
+      "sha256": "ec257b8df1b57959358f4579f0378ef7392c77656c182fcc5a97abd491de09a2",
+      "bytes": 1122800,
+      "width": 1140,
+      "height": 1909,
+      "actuallyViewed": true
+    }
+  ],
+  "observations": [
+    "Both onboarding main regions show the nine-step navigation, organization fields, Next action and empty run list. No account email or filled credential field is visible.",
+    "Both theme pages show all seven built-in version 3.0.0 theme cards, collapsed preview toggles, import/search controls and tenant-assignment area. Production correctly has no tenant assignments; staging has fixture tenants and historical audit events.",
+    "The staging child main region displays the Ocean Quest background, progress path, completed badge, map controls and three score totals. No error page is shown."
+  ],
+  "limitations": [
+    "These are main-locator captures, not full application-shell coverage. The fixed platform header is nevertheless painted over the top edge of the two platform pages and partially covers their titles; this capture does not establish unobstructed full-page rendering.",
+    "The long staging catalogue capture is downscaled when viewed as a whole; this review confirms page composition, not legibility of every historical audit event or assignment control.",
+    "The child capture contains a large blank lower area and only part of the animated mascot in that frame; the image alone does not establish the cause or full scrolling/animation behavior.",
+    "Known expanded platform catalogue preview clipping remains unchanged and was not reopened in this bounded check. No general platform-wide visual GO is claimed.",
+    "The runtime remains historical 1a72606 for this evidence. The scheduled-worker/backup CLI fix and the next canonical release require separate final qualification."
+  ],
+  "newBlockingVisualDefectEstablished": false,
+  "recommendation": "No additional blocker established in the visible main regions. This bounded post-deploy visual record does not close the independent scheduled-operations blocker or approve the next release."
+}

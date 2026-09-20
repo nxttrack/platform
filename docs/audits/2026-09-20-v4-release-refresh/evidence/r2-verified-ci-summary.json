@@ -1,0 +1,46 @@
+{
+  "checkedAt": "2026-09-20T15:50:36.338168+00:00",
+  "runId": 35520248010,
+  "runUrl": "https://github.com/nxttrack/platform/actions/runs/35520248010",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "result": "passed",
+  "stepsPassed": 26,
+  "counts": {
+    "unit": {
+      "tests": 596,
+      "suites": 9,
+      "pass": 596,
+      "fail": 0,
+      "cancelled": 0,
+      "skipped": 0,
+      "todo": 0
+    },
+    "Run local browser smoke tests": {
+      "passed": 102
+    },
+    "Validate Journey timeline in Chromium Firefox and WebKit": {
+      "skipped": 35,
+      "passed": 82
+    }
+  },
+  "newOperationsCliRegressionTestCount": 6,
+  "responsiveRegressionPassedLines": [
+    "2026-09-20T15:43:11.6228531Z   \u2713   10 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (2.0s)",
+    "2026-09-20T15:43:13.0331308Z   \u2713   17 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (1.4s)",
+    "2026-09-20T15:43:15.2093596Z   \u2713   18 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (2.2s)",
+    "2026-09-20T15:43:16.6901761Z   \u2713   19 [journey-chromium] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (1.5s)",
+    "2026-09-20T15:45:59.2121933Z   \u2713   48 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (2.6s)",
+    "2026-09-20T15:46:00.4689373Z   \u2713   49 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (1.2s)",
+    "2026-09-20T15:46:02.5943457Z   \u2713   50 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (2.1s)",
+    "2026-09-20T15:46:04.0811834Z   \u2713   51 [journey-firefox] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (1.5s)",
+    "2026-09-20T15:47:04.4235451Z   \u2713   87 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 390px viewport and the wizard remains usable (7.3s)",
+    "2026-09-20T15:47:08.1812757Z   \u2713   91 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 390px viewport (3.7s)",
+    "2026-09-20T15:47:15.3991573Z   \u2713   96 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:4:7 \u203a 40 intake programs stay inside a 768px viewport and the wizard remains usable (7.2s)",
+    "2026-09-20T15:47:19.0594363Z   \u2713   97 [journey-webkit] \u203a tests/e2e/journey-intake-responsive.spec.ts:30:7 \u203a planning and instructor controls stay inside a 768px viewport (3.6s)"
+  ],
+  "exactSourceArtifact": {
+    "id": 10607314612,
+    "digest": "sha256:25c98977e92201c79b1963256d19c21b1588cecfabb091b85eaf3268f03e7a38",
+    "originDigestAndContentVerified": true
+  }
+}

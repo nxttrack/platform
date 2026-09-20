@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "targets": [
+    {
+      "environment": "staging",
+      "url": "https://staging.nxttrack.nl/api/health",
+      "checkedAt": "2026-09-20T16:25:58.896696+00:00",
+      "httpStatus": 200,
+      "ok": true,
+      "observedEnvironment": "staging",
+      "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    },
+    {
+      "environment": "production",
+      "url": "https://nxttrack.nl/api/health",
+      "checkedAt": "2026-09-20T16:25:59.224992+00:00",
+      "httpStatus": 200,
+      "ok": true,
+      "observedEnvironment": "production",
+      "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "database": "pass",
+      "schemaCompatibility": "pass"
+    }
+  ]
+}

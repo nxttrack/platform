@@ -1,0 +1,73 @@
+{
+  "runId": 35519073616,
+  "result": "passed",
+  "allObservedBeforeWindowStart": true,
+  "reports": [
+    {
+      "target": "production",
+      "artifactId": 10607388025,
+      "digest": "sha256:7834581c34f4b3889f362cf76c19f9c3d3586da627cd8d9bbb7cdefaf41445f9",
+      "sourceSha": "1e106340837236abe848010ff6c74f0d8a06b67c",
+      "snapshot": {
+        "target": "production",
+        "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+        "startedAt": "2026-09-20T15:17:06.518Z",
+        "status": "passed",
+        "services": {
+          "nxttrack-production": {
+            "observedAt": "2026-09-20T15:17:06.768Z",
+            "ActiveState": "active",
+            "SubState": "running",
+            "ActiveEnterTimestamp": "Sun 2026-09-20 15:15:57 UTC",
+            "MainPID": 193372,
+            "NRestarts": 0
+          },
+          "caddy": {
+            "observedAt": "2026-09-20T15:17:06.780Z",
+            "ActiveState": "active",
+            "SubState": "running",
+            "ActiveEnterTimestamp": "Sun 2026-09-13 20:49:35 UTC",
+            "MainPID": 1622,
+            "NRestarts": 0
+          }
+        },
+        "health": "passed",
+        "immutableIdentity": "passed-and-unchanged",
+        "finishedAt": "2026-09-20T15:17:06.780Z"
+      }
+    },
+    {
+      "target": "staging",
+      "artifactId": 10606989119,
+      "digest": "sha256:8ff55f5aa08fff785a7880ebe0e5bb57dceff8619ca20637e2611ee41c4b54d5",
+      "sourceSha": "1e106340837236abe848010ff6c74f0d8a06b67c",
+      "snapshot": {
+        "target": "staging",
+        "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+        "startedAt": "2026-09-20T15:16:54.510Z",
+        "status": "passed",
+        "services": {
+          "nxttrack-staging": {
+            "observedAt": "2026-09-20T15:16:54.962Z",
+            "ActiveState": "active",
+            "SubState": "running",
+            "ActiveEnterTimestamp": "Sun 2026-09-20 14:34:56 UTC",
+            "MainPID": 188885,
+            "NRestarts": 0
+          },
+          "caddy": {
+            "observedAt": "2026-09-20T15:16:54.983Z",
+            "ActiveState": "active",
+            "SubState": "running",
+            "ActiveEnterTimestamp": "Sun 2026-09-13 20:49:35 UTC",
+            "MainPID": 1622,
+            "NRestarts": 0
+          }
+        },
+        "health": "passed",
+        "immutableIdentity": "passed-and-unchanged",
+        "finishedAt": "2026-09-20T15:16:54.984Z"
+      }
+    }
+  ]
+}

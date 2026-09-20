@@ -1,0 +1,20 @@
+{
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "runId": 35520266317,
+  "deployJobId": 106103019362,
+  "deployPassed": true,
+  "operations": [
+    {
+      "target": "staging",
+      "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "installationPrerequisites": "pass"
+    },
+    {
+      "target": "staging",
+      "digest": "8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490",
+      "cronEntries": 2,
+      "installed": true
+    }
+  ],
+  "naturalWorkerTicksNotYetVerified": true
+}

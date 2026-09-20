@@ -1,0 +1,25 @@
+{
+  "runId": "35519677348",
+  "reviewedSourceSha": "75a7de8dc16dea68f88dcdb424f81b30d5c692bf",
+  "testedCommitSha": "0f09274d4c280c6d0454a44313ac051bf714bb5b",
+  "sameTree": true,
+  "treeSha": "c78f481bea8db0d78d18da3da927aed8d502b97e",
+  "testedParents": [
+    "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+    "75a7de8dc16dea68f88dcdb424f81b30d5c692bf"
+  ],
+  "artifactId": 10607943031,
+  "artifactDigest": "sha256:9760b2f1ceed010ec2fac83c5b021fa6aecb419722df0f0bc8e0aaffb39243eb",
+  "artifactSha256Verified": true,
+  "exactSource": {
+    "schemaVersion": 1,
+    "purpose": "nxttrack-exact-source-sha",
+    "repository": "nxttrack/platform",
+    "commitSha": "0f09274d4c280c6d0454a44313ac051bf714bb5b",
+    "refName": "100/merge",
+    "workflowRunId": "35519677348",
+    "createdAt": "2026-09-20T15:28:59.842Z"
+  },
+  "workflowCompletionPending": false,
+  "workflowConclusion": "success"
+}

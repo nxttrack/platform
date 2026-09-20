@@ -1,0 +1,59 @@
+{
+  "reviewedAt": "2026-09-20T16:06:40.931029+00:00",
+  "reviewer": "coordinating release agent",
+  "releaseSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "stagingRun": 35520266317,
+  "artifactId": 10608935985,
+  "artifactZipSha256": "21f5c25c84e6ff20851bdb3cdd2161c4cf8d5e9182fe97b295399748b4981f4f",
+  "images": [
+    {
+      "sourceRelativePath": "tenant-intake/mobile.png",
+      "retainedFile": "tenant-intake-mobile.png",
+      "bytes": 133071,
+      "sha256": "9d4a3496a94977a2b91ce9a5ad4c540aba893dc054167bb16099e9b902d10a71",
+      "width": 390,
+      "height": 1559,
+      "expectedWidth": 390,
+      "actuallyViewed": true
+    },
+    {
+      "sourceRelativePath": "tenant-intake/tablet.png",
+      "retainedFile": "tenant-intake-tablet.png",
+      "bytes": 164853,
+      "sha256": "a31462e21ff600109c3d91d64cfc9d1e2415fe7974ff3196d305532481019997",
+      "width": 768,
+      "height": 1416,
+      "expectedWidth": 768,
+      "actuallyViewed": true
+    },
+    {
+      "sourceRelativePath": "admin-agenda/mobile.png",
+      "retainedFile": "admin-agenda-mobile.png",
+      "bytes": 243140,
+      "sha256": "31b16839cc9c953709a1288e8b1ec0d4b58f352f114c5f7cd5acaacb9ef04138",
+      "width": 390,
+      "height": 3089,
+      "expectedWidth": 390,
+      "actuallyViewed": true
+    },
+    {
+      "sourceRelativePath": "instructor-group/tablet.png",
+      "retainedFile": "instructor-group-tablet.png",
+      "bytes": 219222,
+      "sha256": "247e359637adc188696366c7a3c68041acefc56355d9b8cc7271f8efceb84b4d",
+      "width": 768,
+      "height": 1228,
+      "expectedWidth": 768,
+      "actuallyViewed": true
+    }
+  ],
+  "decision": "passed within bounded layout scope",
+  "observations": [
+    "Both intake widths keep child field, progress and next-step controls within viewport. Program cards scroll inside their own strip.",
+    "Mobile agenda keeps planning actions and day cards within document width.",
+    "Tablet instructor group keeps session selection, focus, attendance and save controls within document width.",
+    "Registered statistic label remains cramped next to adjacent statistic; existing accepted bounded issue.",
+    "Mobile intake full-page capture paints sticky header partway down the page; this image alone does not establish fixed-header behavior during scrolling."
+  ],
+  "scope": "Actual review of four original fictional staging captures, not all 56 images or a general full-platform pixel-perfect claim."
+}

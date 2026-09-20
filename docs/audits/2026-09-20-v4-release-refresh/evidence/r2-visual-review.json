@@ -1,0 +1,203 @@
+{
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "runId": "35520266317",
+  "reviewedAt": "2026-09-20T16:20:04.780425+00:00",
+  "method": "Direct visual inspection of original PNGs with view_image; metadata validation recorded separately.",
+  "actuallyViewedThemeImages": [
+    "nxttrack-default-parent-dashboard-desktop-1440.png",
+    "nxttrack-default-child-dashboard-mobile-390.png",
+    "dolphin-bay-parent-dashboard-desktop-1440.png",
+    "dolphin-bay-child-dashboard-mobile-390.png",
+    "turtle-trails-parent-dashboard-desktop-1440.png",
+    "turtle-trails-child-dashboard-mobile-390.png",
+    "polar-splash-parent-dashboard-desktop-1440.png",
+    "polar-splash-child-dashboard-mobile-390.png",
+    "coastal-explorer-parent-dashboard-desktop-1440.png",
+    "coastal-explorer-child-dashboard-mobile-390.png",
+    "nationaal-zwem-abc-parent-dashboard-desktop-1440.png",
+    "nationaal-zwem-abc-child-dashboard-mobile-390.png",
+    "ocean-quest-parent-dashboard-desktop-1440.png",
+    "ocean-quest-child-dashboard-mobile-390.png"
+  ],
+  "actuallyViewedPriorityAImages": [
+    "tenant-intake/mobile.png",
+    "tenant-intake/tablet.png",
+    "admin-agenda/mobile.png",
+    "instructor-group/tablet.png",
+    "parent-home/desktop.png",
+    "parent-lessons/mobile.png",
+    "parent-progress/mobile.png",
+    "instructor-home/desktop.png",
+    "instructor-student/desktop.png",
+    "admin-home/desktop.png",
+    "admin-waitlist/mobile.png",
+    "tenant-home/desktop.png"
+  ],
+  "themeObservations": [
+    "All seven themes render their backgrounds, colors and applicable mascots in the current-run parent-desktop and child-mobile sample.",
+    "Parent navigation, child bottom navigation and journey controls are present; no new blocking render defect established in these fourteen views.",
+    "Journey maps pan within their region; edge labels clip and mobile map controls overlay parts of the map. These are existing bounded presentation limitations, separate from document overflow."
+  ],
+  "knownNonblockingLimitations": [
+    "Expanded platform theme catalogue preview clipping remains unchanged and documented; this review does not claim general platform-wide visual approval.",
+    "The instructor tablet GEREGISTREERD summary label remains tightly spaced against its next card; this cosmetic limitation does not hide the score or primary controls."
+  ],
+  "metadataValidation": {
+    "themeArtifactDigestVerified": true,
+    "themeCanonicalRenders": 322,
+    "themeDashboardViewportCases": 196,
+    "themeManifestEntries": 518,
+    "selectedThemePngsRetained": 42,
+    "representedThemes": 7,
+    "priorityAComplete": true,
+    "priorityAArtifactDigestVerified": true,
+    "priorityAManifestMatches": true,
+    "priorityAPngsRetained": 56,
+    "priorityAHashesVerified": 56,
+    "priorityAWidthsPassed": 56,
+    "priorityAWidthsFailed": 0,
+    "priorityAMissingFiles": 0,
+    "priorityAExtraFiles": 0,
+    "priorityARuntimeFailures": 0
+  },
+  "blockingVisualDefectsObserved": [],
+  "fullVisualReleaseGo": true,
+  "remaining": "Staging qualification is complete. R2 production activation, post-deployment verification and operational observation are separate root-owned steps.",
+  "priorityAObservations": [
+    "All four historically overflowing cases fit the current release viewport: intake390/768, agenda390 and instructor768. The child-name field/Next control, planning rows and instructor attendance/note/save controls remain visible.",
+    "Parent planning/progress, instructor home/student, admin home/waitlist and public tenant home are readable in the twelve-image sample, with primary controls present.",
+    "The full-page mobile captures show fixed/sticky navigation at the captured scroll position. These captures alone do not establish all scrolling behavior."
+  ],
+  "reviewedImageHashes": [
+    {
+      "path": "theme-screenshots/nxttrack-default-parent-dashboard-desktop-1440.png",
+      "sha256": "8b479731fc4d509e92388cd05c2b6e5274c9cd879a42bb37d8fe38fa7d4d940f"
+    },
+    {
+      "path": "theme-screenshots/nxttrack-default-child-dashboard-mobile-390.png",
+      "sha256": "261c0ee8813e47815a1c93785818d8ccb8f924832e5ce034fb2b5668bca6e575"
+    },
+    {
+      "path": "theme-screenshots/dolphin-bay-parent-dashboard-desktop-1440.png",
+      "sha256": "7112f9b4cf63678c6284344b9703d8d1d193b4146e10daf63b506aa3c24d1804"
+    },
+    {
+      "path": "theme-screenshots/dolphin-bay-child-dashboard-mobile-390.png",
+      "sha256": "fbffb8e294b178a4925bb90390bd2810bafd332e54d26b39dd940a93fe5b0de4"
+    },
+    {
+      "path": "theme-screenshots/turtle-trails-parent-dashboard-desktop-1440.png",
+      "sha256": "d5d3ec2499e215b496794e0deef910ab98c3726a79e9c75cb017548aa2f3f07f"
+    },
+    {
+      "path": "theme-screenshots/turtle-trails-child-dashboard-mobile-390.png",
+      "sha256": "388df8f8169a7042379efd617f24cb73655460c7874219dfb7ea523bdf77f8aa"
+    },
+    {
+      "path": "theme-screenshots/polar-splash-parent-dashboard-desktop-1440.png",
+      "sha256": "0c988e01f12008fca1f092aad14a2bdf4444fc1817c071f014541e5509c33676"
+    },
+    {
+      "path": "theme-screenshots/polar-splash-child-dashboard-mobile-390.png",
+      "sha256": "b40783a2b541c1d179b19e8ba51b69eeebafc773795642ccbc5b60c676e7d206"
+    },
+    {
+      "path": "theme-screenshots/coastal-explorer-parent-dashboard-desktop-1440.png",
+      "sha256": "80d0ee67f2e1250a135be5b061eab3a1c4fe7f7d84eca23cbeead1c337fb1c99"
+    },
+    {
+      "path": "theme-screenshots/coastal-explorer-child-dashboard-mobile-390.png",
+      "sha256": "8933befa5b2587bc63c5c3f08b041e8ee63dff73255977809446bc7351c87d01"
+    },
+    {
+      "path": "theme-screenshots/nationaal-zwem-abc-parent-dashboard-desktop-1440.png",
+      "sha256": "760e7833aeae90f0533341736e7b10d0da2f59d83a461d1f76c2e6131d97a562"
+    },
+    {
+      "path": "theme-screenshots/nationaal-zwem-abc-child-dashboard-mobile-390.png",
+      "sha256": "03d069a1064209f214c40034fe543a7e439b7480d1d894f167d4433ef8426498"
+    },
+    {
+      "path": "theme-screenshots/ocean-quest-parent-dashboard-desktop-1440.png",
+      "sha256": "be3faf11cd98dec3a10c077d36a0e11b3f07d9faa950a67bf01255c2c8b49476"
+    },
+    {
+      "path": "theme-screenshots/ocean-quest-child-dashboard-mobile-390.png",
+      "sha256": "f906d8a119fac7d7636f925f843d3864b92c3276e9ce0b0833a0b7ff86b2af1f"
+    },
+    {
+      "path": "priority-a-visuals/tenant-intake/mobile.png",
+      "sha256": "9d4a3496a94977a2b91ce9a5ad4c540aba893dc054167bb16099e9b902d10a71"
+    },
+    {
+      "path": "priority-a-visuals/tenant-intake/tablet.png",
+      "sha256": "a31462e21ff600109c3d91d64cfc9d1e2415fe7974ff3196d305532481019997"
+    },
+    {
+      "path": "priority-a-visuals/admin-agenda/mobile.png",
+      "sha256": "31b16839cc9c953709a1288e8b1ec0d4b58f352f114c5f7cd5acaacb9ef04138"
+    },
+    {
+      "path": "priority-a-visuals/instructor-group/tablet.png",
+      "sha256": "247e359637adc188696366c7a3c68041acefc56355d9b8cc7271f8efceb84b4d"
+    },
+    {
+      "path": "priority-a-visuals/parent-home/desktop.png",
+      "sha256": "95cca1e9663d434fc6e3dc2f30839a78a91c223c54927547c0d7983b7877d738"
+    },
+    {
+      "path": "priority-a-visuals/parent-lessons/mobile.png",
+      "sha256": "1df9c04b5c9d14bce76482f80e371b833a01978b7a1d46d2f545c750c3bb0ca8"
+    },
+    {
+      "path": "priority-a-visuals/parent-progress/mobile.png",
+      "sha256": "9de88a118a72311d3ead9a1b1681f1bfdc9848b1c2e078c007bddb85ae59cad2"
+    },
+    {
+      "path": "priority-a-visuals/instructor-home/desktop.png",
+      "sha256": "f95f0930ffc686cde5cc1fa0b2f945b21e13df9aa09477b691811f6452f39d05"
+    },
+    {
+      "path": "priority-a-visuals/instructor-student/desktop.png",
+      "sha256": "0b3ba9430b6c363f6da79839077e5b0de343ba4dc2fc8369cf168e78822136f2"
+    },
+    {
+      "path": "priority-a-visuals/admin-home/desktop.png",
+      "sha256": "9079c032abf06521c7770494c22811105f3e92a3218e6e79e2e3d8cc2dc3b966"
+    },
+    {
+      "path": "priority-a-visuals/admin-waitlist/mobile.png",
+      "sha256": "13fb5a40180792b88400b1b151e0c6c10325bbe445d1d28f7e02de718b517d13"
+    },
+    {
+      "path": "priority-a-visuals/tenant-home/desktop.png",
+      "sha256": "3c6a626f0cbf907546a308f9cae3eef2268db227f7678a261ba259b8bb5f2ede"
+    }
+  ],
+  "delegatedVisualRecommendation": "GO within the bounded reviewed staging runtime scope on exact R2 source 86132b2. All13 gates, cleanup and durable persistence passed. No general platform-wide visual approval is claimed.",
+  "mandatoryGatesPassed": 13,
+  "cleanupRestoresPriorSettingsAndPreservesSessions": true,
+  "evidencePersistencePassed": true,
+  "independentWorkflowConfirmation": {
+    "runId": "35520266317",
+    "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+    "conclusion": "success",
+    "requiredGates": 13,
+    "cleanupAfterPhase15BeforeEvidence": true,
+    "releaseArtifactSourceAndRunMatch": true,
+    "phase15AndTenantAdminTestSummaries": [
+      {
+        "step": "Sprint 4 tenant-admin browser mutations",
+        "summary": "2026-09-20T15:59:57.0409085Z   1 flaky"
+      },
+      {
+        "step": "Phase 15 staging truth and security validation",
+        "summary": "2026-09-20T16:18:13.5941752Z   52 skipped"
+      },
+      {
+        "step": "Phase 15 staging truth and security validation",
+        "summary": "2026-09-20T16:18:13.5942245Z   140 passed (12.5m)"
+      }
+    ]
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "method": "Local CLI entrypoint reproduction; local env absent; no HTTP or remote access",
+  "results": [
+    {
+      "mode": "symlink",
+      "exitCode": 0,
+      "stdoutEmpty": true,
+      "stderrEmpty": true,
+      "missingEnvError": false,
+      "moduleResolutionError": false
+    },
+    {
+      "mode": "preserve-symlink",
+      "exitCode": 1,
+      "stdoutEmpty": true,
+      "stderrEmpty": false,
+      "missingEnvError": false,
+      "moduleResolutionError": true
+    },
+    {
+      "mode": "real-file",
+      "exitCode": 1,
+      "stdoutEmpty": true,
+      "stderrEmpty": false,
+      "missingEnvError": true,
+      "moduleResolutionError": false
+    }
+  ]
+}

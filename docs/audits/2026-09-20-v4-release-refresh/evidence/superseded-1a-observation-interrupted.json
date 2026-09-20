@@ -1,0 +1,17 @@
+{
+  "type": "summary",
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "startedAt": "2026-09-20T15:17:20.033Z",
+  "finishedAt": "2026-09-20T15:25:13.365Z",
+  "elapsedMs": 473331,
+  "durationMs": 1800000,
+  "intervalMs": 60000,
+  "expectedSamples": 31,
+  "completedSamples": 8,
+  "failedSampleCount": 0,
+  "failedSamples": [],
+  "interruptedBy": "SIGINT",
+  "fatalError": null,
+  "complete": false,
+  "status": "failed"
+}

@@ -1,0 +1,103 @@
+{
+  "checkedAt": "2026-09-20T15:35:58.368388+00:00",
+  "runId": 35519938480,
+  "operationSourceSha": "d0a259774cade5f3909d73aad0564d2c216286bf",
+  "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+  "result": "passed",
+  "reports": [
+    {
+      "target": "staging",
+      "artifactId": 10607778743,
+      "artifactDigest": "sha256:31a8ace4d472be47ad31bc072192e7bac2bae058ef3c7bdaf409ccecb36ba226",
+      "originalZipDigestVerified": true,
+      "sourceAndRunBindingVerified": true,
+      "result": {
+        "target": "staging",
+        "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+        "operationSourceSha": "d0a259774cade5f3909d73aad0564d2c216286bf",
+        "expectedOperationsDigest": "c98d9d7611e04ba1f9b1de84fc4ad67bf284266bedc3971a1a2ef3129ee6462d",
+        "startedAt": "2026-09-20T15:33:20.029Z",
+        "status": "passed",
+        "appRestarted": false,
+        "manualJobsRun": false,
+        "cronPathsRepaired": true,
+        "cronChanged": true,
+        "nodeVersion": "v24.18.0",
+        "versionDirectory": "/var/www/nxttrack/staging/shared/operations-v4/versions/c98d9d7611e04ba1f9b1de84fc4ad67bf284266bedc3971a1a2ef3129ee6462d",
+        "unrelatedCronEntriesUnchanged": true,
+        "naturalTickRequiredAfter": "2026-09-20T15:33:20.786Z",
+        "workerEvents": [
+          {
+            "at": "2026-09-20T15:34:01.586Z",
+            "target": "staging",
+            "route": "/api/internal/portal-themes/activate-scheduled",
+            "status": "pass"
+          },
+          {
+            "at": "2026-09-20T15:34:01.866Z",
+            "target": "staging",
+            "route": "/api/internal/offerings/expire",
+            "status": "pass"
+          },
+          {
+            "at": "2026-09-20T15:34:02.023Z",
+            "target": "staging",
+            "route": "/api/internal/email-outbox/process",
+            "status": "pass"
+          }
+        ],
+        "runtimeConfigurationKeysIdentityAndPidUnchanged": true,
+        "healthBeforeAndAfter": "passed",
+        "finishedAt": "2026-09-20T15:34:03.359Z"
+      }
+    },
+    {
+      "target": "production",
+      "artifactId": 10607209530,
+      "artifactDigest": "sha256:0436e12ea01efcf49da6fad1a90cd533e39d620ef0872cb43a559fec3ff03af6",
+      "originalZipDigestVerified": true,
+      "sourceAndRunBindingVerified": true,
+      "result": {
+        "target": "production",
+        "releaseSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+        "operationSourceSha": "d0a259774cade5f3909d73aad0564d2c216286bf",
+        "expectedOperationsDigest": "c98d9d7611e04ba1f9b1de84fc4ad67bf284266bedc3971a1a2ef3129ee6462d",
+        "startedAt": "2026-09-20T15:34:15.921Z",
+        "status": "passed",
+        "appRestarted": false,
+        "manualJobsRun": false,
+        "cronPathsRepaired": true,
+        "cronChanged": true,
+        "nodeVersion": "v24.18.0",
+        "versionDirectory": "/var/www/nxttrack/production/shared/operations-v4/versions/c98d9d7611e04ba1f9b1de84fc4ad67bf284266bedc3971a1a2ef3129ee6462d",
+        "unrelatedCronEntriesUnchanged": true,
+        "naturalTickRequiredAfter": "2026-09-20T15:34:16.297Z",
+        "workerEvents": [
+          {
+            "at": "2026-09-20T15:35:01.284Z",
+            "target": "production",
+            "route": "/api/internal/portal-themes/activate-scheduled",
+            "status": "pass"
+          },
+          {
+            "at": "2026-09-20T15:35:01.456Z",
+            "target": "production",
+            "route": "/api/internal/offerings/expire",
+            "status": "pass"
+          },
+          {
+            "at": "2026-09-20T15:35:01.600Z",
+            "target": "production",
+            "route": "/api/internal/email-outbox/process",
+            "status": "pass"
+          }
+        ],
+        "runtimeConfigurationKeysIdentityAndPidUnchanged": true,
+        "healthBeforeAndAfter": "passed",
+        "finishedAt": "2026-09-20T15:35:02.578Z"
+      }
+    }
+  ],
+  "appCodeChanged": false,
+  "canonicalFixStillRequired": true
+}

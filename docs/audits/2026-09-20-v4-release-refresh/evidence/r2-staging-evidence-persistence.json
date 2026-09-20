@@ -1,0 +1,9 @@
+{
+  "preserved": true,
+  "alreadyPresent": false,
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "runId": "35520266317",
+  "destination": "/var/www/nxttrack/staging/releases/20260920153935-86132b2/artifacts/release-evidence.json",
+  "artifactId": 10609050904,
+  "artifactDigest": "sha256:45b4cbef21f3a13e9698091f821dc380aaa12af6cd235269e5d42e059c78a90c"
+}

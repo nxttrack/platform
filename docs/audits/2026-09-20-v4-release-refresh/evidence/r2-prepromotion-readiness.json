@@ -1,0 +1,111 @@
+{
+  "runId": "35522322521",
+  "sourceSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+  "sourceRef": "main",
+  "verifiedAt": "2026-09-20T16:24:18.925004+00:00",
+  "workflowConclusion": "success",
+  "result": "passed",
+  "reports": [
+    {
+      "target": "staging",
+      "runtimeSha": "86132b20455c083cf52a2a0de0713b3c363c7831",
+      "checkedAt": "2026-09-20T16:19:06.065Z",
+      "ready": true,
+      "passed": 12,
+      "total": 12,
+      "checkIds": [
+        "maintenance-disabled",
+        "internal-jobs-enabled",
+        "service-active",
+        "service-enabled",
+        "cron-active",
+        "immutable-release-matches-env",
+        "public-runtime-health",
+        "workers-single-schedule",
+        "backup-single-schedule",
+        "recent-successful-worker-ticks",
+        "backup-key-private",
+        "fresh-complete-encrypted-backup"
+      ],
+      "operationsMode": "versioned",
+      "allConfiguredWorkerRoutesRecentAndSuccessful": true,
+      "workerRecencyContractSeconds": 300,
+      "workerRouteNamesNotEmbeddedInThisArtifact": true,
+      "backup": {
+        "createdAt": "2026-09-20T10:26:23.291Z",
+        "buckets": 7,
+        "objects": 43,
+        "encryptedArchivePresent": true,
+        "ageSecondsAtCheck": 21162.774,
+        "completeEnvironmentProjectAndNoPrefixContractPassed": true,
+        "backupKeyPrivateContractPassed": true
+      },
+      "artifactId": 10608712344,
+      "artifactDigest": "sha256:e7355133e309cb9cdbbb5429f57396f7c52bb14e3846070b1e09b4ff5e2c723f",
+      "originalZipDigestVerified": true,
+      "retainedOriginalZip": "staging.zip",
+      "retainedReport": "staging.json"
+    },
+    {
+      "target": "production",
+      "runtimeSha": "1a72606d5fd7bf72c382fcc5215c3419dfb689e1",
+      "checkedAt": "2026-09-20T16:19:18.487Z",
+      "ready": true,
+      "passed": 12,
+      "total": 12,
+      "checkIds": [
+        "maintenance-disabled",
+        "internal-jobs-enabled",
+        "service-active",
+        "service-enabled",
+        "cron-active",
+        "immutable-release-matches-env",
+        "public-runtime-health",
+        "workers-single-schedule",
+        "backup-single-schedule",
+        "recent-successful-worker-ticks",
+        "backup-key-private",
+        "fresh-complete-encrypted-backup"
+      ],
+      "operationsMode": "versioned",
+      "allConfiguredWorkerRoutesRecentAndSuccessful": true,
+      "workerRecencyContractSeconds": 300,
+      "workerRouteNamesNotEmbeddedInThisArtifact": true,
+      "backup": {
+        "createdAt": "2026-09-20T10:26:43.263Z",
+        "buckets": 7,
+        "objects": 0,
+        "encryptedArchivePresent": true,
+        "ageSecondsAtCheck": 21155.224,
+        "completeEnvironmentProjectAndNoPrefixContractPassed": true,
+        "backupKeyPrivateContractPassed": true
+      },
+      "artifactId": 10608967005,
+      "artifactDigest": "sha256:127afcde92379349f1c4f206ae1b57b123d7bda4ac0e7b7aeb1b31c84997e8ba",
+      "originalZipDigestVerified": true,
+      "retainedOriginalZip": "production.zip",
+      "retainedReport": "production.json"
+    }
+  ],
+  "workerEvidenceQualification": "Readiness proves every configured worker route has a latest PASS event younger than five minutes. Route names/count are not embedded in readiness artifacts. Separate allowlisted environment-variable evidence has EMAIL_SENDING_ENABLED=true for both environments; the canonical contract therefore selects three routes. Earlier cron-repair evidence explicitly records natural ticks for those three routes, and is historical corroboration, not a replacement for this fresh readiness check.",
+  "corroboration": [
+    {
+      "path": "../r2-prepromotion-operational-flags.json",
+      "purpose": "Allowlisted configuration: internal jobs and email sending enabled on both environments."
+    },
+    {
+      "path": "../cron-repair-35519938480/verification.json",
+      "purpose": "Historical explicit natural PASS events for theme activation, offer expiration and email-outbox routes; production temporary physical-path repair remains until R2 deployment."
+    },
+    {
+      "path": "../release-r2-state/staging-installed-operations.json",
+      "purpose": "Fresh staging deploy installed operations digest8e8ea26b64176533a3c0152bcf082d63aafa7b4a095f6f342c04ace6538b4490; this readiness check supplies subsequent natural worker recency confirmation."
+    }
+  ],
+  "limits": [
+    "Read-only verification only; no job invocation, service mutation, new backup, decryption or restore was performed by this review.",
+    "The backup check validates the complete seven-bucket manifest for the expected environment/project, no prefix or missing buckets, age under36h and an existing nonempty encrypted archive. ZIPdigest verification covers the readiness evidence, not a fresh decryption of storage archive bytes.",
+    "The versioned operations marker is reported by readiness; installed digest verification is provided separately by deployment evidence.",
+    "Production is still1a72606 in this prepromotion artifact; post-R2 production readiness requires a new check."
+  ]
+}
