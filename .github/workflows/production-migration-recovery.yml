@@ -37,6 +37,26 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  verify-development-browser:
+    name: repeat development filter browser regression
+    if: inputs.confirmation == 'VERIFY_V4_BROWSER_TEST'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Install and build the exact source
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm build
+      - name: Install WebKit and runtime libraries
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps webkit
+      - name: Repeat the filter, reload, dialog and history checks five times
+        run: pnpm --filter @nxttrack/web exec playwright test tests/e2e/journey-development.spec.ts --config=playwright.journey.config.ts --project=journey-webkit --grep 'development searches' --repeat-each=5 --workers=1
+
   schedule-storage:
     name: install and verify daily encrypted V4 storage backups
     if: inputs.confirmation == 'SCHEDULE_V4_STORAGE_BACKUPS'
