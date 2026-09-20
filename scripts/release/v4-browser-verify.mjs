@@ -35,7 +35,8 @@ try {
   await withSession(owner.email,adminOrigin,'platform',async page=>{
     for (const path of ['/platform','/platform/onboarding','/platform/themes','/platform/themes/import','/platform/themes/bindings','/platform/instellingen','/platform/packages','/platform/audit','/platform/support']) await checkPage(page,adminOrigin,path,'platform');
     await page.goto(`${adminOrigin}/platform/themes`,{waitUntil:'domcontentloaded'});
-    await page.locator('main').first().waitFor();
+    await page.getByRole('heading',{level:1,name:'Themabibliotheek'}).waitFor({state:'visible'});
+    await page.getByRole('link',{name:'Werelden aan een curriculum koppelen'}).waitFor({state:'visible'});
     await page.screenshot({path:new URL('platform-themes.png',out).pathname,fullPage:true});
   });
   if (target==='staging') {
