@@ -661,10 +661,11 @@ jobs:
     env:
       RELEASE_SHA: ${{ inputs.release_sha }}
       STAGED_SHA: ${{ inputs.staging_release_sha }}
-      HISTORICAL_SHA: 6b3c9abb686be198830f417e663ac94124d7066f
-      # Recorded by successful production deployment run 35477451482.
-      HISTORICAL_RELEASE: /var/www/nxttrack/production/releases/20260919235652-6b3c9ab
-      HISTORICAL_RUN_ID: "35477451482"
+      HISTORICAL_SHA: 1a72606d5fd7bf72c382fcc5215c3419dfb689e1
+      # Recorded by successful production deployment run 35518945668.
+      # Runtime rollback preserves the separately installed corrected operations version.
+      HISTORICAL_RELEASE: /var/www/nxttrack/production/releases/20260920151433-1a72606
+      HISTORICAL_RUN_ID: "35518945668"
     steps:
       - name: Confirm the exact promoted production candidate
         run: |
