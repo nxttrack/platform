@@ -1,0 +1,225 @@
+{
+  "preparedAt": "2026-09-20T10:50:50.125Z",
+  "canonicalSourceSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+  "pullRequest": "https://github.com/nxttrack/platform/pull/95",
+  "applicationDeploymentPerformed": false,
+  "databaseMigrationsApplied": false,
+  "definitionOfDone": "Ready to start the staging deployment and subsequently promote that same successful source to production.",
+  "validation": {
+    "unitPass": 573,
+    "browserSmokePass": 100,
+    "journeyPass": 70,
+    "journeyConditionalSkip": 35,
+    "failed": 0
+  },
+  "sourceRuns": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:39:48Z",
+      "databaseId": 35505697064,
+      "event": "push",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:49:28Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505697064"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:40:07Z",
+      "databaseId": 35505710155,
+      "event": "workflow_dispatch",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "Deployment readiness",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:40:48Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505710155"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:40:09Z",
+      "databaseId": 35505711475,
+      "event": "workflow_dispatch",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "Production foundation audit",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:41:28Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505711475"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:40:11Z",
+      "databaseId": 35505712974,
+      "event": "workflow_dispatch",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "Production migration rehearsal",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:40:35Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505712974"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:40:12Z",
+      "databaseId": 35505714243,
+      "event": "workflow_dispatch",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "Storage object backup",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:41:23Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505714243"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-09-20T10:40:13Z",
+      "databaseId": 35505715343,
+      "event": "workflow_dispatch",
+      "headSha": "4248c35ef61d498faa757f004855bb9ee714a3b3",
+      "name": "Storage object backup",
+      "status": "completed",
+      "updatedAt": "2026-09-20T10:40:41Z",
+      "url": "https://github.com/nxttrack/platform/actions/runs/35505715343"
+    }
+  ],
+  "runtimeEnvironments": [
+    {
+      "target": "production",
+      "checkedAt": "2026-09-20T10:40:42.005Z",
+      "ready": true,
+      "checks": [
+        {
+          "id": "maintenance-disabled",
+          "status": "pass"
+        },
+        {
+          "id": "internal-jobs-enabled",
+          "status": "pass"
+        },
+        {
+          "id": "service-active",
+          "status": "pass"
+        },
+        {
+          "id": "service-enabled",
+          "status": "pass"
+        },
+        {
+          "id": "cron-active",
+          "status": "pass"
+        },
+        {
+          "id": "immutable-release-matches-env",
+          "status": "pass"
+        },
+        {
+          "id": "public-runtime-health",
+          "status": "pass"
+        },
+        {
+          "id": "workers-single-schedule",
+          "status": "pass"
+        },
+        {
+          "id": "backup-single-schedule",
+          "status": "pass"
+        },
+        {
+          "id": "recent-successful-worker-ticks",
+          "status": "pass"
+        },
+        {
+          "id": "backup-key-private",
+          "status": "pass"
+        },
+        {
+          "id": "fresh-complete-encrypted-backup",
+          "status": "pass"
+        }
+      ],
+      "details": {
+        "releaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+        "backupKey": {
+          "bytes": 64,
+          "mode": "600"
+        },
+        "latestBackup": {
+          "createdAt": "2026-09-20T10:26:43.263Z",
+          "buckets": 7,
+          "objects": 0,
+          "encryptedArchivePresent": true
+        },
+        "operationsMode": "legacy-v4-installed"
+      }
+    },
+    {
+      "target": "staging",
+      "checkedAt": "2026-09-20T10:40:16.000Z",
+      "ready": true,
+      "checks": [
+        {
+          "id": "maintenance-disabled",
+          "status": "pass"
+        },
+        {
+          "id": "internal-jobs-enabled",
+          "status": "pass"
+        },
+        {
+          "id": "service-active",
+          "status": "pass"
+        },
+        {
+          "id": "service-enabled",
+          "status": "pass"
+        },
+        {
+          "id": "cron-active",
+          "status": "pass"
+        },
+        {
+          "id": "immutable-release-matches-env",
+          "status": "pass"
+        },
+        {
+          "id": "public-runtime-health",
+          "status": "pass"
+        },
+        {
+          "id": "workers-single-schedule",
+          "status": "pass"
+        },
+        {
+          "id": "backup-single-schedule",
+          "status": "pass"
+        },
+        {
+          "id": "recent-successful-worker-ticks",
+          "status": "pass"
+        },
+        {
+          "id": "backup-key-private",
+          "status": "pass"
+        },
+        {
+          "id": "fresh-complete-encrypted-backup",
+          "status": "pass"
+        }
+      ],
+      "details": {
+        "releaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+        "backupKey": {
+          "bytes": 64,
+          "mode": "600"
+        },
+        "latestBackup": {
+          "createdAt": "2026-09-20T10:26:23.291Z",
+          "buckets": 7,
+          "objects": 43,
+          "encryptedArchivePresent": true
+        },
+        "operationsMode": "legacy-v4-installed"
+      }
+    }
+  ],
+  "backupKeyRepairRun": "https://github.com/nxttrack/platform/actions/runs/35505059974",
+  "requiredForNextProductionPromotion": "A new successful staging deployment and all mandatory staging browser gates for this canonical source SHA. The exact-SHA foundation and migration rehearsal runs above already succeeded."
+}
