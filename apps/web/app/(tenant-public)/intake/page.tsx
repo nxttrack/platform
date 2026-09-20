@@ -2,7 +2,7 @@ import { CircleCheck, ShieldCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 
 import { IntakeWizard } from "@/components/public/intake-wizard";
-import { WaitTimeChip } from "@/components/public/wait-time-chip";
+import { IntakeProgramLayout } from "@/components/public/intake-program-layout";
 import { submitIntakeAction } from "@/lib/domain/intake-actions";
 import { getPublicTenantSiteData, getTenantSlugFromRequest, type IntakeOption } from "@/lib/domain/public-site";
 
@@ -75,56 +75,7 @@ export default async function IntakePage({ searchParams }: PageProps) {
       </section>
 
       <section className="px-4 py-6 sm:py-10">
-        <div className="mx-auto grid max-w-6xl gap-6 xl:grid-cols-[220px_minmax(0,1fr)]">
-          <aside className="hidden space-y-4 xl:block">
-            <div className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Programma</p>
-              <nav aria-label="Kies programma" className="mt-3 space-y-2">
-                {data.programs.map((program) => {
-                  const active = selectedProgram?.id === program.id;
-                  return (
-                    <Link
-                      aria-current={active ? "page" : undefined}
-                      className={`block rounded-xl border p-3 transition ${
-                        active ? "border-primary bg-primary/[0.06] shadow-soft" : "border-border bg-white hover:border-primary/30"
-                      }`}
-                      href={`/intake?programma=${program.id}`}
-                      key={program.id}
-                    >
-                      <span className={`block text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>{program.name}</span>
-                      <WaitTimeChip band={program.waitBand} className="mt-2" />
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
-            <p className="px-1 text-xs leading-5 text-muted-foreground">
-              Wachttijden zijn indicatief. Een medewerker controleert niveau, planning en definitieve plaatsing.
-            </p>
-          </aside>
-
-          <div>
-            <div className="mb-4 rounded-2xl border border-border bg-card p-3 shadow-soft xl:hidden">
-              <p className="px-1 text-xs font-bold uppercase tracking-wider text-muted-foreground">Kies programma</p>
-              <nav aria-label="Kies programma" className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                {data.programs.map((program) => {
-                  const active = selectedProgram?.id === program.id;
-                  return (
-                    <Link
-                      aria-current={active ? "page" : undefined}
-                      className={`min-w-44 rounded-xl border px-3 py-2.5 transition ${
-                        active ? "border-primary bg-primary/[0.06]" : "border-border bg-white"
-                      }`}
-                      href={`/intake?programma=${program.id}`}
-                      key={program.id}
-                    >
-                      <span className={`block truncate text-sm font-bold ${active ? "text-primary" : "text-foreground"}`}>{program.name}</span>
-                      <WaitTimeChip band={program.waitBand} className="mt-1.5" />
-                    </Link>
-                  );
-                })}
-              </nav>
-            </div>
+        <IntakeProgramLayout programs={data.programs} selectedProgramId={selectedProgram?.id}>
             {error ? (
               <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-800" role="alert">
                 Versturen is niet gelukt. Controleer de gegevens en probeer opnieuw.
@@ -146,8 +97,7 @@ export default async function IntakePage({ searchParams }: PageProps) {
                 Deze zwemschool heeft nog geen actief programma voor intake.
               </div>
             )}
-          </div>
-        </div>
+        </IntakeProgramLayout>
       </section>
     </main>
   );

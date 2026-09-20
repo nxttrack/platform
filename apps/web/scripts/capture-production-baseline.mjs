@@ -81,6 +81,10 @@ try {
 
             await settlePage(page);
             await assertExpectedSurface(page, route);
+            const layout = await page.evaluate(() => ({ viewportWidth: window.innerWidth, documentWidth: document.documentElement.scrollWidth }));
+            if (layout.documentWidth > layout.viewportWidth + 1) {
+              runtimeFailures.push(`horizontal page overflow: ${layout.documentWidth}px document exceeds ${layout.viewportWidth}px viewport`);
+            }
             await page.screenshot({ path: imagePath, fullPage: true, animations: "disabled" });
 
             const image = readFileSync(imagePath);
@@ -95,6 +99,7 @@ try {
               path: relativeImagePath,
               bytes: image.byteLength,
               sha256: createHash("sha256").update(image).digest("hex"),
+              layout,
               runtimeFailures: [...runtimeFailures]
             };
             captures.push(entry);
