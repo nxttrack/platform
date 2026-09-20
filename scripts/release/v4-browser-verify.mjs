@@ -53,11 +53,11 @@ try {
     await page.getByRole('button',{name:'Vorige',exact:true}).click();
     await page.getByLabel('Naam zwemschool',{exact:true}).waitFor({state:'visible'});
     result.checks.push({check:'tenant onboarding wizard navigation without provisioning or invitations',status:'pass'});
-    await page.screenshot({path:new URL('platform-onboarding.png',out).pathname,fullPage:true});
+    await capturePublicEvidence(page,'platform-onboarding.png',owner.email);
     await page.goto(`${adminOrigin}/platform/themes`,{waitUntil:'domcontentloaded'});
     await page.getByRole('heading',{level:1,name:'Themabibliotheek'}).waitFor({state:'visible'});
     await page.getByRole('link',{name:'Werelden aan een curriculum koppelen'}).waitFor({state:'visible'});
-    await page.screenshot({path:new URL('platform-themes.png',out).pathname,fullPage:true});
+    await capturePublicEvidence(page,'platform-themes.png',owner.email);
   });
   if (target==='staging') {
     const roleChecks=[
@@ -83,7 +83,7 @@ try {
           },undefined,{timeout:30000});
           await page.locator('[data-rich-journey][data-camera-moving="false"]').waitFor({state:'visible'});
           result.checks.push({check:'child journey artwork fully loaded',status:'pass'});
-          await page.screenshot({path:new URL('child-journey.png',out).pathname,fullPage:true});
+          await capturePublicEvidence(page,'child-journey.png',email);
           await page.goto(`${tenantOrigin}/admin`,{waitUntil:'domcontentloaded'});
           assert.ok(new URL(page.url()).pathname.startsWith('/kind'),'Child session must remain outside administration');
           result.checks.push({check:'child-to-admin isolation',status:'pass'});
@@ -96,7 +96,9 @@ try {
   await checkHealth('after browser verification');
 } catch(error) {
   failed=error;
-  result.error=error instanceof Error?error.message:'Unknown verification failure';
+  // Action artifacts belong to a public repository. Raw assertion/navigation/database
+  // errors can include account identifiers, URL query values or credential material.
+  result.error='browser-verification-failed';
 } finally {
   await browser?.close(); await db.end();
   result.finishedAt=new Date().toISOString(); result.status=failed?'failed':'passed';
@@ -136,6 +138,21 @@ async function withSession(email,base,label,task) {
 async function tenantCount() {
   const {rows:[row]}=await db.query('select count(*)::int as count from public.tenants');
   return row.count;
+}
+
+async function capturePublicEvidence(page,name,accountEmail) {
+  // The main region preserves the product surface while excluding account identity
+  // in the global sidebar/header. This is explicitly not a full-shell screenshot.
+  const main=page.getByRole('main').first();
+  await main.waitFor({state:'visible'});
+  const text=await main.innerText();
+  assert.ok(!text.toLowerCase().includes(accountEmail.toLowerCase()),'Account identity must not enter public screenshot evidence');
+  const sensitive=main.locator('input[type="email"], input[type="password"]');
+  for(let index=0;index<await sensitive.count();index+=1) {
+    assert.ok(!(await sensitive.nth(index).inputValue()),'Filled credentials must not enter public screenshot evidence');
+  }
+  await main.screenshot({path:new URL(name,out).pathname});
+  result.checks.push({check:`public-safe main-region screenshot ${name}`,status:'pass'});
 }
 
 async function checkHealth(phase) {
