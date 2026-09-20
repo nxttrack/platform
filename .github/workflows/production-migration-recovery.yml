@@ -157,6 +157,152 @@ jobs:
           if-no-files-found: warn
           retention-days: 90
 
+  check-production-rollback:
+    name: check production rollback without changing runtime
+    if: inputs.confirmation == 'CHECK_PRODUCTION_ROLLBACK'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 10
+    concurrency:
+      group: nxttrack-production
+      cancel-in-progress: false
+    environment: production
+    env:
+      RELEASE_SHA: ${{ inputs.release_sha }}
+      STAGED_SHA: ${{ inputs.staging_release_sha }}
+      HISTORICAL_SHA: 6b3c9abb686be198830f417e663ac94124d7066f
+      # Recorded by successful production deployment run 35477451482.
+      HISTORICAL_RELEASE: /var/www/nxttrack/production/releases/20260919235652-6b3c9ab
+      HISTORICAL_RUN_ID: "35477451482"
+    steps:
+      - name: Confirm the exact promoted production candidate
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$RELEASE_SHA" = "$STAGED_SHA"
+          test "$RELEASE_SHA" != "$HISTORICAL_SHA"
+          echo "EVIDENCE_OUTPUT=$RUNNER_TEMP/production-rollback-check-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT" >> "$GITHUB_ENV"
+          echo "EVIDENCE_STATE=$RUNNER_TEMP/production-rollback-state-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT.json" >> "$GITHUB_ENV"
+      - name: Checkout the promoted candidate's canonical rollback tools
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Bind canonical source, healthy production and historical release
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          git fetch --no-tags origin main
+          git merge-base --is-ancestor "$RELEASE_SHA" FETCH_HEAD
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          import {lstatSync,mkdirSync,readFileSync,readlinkSync,realpathSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const base='/var/www/nxttrack/production';
+          const current=realpathSync(join(base,'current'));
+          const historical=process.env.HISTORICAL_RELEASE;
+          const readJson=(file)=>JSON.parse(readFileSync(file,'utf8'));
+          for (const [directory,sha] of [[current,process.env.RELEASE_SHA],[historical,process.env.HISTORICAL_SHA]]) {
+            const identity=readJson(join(directory,'artifacts/exact-source-sha.json'));
+            const evidence=readJson(join(directory,'artifacts/release-evidence.json'));
+            assert.equal(identity.repository,process.env.GITHUB_REPOSITORY);
+            assert.equal(identity.commitSha,sha,'Immutable identity differs from the expected production release.');
+            assert.equal(evidence.application,'nxttrack-platform');
+            assert.equal(evidence.target,'production');
+            assert.equal(evidence.source?.commitSha,sha);
+            assert.equal(evidence.workflow?.repository,process.env.GITHUB_REPOSITORY);
+            assert.equal(String(evidence.workflow?.runId),String(identity.workflowRunId));
+            if (directory===historical) assert.equal(String(identity.workflowRunId),process.env.HISTORICAL_RUN_ID);
+          }
+          const response=await fetch('https://nxttrack.nl/api/health',{signal:AbortSignal.timeout(20000)});
+          const health=await response.json();
+          assert.ok(response.ok && health.ok===true && health.app==='nxttrack-platform'
+            && health.env==='production' && health.commitSha===process.env.RELEASE_SHA
+            && health.checks?.database?.status==='pass' && health.checks?.schemaCompatibility?.status==='pass',
+            'Production does not report a healthy exact promoted SHA.');
+          const hash=(file)=>createHash('sha256').update(readFileSync(file)).digest('hex');
+          const metadata=lstatSync(join(base,'shared/.env'));
+          assert.ok(metadata.isFile() && !metadata.isSymbolicLink(),'Shared configuration must be a regular file.');
+          const pid=execFileSync('systemctl',['show','--property','MainPID','--value','nxttrack-production'],{encoding:'utf8'}).trim();
+          assert.match(pid,/^[1-9][0-9]*$/,'Production must have a live service process.');
+          const snapshot={current,link:readlinkSync(join(base,'current')),environment:hash(join(base,'shared/.env')),
+            environmentMetadata:[metadata.mode,metadata.uid,metadata.gid],
+            currentIdentity:hash(join(current,'artifacts/exact-source-sha.json')),
+            historicalIdentity:hash(join(historical,'artifacts/exact-source-sha.json')),
+            currentEvidence:hash(join(current,'artifacts/release-evidence.json')),
+            historicalEvidence:hash(join(historical,'artifacts/release-evidence.json')),pid};
+          mkdirSync(process.env.EVIDENCE_OUTPUT,{recursive:true,mode:0o700});
+          writeFileSync(process.env.EVIDENCE_STATE,JSON.stringify(snapshot),{mode:0o600,flag:'wx'});
+          const report={releaseSha:process.env.RELEASE_SHA,historicalSha:process.env.HISTORICAL_SHA,
+            historicalRelease:historical,historicalDeploymentRunId:process.env.HISTORICAL_RUN_ID,
+            target:'production',health:'pass',operation:'rollback-check-only'};
+          writeFileSync(join(process.env.EVIDENCE_OUTPUT,'before.json'),JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report));
+          NODE
+      - name: Check canonical production rollback without activation or recovery
+        id: rollback-check
+        run: |
+          set -euo pipefail
+          scripts/release/rehearse-runtime-rollback.sh production "$HISTORICAL_RELEASE" --check-only \
+            2>&1 | tee "$EVIDENCE_OUTPUT/rollback-check.txt"
+      - name: Prove production runtime and configuration remain unchanged
+        if: always()
+        env:
+          ROLLBACK_CHECK_OUTCOME: ${{ steps.rollback-check.outcome }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${EVIDENCE_STATE:-}" || ! -f "$EVIDENCE_STATE" ]]; then
+            echo "No runtime snapshot was created; the rollback check was not reached."
+            exit 0
+          fi
+          node --input-type=module <<'NODE'
+          import {createHash} from 'node:crypto';
+          import {execFileSync} from 'node:child_process';
+          import {lstatSync,readFileSync,readlinkSync,realpathSync,writeFileSync} from 'node:fs';
+          import {join} from 'node:path';
+          const base='/var/www/nxttrack/production';
+          const before=JSON.parse(readFileSync(process.env.EVIDENCE_STATE,'utf8'));
+          const current=realpathSync(join(base,'current'));
+          const historical=process.env.HISTORICAL_RELEASE;
+          const hash=(file)=>createHash('sha256').update(readFileSync(file)).digest('hex');
+          const metadata=lstatSync(join(base,'shared/.env'));
+          const pid=execFileSync('systemctl',['show','--property','MainPID','--value','nxttrack-production'],{encoding:'utf8'}).trim();
+          const checks={
+            runtimeUnchanged:current===before.current && readlinkSync(join(base,'current'))===before.link,
+            configurationUnchanged:metadata.isFile() && !metadata.isSymbolicLink()
+              && hash(join(base,'shared/.env'))===before.environment
+              && JSON.stringify([metadata.mode,metadata.uid,metadata.gid])===JSON.stringify(before.environmentMetadata),
+            immutableIdentitiesUnchanged:hash(join(current,'artifacts/exact-source-sha.json'))===before.currentIdentity
+              && hash(join(historical,'artifacts/exact-source-sha.json'))===before.historicalIdentity,
+            releaseEvidenceUnchanged:hash(join(current,'artifacts/release-evidence.json'))===before.currentEvidence
+              && hash(join(historical,'artifacts/release-evidence.json'))===before.historicalEvidence,
+            serviceProcessUnchanged:pid===before.pid
+          };
+          const response=await fetch('https://nxttrack.nl/api/health',{signal:AbortSignal.timeout(20000)});
+          const health=await response.json();
+          checks.healthyPromotedRelease=response.ok && health.ok===true && health.app==='nxttrack-platform'
+            && health.env==='production' && health.commitSha===process.env.RELEASE_SHA
+            && health.checks?.database?.status==='pass' && health.checks?.schemaCompatibility?.status==='pass';
+          const report={releaseSha:process.env.RELEASE_SHA,historicalSha:process.env.HISTORICAL_SHA,
+            target:'production',rollbackCheckPassed:process.env.ROLLBACK_CHECK_OUTCOME==='success',...checks};
+          writeFileSync(join(process.env.EVIDENCE_OUTPUT,'unchanged.json'),JSON.stringify(report,null,2)+'\n');
+          console.log(JSON.stringify(report));
+          if (!Object.values(checks).every(value=>value===true)) throw new Error('Production state or health changed during the check-only operation.');
+          NODE
+      - name: Retain non-sensitive production rollback-check evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: production-rollback-check-${{ github.run_id }}
+          path: ${{ env.EVIDENCE_OUTPUT }}
+          if-no-files-found: warn
+          retention-days: 90
+
   rotate-backup-key:
     name: preserve historical keys and verify a strong encrypted backup
     if: inputs.confirmation == 'ROTATE_V4_BACKUP_KEYS'
