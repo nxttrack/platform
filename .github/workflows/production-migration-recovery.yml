@@ -37,6 +37,47 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  repair-v4-worker-cron-paths:
+    name: repair immutable V4 cron paths (${{ matrix.target }})
+    if: inputs.confirmation == 'REPAIR_V4_WORKER_CRON_PATHS'
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    timeout-minutes: 7
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    concurrency:
+      group: nxttrack-${{ matrix.target }}
+      cancel-in-progress: false
+    environment: ${{ matrix.target }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Pin existing cron paths and verify natural worker execution
+        env:
+          TARGET: ${{ matrix.target }}
+          RELEASE_SHA: ${{ inputs.release_sha }}
+          STAGED_SHA: ${{ inputs.staging_release_sha }}
+          REPAIR_OUTPUT: ${{ runner.temp }}/worker-cron-path-repair-${{ matrix.target }}-${{ github.run_id }}.json
+        run: |
+          set -euo pipefail
+          test "$RELEASE_SHA" = "$STAGED_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node scripts/operations/repair-worker-cron-paths.mjs "$TARGET"
+      - name: Retain only sanitized cron path repair evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: worker-cron-path-repair-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/worker-cron-path-repair-${{ matrix.target }}-${{ github.run_id }}.json
+          if-no-files-found: error
+          retention-days: 90
+
   backup-current-v4-database:
     name: retain verified encrypted current V4 production database
     if: inputs.confirmation == 'BACKUP_CURRENT_V4_DATABASE'
