@@ -28,7 +28,7 @@ export function TenantAdminDashboard({ data, signals, tenantName }: {
       <section className="admin-dashboard-hero">
         <div className="min-w-0">
           <p className="admin-dashboard-eyebrow">Dagelijkse cockpit</p>
-          <h1>Goedemorgen, tijd voor overzicht.</h1>
+          <h1>Welkom terug.</h1>
           <p className="admin-dashboard-intro">{formatLongDate()} · {tenantName}. Houd lessen, instroom en opvolging in één rustige werkstroom.</p>
         </div>
         <div className="admin-dashboard-actions" aria-label="Snelle acties">
@@ -51,7 +51,7 @@ export function TenantAdminDashboard({ data, signals, tenantName }: {
           {actionSignals.length ? <div className="admin-action-list">
             {actionSignals.map((signal) => <ActionRow key={signal.key} signal={signal} />)}
           </div> : <EmptyState text="Er zijn geen actuele signalen die vandaag aandacht vragen." />}
-          {signals.length > actionSignals.length ? <Link className="admin-section-link" href="/admin?filter=all">Bekijk alle signalen <ArrowRight className="size-4" /></Link> : null}
+          {signals.length > actionSignals.length ? <Link className="admin-section-link" href="/admin/signalen">Bekijk alle signalen <ArrowRight className="size-4" /></Link> : null}
         </DashboardSection>
 
         <DashboardSection title="Instroom" subtitle="Open werk in intake en plaatsing.">
