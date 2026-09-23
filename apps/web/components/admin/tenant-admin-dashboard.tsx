@@ -51,7 +51,7 @@ export function TenantAdminDashboard({ data, signals, tenantName }: {
           {actionSignals.length ? <div className="admin-action-list">
             {actionSignals.map((signal) => <ActionRow key={signal.key} signal={signal} />)}
           </div> : <EmptyState text="Er zijn geen actuele signalen die vandaag aandacht vragen." />}
-          {signals.length > actionSignals.length ? <Link className="admin-section-link" href="/admin/signalen">Bekijk alle signalen <ArrowRight className="size-4" /></Link> : null}
+          <Link className="admin-section-link" href="/admin/signalen">Open signalenwerkbak <ArrowRight className="size-4" /></Link>
         </DashboardSection>
 
         <DashboardSection title="Instroom" subtitle="Open werk in intake en plaatsing.">
