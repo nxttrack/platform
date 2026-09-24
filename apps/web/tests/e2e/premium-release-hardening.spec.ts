@@ -15,10 +15,23 @@ test.describe("premium release hardening", () => {
     const failures = collectRuntimeFailures(page);
     await signIn(page, requiredEnv("E2E_TENANT_ADMIN_EMAIL"), requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin");
 
-    await expectHeading(page, "Vandaag belangrijk");
-    await expect(page.getByText("Brondata en redenen blijven zichtbaar", { exact: false })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Capaciteit en instroom vandaag" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Alles/ })).toHaveAttribute("aria-current", "page");
+    await expectHeading(page, "Welkom terug.");
+    await expect(page.getByRole("heading", { level: 2, name: "Vandaag", exact: true })).toBeVisible();
+    await expect(page.getByText("Lessen vandaag", { exact: true })).toBeVisible();
+    await expect(page.getByText("Leerlingen verwacht", { exact: true })).toBeVisible();
+    await expect(page.getByText("Aanwezigheid", { exact: true })).toBeVisible();
+    await expect(page.getByText("Aandacht vandaag", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Actie nodig", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Instroom", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Planning & capaciteit", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Planbord openen", exact: true })).toHaveAttribute("href", "/admin/agenda");
+    await expect(page.getByRole("link", { name: "Intake bekijken", exact: true })).toHaveAttribute("href", "/admin/intake");
+    const signalsLink = page.getByRole("link", { name: "Open signalenwerkbak", exact: true });
+    await expect(signalsLink).toHaveAttribute("href", "/admin/signalen");
+
+    await signalsLink.click();
+    await page.waitForURL((url) => url.pathname === "/admin/signalen");
+    await expectHeading(page, "Alle signalen");
 
     await page.goto("/admin/crm", { waitUntil: "domcontentloaded" });
     await expectHeading(page, "CRM-pipeline");
