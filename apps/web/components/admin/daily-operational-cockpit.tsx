@@ -53,7 +53,7 @@ export function DailyOperationalCockpit({
         <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
           <AdminFilterPills
             current={safeFilter}
-            href={(value) => `/admin?filter=${value}`}
+            href={(value) => `/admin/signalen?filter=${value}`}
             items={[
               { label: "Alles", value: "all", count: counts.all },
               { label: "Nu", value: "now", count: counts.now },

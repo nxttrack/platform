@@ -86,7 +86,7 @@
     "test:family-crm": "tsx --test tests/unit/family-crm-intelligence.test.ts tests/unit/family-crm-intelligence-schema.test.ts",
     "test:crm-pipeline": "tsx --test tests/unit/crm-pipeline-contract.test.ts tests/unit/crm-pipeline-schema.test.ts",
     "test:empty-seat-recovery": "tsx --test tests/unit/empty-seat-recovery-contract.test.ts tests/unit/empty-seat-recovery-schema.test.ts",
-    "test:operational-cockpit": "tsx --test tests/unit/operational-cockpit-contract.test.ts tests/unit/operational-cockpit-schema.test.ts",
+    "test:operational-cockpit": "tsx --test tests/unit/operational-cockpit-contract.test.ts tests/unit/operational-cockpit-schema.test.ts tests/unit/operational-cockpit-routing.test.ts",
     "test:instructor-replacement": "tsx --test tests/unit/instructor-replacement-contract.test.ts tests/unit/instructor-replacement-schema.test.ts",
     "test:retention-signals": "tsx --test tests/unit/retention-signals-contract.test.ts tests/unit/retention-signals-schema.test.ts",
     "test:lesson-plans": "tsx --test tests/unit/lesson-plan-contract.test.ts tests/unit/lesson-plan-schema.test.ts",

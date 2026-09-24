@@ -251,7 +251,7 @@ export function AppShellClient({
     <div
       className={cn(
         "flex min-h-screen",
-        accent === "admin" && "admin-density",
+        accent === "admin" && "admin-density tenant-admin-shell",
         mobileBottomNav && "parent-portal-shell"
       )}
       data-portal-route={mobileBottomNav ? pathname : undefined}

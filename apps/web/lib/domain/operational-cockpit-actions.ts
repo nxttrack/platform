@@ -7,7 +7,7 @@ import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { getActiveTenant } from "@/lib/domain/core";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-const path = "/admin";
+const path = "/admin/signalen";
 const allowedStatuses = ["acknowledged", "snoozed", "resolved"] as const;
 const signalTypes = [
   "crm_follow_up",
@@ -38,7 +38,7 @@ const entityTypes = [
 export async function updateOperationalSignalStateAction(formData: FormData) {
   const context = await requirePrivateShellContext(path);
   const tenant = getActiveTenant(context);
-  if (!context.activeTenant?.roles.some((role) => ["tenant_owner", "tenant_admin", "tenant_staff"].includes(role))) redirect("/admin?error=forbidden");
+  if (!context.activeTenant?.roles.some((role) => ["tenant_owner", "tenant_admin", "tenant_staff"].includes(role))) redirect(`${path}?error=forbidden`);
 
   const signalKey = readText(formData, "signalKey", 180);
   const signalType = readEnum(formData, "signalType", signalTypes);
@@ -83,6 +83,7 @@ export async function updateOperationalSignalStateAction(formData: FormData) {
     actor_user_id: context.user.id,
     note
   });
+  revalidatePath("/admin");
   revalidatePath(path);
   redirect(`${path}?saved=${status}`);
 }
