@@ -688,8 +688,8 @@ function Sidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className={cn("flex min-h-16 items-center gap-3 border-b border-sidebar-border px-3", collapsed && !mobile ? "justify-center" : "px-4")}>
-        <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-glow", accentStyles[accent])}>
+      <div className={cn("flex min-h-16 items-center gap-3 border-b border-sidebar-border px-3", collapsed && !mobile ? "justify-center gap-0.5 px-1" : "px-4")}>
+        <div className={cn("flex size-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-glow", collapsed && !mobile && "size-8", accentStyles[accent])}>
           <Waves className="h-5 w-5" />
         </div>
         <div className={cn("min-w-0 flex-1", collapsed && !mobile && "hidden")}>
@@ -700,8 +700,9 @@ function Sidebar({
         </div>
         {!mobile && onToggleCollapsed ? (
           <button
+            aria-expanded={!collapsed}
             aria-label={collapsed ? "Navigatie uitklappen" : "Navigatie inklappen"}
-            className={cn("grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", collapsed && "absolute left-[58px] top-4 translate-x-1/2 border border-border bg-card shadow-soft")}
+            className={cn("grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", collapsed && "size-8 border border-border bg-card shadow-soft")}
             onClick={onToggleCollapsed}
             type="button"
           >
