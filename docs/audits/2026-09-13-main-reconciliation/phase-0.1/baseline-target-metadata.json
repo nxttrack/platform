@@ -1,0 +1,7 @@
+{
+  "version": "2.11.0",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "dist.integrity": "sha512-oCu2wfipvX3AePSgmOuKkIywOu+8n9psz7hXYmk56ghpu3+7KzNIBopaOs4c9BrtdnTtW30unG9GTfHo7EwERQ=="
+}

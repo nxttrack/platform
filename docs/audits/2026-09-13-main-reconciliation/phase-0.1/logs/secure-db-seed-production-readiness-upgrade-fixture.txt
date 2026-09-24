@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 db:seed-production-readiness-upgrade-fixture /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/db/seed-production-readiness-upgrade-fixture.mjs
+
+[seed:production-readiness-upgrade] PASS clean fixture with two tenants and twelve role identities.

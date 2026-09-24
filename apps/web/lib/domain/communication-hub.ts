@@ -1,3 +1,4 @@
+import type { MessageContextReference } from "./message-composer-contract";
 import "server-only";
 
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
@@ -39,6 +40,8 @@ export type MessageThreadRow = {
   participant_id: string | null;
   guardian_user_id: string | null;
   group_id: string | null;
+  curriculum_item_id: string | null;
+  session_id: string | null;
   intake_submission_id: string | null;
   waitlist_entry_id: string | null;
   manual_payment_id: string | null;
@@ -56,6 +59,7 @@ export type ThreadMessageRow = {
   thread_id: string;
   sender_type: string;
   sender_user_id: string | null;
+  reference_json: MessageContextReference | null;
   body_json: Record<string, unknown>;
   body_html: string | null;
   plain_text: string;
@@ -177,15 +181,16 @@ export type ScopedCommunicationHubData = {
   unreadThreadIds: string[];
   people: Map<string, CommunicationPersonOption>;
   participants: CommunicationEntityOption[];
+  archivedThreadIds: string[];
   canReplyToParents: boolean;
 };
 
 const notificationSelect =
   "id, title, message, status, priority, action_href, entity_type, entity_id, created_at";
 const threadSelect =
-  "id, subject, thread_type, status, participant_id, guardian_user_id, group_id, intake_submission_id, waitlist_entry_id, manual_payment_id, graduation_event_id, assigned_staff_user_id, assigned_instructor_user_id, last_message_at, created_at, updated_at, is_test";
+  "id, subject, thread_type, status, participant_id, guardian_user_id, group_id, curriculum_item_id, session_id, intake_submission_id, waitlist_entry_id, manual_payment_id, graduation_event_id, assigned_staff_user_id, assigned_instructor_user_id, last_message_at, created_at, updated_at, is_test";
 const threadMessageSelect =
-  "id, thread_id, sender_type, sender_user_id, body_json, body_html, plain_text, visibility, status, content_classification, classification_reasons, created_at";
+  "id, thread_id, sender_type, sender_user_id, reference_json, body_json, body_html, plain_text, visibility, status, content_classification, classification_reasons, created_at";
 
 export async function getNotificationCenter(
   context: AuthenticatedTrustedAuthContext,
@@ -339,11 +344,23 @@ export async function getAdminCommunicationHub(): Promise<AdminCommunicationHubD
 
 export async function getParentCommunicationHub(): Promise<ScopedCommunicationHubData> {
   const context = await requirePrivateShellContext("/portaal/berichten");
-  return getScopedCommunicationHub(context, "parent");
+  return getParentCommunicationHubForContext(context);
 }
 
 export async function getInstructorCommunicationHub(): Promise<ScopedCommunicationHubData> {
   const context = await requirePrivateShellContext("/instructor/berichten");
+  return getInstructorCommunicationHubForContext(context);
+}
+
+export function getParentCommunicationHubForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
+  return getScopedCommunicationHub(context, "parent");
+}
+
+export function getInstructorCommunicationHubForContext(
+  context: AuthenticatedTrustedAuthContext
+) {
   return getScopedCommunicationHub(context, "instructor");
 }
 
@@ -388,7 +405,8 @@ async function getScopedCommunicationHub(
   assertCommunicationQuery(threadsResult.error, "scoped message threads");
   assertCommunicationQuery(notificationsResult.error, "scoped notifications");
   assertCommunicationQuery(participantsResult.error, "guardian participants");
-  const threads = (threadsResult.data ?? []) as MessageThreadRow[];
+  const visibleParticipantIds = new Set((participantsResult.data ?? []).map((participant) => participant.id));
+  const threads = ((threadsResult.data ?? []) as MessageThreadRow[]).filter((thread) => scope !== "parent" || !thread.participant_id || visibleParticipantIds.has(thread.participant_id));
   const threadIds = threads.map((thread) => thread.id);
   const messagesResult = threadIds.length
     ? await admin.from("messages").select(threadMessageSelect).eq("tenant_id", tenant.id).in("thread_id", threadIds).order("created_at")
@@ -399,7 +417,7 @@ async function getScopedCommunicationHub(
     threadIds.length
       ? await admin
           .from("message_thread_participants")
-          .select("thread_id, can_view_internal, last_read_at")
+          .select("thread_id, can_view_internal, last_read_at, archived_at")
           .eq("tenant_id", tenant.id)
           .eq("user_id", context.user.id)
           .eq("status", "active")
@@ -438,6 +456,7 @@ async function getScopedCommunicationHub(
     ),
     people: await loadPeople(senderIds.concat(context.user.id)),
     participants: ((participantsResult.data ?? []) as Array<{ id: string; display_name: string }>).map((item) => ({ id: item.id, label: item.display_name })),
+    archivedThreadIds: (internalAccessResult.data ?? []).filter((row) => row.archived_at).map((row) => row.thread_id),
     canReplyToParents: scope === "parent" || settings.instructors_can_reply_to_parents
   };
 }

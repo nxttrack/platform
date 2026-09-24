@@ -1,22 +1,15 @@
 #!/usr/bin/env node
 
-import { existsSync, readFileSync } from "node:fs";
-import { createRequire } from "node:module";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
+import pg from "pg";
+import { adminPublicationWindowsSql, adminSessionWindowsSql, requireAdminSessionWindows } from "./admin-session-windows.mjs";
 
-const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
-const { createClient } = requireFromWeb("@supabase/supabase-js");
 const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const phaseStatePath = path.resolve(process.cwd(), process.env.PHASE16_STATE_PATH || "artifacts/phase16-state.json");
 
 if (process.env.APP_ENV !== "staging" || hostname(appUrl) !== "staging.nxttrack.nl") {
   throw new Error("Sprint 4 admin preparation is restricted to staging.nxttrack.nl.");
-}
-
-if (!supabaseUrl || !supabaseSecret) {
-  throw new Error("Staging Supabase credentials are required.");
 }
 
 if (!existsSync(phaseStatePath)) {
@@ -24,82 +17,65 @@ if (!existsSync(phaseStatePath)) {
 }
 
 const phase = JSON.parse(readFileSync(phaseStatePath, "utf8"));
-const tenantId = phase.tenant.id;
-const admin = createClient(supabaseUrl, supabaseSecret, {
-  auth: { autoRefreshToken: false, persistSession: false }
-});
-
-const [programs, stages, groups, participants, plans, subscriptions, payments, sessions] = await Promise.all([
-  idsLike("programs", "code", "sprint4-admin-program-%"),
-  idsLike("program_stages", "code", "sprint4-admin-stage-%"),
-  idsLike("groups", "code", "sprint4-admin-group-%"),
-  idsLike("participants", "display_name", "Sprint 4 Admin Leerling%"),
-  idsLike("payment_plans", "code", "sprint4-admin-plan-%"),
-  idsLike("subscriptions", "notes", "sprint4-admin:%"),
-  idsLike("manual_payments", "reference", "sprint4-admin-payment-%"),
-  idsLike("sessions", "notes", "sprint4-admin:%")
-]);
-
-const enrollmentIds = participants.length > 0 ? await idsIn("enrollments", "participant_id", participants) : [];
-
-await removeLike("tenant_messages", "title", "Sprint 4 Admin Bericht%");
-await removeLike("tenant_documents", "title", "Sprint 4 Admin Document%");
-
-if (payments.length > 0) {
-  await removeIn("billing_events", "manual_payment_id", payments);
-  await removeIn("manual_payments", "id", payments);
+if (!phase.tenant?.id || !phase.expected?.groupId || !phase.users?.instructor?.id
+  || phase.appUrl !== appUrl || phase.tenant.slug !== "aquaswim-demo") {
+  throw new Error("Phase 16 state must identify the staging demo tenant, group and instructor.");
 }
 
-if (subscriptions.length > 0) {
-  await removeIn("billing_events", "subscription_id", subscriptions);
-  await removeIn("subscriptions", "id", subscriptions);
+let database;
+let project;
+try {
+  database = new URL(process.env.DATABASE_URL);
+  project = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.match(/^([a-z0-9]+)\.supabase\.co$/)?.[1];
+} catch { throw new Error("Staging database configuration is required to find available admin lesson times."); }
+if (!project || !(database.hostname === `db.${project}.supabase.co`
+  || (database.hostname.endsWith(".pooler.supabase.com") && decodeURIComponent(database.username) === `postgres.${project}`))) {
+  throw new Error("Database identity must match the configured staging Supabase project.");
 }
-
-if (plans.length > 0) await removeIn("payment_plans", "id", plans);
-if (sessions.length > 0) await removeIn("sessions", "id", sessions);
-
-if (enrollmentIds.length > 0) {
-  await removeIn("group_memberships", "enrollment_id", enrollmentIds);
-  await removeIn("enrollments", "id", enrollmentIds);
-}
-
-if (participants.length > 0) await removeIn("participants", "id", participants);
-
-if (groups.length > 0) {
-  await removeIn("group_instructor_assignments", "group_id", groups);
-  await removeIn("group_memberships", "group_id", groups);
-  await removeIn("sessions", "group_id", groups);
-  await removeIn("groups", "id", groups);
-}
-
-if (stages.length > 0) await removeIn("program_stages", "id", stages);
-if (programs.length > 0) await removeIn("programs", "id", programs);
-
-console.log("[sprint4:prepare-admin] PASS removed only bounded Sprint 4 admin records.");
-
-async function idsLike(table, field, pattern) {
-  const result = await admin.from(table).select("id").eq("tenant_id", tenantId).like(field, pattern);
-  return checked(result, table).map((row) => row.id);
-}
-
-async function idsIn(table, field, values) {
-  const result = await admin.from(table).select("id").eq("tenant_id", tenantId).in(field, values);
-  return checked(result, table).map((row) => row.id);
-}
-
-async function removeLike(table, field, pattern) {
-  const result = await admin.from(table).delete().eq("tenant_id", tenantId).like(field, pattern);
-  checked(result, table);
-}
-
-async function removeIn(table, field, values) {
-  const result = await admin.from(table).delete().eq("tenant_id", tenantId).in(field, values);
-  checked(result, table);
-}
-
-function checked(result, label) {
-  if (result.error) throw new Error(`Could not clean Sprint 4 ${label}: ${result.error.message}`);
-  return result.data ?? [];
+let client;
+try {
+  client = new pg.Client({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 15_000,
+    query_timeout: 20_000
+  });
+  await client.connect();
+  await client.query("begin isolation level repeatable read read only");
+  await client.query("set local statement_timeout = '15s'");
+  const group = await client.query(`
+    select lesson_group.default_resource_id, (now() at time zone 'Europe/Amsterdam')::date::text as today
+    from public.groups lesson_group
+    join public.tenants tenant on tenant.id=lesson_group.tenant_id
+    join public.tenant_domains domain on domain.tenant_id=tenant.id
+    where lesson_group.tenant_id=$1 and lesson_group.id=$2
+      and tenant.slug='aquaswim-demo' and domain.hostname='aquaswim-demo.staging.nxttrack.nl'
+      and domain.status='verified'
+  `, [phase.tenant.id, phase.expected.groupId]);
+  if (group.rowCount !== 1 || !group.rows[0].default_resource_id) {
+    throw new Error("The staging fixture must have one verified tenant and a structured group resource.");
+  }
+  const resourceId = group.rows[0].default_resource_id;
+  const result = await client.query(adminSessionWindowsSql, [phase.tenant.id, resourceId, phase.users.instructor.id, group.rows[0].today]);
+  const sessionWindows = requireAdminSessionWindows(result.rows);
+  const publicationResult = await client.query(adminPublicationWindowsSql, [phase.tenant.id, resourceId, phase.users.instructor.id, group.rows[0].today]);
+  const publicationWindows = requireAdminSessionWindows(publicationResult.rows);
+  await client.query("commit");
+  phase.adminPlanning = { resourceId, sessionWindows, publicationWindows };
+  writeFileSync(phaseStatePath, `${JSON.stringify(phase, null, 2)}\n`, { mode: 0o600 });
+  console.log("[sprint4:prepare-admin] PASS available manual and published lesson windows selected without changing remote data.");
+} catch (error) {
+  const knownReasons = [
+    "The staging fixture must have one verified tenant and a structured group resource.",
+    "Two distinct free admin lesson dates are required."
+  ];
+  console.error("[sprint4:prepare-admin] Failed to prepare available lesson windows", {
+    code: typeof error.code === "string" ? error.code : "fixture_error",
+    reason: knownReasons.includes(error.message) ? error.message : "Staging read or local state write failed."
+  });
+  process.exitCode = 1;
+} finally {
+  await client?.end();
 }
 
 function hostname(value) {

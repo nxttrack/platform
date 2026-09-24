@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -61,7 +63,7 @@ export async function createWaitlistEntryFromIntakeAction(formData: FormData) {
     parent_phone: string | null;
     participant_name: string;
     participant_birth_date: string | null;
-    participant_gender: "boy" | "girl" | "unknown";
+    participant_gender: "boy" | "girl" | "unknown_legacy";
     preferred_days: string[];
     preferred_dayparts: unknown;
     preferred_notes: string | null;
@@ -386,8 +388,9 @@ export async function createSlotOfferAction(formData: FormData) {
     admin
       .from("slot_offers")
       .update({
-        delivery_status: mail.delivered ? "sent" : "skipped",
-        delivery_error: mail.delivered ? null : mail.reason
+        delivery_status: mail.accepted ? "pending" : "skipped",
+        delivery_error: mail.accepted ? null : mail.reason,
+        provider_accepted_at: mail.accepted ? new Date().toISOString() : null
       })
       .eq("tenant_id", tenant.id)
       .eq("id", offerId),
@@ -414,13 +417,13 @@ export async function createSlotOfferAction(formData: FormData) {
       slotOfferId: offerId,
       actorUserId: context.user.id,
       eventType: "slot_offer.sent",
-      message: mail.delivered ? "Slot offer per e-mail verstuurd." : "Slot offer link aangemaakt; mailprovider niet geconfigureerd.",
-      payload: { deliveryStatus: mail.delivered ? "sent" : "skipped" }
+      message: mail.accepted ? "Slot offer door de mailprovider geaccepteerd." : "Slot offer link aangemaakt; mailtransport heeft het bericht niet geaccepteerd.",
+      payload: { deliveryStatus: mail.accepted ? "accepted" : "skipped" }
     })
   ]);
 
   revalidatePath("/admin/wachtlijst");
-  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.delivered ? "sent" : "skipped"}`);
+  redirect(`/admin/wachtlijst?saved=1&delivery=${mail.accepted ? "accepted" : "skipped"}`);
 }
 
 export async function createPlacementSuggestionTaskAction(formData: FormData) {
@@ -713,7 +716,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       guardian_user_id: guardianUserId,
       display_name: entry.participant_name,
       birth_date: entry.participant_birth_date,
-      gender: entry.participant_gender ?? "unknown",
+      gender: entry.participant_gender ?? "unknown_legacy",
       status: "active",
       source: entry.is_test ? "journey_simulation_bot" : "intake",
       is_test: entry.is_test,
@@ -747,7 +750,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       is_test: entry.is_test,
       journey_run_id: entry.journey_run_id,
       test_metadata_json: entry.test_metadata_json,
-      starts_on: new Date().toISOString().slice(0, 10)
+      starts_on: toAmsterdamDate()
     })
     .select("id")
     .single();
@@ -765,7 +768,7 @@ async function respondToSlotOffer(response: "accepted" | "declined") {
       enrollment_id: enrollmentId,
       participant_id: participantId,
       status: "active",
-      starts_on: new Date().toISOString().slice(0, 10),
+      starts_on: toAmsterdamDate(),
       capacity_weight: 1,
       source: entry.is_test ? "journey_simulation_bot" : "intake",
       is_test: entry.is_test,
@@ -966,7 +969,7 @@ function getMinimumAgeDecision(birthDate: string | null) {
   const todayDate = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
   return {
     blocked: eligible > todayDate,
-    eligibleFrom: eligible.toISOString().slice(0, 10)
+    eligibleFrom: toAmsterdamDate(eligible)
   };
 }
 

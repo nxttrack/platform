@@ -14,6 +14,10 @@ on:
         description: Full commit SHA already validated on staging (required for production)
         required: false
         type: string
+      staging_release_run_id:
+        description: Successful exact-SHA staging deploy including full browser validation (required for production)
+        required: false
+        type: string
       production_confirmation:
         description: Type PROMOTE_PRODUCTION for a production release
         required: false
@@ -54,12 +58,14 @@ jobs:
     env:
       CI: true
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
 
       TARGET: ${{ inputs.target }}
       RELEASE_TARGET: ${{ inputs.target }}
       RELEASE_CANONICAL_BRANCH: main
+      DEPLOYED_SOURCE_SHA: ${{ github.sha }}
       STAGING_RELEASE_SHA: ${{ inputs.staging_release_sha }}
+      STAGING_RELEASE_RUN_ID: ${{ inputs.staging_release_run_id }}
       PRODUCTION_RELEASE_CONFIRMATION: ${{ inputs.production_confirmation }}
       PRODUCTION_APPROVAL_REFERENCE: ${{ inputs.production_approval_reference }}
       PRODUCTION_FOUNDATION_RUN_ID: ${{ inputs.production_foundation_run_id }}
@@ -105,6 +111,7 @@ jobs:
       SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       RUN_DB_MIGRATIONS: ${{ vars.RUN_DB_MIGRATIONS }}
+      DB_MIGRATION_REPAIR_EXISTING_SCHEMA: "false"
       DB_MIGRATE_DRY_RUN: ${{ vars.DB_MIGRATE_DRY_RUN }}
       DB_MIGRATE_INCLUDE_ALL: ${{ vars.DB_MIGRATE_INCLUDE_ALL }}
       BOOTSTRAP_PLATFORM_OWNER: ${{ inputs.bootstrap_platform_owner && 'true' || vars.BOOTSTRAP_PLATFORM_OWNER }}
@@ -115,7 +122,8 @@ jobs:
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
-      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS || 'false' }}
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: ${{ vars.PHASE16_PRESERVE_ADMIN_IDENTITIES || 'true' }}
       PHASE16_SKIP_PLAYWRIGHT_INSTALL: ${{ vars.PHASE16_SKIP_PLAYWRIGHT_INSTALL }}
       PHASE16_SKIP_PLAYWRIGHT: ${{ vars.PHASE16_SKIP_PLAYWRIGHT }}
       E2E_PLATFORM_OWNER_EMAIL: ${{ secrets.E2E_PLATFORM_OWNER_EMAIL || vars.E2E_PLATFORM_OWNER_EMAIL }}
@@ -137,13 +145,13 @@ jobs:
       SUPABASE_ADVISOR_LEVEL: ${{ vars.SUPABASE_ADVISOR_LEVEL }}
       SUPABASE_ADVISOR_FAIL_ON: ${{ vars.SUPABASE_ADVISOR_FAIL_ON }}
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      MAINTENANCE_NO_WRITE: ${{ vars.MAINTENANCE_NO_WRITE || 'false' }}
+      NEWSLETTER_DELIVERY_ENABLED: ${{ vars.NEWSLETTER_DELIVERY_ENABLED || 'false' }}
       EMAIL_SENDING_ENABLED: ${{ vars.EMAIL_SENDING_ENABLED || 'false' }}
       INTERNAL_JOBS_ENABLED: ${{ vars.INTERNAL_JOBS_ENABLED || 'false' }}
       MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
       BILLING_AUTOMATION_SECRET: ${{ secrets.BILLING_AUTOMATION_SECRET }}
       CRON_SECRET: ${{ secrets.CRON_SECRET }}
-      JOURNEY_BOT_DEFAULT_ENABLED: ${{ vars.JOURNEY_BOT_DEFAULT_ENABLED || 'false' }}
-      JOURNEY_BOT_EMAIL_DOMAIN: ${{ vars.JOURNEY_BOT_EMAIL_DOMAIN || 'nxttrack.test' }}
       UPLOAD_MALWARE_SCAN_MODE: ${{ vars.UPLOAD_MALWARE_SCAN_MODE || 'required' }}
       CLAMAV_SOCKET_PATH: ${{ vars.CLAMAV_SOCKET_PATH || '/run/clamav/clamd.ctl' }}
       CLAMAV_HOST: ${{ vars.CLAMAV_HOST }}
@@ -162,6 +170,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+
+      - name: Setup certified pnpm
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@10.24.0 --activate
+          test "$(git rev-parse HEAD)" = "$DEPLOYED_SOURCE_SHA"
 
       - name: Assert canonical release source
         run: |
@@ -210,9 +233,34 @@ jobs:
 
           echo "RELEASE=$RELEASE" >> "$GITHUB_ENV"
 
-      - name: Write environment file
+      - name: Guard migration containment
+        if: env.RUN_DB_MIGRATIONS == 'true'
         run: |
           set -euo pipefail
+          test "$MAINTENANCE_NO_WRITE" = "true"
+          test "$EMAIL_SENDING_ENABLED" = "false"
+          test "$NEWSLETTER_DELIVERY_ENABLED" = "false"
+          test "$INTERNAL_JOBS_ENABLED" = "false"
+          test "$DB_MIGRATION_REPAIR_EXISTING_SCHEMA" = "false"
+
+      - name: Snapshot and validate active release before candidate preparation
+        run: |
+          set -euo pipefail
+          PREVIOUS_RELEASE="$(readlink -f "$BASE_DIR/current")"
+          STATE_FILE="$BASE_DIR/shared/deployment-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.previous.json"
+          ENV_STATE_FILE="$BASE_DIR/shared/deployment-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.previous.env"
+          test -s "$BASE_DIR/shared/.env"
+          ROLLBACK_RELEASE="$PREVIOUS_RELEASE" ROLLBACK_STATE_FILE="$STATE_FILE" \
+            pnpm run release:assert-rollback-target
+          cp --dereference "$BASE_DIR/shared/.env" "$ENV_STATE_FILE"
+          chmod 600 "$ENV_STATE_FILE"
+          echo "DEPLOYMENT_STATE_FILE=$STATE_FILE" >> "$GITHUB_ENV"
+          echo "DEPLOYMENT_ENV_SNAPSHOT=$ENV_STATE_FILE" >> "$GITHUB_ENV"
+
+      - name: Write private candidate environment file
+        run: |
+          set -euo pipefail
+          umask 077
 
           SUPABASE_PUBLIC_KEY="${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-$NEXT_PUBLIC_SUPABASE_ANON_KEY}"
           SUPABASE_SERVER_SECRET="${SUPABASE_SECRET_KEY:-$SUPABASE_SERVICE_ROLE_KEY}"
@@ -259,13 +307,13 @@ jobs:
             printf 'BOOTSTRAP_PLATFORM_OWNER_EMAIL=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_EMAIL"
             printf 'BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD=%s\n' "$BOOTSTRAP_PLATFORM_OWNER_RESET_PASSWORD"
             printf 'SENDGRID_API_KEY=%s\n' "$SENDGRID_API_KEY"
+            printf 'MAINTENANCE_NO_WRITE=%s\n' "$MAINTENANCE_NO_WRITE"
+            printf 'NEWSLETTER_DELIVERY_ENABLED=%s\n' "$NEWSLETTER_DELIVERY_ENABLED"
             printf 'EMAIL_SENDING_ENABLED=%s\n' "$EMAIL_SENDING_ENABLED"
             printf 'INTERNAL_JOBS_ENABLED=%s\n' "$INTERNAL_JOBS_ENABLED"
             printf 'MOLLIE_API_KEY=%s\n' "$MOLLIE_API_KEY"
             printf 'BILLING_AUTOMATION_SECRET=%s\n' "$BILLING_AUTOMATION_SECRET"
             printf 'CRON_SECRET=%s\n' "$CRON_SECRET"
-            printf 'JOURNEY_BOT_DEFAULT_ENABLED=%s\n' "$JOURNEY_BOT_DEFAULT_ENABLED"
-            printf 'JOURNEY_BOT_EMAIL_DOMAIN=%s\n' "$JOURNEY_BOT_EMAIL_DOMAIN"
             printf 'UPLOAD_MALWARE_SCAN_MODE=%s\n' "$UPLOAD_MALWARE_SCAN_MODE"
             printf 'CLAMAV_SOCKET_PATH=%s\n' "$CLAMAV_SOCKET_PATH"
             printf 'CLAMAV_HOST=%s\n' "$CLAMAV_HOST"
@@ -280,13 +328,12 @@ jobs:
             printf 'SMTP_FROM_EMAIL=%s\n' "$SMTP_FROM_EMAIL"
             printf 'SMTP_FROM_NAME=%s\n' "$SMTP_FROM_NAME"
             printf 'EMAIL_DELIVERY_TIMEOUT_MS=%s\n' "$EMAIL_DELIVERY_TIMEOUT_MS"
-          } > "$BASE_DIR/shared/.env"
+          } > "$RELEASE/.env.candidate"
 
-          chmod 640 "$BASE_DIR/shared/.env"
-          chgrp nxttrack-deploy "$BASE_DIR/shared/.env"
-
-          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env"
-          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env.production"
+          chmod 640 "$RELEASE/.env.candidate"
+          chgrp nxttrack-deploy "$RELEASE/.env.candidate"
+          ln -sfn .env.candidate "$RELEASE/.env"
+          ln -sfn .env.candidate "$RELEASE/.env.production"
 
       - name: Install dependencies
         working-directory: ${{ env.RELEASE }}
@@ -301,10 +348,8 @@ jobs:
           pnpm run design:audit
           pnpm run typecheck
           pnpm run test:billing-contract
-          pnpm run test:journey-bot
           pnpm run test:communication-hub
           pnpm run test:badges
-          pnpm run release:audit-journey-bot
           pnpm run auth:audit
           pnpm run security:audit-dependencies
           pnpm run db:audit
@@ -319,14 +364,64 @@ jobs:
           pnpm build
           pnpm run deploy:package-standalone-assets
 
+      - name: Verify scheduled operations prerequisites before activation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: |
+          python3 --version
+          node scripts/operations/install-runtime-operations.mjs "$TARGET" --check "$RELEASE/.env.candidate"
+
+      - name: Persist immutable release identity
+        working-directory: ${{ env.RELEASE }}
+        run: pnpm run release:write-exact-source
+
+      - name: Enter and verify migration maintenance containment
+        if: env.RUN_DB_MIGRATIONS == 'true'
+        run: |
+          set -euo pipefail
+          node scripts/release/deployment-environment.mjs maintenance
+          sudo systemctl restart "$SERVICE_NAME"
+          for attempt in {1..20}; do
+            status="$(curl --silent --show-error --output /tmp/nxttrack-maintenance-response --write-out '%{http_code}' \
+              --request POST --max-time 10 "$APP_URL/api/internal/email-outbox/process" || true)"
+            if [[ "$status" == "503" ]] && grep -q 'maintenance_no_write' /tmp/nxttrack-maintenance-response; then
+              break
+            fi
+            if [[ "$attempt" == "20" ]]; then
+              echo "Maintenance containment was not proven; refusing migrations." >&2
+              exit 1
+            fi
+            sleep 3
+          done
+
+      - name: Run read-only deployment preflight
+        if: env.RUN_DB_MIGRATIONS == 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
       - name: Run database migrations
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
           pnpm run db:migrate
 
+      - name: Run post-migration read-only verification
+        if: env.RUN_DB_MIGRATIONS == 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          UPGRADE_PREFLIGHT_DATABASE_URL: ${{ env.DATABASE_URL }}
+        run: pnpm run db:preflight-production-readiness-upgrade
+
+      - name: Assert runtime schema compatibility before activation
+        working-directory: ${{ env.RELEASE }}
+        run: pnpm run release:assert-schema-compatibility
+
       - name: Bootstrap platform owner
-        if: env.BOOTSTRAP_PLATFORM_OWNER == 'true'
+        if: env.BOOTSTRAP_PLATFORM_OWNER == 'true' && env.MAINTENANCE_NO_WRITE != 'true'
         working-directory: ${{ env.RELEASE }}
         run: |
           set -euo pipefail
@@ -339,6 +434,9 @@ jobs:
           chown -R github-runner:nxttrack-deploy "$RELEASE"
           chmod -R u+rwX,g+rX,o-rwx "$RELEASE"
 
+          node scripts/release/deployment-environment.mjs activate
+          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env"
+          ln -sfn "$BASE_DIR/shared/.env" "$RELEASE/.env.production"
           ln -sfn "$RELEASE" "$BASE_DIR/current.new"
           mv -Tf "$BASE_DIR/current.new" "$BASE_DIR/current"
 
@@ -347,6 +445,9 @@ jobs:
 
       - name: Health endpoint smoke
         working-directory: ${{ env.RELEASE }}
+        env:
+          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+          EXPECTED_APP_ENV: ${{ inputs.target }}
         run: |
           set -euo pipefail
           pnpm run staging:health
@@ -357,27 +458,37 @@ jobs:
           set -euo pipefail
           pnpm run staging:runtime-smoke
 
+      - name: Install versioned scheduled operations after runtime verification
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        working-directory: ${{ env.RELEASE }}
+        env:
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: node scripts/operations/install-runtime-operations.mjs "$TARGET"
+
       - name: Write release evidence
-        if: env.TARGET == 'production'
+        if: env.TARGET == 'production' && env.MAINTENANCE_NO_WRITE != 'true'
         working-directory: ${{ env.RELEASE }}
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
-        if: env.TARGET == 'production'
+        if: env.TARGET == 'production' && env.MAINTENANCE_NO_WRITE != 'true'
         uses: actions/upload-artifact@v6
         with:
           name: nxttrack-${{ env.TARGET }}-${{ github.sha }}-release-evidence
-          path: ${{ env.RELEASE }}/artifacts/release-evidence.json
+          path: |
+            ${{ env.RELEASE }}/artifacts/release-evidence.json
+            ${{ env.RELEASE }}/artifacts/exact-source-sha.json
           if-no-files-found: error
           retention-days: ${{ inputs.target == 'production' && 90 || 14 }}
 
       - name: Cleanup old releases
-        run: |
-          set -euo pipefail
-          ls -1dt "$BASE_DIR/releases"/* 2>/dev/null | tail -n +6 | xargs -r rm -rf
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/release/prune-releases.mjs
 
   staging-browser-validation:
     name: staging browser validation
+    outputs:
+      evidence_ready: ${{ steps.write-staging-release-evidence.outcome == 'success' }}
     if: inputs.target == 'staging'
     needs: deploy
     runs-on: ubuntu-latest
@@ -385,11 +496,13 @@ jobs:
 
     env:
       CI: true
+      MAINTENANCE_NO_WRITE: ${{ vars.MAINTENANCE_NO_WRITE || 'false' }}
       NEXT_TELEMETRY_DISABLED: 1
-      NODE_OPTIONS: --max-old-space-size=1536
+      NODE_OPTIONS: --max-old-space-size=3072
       TARGET: staging
       RELEASE_TARGET: staging
       RELEASE_CANONICAL_BRANCH: main
+      DEPLOYED_SOURCE_SHA: ${{ github.sha }}
       APP_ENV: staging
       NODE_ENV: production
       APP_URL: ${{ vars.APP_URL }}
@@ -404,7 +517,8 @@ jobs:
       PHASE16_TENANT_SLUG: ${{ vars.PHASE16_TENANT_SLUG }}
       PHASE16_TENANT_HOSTNAME: ${{ vars.PHASE16_TENANT_HOSTNAME }}
       PHASE16_TENANT_NAME: ${{ vars.PHASE16_TENANT_NAME }}
-      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS }}
+      PHASE16_RESET_E2E_PASSWORDS: ${{ vars.PHASE16_RESET_E2E_PASSWORDS || 'false' }}
+      PHASE16_PRESERVE_ADMIN_IDENTITIES: ${{ vars.PHASE16_PRESERVE_ADMIN_IDENTITIES || 'true' }}
       PHASE16_SKIP_PLAYWRIGHT_INSTALL: "true"
       PHASE15_SKIP_PLAYWRIGHT_INSTALL: "true"
       RUN_DB_MIGRATIONS: "true"
@@ -436,6 +550,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -451,72 +568,128 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Write required exact source SHA artifact
+        run: pnpm run release:write-exact-source
+
+      - name: Retain exact source SHA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ github.sha }}-exact-source
+          path: artifacts/exact-source-sha.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Install Playwright Chromium
         run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
 
+      - name: Maintenance release read-only browser smoke
+        if: env.MAINTENANCE_NO_WRITE == 'true'
+        run: pnpm run test:production-readiness-preview:e2e
+
+      - name: Reset interrupted parent and child preview rollout
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
+
       - name: Phase 16 operational flow validation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run phase16:flow
 
+      - name: Prepare parent and child test fixture
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/staging/parent-child-preview-fixture.mjs prepare
+
+      - name: Validate required seven-theme parent and child portal matrix
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        env:
+          PORTAL_THEME_VISUAL_MATRIX_REQUIRED: "true"
+        run: pnpm run test:portal-themes:e2e
+
+      - name: Upload seven-theme parent and child portal matrix evidence
+        if: always() && env.MAINTENANCE_NO_WRITE != 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-staging-${{ github.sha }}-seven-theme-parent-child-portal-matrix
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Prepare Sprint 4 browser-mutation fixture
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-mutations
 
       - name: Prepare Sprint 4 offer-edge fixtures
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-offer-edges
 
       - name: Prepare Sprint 4 parent self-service fixtures
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-parent
 
       - name: Prepare Sprint 4 tenant-admin fixtures
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-admin
 
       - name: Prepare Sprint 4 isolation fixtures
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run sprint4:prepare-isolation
 
       - name: Sprint 4 intake-to-placement browser mutation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-mutations
 
       - name: Sprint 4 instructor browser mutations
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_INSTRUCTOR_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-instructor
 
       - name: Sprint 4 parent self-service browser mutations
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_PARENT_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-parent
 
       - name: Sprint 4 tenant-admin browser mutations
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_ADMIN_MUTATIONS_ENABLED: "true"
         run: pnpm run sprint4:test-admin
 
       - name: Sprint 4 role and tenant isolation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_ISOLATION_ENABLED: "true"
         run: pnpm run sprint4:test-isolation
 
       - name: Sprint 4 accessibility and performance budgets
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
         run: pnpm run sprint4:test-quality
 
       - name: Communicationhub and Badge Studio browser validation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           BADGE_COMMUNICATION_BROWSER_ENABLED: "true"
         run: pnpm run test:communication-badges:e2e
 
       - name: Premium release browser validation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
           PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run test:premium-release:e2e
 
       - name: Capture Priority A staging visual evidence
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         run: pnpm run design:capture-production
 
       - name: Upload Priority A staging visual evidence
-        if: always()
+        if: always() && env.MAINTENANCE_NO_WRITE != 'true'
         id: upload-priority-a-visuals
         continue-on-error: true
         uses: actions/upload-artifact@v6
@@ -527,28 +700,56 @@ jobs:
           retention-days: 14
 
       - name: Emit compact visual review fallback
-        if: steps.upload-priority-a-visuals.outcome == 'failure'
+        if: steps.upload-priority-a-visuals.outcome == 'failure' && env.MAINTENANCE_NO_WRITE != 'true'
         continue-on-error: true
         run: pnpm run design:log-visual-review
 
       - name: Phase 15 staging truth and security validation
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        env:
+          SPRINT4_ISOLATION_ENABLED: "true"
+          PREMIUM_RELEASE_BROWSER_ENABLED: "true"
         run: pnpm run phase15:staging
 
+      - name: Restore parent and child test rollout
+        if: always() && env.MAINTENANCE_NO_WRITE != 'true'
+        run: node scripts/staging/parent-child-preview-fixture.mjs cleanup
+
       - name: Write release evidence
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        id: write-staging-release-evidence
         run: pnpm run release:write-evidence
 
       - name: Upload release evidence
+        if: env.MAINTENANCE_NO_WRITE != 'true'
         id: upload-release-evidence
-        continue-on-error: true
         uses: actions/upload-artifact@v6
         with:
           name: nxttrack-staging-${{ github.sha }}-release-evidence
-          path: artifacts/release-evidence.json
+          path: |
+            artifacts/release-evidence.json
+            artifacts/exact-source-sha.json
           if-no-files-found: error
           retention-days: 14
 
-      - name: Confirm release evidence fallback
-        if: steps.upload-release-evidence.outcome == 'failure'
-        run: |
-          test -s artifacts/release-evidence.json
-          echo "Artifact upload unavailable; release evidence is preserved in this job summary."
+  staging-evidence-persistence:
+    name: preserve staging evidence on its deployed release
+    if: inputs.target == 'staging' && needs.staging-browser-validation.outputs.evidence_ready == 'true'
+    needs: [deploy, staging-browser-validation]
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    environment: staging
+    steps:
+      - name: Checkout exact canonical source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+      - name: Setup certified Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Verify and preserve the existing staging release artifact
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          STAGING_EVIDENCE_SOURCE_SHA: ${{ github.sha }}
+          STAGING_EVIDENCE_RUN_ID: ${{ github.run_id }}
+        run: node scripts/release/preserve-staging-release-evidence.mjs

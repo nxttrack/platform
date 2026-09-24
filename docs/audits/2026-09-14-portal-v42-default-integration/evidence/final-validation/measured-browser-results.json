@@ -1,0 +1,24 @@
+[
+  {
+    "name": "measured-scene-browser-regressions",
+    "command": [
+      "pnpm",
+      "--filter",
+      "@nxttrack/web",
+      "exec",
+      "playwright",
+      "test",
+      "--config=playwright.v42-local.config.ts",
+      "--project=journey-chromium",
+      "--workers=1",
+      "journey-rich.spec.ts",
+      "journey-development.spec.ts",
+      "journey-draft-history.spec.ts",
+      "journey-image-delivery.spec.ts"
+    ],
+    "exit_code": 0,
+    "seconds": 22.36,
+    "log": "measured-scene-browser-regressions.log",
+    "sha256": "c749a5b6527af78515f86a9e2aac47ba938fac68172ff1b0b828136da42d85a6"
+  }
+]

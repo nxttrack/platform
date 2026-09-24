@@ -25,6 +25,7 @@ checkFile("apps/web/tests/e2e/sprint4-instructor-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-parent-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-admin-mutations.spec.ts");
 checkFile("apps/web/tests/e2e/sprint4-isolation.spec.ts");
+checkFile("scripts/staging/prepare-sprint4-mutations.mjs");
 checkFile("scripts/staging/prepare-sprint4-offer-edges.mjs");
 checkFile("scripts/staging/prepare-sprint4-parent.mjs");
 checkFile("scripts/staging/prepare-sprint4-admin.mjs");
@@ -38,6 +39,8 @@ const productionMigrationRehearsal = read(".github/workflows/production-migratio
 const communicationsAuditWorkflow = read(".github/workflows/communications-foundation-audit.yml");
 const operationalMonitorWorkflow = read(".github/workflows/operational-monitor.yml");
 const operationalMonitorScript = read("scripts/operations/monitor-operational-health.mjs");
+const sprint4MutationPreparation = read("scripts/staging/prepare-sprint4-mutations.mjs");
+const sprint4OfferEdgePreparation = read("scripts/staging/prepare-sprint4-offer-edges.mjs");
 
 requireText(readme, `Canonical implementation and release branch: \`${canonicalBranch}\``, "README does not declare the canonical release branch.");
 requireText(phaseZero, `Canonical implementation branch: \`${canonicalBranch}\``, "Phase 0 does not lock the canonical implementation branch.");
@@ -74,9 +77,15 @@ requireText(operationalMonitorWorkflow, "MONITORING_ENABLED", "Operational monit
 requireText(operationalMonitorWorkflow, "SEND_SYNTHETIC_ALERT", "Operational monitor has no explicit synthetic-alert confirmation contract.");
 requireText(operationalMonitorWorkflow, "operations:monitor", "Operational monitor workflow does not run the canonical monitor.");
 requireText(operationalMonitorScript, "recipient_email !~* '@[^@]+[.]test$'", "Operational monitor does not exclude intentionally skipped reserved test recipients.");
+requireText(sprint4OfferEdgePreparation, 'code: `sprint4-edge-full-${runKey}`', "Sprint 4 offer-edge groups are not unique per staging run.");
+requireText(sprint4OfferEdgePreparation, 'external_reference: `sprint4-edge-full-participant-${runKey}`', "Sprint 4 capacity participants are not unique per staging run.");
 
 if (/\bpush:\s*[\s\S]{0,240}\b(?:staging|production)\b/.test(deployWorkflow)) {
   failures.push("Deploy workflow still contains a push-triggered staging/production release path.");
+}
+
+if (/participants"\)\.delete\(\)[\s\S]{0,180}sprint4-edge-full-participant/.test(sprint4MutationPreparation)) {
+  failures.push("Sprint 4 mutation preparation still deletes participants protected by append-only lifecycle history.");
 }
 
 const currentBranch = git(["branch", "--show-current"]) || process.env.GITHUB_HEAD_REF || "detached";

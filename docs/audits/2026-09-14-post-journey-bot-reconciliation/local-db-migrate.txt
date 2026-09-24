@@ -1,0 +1,6 @@
+
+> @nxttrack/platform@0.0.0 db:migrate /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/migrate.mjs
+
+[db:migrate] Supabase migrations are present in the repository.
+[db:migrate] RUN_DB_MIGRATIONS is not true. Skipping migration execution.

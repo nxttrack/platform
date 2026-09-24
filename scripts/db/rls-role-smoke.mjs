@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
+import { initializeParentRoleSession } from "../auth/parent-role-session.mjs";
+import { verifyParentProgressIsolation } from "./parent-progress-probes.mjs";
+
 const supabaseUrl = normalizeUrl(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const required = process.env.RLS_ROLE_SMOKE_REQUIRED === "true";
@@ -134,6 +138,15 @@ async function runRoleCheck(check) {
     return;
   }
 
+  if (check.key === "parent") {
+    try {
+      await initializeParentSession(auth);
+    } catch (error) {
+      failures.push(`parent session setup failed: ${error.message}`);
+      return;
+    }
+  }
+
   const [tenantMemberships, platformMemberships, tenants] = await Promise.all([
     rest(auth.accessToken, "/tenant_memberships?select=tenant_id,user_id,role,status&status=eq.active"),
     rest(auth.accessToken, "/platform_memberships?select=user_id,role,status&status=eq.active"),
@@ -177,6 +190,42 @@ async function runRoleCheck(check) {
   );
 }
 
+async function initializeParentSession(auth) {
+  // Deployment supplies the state created by Phase 16 in this same run. A
+  // standalone smoke can instead bind the authenticated user to an explicit ID.
+  const state = process.env.PHASE16_STATE_PATH
+    ? JSON.parse(readFileSync(process.env.PHASE16_STATE_PATH, "utf8"))
+    : null;
+  const tenantId = state ? state.tenant?.id : process.env.RLS_PARENT_TENANT_ID;
+  const expectedUserId = state ? state.users?.parent?.id : auth.userId;
+  if (!tenantId) {
+    if (required) throw new Error("PHASE16_STATE_PATH or RLS_PARENT_TENANT_ID is required.");
+    return;
+  }
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) throw new Error("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for parent session setup.");
+
+  await initializeParentRoleSession({
+    accessToken: auth.accessToken,
+    expectedUserId,
+    tenantId,
+    verifyUser: async (accessToken) => {
+      const response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+        headers: { ...baseHeaders(), authorization: `Bearer ${accessToken}` }
+      });
+      return response.ok ? { data: { user: await response.json() } } : { error: true };
+    },
+    initialize: async (name, parameters) => {
+      const response = await fetch(`${supabaseUrl}/rest/v1/rpc/${name}`, {
+        method: "POST",
+        headers: { "content-type": "application/json", apikey: serviceKey, authorization: `Bearer ${serviceKey}` },
+        body: JSON.stringify(parameters)
+      });
+      return response.ok ? { data: await response.json() } : { error: true };
+    }
+  });
+}
+
 async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
   if (ownTenantIds.size === 0) {
     failures.push(`${check.key} has no own tenant ids available for tenant-scoped isolation checks.`);
@@ -184,6 +233,22 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
   }
 
   for (const table of tenantScopedTables) {
+    if (check.key === "parent" && table === "participant_progress_scores") {
+      try {
+        const fixturePath = process.env.SPRINT4_ISOLATION_STATE_PATH;
+        if (!fixturePath) throw new Error("SPRINT4_ISOLATION_STATE_PATH is required for parent progress isolation.");
+        const fixture = JSON.parse(readFileSync(fixturePath, "utf8")).progressScoreIsolation;
+        const count = await verifyParentProgressIsolation({
+          fixture, userId: auth.userId, ownTenantIds,
+          serviceRead: readProgressFixture,
+          parentRead: (path) => fetchRest(auth.accessToken, path)
+        });
+        console.log(`[db:rls-role-smoke] parent progress: ${count} existing-row visibility/isolation probes passed.`);
+      } catch (error) {
+        failures.push(error.message);
+      }
+      continue;
+    }
     const rows = await optionalRest(auth.accessToken, `/${table}?select=tenant_id&limit=50`, table);
     const leakedRow = rows.find((row) => row.tenant_id && !ownTenantIds.has(row.tenant_id));
 
@@ -191,6 +256,16 @@ async function assertTenantScopedTableIsolation(check, auth, ownTenantIds) {
       failures.push(`${check.key} can see a ${table} row for another tenant.`);
     }
   }
+}
+
+async function readProgressFixture(path) {
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) throw new Error("Parent progress fixture verification requires server credentials.");
+  const response = await fetch(`${supabaseUrl}/rest/v1${path}`, {
+    headers: { "content-type": "application/json", apikey: serviceKey, authorization: `Bearer ${serviceKey}` }
+  });
+  if (!response.ok) throw new Error(`Parent progress fixture verification failed: HTTP ${response.status}.`);
+  return response.json();
 }
 
 async function signIn(email, password) {

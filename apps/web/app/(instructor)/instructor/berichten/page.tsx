@@ -34,7 +34,7 @@ export default async function InstructorMessagesPage({ searchParams }: PageProps
         <Metric icon={<MailOpen className="h-5 w-5" />} label="Ongelezen" value={unreadNotifications.length} />
       </div>
 
-      <ThreadWorkspace baseHref="/instructor/berichten" canReply={hub.canReplyToParents} currentUserId={hub.currentUserId} messages={hub.messages} mode="instructor" people={hub.people} selectedThreadId={selectedThreadId} threads={hub.threads} unreadThreadIds={hub.unreadThreadIds} />
+      <ThreadWorkspace tenantId={hub.tenant.id} baseHref="/instructor/berichten" canReply={hub.canReplyToParents} currentUserId={hub.currentUserId} messages={hub.messages} mode="instructor" people={hub.people} selectedThreadId={selectedThreadId} threads={hub.threads} unreadThreadIds={hub.unreadThreadIds} />
 
       <section className="rounded-xl border border-border bg-card p-5 shadow-soft">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

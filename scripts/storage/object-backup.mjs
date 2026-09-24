@@ -4,12 +4,22 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, readdir, stat, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
+import {
+  requiredStorageBucketNames,
+  storageBucketContractVersion,
+  storageBucketDefinition
+} from "./storage-bucket-contract.mjs";
+import {
+  assertStorageRestoreBinding,
+  storageProjectFingerprint,
+  validateStorageManifestBucketContract
+} from "./storage-restore-contract.mjs";
 
 const requireFromWeb = createRequire(new URL("../../apps/web/package.json", import.meta.url));
 const { createClient } = requireFromWeb("@supabase/supabase-js");
 
-const allowedBuckets = new Set(["tenant-documents", "diploma-vault", "participant-media", "badge-studio-assets", "tenant-media-assets"]);
-const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? "tenant-documents,diploma-vault,participant-media,badge-studio-assets,tenant-media-assets");
+const allowedBuckets = new Set(requiredStorageBucketNames);
+const buckets = parseBuckets(process.env.STORAGE_BACKUP_BUCKETS ?? requiredStorageBucketNames.join(","));
 const command = process.argv[2];
 const backupDirectory = resolve(process.env.STORAGE_BACKUP_DIR ?? "artifacts/storage-backup");
 const scopedPrefix = normalizePrefix(process.env.STORAGE_BACKUP_PREFIX ?? "");
@@ -38,7 +48,6 @@ try {
   } else if (command === "verify-local") {
     output(await verifyLocalBackup());
   } else if (command === "restore") {
-    requireConfirmation("STORAGE_RESTORE_CONFIRMATION", "RESTORE_STORAGE_OBJECTS");
     output(await restoreObjects());
   } else if (command === "verify-remote") {
     output(await verifyRemoteObjects());
@@ -109,9 +118,10 @@ async function exportObjects() {
 
   entries.sort((left, right) => `${left.bucket}/${left.path}`.localeCompare(`${right.bucket}/${right.path}`));
   const manifest = {
-    version: 2,
+    version: 3,
+    bucketContractVersion: storageBucketContractVersion,
     createdAt: new Date().toISOString(),
-    sourceProjectFingerprint: sha256(new URL(supabaseUrl).hostname).slice(0, 16),
+    sourceProjectFingerprint: storageProjectFingerprint(supabaseUrl),
     environment: process.env.APP_ENV,
     buckets,
     missingBuckets,
@@ -125,11 +135,13 @@ async function exportObjects() {
   await writeFile(join(backupDirectory, "manifest.sha256"), `${sha256(await readFile(manifestPath))}  manifest.json\n`, {
     mode: 0o600
   });
-  await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
-    objectCount: manifest.objectCount,
-    totalBytes: manifest.totalBytes,
-    sourceProjectFingerprint: manifest.sourceProjectFingerprint
-  });
+  if (process.env.STORAGE_BACKUP_DEFER_SUCCESS_HEARTBEAT !== "true") {
+    await recordStorageBackupHeartbeat("pass", `Storage-back-up bevat ${manifest.objectCount} object(en) in ${manifest.buckets.length} buckets.`, {
+      objectCount: manifest.objectCount,
+      totalBytes: manifest.totalBytes,
+      sourceProjectFingerprint: manifest.sourceProjectFingerprint
+    });
+  }
   return summarizeManifest(manifest);
 }
 
@@ -191,23 +203,51 @@ async function verifyLocalBackup() {
 
 async function restoreObjects() {
   const manifest = await readManifest();
+  assertStorageRestoreBinding({ environment: process.env, manifest, targetUrl: supabaseUrl });
   await verifyLocalBackup();
+  await assertRestoreTargetsAbsent(manifest);
+  const created = [];
 
-  for (const entry of manifest.objects) {
-    const bytes = await readFile(resolveBackupFile(entry.file));
-    const options = {
-      upsert: false,
-      ...(entry.contentType ? { contentType: entry.contentType } : {}),
-      ...(entry.cacheControl ? { cacheControl: entry.cacheControl } : {})
-    };
-    const { error } = await admin.storage.from(entry.bucket).upload(entry.path, bytes, options);
+  try {
+    for (const entry of manifest.objects) {
+      const bytes = await readFile(resolveBackupFile(entry.file));
+      const options = {
+        upsert: false,
+        ...(entry.contentType ? { contentType: entry.contentType } : {}),
+        ...(entry.cacheControl ? { cacheControl: entry.cacheControl } : {})
+      };
+      const { error } = await admin.storage.from(entry.bucket).upload(entry.path, bytes, options);
 
-    if (error) {
-      throw new Error(`Restore refused or failed for an object in ${entry.bucket}: ${error.message}`);
+      if (error) {
+        throw new Error(`Restore refused or failed for an object in ${entry.bucket}: ${error.message}`);
+      }
+      created.push({ bucket: entry.bucket, path: entry.path });
     }
+    await verifyRemoteObjects();
+  } catch (error) {
+    try {
+      await removeObjects(created);
+    } catch (cleanupError) {
+      throw new Error(
+        `Storage restore failed and compensation also failed; reconcile the manifest paths before retrying. Restore: ${error instanceof Error ? error.message : String(error)}. Compensation: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`
+      );
+    }
+    throw error;
   }
 
   return summarizeManifest(manifest);
+}
+
+async function assertRestoreTargetsAbsent(manifest) {
+  const targetKeys = new Set(manifest.objects.map((entry) => `${entry.bucket}\0${entry.path}`));
+
+  for (const bucket of manifest.buckets) {
+    await assertBucketExists(bucket);
+    const existing = await listAllObjects(bucket, normalizePrefix(manifest.prefix ?? ""));
+    if (existing.some((entry) => targetKeys.has(`${bucket}\0${entry.path}`))) {
+      throw new Error(`Storage restore target already contains a manifest path in ${bucket}; no object was written.`);
+    }
+  }
 }
 
 async function verifyRemoteObjects() {
@@ -230,8 +270,10 @@ async function seedRehearsal() {
   try {
     for (const bucket of buckets) {
       await assertBucketExists(bucket);
-      const isImageBucket = bucket === "participant-media" || bucket === "badge-studio-assets";
-      const path = `${scopedPrefix}/probe.${isImageBucket ? "png" : "pdf"}`;
+      const definition = storageBucketDefinition(bucket);
+      if (!definition) throw new Error(`Required bucket ${bucket} is outside the Storage contract.`);
+      const isImageBucket = definition.rehearsalContentType === "image/png";
+      const path = `${scopedPrefix}/probe.${definition.rehearsalExtension}`;
       const bytes = isImageBucket
         ? Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64")
         : Buffer.from(
@@ -239,7 +281,7 @@ async function seedRehearsal() {
             "utf8"
           );
       const { error } = await admin.storage.from(bucket).upload(path, bytes, {
-        contentType: isImageBucket ? "image/png" : "application/pdf",
+        contentType: definition.rehearsalContentType,
         cacheControl: "60",
         upsert: false
       });
@@ -258,7 +300,7 @@ async function seedRehearsal() {
 async function deleteRehearsalObjects() {
   const objects = buckets.map((bucket) => ({
     bucket,
-    path: `${scopedPrefix}/probe.${bucket === "participant-media" || bucket === "badge-studio-assets" ? "png" : "pdf"}`
+    path: `${scopedPrefix}/probe.${storageBucketDefinition(bucket)?.rehearsalExtension ?? "invalid"}`
   }));
   await removeObjects(objects);
 
@@ -361,7 +403,7 @@ async function readManifest() {
   const manifest = JSON.parse(await readFile(join(backupDirectory, "manifest.json"), "utf8"));
 
   if (
-    ![1, 2].includes(manifest.version) ||
+    ![1, 2, 3].includes(manifest.version) ||
     !Array.isArray(manifest.objects) ||
     !Array.isArray(manifest.buckets) ||
     !Number.isInteger(manifest.objectCount) ||
@@ -374,7 +416,9 @@ async function readManifest() {
     if (!allowedBuckets.has(bucket)) throw new Error("Backup manifest contains an unsupported bucket.");
   }
 
-  if (manifest.version === 2) {
+  validateStorageManifestBucketContract(manifest, requiredStorageBucketNames, allowedBuckets);
+
+  if (manifest.version >= 2) {
     if (!Array.isArray(manifest.missingBuckets)) {
       throw new Error("Storage backup manifest has no missing-bucket inventory.");
     }
@@ -400,7 +444,7 @@ function validateManifestEntry(entry) {
     typeof entry.path !== "string" ||
     !entry.path ||
     typeof entry.file !== "string" ||
-    !/^objects\/(?:tenant-documents|diploma-vault|participant-media|badge-studio-assets)\/[a-f0-9]{64}\.bin$/.test(entry.file) ||
+    entry.file !== `objects/${entry.bucket}/${sha256(`${entry.bucket}\0${entry.path}`)}.bin` ||
     !Number.isInteger(entry.size) ||
     entry.size < 0 ||
     !/^[a-f0-9]{64}$/.test(entry.sha256)
@@ -418,8 +462,12 @@ function resolveBackupFile(relativeFile) {
 function parseBuckets(value) {
   const parsed = [...new Set(value.split(",").map((bucket) => bucket.trim()).filter(Boolean))];
 
-  if (parsed.length === 0 || parsed.some((bucket) => !allowedBuckets.has(bucket))) {
-    fatal("STORAGE_BACKUP_BUCKETS may only contain tenant-documents, diploma-vault, participant-media and badge-studio-assets.");
+  if (
+    parsed.length !== requiredStorageBucketNames.length ||
+    parsed.some((bucket) => !allowedBuckets.has(bucket)) ||
+    requiredStorageBucketNames.some((bucket) => !parsed.includes(bucket))
+  ) {
+    fatal(`STORAGE_BACKUP_BUCKETS must contain every required private bucket exactly once: ${requiredStorageBucketNames.join(", ")}.`);
   }
 
   return parsed;
@@ -457,6 +505,7 @@ function requireConfirmation(name, expected) {
 function summarizeManifest(manifest) {
   return {
     version: manifest.version,
+    bucketContractVersion: manifest.bucketContractVersion ?? null,
     createdAt: manifest.createdAt,
     sourceProjectFingerprint: manifest.sourceProjectFingerprint,
     environment: manifest.environment,

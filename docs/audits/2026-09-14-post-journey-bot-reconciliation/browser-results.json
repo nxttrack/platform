@@ -1,0 +1,29 @@
+[
+  {
+    "name": "smoke",
+    "command": [
+      "pnpm",
+      "run",
+      "test:smoke:e2e",
+      "--workers=2",
+      "--retries=0",
+      "--output=/tmp/nxttrack-phase05-evidence/smoke-results"
+    ],
+    "exit_code": 0,
+    "seconds": 29.93,
+    "log": "local-smoke.log"
+  },
+  {
+    "name": "journey",
+    "command": [
+      "pnpm",
+      "run",
+      "test:journey:e2e",
+      "--workers=1",
+      "--output=/tmp/nxttrack-phase05-evidence/journey-results"
+    ],
+    "exit_code": 1,
+    "seconds": 302.96,
+    "log": "local-journey.log"
+  }
+]

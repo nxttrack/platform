@@ -1,0 +1,49 @@
+
+Running 2 tests using 1 worker
+
+(node:3040342) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [journey-chromium] › tests/e2e/journey-development.spec.ts:3:5 › development searches and restores filters, opens a focused dialog and keeps historical values distinct (2.5s)
+  ✘  2 [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text (3.1s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      37 |   const dialog = page.getByRole("dialog", { name: /^Rustig drijven/ }); await expect(dialog).toBeVisible();
+      38 |   await expect(dialog.getByRole("button", { name: "Venster sluiten" })).toBeVisible();
+    > 39 |   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+         |                                                                                                ^
+      40 |   await dialog.getByRole("button", { name: "Venster sluiten" }).click(); await expect(trigger).toBeFocused();
+      41 | });
+      42 |
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-development.spec.ts:39:96
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-overflow-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-overflow-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../tmp/nxttrack-v42-evidence/development-overflow-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/development-overflow-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../tmp/nxttrack-v42-evidence/development-overflow-browser-results/journey-development-develo-12fe4-viewports-and-enlarged-text-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-development.spec.ts:27:5 › development retains readable long labels and reachable details across seven viewports and enlarged text 
+  1 passed (6.6s)
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test tests/e2e/journey-development.spec.ts --config=playwright.v42-local.config.ts --project=journey-chromium --retries=0 --workers=1 --output=/tmp/nxttrack-v42-evidence/development-overflow-browser-results

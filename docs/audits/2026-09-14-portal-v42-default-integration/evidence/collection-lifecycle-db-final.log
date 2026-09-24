@@ -1,0 +1,17 @@
+
+> @nxttrack/platform@0.0.0 test:theme-library:db /home/codex/repos/nxttrack-portal-v42-default-integration
+> tsx --test tests/integration/portal-theme-library.test.ts
+
+PASS world binding identities, tenant isolation, concurrent edits, complete rollback, immutable history, reconnect, curriculum unchanged, legacy opt-in and child/tenant/direct API enforcement
+PASS collection service-only access, exact v1 native context, separate child write capability, scoped random/replay, explicit save, fault rollback and concurrent deduplication, immutable art/title, expired/revoked/foreign-tenant/other-actor denial, rollback preservation and zero business mutations
+PASS Default publication rejects manufactured original fields without verified server provenance; no Default release published
+PASS real storage, authorized SQL, concurrent revision conflict, review invalidation, immutable publication, restart reads, anonymous and authenticated denial; assignment count unchanged
+✔ real storage and canonical SQL commands preserve optimistic review, publication, access and restart contracts (2757.950042ms)
+ℹ tests 1
+ℹ suites 0
+ℹ pass 1
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3012.088726

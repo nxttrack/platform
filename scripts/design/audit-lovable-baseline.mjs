@@ -94,7 +94,8 @@ requireText("apps/web/components/ui/tabs.tsx", "TabsPrimitive.Trigger", "Radix T
 requireText("apps/web/components/ui/alert-dialog.tsx", "AlertDialogPrimitive.Description", "AlertDialog accessible description composition is missing.");
 requireText("apps/web/components/ui/confirm-action-form.tsx", 'type="submit"', "Confirmed actions do not submit through the owning server-action form.");
 requireText("apps/web/app/(instructor)/instructor/student/[id]/page.tsx", "getDossierTab", "Instructor student dossier does not preserve a safe active tab across server-action redirects.");
-requireText("apps/web/app/(portaal)/portaal/lessen/page.tsx", "ConfirmActionForm", "Lesson cancellation is missing explicit confirmation.");
+requireText("apps/web/app/(portaal)/portaal/planning/parent-planning-page.tsx", "ConfirmActionForm", "Lesson cancellation is missing explicit confirmation.");
+requireText("apps/web/lib/domain/parent-portal-actions.ts", 'formData.get("humanConfirmation") !== "confirmed"', "Lesson cancellation confirmation is not enforced server-side.");
 requireText("apps/web/components/shell/ui.tsx", "export function ProgressRing", "ProgressRing primitive is missing.");
 requireText("apps/web/components/shell/ui.tsx", "export function WaitlistDot", "WaitlistDot primitive is missing.");
 requireText("apps/web/components/lovable/page-kit.tsx", "export function Photo", "Photo primitive is missing.");
@@ -118,7 +119,10 @@ requireText("apps/web/app/(tenant-admin)/admin/rapportages/page.tsx", "TableCapt
 requireText("apps/web/components/auth/password-strength-meter.tsx", 'role="progressbar"', "Password strength is not exposed as an accessible progressbar.");
 requireText("apps/web/components/admin/operational-charts.tsx", "accessibilityLayer", "Operational charts must enable the Recharts accessibility layer.");
 requireText("apps/web/lib/domain/admin-chart-data.ts", "buildAdminChartData", "Server-derived admin chart data mapping is missing.");
-requireText("apps/web/app/(tenant-admin)/admin/page.tsx", "CapacityChart", "Admin dashboard does not render real-data charts.");
+requireText("apps/web/app/(tenant-admin)/admin/page.tsx", "TenantAdminDashboard", "Admin dashboard does not render the tenant cockpit.");
+requireText("apps/web/app/(tenant-admin)/admin/page.tsx", "getAdminOperationsData", "Admin dashboard no longer uses existing operational data.");
+requireText("apps/web/app/(tenant-admin)/admin/page.tsx", "getDailyOperationalCockpit", "Admin dashboard no longer preserves the operational signal source.");
+requireText("apps/web/app/(tenant-admin)/admin/signalen/page.tsx", "DailyOperationalCockpit", "Admin signal work queue is missing its existing operational actions.");
 requireText("apps/web/app/(tenant-admin)/admin/rapportages/page.tsx", "Betalingen per status", "Admin reports do not render payment-status charts.");
 requireText("apps/web/components/marketing/site-chrome.tsx", "usePathname", "Marketing navigation is not path-aware.");
 requireText("apps/web/components/marketing/site-chrome.tsx", "SheetContent", "Marketing shell has no Radix mobile drawer.");

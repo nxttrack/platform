@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 deploy:package-standalone-assets /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> node scripts/deploy/package-standalone-assets.mjs
+
+[deploy:package-standalone-assets] Packaged static, public and native Sharp assets for standalone runtime.

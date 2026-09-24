@@ -17,7 +17,7 @@ export type WaitlistEntryRow = {
   parent_phone: string | null;
   participant_name: string;
   participant_birth_date: string | null;
-  participant_gender: "boy" | "girl" | "unknown";
+  participant_gender: "boy" | "girl" | "unknown_legacy";
   selected_option: string;
   status: string;
   priority_date: string;

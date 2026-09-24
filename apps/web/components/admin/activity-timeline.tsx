@@ -37,7 +37,7 @@ export function ActivityTimeline({
               <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                 <p className="font-semibold text-foreground">{smartEventLabel(event.eventType)}</p>
                 <StatusPill tone={severityTone(event.severity)}>{severityLabel(event.severity)}</StatusPill>
-                {event.isTest ? <StatusPill tone="info"><FlaskConical className="mr-1 size-3" aria-hidden="true" />Journey Bot</StatusPill> : null}
+                {event.isTest ? <StatusPill tone="info"><FlaskConical className="mr-1 size-3" aria-hidden="true" />Testdata</StatusPill> : null}
               </div>
               <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={event.occurredAt}>{formatDateTime(event.occurredAt)}</time>
             </div>
@@ -64,7 +64,7 @@ function sourceLabel(source: string) {
       data_quality_assistant: "Data Quality Assistant",
       database_trigger: "Domeinactie",
       signal_sweep: "Signaalcontrole",
-      journey_simulation_bot: "Journey Bot",
+      journey_simulation_bot: "Testdata",
       placement: "Plaatsing",
       billing: "Betalingen",
       planning: "Planning",

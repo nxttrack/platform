@@ -21,11 +21,11 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
   const userId = await findUserIdByEmail(email);
 
   if (!userId) {
-    return { requested: true, delivered: false };
+    return { requested: true, accepted: false };
   }
 
   if (await isPasswordResetRateLimited(admin, email)) {
-    return { requested: true, delivered: false };
+    return { requested: true, accepted: false };
   }
 
   const code = generateSixDigitCode();
@@ -47,7 +47,7 @@ export async function requestPasswordResetCode(input: { email: string; resetUrl:
     to: email,
   });
 
-  return { requested: true, delivered: mail.delivered };
+  return { requested: true, accepted: mail.accepted };
 }
 
 async function isPasswordResetRateLimited(admin: ReturnType<typeof createAdminClient>, email: string) {

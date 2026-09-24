@@ -1,4 +1,37 @@
 import { expect, test, type Page } from "@playwright/test";
+import { instructorRosterEntry } from "./helpers/instructor-roster";
+
+test("instructor roster selection remains exact beside focus cards and matching participant names", async ({ page }) => {
+  const participantId = "11111111-1111-4111-8111-111111111111";
+  const otherId = "22222222-2222-4222-8222-222222222222";
+  const rosterCard = (id: string, name: string) => `<article data-roster="${id}">
+    <h3>${name}</h3><a href="/instructor/student/${id}">Student detail</a>
+    <form onsubmit="event.preventDefault(); document.body.dataset.attendance = '${id}'">
+      <input name="participantId" type="hidden" value="${id}">
+      <input name="status" type="hidden" value="late"><button type="submit">Laat</button>
+    </form><span>open</span>
+  </article>`;
+  await page.setContent(`<section aria-label="Vandaag focus"><article>
+    <h4>E2E Leerling</h4><p>Fictieve afgeschermde score</p>
+    <form><input name="participantId" type="hidden" value="${participantId}"><button>Notitie toevoegen</button></form>
+  </article></section>
+  ${rosterCard(otherId, "E2E Leerling extra")}
+  ${rosterCard(participantId, "E2E Leerling")}`);
+
+  // All three match the old text-only selector; only one is this participant's attendance row.
+  await expect(page.locator("article").filter({ hasText: "E2E Leerling" })).toHaveCount(3);
+  const roster = instructorRosterEntry(page, participantId);
+  await expect(roster).toHaveCount(1);
+  await expect(roster).toHaveAttribute("data-roster", participantId);
+  await roster.getByRole("button", { name: "Laat", exact: true }).click();
+  await expect(page.locator("body")).toHaveAttribute("data-attendance", participantId);
+
+  // Preserve ambiguity detection: a genuine duplicate must still fail the journey's count assertion.
+  await page.locator(`[data-roster="${participantId}"]`).evaluate((element) => element.after(element.cloneNode(true)));
+  await expect(roster).toHaveCount(2);
+  await page.locator(`[data-roster="${participantId}"]`).evaluateAll((elements) => elements.forEach((element) => element.remove()));
+  await expect(roster).toHaveCount(0);
+});
 
 const publicRoutes = [
   { path: "/", label: "root" },
@@ -17,6 +50,8 @@ const privateRoutes = [
   "/admin/berichten",
   "/portaal",
   "/portaal/badges",
+  "/kind",
+  "/kind/reis",
   "/instructor"
 ];
 
@@ -34,6 +69,13 @@ const marketingSubpages = [
 ] as const;
 
 test.describe("staging MVP smoke", () => {
+  test("child session API requires authentication and cannot be cached", async ({ request }) => {
+    const response = await request.get("/api/child/session");
+    expect(response.status()).toBe(401);
+    expect(await response.json()).toMatchObject({ error: "unauthorized" });
+    expect(response.headers()["cache-control"]).toContain("no-store");
+  });
+
   test("health endpoint returns the expected payload", async ({ request }) => {
     const response = await request.get("/api/health");
 

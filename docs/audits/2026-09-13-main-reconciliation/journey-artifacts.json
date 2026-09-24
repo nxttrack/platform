@@ -1,0 +1,438 @@
+{
+  "runtimeCommit": "2f4317e19ed48687a51870274d7c9e74502d6ff5",
+  "result": "PASS",
+  "renderCount": 86,
+  "storage": "Local task artifact directory /dev/shm/nxttrack-reconciliation-visual; original images intentionally not committed",
+  "files": [
+    {
+      "name": "journey-coastal-explorer-dense-12-popup.png",
+      "bytes": 348008,
+      "sha256": "3e68bbccc3b03cfa91dc7d949e02ca8bf1606dc0708ae24b07674c0cf09c9725"
+    },
+    {
+      "name": "journey-coastal-explorer-desktop-first-visit-tooltip.png",
+      "bytes": 1177911,
+      "sha256": "de62e7bc50c20f53c61012f64fcd060ea423c053141f6c44fb40dab716c90d73"
+    },
+    {
+      "name": "journey-coastal-explorer-desktop-initial-current.png",
+      "bytes": 1181506,
+      "sha256": "0e006354c932d1904e2eb8d656b77c8f4087055df3c371c1067469e334563405"
+    },
+    {
+      "name": "journey-coastal-explorer-desktop-milestone-popup.png",
+      "bytes": 1132665,
+      "sha256": "b7ea45c1e5ccc341917cb69071838d7067d67641eb650baf86202304e6e2c2e9"
+    },
+    {
+      "name": "journey-coastal-explorer-desktop-oldest-completion.png",
+      "bytes": 1179545,
+      "sha256": "cb5b10ce2b284b5ced7948654ccd322da85d5d3ad2feb9d5a2b17c6217f02a4c"
+    },
+    {
+      "name": "journey-coastal-explorer-mobile-first-visit-tooltip.png",
+      "bytes": 406076,
+      "sha256": "6f010562f11ae6c531c8ba2c41172554403711595cf7799e70eb298f65c25ea9"
+    },
+    {
+      "name": "journey-coastal-explorer-mobile-initial-current.png",
+      "bytes": 421501,
+      "sha256": "122ff4b8165a6a517cec96224ff77a94d495e0158be3fa648daf065c51ae3d4b"
+    },
+    {
+      "name": "journey-coastal-explorer-mobile-milestone-popup.png",
+      "bytes": 369268,
+      "sha256": "2cbcfc2f7c7f80aa8ed7c7f1a9ea3d82ba81aa9d5947c27076dd712df389d8dd"
+    },
+    {
+      "name": "journey-coastal-explorer-mobile-oldest-completion.png",
+      "bytes": 422143,
+      "sha256": "3eedd10dc6079c8fe6debfdd2ad412c1ccfb3c03cb8149493e189ae9e5d90607"
+    },
+    {
+      "name": "journey-dolphin-bay-dense-12-popup.png",
+      "bytes": 377266,
+      "sha256": "a74fb87700ac0e7a255275f54206c697c04c8e81fb417a9c9bd007da2490b7e3"
+    },
+    {
+      "name": "journey-dolphin-bay-desktop-first-visit-tooltip.png",
+      "bytes": 1494574,
+      "sha256": "ad9d29f3e27efe282c32561792e2e4d71ed4db35f74fd0e4e22d7b9c8513a3f8"
+    },
+    {
+      "name": "journey-dolphin-bay-desktop-initial-current.png",
+      "bytes": 1523818,
+      "sha256": "395f293ca18a4a036c05aa2b7cff2adcb2f7df6c870dc5d293dd2c38b1d773f3"
+    },
+    {
+      "name": "journey-dolphin-bay-desktop-milestone-popup.png",
+      "bytes": 1438123,
+      "sha256": "7db51a081c5671c8dbd53e63dc3e40abd844b79b3f0ab24571d83df61c6c05ca"
+    },
+    {
+      "name": "journey-dolphin-bay-desktop-oldest-completion.png",
+      "bytes": 1513042,
+      "sha256": "9945d1e358699b53cae2b5c4ab9910e8e6fd1d08ba0ae6e2de0e57654e94d48d"
+    },
+    {
+      "name": "journey-dolphin-bay-mobile-first-visit-tooltip.png",
+      "bytes": 421555,
+      "sha256": "ea54796526e223fe0661459c81505b7fb70cff4dab3bc9ea727366133a4d2ace"
+    },
+    {
+      "name": "journey-dolphin-bay-mobile-initial-current.png",
+      "bytes": 435238,
+      "sha256": "29c574c7476192b6df10dba2413e154a4c83a124ef9db6cd964d5e0ad3ff3615"
+    },
+    {
+      "name": "journey-dolphin-bay-mobile-milestone-popup.png",
+      "bytes": 394510,
+      "sha256": "6a91bfce0bf12c163b9caf077a24d348a3025ed0defa3b414b251333e962a97a"
+    },
+    {
+      "name": "journey-dolphin-bay-mobile-oldest-completion.png",
+      "bytes": 436234,
+      "sha256": "e2e07d3a01680e3bab4421cbab73b44cc8460aa4250db933379d39b1679116bb"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-desktop-first-visit-tooltip.png",
+      "bytes": 1259803,
+      "sha256": "30e6ec1406527647b21684527d0680ce1b1a4816524608cc158ceb4e25838107"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-desktop-initial-current.png",
+      "bytes": 1270396,
+      "sha256": "880fcd0b6fadc2d4861d00282762175ec778105b796effc5621fedebfc2747cb"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-desktop-milestone-popup.png",
+      "bytes": 1216052,
+      "sha256": "9e249d818e230e4dbd8195f23434a66b3e600db4054449a8f638a6f7a5228995"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-desktop-oldest-completion.png",
+      "bytes": 1274484,
+      "sha256": "751ca37a44dbc158810fe65cea86adeed834b70844142965bfb039be542c3fe7"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-mobile-first-visit-tooltip.png",
+      "bytes": 370452,
+      "sha256": "5295b41d3b964d040a2f885d59d9936b4dd23b933c6e6880526cd408f29651da"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-mobile-initial-current.png",
+      "bytes": 396000,
+      "sha256": "e18caea7247888a12def3c34e4c0b73facee654676cfde685be721c29ea2a740"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-mobile-milestone-popup.png",
+      "bytes": 330007,
+      "sha256": "8c5f76814d8c637ab7821b35a0a047db13bcc2950055b1134784fc7c33918a3d"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-mobile-oldest-completion.png",
+      "bytes": 394920,
+      "sha256": "4b22fb136966b740e3cfbd753a105ecba83cbc101f093f765132bde914dc559a"
+    },
+    {
+      "name": "journey-nationaal-zwem-abc-no-mascot-no-reserved-layer.png",
+      "bytes": 394293,
+      "sha256": "e1e0433902a0b87986961768b14efeb67e27365aa55790a01dc4c857dc7846e0"
+    },
+    {
+      "name": "journey-nxttrack-default-desktop-first-visit-tooltip.png",
+      "bytes": 1019314,
+      "sha256": "d69d2290a94ee22c7d05bfd87dfda6f41c1d4ac2032aa06bb2bb78a633528fcb"
+    },
+    {
+      "name": "journey-nxttrack-default-desktop-initial-current.png",
+      "bytes": 1026438,
+      "sha256": "cfbaba6e39068920033438785fc2ca0ec6516f1fa3ed1f6031ba3bc92d5dad09"
+    },
+    {
+      "name": "journey-nxttrack-default-desktop-milestone-popup.png",
+      "bytes": 960865,
+      "sha256": "4bcb68975710a184272055c37a42f9cb40608b00258ade0de3bade04cb0440ec"
+    },
+    {
+      "name": "journey-nxttrack-default-desktop-oldest-completion.png",
+      "bytes": 1014552,
+      "sha256": "05fa537368177b2c328b81c0c6ecdc815c649d860cd3ee9ce30d7ebe0de7a0ef"
+    },
+    {
+      "name": "journey-nxttrack-default-mobile-first-visit-tooltip.png",
+      "bytes": 297001,
+      "sha256": "c229511bc25916dd860b8241f70b9e4080a11e3509a6ac1799e6a1d90b4f8644"
+    },
+    {
+      "name": "journey-nxttrack-default-mobile-initial-current.png",
+      "bytes": 305397,
+      "sha256": "a41837565926adc795faddbaab3935af58a8146a06f7e87f11fa58b7448ac6f5"
+    },
+    {
+      "name": "journey-nxttrack-default-mobile-milestone-popup.png",
+      "bytes": 268522,
+      "sha256": "b134f98ddd3f1d5f4df24203b32fbc5fec7643ef107eeef91ae8acd40dabf8d1"
+    },
+    {
+      "name": "journey-nxttrack-default-mobile-oldest-completion.png",
+      "bytes": 303310,
+      "sha256": "f0311e738b048e54e5a0bab0dddf13b67a900e7bb10712744970405d6cb4bd0b"
+    },
+    {
+      "name": "journey-nxttrack-default-no-mascot-no-reserved-layer.png",
+      "bytes": 304235,
+      "sha256": "cea2dbc1d8ccae666ca93a2f87c66e5be3c39b5b0baf6b825b79d346166d3a75"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-1.png",
+      "bytes": 1163526,
+      "sha256": "038eb6e2a1e04635d07d9edba034075fa4414601594a4548cd6196871aba2a5a"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-2.png",
+      "bytes": 1154586,
+      "sha256": "1c0eb45edc39436a60524573dd14ea32461c984743ea04ff1163ec50c5436c3c"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-3.png",
+      "bytes": 1156070,
+      "sha256": "3e7c4be135243e7ba9e4679d02b613527baad1640f2429778f146484f2c28f3a"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-4.png",
+      "bytes": 1150444,
+      "sha256": "cb148ac51cf1589cb135893e47e3edff7ed639126de61a47dd4a0a746d67e005"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-5.png",
+      "bytes": 1152754,
+      "sha256": "d65b3fc58f1dd63ff99a9e4f866d122f1569f4e682b51b2d7f63090480ca96ae"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-6.png",
+      "bytes": 1152076,
+      "sha256": "1bb113dedac371d60e50ab75e4c3344a40bb7ff310edbe79ba95ac4a81420cf5"
+    },
+    {
+      "name": "journey-ocean-quest-1280x720-selected-doel-7.png",
+      "bytes": 1155564,
+      "sha256": "839cdbcdde278037179587bf8472b158e68370ff04740cb9b3cda4538cf08c21"
+    },
+    {
+      "name": "journey-ocean-quest-200-percent-reflow.png",
+      "bytes": 512393,
+      "sha256": "73cfc20366150da54a186b209201c9eca320807100d9d7e066b3f05b41795c07"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-1.png",
+      "bytes": 311051,
+      "sha256": "e59ad910c4019a7e59bca13a1e5c4a08a7a2d68c48fe3e5c45a27913d13f3bce"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-2.png",
+      "bytes": 316412,
+      "sha256": "99ebd951fecdf6c6ffe12f3370cd14fb80f56c73f88bf5e452fc75dd7e0aa46d"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-3.png",
+      "bytes": 315043,
+      "sha256": "4cde432df2b73bf0e1b8bb9d924a251b17e878efcff74a5e669c8de1d0a3565c"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-4.png",
+      "bytes": 314911,
+      "sha256": "6e03ce02d91231620ebd81dd54941fceac0c8864767e3ca1044f05b7759cca2a"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-5.png",
+      "bytes": 315045,
+      "sha256": "2b3752f02f43c10bbc5ea2875e5bf46243c956d429033de67321e748c3f1fb06"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-6.png",
+      "bytes": 307636,
+      "sha256": "afd90251ee2fa47a4bcafd89be3d568344a2a45ad9381590c173a199a9721aa4"
+    },
+    {
+      "name": "journey-ocean-quest-320x568-selected-doel-7.png",
+      "bytes": 311053,
+      "sha256": "bba31d8b332016802c7a6bfb3715e57972ebea96fcd4a8a5888021b6f1deae70"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-1.png",
+      "bytes": 497448,
+      "sha256": "d57d3cca59c81eec16d001e301f53bf5d159589fb60ff1020b40ded7d639bc20"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-2.png",
+      "bytes": 501698,
+      "sha256": "dec4e0c2f533bab451ba67e2fe587fe1df1488d2d0edc8af161d64bb2164dbfd"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-3.png",
+      "bytes": 499627,
+      "sha256": "bbe1b86990c5f351dd54cc84ffaf74ddf432124b64747e45f39d1af7696985a5"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-4.png",
+      "bytes": 499134,
+      "sha256": "19a3fba809d5c6950f125528fbb906ea3099414378ccb71aecc02d098da2fe83"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-5.png",
+      "bytes": 498088,
+      "sha256": "00274da27e1a94b7dddf5514094daa354f5debe74fa00d127581f2816213f976"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-6.png",
+      "bytes": 493429,
+      "sha256": "431b13eabdc04763b193f561e2a9fbf6076a937b1c3e1110481299d652cc1dc7"
+    },
+    {
+      "name": "journey-ocean-quest-390x844-selected-doel-7.png",
+      "bytes": 495799,
+      "sha256": "6a0eaee99560be7f7b793df2bcedf389705d29c95998e785e36db913a8f04eca"
+    },
+    {
+      "name": "journey-ocean-quest-dense-12-popup.png",
+      "bytes": 395760,
+      "sha256": "573a3751b62a75a38fd24ac66b5ab92d0e52b574e2ba8922fef54bfd9dc54706"
+    },
+    {
+      "name": "journey-ocean-quest-desktop-first-visit-tooltip.png",
+      "bytes": 1375177,
+      "sha256": "f841d94cbfccc6ac5f765db5ef3fefcf2b40b2ea26a7a35348fbde31211c1823"
+    },
+    {
+      "name": "journey-ocean-quest-desktop-initial-current.png",
+      "bytes": 1383102,
+      "sha256": "4f741ad50432ec4e68aa4ba16a9c526003710f6fecf4bcf320b0316a28931edf"
+    },
+    {
+      "name": "journey-ocean-quest-desktop-milestone-popup.png",
+      "bytes": 1313308,
+      "sha256": "986998200632d4b679da4f76f991932f3f2cdbb9dda7e3e91ff739ace9da172a"
+    },
+    {
+      "name": "journey-ocean-quest-desktop-oldest-completion.png",
+      "bytes": 1384914,
+      "sha256": "ff1a5e1db888e4d3845c909ba2a8a2d824ea077c78d923d4dc464db9399170ee"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-first-visit-tooltip.png",
+      "bytes": 480430,
+      "sha256": "35c74ade9a01e9d61deb556a7609c85831d1cc6032e0f7131b44616dd5bf61ac"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-initial-current.png",
+      "bytes": 500898,
+      "sha256": "5d73975c6e36778cf1c2b16ae1251a5a56af3ecb2d9f3c6cf92920717113882a"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-landscape.png",
+      "bytes": 461565,
+      "sha256": "c8e64367396c44ed4c02ef9d22461840dce3e309b74190aa401db8000c1e9de8"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-milestone-popup.png",
+      "bytes": 419634,
+      "sha256": "35a19c10a5118ea30febf30255188263e42e1803ca15ae06c40f461f7f122ee0"
+    },
+    {
+      "name": "journey-ocean-quest-mobile-oldest-completion.png",
+      "bytes": 500002,
+      "sha256": "03a97f95d9bd187e9017aaad56fe99e0c6b1ec2c1e8b20b47a7569f60f6d4b37"
+    },
+    {
+      "name": "journey-polar-splash-dense-12-popup.png",
+      "bytes": 347143,
+      "sha256": "766c52e6ffbf8ac93472ed37e8929801007e456208267d88fb59b3ff171c8bc1"
+    },
+    {
+      "name": "journey-polar-splash-desktop-first-visit-tooltip.png",
+      "bytes": 1325496,
+      "sha256": "6ddf2d8b5fb5d76634abd4d3a644a4c71fc50a2c49b83a64c70f56f7016b90ff"
+    },
+    {
+      "name": "journey-polar-splash-desktop-initial-current.png",
+      "bytes": 1337134,
+      "sha256": "3cdb16e9384bfee5c91e9ef995a6459df1d07ac85a87d55aa95ad6155a903c17"
+    },
+    {
+      "name": "journey-polar-splash-desktop-milestone-popup.png",
+      "bytes": 1281124,
+      "sha256": "f9a8f119dff6325ea116c85e041d8fa74dd854147f90ba571585562ff36b0989"
+    },
+    {
+      "name": "journey-polar-splash-desktop-oldest-completion.png",
+      "bytes": 1332532,
+      "sha256": "9faff5bd299efa93ebdf1adbf843c9e7e3d592ab472cfc81703b9784246bb95f"
+    },
+    {
+      "name": "journey-polar-splash-mobile-first-visit-tooltip.png",
+      "bytes": 420061,
+      "sha256": "9d02a279aa99483168f2e718de85578d20eb7e21ddd102dd11565e180b33303d"
+    },
+    {
+      "name": "journey-polar-splash-mobile-initial-current.png",
+      "bytes": 440941,
+      "sha256": "3e9e6f239d5c8548acd94e9732902bed42fe737d24acf1c3b89ee1a56edaa9f3"
+    },
+    {
+      "name": "journey-polar-splash-mobile-milestone-popup.png",
+      "bytes": 371769,
+      "sha256": "d2919d1498595bbd1df832ef6e4b731b8e2a81eca280b0be600aab1bcf7b0749"
+    },
+    {
+      "name": "journey-polar-splash-mobile-oldest-completion.png",
+      "bytes": 441634,
+      "sha256": "da7427bfbac3540858d6f2286a476891a6aa7973b62d04644fdfaa1059e79fd8"
+    },
+    {
+      "name": "journey-turtle-trails-dense-12-popup.png",
+      "bytes": 386893,
+      "sha256": "b806f006b177949020f96ae777ff21905d2f185f83c434b78931098ecf3c75ab"
+    },
+    {
+      "name": "journey-turtle-trails-desktop-first-visit-tooltip.png",
+      "bytes": 1558497,
+      "sha256": "80a42d4087e714dd6fbe6526c644f566f1266c6f1ea611a67dcbf6fd2ac92fe5"
+    },
+    {
+      "name": "journey-turtle-trails-desktop-initial-current.png",
+      "bytes": 1581405,
+      "sha256": "4b75b61d3af788880211e90e2c3f7b9e6b49dadc56d964a0c60528f422aabdcd"
+    },
+    {
+      "name": "journey-turtle-trails-desktop-milestone-popup.png",
+      "bytes": 1502745,
+      "sha256": "1037d09a0df3698a1a76a253bcef7e031f9e4d95b15464fcbb48253894bffa02"
+    },
+    {
+      "name": "journey-turtle-trails-desktop-oldest-completion.png",
+      "bytes": 1573632,
+      "sha256": "126cd98dab481a19b2acb9f220efb44bde1aecea76152c5be00166c2509b37ca"
+    },
+    {
+      "name": "journey-turtle-trails-mobile-first-visit-tooltip.png",
+      "bytes": 448721,
+      "sha256": "e8b0b5b0feed2a0ac0ec95936c37ce54f464b71ff338abcbb0a475b26b1ac7b7"
+    },
+    {
+      "name": "journey-turtle-trails-mobile-initial-current.png",
+      "bytes": 470485,
+      "sha256": "2f23af291b472f7342fbd14b5c1150a2183e42cca2127298447680a53fc6b021"
+    },
+    {
+      "name": "journey-turtle-trails-mobile-milestone-popup.png",
+      "bytes": 404037,
+      "sha256": "d8649a53035af5c907af68b2d2b0fa5364ec76aeffc025c9fa383ef6f7da8a15"
+    },
+    {
+      "name": "journey-turtle-trails-mobile-oldest-completion.png",
+      "bytes": 468722,
+      "sha256": "10d3e14cbc8641503c7f4d5b89d46930a9e90cdb13c66e40eb80063d9489c2ed"
+    }
+  ]
+}

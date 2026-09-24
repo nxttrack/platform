@@ -1,0 +1,131 @@
+{
+  "conclusion": "success",
+  "databaseId": 34766746635,
+  "headSha": "c6cd1c0fe6b5e245977b3e6af26e841b8fcbab3f",
+  "jobs": [
+    {
+      "completedAt": "2026-09-13T15:58:57Z",
+      "conclusion": "success",
+      "databaseId": 103748951136,
+      "name": "Native contract, lint, test and build",
+      "startedAt": "2026-09-13T15:49:27Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-09-13T15:49:32Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-09-13T15:49:30Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:49:37Z",
+          "conclusion": "success",
+          "name": "Checkout",
+          "number": 2,
+          "startedAt": "2026-09-13T15:49:32Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:49:38Z",
+          "conclusion": "success",
+          "name": "Set up Java 17",
+          "number": 3,
+          "startedAt": "2026-09-13T15:49:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:49:38Z",
+          "conclusion": "success",
+          "name": "Validate Gradle wrapper",
+          "number": 4,
+          "startedAt": "2026-09-13T15:49:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:49:41Z",
+          "conclusion": "success",
+          "name": "Set up Gradle",
+          "number": 5,
+          "startedAt": "2026-09-13T15:49:38Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:49:48Z",
+          "conclusion": "success",
+          "name": "Ensure Android 37 SDK",
+          "number": 6,
+          "startedAt": "2026-09-13T15:49:41Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:53:07Z",
+          "conclusion": "success",
+          "name": "Run native quality gate",
+          "number": 7,
+          "startedAt": "2026-09-13T15:49:48Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:55:37Z",
+          "conclusion": "success",
+          "name": "Build both debug and instrumentation APKs",
+          "number": 8,
+          "startedAt": "2026-09-13T15:53:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:49Z",
+          "conclusion": "success",
+          "name": "Build unsigned release bundles",
+          "number": 9,
+          "startedAt": "2026-09-13T15:55:37Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:54Z",
+          "conclusion": "success",
+          "name": "Upload native diagnostics and artifacts",
+          "number": 10,
+          "startedAt": "2026-09-13T15:58:49Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:54Z",
+          "conclusion": "success",
+          "name": "Post Set up Gradle",
+          "number": 18,
+          "startedAt": "2026-09-13T15:58:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:55Z",
+          "conclusion": "success",
+          "name": "Post Set up Java 17",
+          "number": 19,
+          "startedAt": "2026-09-13T15:58:54Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:55Z",
+          "conclusion": "success",
+          "name": "Post Checkout",
+          "number": 20,
+          "startedAt": "2026-09-13T15:58:55Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-09-13T15:58:55Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 21,
+          "startedAt": "2026-09-13T15:58:55Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/nxttrack/platform/actions/runs/34766746635/job/103748951136"
+    }
+  ],
+  "status": "completed"
+}

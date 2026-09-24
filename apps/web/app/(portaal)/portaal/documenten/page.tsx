@@ -2,16 +2,23 @@ import Link from "next/link";
 import { Download, Eye, FileText } from "lucide-react";
 import type { ReactNode } from "react";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
-import { formatDocumentDate, formatDocumentSize, getParentDocuments } from "@/lib/domain/documents";
+import { formatDocumentDate, formatDocumentSize, getParentDocumentsPageData } from "@/lib/domain/documents";
+import { resolveCurrentParentPortalTheme } from "@/lib/theme/portal-theme-server";
+import { getPortalTerminology } from "@/lib/theme/portal-terminology";
 
 export const dynamic = "force-dynamic";
 
 export default async function ParentDocumentsPage() {
-  const documents = await getParentDocuments();
+  const [documentData, portalTheme] = await Promise.all([
+    getParentDocumentsPageData(),
+    resolveCurrentParentPortalTheme("/portaal/documenten")
+  ]);
+  const documents = documentData.documents;
+  const terminology = getPortalTerminology(portalTheme.manifest, documentData.tenant.sector);
 
   return (
     <div className="space-y-6">
-      <PageHeader kicker="Documenten" title="Documenten" subtitle="Belangrijke documenten van je zwemschool." />
+      <PageHeader kicker="Documenten" title="Documenten" subtitle={`Belangrijke documenten van je ${terminology.organization}.`} />
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">

@@ -1,0 +1,95 @@
+
+> @nxttrack/platform@0.0.0 db:audit-clean-room /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/db/audit-clean-room.mjs
+
+{
+  "result": "PASS",
+  "grantProfile": "legacy",
+  "migrationCount": 151,
+  "schemas": [
+    {
+      "schema": "app_private",
+      "tables": 4,
+      "sequences": 0
+    },
+    {
+      "schema": "auth",
+      "tables": 23,
+      "sequences": 1
+    },
+    {
+      "schema": "public",
+      "tables": 251,
+      "sequences": 0
+    },
+    {
+      "schema": "realtime",
+      "tables": 0,
+      "sequences": 0
+    },
+    {
+      "schema": "storage",
+      "tables": 10,
+      "sequences": 0
+    }
+  ],
+  "publicTables": {
+    "total": 251,
+    "rls": 251,
+    "force_rls": 251
+  },
+  "objects": {
+    "functions": 269,
+    "triggers": 264,
+    "indexes": 926,
+    "constraints": 2621
+  },
+  "buckets": [
+    {
+      "id": "badge-studio-assets",
+      "public": false
+    },
+    {
+      "id": "diploma-vault",
+      "public": false
+    },
+    {
+      "id": "participant-media",
+      "public": false
+    },
+    {
+      "id": "tenant-documents",
+      "public": false
+    },
+    {
+      "id": "tenant-media-assets",
+      "public": false
+    }
+  ],
+  "storagePolicies": [
+    {
+      "policyname": "Clean diploma files are scoped to certificate access",
+      "roles": "{authenticated}",
+      "cmd": "SELECT"
+    },
+    {
+      "policyname": "Clean tenant document files are scoped to organization roles",
+      "roles": "{authenticated}",
+      "cmd": "SELECT"
+    },
+    {
+      "policyname": "portal_child_session_restrictive",
+      "roles": "{authenticated}",
+      "cmd": "ALL"
+    }
+  ],
+  "canonicalOutboxKeyConstraintValidated": true,
+  "serviceWriteOnlyLedgerCount": 2,
+  "serviceOnlyFunctionCount": 13,
+  "publicOrAnonExecutableFunctionCount": 2,
+  "sentinel": {
+    "anon_table_select": true,
+    "authenticated_table_insert": true,
+    "anon_function_execute": true
+  }
+}

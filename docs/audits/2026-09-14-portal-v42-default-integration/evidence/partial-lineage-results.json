@@ -1,0 +1,43 @@
+{
+  "result": "PASS",
+  "method": "owned local history omission then exact saved row restoration; no migration repair or schema changes",
+  "partialStates": [
+    {
+      "missingVersion": "20260914101412",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    },
+    {
+      "missingVersion": "20260914104650",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    },
+    {
+      "missingVersion": "20260914124643",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    },
+    {
+      "missingVersion": "20260914134016",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    },
+    {
+      "missingVersion": "20260914142841",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    },
+    {
+      "missingVersion": "20260914145431",
+      "remainingCount": 156,
+      "result": "REJECTED",
+      "exit": 1
+    }
+  ],
+  "complete": 157
+}

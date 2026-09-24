@@ -1,0 +1,9 @@
+Fictional provider listening on loopback58412; no outbound requests
+Local fictional provider GET payment paid
+Local fictional provider GET chargebacks empty
+Local fictional provider GET refunds empty
+Local fictional provider GET payment failed
+Local fictional provider GET payment paid
+Local fictional provider GET payment paid
+Local fictional provider GET refunds empty
+Local fictional provider GET chargebacks empty

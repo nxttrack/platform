@@ -1,0 +1,47 @@
+
+Running 2 tests using 1 worker
+
+  ✓  1 [journey-chromium] › tests/e2e/journey-parent-practical.spec.ts:5:5 › real parent planning, explicit cancellation, invitation, profile and private feedback remain functional (9.9s)
+  ✘  2 [journey-chromium] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes (868ms)
+
+
+  1) [journey-chromium] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: 200
+    Received: 401
+
+      11 |  const f=JSON.parse(readFileSync(path!,'utf8'));await login(page,f.email,f.password);
+      12 |  for(const [kind,id] of [['tenant-document',f.document],['certificate',f.certificate]]){
+    > 13 |   const r=await page.request.get(`/api/files/${kind}/${id}`);expect(r.status()).toBe(200);expect(r.headers()['cache-control']).toContain('private');expect(r.headers()['content-disposition']).toContain('attachment');expect(createHash('sha256').update(await r.body()).digest('hex')).toBe(f.fileHash);
+         |                                                                                 ^
+      14 |  }
+      15 |  expect((await page.request.get(`/api/files/tenant-document/${f.unscannedDocument}`)).status()).toBe(423);
+      16 |  expect((await page.request.get(`/api/files/certificate/${f.revokedCertificate}`)).status()).toBe(403);
+        at /dev/shm/nxttrack-v42-build/apps/web/tests/e2e/journey-private-files.spec.ts:13:81
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../nxttrack-v42-practical-final-results/journey-private-files-priv-df131--the-real-standalone-routes-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../nxttrack-v42-practical-final-results/journey-private-files-priv-df131--the-real-standalone-routes-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../nxttrack-v42-practical-final-results/journey-private-files-priv-df131--the-real-standalone-routes-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../nxttrack-v42-practical-final-results/journey-private-files-priv-df131--the-real-standalone-routes-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../nxttrack-v42-practical-final-results/journey-private-files-priv-df131--the-real-standalone-routes-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-private-files.spec.ts:7:5 › private file bytes, finalized invoices, media consent and separate child approval survive the real standalone routes 
+  1 passed (11.5s)
+undefined
+/dev/shm/nxttrack-v42-build/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts --project=journey-chromium --workers=1 journey-parent-practical.spec.ts journey-private-files.spec.ts

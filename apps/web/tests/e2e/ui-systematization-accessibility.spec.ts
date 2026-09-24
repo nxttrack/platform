@@ -58,10 +58,29 @@ test.describe("systematic admin UI accessibility", () => {
 });
 
 async function signIn(page: Page, nextPath: string) {
-  await page.goto(`/login?next=${encodeURIComponent(nextPath)}`, { waitUntil: "domcontentloaded" });
-  await page.locator("input[name='email']").fill(email ?? "");
-  await page.locator("input[name='password']").fill(password ?? "");
-  await page.getByRole("button", { name: /inloggen/i }).click();
-  await page.waitForLoadState("domcontentloaded");
-  await expect(page).toHaveURL(new RegExp(`${nextPath.replaceAll("/", "\\/")}`));
+  const expected = new RegExp(`${nextPath.replaceAll("/", "\\/")}`);
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await page.goto(`/login?next=${encodeURIComponent(nextPath)}`, { waitUntil: "domcontentloaded" });
+    await page.locator("input[name='email']").fill(email ?? "");
+    await page.locator("input[name='password']").fill(password ?? "");
+    await page.getByRole("button", { name: /inloggen/i }).click();
+    await page.waitForLoadState("domcontentloaded");
+
+    try {
+      await expect(page).toHaveURL(expected);
+      return;
+    } catch (error) {
+      const currentUrl = new URL(page.url());
+      const isSessionBounce = currentUrl.pathname === "/login" && !currentUrl.searchParams.has("error");
+
+      if (!isSessionBounce || attempt === 1) {
+        throw error;
+      }
+
+      // Parallel staging specs can briefly observe the login redirect before the
+      // freshly written Supabase session cookie is available to the next request.
+      await page.waitForTimeout(1_000);
+    }
+  }
 }

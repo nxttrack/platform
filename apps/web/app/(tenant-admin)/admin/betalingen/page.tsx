@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { CreditCard, ReceiptText } from "lucide-react";
+import Link from "next/link";
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminSection, DataList, EmptyState, Field, SelectField, SubmitButton, TextAreaField } from "@/components/admin/domain-ui";
 import { PaymentsTable } from "@/components/admin/resource-tables";
@@ -8,6 +9,7 @@ import { DirtyForm } from "@/components/ui/dirty-form";
 import { RouteFeedback } from "@/components/ui/route-feedback";
 import {
   createBillingExportBatchAction,
+  createCreditNoteAction,
   createInvoiceForPaymentAction,
   createManualPaymentAction,
   createPaymentPlanAction,
@@ -58,6 +60,15 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <PageHeader action={<AdminActionDrawer description="Maak een openstaande of reeds betaalde handmatige betaling voor een abonnement." title="Betaling toevoegen" triggerLabel="Betaling toevoegen"><ManualPaymentForm data={data} /></AdminActionDrawer>} kicker="Financieel" title="Betalingen en abonnementen" subtitle="Handmatige billing en idempotente Mollie-checkout met provider-verified webhooks." />
       <RouteFeedback success={saved ? successMessage(saved) : null} error={error ? errorMessage(error) : null} />
+      {!data.billingProfile?.address_line_1 || !data.billingProfile.postal_code || !data.billingProfile.city || !data.billingProfile.billing_email ? (
+        <section className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+          <p className="font-bold text-foreground">Factuurprofiel aanvullen</p>
+          <p className="mt-1 text-sm text-muted-foreground">Facturen kunnen pas definitief worden uitgegeven nadat juridische naam, adres, plaats en facturatie-e-mail zijn ingesteld.</p>
+          <Link className="mt-3 inline-flex h-10 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" href="/admin/instellingen">
+            Bedrijfs- en btw-gegevens openen
+          </Link>
+        </section>
+      ) : null}
 
       <section className="rounded-xl border border-border bg-card p-4 shadow-soft">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -418,11 +429,11 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
                   <div className="mt-3 grid gap-3 xl:grid-cols-3">
                     <DirtyForm action={createInvoiceForPaymentAction} className="rounded-lg border border-border bg-muted/30 p-3">
                       <input name="paymentId" type="hidden" value={payment.id} />
-                      <input name="status" type="hidden" value={payment.status === "paid" ? "paid" : "issued"} />
+                      <input name="idempotencyKey" type="hidden" value={randomUUID()} />
                       <Field label="Factuurregel" name="description" placeholder={payment.reference ?? "Zwemles betaling"} />
                       <div className="mt-3">
                         <button className="h-10 rounded-lg border border-border bg-white px-4 text-sm font-semibold hover:bg-muted" type="submit">
-                          Factuur voorbereiden
+                          Definitieve factuur uitgeven
                         </button>
                       </div>
                     </DirtyForm>
@@ -686,14 +697,46 @@ export default async function AdminPaymentsPage({ searchParams }: PageProps) {
             ) : (
               <DataList>
                 {data.invoices.slice(0, 12).map((invoice) => (
-                  <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-3" key={invoice.id}>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{invoice.invoice_number ?? "Conceptfactuur"}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {formatMoney(invoice.total_cents, invoice.currency)} - vervalt {invoice.due_on ? formatDate(invoice.due_on) : "n.v.t."}
-                      </p>
+                  <div className="px-3 py-3" key={invoice.id}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{invoice.invoice_number ?? "Conceptfactuur"}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {invoice.document_type === "credit_note" ? "Creditnota" : "Factuur"} · {formatMoney(invoice.total_cents, invoice.currency)} · btw {formatMoney(invoice.tax_cents, invoice.currency)}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Uitgegeven {invoice.issued_on ? formatDate(invoice.issued_on) : "n.v.t."} · document {invoice.template_version}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {invoice.status !== "draft" ? (
+                          <Link className="inline-flex h-9 items-center rounded-lg border border-border bg-white px-3 text-xs font-semibold hover:bg-muted" href={`/api/files/invoice/${invoice.id}`}>
+                            PDF
+                          </Link>
+                        ) : null}
+                        <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "issued" || invoice.status === "sent" ? "warning" : "neutral"}>{invoice.status}</StatusPill>
+                      </div>
                     </div>
-                    <StatusPill tone={invoice.status === "paid" ? "success" : invoice.status === "issued" || invoice.status === "sent" ? "warning" : "neutral"}>{invoice.export_status}</StatusPill>
+                    {invoice.document_type === "invoice" && invoice.status !== "draft" && invoice.status !== "void" ? (
+                      <details className="mt-3 rounded-lg border border-border bg-muted/20 p-3">
+                        <summary className="cursor-pointer text-xs font-bold text-foreground">Creditnota uitgeven</summary>
+                        <DirtyForm action={createCreditNoteAction} className="mt-3 grid gap-3">
+                          <input name="invoiceId" type="hidden" value={invoice.id} />
+                          <input name="idempotencyKey" type="hidden" value={randomUUID()} />
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <Field label={`Bedrag (max. ${formatMoney(invoice.total_cents, invoice.currency)})`} name="amount" required />
+                            <SelectField label="Verwerking" name="adjustmentType">
+                              <option value="credit_only">Alleen creditnota</option>
+                              <option value="refund">Refund volgt</option>
+                              <option value="offset">Verrekenen</option>
+                            </SelectField>
+                          </div>
+                          <Field label="Reden" name="reason" required placeholder="Correctie op gefactureerde lessen" />
+                          <Field label="Typ CREDIT" name="confirmation" required />
+                          <SubmitButton>Definitieve creditnota uitgeven</SubmitButton>
+                        </DirtyForm>
+                      </details>
+                    ) : null}
                   </div>
                 ))}
               </DataList>
@@ -780,6 +823,8 @@ function successMessage(saved: string) {
       "incasso-prenotified": "De incasso is aangekondigd en staat klaar voor de geplande datum.",
       "incasso-reconciled": "De betaalstatus is opnieuw bij Mollie gecontroleerd.",
       "incasso-started": "De incasso is veilig bij Mollie gestart.",
+      invoice: "De definitieve factuur is uitgegeven en als PDF beschikbaar.",
+      "credit-note": "De creditnota is afzonderlijk en definitief uitgegeven.",
       "refund-created": "De terugbetaling is bij Mollie aangevraagd.",
       "refund-reconciled": "De terugbetaling en eventuele storneringen zijn opnieuw gesynchroniseerd."
     }[saved] ?? `Opgeslagen: ${saved}.`;
@@ -788,6 +833,11 @@ function successMessage(saved: string) {
 function errorMessage(error: string) {
   return {
       "incasso-outcome-unknown": "Mollie heeft niet tijdig geantwoord. Dezelfde poging wordt eerst veilig gereconcilieerd; start geen nieuwe incasso.",
+      "invoice-profile": "Vul eerst het factuurprofiel bij Instellingen volledig in.",
+      "invoice-permission": "Je hebt geen recht om een factuur uit te geven.",
+      "credit-amount": "Het creditbedrag is hoger dan het nog crediteerbare factuurbedrag.",
+      "credit-confirmation": "Typ CREDIT om de creditnota bewust te bevestigen.",
+      "credit-permission": "Je hebt geen recht om een creditnota uit te geven.",
       "payment-provider-managed": "Een terugbetaling of stornering kan alleen via de geverifieerde Mollie-synchronisatie worden gewijzigd.",
       "provider-automation-requires-incasso": "Schakel terugkerende SEPA-incasso in voordat je automatische uitvoering of retries activeert.",
       "provider-retry-policy": "Gebruik 1–5 pogingen en een wachttijd van 1–30 dagen.",

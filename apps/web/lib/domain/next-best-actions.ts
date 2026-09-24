@@ -1,3 +1,4 @@
+import { addAmsterdamCalendarDays, toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -133,7 +134,7 @@ export async function getTenantNextBestActions(input: {
 async function loadNextBestActionModel(tenantId: string, includeTestData: boolean): Promise<NextBestActionInput> {
   const admin = createAdminClient();
   const now = new Date();
-  const today = now.toISOString().slice(0, 10);
+  const today = toAmsterdamDate(now);
   const futureBoundary = new Date(now.getTime() + 21 * dayMs).toISOString();
   let intakesQuery = admin
     .from("intake_submissions")
@@ -237,7 +238,7 @@ async function loadNextBestActionModel(tenantId: string, includeTestData: boolea
       .eq("status", "available")
       .not("expires_on", "is", null)
       .gte("expires_on", today)
-      .lte("expires_on", new Date(now.getTime() + 14 * dayMs).toISOString().slice(0, 10)),
+      .lte("expires_on", addAmsterdamCalendarDays(now, 14)),
     admin
       .from("lead_score_snapshots")
       .select("intake_submission_id, score, confidence, reasons_json, suggested_next_action, is_test, journey_run_id")
@@ -663,7 +664,7 @@ function timeRange(block: IntakeDaypart | null) {
 function nextWeekday(now: Date, weekday: number) {
   const current = now.getUTCDay() || 7;
   const delta = (weekday - current + 7) % 7 || 7;
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + delta)).toISOString().slice(0, 10);
+  return toAmsterdamDate(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + delta)));
 }
 
 function asDaypart(value: string | null): IntakeDaypart | null {

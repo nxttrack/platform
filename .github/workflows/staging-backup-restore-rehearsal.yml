@@ -23,7 +23,6 @@ jobs:
 
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      EXPECTED_PUBLIC_TABLES: "63"
       POSTGRES_REHEARSAL_IMAGE: postgres:17
 
     steps:

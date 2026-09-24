@@ -1,0 +1,58 @@
+[
+  {
+    "file": "evidence/practical-seed-1.log",
+    "sha256": "3eafefcd833cad9ddaef799d3be36349295583c9e2043a80685bab26165e09fb"
+  },
+  {
+    "file": "evidence/practical-seed-2.log",
+    "sha256": "2f32efef40aa6c24262a7064c8050108b6dcf1dbd56c0649eb0bde0b601a219c"
+  },
+  {
+    "file": "evidence/practical-seed-3.log",
+    "sha256": "2f32efef40aa6c24262a7064c8050108b6dcf1dbd56c0649eb0bde0b601a219c"
+  },
+  {
+    "file": "evidence/practical-browser-2.log",
+    "sha256": "c6c1ce589c319f0235d974bcb3dcce906969c3b25a089698c5a193fc6a66b89f"
+  },
+  {
+    "file": "evidence/practical-browser-3.log",
+    "sha256": "291c4ef3bc3f06a3bb8326da3c6749f4c9ab2abd4722b6d17ca5b5061e39d146"
+  },
+  {
+    "file": "evidence/practical-browser-4.log",
+    "sha256": "1d1fc1f82c25253afa3a3102a4f654473b50049a5ecaf23346f2811683299f6f"
+  },
+  {
+    "file": "evidence/practical-browser-5.log",
+    "sha256": "f9c3257cf8847d91f5df54b45f22c8b2289dc08ac40426bb6cb357002a891ade"
+  },
+  {
+    "file": "evidence/practical-browser-6.log",
+    "sha256": "bfea4e508e5bb474783f6eac8a687c4af0786733a18719d527427190c5ddeb5b"
+  },
+  {
+    "file": "evidence/practical-stale-module-environment-error.log",
+    "sha256": "c95e2e49d6bbda2d2bf61a512bcbd6ea7e95975fbd3d0124a4e4dae9d2e60f4b"
+  },
+  {
+    "file": "evidence/manual-draft-browser.log",
+    "sha256": "f134d0443addf6a5d0c453c90ce6c71d79f24934f06b1718ab9f414ad52274e7"
+  },
+  {
+    "file": "evidence/manual-draft-browser-2.log",
+    "sha256": "dbb0992f3d660cd9b619c5642c4e50e35b8ade4fd6ba00995c27cb6d115de3af"
+  },
+  {
+    "file": "evidence/practical-final-typecheck.log",
+    "sha256": "0de00c4791387b6713220c80c19f9992f9cb5f1597a33cf1f3f93266db5b46c4"
+  },
+  {
+    "file": "evidence/practical-final-units.log",
+    "sha256": "a762199c1e5dd056a6f83fdfd0b4308077320aaff07259fab88cdee77ffb6c9a"
+  },
+  {
+    "file": "evidence/practical-final-auth.log",
+    "sha256": "da7976525b07dcccca8ae98b59a825f627bb805eb60c73c22e88e759abc8a754"
+  }
+]

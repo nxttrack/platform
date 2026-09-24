@@ -1,0 +1,6 @@
+Connecting to remote database...
+Linting schema: app_private
+Linting schema: extensions
+Linting schema: public
+
+No schema errors found

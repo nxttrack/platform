@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -32,7 +34,7 @@ export async function saveInstructorQualificationAction(formData: FormData) {
     qualification_key: "lesson_instruction",
     name,
     status: "active",
-    valid_from: new Date().toISOString().slice(0, 10),
+    valid_from: toAmsterdamDate(),
     valid_until: validUntil,
     evidence_note: readOptionalText(formData, "evidenceNote", 1000),
     verified_by_user_id: userId,
@@ -56,7 +58,7 @@ export async function saveInstructorWorkloadLimitsAction(formData: FormData) {
     max_sessions_per_day: readInteger(formData, "maxSessionsPerDay", 1, 16),
     minimum_break_minutes: readInteger(formData, "minimumBreakMinutes", 0, 180),
     cross_location_buffer_minutes: readInteger(formData, "crossLocationBufferMinutes", 0, 240),
-    effective_from: new Date().toISOString().slice(0, 10),
+    effective_from: toAmsterdamDate(),
     effective_until: null,
     status: "active",
     updated_by_user_id: userId

@@ -1,0 +1,283 @@
+> Historical source report retained from `db9806f1d12aee7082f5c2848a271ac526e65aa6`. These results do not certify the reconciliation branch. See [the current report](../../MAIN-RECONCILIATION-REPORT.md).
+
+# Production readiness core — sprint 1
+
+Datum: 22 augustus 2026
+
+Auditbron: `docs/PRODUCTION_TENANT_READINESS_AUDIT_2026-08-20.md` (alleen gelezen; niet gewijzigd)
+
+Geaudite basis-SHA: `68d4a79ccdc3ede3691bf1ec1782fb8f81c05466`
+
+Sprintbranch: `codex/production-readiness-core-sprint-1`
+
+Werkvorm: geïsoleerde Git-worktree, omdat de oorspronkelijke werkmap ongetrackte gebruikersbestanden bevat die op de basis-SHA getrackte paden overlappen. De oorspronkelijke werkmap en gebruikerswijzigingen blijven onaangeroerd.
+
+## Scope en status
+
+| Audit-ID | Status | Checkpoint | Bewijs/commit |
+| --- | --- | --- | --- |
+| P1-004 | CLOSED | 2–5 — fail-closed mail en outbox | Centrale kill switch, durable queue, atomische workerclaim en transactionele invitation-enqueue voor provisioning en imports bewezen |
+| P0-004 | CLOSED | 3 — tenantprovisioning | Atomische databasegraph, deterministische dedupe, hervatbare Auth-grens en failure/concurrencybewijs |
+| P1-001 | CLOSED | 4 — participant en intake | Atomische participantgraph en intakegraph, database-idempotentie en failurebewijs |
+| P1-002 | CLOSED | 4 — capaciteit en plaatsing | Groepslock, herberekening onder lock, live-unique invariant en 20-way concurrencybewijs |
+| P1-003 | CLOSED | 5 — imports | Atomische leased apply/rollbackclaims, 250-row chunks, durable manifest, hervatting en 5.000-row bewijs |
+
+De algemene NO-GO uit het auditrapport blijft ongewijzigd. Deze sprint claimt geen live runtimebewijs zonder de vereiste externe credentials en omgevingen.
+
+## Checkpoint 1 — repository- en baselinebewijs
+
+### Git-inventaris
+
+- Verplichte basis bestaat als commit en is de tip van `codex/parent-child-portals-v1`/`origin/codex/parent-child-portals-v1`.
+- De nieuwe branch is rechtstreeks op de verplichte basis aangemaakt; `git merge-base HEAD 68d4a79...` geeft exact `68d4a79...`.
+- De oorspronkelijke werkmap stond op `main` (`e34544c6d7ddfea572d4b1c68a3e201ee3381872`) en bevatte ongetrackte `apps/android/`-bestanden en het ongetrackte auditrapport. Geen van die bestanden is verplaatst, verwijderd, overschreven of opgenomen in deze branch.
+- Geen rebase, merge, reset, deployment of live databaseactie uitgevoerd.
+- Er zijn geen toepasselijke repository-`AGENTS.md`- of `AGENTS.override.md`-bestanden gevonden.
+
+### Pre-change baseline
+
+Runtime lokaal: Node `v24.18.0`; repository package manager `pnpm 10.24.0`; CI-runtime is Node `20.19.0`. De engines-eis is `>=20.19.0`. Harmonisatie is uitsluitend stretchscope.
+
+| Commando | Exact resultaat vóór bronwijzigingen |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS; 317 packages uit lockfile, geen lockfilewijziging |
+| `pnpm run typecheck` | PASS |
+| `pnpm run lint` | Geen afzonderlijke lint: script is dezelfde `tsc --noEmit` als typecheck |
+| `pnpm exec tsx --test tests/unit/*.test.ts tests/unit/*.test.mjs` | PASS; 375 tests, 0 failures, 0 skips |
+| `pnpm run build` | PASS; Next.js 16.2.11, 17 statische pagina's gegenereerd |
+| `pnpm run release:truth` | PASS; waarschuwing dat `origin/production` 3 commits buiten de canonieke historie bevat |
+| `pnpm run design:audit` | PASS |
+| `pnpm run auth:audit` | PASS; route- en authboundary plus 3 invitation-targettests |
+| `pnpm run db:audit` | PASS; 135 migrations |
+| `pnpm run db:rls-audit` | PASS; 246 public tables en 135 migrations; bestaande waarschuwingen voor private helpers zonder authenticated grant |
+| `pnpm run release:audit-journey-bot` | PASS |
+| `pnpm run release:audit-runtime-env` | PASS |
+| `pnpm run security:audit-dependencies` | FAIL (bestaand); `nanoid <3.3.18`, GHSA-2v37-7h3g-55p8 via de expliciete `3.3.17` override |
+| `pnpm run test:e2e` | FAIL lokaal; 12 pass, 80 skips, 34 failures. Oorzaak is reproduceerbaar: standalone Next runtime kan `libvips-cpp.so.8.18.3` voor `sharp` niet laden, waarna assets 404'en. `pnpm rebuild sharp` maakt een directe `require('sharp')` succesvol maar herstelt de standalone runtime niet. Credentialsuites zijn niet getest, niet als pass gemarkeerd. |
+| `git diff --check` | PASS |
+
+De dependencyauditfailure correspondeert met stretchpunt 3. De Playwrightfailure is een lokale native-runtime/packageerfailure, geen groen productbewijs. Beide blijven zichtbaar en worden aan het einde opnieuw gedraaid.
+
+## Geverifieerde huidige callgraphs en zwakke transaction boundaries
+
+### P1-004 — mail
+
+`createInvitation`, password reset, tenant notifications en operationele acties roepen `sendTransactionalEmail` rechtstreeks aan. Dat pad leest platformsettings of env, kiest SendGrid of SMTP, voert direct netwerk-I/O uit en schrijft achteraf best-effort `email_delivery_attempts`. `EMAIL_SENDING_ENABLED` wordt alleen door releaseconfig-audits genoemd en niet door het centrale transport afgedwongen. Provideracceptatie wordt als `delivered: true` en `sent` opgeslagen; er is geen claim, dedupe, retry/backoff of terminale dead-state. Het attempt-log bevat recipient en subject en mag daarom niet in applicatielogs worden gedumpt.
+
+### P0-004 — provisioning
+
+`provisionTenantAction` maakt eerst een run en schrijft daarna tenant, settings, theme-RPC, domains, branding, program, stages, resources, group en payment plan in afzonderlijke Data API-calls. Vervolgens activeert het de tenant en roept het voor owner/staff `createInvitation` aan, inclusief Auth-user/membership en direct mailtransport. Een failure maakt alleen de tenant inactive; reeds geschreven graphrecords en Auth-side effects blijven bestaan. Een retry heeft geen deterministische run/business key.
+
+### P1-001 — participant en intake
+
+`createParticipantEnrollmentAction` schrijft participant, optionele guardianrelatie en enrollment los van elkaar en controleert guardian/enrollment-errors niet als één graph. `submitIntake` doet een read-before-write dedupe, schrijft submission, answers en `tenant_events` afzonderlijk; answer- of eventfailure laat de submission achter. De dedupe-index is niet uniek en beschermt parallelle submits niet.
+
+### P1-002 — capaciteit
+
+`createGroupMembershipAction` doet een niet-gelockte applicatie-precheck en daarna een losse insert. De bestaande `app_private.enforce_membership_capacity_bucket`-trigger lockt de tenant+group-rij en herberekent regulier/flex/trial/hard capacity vóór insert/update; dat bestaande centrale capaciteitscontract blijft leidend. De huidige unique constraint `(group_id, enrollment_id, status)` laat tegelijk een actieve én trialplaatsing voor dezelfde enrollment/groep toe en is niet tenant-expliciet. Er is geen idempotente service-RPC met gecontroleerde capacity/conflictrespons.
+
+### P1-003 — imports
+
+`applyImportAction` leest `ready`, zet daarna los `applying` en verwerkt elke rij met sequentiële reads/writes. Guardianrows creëren Auth-users, invitations en direct mail. Het manifest bestaat alleen in procesgeheugen tot completion. Bij failure worden rollbackerrors genegeerd, waarna het manifest wordt leeggemaakt en `failed` wordt gezet. `rollbackImportAction` verwijdert eveneens sequentieel zonder delete-resultaten te controleren. Double-apply kan door een race tweemaal claimen; 5.000 rijen veroorzaken duizenden round trips.
+
+## Ontwerpcontract vóór implementatie
+
+### Gemeenschappelijke invarianten
+
+1. Elke samengestelde databasewrite loopt door één service-only databasefunctie; elke functie valideert tenant en actor/input, gebruikt een vaste `search_path`, en commit of rollbackt als één statement/transaction.
+2. `PUBLIC`, `anon` en `authenticated` krijgen geen execute op servicefuncties. Alleen `service_role` krijgt minimaal `EXECUTE`; negatieve granttests zijn verplicht.
+3. Nieuwe publieke tabellen krijgen RLS + FORCE RLS, geen client-writegrants en alleen strikt noodzakelijke readpolicies. Outboxpayloads blijven service-only.
+4. Business/idempotency keys zijn onveranderlijk en uniek in de database. Een retry met dezelfde key en dezelfde requestfingerprint retourneert het bestaande resultaat; dezelfde key met andere input faalt als conflict.
+5. Audit/lifecycle-events zijn append-only. Geen secret, token, raw messagebody of onnodige PII komt in foutdetails of applicatielogs.
+6. Failure-injection is alleen testinput en wordt niet blootgesteld aan clientrollen. Productie-RPC's accepteren geen verborgen bypass voor atomariteit of autorisatie.
+
+### Mail/outbox
+
+- Business key: `(tenant_id nulls not distinct, message_type, idempotency_key)`; invitation gebruikt de invitationbusinesskey, andere callers een expliciete stabiele mutatiekey.
+- Transactie: businessrecord + outboxrow worden door dezelfde databasefunctie geschreven. Geen workerclaim of provider-I/O binnen die transactie.
+- Payload: service-only durable payload plus `related_type`/`related_id`; inhoud is begrensd. Logs gebruiken alleen outbox-ID/type/status/providerstatus.
+- Claim: `FOR UPDATE SKIP LOCKED`; status `queued|processing|retry|accepted|dead|cancelled`; lease token + expiry voorkomt dubbele actieve verwerking en maakt workercrashes hervatbaar.
+- Kill switch: uitsluitend de letterlijke, getrimde, case-insensitive waarde `true` voor `EMAIL_SENDING_ENABLED` staat provider-I/O toe. Missing, leeg, invalid en false geven in het directe centrale transport een disabled-uitkomst zonder netwerkaanroep; de outboxworker claimt in die toestand niets zodat queued/retry-items hervatbaar blijven. Dit wordt zowel vóór workerclaim als in het centrale transportpad afgedwongen.
+- Retry: alleen transient timeout/network/429/5xx; begrensd aantal attempts en deterministische exponential backoff met cap. Invalid payload/config/4xx (behalve 429) en exhausted retries gaan zichtbaar naar `dead`.
+- Provideracceptatie heet `accepted`, niet `delivered`. Bounce/webhookdelivery blijft open totdat end-to-end geïmplementeerd en getest.
+
+### Tenantprovisioning
+
+- Business key: deterministische hash/fingerprint over genormaliseerde slug + owneremail + versie van het provisioningcontract; unieke idempotency key op onboarding run en unieke tenant-slug blijven de databasebarrière.
+- Transactie: run, tenant, settings, theme assignment/audit, domains, branding, program, stages, resources, group, plan, invitationrecords/outbox en immutable lifecycle-events in één service-RPC. Tenantstatus wordt pas `active` wanneer alle verplichte database- en enqueuewrites slagen.
+- Auth-compensatie: provisioning maakt geen Auth-user vóór de databasecommit. Een aparte hervatbare invitation-materializer maakt/resolveert een Auth-user idempotent en bindt die aan de bestaande invitation; failure blijft delivery/setup zichtbaar zonder tweede tenant/run. Geen destructive compensatie van gedeelde Auth-users.
+- Failure states: transactionele failure laat geen tenantgraph achter; een committed run is `ready_for_identity|opened|attention_required`, waarbij `opened` alleen database-ready betekent en deliverystatus apart zichtbaar is.
+- Audit: `requested`, `database_committed`, `identity_materialized`, `mail_accepted`, `mail_retry`, `attention_required`; append-only.
+
+### Participantgraph
+
+- Business key: expliciete operation key van de serveractie; fallbackfingerprint wordt niet uit naam alleen afgeleid. Database bewaart requestfingerprint.
+- Transactie: participant + optionele `participant_guardians` + enrollment + audit in één service-RPC.
+- Tenantconsistentie: program, stage, guardian en alle samengestelde FK's moeten bij dezelfde tenant horen; stage moet bij program horen.
+- Retry: dezelfde key geeft dezelfde participant/enrollment; key-reuse met andere input is conflict. Elke fout laat nul nieuwe graphrecords achter.
+
+### Intake
+
+- Business key: de bestaande SHA-256 dedupekey plus een begrensde idempotencywindow-key die vóór de RPC server-side wordt berekend; unieke database-invariant maakt parallelle double-clicks veilig.
+- Transactie: submission + alle answers + `intake.received` audit/event in één service-only RPC.
+- Retry: dezelfde key retourneert de bestaande submission/reference; afwijkende payloadfingerprint onder dezelfde key faalt. Duplicate-detectie over 30 dagen blijft een apart productconcept en wordt niet verward met request-idempotency.
+- Failure: invalid question/form/program/tenant of enige writefailure rolt alles terug.
+
+### Groepsplaatsing
+
+- Business key: `(tenant_id, operation_key)` met resultaat; doelinvariant is maximaal één live (`active|trial`) membership per tenant+group+enrollment. Meerdere programma-enrollments en historische/flexrecords blijven toegestaan.
+- Transactie: lock group, valideer enrollment/participant/tenant, herbereken bestaande bucket+hard capacity onder lock via het bestaande capacitycontract, insert/upsert membership en append audit in één RPC.
+- Resultaten: `placed`, `already_placed`, `capacity_full`, `conflict`; verwachte contention is geen generieke 500.
+- Verplichte test: één resterende plek, 20 parallelle claims, exact één `placed`, negentien gecontroleerde capacity/conflictuitkomsten, eindcount en audit exact consistent.
+
+### Imports
+
+- Claimkey: job-ID plus apply-attempt/lease; statusovergang `ready -> applying` gebeurt atomisch met `FOR UPDATE SKIP LOCKED`/vergelijkbare rijlock.
+- Rowbusinesskey: bestaande `duplicate_key` wordt na normalisatie tenant+job-gebonden uniek per toepassingsrun; manifestregels zijn durable en uniek per importrow.
+- Batchtransactie: chunks (doel 250, begrensd) via één RPC per chunk. Iedere chunk schrijft targets, rowstates en manifest atomair; geen 5.000 sequentiële Data API-writes.
+- Resume: committed chunks worden overgeslagen op manifest/rowstate; dezelfde apply is idempotent. Guardian invitationrecords/outbox worden in dezelfde chunk geschreven; Auth-materialisatie blijft aparte hervatbare side effect.
+- Rollback: reverse manifest in chunks; iedere compensatie krijgt `pending|compensated|failed`. Manifest wordt nooit leeggemaakt. Een failure zet job `needs_attention`/`reconciliation` met begrensde foutdetails; retry verwerkt alleen onbevestigde entries.
+- Mutatiebeleid: deze sprint houdt de bestaande create-only importsemantiek aan. Rollback verwijdert uitsluitend records waarvan het manifest bewijst dat deze import ze heeft gecreëerd; bestaande records worden niet destructief aangepast.
+
+## Checkpointlog
+
+### Checkpoint 1
+
+- Status: CLOSED.
+- Commit: `2582fdc21964abf784cab8315031bee754206ed9` (`docs(audit): define core readiness transaction contracts`).
+- Gewijzigd: alleen dit sprintdocument.
+- Tests: zie pre-change baseline; geen live credentials gebruikt.
+- Resterend risico: alle primaire auditissues zijn nog open; bestaande dependency- en lokale Playwrightbaseline zijn rood.
+- Vervolg: checkpoint 2 implementeert eerst kill switch en durable outbox.
+
+### Checkpoint 2
+
+- Audit-ID/status: P1-004 PARTIALLY CLOSED. Het centrale transport, de durable outbox, atomische claim, retry/dead-semantiek en serviceboundary zijn gereed; transactionele enqueue vanuit provisioning, participantflows en imports volgt in hun eigen checkpoints.
+- Commit: `ae04a439b16da009436092061d95410b3da7e74c` (`feat(email): add fail-closed durable outbox`).
+- Gewijzigd: additive migration `20260822002234_production_email_outbox.sql`; centraal transportcontract; outboxworker en fail-closed interne workerroute; invitation/password-reset/notificatie/slot-offer statussemantiek; beheerfeedback; unit- en echte PostgreSQL-concurrentietest.
+- Invarianten: alleen letterlijke `EMAIL_SENDING_ENABLED=true` kan provider-I/O bereiken; een uitgeschakelde worker claimt niets; `(tenant_id NULLS NOT DISTINCT, message_type, idempotency_key)` dedupliceert; afwijkende input onder dezelfde key faalt; `FOR UPDATE SKIP LOCKED` plus claimtoken/lease voorkomt dubbele actieve verwerking; een verlopen laatste lease wordt `dead`; provideracceptatie zet alleen `accepted_at`/`provider_accepted_at`, nooit `delivered_at`.
+- Grants: outbox-RPC's zijn `SECURITY INVOKER`, hebben vaste `search_path`, zijn gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen uitvoerbaar door `service_role`. Tabellen hebben FORCE RLS en expliciete deny-readpolicies voor authenticated; negatieve grant- en RLS-tests zijn groen.
+- Tests: `tests/unit/email-outbox-contract.test.ts` 7/7 PASS; volledige unitsuite 382/382 PASS; `test:email-outbox:db` PASS met twintig parallelle enqueues en twintig parallelle claims; authaudit PASS; typecheck PASS; production build PASS; migrationaudit PASS (136); RLS-audit PASS (248 tabellen, alleen bestaande private-helperwaarschuwingen); `git diff --check` PASS.
+- Lokale DB-validatie: de nieuwe migration is op de geïsoleerde lokale validatiecontainer geparset/toegepast; de repositorybrede `supabase db push` kon niet als bewijs dienen doordat die container bestaande history/schema-drift heeft bij `20260802230000` (`tenant_notifications_dedupe_unique`). Er is geen migration-repair uitgevoerd. De RPC-concurrentietest draait wel tegen de werkelijk aangemaakte outboxtabellen en functies.
+- Resterend risico: bounce/webhook-afleveringsbewijs is niet geïmplementeerd en wordt niet als opgelost geclaimd; worker scheduling/credentials zijn extern NIET GETEST; bestaande mailcallers buiten de samengestelde writes gebruiken nog het centrale directe pad en worden bij checkpoints 3–5 waar vereist atomair naar enqueue verplaatst. Nieuwe incassopogingen blijven bewust fail-closed zolang alleen provideracceptatie en geen aflevering bekend is.
+
+### Checkpoint 3
+
+- Audit-ID/status: P0-004 CLOSED. P1-004 blijft PARTIALLY CLOSED totdat ook importinvitaties transactioneel via dezelfde outbox lopen.
+- Commit: `785e310c6080ddd077e6430e0f6538a41b208d18` (`feat(onboarding): make tenant provisioning atomic`).
+- Gewijzigd: additive migration `20260822004329_atomic_tenant_provisioning.sql`; provisioningserveraction en hervatactie; Auth-userresolver/bootstrapherkenning; generieke invitationcopy; onboardingrun-UI; unitcontract en echte PostgreSQL-integratietest.
+- Transactie: `provision_tenant_atomic` serialiseert op de deterministische slugkey en schrijft run, inactive tenant, settings, theme-availability/assignment/audit, domains, branding, program, stages, resources, group, payment plan, invitations, outbox en immutable events binnen één PL/pgSQL-boundary. De interne exception-subtransactie rolt iedere graphwrite terug maar bewaart een PII-vrije `attention_required` run plus attempt/event.
+- Idempotentie: de key is SHA-256 over `tenant-provisioning:v1:<slug>`; de afzonderlijke requestfingerprint omvat alle genormaliseerde businessinput. Dezelfde key/input retourneert dezelfde run/tenant; key-reuse met andere input faalt. Een advisory transaction lock serialiseert parallelle submits.
+- Auth-grens: Auth-users worden pas na de databasecommit aangemaakt of gevonden. Nieuwe bootstrapaccounts krijgen alleen de invitation-UUID in admin-only app metadata, zodat een crash tussen Auth en database veilig als nieuw account hervat en nog steeds wachtwoordkeuze eist. De database-materializer upsert profile/security/membership atomisch. Geen mislukte poging verwijdert mogelijk gedeelde Auth-users.
+- Fail-closed opening: tenant en outbox blijven respectievelijk `inactive` en circa honderd jaar uitgesteld zolang identities onvolledig zijn. Alleen `complete_tenant_provisioning` verifieert alle identities, memberships en outboxreferenties, activeert de tenant, opent de run en maakt alle invitation-items in dezelfde transactie due. Provider-I/O gebeurt daarna door de worker.
+- Grants/audit: alle publieke provisioning-RPC's zijn `SECURITY INVOKER`, fixed-search-path, gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen uitvoerbaar door `service_role`; de minimale private Auth-resolver is fixed-search-path `SECURITY DEFINER` en eveneens service-only. `tenant_onboarding_events` is append-only, FORCE RLS en platform-admin read-only.
+- Failure/concurrencybewijs: zeven geïnjecteerde boundaries (`organization`, `identity`, `program`, `operations`, `billing`, `invitations`, `opening`) laten elk nul tenant/invitationgraph achter en één durable aandachtsevent; een database-retry hergebruikt dezelfde run en bewaart beide attempts/events. Twintig parallelle submits leveren exact één run en één tenant. Identity-timeout + retry, dubbele materialisatie en dubbele finalization zijn idempotent bewezen.
+- Tests: provisioningcontract 6/6 PASS; volledige unitsuite 388/388 PASS; `test:tenant-provisioning:db` PASS; `test:email-outbox:db` PASS in dezelfde gedeelde queue; authaudit PASS; typecheck PASS; production build PASS; migrationaudit PASS (137); RLS-audit PASS (249 tabellen, alleen bestaande private-helperwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
+- Lokale DB-validatie: migration compileerde/toegepast op de geïsoleerde lokale validatiecontainer; alle functies zijn werkelijk uitgevoerd. Geen staging/live database, echte mail of live Auth-provider is gebruikt. Auth API-runtime blijft daarom extern NIET GETEST; de databasezijde en crashsemantiek zijn lokaal bewezen.
+- Rollbackrisico: application-forward rollback houdt tenants/runs/invitations uit deze flow intact; `EMAIL_SENDING_ENABLED=false` en/of de worker gate stopt provider-I/O. De additive tabellen/kolommen kunnen door de oude app worden genegeerd, maar een oude app mag niet opnieuw voor provisioning worden gebruikt omdat die zijn oude niet-atomische writeketen zou hervatten.
+
+### Checkpoint 4
+
+- Audit-ID/status: P1-001 CLOSED en P1-002 CLOSED.
+- Commit: `8b9e8a642689051b8f8d1023ef9d9d3e0ff4d5ab` (`feat(onboarding): make core participant writes atomic`).
+- Gewijzigd: additive migration `20260822010612_atomic_core_onboarding_writes.sql`; participant- en plaatsingserveractions; intake-submitflow; expliciete beheerformulier-operationkeys; service-only operation-ledger; unitcontract; echte PostgreSQL failure/idempotency/concurrencytest; herhaalbare gedeelde outboxtestisolatie.
+- Participantgraph: `create_participant_graph_atomic` valideert de actieve beheeractor, tenant-parent, program en stage/programrelatie en schrijft participant, optionele guardianrelatie, enrollment en een PII-arme `participant.graph_created` audit in één exception-subtransactie. De expliciete formulierkey plus SHA-256 requestfingerprint levert bij twintig parallelle retries exact één graph; key-reuse met andere input faalt. Failure-injectie na participant, guardian, enrollment en audit laat telkens nul graphrecords/audit achter en bewaart alleen een PII-vrije failed operation.
+- Intakegraph: de publieke submitflow behoudt de aparte dertigdaagse duplicate-detectie, maar berekent daarnaast een tienminutenwindow-key uit de bestaande dedupekey. `create_intake_submission_atomic` serialiseert daarop en schrijft submission, alle answers en het bestaande `intake.received` event in één transactie. Form/program/group/question-tenantrelaties worden database-side herbevestigd; auditpayload bevat IDs/classificatie maar geen ouder- of kindnaam/e-mail. Twintig parallelle retries leveren één submission, één answer-set en één event; failure na elk van de drie writes laat nul partial graph achter.
+- Plaatsing: `place_group_membership_atomic` lockt de groepsrij `FOR UPDATE`, valideert actor, tenant en dat enrollment en groep hetzelfde program delen, en herberekent onder die lock regular/flex/trial én hard capacity uit live memberships, actieve betaalholds en goedgekeurde soft reservations. Verwachte uitkomsten zijn `placed|already_placed|capacity_full|conflict`; een duplicate click retourneert het oorspronkelijke resultaat. De nieuwe partiële unique index begrenst alleen live `active|trial` per `(tenant, group, enrollment)`, zodat andere programs, paused/historische records en flexbucketsemantiek niet te breed worden verboden; de bestaande historische constraint is bewust niet gedropt.
+- Concurrencybewijs: bij één resterende reguliere/harde plek en twintig parallelle claims van twintig verschillende actieve enrollments ontstond exact één `placed`, negentien gecontroleerde `capacity_full`, één live eindmembership en één `group.membership_placed` audit. Een replay van de winnaar bleef idempotent; dezelfde key met andere input gaf conflict. Een enrollment uit een ander program werd geweigerd zonder membership.
+- Grants/RLS: alle drie publieke RPC's zijn `SECURITY INVOKER`, fixed-search-path, gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen execute-granted aan `service_role`. `core_write_operations` heeft FORCE RLS; authenticated heeft alleen een expliciete selectgrant achter een always-false policy en ziet dus nul rows. De ledger bevat uitsluitend keys, hashes, status, actor/tenant-IDs, begrensde foutcodes en PII-vrije result-IDs.
+- Tests: nieuw unitcontract 6/6 PASS; volledige unitsuite 390/390 PASS; `test:core-onboarding:db` PASS; `test:email-outbox:db` tweemaal achter elkaar PASS in de gedeelde lokale DB; `test:tenant-provisioning:db` PASS; authaudit PASS; typecheck/lint PASS; production build PASS; migrationaudit PASS (138); RLS-audit PASS (250 tabellen, alleen bestaande private-triggerwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
+- Lokale DB-validatie: de migration is op de geïsoleerde PostgreSQL-validatiecontainer geparset/toegepast en de RPC's zijn werkelijk als `service_role` uitgevoerd. Geen staging/live database of externe provider is benaderd. De bestaande migration-historydrift van deze container blijft ongewijzigd; er is geen migration-repair gebruikt.
+- Rollbackrisico: application-forward rollback laat de additive ledger/index en reeds gecommitte graphrecords intact. De oude app mag niet opnieuw voor deze drie writes worden gebruikt omdat die de niet-atomische paden terugbrengt. De partiële index kan deployment fail-closed blokkeren wanneer een doelomgeving al meerdere live active/trial rows voor exact dezelfde tenant+groep+enrollment bevat; vóór live migration is daarom een read-only duplicate-inventory en menselijke reconciliatie vereist, zonder automatische verwijdering. Publieke intake gebruikt bewust een tijdgebonden key: een gecorrigeerde payload binnen hetzelfde tienminutenwindow geeft conflict in plaats van stil een tweede aanvraag te maken.
+- Resterend risico/menselijke stap: deployment en runtime-E2E blijven NIET GETEST; review de live duplicate-inventory en rolloutvolgorde.
+
+### Checkpoint 5
+
+- Audit-ID/status: P1-003 CLOSED en P1-004 CLOSED voor de gescopeerde onboarding-writeketen.
+- Commit: `ac110703848bfae943efff684b8f766ad91e19dc` (`feat(imports): add resumable apply and rollback`).
+- Gewijzigd: additive migration `20260822012255_resumable_import_apply_rollback.sql`; import-validatie/apply/rollback-serveractions en beheerstatus; durable `import_manifest_entries`; import/invitation-lineage; unitcontract; echte PostgreSQL failure-, retry-, rollback- en 5.000-row-integratietest.
+- Claim/idempotentie: `claim_import_apply` lockt de job, bindt de deterministische SHA-256-key `import-apply:v1:<tenant>:<job>` en geeft één lease-token uit. Een actieve lease retourneert `busy`; een verlopen of zichtbaar gefaalde poging kan worden hervat; een afgeronde job retourneert dezelfde completion. Apply-attempts zijn begrensd en rollback kan niet tegelijk starten.
+- Batching: validatiestatussen en targets worden in maximaal 250 rows per RPC verwerkt. Een applychunk lockt job en rows en schrijft target, rowstate en iedere manifestregel binnen één exception-subtransactie. Een fout rolt de volledige huidige chunk terug, bewaart eerdere gecommitte chunks, zet `failed/needs_attention`, wist de claim en schrijft een PII-arm fout-event. Hervatting selecteert alleen resterende `valid` rows. De 5.000-rowproef gebruikt exact twintig apply-RPC's en creëert exact 5.000 targets plus manifestregels.
+- Guardians/outbox/Auth: guardian-invitation, unieke importlineage, uitgestelde outboxrow en beide manifestentries committen in dezelfde chunk; provider-I/O is daar onmogelijk. Auth-resolutie gebeurt alleen post-commit en is retry-safe; de materializer schrijft profile/security/membership en een eigendomsbewuste manifestentry. Alleen wanneer iedere guardianidentity, pending invitation en queued/retry-outboxreferentie compleet is, finaliseert de job en maakt één transactiestap de mailitems due. Identityfailure blijft `needs_attention` met een duurzaam event; er wordt geen echte mail verzonden in tests.
+- Rollback/reconciliatie: `claim_import_rollback` gebruikt een aparte begrensde lease. Reverse-order chunks compenseren uitsluitend `created_by_import` manifesttargets; manifestregels blijven permanent als bewijs met `pending|compensated|failed`. Een chunkfout rolt die hele compensatiechunk terug en blijft zichtbaar/retrybaar. Geaccepteerde/actieve memberships en invitations en reeds processing/accepted mail worden fail-closed niet automatisch verwijderd. Reeds bestaande memberships zijn nooit import-owned en worden als niet te compenseren bewijs gemarkeerd.
+- Grants/RLS: alle tien importmutatie-RPC's zijn `SECURITY INVOKER`, fixed-search-path, gerevoked voor `PUBLIC`/`anon`/`authenticated` en alleen execute-granted aan `service_role`. Het durable manifest heeft RLS + FORCE RLS; alleen actieve tenant owner/admin kan het lezen en alleen service role kan schrijven. Negatieve grant- en cross-tenanttests zijn onderdeel van de integratieproef.
+- Verplicht bewijs: geldige en gemengde import, ongeldige rows, duplicates, double-apply, failure midden in een chunk met nul partial chunkrows, retry/hervatting, rollbackfailure met behouden manifest, succesvolle retry/double-rollback, guardian outboxblokkering/finalization en 5.000 participants in twintig chunks zijn groen.
+- Tests: nieuw unitcontract 6/6 PASS; volledige unitsuite 396/396 PASS; `test:resumable-import:db` PASS; regressies `test:email-outbox:db`, `test:tenant-provisioning:db` en `test:core-onboarding:db` PASS; typecheck/lint PASS; authaudit PASS; production build PASS; migrationaudit PASS (139); RLS-audit PASS (251 tabellen, alleen de bestaande private-helperwaarschuwingen plus de verwachte service-only Auth-resolver); `git diff --check` PASS.
+- Lokale DB-validatie: de migration is op de geïsoleerde PostgreSQL-validatiecontainer geparset/toegepast en de RPC's zijn werkelijk als `service_role` uitgevoerd. Door bestaande migration-historydrift is geen `supabase db push` of repair als bewijs gebruikt. Geen staging/live database, echte mailprovider of live Auth-provider is benaderd; Auth API-runtime, worker scheduling en delivery blijven extern NIET GETEST.
+- Rollback/deploymentrisico: oude apps mogen na migratie niet voor apply/rollback worden gebruikt omdat die het oude geheugenmanifest en losse writes terugbrengen. Voor deployment eerst migrations 2–5 in volgorde, dan exact hetzelfde appartifact, daarna workers nog met kill switch uit. Bestaande jobs zonder durable manifest worden bewust fail-closed niet automatisch teruggedraaid; menselijke inventaris/reconciliatie is vereist.
+
+### Stretch 1 — nieuwsbrief production-safe
+
+- Status: CLOSED als veilige concept-only fallback; echte nieuwsbriefdelivery blijft NIET GEÏMPLEMENTEERD en extern NIET GETEST.
+- Commit: `c0bb26e3e3e9a68af0a09c1588d9ad6e94867d3d` (`fix(newsletters): enforce concept-only delivery gate`).
+- Gewijzigd: server-only newsletter-delivery-capability, campaignserveraction, conceptformulier, beheerbewijsweergave en drie production-safety-contracttests.
+- Fail-closed contract: alleen de letterlijke envwaarde `NEWSLETTER_DELIVERY_ENABLED=true` kan de feature aanvragen, maar de capability blijft uit zolang de applicatie geen in dezelfde change geverifieerde sender bevat. Een envflag alleen kan dus nooit planning of successtatus verzinnen. De serveraction weigert iedere status anders dan `draft` vóór ontvangerpreparatie; de UI biedt alleen een hidden draftstatus en toont geen schedule- of sendcontrole.
+- Waarheidsgetrouwe UI: de pagina claimt geen verzending of aflevering. Eventuele historische `scheduled|sending|sent` data wordt als legacy externe status met waarschuwing getoond; deliveryrows heten historische evidence en bewijzen expliciet geen aflevering.
+- Tests: newsletter safety 3/3 PASS; communication hub contract/schema samen 20/20 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
+- Vervolg voor echte delivery: implementeer eerst sender, durable outboxbinding, worker, provideracceptatie/deliverybewijs, consent/unsubscribe en E2E; pas daarna mag de compile-time sendercapability in dezelfde gereviewde change worden geopend. Een envwijziging alleen is onvoldoende.
+
+### Stretch 2 — Europe/Amsterdam date-only semantics
+
+- Status: CLOSED voor de geïnventariseerde risicovolle webkern-usages.
+- Commit: `141ae59f3b4448d3f85c2fe04b35a2ce93d7ddd3` (`fix(dates): use Amsterdam business dates in core flows`).
+- Gewijzigd: centrale `business-date` helper, 34 webbronbestanden, één lokale E2E-helper, één analyticscontract en drie tijdzonecontracttests.
+- Semantiek: `toAmsterdamDate` gebruikt expliciet `Intl.DateTimeFormat(..., timeZone: "Europe/Amsterdam")` en `formatToParts`, valideert input fail-fast en retourneert uitsluitend `YYYY-MM-DD`. `addAmsterdamCalendarDays` rekent eerst vanuit de lokale businessdatum en gebruikt UTC-noon als veilige kalenderrepresentatie, zodat een 23- of 25-uursdag geen dagoffset verschuift.
+- Inventaris/resultaat: de actuele branch bevatte 73 instanties van `toISOString().slice(0, 10)` in `apps/web` plus het direct gekoppelde swim-flow-contract (de auditraming noemde 72). Alle 73 zijn vervangen; dezelfde scope bevat daarna nul matches. ISO-timestamps en expliciete timestamptz-serialisatie zijn bewust niet gewijzigd.
+- Tests: business-date 3/3 PASS met UTC-middernacht, CET, CEST, 29 maart 2026 en 25 oktober 2026; gerichte automation/placement/next-best/retention/smart-signals/swim-flow regressies 28/28 PASS; volledige unit/contractsuite 406/406 PASS; typecheck/lint PASS; production build PASS; `git diff --check` PASS.
+- Risico/afbakening: losse stagingfixtures en scripts buiten de webkern behouden hun eigen bestaande tijdhelpers en vallen niet onder deze eerste tranche. Reeds opgeslagen datumwaarden worden niet herschreven. Datum-only parsing van provider-timestamps zonder `Date#toISOString` is niet stil meegewijzigd en vereist per providercontract afzonderlijke beoordeling.
+
+### Stretch 3 — securitybaseline en Node-harmonisatie
+
+- Status: CLOSED lokaal; uitvoering van gewijzigde GitHub-workflows blijft extern NIET GETEST.
+- Commit: `d16281a9b2f5b963885ed273ea993c204f884ab4` (`chore(security): align runtime and patch nanoid`).
+- Gewijzigd: root enginecontract en `.node-version`, negen afwijkende workflowpins, nanoid-override/lockfile en drie runtime-security-contracttests. Reeds correcte Node 24.18.0-workflows bleven inhoudelijk ongewijzigd.
+- Dependencyfix: de gerichte transitieve override is verhoogd van kwetsbare `nanoid 3.3.17` naar gepatchte `3.3.18`; lockfile bevat uitsluitend `nanoid@3.3.18`. Er is geen nieuwe productiedependency toegevoegd.
+- Runtimecontract: alle negentien actieve `setup-node`-jobs gebruiken exact Node `24.18.0`; root `engines.node` is `>=24.18.0 <25` en `.node-version` is `24.18.0`. Dit sluit aan op de reeds gebruikte deploy/runtime en lokale verificatieruntime en verwijdert de mix van 20.19, 22 en 24.18.
+- Tests: runtime-security 3/3 PASS; frozen install PASS zonder lockfilemutatie; `pnpm audit --prod --audit-level high` PASS met `No known vulnerabilities found`; typecheck PASS; production build PASS; `git diff --check` PASS.
+- Risico/rollout: Node 24 is nu de bewuste enige ondersteunde major. Externe runners, self-hosted agents en deploymentimages moeten vóór rollout aantoonbaar Node 24.18.0 kunnen leveren; de workflows zijn niet uitgevoerd vanuit deze lokale sessie en zijn daarom niet als runtime-PASS gemarkeerd.
+
+### Stretch 4 — fail-closed evidencepijplijnen
+
+- Status: CLOSED voor repository- en lokale contracten; echte stagingrestore, Storage-rehearsal, GitHub artifactupload en gecredentialde browserisolatie blijven extern NIET GETEST.
+- Commit: `a10c12e4d39303320e0e686d66b56df059499230` (`chore(evidence): harden release and restore proofs`).
+- Dynamische restore-inventory: de restore-rehearsal inventariseert alle publieke brontabellen uit de dump, weigert een lege bron, vergelijkt de bron- en doeltabellen plus rowcounts exact en bevat geen statische `63`-drempel meer. De workflowvariabele en dezelfde minimumdrempel in de live FORCE-RLS-check zijn verwijderd; de live check weigert nog steeds een lege inventory en iedere tabel zonder RLS/FORCE RLS.
+- Storagecontract: één versioned contract bevat exact de vijf huidige private buckets `tenant-documents`, `diploma-vault`, `participant-media`, `badge-studio-assets` en `tenant-media-assets`, inclusief het juiste PDF/PNG-rehearsaltype. Export, restore, remote verify en cleanup vereisen altijd de volledige set. Manifest v3 bewaart het contractversion; oude/incomplete manifests worden fail-closed geweigerd in plaats van stil als volledig bewijs geaccepteerd.
+- Critical suites: premium-release en Sprint 4 tenant-isolation bevatten bij ontbrekende opt-inconfiguratie ieder één expliciet falende configuratietest. De negatieve lokale proef leverde exact twee failures en nul skips met de bedoelde foutmeldingen; dit is fail-closed configuratiebewijs en geen gecredentialde E2E-PASS.
+- Exact bronbewijs: CI en deploy schrijven en uploaden verplicht `exact-source-sha.json`; ontbrekende artifacts laten upload falen. De helper accepteert uitsluitend een volledige 40-teken-SHA en vergelijkt die met de werkelijk uitgecheckte commit. Staging-preview checkt voor de bewijsjob dezelfde expliciete preview-SHA uit en bindt `DEPLOYED_SOURCE_SHA` daaraan. Release evidence en artifact-storage evidence gebruiken dezelfde strikte resolver; productie bewaart het SHA-artifact samen met release evidence.
+- Tests: nieuw evidence-pipelinecontract 4/4 PASS; aangescherpte bestaande Storage/badge/health-contracten PASS; volledige unit/contractsuite 413/413 PASS; typecheck en echte lintscript (dezelfde `tsc --noEmit`) PASS; production build PASS; authaudit PASS; migrationaudit PASS (139); RLS-sourceaudit PASS (251 tabellen met alleen bestaande service/private-helperwaarschuwingen); dependencyaudit PASS (`No known vulnerabilities found`); vier database-integratiesuites PASS; shellsyntax en `git diff --check` PASS. De lokale exacte-SHA-writer schreef en herlas `d16281a9b2f5b963885ed273ea993c204f884ab4` vóór deze checkpointcommit.
+- Externe grens/risico: `db:verify-force-rls` blokkeert lokaal terecht omdat de check alleen tegen `staging.nxttrack.nl` mag draaien; `db:rls-role-smoke` meldde SKIP wegens ontbrekende Supabase-URL/anonkey en E2E-rollen. Geen van beide is als PASS geteld. Een bestaande vier-bucketbackup kan niet meer als actueel volledig herstelbewijs dienen en moet na rollout opnieuw als vijf-bucketbackup worden gemaakt en gerepeteerd; er is niets automatisch verwijderd of hersteld.
+
+## Finale validatie vanaf de complete implementatietip
+
+Bron voor deze finale run: `a10c12e4d39303320e0e686d66b56df059499230`. De werkmap was schoon vóór en na de lokale PostgreSQL-proeven; alle gegenereerde build-/testartifacts zijn genegeerd en niet gecommit.
+
+| Controle | Finaal resultaat |
+| --- | --- |
+| `pnpm install --frozen-lockfile` | PASS; lockfile onveranderd |
+| `pnpm typecheck` en `pnpm lint` | PASS; lint is in deze repository dezelfde `tsc --noEmit`-grens |
+| Volledige unit/contractsuite | PASS; 413/413, 0 failures, 0 skips |
+| `pnpm build` | PASS; Next.js 16.2.11, 17 statische pagina's |
+| Auth-, migration- en RLS-sourceaudit | PASS; 3 authcontracttests, 139 migrations, 251 publieke tabellen; alleen reeds bekende private/service-helperwaarschuwingen zonder authenticated grant |
+| Productiedependencyaudit | PASS; `No known vulnerabilities found` |
+| Repository/design/Journey/runtime audits | PASS; production-historywaarschuwing blijft zichtbaar en is niet gemerged |
+| Outbox PostgreSQL-integratie | PASS; 20-way enqueue/claim, lease, retry/dead en immutable events |
+| Provisioning PostgreSQL-integratie | PASS; zeven failureboundaries, nul partial graphs, 20-way duplicate submit exact één tenant |
+| Core writes PostgreSQL-integratie | PASS; participant/intake rollback+retry en twintig claims op één plek exact één plaatsing |
+| Import PostgreSQL-integratie | PASS; mixed/duplicate/double apply, midchunk resume, rollback retry en 5.000 rows in exact twintig chunks |
+| Standalone packaging + desktop smoke | PASS; native Sharp/libvips, static/public assets en 20/20 desktop smoke |
+| Volledige Playwrightset na correcte packaging | 46 PASS, 64 SKIP wegens ontbrekende externe suiteconfig/credentials, 4 verwachte fail-closed configuratiefailures (premium release en tenantisolatie op desktop+mobile) |
+| `git diff --check` | PASS |
+
+De 64 credential-/staging-/providergebonden tests zijn NIET GETEST, niet groen verklaard. De vier configuratiefailures vervangen de vroegere stille skips en zijn dus het bedoelde bewijs dat een kritieke release/isolationrun zonder expliciete configuratie niet succesvol kan lijken. Met `PREMIUM_RELEASE_BROWSER_ENABLED=true`, `SPRINT4_ISOLATION_ENABLED=true`, de statefiles en de bijbehorende E2E-credentials moeten de echte scenario's in staging alsnog PASS leveren. De live FORCE-RLS-check, Supabase role-smoke, echte Auth-side effects, worker scheduling, mailprovideracceptatie/delivery, Storage backup/restore en GitHub artifactuploads blijven eveneens externe vervolgstappen.
+
+## Auditafsluiting
+
+- Werkelijk gesloten: P0-004, P1-001, P1-002, P1-003 en P1-004 binnen de gescopeerde technische onboarding-writeketen.
+- Gedeeltelijk/productgrens: nieuwsbriefdelivery is bewust concept-only; bounce/webhookdelivery, live Auth/mail/runtime en bestaande jobs zonder durable importmanifest zijn niet als opgelost geclaimd.
+- Algemene auditstatus: het oorspronkelijke auditrapport en de algemene NO-GO zijn niet gewijzigd. Deze branch levert alleen het technische sprintbewijs; GO vereist de hierboven genoemde externe rehearsals, rolloutchecks en menselijke goedkeuring.
+- Migratievolgorde: `20260822002234_production_email_outbox.sql`, `20260822004329_atomic_tenant_provisioning.sql`, `20260822010612_atomic_core_onboarding_writes.sql`, `20260822012255_resumable_import_apply_rollback.sql`, daarna exact hetzelfde gebouwde appartifact. Houd mail/workerfeaturegates uit totdat runtimechecks en identities compleet zijn.
+- Rollback: application-forward en fail-closed. Zet mail/workerfeaturegates uit, stop consumers en herstel de applicatie naar een compatibele versie die de nieuwe write-RPC's blijft gebruiken. Verwijder geen additive tabellen/constraints en gebruik geen migration-repair. Reconcileer pre-existente duplicate live memberships en legacy imports read-only/menselijk vóór rollout; herstel alleen via het durable importmanifest.
+
+## Deployment- en rollbackcontract
+
+Alle migrations in deze sprint zijn additive en forward-compatible. Er worden geen live migrations uitgevoerd. Deploymentvolgorde na review: database migrations in timestampvolgorde, daarna exact hetzelfde appartifact, daarna workers/cron pas activeren met `EMAIL_SENDING_ENABLED=false`. Rollback is application-forward: kill switch uit, workers stoppen, oude appversie kan nieuwe additive tabellen/kolommen negeren. Schema-drops of migration-repair zijn geen rollbackmechanisme.

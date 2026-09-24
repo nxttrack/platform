@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 3,
+  "portalContract": "parent-portal/1.2",
+  "themeKey": "nationaal-zwem-abc",
+  "release": "3.0.0",
+  "compatibility": {
+    "portalContract": "parent-portal/1.2",
+    "minimumWebBuild": "2026.08.03",
+    "requiredFeatureFlags": [
+      "parent_portal_theme_pack_v3"
+    ]
+  },
+  "navigation": {
+    "primaryDestinations": [
+      "overview",
+      "planning",
+      "development",
+      "inbox",
+      "more"
+    ],
+    "routeIds": [
+      "overview",
+      "planning",
+      "lesson-detail",
+      "development",
+      "badges",
+      "media",
+      "diplomas",
+      "inbox",
+      "payments",
+      "documents",
+      "feedback",
+      "children",
+      "profile"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "canvas": "#F7FCFF",
+      "surface": "rgba(255,255,255,.96)",
+      "surfaceAlt": "#E5F8FF",
+      "text": "#17324D",
+      "textMuted": "#6B7A8A",
+      "primary": "#00AEDE",
+      "primaryStrong": "#17324D",
+      "secondary": "#10B9D9",
+      "reward": "#FFDA25",
+      "rail": "#112E4E",
+      "info": "#00AEDE",
+      "success": "#009D61",
+      "warning": "#7A4B00",
+      "danger": "#EE2D35"
+    },
+    "gradients": {
+      "page": [
+        "#F7FCFF",
+        "#E5F8FF",
+        "#FFF1EC"
+      ],
+      "sidebar": [
+        "#1B4C70",
+        "#163C5E",
+        "#112E4E"
+      ]
+    },
+    "radii": {
+      "card": "22px",
+      "hero": "29px"
+    },
+    "typography": {
+      "display": "\"Inter Variable\", Inter, system-ui, sans-serif",
+      "body": "\"Inter Variable\", Inter, system-ui, sans-serif"
+    },
+    "motionMilliseconds": {
+      "microMs": 140,
+      "standardMs": 220,
+      "celebrationMs": 480
+    }
+  },
+  "recipes": {
+    "shell": "portal-shell/shared-v1",
+    "pages": {
+      "overview": "overview/journey-engine-v1",
+      "planning": "planning/timeline-v1",
+      "lesson-detail": "page/data-first-v2",
+      "development": "development/progress-v1",
+      "badges": "badges/placeholder-wall-v1",
+      "media": "page/data-first-v2",
+      "diplomas": "page/data-first-v2",
+      "inbox": "page/data-first-v2",
+      "payments": "page/data-first-v2",
+      "documents": "page/data-first-v2",
+      "feedback": "page/data-first-v2",
+      "children": "page/data-first-v2",
+      "profile": "page/data-first-v2"
+    },
+    "components": {
+      "assessment": "assessment/five-point-v1",
+      "childPicker": "child-picker/pearl-v1",
+      "inboxActions": "inbox-actions/icon-pair-v1",
+      "mediaBlend": "media-blend/surface-fade-v1"
+    }
+  },
+  "assets": {
+    "overview.hero.desktop": {
+      "path": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "contentHash": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "overview.hero.mobile": {
+      "path": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "contentHash": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.desktop": {
+      "path": "/portal-themes/nationaal-zwem-abc/journey-desktop.png",
+      "contentHash": "68a954d4b754540552eea2ef834653235379ff2fd6f99f7e53a5e8a7c2b478b6",
+      "width": 1672,
+      "height": 941,
+      "mimeType": "image/png",
+      "decorative": true
+    },
+    "progress.journey.mobile": {
+      "path": "/portal-themes/nationaal-zwem-abc/journey-mobile.png",
+      "contentHash": "dcc52b05c4a7a55aa61676b6463797fecdbd39037003e442ee838eaffceca4d2",
+      "width": 941,
+      "height": 1672,
+      "mimeType": "image/png",
+      "decorative": true
+    }
+  },
+  "badges": {
+    "familyKey": "neutral-artwork-placeholders",
+    "release": "1.0.0",
+    "fallbackRecipe": "badge-fallback/neutral-placeholder-v1",
+    "status": "review"
+  },
+  "behavior": {
+    "hapticsProfile": "precise",
+    "soundProfile": "off-by-default",
+    "offlineCacheKey": "tenantId+themeKey+release",
+    "unknownRecipe": "fallback-to-default-and-report",
+    "childPicker": "native-popover-or-sheet",
+    "secureExternalNavigationOnly": true
+  },
+  "assessment": {
+    "scaleVersion": "five_point_v1",
+    "values": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "unratedValue": null,
+    "displayModes": [
+      "smileys",
+      "stars"
+    ],
+    "optionCount": 5
+  },
+  "accessibility": {
+    "colorMode": "light",
+    "minimumContrast": "WCAG-AA",
+    "supportsReducedMotion": true,
+    "supportsDynamicType": true
+  }
+}

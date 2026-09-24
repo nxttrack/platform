@@ -79,7 +79,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
       <Feedback saved={saved} error={error} />
       <RouteFeedback error={error && !["confirmation", "visibility"].includes(error) ? error : null} success={success} />
 
-      <ThreadWorkspace
+      <ThreadWorkspace currentUserId={hub.currentUserId} tenantId={hub.tenant.id}
         baseHref="/admin/berichten"
         instructors={hub.instructors}
         filters={filters}
@@ -148,7 +148,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
                       </button>
                     </form>
                   ) : null}
-                  <StatusPill tone={attempt.status === "sent" ? "success" : attempt.status === "failed" ? "danger" : "warning"}>{attempt.status}</StatusPill>
+                  <StatusPill tone={attempt.status === "sent" ? "success" : attempt.status === "accepted" ? "info" : attempt.status === "failed" ? "danger" : "warning"}>{attempt.status === "accepted" ? "provider geaccepteerd" : attempt.status}</StatusPill>
                 </div>
               </div>
             ))}
@@ -161,7 +161,7 @@ export default async function AdminMessagesPage({ searchParams }: PageProps) {
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success" role="status">Opgeslagen: {saved}.</p>;
   }
 
   if (error) {

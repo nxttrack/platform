@@ -1,4 +1,4 @@
-export const badgeGenders = ["boy", "girl", "unknown"] as const;
+export const badgeGenders = ["boy", "girl", "unknown_legacy"] as const;
 export const badgeAudiences = ["all", "boys", "girls"] as const;
 export const badgeFormats = ["square", "story", "landscape", "certificate"] as const;
 
@@ -14,6 +14,7 @@ export type GenderedCopy = {
 
 export type BadgeLayer = {
   id: string;
+  name?: string;
   type: "text" | "shape" | "badge" | "logo" | "decoration" | "image";
   x: number;
   y: number;
@@ -28,6 +29,7 @@ export type BadgeLayer = {
   fontSize?: number;
   fontWeight?: number;
   align?: "left" | "center" | "right";
+  rotation?: number;
   locked?: boolean;
   hidden?: boolean;
 };
@@ -54,12 +56,13 @@ export const badgeFormatDimensions: Record<BadgeFormat, { height: number; label:
 };
 
 export function normalizeBadgeGender(value: unknown): BadgeGender {
-  return badgeGenders.includes(value as BadgeGender) ? (value as BadgeGender) : "unknown";
+  if (value === "unknown") return "unknown_legacy";
+  return badgeGenders.includes(value as BadgeGender) ? (value as BadgeGender) : "unknown_legacy";
 }
 
 export function badgeMatchesAudience(gender: BadgeGender, audience: BadgeAudience) {
   if (audience === "all") return true;
-  if (gender === "unknown") return false;
+  if (gender === "unknown_legacy") return false;
   return audience === "boys" ? gender === "boy" : gender === "girl";
 }
 
@@ -97,37 +100,73 @@ export function firstNameOnly(displayName: string) {
   return displayName.trim().split(/\s+/)[0] || "Kind";
 }
 
-export function validateBadgeLayers(value: unknown): BadgeLayer[] {
+export function validateBadgeLayers(
+  value: unknown,
+  bounds: { height: number; width: number } = { height: 2400, width: 2400 }
+): BadgeLayer[] {
   if (!Array.isArray(value)) return [];
+  const layerIds = new Set<string>();
 
-  return value.flatMap((layer) => {
+  return value.slice(0, 100).flatMap((layer) => {
     if (!layer || typeof layer !== "object") return [];
     const record = layer as Record<string, unknown>;
     const type = record.type;
     if (!["text", "shape", "badge", "logo", "decoration", "image"].includes(String(type))) return [];
+    const id = cleanText(record.id, "layer", 80);
+    if (layerIds.has(id)) return [];
+    layerIds.add(id);
     const assetId = optionalUuid(record.assetId);
     if (type === "image" && !assetId) return [];
+    const x = clampNumber(record.x, 0, Math.max(0, bounds.width - 24));
+    const y = clampNumber(record.y, 0, Math.max(0, bounds.height - 24));
 
     return [{
-      id: cleanText(record.id, "layer"),
+      id,
+      name: optionalLayerText(record.name, 80),
       type: type as BadgeLayer["type"],
-      x: clampNumber(record.x, 0, 2400),
-      y: clampNumber(record.y, 0, 2400),
-      width: clampNumber(record.width, 24, 2400),
-      height: clampNumber(record.height, 24, 2400),
+      x,
+      y,
+      width: clampNumber(record.width, 24, Math.max(24, bounds.width - x)),
+      height: clampNumber(record.height, 24, Math.max(24, bounds.height - y)),
       assetId,
-      alt: optionalText(record.alt, 200),
+      alt: optionalLayerText(record.alt, 200),
       objectFit: ["contain", "cover"].includes(String(record.objectFit)) ? record.objectFit as BadgeLayer["objectFit"] : "contain",
-      text: optionalText(record.text),
+      text: optionalLayerText(record.text),
       fill: optionalText(record.fill),
       opacity: clampNumber(record.opacity ?? 1, 0, 1),
       fontSize: clampNumber(record.fontSize ?? 32, 10, 240),
       fontWeight: clampNumber(record.fontWeight ?? 600, 100, 900),
       align: ["left", "center", "right"].includes(String(record.align)) ? record.align as BadgeLayer["align"] : "center",
+      rotation: clampNumber(record.rotation ?? 0, -180, 180),
       locked: record.locked === true,
       hidden: record.hidden === true
     }];
   });
+}
+
+export function moveBadgeLayer(layers: BadgeLayer[], layerId: string, direction: "back" | "front") {
+  const index = layers.findIndex((layer) => layer.id === layerId);
+  if (index < 0) return layers;
+  const nextIndex = direction === "front"
+    ? Math.min(layers.length - 1, index + 1)
+    : Math.max(0, index - 1);
+  if (nextIndex === index) return layers;
+  const next = [...layers];
+  const [layer] = next.splice(index, 1);
+  if (!layer) return layers;
+  next.splice(nextIndex, 0, layer);
+  return next;
+}
+
+export function reorderBadgeLayers(layers: BadgeLayer[], activeId: string, targetId: string) {
+  const activeIndex = layers.findIndex((layer) => layer.id === activeId);
+  const targetIndex = layers.findIndex((layer) => layer.id === targetId);
+  if (activeIndex < 0 || targetIndex < 0 || activeIndex === targetIndex) return layers;
+  const next = [...layers];
+  const [active] = next.splice(activeIndex, 1);
+  if (!active) return layers;
+  next.splice(targetIndex, 0, active);
+  return next;
 }
 
 export function badgeAwardKey(input: {
@@ -175,6 +214,10 @@ function optionalText(value: unknown, maxLength = 500) {
   return typeof value === "string" && value.trim() ? value.trim().slice(0, maxLength) : undefined;
 }
 
+function optionalLayerText(value: unknown, maxLength = 500) {
+  return typeof value === "string" ? value.slice(0, maxLength) : undefined;
+}
+
 function optionalUuid(value: unknown) {
   const normalized = optionalText(value, 36);
   return normalized && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)
@@ -182,6 +225,6 @@ function optionalUuid(value: unknown) {
     : undefined;
 }
 
-function cleanText(value: unknown, fallback: string) {
-  return optionalText(value) ?? fallback;
+function cleanText(value: unknown, fallback: string, maxLength = 500) {
+  return optionalText(value, maxLength) ?? fallback;
 }

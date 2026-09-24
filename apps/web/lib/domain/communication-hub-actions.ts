@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { classifyContent } from "@/lib/security/content-classification";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getNewsletterDeliveryCapability } from "@/lib/email/newsletter-delivery-capability";
 import {
   communicationTemplateChannels,
   assessCommunicationContent,
@@ -484,6 +485,16 @@ export async function createNewsletterCampaignAction(formData: FormData) {
   const tenant = getActiveTenant(context);
   requireAdminRole(context.activeTenant?.roles ?? [], nextPath);
   const status = readEnum(formData, "status", newsletterStatuses, "draft");
+  const deliveryCapability = getNewsletterDeliveryCapability();
+  if (status !== "draft" && !deliveryCapability.enabled) {
+    redirectWithFeedback(
+      nextPath,
+      "error",
+      deliveryCapability.reason === "sender_not_implemented"
+        ? "Nieuwsbriefdelivery heeft nog geen geverifieerde sender. Sla de nieuwsbrief op als concept."
+        : "Nieuwsbriefdelivery staat uit. Sla de nieuwsbrief op als concept."
+    );
+  }
   if (status !== "draft" && !isHumanConfirmed(formData.get("humanConfirmation"))) {
     redirectWithFeedback(nextPath, "error", "Bevestig de planning of verzending.");
   }
@@ -652,6 +663,35 @@ export async function markMessageThreadReadAction(formData: FormData) {
     .eq("status", "unread");
   revalidateCommunicationHub();
   redirectWithFeedback(nextPath, "success", "Gesprek gemarkeerd als gelezen.");
+}
+
+export async function markAllMessageThreadsReadAction(formData: FormData) {
+  const nextPath = getFormNextPath(formData, "/portaal/inbox");
+  const context = await requirePrivateShellContext(nextPath);
+  const tenant = getActiveTenant(context);
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const participants = await admin
+    .from("message_thread_participants")
+    .update({ last_read_at: now })
+    .eq("tenant_id", tenant.id)
+    .eq("user_id", context.user.id)
+    .eq("status", "active");
+  if (participants.error) {
+    redirectWithFeedback(nextPath, "error", "De gesprekken konden niet worden bijgewerkt.");
+  }
+  const notifications = await admin
+    .from("tenant_notifications")
+    .update({ status: "read", read_at: now })
+    .eq("tenant_id", tenant.id)
+    .eq("recipient_user_id", context.user.id)
+    .eq("entity_type", "message_thread")
+    .eq("status", "unread");
+  if (notifications.error) {
+    redirectWithFeedback(nextPath, "error", "De gespreksmeldingen konden niet worden bijgewerkt.");
+  }
+  revalidateCommunicationHub();
+  redirectWithFeedback(nextPath, "success", "Alle gesprekken zijn gelezen.");
 }
 
 async function upsertThreadParticipants(input: {

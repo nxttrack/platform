@@ -1,9 +1,9 @@
 export const positiveScoreLevels = [
-  { score: 1, label: "Ik ontdek het", description: "Eerste kennismaking met hulp." },
-  { score: 2, label: "Ik probeer het", description: "De beweging lukt soms met begeleiding." },
-  { score: 3, label: "Ik groei erin", description: "De basis is zichtbaar en wordt stabieler." },
-  { score: 4, label: "Ik kan het bijna zelf", description: "De vaardigheid is sterk in gewone lessituaties." },
-  { score: 5, label: "Ik kan het zelfstandig", description: "De vaardigheid is rustig en zelfstandig herhaalbaar." }
+  { score: 1, label: "Goed begonnen", description: "Eerste stap; veel begeleiding nodig." },
+  { score: 2, label: "Goed bezig", description: "Aan het oefenen; regelmatig begeleiding nodig." },
+  { score: 3, label: "Mooi op weg", description: "Groeiend; gedeeltelijk zelfstandig." },
+  { score: 4, label: "Heel knap", description: "Bijna beheerst; meestal zelfstandig." },
+  { score: 5, label: "Superster", description: "Beheerst; zelfstandig." }
 ] as const;
 
 export const swimProgressTemplate = [

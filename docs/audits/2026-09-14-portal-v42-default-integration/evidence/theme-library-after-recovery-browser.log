@@ -1,0 +1,61 @@
+
+Running 4 tests using 1 worker
+
+(node:418400) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:6:5 › platform import, draft editing, preview and immutable publication persist across browser sessions (37.4s)
+  ✓  2 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:84:5 › a manifestless image archive requires explicit mapping and resumes its saved preview after reload (9.5s)
+  ✘  3 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:117:5 › platform world binding is explicit, replaces an optimistic revision and rolls back the full presentation (2.0m)
+(node:444151) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  4 [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:156:5 › a published version forks into a new editable concept, validates assets and restores an earlier revision without rewriting history (25.1s)
+
+
+  1) [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:117:5 › platform world binding is explicit, replaces an optimistic revision and rolls back the full presentation 
+
+    Test timeout of 120000ms exceeded.
+
+    Error: apiRequestContext._wrapApiCall: ENOSPC: no space left on device, write
+
+    Error: ENOSPC: no space left on device, write
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for locator('section').filter({ has: getByRole('heading', { name: 'Curriculumwereld koppelen', exact: true }) }).getByRole('button', { name: /Wereld koppelen|Wereldkoppeling vervangen/ })
+        - locator resolved to <button disabled class="rounded-lg border p-3 font-bold">Wereld koppelen</button>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is not enabled
+        - retrying click action
+          - waiting 100ms
+        227 × waiting for element to be visible, enabled and stable
+            - element is not enabled
+          - retrying click action
+            - waiting 500ms
+
+
+      136 |   await section.locator('select[name="world"]').selectOption(worldOptions[0]);
+      137 |   await section.getByLabel("Reden", { exact: true }).fill("Eerste expliciete wereldkoppeling");
+    > 138 |   await section.getByRole("button", { name: /Wereld koppelen|Wereldkoppeling vervangen/ }).click();
+          |                                                                                            ^
+      139 |   await expect(section.getByText(/Opgeslagen. De nieuwe koppeling/)).toBeVisible();
+      140 |   await expect(section.locator('select[name="target"]')).toHaveValue(selectedTarget);
+      141 |   const firstBinding = await section.locator('input[name="expectedBinding"]').inputValue(); expect(firstBinding).toMatch(/^[a-f\d-]{36}$/);
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/theme-library-persistence.spec.ts:138:92
+
+    Error: ENOSPC: no space left on device, write
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../tmp/nxttrack-v42-evidence/theme-library-after-recovery-browser/theme-library-persistence--5c896--back-the-full-presentation-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/theme-library-persistence.spec.ts:117:5 › platform world binding is explicit, replaces an optimistic revision and rolls back the full presentation 
+  3 passed (3.2m)
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts tests/e2e/theme-library-persistence.spec.ts --project=journey-chromium --workers=1 --output=/tmp/nxttrack-v42-evidence/theme-library-after-recovery-browser

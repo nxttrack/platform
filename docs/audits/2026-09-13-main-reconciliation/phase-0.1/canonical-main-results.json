@@ -1,0 +1,52 @@
+[
+  {
+    "name": "refs",
+    "command": [
+      "git",
+      "-C",
+      "/tmp/nxttrack-phase01-evidence/canonical-main",
+      "for-each-ref",
+      "--format=%(refname) %(objectname)"
+    ],
+    "exitCode": 0,
+    "sha": "1a4822e214772b9525e838b933998b0cd48fe78d",
+    "log": "canonical-main-refs.log"
+  },
+  {
+    "name": "anchor",
+    "command": [
+      "git",
+      "-C",
+      "/tmp/nxttrack-phase01-evidence/canonical-main",
+      "merge-base",
+      "--is-ancestor",
+      "12b4885a55c439caa2a7aa180d597e72baf9d2d5",
+      "HEAD"
+    ],
+    "exitCode": 0,
+    "sha": "1a4822e214772b9525e838b933998b0cd48fe78d",
+    "log": "canonical-main-anchor.log"
+  },
+  {
+    "name": "schema",
+    "command": [
+      "pnpm",
+      "run",
+      "release:assert-schema-compatibility"
+    ],
+    "exitCode": 0,
+    "sha": "1a4822e214772b9525e838b933998b0cd48fe78d",
+    "log": "canonical-main-schema.log"
+  },
+  {
+    "name": "rollback",
+    "command": [
+      "pnpm",
+      "run",
+      "release:assert-rollback-target"
+    ],
+    "exitCode": 0,
+    "sha": "1a4822e214772b9525e838b933998b0cd48fe78d",
+    "log": "canonical-main-rollback.log"
+  }
+]

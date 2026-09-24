@@ -1,0 +1,59 @@
+
+Running 4 tests using 1 worker
+
+(node:897683) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:3:5 › browser Back retains a failed draft without replacing router history; retry and Forward remain navigable (1.4s)
+  ✓  2 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:21:5 › command palette cannot discard a failed private draft during imperative navigation (2.0s)
+  ✓  3 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:35:5 › tab changes retain the mounted draft after a failed flush (1.2s)
+  ✘  4 [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history (1.1s)
+
+
+  1) [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history 
+
+    Error: expect(locator).toHaveText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected: "Fictieve inzending mislukt"
+    Error: strict mode violation: getByRole('alert') resolved to 2 elements:
+        1) <p role="alert">Fictieve inzending mislukt</p> aka getByText('Fictieve inzending mislukt')
+        2) <div role="alert" aria-live="assertive" id="__next-route-announcer__">Jouw zwemreis</div> aka locator('[id="__next-route-announcer__"]')
+
+    Call log:
+      - Expect "toHaveText" with timeout 10000ms
+      - waiting for getByRole('alert')
+
+
+      52 |  const input=page.getByRole('textbox',{name:'Fictief handmatig formulier'});await input.fill('Fictieve niet-opgeslagen tekst');
+      53 |  await page.getByRole('button',{name:'Simuleer mislukte inzending'}).click();
+    > 54 |  await expect(page.getByRole('alert')).toHaveText('Fictieve inzending mislukt');
+         |                                        ^
+      55 |  page.once('dialog',dialog=>dialog.dismiss());await page.goBack();
+      56 |  await expect(page).toHaveURL(/draft=editor/);await expect(input).toHaveValue('Fictieve niet-opgeslagen tekst');
+      57 |  page.once('dialog',dialog=>dialog.accept());await page.goBack();
+        at /home/codex/repos/nxttrack-portal-v42-default-integration/apps/web/tests/e2e/journey-draft-history.spec.ts:54:40
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/manual-draft/journey-draft-history-a-fa-1c384-cit-discard-resumes-history-journey-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/manual-draft/journey-draft-history-a-fa-1c384-cit-discard-resumes-history-journey-chromium/video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: ../../../../../../dev/shm/nxttrack-v42-browser-tmp/manual-draft/journey-draft-history-a-fa-1c384-cit-discard-resumes-history-journey-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    ../../../../../../dev/shm/nxttrack-v42-browser-tmp/manual-draft/journey-draft-history-a-fa-1c384-cit-discard-resumes-history-journey-chromium/trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace ../../../../../../dev/shm/nxttrack-v42-browser-tmp/manual-draft/journey-draft-history-a-fa-1c384-cit-discard-resumes-history-journey-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [journey-chromium] › tests/e2e/journey-draft-history.spec.ts:49:5 › a failed manual form still asks before Back; cancel retains input and explicit discard resumes history 
+  3 passed (6.5s)
+undefined
+/home/codex/repos/nxttrack-portal-v42-default-integration/apps/web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: playwright test --config=playwright.v42-local.config.ts journey-draft-history.spec.ts --project=journey-chromium --retries=0 --workers=1 --output=/dev/shm/nxttrack-v42-browser-tmp/manual-draft

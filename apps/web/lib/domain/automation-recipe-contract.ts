@@ -225,7 +225,7 @@ export function decideAutomationRecipeCandidate(
       candidate,
       confidence: clamp(candidate.confidence),
       eligible: false,
-      reasons: [...candidate.reasons, "Journey Bot- en testdata worden nooit door live automatiseringen verwerkt."],
+      reasons: [...candidate.reasons, "Testdata worden nooit door live automatiseringen verwerkt."],
       skippedReason: "test_data_blocked"
     };
   }

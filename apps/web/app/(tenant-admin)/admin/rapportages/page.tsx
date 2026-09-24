@@ -98,7 +98,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
 
       <AdminSection
         title="Leadherkomst en conversie"
-        description="First-party CRM-inzicht uit werkelijk verstuurde intakes. Journey Bot-data is uitgesloten; Google Analytics is hiervoor niet de bron van waarheid."
+        description="First-party CRM-inzicht uit werkelijk verstuurde intakes. Testdata is uitgesloten; Google Analytics is hiervoor niet de bron van waarheid."
       >
         <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <ReportMetric label="Leads" value={leadReport.totalLeads.toString()} />
@@ -233,7 +233,7 @@ function ReportMetric({ label, value }: { label: string; value: string }) {
 
 function Feedback({ saved, error }: { saved?: string; error?: string }) {
   if (saved) {
-    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">Opgeslagen: {saved}.</p>;
+    return <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success" role="status">Opgeslagen: {saved}.</p>;
   }
 
   if (error) {

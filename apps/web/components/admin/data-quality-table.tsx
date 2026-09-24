@@ -48,7 +48,7 @@ export function DataQualityTable({ initialSearch, rows }: { initialSearch?: stri
         <div className="min-w-52">
           <div className="flex flex-wrap items-center gap-1.5">
             <p className="font-semibold text-foreground">{row.original.entityLabel}</p>
-            {row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+            {row.original.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{entityTypeLabel(row.original.entityType)}</p>
         </div>
@@ -129,7 +129,7 @@ export function DataQualityTable({ initialSearch, rows }: { initialSearch?: stri
             <StatusPill tone={severityTone(row.severity)}>{severityLabel(row.severity)}</StatusPill>
             <StatusPill tone={statusTone(row.status)}>{statusLabel(row.status)}</StatusPill>
             <StatusPill tone="neutral">{Math.round(row.confidence * 100)}% confidence</StatusPill>
-            {row.isTest ? <StatusPill tone="info">Journey Bot-testdata</StatusPill> : null}
+            {row.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
           </div>
 
           <section>

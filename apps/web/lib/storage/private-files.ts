@@ -44,7 +44,7 @@ export async function uploadParticipantMediaFile(input: {
   participantId: string;
   tenantId: string;
 }): Promise<PrivateFileUpload> {
-  const extension = input.file.type === "image/png" ? "png" : "jpg";
+  const extension = input.file.type === "image/png" ? "png" : input.file.type === "video/mp4" ? "mp4" : "jpg";
 
   return uploadPrivateFile({
     bucket: PARTICIPANT_MEDIA_BUCKET,

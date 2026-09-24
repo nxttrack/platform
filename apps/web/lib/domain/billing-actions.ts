@@ -1,5 +1,7 @@
 "use server";
 
+import { toAmsterdamDate } from "../date/business-date";
+
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -25,7 +27,6 @@ const providerKinds = new Set(["manual", "mollie", "ideal", "other"]);
 const providerModes = new Set(["test", "live"]);
 const providerStatuses = new Set(["draft", "active", "disabled"]);
 const collectionMethods = new Set(["manual", "provider"]);
-const invoiceStatuses = new Set(["draft", "issued", "sent", "paid", "void", "exported"]);
 const exportTypes = new Set(["invoices", "payments", "subscriptions", "provider_events"]);
 
 export async function saveBillingProviderConfigAction(formData: FormData) {
@@ -141,7 +142,7 @@ export async function createSubscriptionAction(formData: FormData) {
       guardian_user_id: enrollmentResult.data.guardian_user_id,
       payment_plan_id: planResult.data.id,
       status: readEnum(formData, "status", subscriptionStatuses, "active"),
-      starts_on: readOptional(formData, "startsOn") ?? new Date().toISOString().slice(0, 10),
+      starts_on: readOptional(formData, "startsOn") ?? toAmsterdamDate(),
       ends_on: readOptional(formData, "endsOn"),
       next_due_on: readOptional(formData, "nextDueOn"),
       amount_cents: readMoneyCentsOptional(formData, "amount") ?? planResult.data.amount_cents,
@@ -200,7 +201,7 @@ export async function createManualPaymentAction(formData: FormData) {
       amount_cents: readMoneyCentsOptional(formData, "amount") ?? subscriptionResult.data.amount_cents,
       currency: (readOptional(formData, "currency") ?? subscriptionResult.data.currency).toUpperCase(),
       due_on: readRequired(formData, "dueOn"),
-      paid_on: status === "paid" ? readOptional(formData, "paidOn") ?? new Date().toISOString().slice(0, 10) : readOptional(formData, "paidOn"),
+      paid_on: status === "paid" ? readOptional(formData, "paidOn") ?? toAmsterdamDate() : readOptional(formData, "paidOn"),
       status,
       reference: readOptional(formData, "reference"),
       method: readOptional(formData, "method"),
@@ -248,7 +249,7 @@ export async function updateManualPaymentStatusAction(formData: FormData) {
     redirect("/admin/betalingen?error=payment-provider-managed");
   }
 
-  const paidOn = status === "paid" ? readOptional(formData, "paidOn") ?? new Date().toISOString().slice(0, 10) : readOptional(formData, "paidOn");
+  const paidOn = status === "paid" ? readOptional(formData, "paidOn") ?? toAmsterdamDate() : readOptional(formData, "paidOn");
   const { error } = await admin
     .from("manual_payments")
     .update({
@@ -573,7 +574,7 @@ export async function recordPaymentSessionFailureAction(formData: FormData) {
 export async function runBillingLifecycleAction() {
   const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
-  const today = new Date().toISOString().slice(0, 10);
+  const today = toAmsterdamDate();
   const paymentsResult = await admin
     .from("manual_payments")
     .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on")
@@ -621,86 +622,72 @@ export async function runBillingLifecycleAction() {
 }
 
 export async function createInvoiceForPaymentAction(formData: FormData) {
-  const { tenant } = await getActionContext();
+  const { tenant, user } = await getActionContext();
   const admin = createAdminClient();
   const paymentId = readRequired(formData, "paymentId");
-  const existingInvoiceResult = await admin.from("billing_invoices").select("id").eq("tenant_id", tenant.id).eq("manual_payment_id", paymentId).limit(1);
-
-  if (existingInvoiceResult.error) {
-    redirect("/admin/betalingen?error=invoice");
-  }
-
-  if ((existingInvoiceResult.data ?? []).length > 0) {
-    redirectAfterWrite(null, "invoice-exists");
-  }
-
-  const paymentResult = await admin
-    .from("manual_payments")
-    .select("id, subscription_id, participant_id, guardian_user_id, amount_cents, currency, due_on, paid_on, status, reference")
-    .eq("tenant_id", tenant.id)
-    .eq("id", paymentId)
-    .maybeSingle();
-
-  if (paymentResult.error || !paymentResult.data) {
-    redirect("/admin/betalingen?error=invoice");
-  }
-
-  const status = readEnum(formData, "status", invoiceStatuses, paymentResult.data.status === "paid" ? "paid" : "issued");
-  const invoiceNumber = `INV-${new Date().toISOString().slice(0, 10).replaceAll("-", "")}-${randomUUID().slice(0, 8).toUpperCase()}`;
-  const invoiceResult = await admin
-    .from("billing_invoices")
-    .insert({
-      tenant_id: tenant.id,
-      subscription_id: paymentResult.data.subscription_id,
-      manual_payment_id: paymentResult.data.id,
-      participant_id: paymentResult.data.participant_id,
-      guardian_user_id: paymentResult.data.guardian_user_id,
-      invoice_number: invoiceNumber,
-      status,
-      issued_on: new Date().toISOString().slice(0, 10),
-      due_on: paymentResult.data.due_on,
-      paid_on: status === "paid" ? paymentResult.data.paid_on ?? new Date().toISOString().slice(0, 10) : null,
-      subtotal_cents: paymentResult.data.amount_cents,
-      tax_cents: 0,
-      total_cents: paymentResult.data.amount_cents,
-      currency: paymentResult.data.currency,
-      export_status: "ready",
-      notes: readOptional(formData, "notes")
-    })
-    .select("id")
-    .single();
-
-  if (invoiceResult.error || !invoiceResult.data) {
-    redirect("/admin/betalingen?error=invoice");
-  }
-
-  const lineError = await admin.from("billing_invoice_lines").insert({
-    tenant_id: tenant.id,
-    invoice_id: invoiceResult.data.id,
-    manual_payment_id: paymentResult.data.id,
-    description: readOptional(formData, "description") ?? paymentResult.data.reference ?? "Zwemles betaling",
-    quantity: 1,
-    unit_amount_cents: paymentResult.data.amount_cents,
-    tax_rate_basis_points: 0,
-    total_cents: paymentResult.data.amount_cents,
-    sort_order: 0
+  const result = await admin.rpc("issue_invoice_for_payment", {
+    actor_user_id: user.id,
+    target_description: readOptional(formData, "description"),
+    target_idempotency_key: readOptional(formData, "idempotencyKey") ?? randomUUID(),
+    target_notes: readOptional(formData, "notes"),
+    target_payment_id: paymentId,
+    target_tenant_id: tenant.id
   });
 
-  if (lineError.error) {
-    redirect("/admin/betalingen?error=invoice-line");
+  if (result.error) {
+    console.error("[billing] invoice issue command failed", {
+      code: result.error.code,
+      message: result.error.message,
+      tenantId: tenant.id
+    });
+    const reason = /billing profile is incomplete/i.test(result.error.message)
+      ? "invoice-profile"
+      : /permission/i.test(result.error.message)
+        ? "invoice-permission"
+        : "invoice";
+    redirect(`/admin/betalingen?error=${reason}`);
   }
-
-  await createBillingEvent({
-    tenantId: tenant.id,
-    paymentId: paymentResult.data.id,
-    subscriptionId: paymentResult.data.subscription_id,
-    participantId: paymentResult.data.participant_id,
-    guardianUserId: paymentResult.data.guardian_user_id,
-    type: "invoice_created",
-    message: `Factuur ${invoiceNumber} aangemaakt.`
-  });
-
   redirectAfterWrite(null, "invoice");
+}
+
+export async function createCreditNoteAction(formData: FormData) {
+  const { tenant, user } = await getActionContext();
+  const amountCents = readMoneyCents(formData, "amount");
+  const confirmation = readRequired(formData, "confirmation");
+
+  if (confirmation !== "CREDIT") {
+    redirect("/admin/betalingen?error=credit-confirmation");
+  }
+
+  const result = await createAdminClient().rpc("issue_credit_note", {
+    actor_user_id: user.id,
+    target_adjustment_type: readEnum(
+      formData,
+      "adjustmentType",
+      new Set(["credit_only", "refund", "offset"]),
+      "credit_only"
+    ),
+    target_amount_cents: amountCents,
+    target_idempotency_key: readOptional(formData, "idempotencyKey") ?? randomUUID(),
+    target_original_invoice_id: readRequired(formData, "invoiceId"),
+    target_reason: readRequired(formData, "reason"),
+    target_tenant_id: tenant.id
+  });
+
+  if (result.error) {
+    console.error("[billing] credit-note command failed", {
+      code: result.error.code,
+      message: result.error.message,
+      tenantId: tenant.id
+    });
+    const reason = /exceeds remaining/i.test(result.error.message)
+      ? "credit-amount"
+      : /permission/i.test(result.error.message)
+        ? "credit-permission"
+        : "credit";
+    redirect(`/admin/betalingen?error=${reason}`);
+  }
+  redirectAfterWrite(null, "credit-note");
 }
 
 export async function createBillingExportBatchAction(formData: FormData) {
@@ -726,7 +713,7 @@ export async function createBillingExportBatchAction(formData: FormData) {
   }
 
   const invoiceIds = ((invoicesResult.data ?? []) as { id: string }[]).map((invoice) => invoice.id);
-  const exportKey = `${exportType}-${new Date().toISOString().slice(0, 10)}-${randomUUID().slice(0, 8)}`;
+  const exportKey = `${exportType}-${toAmsterdamDate()}-${randomUUID().slice(0, 8)}`;
   const batchResult = await admin
     .from("billing_export_batches")
     .insert({
@@ -748,7 +735,7 @@ export async function createBillingExportBatchAction(formData: FormData) {
   }
 
   if (invoiceIds.length > 0) {
-    await admin.from("billing_invoices").update({ export_status: "exported", status: "exported" }).eq("tenant_id", tenant.id).in("id", invoiceIds);
+    await admin.from("billing_invoices").update({ export_status: "exported" }).eq("tenant_id", tenant.id).in("id", invoiceIds);
   }
 
   await createBillingEvent({
@@ -851,7 +838,7 @@ async function createBillingFollowUpTask(input: { description: string; participa
     classification_reasons: ["financial_participant_follow_up"],
     priority: input.priority,
     status: "open",
-    due_on: new Date().toISOString().slice(0, 10)
+    due_on: toAmsterdamDate()
   });
 }
 

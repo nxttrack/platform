@@ -1,5 +1,7 @@
 "use client";
 
+import { toAmsterdamDate } from "@/lib/date/business-date";
+
 import type { ColumnDef } from "@tanstack/react-table";
 import { AlertTriangle, CheckCircle2, Clock3, ListTodo, RefreshCw, Sparkles, UserCheck, Users, XCircle } from "lucide-react";
 import Link from "next/link";
@@ -76,7 +78,7 @@ const columns: ColumnDef<PlacementCockpitRow, unknown>[] = [
   {
     accessorKey: "participantName",
     header: "Deelnemer",
-    cell: ({ row }) => <div><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-foreground">{row.original.participantName}</p>{row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}</div><p className="text-xs text-muted-foreground">{row.original.parentName}</p></div>,
+    cell: ({ row }) => <div><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-foreground">{row.original.participantName}</p>{row.original.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}</div><p className="text-xs text-muted-foreground">{row.original.parentName}</p></div>,
     filterFn: dataTableTextFilter
   },
   { accessorKey: "program", header: "Programma", meta: { label: "Programma" } },
@@ -118,14 +120,14 @@ export function PlacementCockpit({ initialSearch, rows }: { initialSearch?: stri
 function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
   const statusMeta = getWaitlistStatusMeta(row.status);
   const effectivelyAgeBlocked = row.minimumAgeBlocked && (
-    !row.eligibleFrom || row.eligibleFrom > new Date().toISOString().slice(0, 10)
+    !row.eligibleFrom || row.eligibleFrom > toAmsterdamDate()
   );
 
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center gap-2">
         <StatusPill tone={statusMeta.tone}>{statusMeta.label}</StatusPill>
-        {row.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+        {row.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
       </div>
       <Tabs defaultValue="overview">
         <TabsList className="justify-start">
@@ -145,7 +147,7 @@ function PlacementDetails({ row }: { row: PlacementCockpitRow }) {
               <p className="mt-2 text-[13px] leading-5 text-foreground">{row.preferences.join(" · ") || "Geen specifieke voorkeur vastgelegd."}</p>
             </div>
             <WaitTimeInsight prediction={row.waitTime} />
-            {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Journey Bot-testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"} · veilig te archiveren via platformbeheer</p> : null}
+            {row.isTest ? <p className="rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-semibold text-sky-800">Testdata · run {row.journeyRunId?.slice(0, 8) ?? "onbekend"}</p> : null}
             {effectivelyAgeBlocked ? <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[13px] font-semibold text-amber-900">Plaatsing geblokkeerd tot {row.eligibleFrom ? new Intl.DateTimeFormat("nl-NL", { dateStyle: "long" }).format(new Date(row.eligibleFrom)) : "de vierde verjaardag"}.</p> : null}
             <section className="rounded-xl border border-border p-4">
               <h3 className="text-sm font-bold text-foreground">Wachtlijststatus</h3>

@@ -45,6 +45,7 @@ jobs:
       APP_ENV: ${{ matrix.target }}
       APP_URL: ${{ vars.APP_URL }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      CRON_SECRET: ${{ secrets.CRON_SECRET }}
       ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
       ALERT_WEBHOOK_FORMAT: ${{ vars.ALERT_WEBHOOK_FORMAT }}
       INCIDENT_OWNER: ${{ vars.INCIDENT_OWNER }}
@@ -93,7 +94,7 @@ jobs:
         if: steps.gate.outputs.enabled == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: "20.19.0"
+          node-version: "24.18.0"
 
       - name: Setup pnpm
         if: steps.gate.outputs.enabled == 'true'

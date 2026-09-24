@@ -1,7 +1,8 @@
-import { ArrowRight, CheckCircle2, ClipboardCheck, MessageSquarePlus, Sparkles } from "lucide-react";
+import { ArrowRight, CheckCircle2, ClipboardCheck, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { attendanceLabels, FocusNoteFields, RosterAttendanceFields } from "@/components/instructor/roster-form-fields";
 import { PageHeader, StatusPill } from "@/components/shell/ui";
 import { completeSessionAction, markAttendanceAction, markRosterPresentAction, saveProgressNoteAction } from "@/lib/domain/instructor-actions";
 import { formatSessionTime, getInstructorData, getSessionRoster } from "@/lib/domain/instructor";
@@ -12,14 +13,6 @@ type PageProps = {
   params: Promise<{ id: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
-
-const attendanceLabels = {
-  present: "Aanwezig",
-  absent: "Afwezig",
-  late: "Laat",
-  excused: "Afmelding",
-  trial: "Proefles"
-} as const;
 
 export const dynamic = "force-dynamic";
 
@@ -135,7 +128,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h4 className="font-bold text-foreground">{card.participant_name}</h4>
-                          {card.is_test ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+                          {card.is_test ? <StatusPill tone="info">Testdata</StatusPill> : null}
                         </div>
                         <StatusPill tone={card.status === "treated" ? "success" : "neutral"}>{card.status === "treated" ? "Behandeld" : "Open"}</StatusPill>
                       </div>
@@ -160,11 +153,7 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                           <input name="sessionId" type="hidden" value={selectedSession.id} />
                           <input name="visibility" type="hidden" value="internal" />
                           <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
-                          <label className="sr-only" htmlFor={`focus-note-${card.id}`}>Interne notitie voor {card.participant_name}</label>
-                          <div className="grid grid-cols-[1fr_auto] gap-2">
-                            <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm" id={`focus-note-${card.id}`} name="note" placeholder="Korte interne notitie" required />
-                            <button aria-label={`Notitie toevoegen voor ${card.participant_name}`} className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg bg-primary text-primary-foreground" type="submit"><MessageSquarePlus className="size-4" /></button>
-                          </div>
+                          <FocusNoteFields id={`focus-note-${card.id}`} participantName={card.participant_name} />
                         </form>
                       </div>
                     </article>
@@ -191,23 +180,12 @@ export default async function InstructorGroupPage({ params, searchParams }: Page
                     <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="absent" label="Afwezig" />
                     <QuickAttendanceButton enrollmentId={enrollment.id} groupId={group.id} participantId={participant.id} sessionId={selectedSession.id} status="late" label="Laat" />
                   </div>
-                  <form action={markAttendanceAction} className="mt-3 grid gap-2 md:grid-cols-[180px_1fr_auto]">
+                  <form action={markAttendanceAction} className="mt-3">
                     <input name="sessionId" type="hidden" value={selectedSession.id} />
                     <input name="participantId" type="hidden" value={participant.id} />
                     <input name="enrollmentId" type="hidden" value={enrollment.id} />
                     <input name="next" type="hidden" value={`/instructor/group/${group.id}?session=${selectedSession.id}`} />
-                    <select aria-label={`Aanwezigheidsstatus van ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.status ?? "present"} name="status">
-                      {Object.entries(attendanceLabels).map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <input aria-label={`Lesnotitie voor ${participant.display_name}`} className="h-10 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" defaultValue={attendance?.note ?? ""} name="note" placeholder="Korte lesnotitie" />
-                    <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="submit">
-                      <ClipboardCheck className="h-4 w-4" />
-                      Opslaan
-                    </button>
+                    <RosterAttendanceFields participantName={participant.display_name} status={attendance?.status ?? "present"} note={attendance?.note ?? ""} />
                   </form>
                 </article>
               );

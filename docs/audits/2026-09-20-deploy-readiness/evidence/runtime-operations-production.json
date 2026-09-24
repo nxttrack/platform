@@ -1,0 +1,69 @@
+{
+  "target": "production",
+  "checkedAt": "2026-09-20T10:26:44.358Z",
+  "ready": true,
+  "checks": [
+    {
+      "id": "maintenance-disabled",
+      "status": "pass"
+    },
+    {
+      "id": "internal-jobs-enabled",
+      "status": "pass"
+    },
+    {
+      "id": "service-active",
+      "status": "pass"
+    },
+    {
+      "id": "service-enabled",
+      "status": "pass"
+    },
+    {
+      "id": "cron-active",
+      "status": "pass"
+    },
+    {
+      "id": "immutable-release-matches-env",
+      "status": "pass"
+    },
+    {
+      "id": "public-runtime-health",
+      "status": "pass"
+    },
+    {
+      "id": "workers-single-schedule",
+      "status": "pass"
+    },
+    {
+      "id": "backup-single-schedule",
+      "status": "pass"
+    },
+    {
+      "id": "recent-successful-worker-ticks",
+      "status": "pass"
+    },
+    {
+      "id": "backup-key-private",
+      "status": "pass"
+    },
+    {
+      "id": "fresh-complete-encrypted-backup",
+      "status": "pass"
+    }
+  ],
+  "details": {
+    "releaseSha": "6b3c9abb686be198830f417e663ac94124d7066f",
+    "backupKey": {
+      "bytes": 64,
+      "mode": "600"
+    },
+    "latestBackup": {
+      "createdAt": "2026-09-20T10:26:43.263Z",
+      "buckets": 7,
+      "objects": 0,
+      "encryptedArchivePresent": true
+    },
+    "operationsMode": "legacy-v4-installed"
+  }
+}

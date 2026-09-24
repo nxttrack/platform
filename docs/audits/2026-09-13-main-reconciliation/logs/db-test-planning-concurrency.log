@@ -1,0 +1,5 @@
+
+> @nxttrack/platform@0.0.0 test:planning:concurrency <worktree>
+> node scripts/db/test-planning-concurrency.mjs
+
+[test:planning:concurrency] PASS two concurrent admins produced one serialized publication and one transactional conflict.

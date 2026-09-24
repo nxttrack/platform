@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v6
         with:
-          node-version: "20.19.0"
+          node-version: "24.18.0"
 
       - name: Setup pnpm
         run: |
@@ -34,6 +34,17 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Write required exact source SHA artifact
+        run: pnpm run release:write-exact-source
+
+      - name: Retain exact source SHA artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ github.sha }}-exact-source
+          path: artifacts/exact-source-sha.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Audit repository truth
         run: pnpm run release:truth
 
@@ -43,20 +54,8 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test billing provider contracts
-        run: pnpm run test:billing-contract
-
-      - name: Test Journey Bot safety contracts
-        run: pnpm run test:journey-bot
-
-      - name: Test Communicationhub contracts
-        run: pnpm run test:communication-hub
-
-      - name: Test premium badge contracts
-        run: pnpm run test:badges
-
-      - name: Audit Journey Bot foundation
-        run: pnpm run release:audit-journey-bot
+      - name: Test every local unit contract
+        run: pnpm run test:unit
 
       - name: Audit runtime environment contract
         run: pnpm run release:audit-runtime-env
@@ -82,8 +81,22 @@ jobs:
       - name: Package standalone runtime assets
         run: pnpm run deploy:package-standalone-assets
 
-      - name: Install Playwright Chromium
-        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium
+      - name: Install Playwright browser engines
+        run: pnpm --filter @nxttrack/web exec playwright install --with-deps chromium firefox webkit
 
-      - name: Run browser smoke tests
-        run: pnpm run test:e2e
+      - name: Run local browser smoke tests
+        run: pnpm run test:smoke:e2e
+
+      - name: Validate Journey timeline in Chromium Firefox and WebKit
+        run: pnpm run test:journey:e2e
+
+      - name: Upload Journey timeline evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: nxttrack-${{ github.sha }}-journey-timeline-evidence
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: warn
+          retention-days: 14

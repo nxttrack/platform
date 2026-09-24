@@ -5,7 +5,7 @@ import path from "node:path";
 type Phase16State = {
   tenant: { hostname: string };
   users: { tenantAdmin: { email: string } };
-  expected: { groupName: string };
+  expected: { groupName: string; programId: string };
 };
 
 type Sprint4EdgeState = Record<string, never>;
@@ -26,11 +26,11 @@ test.describe("Sprint 4 browser-driven mutations", () => {
     const phase = requireState();
     requireEdgeState();
     const failures = collectRuntimeFailures(page);
-    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${testInfo.retry}`;
+    const suffix = `${process.env.GITHUB_RUN_ID ?? Date.now()}-${process.env.GITHUB_RUN_ATTEMPT ?? "1"}-${testInfo.retry}`;
     const participantName = `Sprint4 Browser ${suffix}`;
     const tenantUrl = `https://${phase.tenant.hostname}`;
 
-    await submitIntake(page, tenantUrl, participantName, suffix);
+    await submitIntake(page, tenantUrl, phase.expected.programId, participantName, suffix);
 
     await signIn(page, phase.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"), "/admin/wachtlijst");
     let entry = await convertIntake(page, participantName);
@@ -54,12 +54,12 @@ test.describe("Sprint 4 browser-driven mutations", () => {
   });
 });
 
-async function submitIntake(page: Page, tenantUrl: string, participantName: string, marker: string) {
-  await page.goto(`${tenantUrl}/intake`, { waitUntil: "domcontentloaded" });
+async function submitIntake(page: Page, tenantUrl: string, programId: string, participantName: string, marker: string) {
+  await page.goto(`${tenantUrl}/intake?programma=${encodeURIComponent(programId)}`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("form[data-intake-wizard]")).toHaveAttribute("data-hydrated", "true");
   await page.getByLabel("Naam kind").fill(participantName);
   await page.getByLabel("Geboortedatum kind").fill("2019-07-22");
-  await page.getByText("Neutraal / niet zeggen", { exact: true }).click();
+  await page.getByText("Niet ingevuld", { exact: true }).click();
   await page.getByText("Wachtlijst", { exact: true }).click();
   await page.getByRole("button", { name: "Volgende" }).click();
 
@@ -104,8 +104,14 @@ async function createOffer(page: Page, entry: Locator, groupName: string) {
 }
 
 async function openPlacementDetails(page: Page, participantName: string) {
-  const savedViewsLoader = page.locator('button[aria-label="Opgeslagen weergaven beheren"] svg.animate-spin');
-  await expect(savedViewsLoader).toHaveCount(0);
+  const savedViews = page.getByRole("button", { name: "Opgeslagen weergaven beheren" });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const visible = await expect(savedViews).toBeVisible({ timeout: 5_000 }).then(() => true).catch(() => false);
+    if (visible) break;
+    if (attempt === 2) throw new Error("De plaatsingscockpit verscheen niet na drie serverrenders.");
+    await page.reload({ waitUntil: "domcontentloaded" });
+  }
+  await expect(savedViews.locator("svg.animate-spin")).toHaveCount(0);
 
   const clearFilters = page.getByRole("button", { name: "Wis filters" });
   if (await clearFilters.isVisible()) {
@@ -115,6 +121,7 @@ async function openPlacementDetails(page: Page, participantName: string) {
   const search = page.getByPlaceholder("Zoek deelnemer…");
   await expect(search).toBeVisible();
   await search.fill(participantName);
+  await expect(search).toHaveValue(participantName);
 
   const row = page.getByRole("row").filter({ hasText: participantName });
   await expect(row).toHaveCount(1);

@@ -1,0 +1,17 @@
+.form { display: grid; gap: 1rem; min-width: 0; overflow-wrap: anywhere; }
+.form label { display: grid; gap: .4rem; font-weight: 650; }
+.form input:not([type=checkbox]), .form textarea, .form select { width: 100%; min-width: 0; border: 1px solid var(--border); border-radius: .65rem; background: var(--background); padding: .75rem; font-weight: 400; }
+.form textarea { min-height: 10rem; resize: vertical; }
+.hint { font-size: .8rem; color: var(--muted-foreground); line-height: 1.6; }
+.reference { display: grid; gap: .3rem; border: 1px solid var(--border); border-radius: .75rem; padding: .8rem; background: var(--muted); }
+.reference span, .reference time { font-size: .85rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.button, .primary { min-height: 44px; border: 1px solid var(--border); border-radius: .7rem; padding: .65rem .9rem; font-size: .9rem; font-weight: 700; }
+.primary { background: var(--primary); color: var(--primary-foreground); }
+.button { background: var(--card); color: var(--foreground); }
+.form button:disabled { opacity: .6; cursor: not-allowed; }
+.error { border: 1px solid #b44545; border-radius: .75rem; padding: .8rem; color: #8a2424; background: #fff1f1; line-height: 1.6; }
+.preview { white-space: pre-wrap; padding: 1rem; border: 1px solid var(--border); border-radius: .7rem; background: var(--muted); line-height: 1.7; }
+.form .confirm { display: flex; align-items: flex-start; gap: .7rem; line-height: 1.6; font-size: .9rem; }
+.confirm input { flex: none; width: 22px; height: 22px; margin-top: .15rem; }
+.form :focus-visible { outline: 3px solid var(--primary); outline-offset: 3px; }

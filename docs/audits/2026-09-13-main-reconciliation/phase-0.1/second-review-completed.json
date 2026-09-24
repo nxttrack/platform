@@ -1,0 +1,162 @@
+[
+  {
+    "id": 5191006259,
+    "node_id": "PRR_kwDOTCRwsc8AAAABNWh4Mw",
+    "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "node_id": "BOT_kgDOC98s_g",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+      "html_url": "https://github.com/apps/chatgpt-codex-connector",
+      "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `0228c7d387`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191006259",
+    "pull_request_url": "https://api.github.com/repos/nxttrack/platform/pulls/57",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191006259"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/nxttrack/platform/pulls/57"
+      }
+    },
+    "submitted_at": "2026-09-13T14:25:04Z",
+    "commit_id": "0228c7d387dcfbb448b661febca750f30d514053"
+  },
+  {
+    "id": 5191128707,
+    "node_id": "PRR_kwDOTCRwsc8AAAABNWpWgw",
+    "user": {
+      "login": "TIXOCEO",
+      "id": 212954104,
+      "node_id": "U_kgDODLFr-A",
+      "avatar_url": "https://avatars.githubusercontent.com/u/212954104?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TIXOCEO",
+      "html_url": "https://github.com/TIXOCEO",
+      "followers_url": "https://api.github.com/users/TIXOCEO/followers",
+      "following_url": "https://api.github.com/users/TIXOCEO/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TIXOCEO/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TIXOCEO/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TIXOCEO/subscriptions",
+      "organizations_url": "https://api.github.com/users/TIXOCEO/orgs",
+      "repos_url": "https://api.github.com/users/TIXOCEO/repos",
+      "events_url": "https://api.github.com/users/TIXOCEO/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TIXOCEO/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191128707",
+    "pull_request_url": "https://api.github.com/repos/nxttrack/platform/pulls/57",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191128707"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/nxttrack/platform/pulls/57"
+      }
+    },
+    "submitted_at": "2026-09-13T15:20:31Z",
+    "commit_id": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+  },
+  {
+    "id": 5191128784,
+    "node_id": "PRR_kwDOTCRwsc8AAAABNWpW0A",
+    "user": {
+      "login": "TIXOCEO",
+      "id": 212954104,
+      "node_id": "U_kgDODLFr-A",
+      "avatar_url": "https://avatars.githubusercontent.com/u/212954104?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/TIXOCEO",
+      "html_url": "https://github.com/TIXOCEO",
+      "followers_url": "https://api.github.com/users/TIXOCEO/followers",
+      "following_url": "https://api.github.com/users/TIXOCEO/following{/other_user}",
+      "gists_url": "https://api.github.com/users/TIXOCEO/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/TIXOCEO/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/TIXOCEO/subscriptions",
+      "organizations_url": "https://api.github.com/users/TIXOCEO/orgs",
+      "repos_url": "https://api.github.com/users/TIXOCEO/repos",
+      "events_url": "https://api.github.com/users/TIXOCEO/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/TIXOCEO/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191128784",
+    "pull_request_url": "https://api.github.com/repos/nxttrack/platform/pulls/57",
+    "author_association": "MEMBER",
+    "_links": {
+      "html": {
+        "href": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191128784"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/nxttrack/platform/pulls/57"
+      }
+    },
+    "submitted_at": "2026-09-13T15:20:33Z",
+    "commit_id": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+  },
+  {
+    "id": 5191141978,
+    "node_id": "PRR_kwDOTCRwsc8AAAABNWqKWg",
+    "user": {
+      "login": "chatgpt-codex-connector[bot]",
+      "id": 199175422,
+      "node_id": "BOT_kgDOC98s_g",
+      "avatar_url": "https://avatars.githubusercontent.com/in/1144995?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D",
+      "html_url": "https://github.com/apps/chatgpt-codex-connector",
+      "followers_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/followers",
+      "following_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/following{/other_user}",
+      "gists_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/subscriptions",
+      "organizations_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/orgs",
+      "repos_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/repos",
+      "events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/chatgpt-codex-connector%5Bbot%5D/received_events",
+      "type": "Bot",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "body": "\n### \ud83d\udca1 Codex Review\n\nHere are some automated review suggestions for this pull request.\n\n**Reviewed commit:** `a529056475`\n    \n\n<details> <summary>\u2139\ufe0f About Codex in GitHub</summary>\n<br/>\n\n[Your team has set up Codex to review pull requests in this repo](https://chatgpt.com/codex/cloud/settings/general). Reviews are triggered when you\n- Open a pull request for review\n- Mark a draft as ready\n- Comment \"@codex review\".\n\nIf Codex has suggestions, it will comment; otherwise it will react with \ud83d\udc4d.\n\n\n\n\nCodex can also answer questions or update the PR. Try commenting \"@codex address that feedback\".\n            \n</details>",
+    "state": "COMMENTED",
+    "html_url": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191141978",
+    "pull_request_url": "https://api.github.com/repos/nxttrack/platform/pulls/57",
+    "author_association": "NONE",
+    "_links": {
+      "html": {
+        "href": "https://github.com/nxttrack/platform/pull/57#pullrequestreview-5191141978"
+      },
+      "pull_request": {
+        "href": "https://api.github.com/repos/nxttrack/platform/pulls/57"
+      }
+    },
+    "submitted_at": "2026-09-13T15:26:41Z",
+    "commit_id": "a529056475d0a809f5bfe78b02d227137f9c1df5"
+  }
+]

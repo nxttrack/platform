@@ -1,0 +1,253 @@
+{
+  "contractVersion": "1.0.0",
+  "shared": {
+    "desktop": {
+      "minWidth": 1280,
+      "appInsetPx": 22,
+      "sidebarWidthPx": 238,
+      "sidebarRadiusPx": 28,
+      "shellGapPx": 18,
+      "headerHeightPx": 72,
+      "headerRadiusPx": 23,
+      "headerContentGapPx": 16,
+      "cardRadiusPx": 22,
+      "journeyRadiusPx": 29,
+      "dashboardDocumentScroll": false
+    },
+    "compactDesktop": {
+      "minWidth": 1024,
+      "maxWidth": 1279,
+      "appInsetPx": 16,
+      "sidebarWidthPx": 86,
+      "sidebarMode": "icons"
+    },
+    "mobile": {
+      "maxWidth": 1023,
+      "headerHeightPx": 70,
+      "sidebar": false,
+      "bottomNavigation": [
+        "overview",
+        "planning",
+        "development",
+        "inbox",
+        "more"
+      ],
+      "paymentsInBottomNavigation": false,
+      "safeArea": true,
+      "nestedVerticalScroll": false,
+      "dashboardFirstViewport": [
+        "header",
+        "journey",
+        "bottom-navigation"
+      ]
+    },
+    "allowedGridPatterns": {
+      "quarters": [3, 3, 3, 3],
+      "thirds": [4, 4, 4],
+      "halves": [6, 6],
+      "full": [12]
+    },
+    "themeMayChange": [
+      "tokens",
+      "scenery",
+      "route-material",
+      "completion-material",
+      "terminology",
+      "optional-mascot"
+    ],
+    "themeMayNotChange": [
+      "routes",
+      "business-logic",
+      "permissions",
+      "data-contracts",
+      "component-order",
+      "grid-spans",
+      "actions",
+      "secure-downloads"
+    ]
+  },
+  "screens": {
+    "overview": {
+      "visualRoot": ".dashboard-page",
+      "desktopGrid": [12, [4, 4, 4]],
+      "anchors": [
+        ".sidebar",
+        ".topbar",
+        ".quest-panel",
+        ".dashboard-cards"
+      ],
+      "requiredVisualIds": [
+        "shell.sidebar",
+        "shell.header",
+        "journey.scene",
+        "journey.info",
+        "journey.current",
+        "journey.detail",
+        "journey.rings",
+        "dashboard.actions",
+        "dashboard.updates",
+        "dashboard.messages"
+      ],
+      "desktopAssertions": [
+        "sidebar.top == header.top",
+        "header.left == journey.left",
+        "header.right == journey.right",
+        "journey.left == dashboard-cards.left",
+        "journey.right == dashboard-cards.right",
+        "dashboard-cards.bottom == sidebar.bottom",
+        "document.scrollHeight <= viewport.height"
+      ],
+      "mobileAssertions": [
+        "sidebar.hidden",
+        "header.bottom < journey.top",
+        "journey.bottom <= bottom-navigation.top",
+        "bottom-navigation.items == 5",
+        "payments.bottom-navigation == false"
+      ]
+    },
+    "planning": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "lessons",
+        "make-up",
+        "assessment",
+        "holiday-offer",
+        "cancel-confirmation",
+        "view-only"
+      ]
+    },
+    "lesson": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "scheduled",
+        "cancel-credit",
+        "cancel-no-credit",
+        "view-only"
+      ]
+    },
+    "development": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "current-chapter",
+        "selected-skill",
+        "not-assessed",
+        "carryover",
+        "completed-chapters",
+        "badge-placeholder-preview"
+      ]
+    },
+    "badges": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "badgeGridColumns": {
+        "mobile": 2,
+        "tabletAndUp": 4
+      },
+      "artworkMode": "placeholder-only",
+      "requiredStates": [
+        "earned-placeholder",
+        "locked-standard-placeholder",
+        "unearned-surprise-absent",
+        "earned-surprise-category",
+        "detail-placeholder",
+        "share-square-placeholder",
+        "share-story-placeholder",
+        "multi-celebration-placeholder"
+      ]
+    },
+    "media": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "consent-needed",
+        "consent-granted",
+        "consent-refused",
+        "expired",
+        "download-allowed",
+        "view-only"
+      ]
+    },
+    "diplomas": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "issued",
+        "download",
+        "public-verification",
+        "no-private-file-on-public-route"
+      ]
+    },
+    "inbox": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "thread-list",
+        "thread-detail",
+        "mobile-thread-detail",
+        "announcements",
+        "notifications",
+        "new-thread",
+        "view-only"
+      ]
+    },
+    "payments": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "overview",
+        "invoices",
+        "payment-method",
+        "open",
+        "overdue",
+        "paid",
+        "refund",
+        "chargeback"
+      ]
+    },
+    "documents": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [12],
+      "requiredStates": [
+        "available",
+        "expired",
+        "storage-unavailable",
+        "secure-download"
+      ]
+    },
+    "feedback": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "open",
+        "submitted",
+        "expired",
+        "follow-up-consent",
+        "anti-duplicate"
+      ]
+    },
+    "children": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "full-access",
+        "shared-access",
+        "view-only",
+        "switch-child"
+      ]
+    },
+    "profile": {
+      "visualRoot": ".page-scroll",
+      "desktopGrid": [6, 6],
+      "requiredStates": [
+        "edit",
+        "preferences",
+        "push-permission",
+        "unsaved-changes",
+        "more-menu"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+[WebServer] (node:844464) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:844531) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 2 tests using 1 worker
+
+(node:844802) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium-desktop] › tests/e2e/production-readiness-maintenance-preview.spec.ts:3:5 › maintenance preview is readable, healthy and rejects unsafe requests (614ms)
+(node:845012) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  2 [chromium-mobile] › tests/e2e/production-readiness-maintenance-preview.spec.ts:3:5 › maintenance preview is readable, healthy and rejects unsafe requests (612ms)
+
+  2 passed (4.4s)

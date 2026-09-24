@@ -67,6 +67,16 @@ check(
   "EMAIL_SENDING_ENABLED is explicitly true or false."
 );
 check(
+  "newsletter-delivery-release-gate",
+  isBooleanLiteral(process.env.NEWSLETTER_DELIVERY_ENABLED),
+  "NEWSLETTER_DELIVERY_ENABLED is explicitly true or false."
+);
+check(
+  "maintenance-no-write-gate",
+  isBooleanLiteral(process.env.MAINTENANCE_NO_WRITE),
+  "MAINTENANCE_NO_WRITE is explicitly true or false."
+);
+check(
   "internal-jobs-release-gate",
   isBooleanLiteral(process.env.INTERNAL_JOBS_ENABLED),
   "INTERNAL_JOBS_ENABLED is explicitly true or false."

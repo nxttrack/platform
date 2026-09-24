@@ -1,11 +1,22 @@
-import { AlertTriangle, ArrowLeft, CalendarRange, CheckCircle2, Gauge, Waves } from "lucide-react";
+import { randomUUID } from "node:crypto";
+
+import { AlertTriangle, ArrowLeft, CalendarRange, CheckCircle2, Clock3, Gauge, Waves } from "lucide-react";
 import Link from "next/link";
 
 import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { CapacityForecastTable } from "@/components/admin/intelligence-tables";
 import { PageHeader } from "@/components/shell/ui";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { forecastCapacity } from "@/lib/domain/capacity-forecast";
+import { RouteFeedback } from "@/components/ui/route-feedback";
+import {
+  forecastCapacity,
+  getCapacityForecastOperations
+} from "@/lib/domain/capacity-forecast";
+import {
+  releaseCapacitySoftReservationAction,
+  requestCapacitySoftReservationAction,
+  reviewCapacitySoftReservationAction
+} from "@/lib/domain/capacity-forecast-actions";
 import { getTenantCoreData } from "@/lib/domain/core";
 
 type PageProps = {
@@ -28,15 +39,20 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
     instructorId: getParam(rawParams, "instructor") || undefined
   };
   const includeTestData = getParam(rawParams, "view") === "include-test";
-  const forecasts = await forecastCapacity({
-    tenantId: data.tenant.id,
-    horizonWeeks: horizon,
-    filters,
-    includeTestData
-  });
+  const [forecasts, operations] = await Promise.all([
+    forecastCapacity({
+      tenantId: data.tenant.id,
+      horizonWeeks: horizon,
+      filters,
+      includeTestData
+    }),
+    getCapacityForecastOperations(data.tenant.id)
+  ]);
   const programById = new Map(data.programs.map((row) => [row.id, row]));
   const stageById = new Map(data.stages.map((row) => [row.id, row]));
   const resourceById = new Map(data.resources.map((row) => [row.id, row]));
+  const groupById = new Map(data.groups.map((row) => [row.id, row]));
+  const waitlistById = new Map(operations.waitlistCandidates.map((row) => [row.id, row]));
   const critical = forecasts.filter((row) => row.risk_level === "critical").length;
   const bottlenecks = forecasts.filter((row) =>
     ["critical", "bottleneck"].includes(row.risk_level)
@@ -53,6 +69,10 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
         kicker="4–12 weken vooruit"
         title="Capaciteitsvoorspelling"
         subtitle="Verklaarbare druk en voorzichtige openingen per lesgroep, niveau, moment, locatie en resource."
+      />
+      <RouteFeedback
+        error={getParam(rawParams, "error") ? "De zachte reservering kon niet veilig worden verwerkt." : null}
+        success={reservationSuccess(getParam(rawParams, "saved"))}
       />
 
       <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
@@ -120,6 +140,107 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
         </div>
       </div>
 
+      <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-primary">Planner approval</p>
+            <h2 className="mt-1 text-lg font-bold">Zachte capaciteitsreserveringen</h2>
+            <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
+              Een aanvraag is eerst een preview. Alleen een afzonderlijk goedgekeurde, niet-verlopen reservering verlaagt tijdelijk de planbare capaciteit; zij boekt of verplaatst nooit zelfstandig een leerling.
+            </p>
+          </div>
+          <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold">
+            {operations.reservations.filter((row) => row.status === "approved").length} actief
+          </span>
+        </div>
+        <form action={requestCapacitySoftReservationAction} className="mt-5 grid gap-3 rounded-xl border border-border bg-muted/20 p-4 md:grid-cols-2 xl:grid-cols-6">
+          <input name="idempotencyKey" type="hidden" value={randomUUID()} />
+          <FilterSelect label="Lesgroep" name="groupId">
+            <option value="">Kies lesgroep</option>
+            {data.groups.filter((group) => group.status === "active").map((group) => (
+              <option key={group.id} value={group.id}>{group.name}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect label="Wachtlijstkandidaat" name="waitlistEntryId">
+            <option value="">Kies kandidaat</option>
+            {operations.waitlistCandidates.map((candidate) => (
+              <option key={candidate.id} value={candidate.id}>{candidate.label}</option>
+            ))}
+          </FilterSelect>
+          <FilterSelect label="Capaciteitsbucket" name="capacityBucket">
+            <option value="regular">Regulier</option>
+            <option value="flex">Flex</option>
+            <option value="trial">Proefles</option>
+          </FilterSelect>
+          <FilterSelect label="Verloopt na" name="durationHours">
+            <option value="24">24 uur</option>
+            <option value="48">48 uur</option>
+            <option value="72">72 uur</option>
+            <option value="168">7 dagen</option>
+          </FilterSelect>
+          <label className="grid gap-1.5 text-xs font-semibold text-foreground xl:col-span-2">
+            Reden
+            <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom moet de planner deze plek beoordelen?" required />
+          </label>
+          <div className="md:col-span-2 xl:col-span-6">
+            <Button type="submit">Aanvraag ter goedkeuring klaarzetten</Button>
+          </div>
+        </form>
+        <div className="mt-4 grid gap-3">
+          {operations.reservations.length ? operations.reservations.slice(0, 20).map((reservation) => (
+            <article className="rounded-xl border border-border p-4" key={reservation.id}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-foreground">
+                    {waitlistById.get(reservation.waitlistEntryId)?.label ?? "Kandidaat"} · {groupById.get(reservation.groupId)?.name ?? "Lesgroep"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {capacityBucketLabel(reservation.capacityBucket)} · verloopt {formatDateTime(reservation.expiresAt)} · {reservation.reason}
+                  </p>
+                </div>
+                <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold">
+                  {reservationStatusLabel(reservation.status)}
+                </span>
+              </div>
+              {reservation.status === "pending_approval" ? (
+                <form action={reviewCapacitySoftReservationAction} className="mt-3 flex flex-wrap items-end gap-2">
+                  <input name="reservationId" type="hidden" value={reservation.id} />
+                  <label className="grid min-w-64 flex-1 gap-1 text-xs font-semibold">
+                    Reviewreden
+                    <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Controle en afweging" required />
+                  </label>
+                  <Button name="decision" type="submit" value="approve">Goedkeuren</Button>
+                  <Button name="decision" type="submit" value="reject" variant="outline">Afwijzen</Button>
+                </form>
+              ) : null}
+              {reservation.status === "approved" ? (
+                <form action={releaseCapacitySoftReservationAction} className="mt-3 flex flex-wrap items-end gap-2">
+                  <input name="reservationId" type="hidden" value={reservation.id} />
+                  <label className="grid min-w-64 flex-1 gap-1 text-xs font-semibold">
+                    Vrijgavereden
+                    <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom komt de plek weer vrij?" required />
+                  </label>
+                  <Button type="submit" variant="outline">Reservering vrijgeven</Button>
+                </form>
+              ) : null}
+            </article>
+          )) : (
+            <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Nog geen zachte reserveringen.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-card">
+        <div className="grid gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
+          <AdminMetricCard icon={Gauge} label="Teruggemeten runs" tone="info" value={operations.accuracy.evaluated} />
+          <AdminMetricCard icon={Clock3} label="Gemiddelde fout" tone="neutral" value={operations.accuracy.meanAbsoluteErrorDays === null ? "—" : `${operations.accuracy.meanAbsoluteErrorDays} d`} />
+          <AdminMetricCard icon={CheckCircle2} label="Binnen band" tone="success" value={operations.accuracy.withinRangePercentage === null ? "—" : `${operations.accuracy.withinRangePercentage}%`} />
+          <AdminMetricCard icon={AlertTriangle} label="Onvoldoende bewijs" tone={operations.accuracy.insufficientEvidence ? "warning" : "neutral"} value={operations.accuracy.insufficientEvidence} />
+        </div>
+      </section>
+
       <AdminListSurface>
         <CapacityForecastTable
           rows={forecasts.map((forecast) => ({
@@ -133,6 +254,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
             resource: forecast.resource_id ? resourceById.get(forecast.resource_id)?.name ?? "Resource" : "Niet gekoppeld",
             capacity: forecast.current_capacity,
             occupied: forecast.current_occupied,
+            activeSoftReservations: forecast.active_soft_reservations,
             expectedOpenings: forecast.expected_openings,
             expectedBottlenecks: forecast.expected_bottlenecks,
             waitlistDemand: forecast.waitlist_demand,
@@ -140,7 +262,12 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
             confidence: forecast.confidence,
             reasons: forecast.reasons,
             actions: forecast.recommended_actions,
-            isTest: forecast.is_test
+            isTest: forecast.is_test,
+            modelVersion: forecast.model_version,
+            confidenceScore: forecast.confidence_score,
+            availabilityRange: forecast.availability_range,
+            openingScenarios: forecast.opening_scenarios,
+            dataQuality: forecast.data_quality
           }))}
         />
       </AdminListSurface>
@@ -198,6 +325,36 @@ function getParam(params: Record<string, string | string[] | undefined>, key: st
 
 function roundOne(value: number) {
   return Math.round(value * 10) / 10;
+}
+
+function reservationSuccess(value?: string) {
+  return ({
+    requested: "Zachte reservering staat klaar voor afzonderlijke plannergoedkeuring.",
+    approved: "Zachte reservering is transactioneel goedgekeurd.",
+    rejected: "Zachte reservering is afgewezen; capaciteit bleef ongewijzigd.",
+    released: "Zachte reservering is vrijgegeven."
+  } as Record<string, string>)[value ?? ""] ?? null;
+}
+
+function reservationStatusLabel(value: string) {
+  return ({
+    pending_approval: "wacht op goedkeuring",
+    approved: "goedgekeurd",
+    rejected: "afgewezen",
+    released: "vrijgegeven",
+    expired: "verlopen"
+  } as Record<string, string>)[value] ?? value;
+}
+
+function capacityBucketLabel(value: string) {
+  return ({ regular: "regulier", flex: "flex", trial: "proefles" } as Record<string, string>)[value] ?? value;
+}
+
+function formatDateTime(value: string) {
+  return new Intl.DateTimeFormat("nl-NL", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(value));
 }
 
 const weekdays = ["", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag", "Zondag"];

@@ -1,0 +1,36 @@
+
+> @nxttrack/platform@0.0.0 db:rls-audit /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/audit-rls-coverage.mjs
+
+[db:rls-audit] Warnings:
+- app_private.enforce_billing_refund_reservation has no authenticated execute grant detected.
+- app_private.enforce_billing_refund_reservation has no authenticated execute grant detected.
+- app_private.capture_progress_assessment has no authenticated execute grant detected.
+- app_private.capture_intake_lead_source has no authenticated execute grant detected.
+- app_private.capture_slot_offer_lineage has no authenticated execute grant detected.
+- app_private.capture_direct_placement_lineage has no authenticated execute grant detected.
+- app_private.consume_makeup_credit_after_attendance has no authenticated execute grant detected.
+- app_private.prevent_earned_badge_deletion has no authenticated execute grant detected.
+- app_private.apply_participant_badge_gender_from_intake has no authenticated execute grant detected.
+- app_private.ensure_tenant_billing_profile has no authenticated execute grant detected.
+- app_private.next_billing_document_number has no authenticated execute grant detected.
+- app_private.offering_price_cents has no authenticated execute grant detected.
+- app_private.confirm_offering_registration_from_payment has no authenticated execute grant detected.
+- app_private.capture_portal_journey_chapter_snapshot has no authenticated execute grant detected.
+- app_private.portal_session_json has no authenticated execute grant detected.
+- app_private.configure_child_portal_rollout_for_service has no authenticated execute grant detected.
+- app_private.capture_portal_journey_item_completion has no authenticated execute grant detected.
+- app_private.prevent_portal_journey_completion_mutation has no authenticated execute grant detected.
+- app_private.resolve_auth_user_id_by_email has no authenticated execute grant detected.
+- app_private.import_auth_user_owner has no authenticated execute grant detected.
+- app_private.import_auth_user_exists has no authenticated execute grant detected.
+- app_private.import_auth_users_for_job has no authenticated execute grant detected.
+- app_private.capture_portal_journey_world_binding has no authenticated execute grant detected.
+- app_private.capture_portal_journey_chapter_snapshot has no authenticated execute grant detected.
+- app_private.assert_message_composer_context has no authenticated execute grant detected.
+- app_private.save_message_composer_draft has no authenticated execute grant detected.
+- app_private.discard_message_composer_draft has no authenticated execute grant detected.
+- app_private.send_message_composer_draft has no authenticated execute grant detected.
+- app_private.read_message_composer_draft has no authenticated execute grant detected.
+- app_private.set_message_thread_personal_archive has no authenticated execute grant detected.
+[db:rls-audit] Checked 255 public table(s), 154 migration file(s).

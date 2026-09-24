@@ -1,0 +1,21 @@
+# Visual comparison and accessibility review
+
+Latest rendered application: `feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f`. Original prototype was opened directly from the supplied handoff; comparison screenshots at390×844 and1440×900 are under `evidence/final-browser/reference-*.png`. Actual authenticated parent routes use a real locally imported Parelroute reference with fictional family data, not Default1.1 artwork.
+
+| Comparison | Observed result |
+|---|---|
+| Prototype vs actual parent Home,390×844 /1440×900 | A scene fills the available shell content; compact title and practical navigation remain outside its route semantics. No dashboard tiles displace the journey. Actual Parelroute title identifies that imported world; the legacy tenant shell can still bear its existing built-in Default name. That name is not a claim that Default1.1 art exists. |
+| Home vs Development for the same authenticated child | Home remains the journey; Development is a distinct read-only skills/history/milestones surface. Parent Home and Development comparison files were captured in the same session/build. |
+| Seven viewport fixture matrix |360×800,390×844,412×915,768×1024,1024×768,1440×900,1920×1080. Neutral fallback pearls, selection, accessible list and compact progress pod were verified. Screens explicitly state original artwork/anchors are absent. |
+| Layers and orientation | Real reference portrait/landscape compositions stay registered with route/markers/guide. Latest network regression asserts no opposite-orientation request before actual rotation. The Default gradient fixture certifies geometry only, not source composition. |
+| Guide / control placement | Default fixture uses the runtime light; actual Parelroute uses its optional custom character. Both remain separately supported. Guide parking, offscreen pause, reduced motion and no obstacle-measure loop during drag have executable assertions. |
+| Long labels /200% text | Actual inspected screenshot exposed scrolling away of dialog controls; fixed. Latest screenshot keeps close/footer visible and gives title and body independent scroll areas. No truncation is presented as loss of the full accessible title. |
+| Message review / keyboard-area emulation | Actual390×450 review screenshot shows close and submit reachable while body scrolls; draft/retry/review and nested confirmation tests pass. This is viewport emulation, not an Android/iOS keyboard certification. |
+| Reference image failure / delayed load | Real local imported asset URLs were delayed500ms individually, then aborted in a separate reload. Five image requests,276382 encoded image bytes in the recorded warmed Chromium run; no inline rasters. All items remain available in the accessible list with images failed. This is not a4K Default/device/network benchmark. |
+| Original Default visual quality | BLOCKED B01: no authentic manifests, six anchors or96 originals. Alpha, six-world composition, texture quality, exact support-art fit and actual source4K quality cannot be approved from the PDF. |
+
+Reviewed images: actual `parent-home-390x844.png`, `parent-home-1440x900.png`, `parent-development-*`, `development-390x844-text200-dialog.png`, `parent-confirm-message.png`, `instructor-review-retry.png`, `child-collection-controls-mobile.png`, `theme-draft-preview.png` and both original reference captures. The platform preview uses the same renderer and remains labelled fictional; long offscreen nonselected labels can be reached by panning or the full list rather than pretending the viewport shows the whole world.
+
+The initial all-engine local run failed to launch Firefox/WebKit because host libraries are absent. Its failures are retained. GitHub CI installs engines and supplies separate real engine evidence; local Chromium evidence is not relabelled as cross-browser/device PASS. The current platform's own typography/chrome is retained; this is a React/domain integration of the prototype intent, not a pixel-identical HTML transplant.
+
+All52 optional support slots have explicit decisions in SUPPORT-SLOTS.md/JSON. They are preserved by the editor/export but currently not rendered. No decorative substitute, PDF crop, generated artwork or fake source hash was introduced.

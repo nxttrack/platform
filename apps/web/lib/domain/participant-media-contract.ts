@@ -1,6 +1,7 @@
 export const PARTICIPANT_MEDIA_PURPOSE = "private_progress_media";
 export const PARTICIPANT_MEDIA_POLICY_VERSION = "2026-07";
 export const PARTICIPANT_MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+export const PARTICIPANT_MEDIA_MIME_TYPES = ["image/jpeg", "image/png", "video/mp4"] as const;
 export const PARTICIPANT_MEDIA_DEFAULT_RETENTION_DAYS = 365;
 export const PARTICIPANT_MEDIA_MIN_RETENTION_DAYS = 30;
 export const PARTICIPANT_MEDIA_MAX_RETENTION_DAYS = 730;

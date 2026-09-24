@@ -1,0 +1,2 @@
+# Preserve exact captured process output; FINAL-EVIDENCE hashes original bytes.
+evidence/final-validation/*.log -text

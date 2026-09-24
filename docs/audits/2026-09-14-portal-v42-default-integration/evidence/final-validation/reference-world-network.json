@@ -1,0 +1,46 @@
+{
+  "runtimeSource": "feee0c0a1d3bbdc2787c0f0dfe336edf5637d18f",
+  "context": "Authenticated fictional family, real imported Parelroute, 390x844 Chromium, warmed app, each image response delayed 500ms; not Default originals or device/network benchmark",
+  "metrics": {
+    "navigationMs": 1294.8999999761581,
+    "assets": [
+      {
+        "path": "/portal-themes/golfslag-parelroute/99.1.356435373/7f8f89ad3f25534c52a88f683dbbcec2d13c77c4adcc4c9d8837bd604363ac17.webp",
+        "durationMs": 571.4000000357628,
+        "transferBytes": 110592,
+        "encodedBodyBytes": 110292,
+        "decodedBodyBytes": 110292
+      },
+      {
+        "path": "/portal-themes/golfslag-parelroute/99.1.356435373/4a18f888442d1204c656c3322cc7be603db7eb77e73d07e776d269b164450b7a.webp",
+        "durationMs": 552.3000000119209,
+        "transferBytes": 69842,
+        "encodedBodyBytes": 69542,
+        "decodedBodyBytes": 69542
+      },
+      {
+        "path": "/portal-themes/golfslag-parelroute/99.1.356435373/76613b5ff46e3cde16855a56bd08bbb06ad9a6d5c6e418818cd72e18bbee4331.webp",
+        "durationMs": 558.1999999880791,
+        "transferBytes": 73974,
+        "encodedBodyBytes": 73674,
+        "decodedBodyBytes": 73674
+      },
+      {
+        "path": "/portal-themes/golfslag-parelroute/99.1.356435373/c9cbb0fb7bd02f6cdb59a64d59fd788a7a72e2bf95ac9417dd4becb84afd98fd.webp",
+        "durationMs": 543.8999999761581,
+        "transferBytes": 23174,
+        "encodedBodyBytes": 22874,
+        "decodedBodyBytes": 22874
+      },
+      {
+        "path": "/portal-themes/golfslag-parelroute/99.1.356435373/b675fe51b33ead8b47f947cbc75e636bc3361e8bb8dd3f66ff2a542af28706ba.webp",
+        "durationMs": 466,
+        "transferBytes": 0,
+        "encodedBodyBytes": 0,
+        "decodedBodyBytes": 0
+      }
+    ],
+    "inlineRasterCount": 0
+  },
+  "failedImagesKeepAllItemsReadable": true
+}

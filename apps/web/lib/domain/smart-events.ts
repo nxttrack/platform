@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
@@ -226,7 +227,7 @@ export async function refreshSmartSignals(tenantId: string) {
       ["waiting", "reviewing"].includes(entry.status) &&
       !entry.minimum_age_blocked &&
       !!entry.recommended_stage_id &&
-      (!entry.eligible_from || entry.eligible_from <= now.toISOString().slice(0, 10));
+      (!entry.eligible_from || entry.eligible_from <= toAmsterdamDate(now));
     const status = eligible ? "eligible" : "blocked";
     const key = signalKey("waitlist_eligibility", "waitlist_entry", entry.id);
 
@@ -300,7 +301,7 @@ export async function refreshSmartSignals(tenantId: string) {
         groupId: group.id,
         severity: status === "full" ? "warning" : "info",
         source: "signal_sweep",
-        dedupeKey: `group-capacity:${group.id}:${status}:${now.toISOString().slice(0, 10)}`,
+        dedupeKey: `group-capacity:${group.id}:${status}:${toAmsterdamDate(now)}`,
         metadata: {
           used,
           capacity: group.capacity,

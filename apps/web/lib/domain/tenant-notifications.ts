@@ -42,6 +42,7 @@ export async function createTenantNotifications(input: {
   entityType?: string | null;
   entityId?: string | null;
   actionHref?: string | null;
+  dedupeKey?: string | null;
 }) {
   const recipientIds = unique(input.recipientIds);
 
@@ -50,10 +51,7 @@ export async function createTenantNotifications(input: {
   }
 
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("tenant_notifications")
-    .insert(
-      recipientIds.map((recipientId) => ({
+  const rows = recipientIds.map((recipientId) => ({
         tenant_id: input.tenantId,
         recipient_user_id: recipientId,
         participant_id: input.participantId ?? null,
@@ -66,9 +64,18 @@ export async function createTenantNotifications(input: {
         entity_id: input.entityId ?? null,
         action_href: input.actionHref ?? null,
         related_progress_score_id: input.relatedProgressScoreId ?? null,
-        related_badge_award_id: input.relatedBadgeAwardId ?? null
-      }))
-    )
+        related_badge_award_id: input.relatedBadgeAwardId ?? null,
+        dedupe_key: input.dedupeKey ?? null
+      }));
+  const query = input.dedupeKey
+    ? admin
+        .from("tenant_notifications")
+        .upsert(rows, {
+          ignoreDuplicates: true,
+          onConflict: "tenant_id,recipient_user_id,dedupe_key"
+        })
+    : admin.from("tenant_notifications").insert(rows);
+  const { data, error } = await query
     .select("id, recipient_user_id, title, message");
 
   if (error || !data) {
@@ -147,8 +154,9 @@ async function deliverNotificationsByEmail(input: {
 
       await updateNotificationDelivery(notification.id, {
         attemptId: mail.attemptId,
-        deliveryError: mail.delivered ? null : mail.reason,
-        deliveryStatus: mail.delivered ? "sent" : mail.provider === "not_configured" ? "skipped" : "failed"
+        deliveryError: mail.accepted ? null : mail.reason,
+        deliveryStatus: mail.accepted ? "pending" : mail.provider === "not_configured" ? "skipped" : "failed",
+        providerAcceptedAt: mail.accepted ? new Date().toISOString() : null
       });
     })
   );
@@ -159,7 +167,8 @@ async function updateNotificationDelivery(
   input: {
     attemptId?: string;
     deliveryError: string | null;
-    deliveryStatus: "sent" | "failed" | "skipped";
+    deliveryStatus: "failed" | "pending" | "skipped";
+    providerAcceptedAt?: string | null;
   }
 ) {
   const admin = createAdminClient();
@@ -167,10 +176,11 @@ async function updateNotificationDelivery(
   await admin
     .from("tenant_notifications")
     .update({
-      delivered_at: input.deliveryStatus === "sent" ? new Date().toISOString() : null,
+      delivered_at: null,
       delivery_error: input.deliveryError,
       delivery_status: input.deliveryStatus,
-      email_delivery_attempt_id: input.attemptId ?? null
+      email_delivery_attempt_id: input.attemptId ?? null,
+      provider_accepted_at: input.providerAcceptedAt ?? null
     })
     .eq("id", notificationId);
 }

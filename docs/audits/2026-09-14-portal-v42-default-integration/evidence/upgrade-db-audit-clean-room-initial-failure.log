@@ -1,0 +1,32 @@
+
+> @nxttrack/platform@0.0.0 db:audit-clean-room /home/codex/repos/nxttrack-portal-v42-default-integration
+> node scripts/db/audit-clean-room.mjs
+
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   force_rls: 256,
++   rls: 256,
++   total: 256
+-   force_rls: 251,
+-   rls: 251,
+-   total: 251
+  }
+
+    at file:///home/codex/repos/nxttrack-portal-v42-default-integration/scripts/db/audit-clean-room.mjs:75:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: { total: 256, rls: 256, force_rls: 256 },
+  expected: { total: 251, rls: 251, force_rls: 251 },
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.18.0
+ ELIFECYCLE  Command failed with exit code 1.

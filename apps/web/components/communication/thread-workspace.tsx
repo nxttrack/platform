@@ -2,8 +2,7 @@ import { Clock3, LockKeyhole, MessageCircle, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import {
-  ThreadManagementForm,
-  ThreadReplyForm
+  ThreadManagementForm
 } from "@/components/communication/communication-forms";
 import { Button } from "@/components/ui/button";
 import { createTaskFromThreadAction, markMessageThreadReadAction } from "@/lib/domain/communication-hub-actions";
@@ -18,12 +17,18 @@ import type {
   MessageThreadRow,
   ThreadMessageRow
 } from "@/lib/domain/communication-hub";
+import { ThreadPersonalArchive } from "./thread-personal-archive";
+import { MessageComposer } from "./message-composer";
+import { messageThreadHref, type MessageContextReference } from "@/lib/domain/message-composer-contract";
 import { cn } from "@/lib/utils";
 
 export function ThreadWorkspace({
   baseHref,
+  archivedThreadIds = [],
   canReply = true,
+  writableParticipantIds,
   currentUserId,
+  tenantId,
   filterAssignees = [],
   filters,
   instructors = [],
@@ -36,8 +41,11 @@ export function ThreadWorkspace({
   unreadThreadIds = []
 }: {
   baseHref: string;
+  archivedThreadIds?: string[];
   canReply?: boolean;
-  currentUserId?: string;
+  writableParticipantIds?: string[];
+  currentUserId: string;
+  tenantId: string;
   filterAssignees?: CommunicationPersonOption[];
   filters?: { assigned: string; query: string; status: string; type: string };
   instructors?: CommunicationPersonOption[];
@@ -110,7 +118,7 @@ export function ThreadWorkspace({
                       "block border-b border-border px-4 py-4 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                       active ? "bg-primary/7" : "hover:bg-muted/45"
                     )}
-                    href={`${baseHref}?thread=${thread.id}`}
+                    href={messageThreadHref(baseHref, thread.id)}
                     key={thread.id}
                     role="listitem"
                   >
@@ -152,10 +160,11 @@ export function ThreadWorkspace({
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold">{threadStatusLabel(selected.status)}</span>
+                    {mode === "parent" ? <ThreadPersonalArchive archived={archivedThreadIds.includes(selected.id)} context={{ actorId: currentUserId, tenantId, returnPath: baseHref, threadId: selected.id, participantId: selected.participant_id, curriculumItemId: null, sessionId: null }} /> : null}
                     {unreadThreadIds.includes(selected.id) ? (
                       <form action={markMessageThreadReadAction}>
                         <input name="threadId" type="hidden" value={selected.id} />
-                        <input name="next" type="hidden" value={`${baseHref}?thread=${selected.id}`} />
+                        <input name="next" type="hidden" value={messageThreadHref(baseHref, selected.id)} />
                         <Button size="sm" type="submit" variant="outline">Markeer gelezen</Button>
                       </form>
                     ) : null}
@@ -188,6 +197,7 @@ export function ThreadWorkspace({
                           <time dateTime={message.created_at}>{formatDate(message.created_at)}</time>
                           {internal ? <span className="rounded-full bg-warning/15 px-2 py-0.5 font-semibold text-warning">{message.visibility === "internal_note" ? "interne notitie" : "alleen team"}</span> : null}
                         </div>
+                        {message.reference_json?.label ? <MessageReference reference={message.reference_json} mode={mode} participantId={selected.participant_id} /> : null}
                         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">{message.plain_text}</p>
                         {message.content_classification === "sensitive" || message.content_classification === "restricted" ? (
                           <p className="mt-2 text-xs font-semibold text-danger">Gevoelige inhoud — controleer delen en bewaartermijn.</p>
@@ -204,18 +214,18 @@ export function ThreadWorkspace({
                 <section>
                   <h3 className="text-sm font-bold text-foreground">{mode === "admin" ? "Antwoord of interne notitie" : "Antwoorden"}</h3>
                   <p className="mt-1 mb-3 text-xs leading-5 text-muted-foreground">Verzending is altijd een handmatige, bevestigde actie.</p>
-                  <ThreadReplyForm allowInternal={canWriteInternal} canReply={canReply} next={`${baseHref}?thread=${selected.id}`} threadId={selected.id} />
+                  <MessageComposer scopeKey={`${currentUserId}:${tenantId}`} allowInternal={canWriteInternal && !["closed", "archived"].includes(selected.status)} canReply={canReply && (!selected.participant_id || !writableParticipantIds || writableParticipantIds.includes(selected.participant_id)) && !["closed", "archived"].includes(selected.status)} context={{ actorId: currentUserId, tenantId, returnPath: baseHref, threadId: selected.id, participantId: selected.participant_id, curriculumItemId: selected.curriculum_item_id, sessionId: selected.session_id }} />
                 </section>
                 {mode === "admin" ? (
                   <aside className="space-y-4 border-t border-border pt-4 2xl:border-l 2xl:border-t-0 2xl:pl-5 2xl:pt-0">
                     <div>
                       <h3 className="text-sm font-bold text-foreground">Regie</h3>
                       <p className="mt-1 mb-3 text-xs leading-5 text-muted-foreground">Toewijzing en status wijzigen zonder contextverlies.</p>
-                      <ThreadManagementForm instructors={instructors} next={`${baseHref}?thread=${selected.id}`} staff={staff} thread={selected} />
+                      <ThreadManagementForm instructors={instructors} next={messageThreadHref(baseHref, selected.id)} staff={staff} thread={selected} />
                     </div>
                     <form action={createTaskFromThreadAction}>
                       <input name="threadId" type="hidden" value={selected.id} />
-                      <input name="next" type="hidden" value={`${baseHref}?thread=${selected.id}`} />
+                      <input name="next" type="hidden" value={messageThreadHref(baseHref, selected.id)} />
                       <input name="humanConfirmation" type="hidden" value="confirmed" />
                       <Button className="w-full" type="submit" variant="outline">
                         <Clock3 className="size-4" />
@@ -258,4 +268,10 @@ function senderLabel(value: string) {
 
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short" }).format(new Date(value));
+}
+
+function MessageReference({ reference, mode, participantId }: { reference: MessageContextReference; mode: "parent" | "admin" | "instructor"; participantId: string | null }) {
+  if (reference.participantId !== participantId) return null;
+  const href = mode === "parent" && reference.kind === "curriculum_item" ? `/portaal/ontwikkeling?${new URLSearchParams({ kind: reference.participantId, onderdeel: reference.id })}` : null;
+  return <div className="mt-2 rounded-lg border border-current/15 p-2 text-xs"><span>Over: </span>{href ? <Link className="underline" href={href}>{reference.label}</Link> : <span>{reference.label}</span>}{reference.startsAt ? <time className="ml-2" dateTime={reference.startsAt}>{new Intl.DateTimeFormat("nl-NL", { dateStyle: "medium", timeStyle: "short", timeZone: reference.timeZone ?? "Europe/Amsterdam" }).format(new Date(reference.startsAt))}</time> : null}</div>;
 }

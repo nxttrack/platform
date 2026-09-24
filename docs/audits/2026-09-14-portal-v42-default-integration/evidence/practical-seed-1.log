@@ -1,0 +1,30 @@
+Fictional local parent, two children and authorized curriculum reference created; private fixture file written; no email/provider delivery.
+Fictional qualified instructor, published curriculum/stage, parent and child-mode test context created locally; no external delivery.
+/home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652
+          Error.captureStackTrace(err)
+                ^
+
+error: Scheduled sessions require a structured resource
+    at /home/codex/repos/nxttrack-portal-v42-default-integration/node_modules/.pnpm/pg@8.22.0/node_modules/pg/lib/client.js:652:17
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///home/codex/repos/nxttrack-portal-v42-default-integration/scripts/db/seed-portal-practical-browser.mjs:13:2 {
+  length: 193,
+  severity: 'ERROR',
+  code: 'P0001',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: 'PL/pgSQL function app_private.enforce_session_booking_contract() line 14 at RAISE',
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'pl_exec.c',
+  line: '3911',
+  routine: 'exec_stmt_raise'
+}
+
+Node.js v24.18.0

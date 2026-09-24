@@ -36,7 +36,7 @@ export default async function TenantInvitationsPage({ searchParams }: PageProps)
     <section className="space-y-5">
       <PageHeader action={<AdminActionDrawer description="De ontvanger krijgt een tijdgebonden code en kiest bij een nieuw account een eigen wachtwoord." title="Account uitnodigen" triggerLabel="Uitnodiging sturen"><InvitationForm tenantSlug={tenantSlug} /></AdminActionDrawer>} kicker="Leerlingen" title="Uitnodigingen" subtitle={`Nodig instructeurs, teamleden en ouders uit voor ${context.activeTenant?.name ?? "deze organisatie"}.`} />
 
-      <RouteFeedback success={sent ? delivery === "sent" ? "Uitnodiging is verzonden." : "Uitnodiging is aangemaakt; mailprovider is nog niet geconfigureerd." : null} error={error ? "Uitnodiging aanmaken is niet gelukt." : null} />
+      <RouteFeedback success={sent ? delivery === "accepted" ? "Uitnodiging is door de mailprovider geaccepteerd; aflevering is nog niet bevestigd." : "Uitnodiging is aangemaakt; mailtransport is uitgeschakeld of niet geconfigureerd." : null} error={error ? "Uitnodiging aanmaken is niet gelukt." : null} />
 
       <AdminListSurface>
         <div className="mb-3"><h2 className="text-base font-bold">Verzonden uitnodigingen</h2><p className="text-[13px] text-muted-foreground">Controleer bezorging, status en vervaldatum vanuit het detailpaneel.</p></div>

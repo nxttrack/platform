@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { randomUUID } from "node:crypto";
@@ -205,7 +206,7 @@ async function syncChargeback(session: FinancialSession, expectedPaymentId: stri
       classification_reasons: ["financial_participant_follow_up"],
       priority: "urgent",
       status: "open",
-      due_on: new Date().toISOString().slice(0, 10)
+      due_on: toAmsterdamDate()
     });
     if (task.error) throw task.error;
     await notifyGuardian(session, "Betaling gestorneerd", `De bank heeft ${formatMoney(amountCents, chargeback.amount.currency)} teruggeboekt. Neem contact op met de zwemschool om de betaling te herstellen.`);

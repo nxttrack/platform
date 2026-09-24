@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { instructorRosterEntry } from "./helpers/instructor-roster";
 
 type Phase16State = {
   users: { instructor: { email: string } };
@@ -29,23 +30,18 @@ test.describe("Sprint 4 instructor mutations", () => {
     const groupPath = `/instructor/group/${phase.expected.groupId}?session=${phase.expected.sessionId}`;
 
     await signIn(page, phase.users.instructor.email, requiredEnv("E2E_INSTRUCTOR_PASSWORD"), groupPath);
-    let rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
+    let rosterEntry = instructorRosterEntry(page, phase.expected.participantId);
     await expect(rosterEntry).toHaveCount(1);
+    await expect(rosterEntry.getByRole("heading", { level: 3, name: phase.expected.participantName, exact: true })).toBeVisible();
     await submitAndWaitForSaved(page, rosterEntry.getByRole("button", { name: "Laat", exact: true }), "attendance");
     await expect(page.getByText("Attendance opgeslagen.")).toBeVisible();
-    rosterEntry = page.locator("article").filter({ hasText: phase.expected.participantName });
+    rosterEntry = instructorRosterEntry(page, phase.expected.participantId);
+    await expect(rosterEntry).toHaveCount(1);
     await expect(rosterEntry.locator("span").filter({ hasText: /^Laat$/ })).toBeVisible();
 
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
-    let assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment).toHaveCount(1);
-    await assessment.getByLabel("Score").selectOption("5");
-    await assessment.getByLabel("Zichtbaarheid").selectOption("internal");
-    await assessment.getByLabel("Korte update").fill(`${marker}: score zelfstandig bevestigd.`);
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
-    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await expect(assessment.getByText("Ik kan het zelfstandig", { exact: true })).toBeVisible();
+    let assessment = await getAssessmentCard(page);
+    await submitAssessment(page, assessment, 5, "internal", `${marker}: gecontroleerde correctie naar 5.`);
 
     await page.getByRole("tab", { name: "Notities" }).click();
     await page.getByLabel("Notitie", { exact: true }).fill(`${marker}: interne lesnotitie.`);
@@ -65,13 +61,8 @@ test.describe("Sprint 4 instructor mutations", () => {
     // Restore the shared participant before completing the session. A retry
     // must never inherit a private assessment from a partially completed run.
     await page.goto(`/instructor/student/${phase.expected.participantId}?tab=assessment`, { waitUntil: "domcontentloaded" });
-    assessment = page.locator("form").filter({ hasText: "Zelfstandig drijven" });
-    await assessment.getByLabel("Score").selectOption("4");
-    await assessment.getByLabel("Zichtbaarheid").selectOption("parent_visible");
-    await assessment.getByLabel("Korte update").fill("Phase 16 ouderzichtbare voortgang hersteld.");
-    await submitAndWaitForSaved(page, assessment.getByRole("button", { name: "Score opslaan" }), "progress");
-    await expect(page.getByText("Progress score opgeslagen.")).toBeVisible();
-    await expect(assessment.getByText("Ik kan het bijna zelf", { exact: true })).toBeVisible();
+    assessment = await getAssessmentCard(page);
+    await submitAssessment(page, assessment, 4, "parent_visible", `${marker}: ouderzichtbare Phase 16-baseline hersteld.`);
 
     await page.goto(groupPath, { waitUntil: "domcontentloaded" });
     const completeButton = page.getByRole("button", { name: "Afronden", exact: true });
@@ -94,6 +85,49 @@ async function submitAndWaitForSaved(page: Page, submit: Locator, saved: string)
   const confirmedRedirect = page.waitForURL((url) => url.searchParams.get("saved") === saved, { timeout: 15_000 });
   await submit.click();
   await confirmedRedirect;
+}
+
+async function getAssessmentCard(page: Page) {
+  const assessment = page.locator('[data-assessment-card]').filter({ hasText: "Zelfstandig drijven" });
+  await expect(assessment).toHaveCount(1);
+  await expect(assessment.getByRole("radio")).toHaveCount(5);
+  return assessment;
+}
+
+async function submitAssessment(
+  page: Page,
+  assessment: Locator,
+  value: 1 | 2 | 3 | 4 | 5,
+  visibility: "parent_visible" | "internal",
+  correctionReason: string
+) {
+  const discard = assessment.getByRole("button", { name: "Concept verwijderen", exact: true });
+  if (await discard.isEnabled()) {
+    await discard.click();
+    await expect(assessment.getByRole("status").first()).toHaveText("Geen gewijzigd concept");
+  }
+
+  await chooseAssessmentRating(assessment, value);
+  await assessment.locator("select").selectOption(visibility);
+  const reason = assessment.locator("textarea").first();
+  if (await reason.count()) {
+    await reason.fill(correctionReason);
+  }
+
+  await expect(assessment.getByRole("status").first()).toHaveText("Privéconcept opgeslagen", { timeout: 15_000 });
+  await assessment.getByRole("button", { name: "Controleren en bewaren", exact: true }).click();
+  const review = page.getByRole("dialog", { name: "Beoordeling controleren", exact: true });
+  await expect(review).toBeVisible();
+  await review.getByRole("checkbox").check();
+  await review.getByRole("button", { name: "Beoordeling bewaren", exact: true }).click();
+  await expect(review).not.toBeVisible({ timeout: 15_000 });
+  await expect(assessment).toContainText(`Opgeslagen: ${value} / 5`);
+}
+
+async function chooseAssessmentRating(assessment: Locator, value: 1 | 2 | 3 | 4 | 5) {
+  const radio = assessment.getByRole("radio", { name: new RegExp(`${value} van 5`) });
+  await radio.locator("..").click();
+  await expect(radio).toBeChecked();
 }
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {

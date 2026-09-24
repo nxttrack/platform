@@ -43,7 +43,7 @@ const columns: ColumnDef<NextBestActionTableRow, unknown>[] = [
       <div className="min-w-56">
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-semibold text-foreground">{row.original.title}</p>
-          {row.original.isTest ? <StatusPill tone="info">Journey Bot</StatusPill> : null}
+          {row.original.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
         </div>
         <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{row.original.description}</p>
       </div>
@@ -131,7 +131,7 @@ function ActionDetails({ row }: { row: NextBestActionTableRow }) {
         <PriorityPill priority={row.priority} />
         <StatusPill tone={statusTone(row.status)}>{statusLabel(row.status)}</StatusPill>
         <StatusPill tone="info">{Math.round(row.confidence * 100)}% confidence</StatusPill>
-        {row.isTest ? <StatusPill tone="info">Journey Bot-testdata</StatusPill> : null}
+        {row.isTest ? <StatusPill tone="info">Testdata</StatusPill> : null}
       </div>
       <p className="text-[13px] leading-6 text-foreground">{row.description}</p>
 

@@ -1,0 +1,201 @@
+
+> @nxttrack/platform@0.0.0 build /dev/shm/nxttrack-v42-build
+> pnpm --filter @nxttrack/web build
+
+
+> @nxttrack/web@0.0.0 build /dev/shm/nxttrack-v42-build/apps/web
+> next build
+
+▲ Next.js 16.3.3 (Turbopack)
+✓ Running next.config.ts took 25ms
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+- Experiments (use with caution):
+  · serverActions
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 10.7s
+  Running TypeScript ...
+  Finished TypeScript in 2.1min ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/18) ...
+  Generating static pages using 7 workers (4/18) 
+  Generating static pages using 7 workers (8/18) 
+  Generating static pages using 7 workers (13/18) 
+✓ Generating static pages using 7 workers (18/18) in 540ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /admin
+├ ƒ /admin/aandacht
+├ ƒ /admin/afzwemmen
+├ ƒ /admin/agenda
+├ ƒ /admin/audit
+├ ƒ /admin/automatisering
+├ ƒ /admin/automatisering/acties
+├ ƒ /admin/automatisering/datakwaliteit
+├ ƒ /admin/automatisering/regels
+├ ƒ /admin/badges
+├ ƒ /admin/badges/analytics
+├ ƒ /admin/badges/collecties
+├ ƒ /admin/badges/eigen
+├ ƒ /admin/badges/instellingen
+├ ƒ /admin/berichten
+├ ƒ /admin/betalingen
+├ ƒ /admin/branding
+├ ƒ /admin/communicatie-instellingen
+├ ƒ /admin/crm
+├ ƒ /admin/documenten
+├ ƒ /admin/feedback
+├ ƒ /admin/gezinnen
+├ ƒ /admin/gezinnen/[id]
+├ ƒ /admin/groepen
+├ ƒ /admin/importeren
+├ ƒ /admin/inhaalmarkt
+├ ƒ /admin/instellingen
+├ ƒ /admin/intake
+├ ƒ /admin/leerlingen
+├ ƒ /admin/leerlingen/[id]/media
+├ ƒ /admin/lesplannen
+├ ƒ /admin/media
+├ ƒ /admin/nieuwsbrieven
+├ ƒ /admin/notificaties
+├ ƒ /admin/opvolging
+├ ƒ /admin/plekherstel
+├ ƒ /admin/programma
+├ ƒ /admin/programma/leerlijn/[versionId]
+├ ƒ /admin/rapportages
+├ ƒ /admin/rapportages/campagnes
+├ ƒ /admin/rapportages/capaciteit
+├ ƒ /admin/rapportages/groei
+├ ƒ /admin/rapportages/leskwaliteit
+├ ƒ /admin/resources
+├ ƒ /admin/seizoenen
+├ ƒ /admin/support
+├ ƒ /admin/taken
+├ ƒ /admin/templates
+├ ƒ /admin/uitnodigingen
+├ ƒ /admin/vervanging
+├ ƒ /admin/wachtlijst
+├ ƒ /admin/website
+├ ƒ /agenda
+├ ƒ /api/child/media/[id]
+├ ƒ /api/child/session
+├ ƒ /api/files/badge-studio-asset/[id]
+├ ƒ /api/files/certificate/[id]
+├ ƒ /api/files/invoice/[id]
+├ ƒ /api/files/participant-media/[id]
+├ ƒ /api/files/tenant-document/[id]
+├ ƒ /api/files/tenant-media-asset/[id]
+├ ƒ /api/health
+├ ƒ /api/internal/analytics/swim/refresh
+├ ƒ /api/internal/automation-recipes/tick
+├ ƒ /api/internal/billing/collections
+├ ƒ /api/internal/email-outbox/process
+├ ƒ /api/internal/management-summaries/weekly
+├ ƒ /api/internal/next-best-actions
+├ ƒ /api/internal/offerings/expire
+├ ƒ /api/internal/participant-media/expire
+├ ƒ /api/internal/platform-health/heartbeat
+├ ƒ /api/internal/portal-themes/activate-scheduled
+├ ƒ /api/native/v1/auth/refresh
+├ ƒ /api/native/v1/auth/sign-in
+├ ƒ /api/native/v1/auth/sign-out
+├ ƒ /api/native/v1/bootstrap
+├ ƒ /api/native/v1/commands
+├ ƒ /api/platform/offboarding/[id]/export
+├ ƒ /api/platform/themes/[themeKey]/[release]/assets
+├ ƒ /api/platform/themes/[themeKey]/[release]/export
+├ ƒ /api/platform/themes/import
+├ ƒ /api/platform/themes/import/[id]/image
+├ ƒ /api/public/diplomas/[code]/qr
+├ ƒ /api/push/subscription
+├ ƒ /api/push/test
+├ ƒ /api/webhooks/mollie
+├ ƒ /auth/wachtwoord-wijzigen
+├ ƒ /diploma-verificatie/[code]
+├ ƒ /instructor
+├ ƒ /instructor/agenda
+├ ƒ /instructor/berichten
+├ ƒ /instructor/documenten
+├ ƒ /instructor/groepen
+├ ƒ /instructor/group/[id]
+├ ƒ /instructor/leerlingen
+├ ƒ /instructor/lesplannen
+├ ƒ /instructor/student/[id]
+├ ƒ /instructor/taken
+├ ƒ /intake
+├ ƒ /kind
+├ ƒ /kind/agenda
+├ ƒ /kind/agenda/lessen/[id]
+├ ƒ /kind/badges
+├ ƒ /kind/ik
+├ ƒ /kind/reis
+├ ƒ /login
+├ ○ /manifest.webmanifest
+├ ƒ /nieuws
+├ ○ /nxttrack
+├   /nxttrack/[slug]
+│ ├ ● /nxttrack/ouderportaal
+│ ├ ● /nxttrack/trainer-app
+│ ├ ● /nxttrack/backoffice
+│ └ ● [+7 more paths]
+├ ○ /nxttrack/zwemscholen
+├ ƒ /plaatsing-aanbod
+├ ƒ /platform
+├ ƒ /platform/audit
+├ ƒ /platform/badges
+├ ƒ /platform/badges/analytics
+├ ƒ /platform/badges/collections
+├ ƒ /platform/badges/share-templates
+├ ƒ /platform/badges/themes
+├ ƒ /platform/instellingen
+├ ƒ /platform/offboarding
+├ ƒ /platform/onboarding
+├ ƒ /platform/organisaties/[id]
+├ ƒ /platform/packages
+├ ƒ /platform/support
+├ ƒ /platform/support/[tenantId]
+├ ƒ /platform/themes
+├ ƒ /platform/themes/[themeKey]/[release]
+├ ƒ /platform/themes/bindings
+├ ƒ /platform/themes/import
+├ ƒ /platform/uitnodigingen
+├ ƒ /portaal
+├ ƒ /portaal/afzwemmen
+├ ƒ /portaal/badges
+├ ƒ /portaal/berichten
+├ ƒ /portaal/betalingen
+├ ƒ /portaal/diplomas
+├ ƒ /portaal/documenten
+├ ƒ /portaal/feedback
+├ ƒ /portaal/inbox
+├ ƒ /portaal/kinderen
+├ ƒ /portaal/lessen
+├ ƒ /portaal/lessen/[id]
+├ ƒ /portaal/media
+├ ƒ /portaal/ontwikkeling
+├ ƒ /portaal/ontwikkeling/badges
+├ ƒ /portaal/ontwikkeling/diplomas
+├ ƒ /portaal/ontwikkeling/media
+├ ƒ /portaal/planning
+├ ƒ /portaal/profiel
+├ ƒ /portaal/voortgang
+├ ƒ /portal-themes/[themeKey]/[release]/[file]
+├ ƒ /programmas
+├ ƒ /test-harness/journey
+├ ƒ /test-harness/journey-development
+├ ƒ /test-harness/journey-rich
+├ ƒ /theme-preview/[themeKey]/[release]
+├ ƒ /uitnodiging-accepteren
+├ ƒ /wachtwoord-resetten
+└ ƒ /wachtwoord-vergeten
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+ƒ  (Dynamic)  server-rendered on demand
+

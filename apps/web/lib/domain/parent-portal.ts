@@ -1,8 +1,13 @@
 import "server-only";
+import { readJourneyPages } from "./journey-query-pages";
 
 import { requirePrivateShellContext } from "@/lib/auth/server-guard";
 import type { AuthenticatedTrustedAuthContext } from "@/lib/auth/trusted-context";
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  resolveTenantPortalTheme,
+  type ResolvedPortalTheme
+} from "@/lib/theme/portal-theme-server";
 import {
   getActiveTenant,
   type EnrollmentRow,
@@ -14,6 +19,10 @@ import {
   type ResourceRow,
   type SessionRow
 } from "./core";
+import {
+  loadCanonicalSwimJourneys,
+  type CanonicalSwimJourneyData
+} from "./swim-progress";
 
 export type ParentProfileRow = {
   id: string;
@@ -43,6 +52,7 @@ export type ParentMakeupCommunicationPreferences = {
 export type ParentPortalSettings = {
   locale: string;
   timezone: string;
+  assessment_rating_display: "smileys" | "stars";
   lesson_cancellation_cutoff_hours: number;
   lesson_cancellation_credit_window_days: number;
   lesson_cancellation_grants_credit: boolean;
@@ -105,6 +115,9 @@ export type ParentProgressScoreRow = {
   item_id: string;
   session_id: string | null;
   score: number;
+  scale_version: "five_point_v1";
+  source_scale_version: "five_point_v1" | "three_point_legacy";
+  source_value: 1 | 2 | 3 | null;
   positive_label: string;
   note: string | null;
   visibility: string;
@@ -122,6 +135,10 @@ export type ParentBadgeAwardRow = {
   visibility: string;
   status: string;
   awarded_at: string;
+  trigger_event_type?: string | null;
+  trigger_context_json?: Record<string, unknown> | null;
+  resolved_description?: string | null;
+  badge_release?: { is_surprise: boolean } | null;
 };
 
 export type ParentBadgeDefinitionRow = {
@@ -390,6 +407,10 @@ export type ParentBillingInvoiceRow = {
   currency: string;
   export_status: string;
   notes: string | null;
+  document_type: "invoice" | "credit_note";
+  original_invoice_id: string | null;
+  default_vat_rate_basis_points: number;
+  finalized_at: string | null;
   created_at: string;
 };
 
@@ -402,6 +423,9 @@ export type ParentBillingInvoiceLineRow = {
   unit_amount_cents: number;
   tax_rate_basis_points: number;
   total_cents: number;
+  net_amount_cents: number;
+  vat_amount_cents: number;
+  gross_amount_cents: number;
   sort_order: number;
 };
 
@@ -410,10 +434,12 @@ export type ParentPortalData = {
     id: string;
     slug: string;
     name: string;
+    sector: NonNullable<AuthenticatedTrustedAuthContext["activeTenant"]>["sector"];
   };
   user: AuthenticatedTrustedAuthContext["user"];
   profile: ParentProfileRow | null;
   settings: ParentPortalSettings;
+  portalTheme: ResolvedPortalTheme;
   accessLinks: ParentAccessRow[];
   mutableParticipantIds: string[];
   participants: ParticipantRow[];
@@ -429,6 +455,7 @@ export type ParentPortalData = {
   progressModules: ParentProgressModuleRow[];
   progressItems: ParentProgressItemRow[];
   progressScores: ParentProgressScoreRow[];
+  swimJourneys: CanonicalSwimJourneyData;
   badgeAwards: ParentBadgeAwardRow[];
   badgeDefinitions: ParentBadgeDefinitionRow[];
   notifications: ParentNotificationRow[];
@@ -451,9 +478,18 @@ export type ParentPortalData = {
 
 export async function getParentPortalData(): Promise<ParentPortalData> {
   const context = await requirePrivateShellContext("/portaal");
+  return getParentPortalDataForContext(context);
+}
+
+export async function getParentPortalDataForContext(
+  context: AuthenticatedTrustedAuthContext
+): Promise<ParentPortalData> {
   const tenant = getActiveTenant(context);
   const admin = createAdminClient();
-  const access = await loadParentParticipantAccess(tenant.id, context.user.id);
+  const [access, portalTheme] = await Promise.all([
+    loadParentParticipantAccess(tenant.id, context.user.id),
+    resolveTenantPortalTheme(tenant.id)
+  ]);
   const participantIds = access.participantIds;
   const since = new Date();
 
@@ -463,7 +499,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     admin.from("profiles").select("id, full_name, email, phone").eq("id", context.user.id).maybeSingle(),
     admin
       .from("tenant_settings")
-      .select("locale, timezone, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit")
+      .select("locale, timezone, assessment_rating_display, lesson_cancellation_cutoff_hours, lesson_cancellation_credit_window_days, lesson_cancellation_grants_credit")
       .eq("tenant_id", tenant.id)
       .maybeSingle(),
     participantIds.length > 0
@@ -501,7 +537,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("enrollments")
-          .select("id, participant_id, guardian_user_id, program_id, current_stage_id, status, source, starts_on")
+          .select("id, participant_id, guardian_user_id, program_id, current_stage_id, curriculum_version_id, status, source, starts_on")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("starts_on", { ascending: false })
@@ -528,7 +564,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("participant_progress_scores")
-          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, positive_label, note, visibility, status, scored_at")
+          .select("id, participant_id, enrollment_id, module_id, item_id, session_id, score, scale_version, source_scale_version, source_value, positive_label, note, visibility, status, scored_at")
           .eq("tenant_id", tenant.id)
           .eq("visibility", "parent_visible")
           .eq("status", "active")
@@ -536,14 +572,15 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
           .order("scored_at", { ascending: false })
       : Promise.resolve({ data: [], error: null }),
     loadedParticipantIds.length > 0
-      ? admin
+      ? readJourneyPages(admin
           .from("participant_badge_awards")
-          .select("id, participant_id, enrollment_id, badge_definition_id, title, note, visibility, status, awarded_at")
+          .select("id, participant_id, enrollment_id, badge_definition_id, title, note, visibility, status, awarded_at, trigger_event_type, trigger_context_json, resolved_description, badge_release:badge_definition_releases!participant_badge_awards_badge_release_id_fkey(is_surprise)")
           .eq("tenant_id", tenant.id)
           .eq("visibility", "parent_visible")
           .eq("status", "awarded")
           .in("participant_id", loadedParticipantIds)
-          .order("awarded_at", { ascending: false })
+          .lte("awarded_at",new Date().toISOString())
+          .order("awarded_at", { ascending: false }).order("id"))
       : Promise.resolve({ data: [], error: null }),
     admin
       .from("tenant_notifications")
@@ -639,7 +676,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     loadedParticipantIds.length > 0
       ? admin
           .from("billing_invoices")
-          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, created_at")
+          .select("id, subscription_id, manual_payment_id, participant_id, guardian_user_id, invoice_number, status, issued_on, due_on, paid_on, subtotal_cents, tax_cents, total_cents, currency, export_status, notes, document_type, original_invoice_id, default_vat_rate_basis_points, finalized_at, created_at")
           .eq("tenant_id", tenant.id)
           .in("participant_id", loadedParticipantIds)
           .order("created_at", { ascending: false })
@@ -680,12 +717,17 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
   const refunds = (refundsResult.data ?? []) as ParentBillingRefundRow[];
   const chargebacks = (chargebacksResult.data ?? []) as ParentBillingChargebackRow[];
   const invoices = (invoicesResult.data ?? []) as ParentBillingInvoiceRow[];
+  const swimJourneys = await loadCanonicalSwimJourneys({
+    tenantId: tenant.id,
+    enrollments,
+    parentVisibleOnly: true
+  });
   const invoiceIds = invoices.map((invoice) => invoice.id);
   const invoiceLinesResult =
     invoiceIds.length > 0
       ? await admin
           .from("billing_invoice_lines")
-          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, sort_order")
+          .select("id, invoice_id, manual_payment_id, description, quantity, unit_amount_cents, tax_rate_basis_points, total_cents, net_amount_cents, vat_amount_cents, gross_amount_cents, sort_order")
           .eq("tenant_id", tenant.id)
           .in("invoice_id", invoiceIds)
           .order("sort_order")
@@ -769,6 +811,7 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     user: context.user,
     profile: (profileResult.data as ParentProfileRow | null) ?? null,
     settings: normalizeSettings(settingsResult.data),
+    portalTheme,
     accessLinks: access.links,
     mutableParticipantIds: access.mutableParticipantIds,
     participants,
@@ -784,7 +827,8 @@ export async function getParentPortalData(): Promise<ParentPortalData> {
     progressModules: (progressModulesResult.data ?? []) as ParentProgressModuleRow[],
     progressItems: (progressItemsResult.data ?? []) as ParentProgressItemRow[],
     progressScores: (progressScoresResult.data ?? []) as ParentProgressScoreRow[],
-    badgeAwards: (badgeAwardsResult.data ?? []) as ParentBadgeAwardRow[],
+    swimJourneys,
+    badgeAwards: (badgeAwardsResult.data ?? []).map((award) => ({ ...award, badge_release: Array.isArray(award.badge_release) ? award.badge_release[0] ?? null : award.badge_release })) as ParentBadgeAwardRow[],
     badgeDefinitions: (badgeDefinitionsResult.data ?? []) as ParentBadgeDefinitionRow[],
     notifications: (notificationsResult.data ?? []) as ParentNotificationRow[],
     graduationEvents,
@@ -903,6 +947,7 @@ function normalizeSettings(value: unknown): ParentPortalSettings {
   return {
     locale: row.locale ?? "nl-NL",
     timezone: row.timezone ?? "Europe/Amsterdam",
+    assessment_rating_display: row.assessment_rating_display === "stars" ? "stars" : "smileys",
     lesson_cancellation_cutoff_hours: Number(row.lesson_cancellation_cutoff_hours ?? 12),
     lesson_cancellation_credit_window_days: Number(row.lesson_cancellation_credit_window_days ?? 60),
     lesson_cancellation_grants_credit: row.lesson_cancellation_grants_credit ?? true

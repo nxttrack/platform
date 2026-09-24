@@ -3,6 +3,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { sqlFunctionBlocks } from "./sql-function-blocks.mjs";
 
 const rootDir = fileURLToPath(new URL("../..", import.meta.url));
 const migrationsDir = join(rootDir, "supabase", "migrations");
@@ -49,7 +50,6 @@ function checkForbiddenPatterns(file, sql) {
   const forbiddenPatterns = [
     { pattern: /\bauth\.role\s*\(/, message: "uses deprecated auth.role(); use policy TO clauses instead" },
     { pattern: /\braw_user_meta_data\b|\buser_metadata\b/, message: "uses editable user metadata for authorization" },
-    { pattern: /create\s+function\s+public\.[\s\S]*?\bsecurity\s+definer\b/, message: "creates a security definer function in public schema" },
     {
       pattern: /\bon\s+delete\s+(?:restrict|cascade|no\s+action)\s*\(/,
       message: "uses a foreign-key column list with an ON DELETE action that does not support one"
@@ -64,10 +64,11 @@ function checkForbiddenPatterns(file, sql) {
 }
 
 function checkSecurityDefinerFunctions(file, sql) {
-  const functionBlocks = sql.match(/create\s+function\s+[\s\S]*?\$\$\s*;/g) ?? [];
-
-  for (const block of functionBlocks) {
-    if (/\bsecurity\s+definer\b/.test(block) && !/\bset\s+search_path\s*=/.test(block)) {
+  for (const block of sqlFunctionBlocks(sql)) {
+    if (block.name.startsWith("public.") && block.securityDefiner) {
+      failures.push(`${file}: creates a security definer function in public schema (${block.name}).`);
+    }
+    if (block.securityDefiner && !block.explicitSearchPath) {
       failures.push(`${file}: security definer function is missing an explicit search_path.`);
     }
   }

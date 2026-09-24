@@ -1,0 +1,30 @@
+▲ Next.js 16.3.3 (Turbopack)
+- Local:         http://127.0.0.1:58410
+- Network:       http://127.0.0.1:58410
+✓ Ready in 354ms
+✓ Running next.config.ts took 57ms
+- Experiments (use with caution):
+  · serverActions
+
+ GET /login?next=/portaal 200 in 573ms (next.js: 132ms, proxy.ts: 191ms, application-code: 251ms)
+⨯ Error: Failed to load external module sharp-879f602e5fc4c669: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp-879f602e5fc4c669' imported from /dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js
+    at async (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[root-of-the-server]__0_k-c0l._.js:6:11)
+⨯ Error: Failed to load external module sharp-879f602e5fc4c669: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp-879f602e5fc4c669' imported from /dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js
+    at async (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[root-of-the-server]__0_k-c0l._.js:6:11) {
+  page: '/portaal'
+}
+ GET /portaal 500 in 387ms (next.js: 258ms, proxy.ts: 38ms, application-code: 90ms)
+ POST /login?next=/portaal 200 in 692ms (next.js: 4ms, proxy.ts: 6ms, application-code: 682ms)
+  └─ ƒ loginAction({}) in 275ms lib/auth/actions.ts
+⨯ Error: Failed to load external module sharp-879f602e5fc4c669: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp-879f602e5fc4c669' imported from /dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js
+    at async (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[root-of-the-server]__0_k-c0l._.js:6:11) {
+  page: '/portaal'
+}
+⨯ Error: Failed to load external module sharp-879f602e5fc4c669: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp-879f602e5fc4c669' imported from /dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js
+    at async (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[root-of-the-server]__0_k-c0l._.js:6:11) {
+  page: '/portaal'
+}
+ GET /portaal 500 in 37ms (next.js: 13ms, proxy.ts: 16ms, application-code: 8ms)
+[browser] Uncaught Error: Failed to load external module sharp-879f602e5fc4c669: Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'sharp-879f602e5fc4c669' imported from /dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js
+    at Context.externalImport [as y] (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[turbopack]_runtime.js:687:15)
+    at async (../../../../../../dev/shm/nxttrack-v42-next/dev/server/chunks/ssr/[root-of-the-server]__0_k-c0l._.js:6:11)

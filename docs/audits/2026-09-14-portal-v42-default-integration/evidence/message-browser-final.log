@@ -1,0 +1,6 @@
+
+Running 1 test using 1 worker
+
+  ✓  1 [journey-chromium] › tests/e2e/journey-message-composer.spec.ts:4:5 › real parent messages retain authorized references, private drafts, conflict choices and explicit send (22.6s)
+
+  1 passed (23.2s)

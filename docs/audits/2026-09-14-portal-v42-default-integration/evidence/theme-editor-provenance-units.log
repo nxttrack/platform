@@ -1,0 +1,16 @@
+✔ raster validation rejects EXIF rotation that would detach anchors from the displayed canvas (28.161024ms)
+✔ editor accepts jsonb map reordering after its own save without accepting another edit (0.515662ms)
+✔ revision comparison separates world, guide and asset changes and ignores map order and rebased delivery paths (1082.696609ms)
+✔ legacy built-ins retain their actual release artwork without claiming Default 1.1 provenance (2.839222ms)
+✔ portable export roundtrip preserves manifest, worlds, anchors and bytes with no management metadata (2595.536006ms)
+✔ a new version rebases every delivery key without changing asset hashes or curriculum semantics (2589.869219ms)
+✔ modified raster bytes, external native references and unsafe tokens fail the release validation (1589.644215ms)
+✔ publishing rejects explicit fixture worlds even when the surrounding package is valid (814.776431ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8957.398631

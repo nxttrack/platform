@@ -54,6 +54,12 @@ admin route is `/admin/rapportages/capaciteit`; its planboard link opens the
 existing agenda without pretending that an unimplemented simulation mode
 exists. Next Best Actions consumes the eight-week forecast.
 
+Canon v3.0 extends this advisory layer with deterministic availability bands,
+scenario counts, reviewed expiring soft reservations, versioned daily
+snapshots and measured forecast accuracy. The exact formula, cohort and
+operational contract is documented in
+[SWIM_FLOW_ANALYTICS_AND_FORECASTS.md](SWIM_FLOW_ANALYTICS_AND_FORECASTS.md).
+
 ## Attendance and dropout signals
 
 `detectAttendanceRisks(tenantId)` detects:

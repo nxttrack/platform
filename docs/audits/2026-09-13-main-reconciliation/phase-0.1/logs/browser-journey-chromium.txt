@@ -1,0 +1,27 @@
+
+> @nxttrack/platform@0.0.0 test:journey:e2e /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> pnpm --filter @nxttrack/web exec playwright test --config=playwright.journey.config.ts --project=journey-chromium --workers=1 --output=/tmp/nxttrack-phase01-journey-results
+
+[WebServer] ⚠ "next start" does not work with "output: standalone" configuration. Use "node .next/standalone/server.js" instead.
+
+Running 16 tests using 1 worker
+
+  -   1 [journey-chromium] › tests/e2e/journey-bot-staging.spec.ts:8:7 › Journey Simulation Bot staging smoke › tick endpoint weigert een ontbrekend cron-geheim
+  -   2 [journey-chromium] › tests/e2e/journey-bot-staging.spec.ts:14:7 › Journey Simulation Bot staging smoke › platform owner validates full journey, stressmatrix, stopbudget en cleanup
+  -   3 [journey-chromium] › tests/e2e/journey-bot-window-control.spec.ts:8:7 › Journey Simulation Bot controlled staging window › starts a bounded full ABC journey window
+  ✓   4 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:8:5 › alle 30 onderdelen blijven semantisch bereikbaar en current staat los van selected (1.9s)
+  ✓   5 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:23:5 › mouse drag, WheelEvent-proxy en keyboard bedienen de volledige route zonder drag-click (1.8s)
+  ✓   6 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:52:5 › touch axis-lock laat verticale scroll/jitter vrij en verwerkt een horizontale swipe (1.1s)
+  ✓   7 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:70:5 › tooltip is eenmalig, niet-modale hulp en popupdeeplinks zijn child-safe (2.7s)
+  ✓   8 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:87:5 › popupinhoud dekt huidig, voltooid, gewone badge en surprisebadge en herstelt focus (1.3s)
+  ✓   9 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:108:5 › live event-insertie behoudt selectie en geopende popup (1.1s)
+  ✓  10 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:122:5 › tooltip en journey blijven werken wanneer storage geblokkeerd is (1.1s)
+  ✓  11 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:139:5 › dezelfde childcontext krijgt na een themeswitch geen tweede tooltip (989ms)
+  ✓  12 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:149:5 › lege, onbeoordeelde, volledig voltooide en scenery-loze states falen veilig (948ms)
+  ✓  13 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:170:5 › axe, 48px hitboxes, reduced motion en no-mascot recipes blijven groen (3.1s)
+  ✓  14 [journey-chromium] › tests/e2e/journey-timeline.spec.ts:189:5 › 630 echte DOM-collision-eindstates hebben minimaal 12px vrije ruimte (2.1m)
+  ✓  15 [journey-chromium] › tests/e2e/journey-visual.spec.ts:14:5 › 86 gerichte journey-renders volgen het verplichte artifactcontract (2.3m)
+  ✓  16 [journey-chromium] › tests/e2e/journey-visual.spec.ts:97:5 › journey productionfixture blijft binnen LCP CLS en interaction-latency budgets (2.6s)
+
+  3 skipped
+  13 passed (4.7m)

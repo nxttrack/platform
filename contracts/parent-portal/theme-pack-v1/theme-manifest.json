@@ -1,0 +1,183 @@
+{
+  "$schema": "./schemas/theme-manifest.schema.json",
+  "manifestVersion": "1.0.0",
+  "generatedAt": "2026-08-03T00:00:00+02:00",
+  "themeCount": 6,
+  "sharedContract": {
+    "shell": "portal-shell-v1",
+    "journeyEngine": "journey-engine-v1",
+    "badgeArtworkMode": "placeholder-only",
+    "font": "Inter Variable",
+    "allowedContentGrids": [
+      "25/25/25/25",
+      "33.333/33.333/33.333",
+      "50/50",
+      "100"
+    ],
+    "mobileNavigation": [
+      "overview",
+      "planning",
+      "development",
+      "inbox",
+      "more"
+    ],
+    "paymentsMobileLocation": "more"
+  },
+  "themes": [
+    {
+      "id": "nxttrack-default",
+      "displayName": "NXTTRACK Default",
+      "publicFallbackName": "NXTTRACK Default",
+      "sectorMode": "generic",
+      "mascot": null,
+      "journeyMetaphor": "momentum-route",
+      "developmentLabel": "Ontwikkeling",
+      "tokens": {
+        "primary": "#4D63E6",
+        "secondary": "#15B8A6",
+        "accent": "#F0B447",
+        "attention": "#EF6C75",
+        "success": "#1EAF82",
+        "ink": "#172A46",
+        "muted": "#6B7C93",
+        "page": ["#F7F9FF", "#EAF1FF", "#EFFBF8"],
+        "sidebar": ["#26365B", "#1E2E50", "#172640"]
+      },
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/nxttrack-default/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/nxttrack-default/journey-mobile.png"
+      }
+    },
+    {
+      "id": "dolphin-bay",
+      "displayName": "Dolphin Bay",
+      "publicFallbackName": "Dolphin Bay",
+      "sectorMode": "swim",
+      "mascot": "dolphin",
+      "journeyMetaphor": "bay-to-bay",
+      "developmentLabel": "Zwemreis",
+      "tokens": {
+        "primary": "#087BD5",
+        "secondary": "#0DC3C8",
+        "accent": "#FFC857",
+        "attention": "#FF7F73",
+        "success": "#24B88A",
+        "ink": "#073351",
+        "muted": "#617F91",
+        "page": ["#EFFCFF", "#D7F8FB", "#EEFBFF"],
+        "sidebar": ["#075071", "#063D61", "#052B4D"]
+      },
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/dolphin-bay/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/dolphin-bay/journey-mobile.png",
+        "mascot": "prototype/assets/themes/dolphin-bay/mascot.png"
+      }
+    },
+    {
+      "id": "turtle-trails",
+      "displayName": "Turtle Trails",
+      "publicFallbackName": "Turtle Trails",
+      "sectorMode": "swim",
+      "mascot": "sea-turtle",
+      "journeyMetaphor": "calm-current-trail",
+      "developmentLabel": "Zwemroute",
+      "tokens": {
+        "primary": "#147E84",
+        "secondary": "#45A878",
+        "accent": "#E8BD68",
+        "attention": "#E57C6F",
+        "success": "#3B9D70",
+        "ink": "#153D42",
+        "muted": "#69827E",
+        "page": ["#F5FBF7", "#E4F3E9", "#EEF9F7"],
+        "sidebar": ["#245652", "#194946", "#123B3B"]
+      },
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/turtle-trails/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/turtle-trails/journey-mobile.png",
+        "mascot": "prototype/assets/themes/turtle-trails/mascot.png"
+      }
+    },
+    {
+      "id": "polar-splash",
+      "displayName": "Polar Splash",
+      "publicFallbackName": "Polar Splash",
+      "sectorMode": "swim",
+      "mascot": "penguin",
+      "journeyMetaphor": "ice-floe-expedition",
+      "developmentLabel": "Poolreis",
+      "tokens": {
+        "primary": "#3278D5",
+        "secondary": "#66CDDD",
+        "accent": "#F4C969",
+        "attention": "#EF758D",
+        "success": "#39AA9E",
+        "ink": "#18385B",
+        "muted": "#6D819D",
+        "page": ["#F5FAFF", "#E4F3FF", "#F0EDFF"],
+        "sidebar": ["#284F7A", "#203F68", "#1A3157"]
+      },
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/polar-splash/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/polar-splash/journey-mobile.png",
+        "mascot": "prototype/assets/themes/polar-splash/mascot.png"
+      }
+    },
+    {
+      "id": "coastal-explorer",
+      "displayName": "Coastal Explorer",
+      "publicFallbackName": "Coastal Explorer",
+      "sectorMode": "swim",
+      "mascot": "beach-lifeguard",
+      "journeyMetaphor": "dutch-coast-route",
+      "developmentLabel": "Kustreis",
+      "tokens": {
+        "primary": "#176BB3",
+        "secondary": "#1DA8A5",
+        "accent": "#F1BA57",
+        "attention": "#EF6E4F",
+        "success": "#2C9C75",
+        "ink": "#173A55",
+        "muted": "#6C7E8D",
+        "page": ["#F8FBF7", "#E9F2EA", "#EAF7FA"],
+        "sidebar": ["#244F67", "#1D4159", "#17364C"]
+      },
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/coastal-explorer/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/coastal-explorer/journey-mobile.png",
+        "mascot": "prototype/assets/themes/coastal-explorer/mascot.png"
+      }
+    },
+    {
+      "id": "nationaal-zwem-abc",
+      "displayName": "Nationaal Zwem ABC",
+      "publicFallbackName": "Diplomareis A–B–C",
+      "sectorMode": "swim-abc-gated",
+      "requiresVerifiedLicenseForDisplayName": true,
+      "mascot": null,
+      "journeyMetaphor": "abc-diploma-lanes",
+      "developmentLabel": "Zwem ABC",
+      "tokens": {
+        "primary": "#00AEDE",
+        "secondary": "#10B9D9",
+        "accent": "#FFDA25",
+        "attention": "#EE2D35",
+        "success": "#009D61",
+        "purple": "#8D3DA8",
+        "ink": "#17324D",
+        "muted": "#6B7A8A",
+        "page": ["#F7FCFF", "#E5F8FF", "#FFF1EC"],
+        "sidebar": ["#1B4C70", "#163C5E", "#112E4E"]
+      },
+      "phases": [
+        "start-a",
+        "a-b",
+        "b-c"
+      ],
+      "assets": {
+        "journeyDesktop": "prototype/assets/themes/nationaal-zwem-abc/journey-desktop.png",
+        "journeyMobile": "prototype/assets/themes/nationaal-zwem-abc/journey-mobile.png"
+      }
+    }
+  ]
+}

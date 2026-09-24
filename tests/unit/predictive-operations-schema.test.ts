@@ -21,19 +21,6 @@ test("predictive tables are tenant scoped, RLS protected and service writable", 
   assert.match(migration, /current_user_can_manage_tenant_domain\(tenant_id\)/);
 });
 
-test("Journey Bot purge removes derived suggestions and actions before source records", () => {
-  assert.match(
-    migration,
-    /delete from public\.placement_suggestions\s+where journey_run_id = target_run_id\s+and is_test\s+and source = 'journey_simulation_bot'/
-  );
-  assert.match(
-    migration,
-    /delete from public\.next_best_actions\s+where journey_run_id = target_run_id\s+and is_test\s+and source = 'journey_simulation_bot'/
-  );
-  assert.match(migration, /'placement_suggestions', deleted_suggestion_count/);
-  assert.match(migration, /'next_best_actions', deleted_action_count/);
-});
-
 test("state constraints keep proposals auditable and explanation payloads structured", () => {
   assert.match(migration, /next_best_actions_status_check check \(status in \('open', 'dismissed', 'completed', 'auto_resolved'\)\)/);
   assert.match(migration, /placement_suggestions_status_check check \(status in \('suggested', 'offered', 'accepted', 'rejected', 'expired'\)\)/);

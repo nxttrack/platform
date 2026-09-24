@@ -1,0 +1,1 @@
+PASS: all workflow YAML parsed; 213 bash/sh run blocks checked with bash -n. No actionlint installed.

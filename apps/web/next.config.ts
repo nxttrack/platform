@@ -29,7 +29,26 @@ const nextConfig: NextConfig = {
     root: join(projectRoot, "../..")
   },
   async headers() {
-    return [{ source: "/:path*", headers: [...securityHeaders] }];
+    return [
+      {
+        source: "/portal-themes/:path*",
+        headers: [
+          ...securityHeaders,
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" }
+        ]
+      },
+      { source: "/:path*", headers: [...securityHeaders] },
+      {
+        // Only this guarded, fictional-data renderer may be embedded by the same origin.
+        // It has no form actions, learner loaders or mutation adapters.
+        source: "/theme-preview/:themeKey/:release",
+        headers: [
+          { key: "Content-Security-Policy", value: "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; object-src 'none'" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
+          { key: "Cache-Control", value: "private, no-store" }
+        ]
+      }
+    ];
   },
   async redirects() {
     return [

@@ -21,16 +21,21 @@ export default async function PlatformBadgeTemplatesPage({ searchParams }: { sea
       <p className="max-w-2xl text-xs leading-5 text-muted-foreground">Bouw versieerbare formats met lagen, shortcodes en veilige voorbeelddata.</p>
     </header>
     <BadgeSectionNav active="/platform/badges/share-templates" scope="platform" />
+    <Feedback error={readParam(params.error)} success={readParam(params.success)} />
     <div className="flex gap-2 overflow-x-auto">
-      {data.templates.map((template) => <Link className={cn("shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold", template.id === selected?.id ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground")} href={`/platform/badges/share-templates?template=${template.id}`} key={template.id}>{formatLabel(template.format as BadgeFormat)}</Link>)}
+      {data.templates.map((template) => <Link className={cn("shrink-0 rounded-xl border px-4 py-2 text-sm font-semibold", template.id === selected?.id ? "border-primary bg-primary text-white" : "border-border bg-card text-foreground")} href={`/platform/badges/share-templates?template=${template.id}`} key={template.id}>{formatLabel(template.format as BadgeFormat)} · v{template.version}</Link>)}
     </div>
     <div className="xl:min-h-0 xl:flex-1">
-      {selected ? <BadgeTemplateEditor canManage={data.canManage} format={selected.format as BadgeFormat} initialAssets={data.assets} initialLayers={selected.layers_json} initialStatus={selected.status} initialVersion={selected.version} templateId={selected.id} /> : <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Nog geen sharetemplate beschikbaar.</p>}
+      {selected ? <BadgeTemplateEditor canManage={data.canManage} format={selected.format as BadgeFormat} initialAssets={data.assets} initialLayers={selected.layers_json} initialStatus={selected.status} initialVersion={selected.version} key={`${selected.id}:${selected.version}`} templateId={selected.id} /> : <p className="rounded-3xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">Nog geen sharetemplate beschikbaar.</p>}
     </div>
   </div>;
 }
 
 function formatLabel(format: BadgeFormat) {
   return ({ square: "Vierkant", story: "Story", landscape: "Liggend", certificate: "Certificaat" } satisfies Record<BadgeFormat, string>)[format] ?? format;
+}
+function Feedback({ error, success }: { error?: string; success?: string }) {
+  if (!error && !success) return null;
+  return <p className={`shrink-0 rounded-xl border px-3 py-2 text-xs font-semibold ${error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-800"}`}>{error ?? success}</p>;
 }
 function readParam(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }

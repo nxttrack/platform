@@ -1,0 +1,53 @@
+name: Deployment readiness
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type CHECK_DEPLOYMENT_READINESS for read-only runtime checks
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  runtime:
+    name: inspect ${{ matrix.target }} runtime operations
+    runs-on: [self-hosted, linux, x64, nxttrack]
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        target: [staging, production]
+    concurrency:
+      group: nxttrack-${{ matrix.target }}
+      cancel-in-progress: false
+    environment: ${{ matrix.target }}
+    steps:
+      - name: Confirm read-only check
+        env:
+          CONFIRMATION: ${{ inputs.confirmation }}
+        run: test "$CONFIRMATION" = CHECK_DEPLOYMENT_READINESS
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24.18.0"
+      - name: Check next deployment operations prerequisites without installation
+        env:
+          TARGET: ${{ matrix.target }}
+          STORAGE_BACKUP_PASSPHRASE: ${{ secrets.STORAGE_BACKUP_PASSPHRASE }}
+        run: node scripts/operations/install-runtime-operations.mjs "$TARGET" --check
+      - name: Verify runtime, workers and retained backups without writes
+        env:
+          TARGET: ${{ matrix.target }}
+          OPERATIONS_AUDIT_OUTPUT: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+        run: node scripts/operations/check-runtime-operations.mjs "$TARGET"
+      - name: Retain non-sensitive readiness evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: runtime-readiness-${{ matrix.target }}-${{ github.run_id }}
+          path: ${{ runner.temp }}/runtime-operations-${{ matrix.target }}.json
+          retention-days: 30
+          if-no-files-found: error

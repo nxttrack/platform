@@ -5,10 +5,11 @@ import { redirect } from "next/navigation";
 import { getFormNextPath, requirePrivateShellContext } from "@/lib/auth/server-guard";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { classifyContent } from "@/lib/security/content-classification";
+import { parseLearnerAssessmentValue } from "./learner-assessment";
 import { getActiveTenant } from "./core";
 import { badgeCatalogTemplate, getPositiveScoreLabel, swimProgressTemplate } from "./progress-template";
 import { createTenantNotifications } from "./tenant-notifications";
-import { evaluateBadgeTriggers } from "./badge-engine";
+import { evaluateBadgeTriggers, evaluateBadgeTriggerSet } from "./badge-engine";
 
 const attendanceStatuses = new Set(["present", "absent", "late", "excused", "trial"]);
 const noteVisibilities = new Set(["internal", "parent_visible"]);
@@ -295,7 +296,7 @@ export async function scoreProgressItemAction(formData: FormData) {
   const context = await requirePrivateShellContext("/instructor");
   const tenant = getActiveTenant(context);
   const participantId = readRequired(formData, "participantId");
-  const moduleId = readRequired(formData, "moduleId");
+  const moduleId = readOptional(formData, "moduleId");
   const itemId = readRequired(formData, "itemId");
   const sessionId = readOptional(formData, "sessionId");
   const score = readScore(formData, "score");
@@ -321,6 +322,26 @@ export async function scoreProgressItemAction(formData: FormData) {
   }
 
   const admin = createAdminClient();
+  const enrollmentResult = await admin
+    .from("enrollments")
+    .select("id, curriculum_version_id")
+    .eq("tenant_id", tenant.id)
+    .eq("id", membership.enrollment_id)
+    .eq("participant_id", participantId)
+    .maybeSingle();
+
+  if (enrollmentResult.error || !enrollmentResult.data) {
+    redirectWithStatus(nextPath, "error", "progress");
+  }
+
+  if (enrollmentResult.data.curriculum_version_id) {
+    // Canonical assessments must use the persisted review/optimistic-lock flow.
+    redirectWithStatus(nextPath, "error", "review-required");
+  }
+
+  if (!moduleId) {
+    redirectWithStatus(nextPath, "error", "progress");
+  }
   const itemResult = await admin.from("progress_items").select("id, module_id, name, code").eq("tenant_id", tenant.id).eq("module_id", moduleId).eq("id", itemId).eq("status", "active").maybeSingle();
 
   if (itemResult.error || !itemResult.data) {
@@ -339,6 +360,9 @@ export async function scoreProgressItemAction(formData: FormData) {
         item_id: itemId,
         session_id: sessionId,
         score,
+        scale_version: "five_point_v1",
+        source_scale_version: "five_point_v1",
+        source_value: null,
         positive_label: positiveLabel,
         note,
         visibility,
@@ -356,36 +380,28 @@ export async function scoreProgressItemAction(formData: FormData) {
   if (scoreResult.error || !scoreResult.data) {
     redirectWithStatus(nextPath, "error", "progress");
   }
-
-  if (visibility === "parent_visible") {
-    await createParentNotificationsForParticipant({
-      tenantId: tenant.id,
-      organizationName: tenant.name,
-      participantId,
-      type: "progress_score",
-      title: "Nieuwe voortgang",
-      message: `${itemResult.data.name}: ${positiveLabel}`,
-      relatedProgressScoreId: scoreResult.data.id
-    });
-  }
-
-  if (score >= 4) {
+  if (visibility === "parent_visible" && score >= 4) {
     const completedCountResult = await admin
       .from("participant_progress_scores")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id)
       .eq("participant_id", participantId)
       .eq("status", "active")
+      .eq("visibility", "parent_visible")
       .gte("score", 4);
     const triggerContext = {
       count: completedCountResult.count ?? 1,
       entityId: scoreResult.data.id,
       skill: itemResult.data.code?.replace(/_completed$/, "") ?? itemResult.data.id
     };
-    await Promise.all([
-      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "progress_item_completed", eventContext: triggerContext }),
-      evaluateBadgeTriggers({ tenantId: tenant.id, participantId, eventType: "skill_completed", eventContext: triggerContext })
-    ]);
+    await evaluateBadgeTriggerSet({
+      tenantId: tenant.id,
+      participantId,
+      events: [
+        { eventType: "progress_item_completed", eventContext: triggerContext },
+        { eventType: "skill_completed", eventContext: triggerContext }
+      ]
+    });
   }
 
   redirectWithStatus(nextPath, "saved", "progress");
@@ -665,13 +681,7 @@ function readEnum(formData: FormData, field: string, allowed: Set<string>, fallb
 }
 
 function readScore(formData: FormData, field: string) {
-  const rawScore = Number(readOptional(formData, field) ?? 1);
-
-  if (!Number.isInteger(rawScore) || rawScore < 1 || rawScore > 5) {
-    return 1;
-  }
-
-  return rawScore;
+  return parseLearnerAssessmentValue(readOptional(formData, field));
 }
 
 function readRequired(formData: FormData, field: string) {

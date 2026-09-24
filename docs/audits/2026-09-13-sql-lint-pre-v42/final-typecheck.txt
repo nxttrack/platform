@@ -1,0 +1,7 @@
+
+> @nxttrack/platform@0.0.0 typecheck /home/codex/repos/nxttrack-sql-lint-pre-v42
+> pnpm --filter @nxttrack/web typecheck
+
+
+> @nxttrack/web@0.0.0 typecheck /home/codex/repos/nxttrack-sql-lint-pre-v42/apps/web
+> tsc --noEmit

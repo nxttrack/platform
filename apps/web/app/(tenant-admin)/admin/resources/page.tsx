@@ -54,13 +54,13 @@ export default async function AdminResourcesPage({ searchParams }: PageProps) {
 }
 
 function ResourceForm({ data }: { data: Awaited<ReturnType<typeof getTenantCoreData>> }) {
-  return <DirtyForm action={createResourceAction} className="grid gap-4 sm:grid-cols-2"><SelectField label="Type" name="kind" required><option value="location">Locatie</option><option value="pool">Bad</option><option value="lane">Baan</option><option value="room">Ruimte</option><option value="other">Overig</option></SelectField><Field label="Naam" name="name" required placeholder="Hoofdbad" /><Field label="Code" name="code" placeholder="bad-1" /><SelectField label="Onderdeel van" name="parentResourceId"><option value="">Geen parent</option>{data.resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</SelectField><Field label="Capaciteit" name="capacity" type="number" placeholder="8" /><Field label="Volgorde" name="sortOrder" type="number" defaultValue={0} /><div className="sm:col-span-2"><SubmitButton>Resource opslaan</SubmitButton></div></DirtyForm>;
+  return <DirtyForm action={createResourceAction} className="grid gap-4 sm:grid-cols-2"><SelectField label="Type" name="kind" required><option value="location">Locatie</option><option value="pool">Bad</option><option value="lane">Baan</option><option value="room">Ruimte</option><option value="other">Overig</option></SelectField><Field label="Naam" name="name" required placeholder="Hoofdbad" /><Field label="Code" name="code" placeholder="bad-1" /><SelectField label="Onderdeel van" name="parentResourceId"><option value="">Geen parent</option>{data.resources.map((resource) => <option key={resource.id} value={resource.id}>{resource.name}</option>)}</SelectField><Field label="Operationele capaciteit" name="capacity" type="number" placeholder="8" /><Field description="Harde fysieke grens voor groepspublicatie." label="Veiligheidscapaciteit" name="safetyCapacity" type="number" placeholder="8" /><Field label="Volgorde" name="sortOrder" type="number" defaultValue={0} /><div className="sm:col-span-2"><SubmitButton>Resource opslaan</SubmitButton></div></DirtyForm>;
 }
 
 function ResourceMeta({ resource, parent }: { resource: ResourceRow; parent?: ResourceRow | null }) {
   return (
     <span>
-      {resource.code ?? "zonder code"} · capaciteit {resource.capacity ?? "niet gezet"}
+      {resource.code ?? "zonder code"} · operationeel {resource.capacity ?? "niet gezet"} · veiligheid {resource.safety_capacity ?? "niet gezet"}
       {parent ? ` · onder ${parent.name}` : ""}
     </span>
   );

@@ -1,3 +1,4 @@
+import { toAmsterdamDate } from "../date/business-date";
 import "server-only";
 
 import { createHash } from "node:crypto";
@@ -147,7 +148,7 @@ export async function refreshParticipantAttentionSignals(tenantId: string) {
       recentAttendance: attendanceRows.slice(0, 8).map((row) => row.status as ParticipantEngagementInput["recentAttendance"][number]),
       previousAttendance: attendanceRows.slice(8, 16).map((row) => row.status as ParticipantEngagementInput["previousAttendance"][number]),
       daysSinceProgress: latestProgress ? Math.floor((now.getTime() - new Date(latestProgress).getTime()) / 86_400_000) : null,
-      overdueAmountCents: (payments.get(participantId) ?? []).filter((row) => row.status === "overdue" || row.due_on < now.toISOString().slice(0, 10)).reduce((sum, row) => sum + row.amount_cents, 0),
+      overdueAmountCents: (payments.get(participantId) ?? []).filter((row) => row.status === "overdue" || row.due_on < toAmsterdamDate(now)).reduce((sum, row) => sum + row.amount_cents, 0),
       openParentQuestions: (threads.get(participantId) ?? []).length,
       pauseExpectedReturnOn: pauses.get(participantId)?.expected_return_on ?? null,
       cancellationsLast60Days: (cancellations.get(participantId) ?? []).length,

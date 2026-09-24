@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { Clock3, UserPlus, UsersRound } from "lucide-react";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
@@ -67,7 +68,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         <AdminMetricCard icon={UsersRound} label="Alle leerlingen" value={data.enrollments.length} />
         <AdminMetricCard icon={UserPlus} label="Actief" tone="success" value={data.enrollments.filter((enrollment) => enrollment.status === "active").length} />
         <AdminMetricCard icon={Clock3} label="Nog niet geplaatst" tone="warning" value={data.enrollments.filter((enrollment) => !data.groupMemberships.some((membership) => membership.enrollment_id === enrollment.id && ["active", "trial"].includes(membership.status))).length} />
-        <AdminMetricCard label="Journey Bot" tone="info" value={data.enrollments.filter((enrollment) => enrollment.is_test).length} />
+        <AdminMetricCard label="Testdata" tone="info" value={data.enrollments.filter((enrollment) => enrollment.is_test).length} />
       </div>
 
       <AdminFilterPills
@@ -133,10 +134,11 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
 function EnrollmentForm({ data }: { data: Awaited<ReturnType<typeof getTenantCoreData>> }) {
   return (
     <DirtyForm action={createParticipantEnrollmentAction} className="grid gap-4 sm:grid-cols-2">
+      <input name="operationKey" type="hidden" value={randomUUID()} />
       <Field label="Leerlingnaam" name="displayName" required placeholder="Sam de Jong" />
       <Field label="Geboortedatum" name="birthDate" type="date" />
       <SelectField label="Badge-aanspreekvorm" name="gender">
-        <option value="unknown">Neutraal / onbekend</option>
+        <option value="unknown_legacy">Neutraal / onbekend</option>
         <option value="boy">Jongen</option>
         <option value="girl">Meisje</option>
       </SelectField>
@@ -169,6 +171,7 @@ function PlacementForm({
 }) {
   return (
     <DirtyForm action={createGroupMembershipAction} className="grid gap-4 sm:grid-cols-2">
+      <input name="operationKey" type="hidden" value={randomUUID()} />
       <SelectField label="Inschrijving" name="enrollmentId" required>
         <option value="">Kies inschrijving</option>
         {data.enrollments.map((enrollment) => <option key={enrollment.id} value={enrollment.id}>{participantById.get(enrollment.participant_id)?.display_name ?? "Leerling"} · {programById.get(enrollment.program_id)?.name ?? "Programma"}</option>)}
@@ -181,6 +184,11 @@ function PlacementForm({
         <option value="active">Actief</option>
         <option value="trial">Proefles</option>
         <option value="paused">Gepauzeerd</option>
+      </SelectField>
+      <SelectField label="Capaciteitsbucket" name="capacityBucket">
+        <option value="regular">Regulier</option>
+        <option value="flex">Flex</option>
+        <option value="trial">Proef (automatisch bij proefles)</option>
       </SelectField>
       <Field label="Capaciteitsgewicht" name="capacityWeight" type="number" defaultValue={1} />
       <Field label="Startdatum" name="startsOn" type="date" />

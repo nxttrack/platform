@@ -1,0 +1,14 @@
+
+> @nxttrack/platform@0.0.0 release:assert-schema-compatibility /home/codex/repos/nxttrack-sql-lint-pre-v42
+> node scripts/release/assert-runtime-schema-compatibility.mjs
+
+file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/release/assert-runtime-schema-compatibility.mjs:56
+  if (missing.length) throw new Error(`Database is missing ${missing.length} required migration(s).`);
+                            ^
+
+Error: Database is missing 1 required migration(s).
+    at file:///home/codex/repos/nxttrack-sql-lint-pre-v42/scripts/release/assert-runtime-schema-compatibility.mjs:56:29
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+Node.js v24.18.0
+ ELIFECYCLE  Command failed with exit code 1.

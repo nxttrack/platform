@@ -3,8 +3,12 @@ import { expect, test, type Page } from "@playwright/test";
 
 const enabled = process.env.PREMIUM_RELEASE_BROWSER_ENABLED === "true";
 
+if (!enabled) {
+  test("critical premium-release configuration is present", () => {
+    expect(enabled, "PREMIUM_RELEASE_BROWSER_ENABLED=true is required; this critical suite may not silently skip.").toBe(true);
+  });
+} else {
 test.describe("premium release hardening", () => {
-  test.skip(!enabled, "Enable the exact-SHA staging premium release validation.");
 
   test("tenant admin can inspect explainable commercial and retention workflows", async ({ page }) => {
     test.setTimeout(120_000);
@@ -125,7 +129,7 @@ test.describe("premium release hardening", () => {
     const failures = collectRuntimeFailures(page);
     await signIn(page, requiredEnv("E2E_PARENT_EMAIL"), requiredEnv("E2E_PARENT_PASSWORD"), "/portaal/profiel");
 
-    await expectHeading(page, "Profiel basics");
+    await expectHeading(page, "Profiel & meer");
     await expect(page.getByRole("heading", { name: "Directe, veilige updates" })).toBeVisible();
     await expect(page.getByText("Expliciete toestemming per apparaat", { exact: true })).toBeVisible();
 
@@ -141,6 +145,7 @@ test.describe("premium release hardening", () => {
     expect(failures()).toEqual([]);
   });
 });
+}
 
 async function signIn(page: Page, email: string, password: string, nextPath: string) {
   await page.goto(`/login?next=${encodeURIComponent(nextPath)}`, { waitUntil: "domcontentloaded" });

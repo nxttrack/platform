@@ -8,8 +8,6 @@ const appUrl = process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || "";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
 const supabaseSecret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 const tenantSlug = process.env.PHASE16_TENANT_SLUG || "nxttrack-e2e";
-const edgeGroupCode = "sprint4-edge-full";
-const edgeParticipantReference = "sprint4-edge-full-participant";
 
 if (process.env.APP_ENV !== "staging" || hostname(appUrl) !== "staging.nxttrack.nl") {
   throw new Error("Sprint 4 mutation cleanup is restricted to staging.nxttrack.nl.");
@@ -97,9 +95,6 @@ if (submissionIds.length > 0) {
   );
   await removeRows(admin.from("intake_submissions").delete().eq("tenant_id", tenantId).in("id", submissionIds), "intake fixtures");
 }
-
-await removeRows(admin.from("participants").delete().eq("tenant_id", tenantId).eq("external_reference", edgeParticipantReference), "full-capacity participant fixture");
-await removeRows(admin.from("groups").delete().eq("tenant_id", tenantId).eq("code", edgeGroupCode), "full-capacity group fixture");
 
 console.log(
   `[sprint4:prepare] PASS removed ${submissionIds.length} intake, ${entryIds.length} waitlist and ${offerIds.length} offer fixture(s).`

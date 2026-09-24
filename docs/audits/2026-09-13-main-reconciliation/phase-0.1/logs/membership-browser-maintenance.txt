@@ -1,0 +1,10 @@
+
+> @nxttrack/platform@0.0.0 test:production-readiness-preview:e2e /home/codex/repos/nxttrack-main-reconciliation-v42-prep
+> pnpm --filter @nxttrack/web exec playwright test tests/e2e/production-readiness-maintenance-preview.spec.ts --project=chromium-desktop --retries=0 --workers=1 --output=/tmp/nxttrack-phase01-membership-maintenance
+
+
+Running 1 test using 1 worker
+
+  ✓  1 [chromium-desktop] › tests/e2e/production-readiness-maintenance-preview.spec.ts:3:5 › maintenance preview is readable, healthy and rejects unsafe requests (403ms)
+
+  1 passed (1.9s)
