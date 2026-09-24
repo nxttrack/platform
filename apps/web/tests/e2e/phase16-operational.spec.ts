@@ -51,8 +51,21 @@ test.describe("phase 16 operational happy path", () => {
     await expectBodyToContain(page, phase.expected.certificateTitle);
 
     await page.goto("/admin", { waitUntil: "domcontentloaded" });
-    await expect(page.locator("[data-chart]")).toHaveCount(2);
-    await expect(page.getByRole("table", { name: "Bezetting per lesgroep" })).toBeAttached();
+    await expect(page.getByRole("heading", { level: 1, name: "Welkom terug." })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Vandaag", exact: true })).toBeVisible();
+    await expect(page.getByText("Lessen vandaag", { exact: true })).toBeVisible();
+    await expect(page.getByText("Leerlingen verwacht", { exact: true })).toBeVisible();
+    await expect(page.getByText("Aanwezigheid", { exact: true })).toBeVisible();
+    await expect(page.getByText("Aandacht vandaag", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Actie nodig", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Instroom", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "Planning & capaciteit", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Planbord openen", exact: true })).toHaveAttribute("href", "/admin/agenda");
+    await expect(page.getByRole("link", { name: "Intake bekijken", exact: true })).toHaveAttribute("href", "/admin/intake");
+
+    await page.getByRole("link", { name: "Open signalenwerkbak", exact: true }).click();
+    await page.waitForURL((url) => url.pathname === "/admin/signalen");
+    await expect(page.getByRole("heading", { level: 1, name: "Alle signalen", exact: true })).toBeVisible();
 
     await page.goto("/admin/rapportages", { waitUntil: "domcontentloaded" });
     await expect(page.locator("[data-chart]")).toHaveCount(3);
