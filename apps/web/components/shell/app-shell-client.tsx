@@ -261,7 +261,7 @@ export function AppShellClient({
           "relative shrink-0 border-r border-sidebar-border bg-sidebar/90 backdrop-blur transition-[width] duration-200",
           mobileBottomNav
             ? "portal-parent-sidebar sidebar hidden overflow-hidden border shadow-card lg:block"
-            : "hidden md:block",
+            : "sticky top-0 hidden h-dvh self-start overflow-hidden md:block",
           sidebarCollapsed ? "w-[76px]" : mobileBottomNav ? "w-[240px]" : "w-[248px]"
         )}
       >
@@ -710,7 +710,7 @@ function Sidebar({
           </button>
         ) : null}
       </div>
-      <nav aria-label="Hoofdnavigatie" className={cn("flex-1 overflow-y-auto py-3", collapsed && !mobile ? "px-2" : "px-3")}>
+      <nav aria-label="Hoofdnavigatie" className={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain py-3", collapsed && !mobile ? "px-2" : "px-3")}>
         <TooltipProvider delayDuration={250}>
           {groups.map((group, index) => {
             const isClosed = closedSections.has(group.label);

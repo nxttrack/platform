@@ -13,3 +13,8 @@ test("de ingeklapte desktopsidebar houdt de uitklapbediening binnen de rail", ()
   assert.match(sidebar, /collapsed && "size-8 border border-border bg-card shadow-soft"/);
   assert.doesNotMatch(sidebar, /absolute left-\[58px\] top-4 translate-x-1\/2/);
 });
+
+test("de desktopsidebar blijft viewportvast en scrolt de lange navigatie zelfstandig", () => {
+  assert.match(shell, /sticky top-0 hidden h-dvh self-start overflow-hidden md:block/);
+  assert.match(sidebar, /min-h-0 flex-1 overflow-y-auto overscroll-contain py-3/);
+});
