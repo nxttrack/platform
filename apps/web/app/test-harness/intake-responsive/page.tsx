@@ -8,6 +8,7 @@ import { FocusNoteFields, RosterAttendanceFields } from "@/components/instructor
 import { IntakeProgramLayout } from "@/components/public/intake-program-layout";
 import { IntakeWizard } from "@/components/public/intake-wizard";
 import { AppShell } from "@/components/shell/app-shell";
+import { PageLoadingSkeleton } from "@/components/shell/page-loading-skeleton";
 import { PageHeader } from "@/components/shell/ui";
 import { adminNav } from "@/lib/navigation";
 
@@ -18,6 +19,10 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
 }) {
   if (process.env.APP_ENV !== "test") notFound();
   const params = await searchParams;
+
+  if (params.surface === "loading") {
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><PageLoadingSkeleton /></AppShell>;
+  }
 
   if (params.surface === "planning") {
     return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
