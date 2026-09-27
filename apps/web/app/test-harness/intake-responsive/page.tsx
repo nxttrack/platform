@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { AlertTriangle, CalendarDays, Clock, Send, Users } from "lucide-react";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
-import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
+import { AdminFilterPills, AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { PlanningDayBoard } from "@/components/admin/planning-day-board";
 import { FocusNoteFields, RosterAttendanceFields } from "@/components/instructor/roster-form-fields";
 import { IntakeProgramLayout } from "@/components/public/intake-program-layout";
@@ -49,6 +49,26 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
           <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground xl:col-span-2">Reden<input className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" placeholder="Waarom moet de planner deze plek beoordelen?" /></label>
           <div className="md:col-span-2 xl:col-span-6"><button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="button">Aanvraag klaarzetten</button></div>
         </form>
+      </AdminListSurface>
+    </div></AppShell>;
+  }
+
+  if (params.surface === "learning-quality") {
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
+      <PageHeader kicker="Begeleiding & leskwaliteit" title="Group Health en voortgang" subtitle="Responsieve lokale fixture met lange, fictieve filterwaarden en tabelgegevens." />
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[auto_1fr] xl:items-start">
+        <AdminFilterPills current="12" href={(value) => `/test-harness/intake-responsive?surface=learning-quality&period=${value}`} items={[{ label: "4 weken", value: "4" }, { label: "8 weken", value: "8" }, { label: "12 weken", value: "12" }]} />
+        <form className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-2 xl:grid-cols-4">
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">Programma<select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue=""><option value="">Alle programma’s</option><option value="fixture">Fictief zwemprogramma met een uitzonderlijk lange programmanaam en locatieomschrijving</option></select></label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">Niveau<select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue=""><option value="">Alle niveaus</option><option value="fixture">Fictief bewijsbadje met een uitzonderlijk lange niveauomschrijving</option></select></label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">Lesgroep<select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue=""><option value="">Alle groepen</option><option value="fixture">Fictieve zwemgroep met een uitzonderlijk lange naam en locatieomschrijving</option></select></label>
+          <div className="flex min-w-0 items-end"><button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="button">Filters toepassen</button></div>
+        </form>
+      </div>
+      <AdminListSurface>
+        <div className="relative w-full overflow-x-auto">
+          <table className="w-full min-w-[30rem] caption-bottom text-sm"><thead><tr><th className="px-3 py-2 text-left">Leerling</th><th className="px-3 py-2 text-left">Signaal</th><th className="px-3 py-2 text-left">Aandacht</th><th className="px-3 py-2 text-left">Zekerheid</th><th className="px-3 py-2 text-left">Details</th></tr></thead><tbody><tr><td className="px-3 py-2">Fictieve leerling</td><td className="px-3 py-2">Warme opvolging</td><td className="px-3 py-2">Volgen</td><td className="px-3 py-2">Hoog</td><td className="px-3 py-2">Openen</td></tr></tbody></table>
+        </div>
       </AdminListSurface>
     </div></AppShell>;
   }

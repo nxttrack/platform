@@ -58,6 +58,16 @@ for (const width of [390, 768]) {
     await expectNoPageOverflow(page);
     await testInfo.attach(`capacity-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
+    await page.goto("/test-harness/intake-responsive?surface=learning-quality");
+    const qualityProgram = page.getByLabel("Programma");
+    await expect(qualityProgram).toBeVisible();
+    await expectWithinViewport(qualityProgram, width);
+    await expectWithinViewport(page.getByLabel("Niveau"), width);
+    await expectWithinViewport(page.getByLabel("Lesgroep"), width);
+    await expectWithinViewport(page.getByRole("button", { name: "Filters toepassen" }), width);
+    await expectNoPageOverflow(page);
+    await testInfo.attach(`learning-quality-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+
     await page.goto("/test-harness/intake-responsive?surface=instructor");
     await page.getByLabel("Lesnotitie voor Fictieve leerling", { exact: true }).fill("Fictieve lesnotitie");
     await page.getByLabel("Interne notitie voor Fictieve leerling", { exact: true }).fill("Fictieve focusnotitie");
