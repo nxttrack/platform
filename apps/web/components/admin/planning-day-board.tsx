@@ -31,7 +31,7 @@ export function PlanningDayBoard({ days }: { days: Array<{ key: string; label: s
     <>
       <div className="grid min-w-0 grid-cols-1 gap-3 xl:grid-cols-2 2xl:grid-cols-3">
         {days.map((day) => (
-          <section className="flex h-64 min-w-0 flex-col rounded-xl border border-border bg-card p-3 shadow-soft" key={day.key}>
+          <section className="flex min-w-0 flex-col rounded-xl border border-border bg-card p-3 shadow-soft xl:h-64" key={day.key}>
             <div className="mb-2 flex shrink-0 items-center justify-between gap-2 px-1">
               <h3 className="text-sm font-bold text-foreground">{day.label}</h3>
               <StatusPill tone={day.sessions.some((session) => session.status === "over_capacity") ? "danger" : "neutral"}>{day.sessions.length} lessen</StatusPill>

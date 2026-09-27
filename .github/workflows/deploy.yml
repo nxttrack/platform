@@ -672,6 +672,12 @@ jobs:
           SPRINT4_QUALITY_BUDGETS_ENABLED: "true"
         run: pnpm run sprint4:test-quality
 
+      - name: Tenant backoffice route health
+        if: env.MAINTENANCE_NO_WRITE != 'true'
+        env:
+          TENANT_BACKOFFICE_HEALTH_ENABLED: "true"
+        run: pnpm run test:tenant-backoffice-health:e2e
+
       - name: Communicationhub and Badge Studio browser validation
         if: env.MAINTENANCE_NO_WRITE != 'true'
         env:
