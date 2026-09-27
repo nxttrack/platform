@@ -72,14 +72,14 @@ export default async function AdminSettingsPage({ searchParams }: PageProps) {
   const canManage = context.activeTenant?.roles.some((role) => role === "tenant_owner" || role === "tenant_admin") ?? false;
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <PageHeader kicker="Beheer" subtitle={`Beheer configuratie, beleid, analytics en privacy voor ${tenant.name}.`} title="Instellingen" />
 
       {saved ? <p className="rounded-lg border border-success/20 bg-success/10 px-3 py-2 text-sm font-medium text-success">{saved === "billing" ? "Bedrijfs- en btw-gegevens zijn opgeslagen." : saved === "child_portal" ? "Kinderportaalrollout is veilig opgeslagen." : "Instellingen zijn opgeslagen."}</p> : null}
       {error ? <p className="rounded-lg border border-danger/20 bg-danger/10 px-3 py-2 text-sm font-medium text-danger">{errorMessage(error)}</p> : null}
 
       <AdminListSurface>
-        <DirtyForm action={saveTenantSettingsAction} className="grid gap-5">
+        <DirtyForm action={saveTenantSettingsAction} className="grid min-w-0 gap-5">
           <Tabs defaultValue="general">
             <TabsList className="justify-start">
               <TabsTrigger className="flex-none" value="general">Algemeen</TabsTrigger>
@@ -323,7 +323,7 @@ function asObject(value: unknown): Record<string, unknown> {
 
 function SettingsPanel({ action, children, description, title }: { action?: ReactNode; children: ReactNode; description: string; title: string }) {
   return (
-    <section className="max-w-4xl rounded-xl border border-border bg-card p-4">
+    <section className="w-full min-w-0 max-w-4xl rounded-xl border border-border bg-card p-4">
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div><h2 className="text-base font-bold text-foreground">{title}</h2><p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{description}</p></div>
         {action}

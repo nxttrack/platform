@@ -39,11 +39,14 @@ test.describe("tenant backoffice route health", () => {
       await signIn(page, state.users.tenantAdmin.email, requiredEnv("E2E_TENANT_ADMIN_PASSWORD"));
 
       const outcomes: Array<Record<string, unknown>> = [];
+      const failures: string[] = [];
 
       try {
         for (const route of routes) {
           const runtimeErrors: string[] = [];
           const onPageError = (error: Error) => runtimeErrors.push(error.message);
+          const outcome: Record<string, unknown> = { href: route.href, label: route.label, runtimeErrors };
+          outcomes.push(outcome);
           page.on("pageerror", onPageError);
 
           try {
@@ -53,8 +56,7 @@ test.describe("tenant backoffice route health", () => {
             const pathname = new URL(page.url()).pathname;
             const loadingVisible = await page.getByRole("status", { name: "Pagina wordt geladen" }).isVisible().catch(() => false);
             const loadingLayout = loadingVisible ? await measureLayout(page) : null;
-            const outcome: Record<string, unknown> = { href: route.href, label: route.label, loadingLayout, pathname, runtimeErrors, status };
-            outcomes.push(outcome);
+            Object.assign(outcome, { loadingLayout, pathname, status });
 
             expect(status, `${route.href} HTTP status`).toBeGreaterThanOrEqual(200);
             expect(status, `${route.href} HTTP status`).toBeLessThan(400);
@@ -79,10 +81,25 @@ test.describe("tenant backoffice route health", () => {
             } else {
               await expect(page.getByRole("button", { name: "Navigatie openen" })).toBeVisible();
             }
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            outcome.error = message.slice(0, 4_000);
+            failures.push(`${route.href}: ${message.slice(0, 4_000)}`);
+            if (!page.isClosed()) {
+              const screenshot = await page.screenshot({ fullPage: true }).catch(() => null);
+              if (screenshot) {
+                await testInfo.attach(`route-failure-${viewport.label}-${route.href.replaceAll(/[^a-z0-9]+/gi, "-")}`, {
+                  body: screenshot,
+                  contentType: "image/png"
+                });
+              }
+            }
           } finally {
             page.off("pageerror", onPageError);
           }
         }
+
+        expect(failures, `All ${viewport.label} routes must satisfy the backoffice health contract`).toEqual([]);
       } finally {
         await attachJson(testInfo, `tenant-backoffice-${viewport.label}`, outcomes);
       }

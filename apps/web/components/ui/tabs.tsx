@@ -15,14 +15,14 @@ export function Tabs({ className, value, defaultValue, onValueChange, ...props }
     if (!hasPendingDraftWrites()) apply();
     else void flushDraftWriters().then(saved => { if (saved && !hasPendingDraftWrites()) apply(); });
   }
-  return <TabsPrimitive.Root className={cn("w-full", className)} value={value ?? local} onValueChange={change} {...props} />;
+  return <TabsPrimitive.Root className={cn("w-full min-w-0 max-w-full", className)} value={value ?? local} onValueChange={change} {...props} />;
 }
 
 export function TabsList({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
       className={cn(
-        "flex w-full gap-1 overflow-x-auto rounded-xl border border-border bg-muted/60 p-1 text-muted-foreground",
+        "flex w-full min-w-0 max-w-full gap-1 overflow-x-auto rounded-xl border border-border bg-muted/60 p-1 text-muted-foreground",
         className
       )}
       {...props}
