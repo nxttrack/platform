@@ -27,7 +27,7 @@ for (const width of [390, 768]) {
     await testInfo.attach(`intake-40-programs-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
   });
 
-  test(`planning, loading and instructor controls stay inside a ${width}px viewport`, async ({ page }, testInfo) => {
+  test(`planning, loading, graduation and instructor controls stay inside a ${width}px viewport`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height: 844 });
     await page.goto("/test-harness/intake-responsive?surface=planning");
     await expectNoPageOverflow(page);
@@ -42,6 +42,13 @@ for (const width of [390, 768]) {
     await expect(page.getByRole("status", { name: "Pagina wordt geladen" })).toBeVisible();
     await expectNoPageOverflow(page);
     await testInfo.attach(`loading-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+
+    await page.goto("/test-harness/intake-responsive?surface=graduation");
+    const graduationEvent = page.getByLabel("Afzwemevent");
+    await expect(graduationEvent).toBeVisible();
+    await expectWithinViewport(graduationEvent, width);
+    await expectNoPageOverflow(page);
+    await testInfo.attach(`graduation-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
     await page.goto("/test-harness/intake-responsive?surface=instructor");
     await page.getByLabel("Lesnotitie voor Fictieve leerling", { exact: true }).fill("Fictieve lesnotitie");
