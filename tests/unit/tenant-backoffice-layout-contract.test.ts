@@ -25,6 +25,7 @@ test("backofficeheaders stapelen acties zolang de zijbalk tabletbreedte beperkt"
   const pageHeader = shellUi.slice(shellUi.indexOf("export function PageHeader"), shellUi.indexOf("export function Card"));
 
   assert.match(pageHeader, /lg:flex-row lg:items-end lg:justify-between/);
+  assert.match(pageHeader, /w-full min-w-0 max-w-full flex-wrap gap-2 lg:w-auto lg:max-w-none lg:shrink-0/);
   assert.doesNotMatch(pageHeader, /sm:flex-row/);
 });
 

@@ -1,9 +1,15 @@
 import { notFound } from "next/navigation";
+import { AlertTriangle, CalendarDays, Clock, Users } from "lucide-react";
 
+import { AdminActionDrawer } from "@/components/admin/action-drawer";
+import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
 import { PlanningDayBoard } from "@/components/admin/planning-day-board";
 import { FocusNoteFields, RosterAttendanceFields } from "@/components/instructor/roster-form-fields";
 import { IntakeProgramLayout } from "@/components/public/intake-program-layout";
 import { IntakeWizard } from "@/components/public/intake-wizard";
+import { AppShell } from "@/components/shell/app-shell";
+import { PageHeader } from "@/components/shell/ui";
+import { adminNav } from "@/lib/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +20,28 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
   const params = await searchParams;
 
   if (params.surface === "planning") {
-    return <main className="p-4"><section className="rounded-2xl border p-4"><h1>Dag- en weekplan</h1><PlanningDayBoard days={[{
-      key: "2026-09-22", label: "dinsdag 22 september", sessions: [{
-        id: "fixture-session", groupName: "Sprint 4 Admin Groep 35512095754-1-0",
-        startsAt: "2026-09-22T14:00:00Z", endsAt: "2026-09-22T14:45:00Z",
-        instructorNames: ["Fictieve instructeur"], notes: "Alleen lokale fictieve gegevens.",
-        resourceName: "Baan 1", status: "available", used: 1, capacity: 8, available: 7, catchUpHolds: 0
-      }]
-    }]} /></section></main>;
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
+      <PageHeader
+        action={<><AdminActionDrawer description="Alleen een lokale fixture." title="Nieuwe les" triggerLabel="Les plannen"><p>Read-only</p></AdminActionDrawer><AdminActionDrawer description="Alleen een lokale fixture." title="Beschikbaarheid instructeur" triggerLabel="Beschikbaarheid" triggerVariant="outline"><p>Read-only</p></AdminActionDrawer></>}
+        kicker="Planning"
+        title="Planbord"
+        subtitle="Scan de week, open lesdetails in een dossierdrawer en stuur alleen bij waar signalen daarom vragen."
+      />
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <AdminMetricCard icon={CalendarDays} label="Vandaag" value={1} />
+        <AdminMetricCard icon={AlertTriangle} label="Conflicten" tone="success" value={0} />
+        <AdminMetricCard icon={Users} label="Over capaciteit" tone="success" value={0} />
+        <AdminMetricCard icon={Clock} label="Inhaalverzoeken" tone="warning" value={1} />
+      </div>
+      <AdminListSurface><h2>Dag- en weekplan</h2><PlanningDayBoard days={[{
+        key: "2026-09-22", label: "dinsdag 22 september", sessions: [{
+          id: "fixture-session", groupName: "Sprint 4 Admin Groep 35512095754-1-0",
+          startsAt: "2026-09-22T14:00:00Z", endsAt: "2026-09-22T14:45:00Z",
+          instructorNames: ["Fictieve instructeur"], notes: "Alleen lokale fictieve gegevens.",
+          resourceName: "Baan 1", status: "available", used: 1, capacity: 8, available: 7, catchUpHolds: 0
+        }]
+      }]} /></AdminListSurface>
+    </div></AppShell>;
   }
 
   if (params.surface === "instructor") {

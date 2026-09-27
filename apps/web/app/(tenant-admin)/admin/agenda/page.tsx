@@ -25,7 +25,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
   const overCapacitySessions = data.sessionInsights.filter((insight) => insight.status === "over_capacity").length;
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <PageHeader
         action={
           <>
@@ -43,7 +43,7 @@ export default async function AdminAgendaPage({ searchParams }: PageProps) {
       />
       <Feedback saved={saved} error={error} />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <AdminMetricCard icon={CalendarDays} label="Vandaag" value={todaySessions.length} />
         <AdminMetricCard icon={AlertTriangle} label="Conflicten" tone={data.conflicts.length ? "warning" : "success"} value={data.conflicts.length} />
         <AdminMetricCard icon={Users} label="Over capaciteit" tone={overCapacitySessions ? "warning" : "success"} value={overCapacitySessions} />
