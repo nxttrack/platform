@@ -11,7 +11,7 @@ export function PageHeader({ kicker, title, subtitle, action }: { kicker?: strin
         <h1 className="mt-0.5 break-words font-display text-[clamp(1.45rem,7vw,1.875rem)] font-bold leading-tight tracking-tight">{title}</h1>
         {subtitle ? <p className="mt-1 max-w-3xl text-[13px] leading-5 text-muted-foreground md:text-sm">{subtitle}</p> : null}
       </div>
-      {action ? <div className="flex shrink-0 flex-wrap gap-2">{action}</div> : null}
+      {action ? <div className="flex w-full min-w-0 max-w-full flex-wrap gap-2 lg:w-auto lg:max-w-none lg:shrink-0">{action}</div> : null}
     </div>
   );
 }

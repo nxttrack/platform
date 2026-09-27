@@ -678,6 +678,18 @@ jobs:
           TENANT_BACKOFFICE_HEALTH_ENABLED: "true"
         run: pnpm run test:tenant-backoffice-health:e2e
 
+      - name: Upload failed tenant backoffice route health evidence
+        if: failure() && env.MAINTENANCE_NO_WRITE != 'true'
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: tenant-backoffice-route-health-${{ github.sha }}
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          if-no-files-found: warn
+          retention-days: 7
+
       - name: Communicationhub and Badge Studio browser validation
         if: env.MAINTENANCE_NO_WRITE != 'true'
         env:

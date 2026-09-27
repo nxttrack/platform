@@ -51,11 +51,28 @@ test.describe("tenant backoffice route health", () => {
             await page.waitForTimeout(100);
             const status = response?.status() ?? 0;
             const pathname = new URL(page.url()).pathname;
-            const layout = await page.evaluate(() => ({
-              documentWidth: document.documentElement.scrollWidth,
-              headingCount: document.querySelectorAll("h1").length,
-              viewportWidth: window.innerWidth
-            }));
+            const layout = await page.evaluate(() => {
+              const offenders = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+                .map((element) => {
+                  const rect = element.getBoundingClientRect();
+                  return {
+                    className: typeof element.className === "string" ? element.className.slice(0, 180) : "",
+                    left: Math.round(rect.left),
+                    right: Math.round(rect.right),
+                    tag: element.tagName.toLowerCase(),
+                    text: (element.textContent ?? "").replaceAll(/\s+/g, " ").trim().slice(0, 100)
+                  };
+                })
+                .filter((element) => element.left < -1 || element.right > window.innerWidth + 1)
+                .slice(0, 12);
+
+              return {
+                documentWidth: document.documentElement.scrollWidth,
+                headingCount: document.querySelectorAll("h1").length,
+                offenders,
+                viewportWidth: window.innerWidth
+              };
+            });
 
             outcomes.push({ href: route.href, label: route.label, layout, pathname, runtimeErrors, status });
             expect(status, `${route.href} HTTP status`).toBeGreaterThanOrEqual(200);
@@ -63,7 +80,7 @@ test.describe("tenant backoffice route health", () => {
             expect(pathname, `${route.href} must not redirect away`).toBe(route.href);
             await expect(page.getByRole("heading", { level: 1 }).first(), `${route.href} needs a visible H1`).toBeVisible();
             expect(layout.headingCount, `${route.href} must expose exactly one H1`).toBe(1);
-            expect(layout.documentWidth, `${route.href} must not overflow horizontally`).toBeLessThanOrEqual(layout.viewportWidth + 1);
+            expect(layout.documentWidth, `${route.href} must not overflow horizontally; offenders=${JSON.stringify(layout.offenders)}`).toBeLessThanOrEqual(layout.viewportWidth + 1);
             expect(runtimeErrors, `${route.href} must not emit page errors`).toEqual([]);
 
             if (viewport.label === "desktop") {
