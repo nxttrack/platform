@@ -7,6 +7,7 @@ import { adminNav } from "../../apps/web/lib/navigation";
 const shellUi = readFileSync(new URL("../../apps/web/components/shell/ui.tsx", import.meta.url), "utf8");
 const planningBoard = readFileSync(new URL("../../apps/web/components/admin/planning-day-board.tsx", import.meta.url), "utf8");
 const graduationPage = readFileSync(new URL("../../apps/web/app/(tenant-admin)/admin/afzwemmen/page.tsx", import.meta.url), "utf8");
+const capacityPage = readFileSync(new URL("../../apps/web/app/(tenant-admin)/admin/rapportages/capaciteit/page.tsx", import.meta.url), "utf8");
 const routeHealth = readFileSync(new URL("../../apps/web/tests/e2e/tenant-backoffice-route-health.spec.ts", import.meta.url), "utf8");
 const rootPackage = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as { scripts: Record<string, string> };
 
@@ -49,6 +50,12 @@ test("lange afzwemeventnamen begrenzen het uitnodigingsformulier op mobiel", () 
   assert.match(graduationPage, /flex w-full min-w-0 flex-wrap items-end gap-2 md:w-auto/);
   assert.match(graduationPage, /h-10 w-full min-w-0 max-w-full[^\"]+sm:w-64/);
   assert.doesNotMatch(graduationPage, /select className="h-10 min-w-64/);
+});
+
+test("lange forecastopties begrenzen alle capaciteitsvelden op mobiel", () => {
+  assert.match(capacityPage, /grid min-w-0 gap-1\.5 text-xs font-semibold text-foreground/);
+  assert.match(capacityPage, /min-h-11 w-full min-w-0 max-w-full rounded-lg border/);
+  assert.match(capacityPage, /grid min-w-0 gap-3 rounded-xl border/);
 });
 
 test("de stagingroute-audit deelt geen login en wacht op streaming inhoud", () => {

@@ -61,7 +61,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
   const unresolved = forecasts.reduce((total, row) => total + row.expected_bottlenecks, 0);
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <PageHeader
         action={
           <Link className={buttonVariants({ variant: "outline" })} href="/admin/rapportages"><ArrowLeft className="size-4" />Alle rapportages</Link>
@@ -84,7 +84,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
         </div>
       </section>
 
-      <div className="grid gap-3 xl:grid-cols-[auto_1fr] xl:items-start">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[auto_1fr] xl:items-start">
         <AdminFilterPills
           current={String(horizon)}
           href={(value) => buildHref(rawParams, { horizon: value })}
@@ -94,7 +94,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
             { label: "12 weken", value: "12" }
           ]}
         />
-        <form className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-2 xl:grid-cols-6">
+        <form className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-2 xl:grid-cols-6">
           <input name="horizon" type="hidden" value={horizon} />
           <FilterSelect defaultValue={filters.programId} label="Programma" name="program">
             <option value="">Alle programma’s</option>
@@ -140,7 +140,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
         </div>
       </div>
 
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-card">
+      <section className="min-w-0 rounded-2xl border border-border bg-card p-5 shadow-card">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-primary">Planner approval</p>
@@ -153,7 +153,7 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
             {operations.reservations.filter((row) => row.status === "approved").length} actief
           </span>
         </div>
-        <form action={requestCapacitySoftReservationAction} className="mt-5 grid gap-3 rounded-xl border border-border bg-muted/20 p-4 md:grid-cols-2 xl:grid-cols-6">
+        <form action={requestCapacitySoftReservationAction} className="mt-5 grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4 md:grid-cols-2 xl:grid-cols-6">
           <input name="idempotencyKey" type="hidden" value={randomUUID()} />
           <FilterSelect label="Lesgroep" name="groupId">
             <option value="">Kies lesgroep</option>
@@ -178,9 +178,9 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
             <option value="72">72 uur</option>
             <option value="168">7 dagen</option>
           </FilterSelect>
-          <label className="grid gap-1.5 text-xs font-semibold text-foreground xl:col-span-2">
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground xl:col-span-2">
             Reden
-            <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom moet de planner deze plek beoordelen?" required />
+            <input className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom moet de planner deze plek beoordelen?" required />
           </label>
           <div className="md:col-span-2 xl:col-span-6">
             <Button type="submit">Aanvraag ter goedkeuring klaarzetten</Button>
@@ -203,22 +203,22 @@ export default async function CapacityForecastPage({ searchParams }: PageProps) 
                 </span>
               </div>
               {reservation.status === "pending_approval" ? (
-                <form action={reviewCapacitySoftReservationAction} className="mt-3 flex flex-wrap items-end gap-2">
+                <form action={reviewCapacitySoftReservationAction} className="mt-3 flex w-full min-w-0 flex-wrap items-end gap-2">
                   <input name="reservationId" type="hidden" value={reservation.id} />
-                  <label className="grid min-w-64 flex-1 gap-1 text-xs font-semibold">
+                  <label className="grid w-full min-w-0 flex-1 gap-1 text-xs font-semibold sm:min-w-64">
                     Reviewreden
-                    <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Controle en afweging" required />
+                    <input className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Controle en afweging" required />
                   </label>
                   <Button name="decision" type="submit" value="approve">Goedkeuren</Button>
                   <Button name="decision" type="submit" value="reject" variant="outline">Afwijzen</Button>
                 </form>
               ) : null}
               {reservation.status === "approved" ? (
-                <form action={releaseCapacitySoftReservationAction} className="mt-3 flex flex-wrap items-end gap-2">
+                <form action={releaseCapacitySoftReservationAction} className="mt-3 flex w-full min-w-0 flex-wrap items-end gap-2">
                   <input name="reservationId" type="hidden" value={reservation.id} />
-                  <label className="grid min-w-64 flex-1 gap-1 text-xs font-semibold">
+                  <label className="grid w-full min-w-0 flex-1 gap-1 text-xs font-semibold sm:min-w-64">
                     Vrijgavereden
-                    <input className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom komt de plek weer vrij?" required />
+                    <input className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" maxLength={1000} minLength={3} name="reason" placeholder="Waarom komt de plek weer vrij?" required />
                   </label>
                   <Button type="submit" variant="outline">Reservering vrijgeven</Button>
                 </form>
@@ -287,9 +287,9 @@ function FilterSelect({
   name: string;
 }) {
   return (
-    <label className="grid gap-1.5 text-xs font-semibold text-foreground">
+    <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">
       {label}
-      <select className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={defaultValue ?? ""} name={name}>
+      <select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={defaultValue ?? ""} name={name}>
         {children}
       </select>
     </label>
