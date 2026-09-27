@@ -6,6 +6,8 @@ import { adminNav } from "../../apps/web/lib/navigation";
 
 const shellUi = readFileSync(new URL("../../apps/web/components/shell/ui.tsx", import.meta.url), "utf8");
 const planningBoard = readFileSync(new URL("../../apps/web/components/admin/planning-day-board.tsx", import.meta.url), "utf8");
+const routeHealth = readFileSync(new URL("../../apps/web/tests/e2e/tenant-backoffice-route-health.spec.ts", import.meta.url), "utf8");
+const rootPackage = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8")) as { scripts: Record<string, string> };
 
 test("iedere tenant-backofficenavigatieroute is uniek en heeft een pagina", () => {
   const routes = adminNav.map((item) => item.href);
@@ -40,4 +42,10 @@ test("de paginalaadstatus past op mobiel zonder het desktopgrid af te zwakken", 
   assert.match(skeleton, /grid-cols-\[24px_minmax\(0,1fr\)_72px\]/);
   assert.match(skeleton, /sm:grid-cols-\[32px_minmax\(120px,1\.4fr\)_minmax\(90px,1fr\)_100px\]/);
   assert.match(skeleton, /hidden h-5 min-w-0 sm:block/);
+});
+
+test("de stagingroute-audit deelt geen login en wacht op streaming inhoud", () => {
+  assert.match(rootPackage.scripts["test:tenant-backoffice-health:e2e"] ?? "", /--workers=1/);
+  assert.match(routeHealth, /loadingVisible \? await measureLayout\(page\) : null/);
+  assert.equal(routeHealth.match(/\{ timeout: 30_000 \}/g)?.length, 3);
 });
