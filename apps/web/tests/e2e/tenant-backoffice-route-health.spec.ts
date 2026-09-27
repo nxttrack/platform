@@ -51,34 +51,21 @@ test.describe("tenant backoffice route health", () => {
             await page.waitForTimeout(100);
             const status = response?.status() ?? 0;
             const pathname = new URL(page.url()).pathname;
-            const layout = await page.evaluate(() => {
-              const offenders = Array.from(document.querySelectorAll<HTMLElement>("body *"))
-                .map((element) => {
-                  const rect = element.getBoundingClientRect();
-                  return {
-                    className: typeof element.className === "string" ? element.className.slice(0, 180) : "",
-                    left: Math.round(rect.left),
-                    right: Math.round(rect.right),
-                    tag: element.tagName.toLowerCase(),
-                    text: (element.textContent ?? "").replaceAll(/\s+/g, " ").trim().slice(0, 100)
-                  };
-                })
-                .filter((element) => element.left < -1 || element.right > window.innerWidth + 1)
-                .slice(0, 12);
+            const loadingVisible = await page.getByRole("status", { name: "Pagina wordt geladen" }).isVisible().catch(() => false);
+            const loadingLayout = loadingVisible ? await measureLayout(page) : null;
+            const outcome: Record<string, unknown> = { href: route.href, label: route.label, loadingLayout, pathname, runtimeErrors, status };
+            outcomes.push(outcome);
 
-              return {
-                documentWidth: document.documentElement.scrollWidth,
-                headingCount: document.querySelectorAll("h1").length,
-                offenders,
-                viewportWidth: window.innerWidth
-              };
-            });
-
-            outcomes.push({ href: route.href, label: route.label, layout, pathname, runtimeErrors, status });
             expect(status, `${route.href} HTTP status`).toBeGreaterThanOrEqual(200);
             expect(status, `${route.href} HTTP status`).toBeLessThan(400);
             expect(pathname, `${route.href} must not redirect away`).toBe(route.href);
-            await expect(page.getByRole("heading", { level: 1 }).first(), `${route.href} needs a visible H1`).toBeVisible();
+            if (loadingLayout) {
+              expect(loadingLayout.documentWidth, `${route.href} loading state must not overflow horizontally; offenders=${JSON.stringify(loadingLayout.offenders)}`).toBeLessThanOrEqual(loadingLayout.viewportWidth + 1);
+            }
+
+            await expect(page.getByRole("heading", { level: 1 }).first(), `${route.href} needs a visible H1`).toBeVisible({ timeout: 30_000 });
+            const layout = await measureLayout(page);
+            outcome.layout = layout;
             expect(layout.headingCount, `${route.href} must expose exactly one H1`).toBe(1);
             expect(layout.documentWidth, `${route.href} must not overflow horizontally; offenders=${JSON.stringify(layout.offenders)}`).toBeLessThanOrEqual(layout.viewportWidth + 1);
             expect(runtimeErrors, `${route.href} must not emit page errors`).toEqual([]);
@@ -108,8 +95,33 @@ async function signIn(page: Page, email: string, password: string) {
   await page.locator("input[name='email']").fill(email);
   await page.locator("input[name='password']").fill(password);
   await page.getByRole("button", { name: /^inloggen$/i }).click();
-  await expect(page).toHaveURL(/\/admin(?:\?|$)/);
-  await expect(page.getByRole("heading", { level: 1, name: "Welkom terug." })).toBeVisible();
+  await expect(page).toHaveURL(/\/admin(?:\?|$)/, { timeout: 30_000 });
+  await expect(page.getByRole("heading", { level: 1, name: "Welkom terug." })).toBeVisible({ timeout: 30_000 });
+}
+
+async function measureLayout(page: Page) {
+  return page.evaluate(() => {
+    const offenders = Array.from(document.querySelectorAll<HTMLElement>("body *"))
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          className: typeof element.className === "string" ? element.className.slice(0, 180) : "",
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          tag: element.tagName.toLowerCase(),
+          text: (element.textContent ?? "").replaceAll(/\s+/g, " ").trim().slice(0, 100)
+        };
+      })
+      .filter((element) => element.left < -1 || element.right > window.innerWidth + 1)
+      .slice(0, 12);
+
+    return {
+      documentWidth: document.documentElement.scrollWidth,
+      headingCount: document.querySelectorAll("h1").length,
+      offenders,
+      viewportWidth: window.innerWidth
+    };
+  });
 }
 
 async function attachJson(testInfo: TestInfo, name: string, value: unknown) {
