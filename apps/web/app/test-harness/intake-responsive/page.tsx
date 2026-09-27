@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { AlertTriangle, CalendarDays, Clock, Users } from "lucide-react";
+import { AlertTriangle, CalendarDays, Clock, Send, Users } from "lucide-react";
 
 import { AdminActionDrawer } from "@/components/admin/action-drawer";
 import { AdminListSurface, AdminMetricCard } from "@/components/admin/admin-patterns";
@@ -22,6 +22,21 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
 
   if (params.surface === "loading") {
     return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><PageLoadingSkeleton /></AppShell>;
+  }
+
+  if (params.surface === "graduation") {
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
+      <PageHeader kicker="Lesproces" title="Afzwemmen en diploma's" subtitle="Responsieve lokale fixture met lange, fictieve eventnamen." />
+      <AdminListSurface>
+        <div className="grid gap-3 px-3 py-3 md:grid-cols-[1fr_auto] md:items-end">
+          <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><p className="font-semibold">Fictieve leerling</p><span>ready</span></div><p className="mt-1 text-xs text-muted-foreground">Badje 1 · menselijk beoordeeld</p><p className="mt-2 text-sm leading-6 text-muted-foreground">Alleen lokale fictieve gegevens voor het responsieve contract.</p></div>
+          <form className="flex w-full min-w-0 flex-wrap items-end gap-2 md:w-auto">
+            <label className="w-full min-w-0 space-y-2 text-sm font-semibold text-foreground sm:w-auto"><span>Afzwemevent</span><select className="h-10 w-full min-w-0 max-w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none sm:w-64" defaultValue="" name="eventId"><option value="">Kies event</option><option value="fixture">Fictief afzwemevent met een uitzonderlijk lange naam - 18 oktober 2026, 10:00</option></select></label>
+            <button className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="button"><Send className="size-4" />Uitnodigen</button>
+          </form>
+        </div>
+      </AdminListSurface>
+    </div></AppShell>;
   }
 
   if (params.surface === "planning") {

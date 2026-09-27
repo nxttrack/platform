@@ -112,11 +112,11 @@ export default async function AdminGraduationPage({ searchParams }: PageProps) {
                     </p>
                     {readiness.checklist_summary ? <p className="mt-2 text-sm leading-6 text-muted-foreground">{readiness.checklist_summary}</p> : null}
                   </div>
-                  <form action={inviteGraduationParticipantAction} className="flex flex-wrap items-end gap-2">
+                  <form action={inviteGraduationParticipantAction} className="flex w-full min-w-0 flex-wrap items-end gap-2 md:w-auto">
                     <input name="readinessId" type="hidden" value={readiness.id} />
-                    <label className="space-y-2 text-sm font-semibold text-foreground">
+                    <label className="w-full min-w-0 space-y-2 text-sm font-semibold text-foreground sm:w-auto">
                       <span>Afzwemevent</span>
-                      <select className="h-10 min-w-64 rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" name="eventId" required>
+                      <select className="h-10 w-full min-w-0 max-w-full rounded-lg border border-border bg-white px-3 text-sm font-normal outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-64" name="eventId" required>
                         <option value="">Kies event</option>
                         {openEvents.map((event) => (
                           <option key={event.id} value={event.id}>
