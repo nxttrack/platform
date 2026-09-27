@@ -39,6 +39,20 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
     </div></AppShell>;
   }
 
+  if (params.surface === "capacity") {
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
+      <PageHeader kicker="Inzichten" title="Capaciteitsvoorspelling" subtitle="Responsieve lokale fixture met lange, fictieve lesgroep- en kandidaatnamen." />
+      <AdminListSurface>
+        <form className="grid min-w-0 gap-3 rounded-xl border border-border bg-muted/20 p-4 md:grid-cols-2 xl:grid-cols-6">
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">Lesgroep<select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue=""><option value="">Kies lesgroep</option><option value="fixture">Fictieve zwemgroep met een uitzonderlijk lange naam en locatieomschrijving</option></select></label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">Wachtlijstkandidaat<select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue=""><option value="">Kies kandidaat</option><option value="fixture">Fictieve wachtlijstkandidaat met een uitzonderlijk lange samengestelde naam</option></select></label>
+          <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground xl:col-span-2">Reden<input className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" placeholder="Waarom moet de planner deze plek beoordelen?" /></label>
+          <div className="md:col-span-2 xl:col-span-6"><button className="inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground" type="button">Aanvraag klaarzetten</button></div>
+        </form>
+      </AdminListSurface>
+    </div></AppShell>;
+  }
+
   if (params.surface === "planning") {
     return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
       <PageHeader
