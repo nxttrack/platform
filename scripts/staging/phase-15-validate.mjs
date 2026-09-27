@@ -62,7 +62,12 @@ if (process.env.PHASE15_SKIP_PLAYWRIGHT_INSTALL !== "true") {
   runStep("ensure Playwright Chromium", "pnpm", ["--filter", "@nxttrack/web", "exec", "playwright", "install", "chromium"], phaseEnv);
 }
 
-runStep("run live Playwright staging smoke", "pnpm", ["run", "test:e2e"], phaseEnv);
+runStep(
+  "run live Playwright staging smoke",
+  "pnpm",
+  ["--filter", "@nxttrack/web", "exec", "playwright", "test", "--workers=1"],
+  phaseEnv
+);
 runStep("run strict staging launch gate", "pnpm", ["run", "staging:gate"], {
   ...phaseEnv,
   STAGING_LAUNCH_STRICT: "true",
