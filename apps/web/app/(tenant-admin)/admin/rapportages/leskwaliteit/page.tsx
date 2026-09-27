@@ -81,7 +81,7 @@ export default async function LearningQualityPage({ searchParams }: PageProps) {
   const error = getParam(rawParams, "error");
 
   return (
-    <div className="space-y-5">
+    <div className="min-w-0 space-y-5">
       <PageHeader
         action={
           <Link className={buttonVariants({ variant: "outline" })} href="/admin/rapportages"><ArrowLeft className="size-4" />Alle rapportages</Link>
@@ -99,7 +99,7 @@ export default async function LearningQualityPage({ searchParams }: PageProps) {
         <AdminMetricCard icon={MessageSquareText} label="Concepten ter review" tone={drafts.length ? "info" : "success"} value={drafts.length} />
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[auto_1fr] xl:items-start">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[auto_1fr] xl:items-start">
         <AdminFilterPills
           current={String(weeks)}
           href={(value) => buildHref(rawParams, { period: value })}
@@ -109,7 +109,7 @@ export default async function LearningQualityPage({ searchParams }: PageProps) {
             { label: "12 weken", value: "12" }
           ]}
         />
-        <form className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-2 xl:grid-cols-4">
+        <form className="grid min-w-0 gap-3 rounded-2xl border border-border bg-card p-4 shadow-soft sm:grid-cols-2 xl:grid-cols-4">
           <input name="period" type="hidden" value={weeks} />
           <FilterSelect defaultValue={filters.programId} label="Programma" name="program">
             <option value="">Alle programma’s</option>
@@ -127,7 +127,7 @@ export default async function LearningQualityPage({ searchParams }: PageProps) {
               <option key={group.id} value={group.id}>{group.name}</option>
             ))}
           </FilterSelect>
-          <div className="flex items-end"><Button className="w-full" type="submit">Filters toepassen</Button></div>
+          <div className="flex min-w-0 items-end"><Button className="w-full" type="submit">Filters toepassen</Button></div>
           {includeTestData ? <input name="view" type="hidden" value="include-test" /> : null}
         </form>
       </div>
@@ -246,9 +246,9 @@ function FilterSelect({
   name: string;
 }) {
   return (
-    <label className="grid gap-1.5 text-xs font-semibold text-foreground">
+    <label className="grid min-w-0 gap-1.5 text-xs font-semibold text-foreground">
       {label}
-      <select className="min-h-11 rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={defaultValue ?? ""} name={name}>
+      <select className="min-h-11 w-full min-w-0 max-w-full rounded-lg border border-border bg-background px-3 text-sm font-normal" defaultValue={defaultValue ?? ""} name={name}>
         {children}
       </select>
     </label>
