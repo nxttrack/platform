@@ -18,7 +18,7 @@ export function PageLoadingSkeleton({ compact = false }: { compact?: boolean }) 
           <Skeleton className="h-11 w-36 xl:ml-auto" />
         </div>
         <div className="mt-5 grid gap-3">
-          {Array.from({ length: compact ? 4 : 7 }, (_, index) => <div className="grid grid-cols-[32px_minmax(120px,1.4fr)_minmax(90px,1fr)_100px] items-center gap-4 border-b border-border py-3 last:border-0" key={index}><Skeleton className="size-5" /><Skeleton className="h-5" /><Skeleton className="h-5" /><Skeleton className="h-7 rounded-full" /></div>)}
+          {Array.from({ length: compact ? 4 : 7 }, (_, index) => <div className="grid min-w-0 grid-cols-[24px_minmax(0,1fr)_72px] items-center gap-3 border-b border-border py-3 last:border-0 sm:grid-cols-[32px_minmax(120px,1.4fr)_minmax(90px,1fr)_100px] sm:gap-4" key={index}><Skeleton className="size-5" /><Skeleton className="h-5 min-w-0" /><Skeleton className="hidden h-5 min-w-0 sm:block" /><Skeleton className="h-7 min-w-0 rounded-full" /></div>)}
         </div>
       </div>
       <span className="sr-only">Gegevens worden opgehaald.</span>

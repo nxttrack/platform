@@ -33,3 +33,11 @@ test("planborddagen krijgen alleen in een meerkolomsgrid een vaste hoogte", () =
   assert.match(planningBoard, /shadow-soft xl:h-64/);
   assert.doesNotMatch(planningBoard, /flex h-64 min-w-0/);
 });
+
+test("de paginalaadstatus past op mobiel zonder het desktopgrid af te zwakken", () => {
+  const skeleton = readFileSync(new URL("../../apps/web/components/shell/page-loading-skeleton.tsx", import.meta.url), "utf8");
+
+  assert.match(skeleton, /grid-cols-\[24px_minmax\(0,1fr\)_72px\]/);
+  assert.match(skeleton, /sm:grid-cols-\[32px_minmax\(120px,1\.4fr\)_minmax\(90px,1fr\)_100px\]/);
+  assert.match(skeleton, /hidden h-5 min-w-0 sm:block/);
+});
