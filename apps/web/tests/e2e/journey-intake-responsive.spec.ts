@@ -68,6 +68,17 @@ for (const width of [390, 768]) {
     await expectNoPageOverflow(page);
     await testInfo.attach(`learning-quality-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
 
+    await page.goto("/test-harness/intake-responsive?surface=settings");
+    const settingsTabs = page.getByRole("tablist");
+    await expect(settingsTabs).toBeVisible();
+    await expectWithinViewport(settingsTabs, width);
+    const tabScroll = await settingsTabs.evaluate((element) => ({ client: element.clientWidth, scroll: element.scrollWidth }));
+    expect(tabScroll.scroll).toBeGreaterThan(tabScroll.client);
+    await settingsTabs.getByRole("tab", { name: "Productisatie" }).scrollIntoViewIfNeeded();
+    await expectWithinViewport(settingsTabs.getByRole("tab", { name: "Productisatie" }), width);
+    await expectNoPageOverflow(page);
+    await testInfo.attach(`settings-tabs-${width}`, { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+
     await page.goto("/test-harness/intake-responsive?surface=instructor");
     await page.getByLabel("Lesnotitie voor Fictieve leerling", { exact: true }).fill("Fictieve lesnotitie");
     await page.getByLabel("Interne notitie voor Fictieve leerling", { exact: true }).fill("Fictieve focusnotitie");

@@ -10,6 +10,7 @@ import { IntakeWizard } from "@/components/public/intake-wizard";
 import { AppShell } from "@/components/shell/app-shell";
 import { PageLoadingSkeleton } from "@/components/shell/page-loading-skeleton";
 import { PageHeader } from "@/components/shell/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { adminNav } from "@/lib/navigation";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +70,26 @@ export default async function ResponsiveIntakeHarness({ searchParams }: {
         <div className="relative w-full overflow-x-auto">
           <table className="w-full min-w-[30rem] caption-bottom text-sm"><thead><tr><th className="px-3 py-2 text-left">Leerling</th><th className="px-3 py-2 text-left">Signaal</th><th className="px-3 py-2 text-left">Aandacht</th><th className="px-3 py-2 text-left">Zekerheid</th><th className="px-3 py-2 text-left">Details</th></tr></thead><tbody><tr><td className="px-3 py-2">Fictieve leerling</td><td className="px-3 py-2">Warme opvolging</td><td className="px-3 py-2">Volgen</td><td className="px-3 py-2">Hoog</td><td className="px-3 py-2">Openen</td></tr></tbody></table>
         </div>
+      </AdminListSurface>
+    </div></AppShell>;
+  }
+
+  if (params.surface === "settings") {
+    return <AppShell accent="admin" brand={{ title: "NXTTRACK technische E2E-fixture", subtitle: "Backoffice" }} nav={adminNav} user={{ name: "E2E Tenantbeheerder", role: "Organisatiebeheerder" }}><div className="min-w-0 space-y-5">
+      <PageHeader kicker="Beheer" title="Instellingen" subtitle="Responsieve lokale fixture voor een brede reeks instellingentabs." />
+      <AdminListSurface>
+        <Tabs defaultValue="general">
+          <TabsList className="justify-start">
+            <TabsTrigger className="flex-none" value="general">Algemeen</TabsTrigger>
+            <TabsTrigger className="flex-none" value="terminology">Terminologie</TabsTrigger>
+            <TabsTrigger className="flex-none" value="cancellation">Annuleren & inhalen</TabsTrigger>
+            <TabsTrigger className="flex-none" value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger className="flex-none" value="notifications">Notificaties</TabsTrigger>
+            <TabsTrigger className="flex-none" value="privacy">Privacy & cookies</TabsTrigger>
+            <TabsTrigger className="flex-none" value="product">Productisatie</TabsTrigger>
+          </TabsList>
+          <TabsContent value="general"><section className="w-full min-w-0 max-w-4xl rounded-xl border border-border bg-card p-4"><h2 className="font-bold">Algemeen</h2><p className="mt-1 text-sm text-muted-foreground">Fictieve instellingen zonder externe gegevens.</p></section></TabsContent>
+        </Tabs>
       </AdminListSurface>
     </div></AppShell>;
   }
